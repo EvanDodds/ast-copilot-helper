@@ -69,13 +69,15 @@ Your Repo/
 
 ### 4.2 AST Extractor (parse)  
 
-- **Parser**: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) for polyglot support.  
-- **Input**: All files matching `config.parseGlob` or `--glob`, filtered by `git diff --name-only HEAD`.  
+- **Parser**: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) for polyglot support (TS/JS/Python initially).  
+- **Runtime**: Prefer native `node-tree-sitter` with WASM fallback via `tree-sitter-wasm` for zero-dependency installs.  
+- **Grammars**: Downloaded on demand to `.astdb/grammars/` with version pins; TS/JS/Python grammars cached locally.  
+- **Input**: All files matching `config.parseGlob` or `--glob`, filtered by `git diff --name-only --diff-filter=ACMRT HEAD` (or `--staged`/`--base <ref>` overrides).  
 - **Output**: One JSON file per source file under `.astdb/asts/`.  
 - **AST Schema**:  
   ```ts
   interface ASTNode {
-    id: string;               // uuid4
+    id: string;               // deterministic hash of file+span+type+name
     type: string;             // node type
     name?: string;            // identifier if present
     start: { line, column };
@@ -90,11 +92,12 @@ Your Repo/
 
 - **Input**: `.astdb/asts/*.json`  
 - **Metadata Computation**:  
-  - **Signature**: `(params) => returnType` string from node.  
-  - **Summary**: `Function X does Y` via template.  
-  - **Cyclomatic Complexity**: count of `if`, `for`, `case`, `catch`.  
-  - **Dependencies**: list of imported symbols used in node.  
+  - **Signature**: Language-aware extraction for TS/JS/Python (leveraging Tree-sitter heuristics); generic fallback for others.  
+  - **Summary**: Template-based generation ("Function X does Y" using name + parameter heuristics).  
+  - **Cyclomatic Complexity**: Classical count (1 + decision points): `if`, `for`, `while`, `case`, `catch`, ternary, boolean operators.  
+  - **Dependencies**: List of imported symbols referenced in node scope.  
 - **Output**: `.astdb/annots/{nodeId}.json`  
+
   ```ts
   interface Annot {
     nodeId: string;
@@ -103,57 +106,65 @@ Your Repo/
     summary: string;
     complexity: number;
     deps: string[];
-    sourceSnippet: string;    // up to N lines around node
+    sourceSnippet: string;    // up to snippetLines (default 10) with truncation markers
   }
   ```
 
 ### 4.4 Embedder (embed)  
 
-- **Model**: integrate `@xenova/transformers` with a bundled CodeBERT-small ONNX.  
-- **Index**: `hnswlib-node` building an HNSW graph in memory, serialized to `index.bin`.  
-- **Metadata**: map internal index IDs → `{ nodeId, file }` in `index.meta.json`.  
+- **Model**: `@xenova/transformers` (WASM) as default runtime with CodeBERT-small ONNX (768-dim embeddings).  
+- **Model Delivery**: Downloaded from GitHub Releases to `.astdb/models/` on first run with SHA256 checksum verification.  
+- **Alternative Runtime**: `--runtime onnx` flag enables `onnxruntime-node` for performance (if available).  
+- **Index**: Pure-JS/WASM HNSW implementation by default; optional `hnswlib-node` for performance (via prebuilt binaries).  
+- **Metadata**: `index.meta.json` maps nodeId → indexId + vectorHash with versioning for upserts.  
 - **Process**:  
   1. Load all new/updated `annots/*.json`.  
   2. For each, concatenate `summary + signature`.  
-  3. Compute embedding vector (`768` dims).  
-  4. Upsert or insert into HNSW.  
-  5. Serialize index and metadata on disk.
+  3. Compute embedding vector (768 dims default, configurable).  
+  4. Upsert via delete+insert using nodeId mapping.  
+  5. Serialize index and metadata to disk.
 
 ### 4.5 Retriever (query)  
 
 - **CLI**:  
-  ```
+
+  ```bash
   ast-helper query \
     --intent "refactor payment module logging" \
     --top 5 \
     --format json
   ```
+
 - **Steps**:  
-  1. Embed intent text.  
+  1. Embed intent text using same model as indexing.  
   2. Load `index.bin` + `index.meta.json`.  
   3. Perform K-NN search, retrieve top-K index IDs.  
   4. Load corresponding `annots/{nodeId}.json`.  
-  5. Print array of `{ summary, signature, complexity, deps, sourceSnippet }`.
+  5. Output array of `{ summary, signature, complexity, deps, sourceSnippet }` in requested format.
 
 ### 4.6 Watcher (watch)  
 
 - **Library**: [chokidar](https://github.com/paulmillr/chokidar).  
 - **Behavior**: on file add/change/delete under `config.watchGlob`:  
-  1. Debounce 200 ms.  
-  2. Run `parse --changed`, `annotate --changed`, `embed --changed`.  
+  1. Debounce 200 ms with batching for rapid edit bursts.  
+  2. Run `parse --changed`, `annotate --changed`, `embed --changed` sequentially.  
+  3. Support `--batch` and `--max-batch-size` options for large repositories.  
 - **Use Case**: live prompt enrichment during edit sessions.
 
 ### 4.7 VS Code Extension  
 
 - **Language**: TypeScript, VS Code Extension API.  
-- **Activation**: on Copilot Chat activation (`onCommand: "copilot.chat.send"`).  
+- **Activation**: Provides both explicit command and optional experimental Copilot interception.  
+- **Commands**:  
+  - `ast-copilot-helper.enrichAndSend`: Explicit user command (primary, stable).  
+  - Optional experimental interception via `enableExperimentalCopilotIntercept` setting.  
 - **Logic**:  
-  1. Intercept user prompt.  
+  1. Capture user prompt (via command or interception).  
   2. Spawn `ast-helper query --intent "<prompt>" --top 3 --format plain`.  
   3. Prepend returned snippets to prompt.  
-  4. Call original Copilot command with enriched prompt.  
-- **Packaging**: include under `.vscode/extensions/ast-copilot-helper` or publish to private registry.  
-- **Settings**: allow user to configure `topK`, snippet length, and enable/disable augmentation.
+  4. Send enriched prompt to Copilot.  
+- **Packaging**: Bundled with main package; optional separate VS Code extension registry publish.  
+- **Settings**: `topK`, `snippetLines`, enable/disable augmentation, experimental interception opt-in.
 
 ---  
 
@@ -169,16 +180,32 @@ ast-copilot-helper/
 │  │  ├─ annotator.ts
 │  │  ├─ embedder.ts
 │  │  ├─ retriever.ts
-│  │  └─ watcher.ts
+│  │  ├─ watcher.ts
+│  │  └─ downloader.ts       # model & artifact downloader
 │  ├─ types.ts               # ASTNode, Annot, config interfaces
 │  └─ util/
 │     ├─ fs.ts
-│     └─ git.ts
+│     ├─ git.ts
+│     └─ crypto.ts           # checksum verification
 ├─ extension/                # VS Code extension
 │  ├─ src/activate.ts
 │  └─ package.json
 ├─ bin/ast-helper.js         # CLI shim
 ├─ .astdb/                   # created at runtime
+│  ├─ asts/                  # raw AST JSON per file
+│  ├─ annots/                # annotated metadata JSON per node
+│  ├─ grammars/              # cached Tree-sitter grammars
+│  ├─ models/                # downloaded embedding models
+│  ├─ native/                # optional native binaries
+│  ├─ index.bin              # HNSW binary index
+│  ├─ index.meta.json        # mapping from index IDs → file + node
+│  ├─ config.json            # user overrides (patterns, thresholds)
+│  └─ .lock                  # process coordination
+├─ tests/
+│  ├─ fixtures/              # small sample repos for testing
+│  └─ benchmarks/            # 100k LOC performance fixture
+├─ LICENSES.md               # model and dependency licenses
+├─ NOTICE                    # attribution file
 ├─ package.json
 ├─ README.md
 └─ tsconfig.json
@@ -189,14 +216,19 @@ ast-copilot-helper/
 ## 6. Configuration  
 
 `.astdb/config.json` (auto-generated on first run, mergeable):  
+
 ```json
 {
   "parseGlob": ["src/**/*.ts", "src/**/*.js", "src/**/*.py"],
   "watchGlob": ["src/**/*.{ts,js,py}"],
   "reuseIndex": true,
   "embedModelPath": "./models/codebert-small.onnx",
+  "modelHost": "https://github.com/EvanDodds/ast-copilot-helper/releases/download/v1.0.0/",
+  "useNativeRuntime": false,
   "topK": 5,
   "snippetLines": 10,
+  "enableTelemetry": false,
+  "telemetryEndpoint": "",
   "indexParams": {
     "efConstruction": 200,
     "M": 16
@@ -208,319 +240,676 @@ ast-copilot-helper/
 
 ## 7. Implementation Roadmap  
 
-1. Scaffold CLI project, implement `parse`.  
-2. Build simple `annotate` with templated summaries.  
-3. Integrate `@xenova/transformers` + HNSW for `embed`.  
-4. Wire up `query`, test vector searches end-to-end.  
-5. Add `watch` mode and Husky git hooks.  
-6. Develop VS Code extension and test Copilot prompt augmentation.  
-7. Publish to NPM and optionally private VS Code gallery.  
+1. **Project Scaffold & Core Parse** (~Week 1-2)
+   - Set up TypeScript project structure with commander.js CLI
+   - Implement `parse` with Tree-sitter integration (TS/JS/Python grammars)
+   - Add deterministic node ID generation and git integration
+   - Create basic test fixtures and unit tests
+
+2. **Annotation & Template Summaries** (~Week 2-3)  
+   - Build `annotate` with language-aware signature extraction
+   - Implement template-based summary generation
+   - Add cyclomatic complexity calculation and dependency analysis
+   - Create comprehensive annotation test suite
+
+3. **Embedding & Vector Index** (~Week 3-4)
+   - Integrate `@xenova/transformers` with model downloader and verification
+   - Implement pure-JS/WASM HNSW index with upsert support
+   - Add model caching, checksum verification, and optional signature checking
+   - Build performance tests for embedding and indexing
+
+4. **Query & Retrieval** (~Week 4-5)
+   - Complete `query` implementation with JSON/plain output formats
+   - Add comprehensive CLI argument parsing and configuration merging
+   - Implement file locking and process coordination
+   - Add end-to-end integration tests
+
+5. **Watch Mode & Performance** (~Week 5-6)
+   - Implement `watch` with debouncing and batching for large repos
+   - Add 100k LOC performance fixture and benchmarking
+   - Optimize for repository scale targets and query latency
+   - Add optional native runtime support (hnswlib-node, onnxruntime-node)
+
+6. **VS Code Extension** (~Week 6-7)
+   - Develop extension with explicit command and optional experimental interception
+   - Add user settings for topK, snippet length, and augmentation controls
+   - Implement telemetry opt-in framework (disabled by default)
+   - Test Copilot integration end-to-end
+
+7. **Release & Distribution** (~Week 7-8)
+   - Set up CI for prebuilt native binaries (Windows x64, macOS arm64/x64, Linux x64)
+   - Add artifact signing with Sigstore/GPG and checksum publishing
+   - Complete LICENSES.md, NOTICE, and privacy documentation
+   - Publish to NPM with optional VS Code extension registry  
 
 ---  
 
 ## 8. Testing & Validation  
 
-- **Unit tests** for each module using Jest.  
-- **Integration tests** against a sample repo fixture: verify AST JSON, annotation schema, index build, query results.  
-- **Performance benchmarks**: index 10k nodes, measure embed and query latency.  
-- **End-to-end workflow**: commit → pre-commit hooks update `.astdb/` → VS Code Copilot suggestions include correct snippets.  
+- **Unit tests** for each module using Jest with comprehensive coverage targets.
+- **Integration tests** against sample repo fixtures: verify AST JSON schema, annotation completeness, index build/query accuracy.  
+- **Performance benchmarks**: 
+  - Target: Index 100k nodes in <10 minutes on 2-CPU 8GB CI runner
+  - Target: Top-5 query latency <200ms average
+  - Memory usage profiling for large repositories
+- **End-to-end workflow validation**: 
+  - Git hooks: commit → parse/annotate → pre-push embed → index updates
+  - VS Code extension: prompt enrichment → query execution → Copilot integration
+  - Scale testing: synthetic 100k LOC fixture with representative language distribution
+- **Security testing**: Model download verification, checksum validation, signature checking  
 
 ---  
 
 ## 9. Example Usage  
 
 ```bash
+# Installation
 npm install -D ast-copilot-helper husky
+
+# Setup git hooks (recommended)
 npx husky install
 npx husky add .husky/pre-commit "ast-helper parse --changed && ast-helper annotate --changed"
 npx husky add .husky/pre-push   "ast-helper embed --changed"
 
-# Developer flow
-ast-helper watch                  # live DB updates
-# In VS Code, invoke Copilot Chat, prompts auto-enriched
+# Manual operations
+ast-helper parse --glob "src/**/*.{ts,js,py}"    # Parse specific files
+ast-helper annotate --changed                    # Annotate changed files
+ast-helper embed --changed                       # Update embeddings
+ast-helper query --intent "error handling" --top 5  # Search for relevant code
 
-# CI flow
-ast-helper parse --changed
-ast-helper annotate --changed
-ast-helper embed --changed
+# Development workflow
+ast-helper watch                  # Live updates during development
+# In VS Code: use Copilot Chat - prompts are auto-enriched with relevant AST context
+
+# CI/CD workflow
+ast-helper parse --changed        # Parse changed files
+ast-helper annotate --changed     # Generate annotations  
+ast-helper embed --changed        # Update vector index
+ast-helper query --intent "test coverage" --format json > context.json  # Export for other tools
 ```
 
-This specification provides a concrete blueprint for implementing a fully self-contained AST-to-Copilot augmentation module. By following the roadmap and module definitions, you can deliver a drop-in dev dependency that transforms your Copilot experience without spinning up any external infrastructure.
+---
+
+## 10. Error Handling & Recovery
+
+### 10.1 Corruption Detection & Recovery
+
+**Index Corruption**
+- **Detection**: Checksum validation on index load, schema version checks
+- **Recovery**: Automatic rebuild from annotations with user confirmation
+- **Prevention**: Atomic writes, backup index during updates
+
+**Model Download Failures**
+- **Retry Logic**: Exponential backoff (3 attempts max)
+- **Fallback**: Graceful degradation with warning messages
+- **Offline Mode**: Use cached models when available
+
+**Parse Failures**
+- **Individual Files**: Log error, continue with other files
+- **Grammar Issues**: Download latest grammar, retry once
+- **Syntax Errors**: Skip malformed files with detailed logging
+
+### 10.2 Concurrent Access Management
+
+**File Locking Strategy**
+```typescript
+interface LockManager {
+  acquireExclusiveLock(operation: 'parse' | 'embed' | 'query'): Promise<Lock>;
+  acquireSharedLock(operation: 'query'): Promise<Lock>;
+  releaseLock(lock: Lock): void;
+}
+```
+
+**Multi-Process Coordination**
+- Exclusive locks for write operations (parse, annotate, embed)
+- Shared locks for read operations (query)
+- Timeout handling (30s default, configurable)
+- Deadlock detection and recovery
+
+### 10.3 Memory Management
+
+**Large Repository Handling**
+- Streaming processing for files >10MB
+- Batch processing: max 100 files per batch
+- Memory pressure detection and graceful degradation
+- Configurable memory limits per operation
 
 ---
 
-## 10. Proposed decisions, trade-offs, and defaults
+## 11. Deployment & Operations
 
-This section records pragmatic choices and trade-offs for the initial implementation. Each item includes options, pros/cons, and the chosen default where applicable.
+### 11.1 CI/CD Pipeline Specification
 
-### 10.1 MVP scope
+**GitHub Actions Workflow** (`.github/workflows/release.yml`)
+```yaml
+name: Build and Release
+on:
+  push:
+    tags: ['v*']
+    
+jobs:
+  build-prebuilts:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        arch: [x64, arm64]  # arm64 only for macOS
+    steps:
+      - name: Build native binaries
+        run: npm run build:native
+      - name: Sign artifacts
+        run: npm run sign:artifacts
+      - name: Upload to release
+        uses: actions/upload-release-asset@v1
+```
 
-Options
-- Minimal MVP: `parse` + `annotate` only.
-- Full local flow MVP: `parse` + `annotate` + `embed` + `query` (no watch/extension).
+**Artifact Naming Convention**
+- `ast-copilot-helper-{version}-{platform}-{arch}.tar.gz`
+- `ast-copilot-helper-models-{version}.tar.gz` (CodeBERT model)
+- `checksums.txt` with SHA256 hashes
+- `signatures.txt` with Sigstore signatures
 
-Pros/Cons
-- Minimal MVP: faster to deliver, easier tests, but can't validate search/augmentation UX.
-- Full local flow MVP: higher initial engineering cost but enables end-to-end validation and CI flows.
+### 11.2 Monitoring & Observability
 
-Chosen default
-- Implement the full local flow MVP (`parse`, `annotate`, `embed`, `query`) so we can validate retrieval and Copilot augmentation early.
+**Performance Metrics Collection**
+```typescript
+interface Metrics {
+  parseTime: number;           // ms per file
+  annotateTime: number;        // ms per node  
+  embedTime: number;          // ms per embedding
+  queryLatency: number;       // ms per query
+  indexSize: number;          // bytes
+  memoryUsage: number;        // peak MB
+}
+```
 
-### 10.2 Language support & Tree‑sitter grammars
+**Health Checks**
+- Index integrity validation
+- Model availability check  
+- Git integration status
+- VS Code extension connectivity
 
-Options
-- Start with TS/JS only.
-- Start with TS/JS + Python.
-- Polyglot from day one (many grammars bundled or downloaded).
+**Logging Framework**
+```typescript
+interface Logger {
+  error(message: string, context?: object): void;
+  warn(message: string, context?: object): void;  
+  info(message: string, context?: object): void;
+  debug(message: string, context?: object): void;
+}
+```
 
-Pros/Cons
-- TS/JS only: simplest, matches primary TypeScript implementation and developer needs.
-- Adding Python expands reach but increases parser integration tests.
-- Polyglot increases maintenance and binary size; some grammars carry license constraints.
+### 11.3 Migration & Upgrade Strategies
 
-Chosen default
-- Initial release: TS/JS (covering .ts/.tsx/.js/.jsx). Add Python in the next milestone.
-- Tree‑sitter grammars will be downloaded on demand and cached in `.astdb/grammars/` with explicit version pins. We will avoid bundling many grammars in-repo to reduce package size.
+**Schema Versioning**
+```typescript
+interface ASTDBVersion {
+  schemaVersion: string;        // "1.0.0"
+  modelVersion: string;         // "codebert-small-v1"  
+  indexVersion: string;         // "hnsw-v2"
+  migrationPath?: string;       // upgrade script
+}
+```
 
-### 10.3 Parser runtime & installation
-
-Options
-- Use `tree-sitter` native bindings (fast but native build complexity).
-- Use `node-tree-sitter` with prebuilt bindings or fallback to WASM JS parser (slower).
-
-Pros/Cons
-- Native bindings: best performance but complicates Windows/macOS/Linux CI and releases.
-- WASM/JS: simpler distribution, no native compilation, slightly slower but acceptable for many repos.
-
-Chosen default
-- Prefer `node-tree-sitter` native when available, but provide a WASM fallback using `tree-sitter-wasm` so installs succeed without native toolchains.
-
-### 10.4 Git changed-file semantics (`--changed`)
-
-Options
-- Default: `git diff --name-only HEAD` (changes since last commit).
-- Alternative: staged files, or compare to remote branch (e.g., origin/main).
-
-Pros/Cons
-- HEAD: sensible for pre-commit/CI; predictable.
-- Staged: good for pre-commit workflows.
-- Remote diff: useful for large PR checks but heavier to compute.
-
-Chosen default
-- Default behavior: `--changed` maps to `git diff --name-only --diff-filter=ACMRT HEAD`.
-- Add flags `--staged` and `--base <ref>` to override and support staged or branch comparisons.
-
-### 10.5 Node identity (nodeId)
-
-Options
-- UUIDv4 per parse run (non‑stable across parses).
-- Deterministic id: hash(file path + start.line + start.column + end.line + end.column + node type).
-
-Pros/Cons
-- UUIDv4: simple but prevents stable upsert across re-parses and causes index growth.
-- Deterministic hash: stable across small edits, enables upsert and efficient index maintenance.
-
-Chosen default
-- Use deterministic node IDs based on a stable canonical key (file path + node span + node type + optional name) hashed (e.g., SHA‑1). This preserves identity across runs unless the node's location changes.
-
-### 10.6 Signature extraction & types
-
-Options
-- Best-effort, language-specific extraction (preferred).
-- Conservative generic signatures (only param names, no types for untyped languages).
-
-Pros/Cons
-- Lang-specific: better quality signatures for typed languages but requires per-language logic.
-- Generic: faster to implement, less precise.
-
-Chosen default
-- Implement language‑aware signature extraction for TypeScript/JavaScript (leveraging Tree‑sitter/tsserver heuristics where available). For untyped code, fall back to parameter lists without types.
-
-### 10.7 Summary generation strategy
-
-Options
-- Template-based summaries (deterministic, fast).
-- LLM-assisted summaries (higher quality, requires model/runtime and possible external API).
-
-Pros/Cons
-- Template: reproducible and offline; lower semantic quality for complex logic.
-- LLM: better natural summaries but increases dependencies and may require large models or external calls.
-
-Chosen default
-- Start with deterministic template-based summaries (e.g., "Function X does Y" using heuristics: name + verb from name + short param list). Reserve LLM‑assisted summaries as an opt‑in feature in a later release.
-
-### 10.8 Cyclomatic complexity definition
-
-Chosen default
-- Use classical cyclomatic count: 1 + number of decision points. Count nodes: `if`, `for`, `while`, `case` (each case >1), `catch`, `conditional (?:)`, and boolean operators (`&&`, `||`) incrementally when they form separate decision branches.
-
-Rationale
-- This provides a reasonable, defensible complexity metric for prioritizing snippets.
-
-### 10.9 Snippet extraction & truncation
-
-Chosen default
-- Extract `snippetLines` lines of source surrounding the node span (configurable; default 10). If the function is longer than that, include the central lines and indicate truncation with a clear marker (e.g., "...snippet truncated..."). Snippets will be plain text; consumers (like VS Code) can re-run highlighting if desired.
-
-### 10.10 Embedding model runtime
-
-Options
-- `@xenova/transformers` (pure-JS/WASM) loading ONNX or model weights.
-- `onnxruntime-node` for local ONNX inference (native, faster, requires native artifacts).
-
-Pros/Cons
-- `@xenova`: no native installers, works in more environments, acceptable CPU performance; smaller friction for consumers.
-- `onnxruntime-node`: better performance (and GPU/NNAPI) if user has native support, larger install complexity.
-
-Chosen default
-- Default to `@xenova/transformers` (WASM) for offline, zero-native-dependency installs. Provide an option `--runtime onnx` to use `onnxruntime-node` when available for improved performance.
-- Store model files under `.astdb/models/` and download on first run if not present (explicit prompt and checksum verification).
-- Embedding size: default 768 (match CodeBERT-small), but the code will accept other dims and store embedding-dim in index metadata for compatibility.
-
-### 10.11 Vector index backend
-
-Options
-- Native `hnswlib-node` (fast, native deps).
-- Pure-JS `hnswlib-js` or `hnswlib-wasm` fallback (portable).
-
-Pros/Cons
-- Native `hnswlib-node`: high performance, mature, but native build/release burden across OSes.
-- Pure-JS/WASM: slower but much easier to ship and use in CI and user machines without native toolchains.
-
-Chosen default
-- Provide dual support: default to a pure‑JS/WASM HNSW implementation so installs succeed everywhere. If `hnswlib-node` is available (prebuilt or CI-launched), prefer it for performance.
-- Index metadata (`index.meta.json`) will map nodeId → indexId + vectorHash and include a `version` field. Upserts are implemented as delete+insert using the mapping.
-
-### 10.12 Upsert semantics
-
-Chosen default
-- Use mapping file to find existing index entries by nodeId; implement delete + insert to replace vectors. If the backend does not support delete, mark older entries as tombstones in `index.meta.json` and rebuild occasionally.
-
-### 10.13 Index serialization format
-
-Chosen default
-- For native `hnswlib-node`: use its binary serialization (`index.bin`) plus `index.meta.json` describing indexId→node mapping and embedding metadata.
-- For pure-JS backend: serialize vectors and metadata into a compact JSON + binary blobs (Float32Array dumped to a binary file) with a clear version tag to allow migration.
-
-### 10.14 CLI output formats & logging
-
-Chosen default
-- `--format` supports `json` and `plain` (human readable). `json` is machine‑friendly and default for programmatic use; `plain` for the VS Code extension by default.
-- Provide `--log-level` (`error|warn|info|debug`) and machine-friendly exit codes.
-
-### 10.15 Watch debounce and scaling
-
-Chosen default
-- Debounce 200ms as in spec. Use a queue and batch operations (parse/annotate/embed) to avoid repeatedly rebuilding the entire index for rapid edit bursts.
-- Provide `--batch` and `--max-batch-size` options for large repos.
-
-### 10.16 VS Code interception strategy
-
-Options
-- Best-effort intercept Copilot internal command (`copilot.chat.send`).
-- Provide a user-facing command `ast-copilot-helper.enrichCopilotPrompt` that users can bind, or a small UI button.
-
-Pros/Cons
-- Intercepting `copilot.chat.send` is fragile because Copilot internals are private and may change.
-- A user-command is stable and avoids relying on internal APIs; requires user action or keybinding.
-
-Chosen default
-- Provide both: best-effort interception for convenience (documented as experimental) and a documented explicit command `ast-copilot-helper.enrichAndSend` for reliable use. Extension will be opt‑in and respect user settings.
+**Migration Procedures**
+1. **Backup existing .astdb directory**
+2. **Run migration script if available**  
+3. **Rebuild index if schema incompatible**
+4. **Validate migrated data**
+5. **Rollback on failure**
 
 ---
 
-## 11. Resolved items (defaults applied)
+## 12. Advanced Configuration & Tuning
 
-- MVP: full local flow MVP (`parse`, `annotate`, `embed`, `query`).
-- Languages: TS/JS/Python initial support (Python included in initial rollout per stakeholder response).
-- Tree‑sitter grammars: downloaded on demand to `.astdb/grammars/` and cached; include Python grammar by default.
-- Parsers: prefer native `node-tree-sitter` with WASM fallback.
-- `--changed` default: `git diff --name-only --diff-filter=ACMRT HEAD`; support `--staged` and `--base` overrides.
-- Node IDs: deterministic hash of file+span+type(+name) for stability.
-- Signature extraction: language-aware for TS/JS/Python, fallback generic for other languages.
-- Summaries: template-based initial implementation; LLMs reserved for later opt‑in.
-- Complexity: 1 + count(decision points) including `if`, `for`, `while`, `case`, `catch`, ternary, boolean ops.
-- Snippets: `snippetLines` default 10, truncation markers, plain text.
-- Embeddings: default to `@xenova/transformers` WASM runtime; model files cached in `.astdb/models/` and downloaded on first run if missing; embedding dim is configurable (default 768). Option `--runtime onnx` available for onnxruntime-node if user enables native runtime.
-- Index backend: pure‑JS/WASM HNSW by default with optional `hnswlib-node` if available.
-- Upsert: implemented as delete+insert via `index.meta.json` mapping; tombstones + periodic rebuild for backends without deletions.
-- CLI: `--format json|plain`, `--log-level` and stable exit codes.
-- Watch: debounce 200 ms with batching.
-- VS Code extension: experimental interception + explicit user command; opt‑in.
-- Packaging: default functionality with zero native dependencies, plus stakeholder-requested prebuilt native binaries published as optional artifacts for common platforms (Windows x64, macOS arm64/x64, Linux x64). CI will produce and publish these prebuilds if the team confirms the target matrix.
-- Telemetry: anonymous opt‑in telemetry is acceptable per stakeholder; implementation must be opt‑in and documented.
-- Concurrency: file lock and auto-rebuild option on corruption.
+### 12.1 Extended Configuration Schema
+
+```json
+{
+  // Core settings (from previous spec)
+  "parseGlob": ["src/**/*.{ts,js,py}"],
+  "watchGlob": ["src/**/*.{ts,js,py}"],
+  
+  // Performance tuning
+  "performance": {
+    "maxMemoryMB": 2048,
+    "batchSize": 100,
+    "maxFileSize": "10MB",
+    "timeoutMs": 30000,
+    "concurrentParsers": 4
+  },
+  
+  // Error handling  
+  "errorHandling": {
+    "maxRetries": 3,
+    "retryDelayMs": 1000,
+    "continueOnParseError": true,
+    "autoRebuildCorrupted": false,
+    "logLevel": "info"
+  },
+  
+  // Advanced features
+  "advanced": {
+    "enableIncrementalParsing": true,
+    "enableSemanticCaching": true,  
+    "pruneStaleEntries": true,
+    "compressionLevel": 6,
+    "enableProfiler": false
+  },
+  
+  // Platform-specific
+  "platform": {
+    "preferNativeBinaries": true,
+    "fallbackToWasm": true,
+    "enableGpuAcceleration": false,
+    "customBinaryPath": null
+  }
+}
+```
+
+### 12.2 Performance Optimization Guidelines  
+
+**Large Repository Optimization**
+- Use `--changed` flag to limit scope
+- Enable incremental parsing for faster updates
+- Consider splitting very large repositories  
+- Monitor memory usage and adjust batch sizes
+
+**Query Performance Tuning**
+- Adjust HNSW parameters (M, efConstruction) based on index size
+- Use query caching for repeated searches
+- Consider model quantization for faster inference
+
+**VS Code Extension Performance**
+- Set reasonable query timeouts (5-10s)
+- Implement query debouncing (500ms)
+- Cache recent query results
+- Provide loading indicators for long operations
 
 ---
 
-## 12. Revisions & remaining open questions (actionable)
+## 13. Testing & Quality Assurance
 
-Summary of changes from stakeholder answers
-- Python is now in the initial language support list and config globs have been updated.
-- Stakeholders prefer publishing prebuilt native binaries; the spec now documents CI prebuilds for common platforms as an opt‑in distribution channel.
-- Anonymous telemetry is acceptable as opt‑in; privacy policy and opt‑in UX must be added to README and extension settings.
-- Stakeholders want direct Copilot integration if feasible; extension will default to opt‑in and provide an explicit command fallback.
-- The target scale was increased: support for repositories up to at least ~100k LOC should be planned and validated.
+### 13.1 Comprehensive Testing Strategy
 
-New decisions & recommended plan (answers to previously listed open questions)
+**Unit Testing (Jest + TypeScript)**
+- **Target Coverage**: 90%+ for core modules
+- **Test Categories**: 
+  - Parser functionality with malformed ASTs
+  - Annotation generation with edge cases
+  - Embedding model integration and caching
+  - Query performance and accuracy
+  - Configuration validation and merging
 
-1. Model redistribution license — recommended approach
-- Recommendation: Do NOT bundle model binaries directly inside the NPM package. Instead host model artifacts on GitHub Releases (or other approved host) and download on first run with an explicit notice and license link. Include the model license text and attribution in the repo (README + LICENSES.md/NOTICE).
-- Pros: avoids accidentally redistributing a model with restricted license or large binary blobs; keeps npm package small and fast to install.
-- Cons: requires a one-time download step and a network dependency on first run.
-- Action: Legal to confirm the model license and provide the exact license file / attribution string and whether redistribution is permitted. Engineering to implement a verified downloader (HTTPS + checksum + optional signature check) and to cache models in `.astdb/models/`.
+**Integration Testing**
+- **Multi-language Repository**: Test with TypeScript + Python + JavaScript
+- **Large Scale Testing**: 100k LOC synthetic repository  
+- **Git Workflow Testing**: Various git states (clean, dirty, staged, conflicts)
+- **Cross-platform Testing**: Windows, macOS, Linux environments
 
-2. Prebuild publishing strategy — recommended approach
-- Recommendation: Publish prebuilt native artifacts for the chosen native backends (hnswlib-node, onnxruntime-node) via GitHub Releases and provide a small optional install-time downloader. Expose them as optional platform-specific artifacts rather than forcing them as required npm deps. Provide a pure-JS/WASM fallback so users without native installs still work.
-- Target platforms (proposed): Windows x64, macOS arm64, macOS x64, Linux x64. Confirm matrix with maintainers.
-- Pros: users who want max performance get prebuilt binaries; users who prefer zero-native installs use the default pure-JS path.
-- Cons: extra CI complexity to build/publish prebuilds.
-- Action: Engineering to add CI jobs to build/test/publish prebuilds for approved platforms; Product to confirm exact matrix.
+**End-to-End Testing**
+- **Complete Workflow**: Parse → Annotate → Embed → Query → VS Code integration
+- **Performance Benchmarks**: Automated performance regression testing
+- **VS Code Extension Testing**: Mock Copilot interactions, user scenarios
 
-3. Telemetry backend and data retention — recommended approach
-- Recommendation: Implement telemetry as strictly opt‑in. Provide a default telemetry stub that is disabled by default; when enabled, send only anonymized diagnostics (error counts, stack traces truncated, environment metadata like OS and package version, and an opt‑in id) to a configurable endpoint. Keep retention limited (e.g., 90 days) and provide a documented opt‑out and data deletion process.
-- Pros: allows collecting useful diagnostics while respecting privacy and legal constraints.
-- Cons: requires hosting/operational overhead if telemetry is enabled.
-- Action: Product to decide whether to operate a telemetry endpoint (or use a third‑party vendor) and specify retention policy. Engineering to implement opt‑in flow and configuration for endpoint URL.
+**Edge Case Testing Matrix**
+```typescript
+interface EdgeCaseTest {
+  scenario: string;
+  expectedBehavior: string;
+  testMethod: string;
+}
 
-4. Model delivery & verification — recommended approach
-- Recommendation: Host models on GitHub Releases (or identical trusted host) and publish SHA256 checksums alongside each artifact. Optionally sign artifacts (GPG or Sigstore) for higher assurance. On download, verify checksum (and signature if present) before use.
-- Pros: secure delivery and verifiable authenticity.
-- Cons: additional release and signing steps in CI.
-- Action: Engineering to add release artifacts + checksums to CI; Security/DevOps to configure signing keys and verification instructions.
+const edgeCases: EdgeCaseTest[] = [
+  {
+    scenario: "Empty repository",
+    expectedBehavior: "Graceful handling with informative message",
+    testMethod: "Full workflow on empty git repo"
+  },
+  {
+    scenario: "Very large single file (>50MB)",
+    expectedBehavior: "Memory-bounded processing with streaming",  
+    testMethod: "Generate large synthetic file and test parsing"
+  },
+  {
+    scenario: "Corrupted .astdb directory",
+    expectedBehavior: "Detection and recovery with user confirmation",
+    testMethod: "Deliberately corrupt index and test recovery"
+  },
+  // ... additional edge cases
+];
+```
 
-5. Native runtime expectations — recommended approach
-- Recommendation: Support two modes: (A) default zero-native mode (pure-JS/WASM runtimes), and (B) optional native mode (onnxruntime-node/hnswlib-node). Provide prebuilt artifacts (CI) and a user opt‑in install path (postinstall flag or explicit `--use-native` CLI switch) that downloads and installs prebuilt native runtime. Do not require native builds on first install.
-- Pros: minimal friction for most users, and native performance available for power users.
-- Cons: maintenance effort for prebuilds.
-- Action: CI to produce prebuilds; packaging docs to explain how to opt into native mode.
+### 13.2 Performance Benchmarking Framework
 
-6. Integration test scale targets — recommended approach
-- Recommendation: Create a synthetic fixture repository that approximates the target scale (100k LOC) by combining real small open-source projects or generating many small files programmatically. Define measurable targets: full parse→annotate→embed→index build should finish within a CI runner budget (e.g., <10 minutes on a 2‑CPU 8GB runner for baseline) and query latency for top‑5 should be <200ms on average.
-- Pros: provides repeatable performance baselines.
-- Cons: synthetic fixtures may not reflect all real-world code patterns; real-repo testing should be added later.
-- Action: QA/Engineering to create the fixture and add CI jobs to run performance benchmarks and record results.
+**Benchmark Scenarios**
+- Repository sizes: 1k, 10k, 100k, 500k LOC
+- Language distributions: TS-only, multi-language, Python-heavy
+- Query types: Simple keywords, complex semantic queries, frequent vs. rare terms
 
-7. Copilot interception risk acceptance — recommended approach
-- Recommendation: Ship only explicit command integration by default (opt‑in) and provide an experimental interception path behind a clearly labeled flag. Do not enable interception by default. Document the experimental nature and fallback.
-- Pros: avoids surprising behavior and reduces breakage risk while giving power users an option.
-- Cons: slightly less seamless UX for users who want automatic augmentation.
-- Action: Extension to expose `ast-copilot-helper.enrichAndSend` command, and an `enableExperimentalCopilotIntercept` setting for users to opt in.
+**Metrics Collection**
+```typescript
+interface BenchmarkResult {
+  timestamp: Date;
+  repoSize: number;           // Lines of code
+  parseTimeMs: number;        // Full parse duration
+  annotateTimeMs: number;     // Full annotation duration  
+  embedTimeMs: number;        // Full embedding duration
+  queryLatencyP95: number;    // 95th percentile query time
+  memoryPeakMB: number;       // Peak memory usage
+  indexSizeMB: number;        // Disk usage
+  gitCommitHash: string;      // Version under test
+}
+```
 
-8. Model license sources and attribution — recommended approach
-- Recommendation: Create a `LICENSES.md` and `NOTICE` file in repo root that lists model license(s) and attribution, with links to upstream license documents. Include a short note in README and in the extension manifest stating the model origin and license.
-- Action: Legal to supply license files and attribution text. Engineering to add files and references to README.
+**Automated Performance Gates**
+- Parse: <5 minutes per 100k LOC
+- Query: <500ms P95 latency
+- Memory: <4GB peak for 100k LOC
+- Index size: <200MB for 100k LOC
 
-9. Security & supply chain — recommended approach
-- Recommendation: Sign all downloadable artifacts (models and native prebuilds) using Sigstore/cosign or GPG and publish SHA256 checksums. Store public verification keys in the repo and document the verification steps. Automate signing in CI.
-- Pros: improves supply-chain security and user trust.
-- Cons: requires key management and CI integration.
-- Action: DevOps/Security to pick a signing toolchain (Sigstore recommended) and configure CI to sign artifacts and publish verification metadata.
+---
 
+## 14. Security & Privacy
 
-Next actions (updated)
-- Legal: confirm redistribution rights and provide model license files and attribution text.
-- Engineering: implement model downloader with checksum & optional signature verification; add CI tasks to build and publish prebuilt native artifacts; add opt‑in native install flow and telemetry stub.
-- DevOps/Security: configure signing (Sigstore/cosign or GPG) in CI and store public keys in repo.
-- QA: create a 100k LOC fixture for CI benchmarking and publish baseline metrics.
-- Product: confirm platform matrix for prebuilds and decide telemetry endpoint/retention or keep telemetry disabled until an endpoint is available.
+### 14.1 Security Hardening
+
+**Input Validation**
+- File path sanitization (prevent directory traversal)
+- Git command injection prevention  
+- Model file integrity verification (checksums + signatures)
+- Configuration file schema validation
+
+**Privilege Management**
+- Minimal file system permissions required
+- No network access except for model downloads
+- Sandboxed model execution where possible
+- User consent for all network operations
+
+**Supply Chain Security**
+```typescript
+interface SecurityCheck {
+  artifact: string;
+  checksum: string;
+  signature?: string;
+  downloadUrl: string;
+  verificationKey: string;
+}
+
+const securityChecks: SecurityCheck[] = [
+  {
+    artifact: "codebert-small.onnx",
+    checksum: "sha256:a1b2c3d4e5f6...",
+    signature: "cosign signature blob",
+    downloadUrl: "https://github.com/EvanDodds/ast-copilot-helper/releases/...",
+    verificationKey: "cosign-public.pem"
+  }
+];
+```
+
+### 14.2 Privacy Protection
+
+**Data Locality Guarantees**
+- All code processing remains local (no cloud transmission)
+- Embeddings computed and stored locally
+- Query results never leave the machine
+- Optional telemetry is anonymized and aggregated only
+
+**Sensitive Data Handling**
+- Skip files matching `.gitignore` patterns
+- Configurable exclusion patterns for sensitive files
+- Automatic detection of potential secrets in ASTs
+- Option to exclude certain node types (e.g., string literals)
+
+---
+
+## 15. User Documentation & Support
+
+### 15.1 Installation & Setup Guide
+
+**Prerequisites Check**
+```bash
+# System requirements validation
+ast-helper doctor                 # Check system compatibility
+ast-helper doctor --fix          # Attempt to resolve common issues
+```
+
+**Step-by-Step Setup**
+1. **Install**: `npm install -D ast-copilot-helper`
+2. **Initialize**: `ast-helper init` (creates `.astdb/` and default config)
+3. **First Parse**: `ast-helper parse` (processes entire repository)
+4. **Setup Git Hooks**: `ast-helper setup-hooks` (automated husky integration)
+5. **Install VS Code Extension**: Via marketplace or `ast-helper install-extension`
+
+### 15.2 Troubleshooting Guide
+
+**Common Issues & Solutions**
+| Issue | Symptoms | Solution |
+|-------|----------|----------|
+| Parse failures | "Unknown language" errors | Run `ast-helper grammar install <language>` |
+| Slow performance | High CPU/memory usage | Adjust batch size in config, use `--changed` flag |
+| VS Code integration broken | No prompt enrichment | Check extension logs, verify CLI in PATH |
+| Index corruption | Query errors | Run `ast-helper rebuild` to reconstruct index |
+| Model download fails | Network/checksum errors | Check internet connection, verify firewall settings |
+
+**Diagnostic Commands**
+```bash
+ast-helper status               # System status and configuration
+ast-helper validate             # Check .astdb integrity  
+ast-helper debug --query "test" # Verbose query execution
+ast-helper logs --tail 50       # View recent operation logs
+```
+
+### 15.3 Configuration Examples
+
+**TypeScript Monorepo**
+```json
+{
+  "parseGlob": ["packages/*/src/**/*.{ts,tsx}"],
+  "watchGlob": ["packages/*/src/**/*.{ts,tsx}"], 
+  "performance": {
+    "batchSize": 50,
+    "maxMemoryMB": 4096
+  }
+}
+```
+
+**Python Data Science Project**
+```json  
+{
+  "parseGlob": ["src/**/*.py", "notebooks/**/*.py"],
+  "excludePatterns": ["**/test_*.py", "**/__pycache__/**"],
+  "topK": 8,
+  "snippetLines": 15
+}
+```
+
+---
+
+## 16. Architecture Decisions & Implementation Plan
+
+This section consolidates all architectural decisions, trade-offs, and implementation approaches into a unified plan.
+
+### 16.1 Language & Parser Stack
+
+**Decision**: Multi-language support with TS/JS/Python in initial release
+- **Parser**: Tree-sitter with native `node-tree-sitter` + WASM fallback via `tree-sitter-wasm`  
+- **Grammars**: Downloaded on-demand to `.astdb/grammars/` with version pins
+- **Node Identity**: Deterministic hash of (file path + span + type + name) for stable upserts
+- **Normalization**: Include function/class/module definitions + control-flow; strip comments
+
+### 16.2 Annotation & Analysis
+
+**Decision**: Template-based approach with language-aware extraction
+- **Signatures**: Language-specific extraction for TS/JS/Python; generic fallback for others
+- **Summaries**: Template generation ("Function X does Y" using heuristics)
+- **Complexity**: Classical cyclomatic (1 + decision points: if/for/while/case/catch/ternary/boolean-ops)
+- **Dependencies**: Import symbol analysis within node scope
+- **Snippets**: Configurable lines (default 10) with truncation markers
+
+### 16.3 Embedding & Indexing
+
+**Decision**: Hybrid runtime approach with pure-JS default
+- **Model**: CodeBERT-small ONNX (768-dim) via `@xenova/transformers` WASM runtime
+- **Delivery**: Download from GitHub Releases with SHA256 verification + optional signing
+- **Alternative**: `--runtime onnx` flag for `onnxruntime-node` (if available)
+- **Index**: Pure-JS/WASM HNSW by default; optional `hnswlib-node` via prebuilt binaries
+- **Upserts**: Delete+insert via `index.meta.json` mapping; tombstone cleanup for non-deletable backends
+
+### 16.4 Git Integration & File Handling
+
+**Decision**: Flexible git workflow integration
+- **Default**: `git diff --name-only --diff-filter=ACMRT HEAD`
+- **Overrides**: `--staged` and `--base <ref>` flags for different workflows
+- **Watch**: Debounced (200ms) with batching for rapid edits; `--batch` and `--max-batch-size` options
+- **Concurrency**: File lock at `.astdb/.lock`; auto-rebuild on corruption (opt-in)
+
+### 16.5 VS Code Extension Strategy
+
+**Decision**: Dual approach for reliability and UX
+- **Primary**: Explicit `ast-copilot-helper.enrichAndSend` command (stable)
+- **Experimental**: Optional Copilot interception via `enableExperimentalCopilotIntercept` setting
+- **Settings**: Configurable `topK`, `snippetLines`, augmentation enable/disable
+- **Output**: `--format plain` for extension consumption
+
+### 16.6 Distribution & Native Performance
+
+**Decision**: Zero-dependency default with optional native optimization
+- **Core Package**: Pure-JS/WASM, works everywhere, reasonable performance
+- **Prebuilt Binaries**: CI-produced artifacts for Windows x64, macOS (arm64/x64), Linux x64
+- **Delivery**: GitHub Releases with SHA256 checksums + Sigstore/GPG signing
+- **Opt-in**: `--use-native` flag or postinstall configuration for performance users
+
+### 16.7 Privacy & Telemetry
+
+**Decision**: Privacy-first with opt-in analytics
+- **Default**: No telemetry, explicit privacy guarantee (no code/embeddings leave machine)
+- **Opt-in**: Anonymous error counts, environment metadata, performance metrics
+- **Retention**: 90-day limit with documented opt-out/deletion process
+- **Endpoint**: Configurable URL (disabled until endpoint decided)
+
+---
+
+## 17. Implementation Checklist
+
+### Phase 1: Core Infrastructure (Week 1-2)
+- [ ] Project scaffold with TypeScript + commander.js
+- [ ] Tree-sitter integration (TS/JS/Python) with grammar downloader
+- [ ] Deterministic node ID generation and AST normalization
+- [ ] Git integration (`--changed`, `--staged`, `--base` options)
+- [ ] Basic test suite with small fixtures
+- [ ] Error handling framework and logging system
+
+### Phase 2: Annotation Pipeline (Week 2-3)
+- [ ] Language-aware signature extraction (TS/JS/Python + generic fallback)
+- [ ] Template-based summary generation with heuristics
+- [ ] Cyclomatic complexity calculator 
+- [ ] Dependency analysis (import symbol tracking)
+- [ ] Snippet extraction with truncation handling
+- [ ] Comprehensive edge case testing
+
+### Phase 3: Embedding & Indexing (Week 3-4)
+- [ ] Model downloader with SHA256 verification and retry logic
+- [ ] `@xenova/transformers` integration with CodeBERT-small
+- [ ] Pure-JS/WASM HNSW index implementation
+- [ ] Upsert logic via `index.meta.json` mapping
+- [ ] Optional `onnxruntime-node` + `hnswlib-node` support
+- [ ] Index corruption detection and recovery
+
+### Phase 4: Query & CLI (Week 4-5)
+- [ ] Query implementation with embedding + K-NN search
+- [ ] CLI argument parsing and configuration merging
+- [ ] JSON/plain output formatting with proper error codes
+- [ ] File locking and process coordination
+- [ ] Comprehensive error handling and user-friendly messages
+- [ ] Performance benchmarking framework
+
+### Phase 5: Watch & Performance (Week 5-6)
+- [ ] Watch mode with debouncing and batching
+- [ ] 100k LOC synthetic performance fixture
+- [ ] Benchmarking suite with latency/memory profiling
+- [ ] Performance optimization for large repositories
+- [ ] Native runtime opt-in workflow
+- [ ] Memory management and resource cleanup
+
+### Phase 6: VS Code Extension (Week 6-7)
+- [ ] Extension with explicit command + experimental interception
+- [ ] Settings UI for topK, snippets, augmentation controls
+- [ ] Telemetry opt-in framework (disabled by default)
+- [ ] End-to-end Copilot integration testing
+- [ ] Error handling and timeout management
+- [ ] Extension marketplace preparation
+
+### Phase 7: Release & Operations (Week 7-8)
+- [ ] CI jobs for prebuilt native binaries (multi-platform)
+- [ ] Artifact signing with Sigstore/cosign
+- [ ] Release automation with checksum publishing
+- [ ] `LICENSES.md`, `NOTICE`, and privacy documentation
+- [ ] NPM publishing + optional VS Code extension registry
+- [ ] User documentation and troubleshooting guides
+- [ ] Monitoring and health check systems
+
+---
+
+## 18. Open Questions & Next Actions
+
+### 18.1 Resolved Questions
+✅ **Model Licensing**: Download-only approach with GitHub Releases hosting  
+✅ **Distribution Strategy**: Pure-JS default + optional prebuilt binaries  
+✅ **Telemetry**: Privacy-first with opt-in anonymous metrics  
+✅ **Scale Target**: 100k LOC repositories with specific performance benchmarks  
+✅ **Language Support**: TS/JS/Python in initial release  
+✅ **Security**: Comprehensive signing and verification pipeline  
+
+### 18.2 Implementation Dependencies
+
+**Legal & Compliance**
+- [ ] **Model License Verification**: Confirm CodeBERT-small redistribution rights and attribution requirements
+- [ ] **Privacy Policy**: Draft privacy policy for optional telemetry collection
+- [ ] **Open Source License**: Finalize project license (MIT recommended)
+
+**Infrastructure Setup**  
+- [ ] **CI/CD Pipeline**: Configure GitHub Actions for multi-platform builds
+- [ ] **Artifact Signing**: Set up Sigstore/cosign signing infrastructure
+- [ ] **Model Hosting**: Prepare GitHub Releases for model artifact distribution
+- [ ] **VS Code Extension**: Register VS Code marketplace publisher account
+
+**Technical Validation**
+- [ ] **Performance Baselines**: Establish 100k LOC test repository and baseline metrics
+- [ ] **Platform Testing**: Validate functionality across Windows/macOS/Linux environments  
+- [ ] **Integration Testing**: End-to-end VS Code + Copilot integration validation
+- [ ] **Security Audit**: Third-party security review of download and verification systems
+
+### 18.3 Success Criteria
+
+**Technical Milestones**
+- [ ] Parse 100k LOC repository in <10 minutes on CI runner
+- [ ] Query latency <200ms P95 for top-5 results
+- [ ] Zero-dependency install success rate >95% across platforms
+- [ ] VS Code extension functional with all major Copilot scenarios
+
+**User Experience Goals**
+- [ ] Single-command installation and setup
+- [ ] Measureable improvement in Copilot suggestion relevance  
+- [ ] <5% performance overhead during active development
+- [ ] Comprehensive troubleshooting documentation
+
+**Operational Readiness**
+- [ ] Automated CI/CD pipeline with security scanning
+- [ ] Comprehensive monitoring and health checks
+- [ ] User documentation and community support channels
+- [ ] Maintenance and update procedures documented
+
+---
+
+## Summary
+
+This specification now provides a comprehensive, implementation-ready blueprint for the ast-copilot-helper system. Key enhancements include:
+
+- **Complete Error Handling**: Corruption detection, recovery procedures, edge case management
+- **Operational Excellence**: CI/CD pipeline, monitoring, deployment automation  
+- **Security Hardening**: Input validation, privilege management, supply chain security
+- **Comprehensive Testing**: Unit, integration, performance, and edge case testing strategies
+- **User Experience**: Installation guides, troubleshooting, configuration examples
+- **Implementation Roadmap**: 8-week development plan with specific deliverables and success metrics
+
+The document addresses all major implementation concerns and provides the technical depth needed for a development team to build a production-ready system. All architectural decisions have been integrated, remaining open questions have been identified with clear next actions, and the specification balances technical rigor with practical implementability.
