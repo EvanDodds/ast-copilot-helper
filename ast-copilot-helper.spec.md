@@ -238,50 +238,6 @@ ast-copilot-helper/
 
 ---  
 
-## 7. Implementation Roadmap  
-
-1. **Project Scaffold & Core Parse** (~Week 1-2)
-   - Set up TypeScript project structure with commander.js CLI
-   - Implement `parse` with Tree-sitter integration (TS/JS/Python grammars)
-   - Add deterministic node ID generation and git integration
-   - Create basic test fixtures and unit tests
-
-2. **Annotation & Template Summaries** (~Week 2-3)  
-   - Build `annotate` with language-aware signature extraction
-   - Implement template-based summary generation
-   - Add cyclomatic complexity calculation and dependency analysis
-   - Create comprehensive annotation test suite
-
-3. **Embedding & Vector Index** (~Week 3-4)
-   - Integrate `@xenova/transformers` with model downloader and verification
-   - Implement pure-JS/WASM HNSW index with upsert support
-   - Add model caching, checksum verification, and optional signature checking
-   - Build performance tests for embedding and indexing
-
-4. **Query & Retrieval** (~Week 4-5)
-   - Complete `query` implementation with JSON/plain output formats
-   - Add comprehensive CLI argument parsing and configuration merging
-   - Implement file locking and process coordination
-   - Add end-to-end integration tests
-
-5. **Watch Mode & Performance** (~Week 5-6)
-   - Implement `watch` with debouncing and batching for large repos
-   - Add 100k LOC performance fixture and benchmarking
-   - Optimize for repository scale targets and query latency
-   - Add optional native runtime support (hnswlib-node, onnxruntime-node)
-
-6. **VS Code Extension** (~Week 6-7)
-   - Develop extension with explicit command and optional experimental interception
-   - Add user settings for topK, snippet length, and augmentation controls
-   - Implement telemetry opt-in framework (disabled by default)
-   - Test Copilot integration end-to-end
-
-7. **Release & Distribution** (~Week 7-8)
-   - Set up CI for prebuilt native binaries (Windows x64, macOS arm64/x64, Linux x64)
-   - Add artifact signing with Sigstore/GPG and checksum publishing
-   - Complete LICENSES.md, NOTICE, and privacy documentation
-   - Publish to NPM with optional VS Code extension registry  
-
 ---  
 
 ## 8. Testing & Validation  
@@ -727,7 +683,7 @@ ast-helper logs --tail 50       # View recent operation logs
 
 ## 16. Architecture Decisions & Implementation Plan
 
-This section consolidates all architectural decisions, trade-offs, and implementation approaches into a unified plan.
+This section consolidates all architectural decisions, trade-offs, and implementation approaches into a unified plan. All previously open questions have been resolved and integrated below.
 
 ### 16.1 Language & Parser Stack
 
@@ -736,6 +692,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Grammars**: Downloaded on-demand to `.astdb/grammars/` with version pins
 - **Node Identity**: Deterministic hash of (file path + span + type + name) for stable upserts
 - **Normalization**: Include function/class/module definitions + control-flow; strip comments
+- **Rationale**: Balanced approach supporting major languages while maintaining package size and reliability
 
 ### 16.2 Annotation & Analysis
 
@@ -745,6 +702,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Complexity**: Classical cyclomatic (1 + decision points: if/for/while/case/catch/ternary/boolean-ops)
 - **Dependencies**: Import symbol analysis within node scope
 - **Snippets**: Configurable lines (default 10) with truncation markers
+- **Rationale**: Provides deterministic, reproducible results without external dependencies
 
 ### 16.3 Embedding & Indexing
 
@@ -754,6 +712,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Alternative**: `--runtime onnx` flag for `onnxruntime-node` (if available)
 - **Index**: Pure-JS/WASM HNSW by default; optional `hnswlib-node` via prebuilt binaries
 - **Upserts**: Delete+insert via `index.meta.json` mapping; tombstone cleanup for non-deletable backends
+- **Rationale**: Zero-dependency baseline with performance upgrade path for power users
 
 ### 16.4 Git Integration & File Handling
 
@@ -762,6 +721,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Overrides**: `--staged` and `--base <ref>` flags for different workflows
 - **Watch**: Debounced (200ms) with batching for rapid edits; `--batch` and `--max-batch-size` options
 - **Concurrency**: File lock at `.astdb/.lock`; auto-rebuild on corruption (opt-in)
+- **Rationale**: Supports common git workflows while providing flexibility for different CI/development patterns
 
 ### 16.5 VS Code Extension Strategy
 
@@ -770,6 +730,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Experimental**: Optional Copilot interception via `enableExperimentalCopilotIntercept` setting
 - **Settings**: Configurable `topK`, `snippetLines`, augmentation enable/disable
 - **Output**: `--format plain` for extension consumption
+- **Rationale**: Provides stable integration with experimental convenience feature for power users
 
 ### 16.6 Distribution & Native Performance
 
@@ -778,6 +739,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Prebuilt Binaries**: CI-produced artifacts for Windows x64, macOS (arm64/x64), Linux x64
 - **Delivery**: GitHub Releases with SHA256 checksums + Sigstore/GPG signing
 - **Opt-in**: `--use-native` flag or postinstall configuration for performance users
+- **Rationale**: Maximizes compatibility while providing performance upgrade path
 
 ### 16.7 Privacy & Telemetry
 
@@ -786,120 +748,132 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Opt-in**: Anonymous error counts, environment metadata, performance metrics
 - **Retention**: 90-day limit with documented opt-out/deletion process
 - **Endpoint**: Configurable URL (disabled until endpoint decided)
+- **Rationale**: Respects user privacy while enabling optional product improvement data
+
+### 16.8 Security & Supply Chain
+
+**Decision**: Comprehensive verification pipeline
+- **Downloads**: HTTPS + SHA256 checksums for all artifacts (models, prebuilds)
+- **Signing**: Sigstore/cosign for artifact authenticity
+- **Verification**: Public keys stored in repo with documented validation steps
+- **Licenses**: `LICENSES.md` and `NOTICE` files with model attribution
+- **Rationale**: Enterprise-grade security practices for supply chain integrity
+
+### 16.9 Scale & Performance Targets
+
+**Decision**: Enterprise-grade scale planning
+- **Target**: 100k LOC repositories (validated requirement from stakeholders)
+- **Benchmarks**: 
+  - Full index build: <10 minutes (2-CPU 8GB CI runner)
+  - Query latency: <200ms average for top-5 results
+  - Memory: Efficient for large codebases with batching
+- **Testing**: Synthetic fixture combining real projects + generated code
+- **Rationale**: Targets real-world enterprise development environments
 
 ---
 
-## 17. Implementation Checklist
+## 18. Outstanding Implementation Dependencies
 
-### Phase 1: Core Infrastructure (Week 1-2)
-- [ ] Project scaffold with TypeScript + commander.js
-- [ ] Tree-sitter integration (TS/JS/Python) with grammar downloader
-- [ ] Deterministic node ID generation and AST normalization
-- [ ] Git integration (`--changed`, `--staged`, `--base` options)
-- [ ] Basic test suite with small fixtures
-- [ ] Error handling framework and logging system
+### 18.1 Legal & Compliance Requirements
 
-### Phase 2: Annotation Pipeline (Week 2-3)
-- [ ] Language-aware signature extraction (TS/JS/Python + generic fallback)
-- [ ] Template-based summary generation with heuristics
-- [ ] Cyclomatic complexity calculator 
-- [ ] Dependency analysis (import symbol tracking)
-- [ ] Snippet extraction with truncation handling
-- [ ] Comprehensive edge case testing
+**Model License Verification** (Legal Team)
+- [ ] Confirm CodeBERT-small redistribution rights and attribution requirements
+- [ ] Obtain exact license text and attribution format
+- [ ] Verify download-only distribution approach compliance
 
-### Phase 3: Embedding & Indexing (Week 3-4)
-- [ ] Model downloader with SHA256 verification and retry logic
-- [ ] `@xenova/transformers` integration with CodeBERT-small
-- [ ] Pure-JS/WASM HNSW index implementation
-- [ ] Upsert logic via `index.meta.json` mapping
-- [ ] Optional `onnxruntime-node` + `hnswlib-node` support
-- [ ] Index corruption detection and recovery
+**Privacy & Legal Documentation** (Legal/Product)
+- [ ] Draft privacy policy for optional telemetry collection
+- [ ] Finalize project open source license (MIT recommended)
+- [ ] Review GDPR/privacy compliance for telemetry features
 
-### Phase 4: Query & CLI (Week 4-5)
-- [ ] Query implementation with embedding + K-NN search
-- [ ] CLI argument parsing and configuration merging
-- [ ] JSON/plain output formatting with proper error codes
-- [ ] File locking and process coordination
-- [ ] Comprehensive error handling and user-friendly messages
-- [ ] Performance benchmarking framework
+### 18.2 Infrastructure Setup
 
-### Phase 5: Watch & Performance (Week 5-6)
-- [ ] Watch mode with debouncing and batching
-- [ ] 100k LOC synthetic performance fixture
-- [ ] Benchmarking suite with latency/memory profiling
-- [ ] Performance optimization for large repositories
-- [ ] Native runtime opt-in workflow
-- [ ] Memory management and resource cleanup
+**CI/CD Pipeline Configuration** (DevOps)
+- [ ] Configure GitHub Actions for multi-platform native binary builds
+- [ ] Set up automated testing across Windows/macOS/Linux environments
+- [ ] Implement release automation with version tagging
 
-### Phase 6: VS Code Extension (Week 6-7)
-- [ ] Extension with explicit command + experimental interception
-- [ ] Settings UI for topK, snippets, augmentation controls
-- [ ] Telemetry opt-in framework (disabled by default)
-- [ ] End-to-end Copilot integration testing
-- [ ] Error handling and timeout management
-- [ ] Extension marketplace preparation
+**Artifact Security & Distribution** (DevOps/Security)
+- [ ] Set up Sigstore/cosign signing infrastructure with key management
+- [ ] Configure GitHub Releases for secure model and binary distribution
+- [ ] Establish artifact verification procedures and documentation
 
-### Phase 7: Release & Operations (Week 7-8)
-- [ ] CI jobs for prebuilt native binaries (multi-platform)
-- [ ] Artifact signing with Sigstore/cosign
-- [ ] Release automation with checksum publishing
-- [ ] `LICENSES.md`, `NOTICE`, and privacy documentation
-- [ ] NPM publishing + optional VS Code extension registry
-- [ ] User documentation and troubleshooting guides
-- [ ] Monitoring and health check systems
+**Extension Publishing** (Product/Engineering)
+- [ ] Register VS Code marketplace publisher account
+- [ ] Prepare extension packaging and submission process
+- [ ] Set up extension update and distribution pipeline
+
+### 18.3 Technical Validation
+
+**Performance Baseline Establishment** (QA/Engineering)
+- [ ] Create 100k LOC synthetic test repository with representative code
+- [ ] Establish baseline performance metrics on standard CI hardware
+- [ ] Define automated performance regression testing procedures
+
+**Cross-Platform Validation** (QA)
+- [ ] Validate functionality across Windows 10/11, macOS 12+, Ubuntu 20.04+
+- [ ] Test installation and operation on common development environments
+- [ ] Verify graceful degradation when native dependencies unavailable
+
+**Security & Integration Testing** (Security/QA)
+- [ ] Conduct third-party security review of download and verification systems
+- [ ] Validate end-to-end VS Code + Copilot integration across scenarios
+- [ ] Test security hardening measures and input validation
 
 ---
 
-## 18. Open Questions & Next Actions
+## 19. Success Criteria & Delivery Readiness
 
-### 18.1 Resolved Questions
-✅ **Model Licensing**: Download-only approach with GitHub Releases hosting  
-✅ **Distribution Strategy**: Pure-JS default + optional prebuilt binaries  
-✅ **Telemetry**: Privacy-first with opt-in anonymous metrics  
-✅ **Scale Target**: 100k LOC repositories with specific performance benchmarks  
-✅ **Language Support**: TS/JS/Python in initial release  
-✅ **Security**: Comprehensive signing and verification pipeline  
+### 19.1 Technical Milestones
 
-### 18.2 Implementation Dependencies
+**Core Functionality**
+- [ ] Parse 100k LOC repository in <10 minutes on 2-CPU 8GB CI runner
+- [ ] Query latency <200ms P95 for top-5 results with warm index
+- [ ] Zero-dependency install success rate >95% across supported platforms
+- [ ] Memory usage scales linearly with repository size (efficient batching)
+
+**Integration & User Experience**
+- [ ] VS Code extension functional with all major Copilot scenarios
+- [ ] Single-command installation and setup (npm install + init)
+- [ ] Comprehensive error messages and recovery procedures
+- [ ] <5% performance overhead during active development in VS Code
+
+### 19.2 Operational Readiness
+
+**Production Systems**
+- [ ] Automated CI/CD pipeline with security scanning and artifact signing
+- [ ] Comprehensive monitoring and health check systems operational
+- [ ] User documentation, troubleshooting guides, and support channels ready
+- [ ] Maintenance procedures and update mechanisms documented and tested
+
+**Quality Assurance**
+- [ ] 90%+ test coverage across unit, integration, and end-to-end scenarios
+- [ ] Performance benchmarking suite with automated regression detection
+- [ ] Security audit completed with all findings addressed
+- [ ] Beta testing program with representative user feedback incorporated
+
+### 19.3 Launch Prerequisites
+
+**Documentation & Support**
+- [ ] Installation guide with platform-specific instructions
+- [ ] Configuration examples for common project types
+- [ ] Troubleshooting guide covering common issues and solutions
+- [ ] API documentation for advanced configuration and integration
 
 **Legal & Compliance**
-- [ ] **Model License Verification**: Confirm CodeBERT-small redistribution rights and attribution requirements
-- [ ] **Privacy Policy**: Draft privacy policy for optional telemetry collection
-- [ ] **Open Source License**: Finalize project license (MIT recommended)
+- [ ] All licenses, attributions, and legal requirements satisfied
+- [ ] Privacy policy published and telemetry consent mechanisms implemented
+- [ ] Open source license applied and contributor guidelines established
 
-**Infrastructure Setup**  
-- [ ] **CI/CD Pipeline**: Configure GitHub Actions for multi-platform builds
-- [ ] **Artifact Signing**: Set up Sigstore/cosign signing infrastructure
-- [ ] **Model Hosting**: Prepare GitHub Releases for model artifact distribution
-- [ ] **VS Code Extension**: Register VS Code marketplace publisher account
-
-**Technical Validation**
-- [ ] **Performance Baselines**: Establish 100k LOC test repository and baseline metrics
-- [ ] **Platform Testing**: Validate functionality across Windows/macOS/Linux environments  
-- [ ] **Integration Testing**: End-to-end VS Code + Copilot integration validation
-- [ ] **Security Audit**: Third-party security review of download and verification systems
-
-### 18.3 Success Criteria
-
-**Technical Milestones**
-- [ ] Parse 100k LOC repository in <10 minutes on CI runner
-- [ ] Query latency <200ms P95 for top-5 results
-- [ ] Zero-dependency install success rate >95% across platforms
-- [ ] VS Code extension functional with all major Copilot scenarios
-
-**User Experience Goals**
-- [ ] Single-command installation and setup
-- [ ] Measureable improvement in Copilot suggestion relevance  
-- [ ] <5% performance overhead during active development
-- [ ] Comprehensive troubleshooting documentation
-
-**Operational Readiness**
-- [ ] Automated CI/CD pipeline with security scanning
-- [ ] Comprehensive monitoring and health checks
-- [ ] User documentation and community support channels
-- [ ] Maintenance and update procedures documented
+**Community & Ecosystem**
+- [ ] GitHub repository with comprehensive README and contribution guidelines
+- [ ] Issue tracking and support processes established
+- [ ] VS Code marketplace listing with screenshots and feature descriptions
+- [ ] NPM package published with proper metadata and keywords
 
 ---
+
+This consolidated organization eliminates redundancy while maintaining all critical implementation guidance and outstanding requirements. The document now flows logically from architecture decisions through implementation details to delivery readiness criteria.
 
 ## Summary
 
