@@ -67,6 +67,64 @@ Your Repo/
 
 **Configuration** lives in `.astdb/config.json`, merging CLI flags with defaults.
 
+**Detailed Command Specifications:**
+
+```bash
+# Parse command - Extract AST from source files
+ast-helper parse [options]
+  --changed, -c          Process only changed files since last commit
+  --glob <pattern>       File pattern to parse (overrides config)
+  --base <ref>           Git reference for change detection (default: HEAD)
+  --staged               Include only staged files
+  --force, -f            Force reparse even if files unchanged
+  --help, -h             Show command help
+
+# Annotate command - Generate metadata for parsed AST nodes  
+ast-helper annotate [options]
+  --changed, -c          Process only nodes from changed files
+  --force, -f            Force re-annotation of existing nodes
+  --help, -h             Show command help
+
+# Embed command - Generate vector embeddings for annotations
+ast-helper embed [options] 
+  --changed, -c          Process only changed annotations
+  --model <path>         Path to custom embedding model
+  --runtime <type>       Runtime: wasm (default) or onnx
+  --batch-size <num>     Embedding batch size (default: 32)
+  --force, -f            Force re-embedding of existing vectors
+  --help, -h             Show command help
+
+# Query command - Search for relevant code context
+ast-helper query [options]
+  --intent <text>        Query text describing desired functionality
+  --top <num>            Number of results to return (default: 5)
+  --format <type>        Output format: plain (default), json, markdown
+  --min-score <num>      Minimum similarity score (0.0-1.0, default: 0.3)
+  --help, -h             Show command help
+
+# Watch command - Monitor files for changes and auto-update
+ast-helper watch [options]
+  --glob <pattern>       File pattern to watch (overrides config)
+  --debounce <ms>        Debounce delay in milliseconds (default: 200)
+  --batch                Enable batch processing for rapid changes
+  --help, -h             Show command help
+
+# Global options (available for all commands)
+  --config <path>        Configuration file path
+  --verbose, -v          Verbose logging output
+  --quiet, -q            Suppress non-error output  
+  --version, -V          Show version information
+  --help, -h             Show help information
+```
+
+**Command Validation Rules:**
+- `--changed` and `--glob` are mutually exclusive
+- `--intent` is required for query command
+- `--top` must be positive integer ≤ 100
+- `--min-score` must be between 0.0 and 1.0
+- Model path validation for custom models
+- Git repository detection for `--changed` flag
+
 ### 4.2 AST Extractor (parse)  
 
 - **Parser**: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) for polyglot support (TS/JS/Python initially).  
@@ -94,6 +152,25 @@ Your Repo/
 - **Metadata Computation**:  
   - **Signature**: Language-aware extraction for TS/JS/Python (leveraging Tree-sitter heuristics); generic fallback for others.  
   - **Summary**: Template-based generation ("Function X does Y" using name + parameter heuristics).  
+  - **Template System Implementation**:  
+    ```typescript
+    // Template-based summary generation
+    const summaryTemplates = {
+      function: 'Function {name} {purpose} with parameters: {params}',
+      class: 'Class {name} {description} implementing {interfaces}',
+      method: 'Method {name} in {className} {purpose}',
+      interface: 'Interface {name} defining {members}',
+      enum: 'Enum {name} with values: {values}',
+      variable: 'Variable {name} of type {type} {usage}'
+    };
+    
+    function generateSummary(node: ASTNode, metadata: any): string {
+      const template = summaryTemplates[node.type] || 'Code element {name}';
+      return template.replace(/{(\w+)}/g, (_, key) => 
+        metadata[key] || extractFromNode(node, key) || 'unknown'
+      );
+    }
+    ```  
   - **Cyclomatic Complexity**: Classical count (1 + decision points): `if`, `for`, `while`, `case`, `catch`, ternary, boolean operators.  
   - **Dependencies**: List of imported symbols referenced in node scope.  
 - **Output**: `.astdb/annots/{nodeId}.json`  
@@ -114,8 +191,18 @@ Your Repo/
 
 - **Model**: `@xenova/transformers` (WASM) as default runtime with CodeBERT-small ONNX (768-dim embeddings).  
 - **Model Delivery**: Downloaded from GitHub Releases to `.astdb/models/` on first run with SHA256 checksum verification.  
+- **Model Specifications**:  
+  - **Primary Model**: microsoft/codebert-base (ONNX format)  
+  - **Model URL**: `https://huggingface.co/microsoft/codebert-base/resolve/main/onnx/model.onnx`  
+  - **Tokenizer URL**: `https://huggingface.co/microsoft/codebert-base/resolve/main/tokenizer.json`  
+  - **Expected Checksums**: SHA256 verification on download (exact values determined during implementation)  
+  - **Fallback Models**: sentence-transformers/all-MiniLM-L6-v2 for compatibility  
 - **Alternative Runtime**: `--runtime onnx` flag enables `onnxruntime-node` for performance (if available).  
 - **Index**: Pure-JS/WASM HNSW implementation by default; optional `hnswlib-node` for performance (via prebuilt binaries).  
+- **HNSW Parameters**:  
+  - **efConstruction**: 200 (build-time quality, configurable 16-800)  
+  - **M**: 16 (connectivity, configurable 4-64)  
+  - **ef**: 64 (query-time quality, configurable 16-512)  
 - **Metadata**: `index.meta.json` maps nodeId → indexId + vectorHash with versioning for upserts.  
 - **Process**:  
   1. Load all new/updated `annots/*.json`.  
@@ -158,6 +245,90 @@ Your Repo/
 - **Commands**:  
   - `ast-copilot-helper.enrichAndSend`: Explicit user command (primary, stable).  
   - Optional experimental interception via `enableExperimentalCopilotIntercept` setting.  
+- **Extension API Specifications**:  
+  ```json
+  {
+    "activationEvents": [
+      "onLanguage:typescript",
+      "onLanguage:javascript", 
+      "onLanguage:python",
+      "onCommand:ast-copilot-helper.index",
+      "onCommand:ast-copilot-helper.query",
+      "onCommand:ast-copilot-helper.enrichAndSend"
+    ],
+    "contributes": {
+      "commands": [
+        {
+          "command": "ast-copilot-helper.index",
+          "title": "Index Repository",
+          "category": "AST Copilot Helper"
+        },
+        {
+          "command": "ast-copilot-helper.query", 
+          "title": "Query Context",
+          "category": "AST Copilot Helper"
+        },
+        {
+          "command": "ast-copilot-helper.enrichAndSend",
+          "title": "Enrich Prompt and Send to Copilot",
+          "category": "AST Copilot Helper"
+        }
+      ],
+      "configuration": {
+        "title": "AST Copilot Helper",
+        "properties": {
+          "astCopilotHelper.autoIndex": {
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically index repositories on open"
+          },
+          "astCopilotHelper.maxResults": {
+            "type": "number", 
+            "default": 3,
+            "description": "Maximum number of context results to include"
+          },
+          "astCopilotHelper.enableExperimentalCopilotIntercept": {
+            "type": "boolean",
+            "default": false,
+            "description": "Experimental: Auto-enrich Copilot prompts"
+          }
+        }
+      }
+    }
+  }
+  ```  
+- **Integration Implementation**:  
+  ```typescript
+  // Key VS Code API integration points
+  async function activate(context: vscode.ExtensionContext) {
+    // File watching for auto-indexing
+    const watcher = vscode.workspace.createFileSystemWatcher('**/*.{ts,js,py}');
+    watcher.onDidChange(handleFileChange);
+    
+    // Command registration
+    context.subscriptions.push(
+      vscode.commands.registerCommand('ast-copilot-helper.enrichAndSend', enrichAndSend),
+      vscode.workspace.onDidChangeTextDocument(handleDocumentChange)
+    );
+  }
+  
+  async function enrichAndSend() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    
+    // Get user input
+    const prompt = await vscode.window.showInputBox({
+      prompt: 'Enter your prompt for GitHub Copilot'
+    });
+    
+    // Query context
+    const context = await queryContext(prompt);
+    const enrichedPrompt = `${context}\n\n${prompt}`;
+    
+    // Send to Copilot Chat (when API available)
+    // Implementation depends on GitHub Copilot extension API
+  }
+  ```  
 - **Logic**:  
   1. Capture user prompt (via command or interception).  
   2. Spawn `ast-helper query --intent "<prompt>" --top 3 --format plain`.  
@@ -329,6 +500,96 @@ interface LockManager {
 - Batch processing: max 100 files per batch
 - Memory pressure detection and graceful degradation
 - Configurable memory limits per operation
+
+### 10.4 Error Code Framework
+
+**Exit Codes and Error Classification**
+```typescript
+enum ErrorCodes {
+  SUCCESS = 0,
+  
+  // Configuration & Setup (1-10)
+  CONFIG_INVALID = 1,
+  CONFIG_MISSING = 2,
+  WORKSPACE_INVALID = 3,
+  PERMISSION_DENIED = 4,
+  
+  // Parsing & Analysis (11-20)
+  PARSE_FAILED = 11,
+  GRAMMAR_DOWNLOAD_FAILED = 12,
+  FILE_NOT_FOUND = 13,
+  SYNTAX_ERROR = 14,
+  
+  // Model & Embedding (21-30)
+  MODEL_DOWNLOAD_FAILED = 21,
+  MODEL_INVALID = 22,
+  EMBEDDING_FAILED = 23,
+  INDEX_CORRUPTION = 24,
+  
+  // Query & Retrieval (31-40)
+  INDEX_NOT_FOUND = 31,
+  QUERY_FAILED = 32,
+  INVALID_QUERY = 33,
+  
+  // System & Resources (41-50)
+  INSUFFICIENT_MEMORY = 41,
+  DISK_FULL = 42,
+  LOCK_TIMEOUT = 43,
+  PROCESS_INTERRUPTED = 44,
+  
+  // Network & External (51-60)
+  NETWORK_ERROR = 51,
+  TIMEOUT = 52,
+  RATE_LIMITED = 53,
+  
+  // Internal Errors (90+)
+  INTERNAL_ERROR = 90,
+  UNKNOWN_ERROR = 99
+}
+
+const ErrorMessages: Record<ErrorCodes, string> = {
+  [ErrorCodes.SUCCESS]: "Operation completed successfully",
+  [ErrorCodes.CONFIG_INVALID]: "Configuration file is invalid or corrupted",
+  [ErrorCodes.CONFIG_MISSING]: "Configuration file not found, run with --init",
+  [ErrorCodes.WORKSPACE_INVALID]: "Not a valid workspace directory",
+  [ErrorCodes.PERMISSION_DENIED]: "Insufficient permissions for operation",
+  [ErrorCodes.PARSE_FAILED]: "Failed to parse source files",
+  [ErrorCodes.GRAMMAR_DOWNLOAD_FAILED]: "Could not download Tree-sitter grammar",
+  [ErrorCodes.FILE_NOT_FOUND]: "Source file not found",
+  [ErrorCodes.SYNTAX_ERROR]: "Syntax error in source file",
+  [ErrorCodes.MODEL_DOWNLOAD_FAILED]: "Could not download embedding model",
+  [ErrorCodes.MODEL_INVALID]: "Embedding model is invalid or corrupted", 
+  [ErrorCodes.EMBEDDING_FAILED]: "Failed to generate embeddings",
+  [ErrorCodes.INDEX_CORRUPTION]: "Vector index is corrupted, rebuild required",
+  [ErrorCodes.INDEX_NOT_FOUND]: "Vector index not found, run indexing first",
+  [ErrorCodes.QUERY_FAILED]: "Query execution failed",
+  [ErrorCodes.INVALID_QUERY]: "Query syntax or parameters invalid",
+  [ErrorCodes.INSUFFICIENT_MEMORY]: "Insufficient memory for operation",
+  [ErrorCodes.DISK_FULL]: "Insufficient disk space",
+  [ErrorCodes.LOCK_TIMEOUT]: "Could not acquire file lock, another process running",
+  [ErrorCodes.PROCESS_INTERRUPTED]: "Operation interrupted by user or system",
+  [ErrorCodes.NETWORK_ERROR]: "Network connection failed",
+  [ErrorCodes.TIMEOUT]: "Operation timed out",
+  [ErrorCodes.RATE_LIMITED]: "Rate limited by external service",
+  [ErrorCodes.INTERNAL_ERROR]: "Internal application error",
+  [ErrorCodes.UNKNOWN_ERROR]: "Unknown error occurred"
+};
+
+// User-friendly error reporting
+function formatError(code: ErrorCodes, details?: string): string {
+  const message = ErrorMessages[code] || ErrorMessages[ErrorCodes.UNKNOWN_ERROR];
+  return details ? `${message}: ${details}` : message;
+}
+
+// CLI help suggestions
+const ErrorHelp: Partial<Record<ErrorCodes, string>> = {
+  [ErrorCodes.CONFIG_MISSING]: "Try: ast-helper init",
+  [ErrorCodes.INDEX_NOT_FOUND]: "Try: ast-helper parse && ast-helper embed",
+  [ErrorCodes.GRAMMAR_DOWNLOAD_FAILED]: "Check network connection and try again",
+  [ErrorCodes.MODEL_DOWNLOAD_FAILED]: "Check network connection or try --offline mode",
+  [ErrorCodes.LOCK_TIMEOUT]: "Wait for other operations to complete or use --force"
+};
+```
 
 ---
 
@@ -773,6 +1034,54 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ---
 
 ## 18. Outstanding Implementation Dependencies
+
+### 18.1 High Priority Implementation Details
+
+**VS Code Extension API Integration**
+- **GitHub Copilot API**: Investigate available extension points for prompt enrichment
+- **Command Registration**: Implement activation events and contribution points as specified in Section 4.7
+- **Settings Integration**: Wire VS Code configuration system to CLI backend
+- **Progress Reporting**: Use `vscode.window.withProgress` for indexing operations
+
+**Model Artifact Management**
+- **URLs & Checksums**: Finalize exact URLs and compute SHA256 checksums for all model artifacts
+- **Download Infrastructure**: Set up GitHub Releases artifacts with signing pipeline
+- **Model Validation**: Implement checksum verification and model compatibility testing
+- **Fallback Strategy**: Define specific fallback model selection criteria
+
+**Template System Finalization**
+- **Language-Specific Templates**: Complete templates for Python, JavaScript patterns  
+- **Metadata Extraction**: Implement `extractFromNode()` functions for each supported language
+- **Template Validation**: Test template generation against diverse code samples
+- **Customization Support**: Allow user-defined templates in configuration
+
+### 18.2 Medium Priority Dependencies
+
+**Performance Optimization Parameters**
+- **HNSW Tuning**: Validate default efConstruction=200, M=16 parameters against target workloads
+- **Batch Processing**: Optimize batch sizes for different hardware configurations
+- **Memory Thresholds**: Define specific memory limits and pressure detection algorithms
+- **Query Optimization**: Fine-tune similarity thresholds and ranking algorithms
+
+**Error Recovery Procedures**  
+- **Index Rebuild Logic**: Implement safe rebuild with progress reporting and rollback
+- **Partial Failure Handling**: Define recovery strategies for individual file parse failures
+- **Network Resilience**: Implement retry policies with exponential backoff for model downloads
+- **User Communication**: Develop clear error messages and resolution guidance
+
+### 18.3 Lower Priority Implementation Tasks
+
+**Testing Infrastructure**
+- **Fixture Development**: Create comprehensive test repositories covering target languages and patterns
+- **Performance Benchmarking**: Set up automated testing against 100k LOC repositories  
+- **Integration Testing**: Develop end-to-end workflows covering all major use cases
+- **Security Testing**: Validate model download verification and input sanitization
+
+**Documentation & Support**
+- **API Documentation**: Generate comprehensive API docs from TypeScript definitions
+- **User Guides**: Create step-by-step guides for common development workflows
+- **Troubleshooting**: Develop diagnostic tools and common issue resolution procedures
+- **Community Support**: Set up issue templates and contribution guidelines
 
 ### 18.1 Legal & Compliance Requirements
 
