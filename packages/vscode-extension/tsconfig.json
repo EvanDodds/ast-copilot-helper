@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "extends": "../../tsconfig.json",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true,
+    "lib": ["ES2022", "DOM"],
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "references": [
+    {
+      "path": "../ast-helper"
+    },
+    {
+      "path": "../ast-mcp-server"
+    }
+  ]
+}

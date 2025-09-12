@@ -1,0 +1,49 @@
+{
+  "name": "@ast-copilot-helper/vscode-extension",
+  "version": "0.1.0",
+  "description": "VS Code extension for managing AST helper processes",
+  "main": "dist/extension.js",
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "tsc --build --watch",
+    "dev": "npm run build:watch",
+    "clean": "rm -rf dist",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "echo 'Linting not configured yet'",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "vscode": "^1.80.0",
+    "node": ">=20.0.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "contributes": {
+    "commands": []
+  },
+  "dependencies": {
+    "@types/node": "^20.0.0",
+    "@ast-copilot-helper/ast-helper": "workspace:*",
+    "@ast-copilot-helper/ast-mcp-server": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.2",
+    "vitest": "^1.6.0"
+  },
+  "keywords": [
+    "vscode-extension",
+    "ast",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EvanDodds/ast-copilot-helper.git",
+    "directory": "packages/vscode-extension"
+  },
+  "license": "MIT"
+}

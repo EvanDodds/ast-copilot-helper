@@ -1,0 +1,53 @@
+{
+  "name": "ast-copilot-helper",
+  "version": "0.1.0",
+  "description": "Monorepo for AST-based code analysis tools and MCP server",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:watch": "npm run build:watch --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "tsc --build",
+    "install:all": "npm install",
+    "postinstall": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.0",
+    "vitest": "^1.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EvanDodds/ast-copilot-helper.git"
+  },
+  "keywords": [
+    "ast",
+    "typescript",
+    "mcp",
+    "cli",
+    "vscode-extension",
+    "monorepo"
+  ],
+  "author": "EvanDodds",
+  "license": "MIT",
+  "os": [
+    "win32",
+    "darwin",
+    "linux"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+}
