@@ -314,40 +314,61 @@ class QueryProcessor {
 - [ ] Debouncing (200ms) and batch processing
 - [ ] Live update pipeline (parse→annotate→embed)
 
-### Week 7: VS Code Extension
+### Week 7: MCP Server & VS Code Extension
 
-#### Day 1-2: Extension Scaffold
+#### Day 1-2: MCP Server Foundation
 **Deliverables:**
-- [ ] VS Code extension project structure
-- [ ] Extension manifest with proper activation events
-- [ ] Settings schema and configuration UI
+- [ ] MCP protocol implementation
+- [ ] Server lifecycle management
+- [ ] Method handlers for AST queries
 
-**Extension Structure:**
+**MCP Server Structure:**
 ```
-extension/
-├─ src/
-│  ├─ activate.ts           # Main activation
-│  ├─ commands.ts           # Command handlers
-│  └─ settings.ts           # Configuration
-├─ package.json             # Extension manifest
-└─ README.md               # Extension documentation
+src/mcp/
+├─ server.ts               # Main MCP server
+├─ handlers.ts             # Method implementations  
+├─ types.ts                # MCP protocol types
+└─ client.ts               # Connection management
 ```
 
-#### Day 3-4: CLI Integration
-**Deliverables:**
-- [ ] Command spawning and process management
-- [ ] Input capture and prompt handling
-- [ ] Progress reporting and error handling
-
-**Implementation:**
+**Core MCP Methods:**
 ```typescript
-// extension/src/commands.ts
-export async function enrichAndSend() {
-    const editor = vscode.window.activeTextEditor;
-    const prompt = await vscode.window.showInputBox({
-        prompt: 'Enter your request for GitHub Copilot',
-        placeHolder: 'e.g., "refactor the payment module"'
-    });
+// src/mcp/handlers.ts
+export const handlers = {
+    'querySemanticContext': async (params: any) => {
+        const retriever = new SemanticRetriever();
+        return retriever.searchByIntent(params.intent, params.maxResults);
+    },
+    'getFileAST': async (params: any) => {
+        const parser = new ASTParser();
+        return parser.parseFile(params.filePath);
+    }
+};
+```
+
+#### Day 3-4: VS Code Extension Integration  
+**Deliverables:**
+- [ ] VS Code extension with MCP client
+- [ ] Extension commands and UI integration
+- [ ] Settings and configuration management
+
+**Extension Implementation:**
+```typescript
+// extension/src/activate.ts
+export async function activate(context: vscode.ExtensionContext) {
+    const mcpManager = new MCPManager();
+    await mcpManager.startServer();
+    
+    context.subscriptions.push(
+        vscode.commands.registerCommand('astHelper.queryCodebase', async () => {
+            const query = await vscode.window.showInputBox({
+                prompt: 'What would you like to know about this codebase?'
+            });
+            const results = await mcpManager.querySemanticContext(query);
+            // Display results in output panel or webview
+        })
+    );
+}
     
     const context = await queryASTHelper(prompt);
     const enrichedPrompt = `Context: ${context}\n\nRequest: ${prompt}`;
@@ -357,13 +378,26 @@ export async function enrichAndSend() {
 }
 ```
 
-#### Day 5: Copilot Integration Strategy
+#### Day 5: MCP Protocol Testing & Validation
 **Deliverables:**
-- [ ] Primary approach: command-based with clipboard
-- [ ] User guidance and workflow documentation
-- [ ] Fallback mechanisms for edge cases
+- [ ] MCP protocol compliance testing
+- [ ] Tool method validation and response formatting
+- [ ] Cross-platform MCP server compatibility testing
 
-**Note:** Experimental Copilot interception is not feasible with current APIs
+**Testing Implementation:**
+```typescript
+// tests/mcp-integration.test.ts
+describe('MCP Server Integration', () => {
+  test('querySemanticContext returns proper format', async () => {
+    const response = await mcpClient.call('querySemanticContext', {
+      intent: 'find authentication methods',
+      maxResults: 3
+    });
+    expect(response).toHaveProperty('matches');
+    expect(response.matches).toBeArray();
+  });
+});
+```
 
 ### Week 8: Testing & Validation
 
@@ -487,7 +521,7 @@ docs/
 - [ ] Query latency <500ms for development
 - [ ] Memory usage linear with dataset size
 
-### Milestone 4 (Week 7): VS Code Integration
+### Milestone 4 (Week 7): MCP Server & VS Code Extension
 - [ ] Extension functional with Copilot workflow
 - [ ] Proper error handling and user feedback
 - [ ] Configuration UI working
@@ -534,7 +568,7 @@ docs/
 
 ### External Dependencies
 - Tree-sitter grammar availability
-- CodeBERT model hosting and accessibility
+- CodeBERT-base model downloaded from HuggingFace
 - GitHub Actions/CI availability
 - NPM and VS Code marketplace access
 

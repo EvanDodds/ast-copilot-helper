@@ -6,75 +6,69 @@ This document identifies unresolved technical challenges, implementation uncerta
 
 ## Critical Technical Issues
 
-### 1. GitHub Copilot Integration Limitations
+### 1. ~~GitHub Copilot Integration Limitations~~ → **RESOLVED: MCP Architecture Pivot**
 
-**Issue**: The specification mentions experimental Copilot prompt interception, but GitHub's Copilot extension does not provide public APIs for this functionality.
+**Original Issue**: The specification mentions experimental Copilot prompt interception, but GitHub's Copilot extension does not provide public APIs for this functionality.
 
-**Context**: The VS Code extension needs to integrate with GitHub Copilot to enhance prompts with AST context. The specification suggests both explicit commands and automatic interception.
+**ARCHITECTURAL PIVOT - MCP-Based Solution**:
 
-**Current State**: 
-- GitHub Copilot extension is closed-source with no public API for prompt interception
-- VS Code extension API does not provide hooks into other extensions' functionality
-- Chat participants API exists but requires GitHub partnership
+**New Approach**: Reorient the entire system to be a locally-hosted MCP (Model Context Protocol) server, providing AST context to external AI models and eliminating dependency on GitHub Copilot entirely.
 
-**Potential Approaches**:
-1. **Command-based Integration** (Recommended)
-   - User runs explicit command to get enriched prompt
-   - Copy enhanced prompt to clipboard with instructions to paste in Copilot Chat
-   - Clear user workflow but requires manual step
+**Revised Architecture**:
+```typescript
+// Embedded MCP Server in VS Code Extension
+class ASTCodebaseAssistant {
+  private mcpServer: EmbeddedMCPServer;     // Provides AST context via MCP protocol
+  private astDatabase: ASTDatabase;         // Local AST storage and indexing
+  // Note: No AI client - external AI models call our MCP server
+}
+```
 
-2. **Chat Participant Integration** (Requires Partnership)
-   - Register as Copilot Chat participant
-   - Requires GitHub approval and partnership agreement
-   - Would provide seamless integration but uncertain timeline
+**MCP Tools & Resources**:
+- `search_code(query)` - Semantic code search with AST context
+- `analyze_function(name)` - Deep function analysis with dependencies
+- `get_dependencies(path)` - Dependency graph traversal  
+- `find_similar_patterns(code)` - Pattern matching across codebase
+- `trace_variable_usage(var)` - Variable usage analysis
 
-3. **Clipboard Monitoring** (Not Recommended)
-   - Monitor clipboard for Copilot-like prompts
-   - Privacy concerns and brittle implementation
-   - May violate VS Code extension guidelines
+**Benefits of MCP Approach**:
+1. **No External Dependencies** - Eliminates GitHub Copilot API limitations entirely
+2. **More Powerful** - Provides structured AST context to any compatible AI model
+3. **User Choice** - Works with any AI models that support MCP (Claude, GPT-4, local models)
+4. **Better UX** - Direct access to codebase knowledge without token limitations
+5. **Future-Proof** - MCP standard enables extensibility to other tools and clients
 
-**Recommendation**: Start with command-based integration as primary approach. Investigate Chat Participant API as future enhancement requiring GitHub partnership.
+**Implementation Changes**:
+- **Weeks 1-6**: Same core AST system (parsing, annotation, embedding)
+- **Week 7**: Develop embedded MCP server (replaces CLI approach)
+- **Week 8**: VS Code extension hosting MCP server (no AI integration needed)
+- **Week 9-10**: Polish MCP protocol implementation and documentation
 
-**Impact**: High - affects core user experience and value proposition
+**New Product Identity**: 
+From "AST-based context enhancement for GitHub Copilot" 
+To "AI-powered codebase assistant with deep AST understanding"
+
+**Status**: ✅ **RESOLVED** - This architectural pivot eliminates the critical API limitation and creates a superior product
 
 ### 2. Model Artifact Hosting & Distribution
 
-**Issue**: Specification mentions CodeBERT model hosting but exact URLs, checksums, and hosting infrastructure are undefined.
+**Issue**: ~~Specification mentions CodeBERT model hosting but exact URLs, checksums, and hosting infrastructure are undefined.~~
 
-**Context**: The system requires secure distribution of machine learning models with integrity verification.
+**Status**: ✅ **RESOLVED** - Using HuggingFace as official distribution point
 
-**Unresolved Questions**:
-- Where will CodeBERT models be hosted? (GitHub Releases, CDN, other?)
-- How will checksums be generated and distributed?
-- What fallback mechanisms for model unavailability?
-- How to handle model updates and versioning?
+**Resolution**: 
+- **Source**: Download directly from HuggingFace (Microsoft's official distribution)
+- **Model URL**: `https://huggingface.co/microsoft/codebert-base/resolve/main/onnx/model.onnx`
+- **Tokenizer URL**: `https://huggingface.co/microsoft/codebert-base/resolve/main/tokenizer.json` 
+- **Checksums**: Retrieved from HuggingFace manifest.json
+- **Fallback**: sentence-transformers/all-MiniLM-L6-v2 for compatibility
+- **Local Cache**: `.astdb/models/` with version tracking
 
-**Hosting Options**:
-1. **GitHub Releases** (Recommended)
-   ```
-   Pros: Integrated with codebase, version control, free for open source
-   Cons: Download speed limitations, bandwidth costs for popular packages
-   ```
-
-2. **NPM Package Assets**
-   ```
-   Pros: Integrated with package management, caching
-   Cons: Package size limitations, not ideal for binary assets
-   ```
-
-3. **External CDN**
-   ```
-   Pros: Fast downloads, global distribution
-   Cons: External dependency, cost, availability concerns
-   ```
-
-**Implementation Requirements**:
-- SHA256 checksum verification for all model files
-- Graceful fallback when models unavailable
-- Progress reporting for large downloads
-- Caching strategy to avoid repeated downloads
-
-**Recommendation**: Use GitHub Releases with manifest file containing checksums. Implement robust caching and fallback mechanisms.
+**Benefits of HuggingFace Distribution**:
+- Official Microsoft-maintained models
+- Built-in versioning and checksums
+- Standard model hub with reliable infrastructure
+- No need to maintain our own model hosting
 
 **Impact**: High - affects installation success rate and security
 
@@ -449,8 +443,12 @@ git status --porcelain  # working directory state
 
 ## Summary and Prioritization
 
+### ✅ **RESOLVED - Critical Path Items**
+1. **~~GitHub Copilot Integration Strategy~~** → **MCP Architecture Pivot** - Eliminates API dependency entirely
+   - **New approach**: Embedded MCP server providing AST context to external AI models
+   - **Impact**: Transforms product into superior standalone AI codebase assistant
+
 ### Critical Path Items (Must Resolve Before Development)
-1. **GitHub Copilot Integration Strategy** - Affects core value proposition
 2. **Model Artifact Hosting Plan** - Required for basic functionality
 3. **Memory Management Strategy** - Needed for performance targets
 
@@ -460,10 +458,15 @@ git status --porcelain  # working directory state
 6. **HNSW Performance Tuning** - Required for performance targets
 7. **Error Recovery Mechanisms** - Important for user experience
 
+### New Items (Added for MCP Architecture)
+**New-1. MCP Protocol Implementation** - Embed MCP server in VS Code extension  
+**New-2. MCP Tool Design** - Define AST context tools and response formats
+**New-3. External AI Compatibility** - Ensure MCP server works with various AI clients
+
 ### Future Enhancement Items (Can Defer)
 8. **Git Workflow Edge Cases** - Can add incrementally
 9. **Configuration Edge Cases** - Good error handling sufficient initially
-10. **Extension Distribution Strategy** - Can evolve over time
+10. **~~Extension Distribution Strategy~~** → **Single VS Code Extension** - Simplified with embedded architecture
 
 ### Pre-Launch Requirements
 11. **Security Audit** - Must complete before production release
@@ -472,19 +475,37 @@ git status --porcelain  # working directory state
 
 ## Resolution Recommendations
 
-### Immediate Actions (Week 1)
-- [ ] Define Copilot integration strategy and user workflow
-- [ ] Set up model hosting infrastructure with checksums
+### Immediate Actions (Week 1) - **UPDATED FOR MCP ARCHITECTURE**
+- [x] ~~Define Copilot integration strategy~~ → **RESOLVED: MCP Architecture Eliminates This Need**
+- [ ] **NEW: Research MCP protocol implementation and AI model APIs**
+- [ ] Set up model hosting infrastructure with checksums  
 - [ ] Design memory management and batching strategy
+- [ ] **NEW: Design embedded MCP server architecture for VS Code extension**
 
 ### Early Development (Weeks 2-4)
 - [ ] Implement robust error handling and recovery
-- [ ] Test cross-platform file operations thoroughly
+- [ ] Test cross-platform file operations thoroughly  
 - [ ] Begin security-focused development practices
+- [ ] **NEW: Prototype MCP server tools and test with external AI clients**
+
+### Mid Development (Weeks 5-7) - **UPDATED FOR MCP ARCHITECTURE**
+- [ ] **NEW: Implement embedded MCP server with AST context tools**
+- [ ] **NEW: Build AI chat interface for VS Code extension**
+- [ ] **NEW: Integrate conversation management and context handling**
+- [ ] Validate performance targets with large repositories
 
 ### Pre-Launch (Weeks 8-10)
 - [ ] Conduct security audit and legal review
-- [ ] Establish support processes and documentation
+- [ ] Establish support processes and documentation  
 - [ ] Plan community engagement strategy
+- [ ] **NEW: Test AI conversation quality with diverse codebases**
+- [ ] **NEW: Optimize AI model costs and response latency**
+
+### **Key Architectural Benefits of MCP Pivot**
+1. **Eliminates Critical Risk**: No dependency on GitHub Copilot's closed API
+2. **Superior User Experience**: Dedicated AI assistant vs trying to enhance existing tool
+3. **More Powerful**: Provides structured AST context to AI models via standardized MCP protocol
+4. **Future-Proof**: MCP standard enables extensibility to other AI models and clients
+5. **Simpler Deployment**: Single VS Code extension vs CLI + extension coordination
 
 This document serves as a living reference for implementation challenges and should be updated as issues are resolved or new concerns emerge during development.

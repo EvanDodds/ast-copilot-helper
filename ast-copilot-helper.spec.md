@@ -2,7 +2,7 @@
 
 ## 1. Overview  
 
-ast-copilot-helper is a self-contained, filesystem-only toolkit that continuously extracts, annotates, embeds, indexes, and retrieves AST fragments from your codebase. It ships as a single NPM package with a CLI (`ast-helper`) and an optional VS Code extension that intercepts Copilot prompts, prepending precisely the AST-derived context you need. There are no external services or databases—just files under `.astdb/`.  
+ast-copilot-helper is a self-contained, filesystem-only AI codebase assistant that continuously extracts, annotates, embeds, indexes, and retrieves AST fragments from your codebase. It provides an embedded MCP (Model Context Protocol) server within a VS Code extension, enabling external AI models to access deep codebase understanding. There are no external services or databases—just files under `.astdb/` and a standard MCP interface for AI integration.  
 
 This design dramatically cuts Copilot’s token usage, improves suggestion relevance, and slots seamlessly into existing git workflows and CI pipelines.  
 
@@ -13,8 +13,11 @@ This design dramatically cuts Copilot’s token usage, improves suggestion relev
 - **File-only datastore**  
   All data—raw ASTs, annotations, vector index—lives under `.astdb/`. No Docker, no remote DB, no long-running MCP server.  
 
-- **Modular CLI**  
-  One entrypoint (`ast-helper`) with subcommands (`parse`, `annotate`, `embed`, `query`, `watch`). Each subcommand can be invoked in isolation, in CI steps, or chained via git hooks.  
+- **Embedded MCP Server**  
+  VS Code extension contains embedded MCP server providing AST context and tools via standard protocol. External AI models (Claude, GPT-4, local) call MCP server to access codebase knowledge.
+
+- **MCP Protocol Integration**  
+  Standard Model Context Protocol enables any compatible AI client to access structured AST context and semantic search capabilities.  
 
 - **Local embeddings + vector search**  
   Leverage an embedded JS/Node embedding model (e.g. `@xenova/transformers`) and `hnswlib-node` (with a pure-JS fallback) to build and query a nearest-neighbor index on disk (`.astdb/index.*`).  
@@ -38,17 +41,18 @@ Your Repo/
 │  ├─ index.bin              # HNSW binary index
 │  ├─ index.meta.json        # mapping from index IDs → file + node
 │  └─ config.json            # user overrides (patterns, thresholds)
-├─ node_modules/
-├─ package.json
-└─ .husky/                   # Git hooks for parse/annotate/embed
+├─ .vscode/
+│  └─ extensions/            # VS Code extension with embedded MCP server
+└─ package.json
 ```
 
 1. **parse** reads only git-changed files, emits normalized AST JSON under `asts/`.  
 2. **annotate** consumes those ASTs, computes signatures, summaries, cyclomatic complexity, dependency lists, and writes to `annots/`.  
 3. **embed** loads annotations, runs each summary+signature through the embedding model, upserts vectors into `index.*`.  
-4. **query** embeds a natural-language intent, fetches top-K nearest neighbors, and returns the node summaries plus code snippets.  
-5. **watch** runs `parse→annotate→embed` on file changes in real time.  
-6. **VS Code Extension** intercepts Copilot commands, injects `query` results into the prompt.  
+4. **MCP server** provides structured AST context and tools via Model Context Protocol.
+5. **External AI models** (Claude, GPT-4, local) call MCP server to access rich codebase context.
+6. **watch** runs `parse→annotate→embed` on file changes in real time.  
+7. **VS Code Extension** hosts MCP server, enabling AI clients to access codebase knowledge.  
 
 ---  
 
@@ -189,8 +193,8 @@ ast-helper watch [options]
 
 ### 4.4 Embedder (embed)  
 
-- **Model**: `@xenova/transformers` (WASM) as default runtime with CodeBERT-small ONNX (768-dim embeddings).  
-- **Model Delivery**: Downloaded from GitHub Releases to `.astdb/models/` on first run with SHA256 checksum verification.  
+- **Model**: `@xenova/transformers` (WASM) as default runtime with CodeBERT-base ONNX (768-dim embeddings).  
+- **Model Delivery**: Downloaded from HuggingFace to `.astdb/models/` on first run with SHA256 checksum verification.  
 - **Model Specifications**:  
   - **Primary Model**: microsoft/codebert-base (ONNX format)  
   - **Model URL**: `https://huggingface.co/microsoft/codebert-base/resolve/main/onnx/model.onnx`  
@@ -240,13 +244,16 @@ ast-helper watch [options]
   3. Support `--batch` and `--max-batch-size` options for large repositories.  
 - **Use Case**: live prompt enrichment during edit sessions.
 
-### 4.7 VS Code Extension  
+### 4.7 VS Code Extension with Embedded MCP Server
 
-- **Language**: TypeScript, VS Code Extension API.  
-- **Activation**: Provides both explicit command and optional experimental Copilot interception.  
-- **Commands**:  
-  - `ast-copilot-helper.enrichAndSend`: Explicit user command (primary, stable).  
-  - Optional experimental interception via `enableExperimentalCopilotIntercept` setting.  
+- **Language**: TypeScript, VS Code Extension API with embedded MCP server.
+- **Architecture**: Single VS Code extension hosting embedded MCP server for external AI model access.
+- **Core Components**:
+  - Embedded MCP server providing AST context tools
+  - MCP protocol handlers for semantic queries
+  - Background indexing and context management
+  - No direct AI integration (AI models call our MCP server)
+  
 - **Extension API Specifications**:  
   ```json
   {
@@ -254,45 +261,57 @@ ast-helper watch [options]
       "onLanguage:typescript",
       "onLanguage:javascript", 
       "onLanguage:python",
-      "onCommand:ast-copilot-helper.index",
-      "onCommand:ast-copilot-helper.query",
-      "onCommand:ast-copilot-helper.enrichAndSend"
+      "onStartupFinished"
     ],
     "contributes": {
       "commands": [
         {
-          "command": "ast-copilot-helper.index",
+          "command": "ast-copilot-helper.startChat",
+          "title": "Start AI Chat",
+          "category": "AST Copilot Helper"
+        },
+        {
+          "command": "ast-copilot-helper.indexRepository",
           "title": "Index Repository",
           "category": "AST Copilot Helper"
         },
         {
-          "command": "ast-copilot-helper.query", 
-          "title": "Query Context",
-          "category": "AST Copilot Helper"
-        },
-        {
-          "command": "ast-copilot-helper.enrichAndSend",
-          "title": "Enrich Prompt and Send to Copilot",
+          "command": "ast-copilot-helper.showSettings",
+          "title": "Settings",
           "category": "AST Copilot Helper"
         }
       ],
+      "views": {
+        "explorer": [
+          {
+            "id": "astCopilotHelper.chatView",
+            "name": "AI Codebase Assistant",
+            "when": "astCopilotHelper.enabled"
+          }
+        ]
+      },
       "configuration": {
         "title": "AST Copilot Helper",
         "properties": {
+          "astCopilotHelper.mcpPort": {
+            "type": "number",
+            "default": 8765,
+            "description": "Port for embedded MCP server"
+          },
+          "astCopilotHelper.mcpAutoStart": {
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically start MCP server with extension"
+          },
           "astCopilotHelper.autoIndex": {
             "type": "boolean",
             "default": true,
             "description": "Automatically index repositories on open"
           },
-          "astCopilotHelper.maxResults": {
+          "astCopilotHelper.maxContextResults": {
             "type": "number", 
-            "default": 3,
-            "description": "Maximum number of context results to include"
-          },
-          "astCopilotHelper.enableExperimentalCopilotIntercept": {
-            "type": "boolean",
-            "default": false,
-            "description": "Experimental: Auto-enrich Copilot prompts"
+            "default": 5,
+            "description": "Maximum number of context results for AI"
           }
         }
       }
@@ -317,27 +336,33 @@ ast-helper watch [options]
   async function enrichAndSend() {
     const editor = vscode.window.activeTextEditor;
     if (!editor) return;
+  export async function provideMCPContext(params: MCPRequest) {
+    // Query AST database for relevant context
+    const retriever = new SemanticRetriever();
+    const results = await retriever.searchByIntent(
+      params.intent,
+      params.maxResults || 5,
+      params.minSimilarity || 0.7
+    );
     
-    // Get user input
-    const prompt = await vscode.window.showInputBox({
-      prompt: 'Enter your prompt for GitHub Copilot'
-    });
-    
-    // Query context
-    const context = await queryContext(prompt);
-    const enrichedPrompt = `${context}\n\n${prompt}`;
-    
-    // Send to Copilot Chat (when API available)
-    // Implementation depends on GitHub Copilot extension API
+    // Return raw context data (no AI processing)
+    return {
+      matches: results.map(r => ({
+        file: r.filePath,
+        summary: r.summary,
+        signature: r.signature,
+        snippet: r.sourceSnippet
+      }))
+    };
   }
   ```  
 - **Logic**:  
-  1. Capture user prompt (via command or interception).  
-  2. Spawn `ast-helper query --intent "<prompt>" --top 3 --format plain`.  
-  3. Prepend returned snippets to prompt.  
-  4. Send enriched prompt to Copilot.  
-- **Packaging**: Bundled with main package; optional separate VS Code extension registry publish.  
-- **Settings**: `topK`, `snippetLines`, enable/disable augmentation, experimental interception opt-in.
+  1. VS Code extension hosts MCP server on localhost
+  2. External AI models (Claude, GPT-4) call MCP server as tool
+  3. MCP server returns raw AST context data
+  4. AI models use context to generate responses (outside our system)
+- **Packaging**: Single VS Code extension with embedded MCP server
+- **Settings**: MCP port, similarity thresholds, result limits
 
 ---  
 
@@ -346,8 +371,10 @@ ast-helper watch [options]
 ```txt
 ast-copilot-helper/
 ├─ src/
-│  ├─ cli/
-│  │  └─ index.ts            # commander setup
+│  ├─ mcp/                   # MCP server implementation
+│  │  ├─ server.ts           # main MCP server
+│  │  ├─ handlers.ts         # MCP method handlers
+│  │  └─ types.ts            # MCP protocol types
 │  ├─ modules/
 │  │  ├─ parser.ts
 │  │  ├─ annotator.ts
@@ -361,9 +388,10 @@ ast-copilot-helper/
 │     ├─ git.ts
 │     └─ crypto.ts           # checksum verification
 ├─ extension/                # VS Code extension
-│  ├─ src/activate.ts
+│  ├─ src/
+│  │  ├─ activate.ts
+│  │  └─ mcpManager.ts       # MCP server lifecycle
 │  └─ package.json
-├─ bin/ast-helper.js         # CLI shim
 ├─ .astdb/                   # created at runtime
 │  ├─ asts/                  # raw AST JSON per file
 │  ├─ annots/                # annotated metadata JSON per node
@@ -395,13 +423,18 @@ ast-copilot-helper/
   "parseGlob": ["src/**/*.ts", "src/**/*.js", "src/**/*.py"],
   "watchGlob": ["src/**/*.{ts,js,py}"],
   "reuseIndex": true,
-  "embedModelPath": "./models/codebert-small.onnx",
-  "modelHost": "https://github.com/EvanDodds/ast-copilot-helper/releases/download/v1.0.0/",
+  "embedModelPath": "./models/codebert-base.onnx",
+  "modelHost": "https://huggingface.co/microsoft/codebert-base/resolve/main/",
   "useNativeRuntime": false,
   "topK": 5,
   "snippetLines": 10,
   "enableTelemetry": false,
   "telemetryEndpoint": "",
+  "mcp": {
+    "port": 8765,
+    "host": "localhost",
+    "autoStart": true
+  },
   "indexParams": {
     "efConstruction": 200,
     "M": 16
@@ -413,7 +446,7 @@ ast-copilot-helper/
 
 Configuration values are resolved in the following priority order (highest to lowest):
 
-1. **CLI Arguments**: Direct command-line flags override all other sources
+1. **VS Code Settings**: Extension settings in VS Code preferences
 2. **Environment Variables**: `AST_COPILOT_*` prefixed variables  
 3. **Project Config**: `.astdb/config.json` in current workspace
 4. **User Config**: `~/.config/ast-copilot-helper/config.json`
@@ -725,9 +758,10 @@ jobs:
 
 **Artifact Naming Convention**
 - `ast-copilot-helper-{version}-{platform}-{arch}.tar.gz`
-- `ast-copilot-helper-models-{version}.tar.gz` (CodeBERT model)
 - `checksums.txt` with SHA256 hashes
 - `signatures.txt` with Sigstore signatures
+
+**Note**: CodeBERT models are downloaded directly from HuggingFace at runtime, not distributed in releases.
 
 ### 11.2 Monitoring & Observability
 
@@ -765,7 +799,7 @@ interface Logger {
 ```typescript
 interface ASTDBVersion {
   schemaVersion: string;        // "1.0.0"
-  modelVersion: string;         // "codebert-small-v1"  
+  modelVersion: string;         // "codebert-base-v1"  
   indexVersion: string;         // "hnsw-v2"
   migrationPath?: string;       // upgrade script
 }
@@ -958,7 +992,7 @@ interface SecurityCheck {
 
 const securityChecks: SecurityCheck[] = [
   {
-    artifact: "codebert-small.onnx",
+    artifact: "codebert-base.onnx",
     checksum: "sha256:a1b2c3d4e5f6...",
     signature: "cosign signature blob",
     downloadUrl: "https://github.com/EvanDodds/ast-copilot-helper/releases/...",
@@ -1072,7 +1106,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 16.3 Embedding & Indexing
 
 **Decision**: Hybrid runtime approach with pure-JS default
-- **Model**: CodeBERT-small ONNX (768-dim) via `@xenova/transformers` WASM runtime
+- **Model**: CodeBERT-base ONNX (768-dim) via `@xenova/transformers` WASM runtime
 - **Delivery**: Download from GitHub Releases with SHA256 verification + optional signing
 - **Alternative**: `--runtime onnx` flag for `onnxruntime-node` (if available)
 - **Index**: Pure-JS/WASM HNSW by default; optional `hnswlib-node` via prebuilt binaries
@@ -1225,7 +1259,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 18.1 Legal & Compliance Requirements
 
 **Model License Verification** (Legal Team)
-- [ ] Confirm CodeBERT-small redistribution rights and attribution requirements
+- [ ] Confirm CodeBERT-base redistribution rights and attribution requirements
 - [ ] Obtain exact license text and attribution format
 - [ ] Verify download-only distribution approach compliance
 
