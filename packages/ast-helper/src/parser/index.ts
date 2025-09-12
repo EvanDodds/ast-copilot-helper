@@ -5,6 +5,7 @@
 export { RuntimeDetector } from './runtime-detector.js';
 export { TreeSitterGrammarManager } from './grammar-manager.js';
 export * from './types.js';
+export * from './languages.js';
 
 // Re-export from parsers when implemented
 // export { BaseParser } from './parsers/base-parser.js';
