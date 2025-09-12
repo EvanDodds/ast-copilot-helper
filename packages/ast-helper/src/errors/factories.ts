@@ -5,15 +5,15 @@
 
 import {
   ConfigurationError,
-  FileSystemError,
-  ValidationError,
-  ParseError,
   DatabaseError,
-  NetworkError,
-  TimeoutError,
+  FileSystemError,
   GitError,
   GlobError,
-  PathError
+  NetworkError,
+  ParseError,
+  PathError,
+  TimeoutError,
+  ValidationError
 } from './types.js';
 
 /**
@@ -273,6 +273,70 @@ export const DatabaseErrors = {
         `Re-run the parse command to create a new database`,
         `Upgrade to the latest version of ast-copilot-helper`,
         `Backup your configuration before upgrading`
+      ]
+    );
+  },
+
+  /**
+   * Database not initialized
+   */
+  notInitialized(workspacePath: string): DatabaseError {
+    return new DatabaseError(
+      `AST database not initialized in ${workspacePath}`,
+      { workspacePath },
+      [
+        `Run 'ast-helper init' to initialize the database`,
+        `Verify you're in the correct workspace directory`,
+        `Check if .astdb directory exists`,
+        `Use --workspace option to specify the correct path`
+      ]
+    );
+  },
+
+  /**
+   * Directory creation failed
+   */
+  directoryCreationFailed(dirPath: string, cause: Error): DatabaseError {
+    return new DatabaseError(
+      `Failed to create database directory: ${dirPath}`,
+      { dirPath, cause: cause.message },
+      [
+        `Check directory permissions for: ${dirPath}`,
+        `Ensure sufficient disk space is available`,
+        `Verify the parent directory exists and is writable`,
+        `Check for conflicts with existing files or directories`
+      ]
+    );
+  },
+
+  /**
+   * Insufficient disk space
+   */
+  insufficientSpace(targetPath: string, details?: string): DatabaseError {
+    return new DatabaseError(
+      `Insufficient disk space for database operations at: ${targetPath}`,
+      { targetPath, details },
+      [
+        `Free up disk space on the target drive`,
+        `Check available space with 'df -h' (Unix) or disk management (Windows)`,
+        `Consider using a different location with more space`,
+        `Clean up temporary files and unused data`
+      ]
+    );
+  },
+
+  /**
+   * Database initialization failed
+   */
+  initializationFailed(workspacePath: string, cause?: Error): DatabaseError {
+    return new DatabaseError(
+      `Database initialization failed in ${workspacePath}`,
+      { workspacePath, cause: cause?.message },
+      [
+        `Check workspace permissions and disk space`,
+        `Ensure the workspace path is valid and accessible`,
+        `Try using --force to overwrite existing database`,
+        `Check logs for detailed error information`
       ]
     );
   }
