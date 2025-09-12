@@ -4,14 +4,19 @@
 
 import { createHash } from 'crypto';
 
+export interface NodePosition {
+  line: number;
+  column: number;
+}
+
 export interface ASTNode {
   id: string;                    // Deterministic hash: sha256(filePath + position + type)
   type: string;                  // Normalized node type (function, class, method, etc.)
   name?: string;                 // Identifier name if available
   filePath: string;              // Absolute file path
-  start: { line: number; column: number };
-  end: { line: number; column: number };
-  children?: string[];           // Child node IDs for hierarchy
+  start: NodePosition;
+  end: NodePosition;
+  children?: ASTNode[];          // Child nodes for hierarchy
   metadata: {
     language: string;            // Source language
     scope: string[];            // Scope chain (module, class, function)
@@ -30,7 +35,7 @@ export interface ParseResult {
 export interface ParseError {
   type: 'syntax' | 'grammar' | 'runtime';
   message: string;
-  position?: { line: number; column: number };
+  position?: NodePosition;
   context?: string;
 }
 
@@ -67,6 +72,63 @@ export interface GrammarManager {
   getCachedGrammarPath(language: string): Promise<string>;
   verifyGrammarIntegrity(language: string): Promise<boolean>;
   loadParser(language: string): Promise<any>;
+}
+
+/**
+ * Normalized AST node with consistent structure across languages
+ */
+export interface NormalizedASTNode {
+  /** Deterministic unique identifier for the node */
+  id: string;
+  
+  /** Normalized node type (language-agnostic) */
+  normalizedType: string;
+  
+  /** Original node type from Tree-sitter */
+  originalType: string;
+  
+  /** Source language */
+  language: string;
+  
+  /** File path */
+  filePath: string;
+  
+  /** Node position information */
+  position: {
+    start: NodePosition;
+    end: NodePosition;
+  };
+  
+  /** Normalized metadata */
+  metadata: {
+    /** Semantic category (declaration, statement, expression, etc.) */
+    category: 'declaration' | 'statement' | 'expression' | 'literal' | 'identifier' | 'other';
+    
+    /** Scope depth from root */
+    scopeDepth: number;
+    
+    /** Scope identifier for the current scope */
+    scopeId: string;
+    
+    /** Whether this node creates a new scope */
+    createsSope: boolean;
+    
+    /** Complexity metrics */
+    complexity: {
+      cyclomatic: number;
+      cognitive: number;
+      nesting: number;
+    };
+    
+    /** Node attributes specific to the category */
+    attributes: Record<string, any>;
+  };
+  
+  /** Normalized child nodes */
+  children: NormalizedASTNode[];
+  
+  /** Hash of the node content for change detection */
+  contentHash: string;
 }
 
 /**
