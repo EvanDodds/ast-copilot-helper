@@ -210,11 +210,35 @@ export class ASTTestHelpers {
 }
 
 export class PerformanceTimer {
+  private timers: Map<string, number> = new Map();
+  
   static async measure<T>(fn: () => Promise<T>): Promise<{ result: T; duration: number }> {
     const start = performance.now();
     const result = await fn();
     const duration = performance.now() - start;
     return { result, duration };
+  }
+
+  start(label: string): void {
+    this.timers.set(label, performance.now());
+  }
+
+  lap(label: string): number {
+    const startTime = this.timers.get(label);
+    if (!startTime) {
+      throw new Error(`Timer '${label}' not found`);
+    }
+    return performance.now() - startTime;
+  }
+
+  end(label: string): number {
+    const startTime = this.timers.get(label);
+    if (!startTime) {
+      throw new Error(`Timer '${label}' not found`);
+    }
+    const duration = performance.now() - startTime;
+    this.timers.delete(label);
+    return duration;
   }
 
   static assertPerformance(duration: number, threshold: number, operation: string): void {
