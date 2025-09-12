@@ -51,10 +51,15 @@ export interface ParserRuntime {
 }
 
 export interface ASTParser {
-  parseFile(filePath: string): Promise<ASTNode[]>;
-  batchParseFiles(files: string[]): Promise<Map<string, ASTNode[]>>;
-  detectLanguage(filePath: string): string | null;
-  isLanguageSupported(language: string): boolean;
+  parseFile(filePath: string): Promise<ParseResult>;
+  parseCode(code: string, language: string, filePath?: string): Promise<ParseResult>;
+  batchParseFiles(files: string[], options?: {
+    concurrency?: number;
+    onProgress?: (completed: number, total: number, currentFile: string) => void;
+    continueOnError?: boolean;
+  }): Promise<Map<string, ParseResult>>;
+  getRuntime(): ParserRuntime;
+  dispose(): Promise<void>;
 }
 
 export interface GrammarManager {
