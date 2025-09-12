@@ -5,15 +5,15 @@
 
 import {
   ConfigurationError,
-  FileSystemError,
-  ValidationError,
-  ParseError,
   DatabaseError,
-  NetworkError,
-  TimeoutError,
+  FileSystemError,
   GitError,
   GlobError,
-  PathError
+  NetworkError,
+  ParseError,
+  PathError,
+  TimeoutError,
+  ValidationError
 } from './types.js';
 
 /**

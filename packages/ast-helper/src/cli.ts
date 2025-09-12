@@ -6,14 +6,13 @@
  */
 
 import { Command, Option } from 'commander';
-import { ConfigManager } from './config/index.js';
-import { createLogger, setupGlobalErrorHandling, parseLogLevel } from './logging/index.js';
-import { ErrorFormatter } from './errors/index.js';
-import { LockManager, type Lock } from './locking/index.js';
-import type { Config } from './types.js';
-import { ValidationErrors, ConfigurationErrors } from './errors/index.js';
-import * as path from 'path';
 import * as fs from 'fs/promises';
+import * as path from 'path';
+import { ConfigManager } from './config/index.js';
+import { ConfigurationErrors, ErrorFormatter, ValidationErrors } from './errors/index.js';
+import { LockManager, type Lock } from './locking/index.js';
+import { createLogger, parseLogLevel, setupGlobalErrorHandling } from './logging/index.js';
+import type { Config } from './types.js';
 
 /**
  * Global CLI options available for all commands
@@ -28,6 +27,9 @@ interface GlobalOptions {
  */
 interface InitOptions extends GlobalOptions {
   force?: boolean;
+  verbose?: boolean;
+  dryRun?: boolean;
+  dbPath?: string;
 }
 
 /**
@@ -140,6 +142,9 @@ export class AstHelperCli {
       .description('Initialize AST database directory structure')
       .addOption(new Option('--workspace <path>', 'Workspace directory to initialize').default(process.cwd()))
       .addOption(new Option('--force', 'Overwrite existing .astdb directory'))
+      .addOption(new Option('--verbose', 'Show detailed progress information'))
+      .addOption(new Option('--dry-run', 'Show what would be done without making changes'))
+      .addOption(new Option('--db-path <path>', 'Custom path for AST database directory (defaults to workspace/.astdb)'))
       .action(async (options: InitOptions) => {
         await this.executeCommand('init', options);
       });
@@ -258,10 +263,10 @@ export class AstHelperCli {
     try {
       // Initialize LockManager with current workspace
       this.lockManager = new LockManager(process.cwd());
-      
+
       // Add custom validation before parsing
       this.addCustomValidation();
-      
+
       // Parse and execute commands
       await this.program.parseAsync(args, { from: 'user' });
     } catch (error) {
@@ -277,19 +282,19 @@ export class AstHelperCli {
     // Add hook to validate mutually exclusive options
     this.program.hook('preAction', (_thisCommand, actionCommand) => {
       const opts = actionCommand.opts();
-      
+
       // Validate mutually exclusive options for parse command
       if (actionCommand.name() === 'parse') {
         if (opts.changed && opts.glob) {
           throw ValidationErrors.invalidValue('--changed and --glob', 'both specified', 'These options are mutually exclusive');
         }
-        
+
         // Validate staged option only works with changed
         if (opts.staged && !opts.changed) {
           throw ValidationErrors.invalidValue('--staged', 'used without --changed', 'The --staged option can only be used with --changed');
         }
       }
-      
+
       // Validate Git repository for --changed flag
       if ((opts.changed || opts.staged) && !this.isGitRepository(opts.workspace || process.cwd())) {
         throw ValidationErrors.invalidValue('--changed', 'used outside Git repository', 'Git repository detection required for --changed flag');
@@ -304,26 +309,26 @@ export class AstHelperCli {
     try {
       // Determine workspace path
       const workspacePath = options.workspace || process.cwd();
-      
+
       // Load configuration
       await this.loadConfiguration(workspacePath, options);
-      
+
       // Set up logging
       this.setupLogging();
-      
+
       // Acquire database lock
       await this.acquireDatabaseLock();
-      
+
       // Create database directory if needed
       await this.ensureDatabaseDirectory();
-      
+
       // Execute the appropriate command handler
       const handler = this.getCommandHandler(commandName);
       await handler.execute(options, this.config!);
-      
+
       // Release lock
       await this.releaseDatabaseLock();
-      
+
     } catch (error) {
       await this.releaseDatabaseLock();
       throw error;
@@ -413,10 +418,10 @@ export class AstHelperCli {
    */
   private setupLogging(): void {
     if (!this.config) return;
-    
+
     const logLevel = parseLogLevel(this.config.debug ? 'debug' : this.config.verbose ? 'info' : 'warn');
-    
-    this.logger = createLogger({ 
+
+    this.logger = createLogger({
       level: logLevel,
       jsonOutput: this.config.jsonLogs,
       logFile: this.config.logFile,
@@ -438,8 +443,8 @@ export class AstHelperCli {
 
     try {
       const lockPath = path.join(this.config.outputDir, '.lock');
-      this.currentLock = await this.lockManager.acquireExclusiveLock(lockPath, { 
-        timeoutMs: 30000 
+      this.currentLock = await this.lockManager.acquireExclusiveLock(lockPath, {
+        timeoutMs: 30000
       });
     } catch (error) {
       throw ConfigurationErrors.loadFailed(
@@ -456,7 +461,7 @@ export class AstHelperCli {
     if (!this.lockManager || !this.currentLock) {
       return;
     }
-    
+
     try {
       await this.lockManager.releaseLock(this.currentLock);
     } catch (error) {
@@ -474,12 +479,12 @@ export class AstHelperCli {
 
     try {
       await fs.mkdir(this.config.outputDir, { recursive: true });
-      
+
       // Create subdirectories
       await fs.mkdir(path.join(this.config.outputDir, 'index'), { recursive: true });
       await fs.mkdir(path.join(this.config.outputDir, 'cache'), { recursive: true });
       await fs.mkdir(path.join(this.config.outputDir, 'logs'), { recursive: true });
-      
+
     } catch (error) {
       throw ConfigurationErrors.loadFailed(
         'Failed to create database directory structure',
@@ -496,13 +501,13 @@ export class AstHelperCli {
       // Handle AST-specific errors
       const userMessage = this.errorFormatter.formatForUser(error as any);
       const debugMessage = this.errorFormatter.formatForDebug(error as any);
-      
+
       console.error(userMessage);
-      
+
       if (this.config?.debug) {
         console.error('Debug details:', debugMessage);
       }
-      
+
       // Log structured error details
       this.logger.error('CLI error occurred', {
         message: (error as any).message,
@@ -513,7 +518,7 @@ export class AstHelperCli {
       // Handle generic errors
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`Error: ${errorMessage}`);
-      
+
       this.logger.error('Unexpected CLI error', {
         message: errorMessage,
         stack: error instanceof Error ? error.stack : undefined
@@ -527,10 +532,157 @@ export class AstHelperCli {
  */
 
 class InitCommandHandler implements CommandHandler<InitOptions> {
-  async execute(options: InitOptions, config: Config): Promise<void> {
-    console.log('Init command executed with options:', options);
-    console.log('Using config:', { outputDir: config.outputDir });
-    // TODO: Implement actual init logic
+  private logger = createLogger();
+
+  async execute(options: InitOptions, _config: Config): Promise<void> {
+    const {
+      workspace = process.cwd(),
+      force = false,
+      verbose = false,
+      dryRun = false,
+      dbPath
+    } = options;
+
+    if (verbose) {
+      console.log('🚀 Initializing AST database structure...');
+      console.log(`   Workspace: ${workspace}`);
+      console.log(`   Force overwrite: ${force}`);
+      console.log(`   Dry run: ${dryRun}`);
+      if (dbPath) {
+        console.log(`   Custom DB path: ${dbPath}`);
+      }
+      console.log('');
+    }
+
+    try {
+      // Import database modules dynamically to avoid circular dependencies
+      const {
+        ASTDatabaseManager,
+        DatabaseConfigurationManager,
+        DatabaseVersionManager,
+        WorkspaceDetector
+      } = await import('./database/index.js');
+
+      // Step 1: Detect and validate workspace
+      if (verbose) console.log('📂 Detecting workspace...');
+
+      const workspaceDetector = new WorkspaceDetector();
+      const workspaceInfo = await workspaceDetector.detectWorkspace({
+        startDir: workspace,
+        allowExisting: true
+      });
+
+      if (verbose) {
+        console.log(`   ✅ Workspace detected: ${workspaceInfo.root}`);
+        console.log(`   Method: ${workspaceInfo.detectionMethod}`);
+        console.log(`   Git repository: ${workspaceInfo.isGitRepository ? 'Yes' : 'No'}`);
+        if (workspaceInfo.indicators.length > 0) {
+          console.log(`   Indicators: ${workspaceInfo.indicators.join(', ')}`);
+        }
+        console.log('');
+      }
+
+      // Determine database path
+      const astdbPath = dbPath || workspaceDetector.getDefaultDatabasePath(workspaceInfo.root);
+
+      if (verbose) {
+        console.log(`📁 Database path: ${astdbPath}`);
+        console.log('');
+      }
+
+      // Step 2: Validate workspace for database creation
+      if (verbose) console.log('🔍 Validating workspace...');
+
+      const databaseInitOptions = {
+        force,
+        verbose,
+        dryRun
+      };
+
+      await workspaceDetector.validateWorkspaceForDatabase(workspaceInfo, databaseInitOptions);
+
+      if (verbose) {
+        console.log('   ✅ Workspace validation passed');
+        console.log('');
+      }
+
+      // Step 3: Create database directory structure
+      if (verbose) console.log('🏗️  Creating database structure...');
+
+      const dbManager = new ASTDatabaseManager(workspaceInfo.root);
+      await dbManager.createDirectoryStructure(databaseInitOptions);
+
+      if (verbose) {
+        console.log('   ✅ Database directories created');
+        console.log('');
+      }
+
+      // Step 4: Generate configuration file
+      if (verbose) console.log('⚙️  Generating configuration...');
+
+      const configManager = new DatabaseConfigurationManager();
+      await configManager.createConfigurationFile(astdbPath, databaseInitOptions);
+
+      if (verbose) {
+        console.log('   ✅ Configuration file created');
+        console.log('');
+      }
+
+      // Step 5: Create version file
+      if (verbose) console.log('📋 Creating version file...');
+
+      const versionManager = new DatabaseVersionManager();
+      await versionManager.createVersionFile(astdbPath, databaseInitOptions);
+
+      if (verbose) {
+        console.log('   ✅ Version file created');
+        console.log('');
+      }
+
+      // Step 6: Final validation
+      if (verbose) console.log('🔎 Validating database structure...');
+
+      await dbManager.validateDatabaseStructure();
+
+      if (verbose) {
+        console.log('   ✅ Database structure validated');
+        console.log('');
+      }
+
+      // Success message
+      if (dryRun) {
+        console.log('✅ Dry run completed successfully!');
+        console.log(`   Database structure would be created at: ${astdbPath}`);
+      } else {
+        console.log('✅ AST database initialized successfully!');
+        console.log(`   Database location: ${astdbPath}`);
+        console.log(`   Workspace: ${workspaceInfo.root}`);
+        console.log(`   Next steps: Run 'ast-helper parse' to index your codebase`);
+      }
+
+      this.logger.info('Database initialization completed', {
+        workspace: workspaceInfo.root,
+        dbPath: astdbPath,
+        method: workspaceInfo.detectionMethod,
+        dryRun
+      });
+
+    } catch (error) {
+      const errorFormatter = new ErrorFormatter();
+      const formattedError = errorFormatter.formatForUser(error as Error);
+
+      console.error('❌ Failed to initialize AST database');
+      console.error(formattedError);
+
+      this.logger.error('Database initialization failed', {
+        workspace,
+        dbPath,
+        error: (error as Error).message,
+        stack: (error as Error).stack
+      });
+
+      process.exit(1);
+    }
   }
 }
 
