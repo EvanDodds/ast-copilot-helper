@@ -1,10 +1,12 @@
 /**
- * Git operations manager
+ * Git operations manager  
  * Provides git integration for change detection and repository operations
  */
 
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
+import { GitErrors } from '../errors/index.js';
+import { GitError } from '../errors/types.js';
 import type { 
   GitUtils, 
   ChangedFilesOptions, 
@@ -18,8 +20,9 @@ import type {
 export class GitManager implements GitUtils {
   private defaultCwd: string;
   
-  constructor(cwd: string = process.cwd()) {
-    this.defaultCwd = resolve(cwd);
+  constructor(cwd?: string) {
+    const workingDir = cwd || (typeof process !== 'undefined' && process.cwd ? process.cwd() : '/');
+    this.defaultCwd = resolve(workingDir);
   }
   
   /**
@@ -58,12 +61,12 @@ export class GitManager implements GitUtils {
         if (exitCode === 0) {
           resolve(result);
         } else {
-          reject(new Error(`Git command failed: ${result.command}\\nExit code: ${exitCode}\\nStderr: ${stderr}`));
+          reject(GitErrors.commandFailed(result.command, exitCode ?? 1, stderr.trim(), cwd));
         }
       });
       
       child.on('error', (error) => {
-        reject(new Error(`Failed to execute git command: ${error.message}`));
+        reject(GitErrors.commandFailed(`git ${args.join(' ')}`, 1, error.message, cwd));
       });
     });
   }
@@ -76,8 +79,22 @@ export class GitManager implements GitUtils {
       const resolvedPath = resolve(path);
       await this.execGitCommand(['rev-parse', '--git-dir'], resolvedPath);
       return true;
-    } catch {
-      return false;
+    } catch (error) {
+      // Only return false for repository-specific errors (exit code 128)
+      // Re-throw other errors like permission issues
+      if (error instanceof GitError) {
+        if (error.context?.exitCode === 128) {
+          return false;
+        }
+      }
+      if (error instanceof Error) {
+        if (error.message.includes('exit code 128') || 
+            error.message.includes('not a git repository') || 
+            error.message.includes('fatal: not a git repository')) {
+          return false;
+        }
+      }
+      throw error;
     }
   }
   
@@ -92,6 +109,12 @@ export class GitManager implements GitUtils {
       filterTypes,
       cwd = this.defaultCwd
     } = options;
+
+    // Verify this is a git repository first
+    const isRepo = await this.isGitRepository(cwd);
+    if (!isRepo) {
+      throw GitErrors.notARepository(cwd);
+    }
     
     const files = new Set<string>();
     
@@ -104,6 +127,9 @@ export class GitManager implements GitUtils {
       
       // Get changed files vs base reference
       if (base) {
+        // Validate git reference first
+        await this.validateGitReference(base, cwd);
+        
         const args = ['diff', '--name-only', '--relative'];
         
         // Add filter for change types
@@ -115,7 +141,7 @@ export class GitManager implements GitUtils {
         
         const result = await this.execGitCommand(args, cwd);
         if (result.stdout) {
-          result.stdout.split('\\n').forEach(file => {
+          result.stdout.split('\n').forEach(file => {
             if (file.trim()) files.add(file.trim());
           });
         }
@@ -125,7 +151,7 @@ export class GitManager implements GitUtils {
       if (includeUntracked) {
         const result = await this.execGitCommand(['ls-files', '--others', '--exclude-standard'], cwd);
         if (result.stdout) {
-          result.stdout.split('\\n').forEach(file => {
+          result.stdout.split('\n').forEach(file => {
             if (file.trim()) files.add(file.trim());
           });
         }
@@ -145,9 +171,12 @@ export class GitManager implements GitUtils {
       const result = await this.execGitCommand(['diff', '--name-only', '--cached', '--relative'], cwd);
       if (!result.stdout) return [];
       
-      return result.stdout.split('\\n').filter(file => file.trim()).map(file => file.trim());
+      return result.stdout.split('\n').filter(file => file.trim()).map(file => file.trim());
     } catch (error) {
-      throw new Error(`Failed to get staged files: ${error instanceof Error ? error.message : String(error)}`);
+      if (!await this.isGitRepository(cwd)) {
+        throw GitErrors.notARepository(cwd);
+      }
+      throw GitErrors.commandFailed('git diff --cached --name-only', 1, (error as Error).message, cwd);
     }
   }
   
@@ -155,13 +184,18 @@ export class GitManager implements GitUtils {
    * Find the root directory of the git repository
    */
   async getRepositoryRoot(path: string = this.defaultCwd): Promise<string> {
+    const resolvedPath = resolve(path);
+    
+    if (!await this.isGitRepository(resolvedPath)) {
+      throw GitErrors.notARepository(resolvedPath);
+    }
+    
     try {
-      const resolvedPath = resolve(path);
       const result = await this.execGitCommand(['rev-parse', '--show-toplevel'], resolvedPath);
       // Normalize path to match the format used by Node.js on current platform
       return resolve(result.stdout);
     } catch (error) {
-      throw new Error(`Failed to get repository root: ${error instanceof Error ? error.message : String(error)}`);
+      throw GitErrors.repositoryNotFound(resolvedPath);
     }
   }
   
@@ -169,6 +203,10 @@ export class GitManager implements GitUtils {
    * Validate that a git reference exists
    */
   async validateGitReference(ref: string, cwd: string = this.defaultCwd): Promise<boolean> {
+    if (!await this.isGitRepository(cwd)) {
+      throw GitErrors.notARepository(cwd);
+    }
+    
     try {
       await this.execGitCommand(['rev-parse', '--verify', `${ref}^{commit}`], cwd);
       return true;
@@ -188,14 +226,14 @@ export class GitManager implements GitUtils {
         this.execGitCommand(['status', '--porcelain'], cwd)
       ]);
       
-      const currentBranch = branchResult.stdout || 'HEAD';
+      const currentBranch = branchResult.stdout?.trim() || 'HEAD';
       
       let stagedFiles = 0;
       let modifiedFiles = 0;
       let untrackedFiles = 0;
       
       if (statusResult.stdout) {
-        const lines = statusResult.stdout.split('\\n').filter(line => line.trim());
+        const lines = statusResult.stdout.split('\n').filter(line => line.trim());
         
         for (const line of lines) {
           const status = line.substring(0, 2);
@@ -214,13 +252,23 @@ export class GitManager implements GitUtils {
         }
       }
       
+      const hasChanges = modifiedFiles > 0;
+      const hasStaged = stagedFiles > 0;
+      const hasUntracked = untrackedFiles > 0;
+      const isDirty = hasChanges || hasStaged || hasUntracked;
+      
       return {
         repositoryRoot,
-        currentBranch,
-        isDirty: stagedFiles > 0 || modifiedFiles > 0 || untrackedFiles > 0,
+        branch: currentBranch,
+        ahead: 0, // TODO: implement proper ahead/behind tracking
+        behind: 0,
+        hasChanges,
+        hasStaged,
+        hasUntracked,
         stagedFiles,
         modifiedFiles,
-        untrackedFiles
+        untrackedFiles,
+        isDirty
       };
     } catch (error) {
       throw new Error(`Failed to get repository status: ${error instanceof Error ? error.message : String(error)}`);

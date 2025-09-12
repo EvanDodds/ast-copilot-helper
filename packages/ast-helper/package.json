@@ -1,16 +1,52 @@
 {
   "name": "@ast-copilot-helper/ast-helper",
   "version": "0.1.0",
-  "description": "CLI data processor that builds .astdb/ database from source code",
+  "description": "Core AST manipulation and utility functions for Git, filesystem, and error handling operations",
+  "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "ast-helper": "./bin/ast-helper"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./git": {
+      "types": "./dist/git/index.d.ts",
+      "import": "./dist/git/index.js"
+    },
+    "./filesystem": {
+      "types": "./dist/filesystem/index.d.ts",
+      "import": "./dist/filesystem/index.js"
+    },
+    "./glob": {
+      "types": "./dist/glob/index.d.ts",
+      "import": "./dist/glob/index.js"
+    },
+    "./errors": {
+      "types": "./dist/errors/index.d.ts",
+      "import": "./dist/errors/index.js"
+    },
+    "./config": {
+      "types": "./dist/config/index.d.ts",
+      "import": "./dist/config/index.js"
+    },
+    "./logging": {
+      "types": "./dist/logging/index.d.ts",
+      "import": "./dist/logging/index.js"
+    },
+    "./locking": {
+      "types": "./dist/locking/index.d.ts",
+      "import": "./dist/locking/index.js"
+    }
   },
   "scripts": {
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",
     "dev": "ts-node src/cli.ts",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist temp",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -39,10 +75,20 @@
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
   },
+  "files": [
+    "dist/",
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": [
     "ast",
     "cli",
     "typescript",
+    "git",
+    "filesystem",
+    "utilities",
+    "error-handling",
     "code-analysis"
   ],
   "repository": {

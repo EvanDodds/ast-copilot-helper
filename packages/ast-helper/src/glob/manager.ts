@@ -5,6 +5,7 @@
 
 import { join, resolve, relative } from 'node:path';
 import { readdir, stat } from 'node:fs/promises';
+import { GlobErrors } from '../errors/index.js';
 import type {
   GlobMatcher,
   GlobOptions,
@@ -106,37 +107,38 @@ export class GlobManager implements GlobMatcher {
       return this.pathCache.get(cacheKey)!;
     }
     
-    const compiledPatterns = patterns.map(p => this.getCompiledPattern(p));
-    const normalizedPath = this.normalizePath(filePath);
-    
-    let hasPositiveMatch = false;
-    let hasNegativeMatch = false;
-    
-    // First, check for positive matches
-    for (const compiled of compiledPatterns) {
-      if (!compiled.isNegated) {
-        const matcher = this.getPatternMatcher(compiled.normalizedPattern);
-        if (matcher.match(normalizedPath)) {
-          hasPositiveMatch = true;
-          break;
-        }
-      }
-    }
-    
-    // If no positive patterns at all, default to match (like "!" patterns only)
-    const hasPositivePatterns = compiledPatterns.some(p => !p.isNegated);
-    if (!hasPositivePatterns) {
-      hasPositiveMatch = true;
-    }
-    
-    // Then check for negative matches (exclusions)
-    if (hasPositiveMatch) {
+    try {
+      const compiledPatterns = patterns.map(p => this.getCompiledPattern(p));
+      const normalizedPath = this.normalizePath(filePath);
+      
+      let hasPositiveMatch = false;
+      let hasNegativeMatch = false;
+      
+      // First, check for positive matches
       for (const compiled of compiledPatterns) {
-        if (compiled.isNegated) {
+        if (!compiled.isNegated) {
           const matcher = this.getPatternMatcher(compiled.normalizedPattern);
           if (matcher.match(normalizedPath)) {
-            hasNegativeMatch = true;
+            hasPositiveMatch = true;
             break;
+          }
+        }
+      }
+      
+      // If no positive patterns at all, default to match (like "!" patterns only)
+      const hasPositivePatterns = compiledPatterns.some(p => !p.isNegated);
+      if (!hasPositivePatterns) {
+        hasPositiveMatch = true;
+      }
+      
+      // Then check for negative matches (exclusions)
+      if (hasPositiveMatch) {
+        for (const compiled of compiledPatterns) {
+          if (compiled.isNegated) {
+            const matcher = this.getPatternMatcher(compiled.normalizedPattern);
+            if (matcher.match(normalizedPath)) {
+              hasNegativeMatch = true;
+              break;
           }
         }
       }
@@ -145,6 +147,11 @@ export class GlobManager implements GlobMatcher {
     const result = hasPositiveMatch && !hasNegativeMatch;
     this.pathCache.set(cacheKey, result);
     return result;
+    } catch (error) {
+      // If pattern matching fails, don't match by default
+      console.warn('Pattern matching error:', error);
+      return false;
+    }
   }
   
   /**
@@ -152,31 +159,40 @@ export class GlobManager implements GlobMatcher {
    */
   async expandPatterns(patterns: string[], basePath?: string): Promise<GlobResult> {
     const startTime = Date.now();
-    const resolvedBasePath = resolve(basePath || this.options.baseDirectory || process.cwd());
     
-    const result: GlobResult = {
-      files: [],
-      matchedPatterns: [],
-      unmatchedPatterns: [],
-      duration: 0,
-      directoriesScanned: 0,
-      filesExamined: 0
-    };
-    
-    if (patterns.length === 0) {
-      result.duration = Date.now() - startTime;
-      return result;
-    }
-    
-    const allFiles = await this.scanDirectory(resolvedBasePath, result);
-    
-    // Apply patterns to found files
-    for (const filePath of allFiles) {
-      const relativePath = this.normalizePath(relative(resolvedBasePath, filePath));
-      result.filesExamined++;
+    try {
+      const resolvedBasePath = resolve(basePath || this.options.baseDirectory || process.cwd());
       
-      if (this.match(patterns, relativePath)) {
-        result.files.push(relativePath);
+      const result: GlobResult = {
+        files: [],
+        matchedPatterns: [],
+        unmatchedPatterns: [],
+        duration: 0,
+        directoriesScanned: 0,
+        filesExamined: 0
+      };
+      
+      if (patterns.length === 0) {
+        result.duration = Date.now() - startTime;
+        return result;
+      }
+      
+      // Validate all patterns first
+      for (const pattern of patterns) {
+        if (!this.isValidPattern(pattern)) {
+          throw GlobErrors.invalidPattern(pattern, 'Pattern contains invalid glob syntax');
+        }
+      }
+      
+      const allFiles = await this.scanDirectory(resolvedBasePath, result);
+      
+      // Apply patterns to found files
+      for (const filePath of allFiles) {
+        const relativePath = this.normalizePath(relative(resolvedBasePath, filePath));
+        result.filesExamined++;
+        
+        if (this.match(patterns, relativePath)) {
+          result.files.push(relativePath);
         
         // Track which patterns matched
         for (const pattern of patterns) {
@@ -194,6 +210,9 @@ export class GlobManager implements GlobMatcher {
     this.updateStats(result);
     
     return result;
+    } catch (error) {
+      throw GlobErrors.expansionFailed(patterns, error instanceof Error ? error.message : 'Unknown error');
+    }
   }
   
   /**
@@ -262,7 +281,9 @@ export class GlobManager implements GlobMatcher {
     try {
       this.getPatternMatcher(pattern);
       return true;
-    } catch {
+    } catch (error) {
+      // Log invalid patterns for debugging
+      console.warn('Invalid glob pattern:', pattern, error);
       return false;
     }
   }
@@ -271,17 +292,24 @@ export class GlobManager implements GlobMatcher {
    * Compile pattern for optimization
    */
   compilePattern(pattern: string): CompiledPattern {
-    const isNegated = pattern.startsWith('!');
-    const normalizedPattern = isNegated ? pattern.slice(1) : pattern;
-    
-    return {
-      pattern,
-      isNegated,
-      normalizedPattern,
-      isGlobStar: normalizedPattern.includes('**'),
-      baseDir: this.extractBaseDir(normalizedPattern),
-      parts: normalizedPattern.split('/')
-    };
+    try {
+      const isNegated = pattern.startsWith('!');
+      const normalizedPattern = isNegated ? pattern.slice(1) : pattern;
+      
+      // Validate pattern by attempting to create matcher
+      this.getPatternMatcher(normalizedPattern);
+      
+      return {
+        pattern,
+        isNegated,
+        normalizedPattern,
+        isGlobStar: normalizedPattern.includes('**'),
+        baseDir: this.extractBaseDir(normalizedPattern),
+        parts: normalizedPattern.split('/')
+      };
+    } catch (error) {
+      throw GlobErrors.invalidPattern(pattern, error instanceof Error ? error.message : 'Unknown error');
+    }
   }
   
   /**

@@ -5,6 +5,8 @@
     "rootDir": "./src",
     "composite": true,
     "baseUrl": "./src",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "paths": {
       "@/*": ["./*"]
     }

@@ -27,6 +27,7 @@ import {
 } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
+import { FileSystemErrors } from '../errors/index.js';
 import type {
   FileSystemUtils,
   ListOptions,
@@ -49,11 +50,12 @@ export class FileSystemManager implements FileSystemUtils {
   /**
    * Resolve path relative to base directory
    */
-  resolvePath(path: string, base: string = process.cwd()): string {
+  resolvePath(path: string, base?: string): string {
     if (isAbsolute(path)) {
       return normalize(path);
     }
-    return resolve(base, path);
+    const baseDir = base || (typeof process !== 'undefined' && process.cwd ? process.cwd() : '/');
+    return resolve(baseDir, path);
   }
   
   /**
@@ -111,6 +113,17 @@ export class FileSystemManager implements FileSystemUtils {
       } catch {
         // Ignore cleanup errors
       }
+      
+      const nodeError = error as NodeJS.ErrnoException;
+      
+      if (nodeError.code === 'ENOENT') {
+        throw FileSystemErrors.notFound(dirname(resolvedPath), 'write');
+      } else if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+        throw FileSystemErrors.permissionDenied(resolvedPath, 'write');
+      } else if (nodeError.code === 'ENOSPC') {
+        throw FileSystemErrors.diskSpaceExceeded(resolvedPath);
+      }
+      
       throw error;
     }
   }
@@ -128,7 +141,13 @@ export class FileSystemManager implements FileSystemUtils {
         if (stats?.isDirectory()) {
           return; // Directory exists, that's fine
         }
+        throw FileSystemErrors.permissionDenied(dirPath, 'create directory (file exists with same name)');
+      } else if (error.code === 'EACCES' || error.code === 'EPERM') {
+        throw FileSystemErrors.permissionDenied(dirPath, 'create directory');
+      } else if (error.code === 'ENOSPC') {
+        throw FileSystemErrors.diskSpaceExceeded(dirPath);
       }
+      
       throw error;
     }
   }

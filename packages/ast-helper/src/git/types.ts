@@ -31,10 +31,22 @@ export interface GitStatus {
   repositoryRoot: string;
   
   /** Current branch name */
-  currentBranch: string;
+  branch: string;
   
-  /** Whether there are uncommitted changes */
-  isDirty: boolean;
+  /** Number of commits ahead of remote */
+  ahead: number;
+  
+  /** Number of commits behind remote */
+  behind: number;
+  
+  /** Whether there are any changes */
+  hasChanges: boolean;
+  
+  /** Whether there are staged changes */
+  hasStaged: boolean;
+  
+  /** Whether there are untracked files */
+  hasUntracked: boolean;
   
   /** Number of staged files */
   stagedFiles: number;
@@ -44,6 +56,9 @@ export interface GitStatus {
   
   /** Number of untracked files */
   untrackedFiles: number;
+  
+  /** Whether there are uncommitted changes (legacy) */
+  isDirty: boolean;
 }
 
 /**

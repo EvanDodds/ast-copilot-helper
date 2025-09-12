@@ -210,10 +210,11 @@ describe('GlobManager', () => {
     });
     
     it('should create new instance with different options', () => {
-      const newManager = globManager.withOptions({ caseSensitive: true });
+      const originalCaseSensitive = globManager.getOptions().caseSensitive;
+      const newManager = globManager.withOptions({ caseSensitive: !originalCaseSensitive });
       
-      expect(newManager.getOptions().caseSensitive).toBe(true);
-      expect(globManager.getOptions().caseSensitive).not.toBe(true); // Original unchanged
+      expect(newManager.getOptions().caseSensitive).toBe(!originalCaseSensitive);
+      expect(globManager.getOptions().caseSensitive).toBe(originalCaseSensitive); // Original unchanged
     });
   });
   

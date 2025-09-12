@@ -61,7 +61,7 @@ export class LockManager {
           operation,
           acquiredAt: new Date(),
           timeoutMs: mergedOptions.timeoutMs,
-          pid: process.pid
+          pid: process.pid ?? Math.floor(Math.random() * 100000)
         });
         
         this.activeLocks.set(lock.id, lock);
@@ -121,7 +121,7 @@ export class LockManager {
           operation,
           acquiredAt: new Date(),
           timeoutMs: mergedOptions.timeoutMs,
-          pid: process.pid
+          pid: process.pid ?? Math.floor(Math.random() * 100000)
         });
         
         this.activeLocks.set(lock.id, lock);

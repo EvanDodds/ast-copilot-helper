@@ -174,3 +174,104 @@ export class TimeoutError extends AstError {
     super(message, 'TIMEOUT_ERROR', context, suggestions, cause);
   }
 }
+
+/**
+ * Git repository and version control errors
+ */
+export class GitError extends AstError {
+  constructor(
+    message: string,
+    context: Record<string, any> = {},
+    suggestions: string[] = [],
+    cause?: Error
+  ) {
+    super(message, 'GIT_ERROR', context, suggestions, cause);
+  }
+}
+
+/**
+ * Glob pattern matching and file filtering errors
+ */
+export class GlobError extends AstError {
+  constructor(
+    message: string,
+    context: Record<string, any> = {},
+    suggestions: string[] = [],
+    cause?: Error
+  ) {
+    super(message, 'GLOB_ERROR', context, suggestions, cause);
+  }
+}
+
+/**
+ * Path resolution and normalization errors
+ */
+export class PathError extends AstError {
+  constructor(
+    message: string,
+    context: Record<string, any> = {},
+    suggestions: string[] = [],
+    cause?: Error
+  ) {
+    super(message, 'PATH_ERROR', context, suggestions, cause);
+  }
+}
+
+/**
+ * Type guard to check if error is an AST error
+ */
+export function isAstError(error: unknown): error is AstError {
+  return error instanceof Error && 'isAstError' in error && error.isAstError === true;
+}
+
+/**
+ * Error recovery strategies
+ */
+export enum ErrorRecoveryStrategy {
+  /** Retry the operation with exponential backoff */
+  RETRY = 'retry',
+  /** Ignore the error and continue */
+  IGNORE = 'ignore',
+  /** Use fallback logic */
+  FALLBACK = 'fallback',
+  /** Fail fast and propagate */
+  FAIL_FAST = 'fail_fast',
+  /** Show user prompt for input */
+  PROMPT_USER = 'prompt_user'
+}
+
+/**
+ * Error recovery information
+ */
+export interface ErrorRecoveryInfo {
+  /** Suggested recovery strategy */
+  strategy: ErrorRecoveryStrategy;
+  /** Maximum retry attempts (for RETRY strategy) */
+  maxRetries?: number;
+  /** Delay between retries in milliseconds */
+  retryDelay?: number;
+  /** Fallback value or function (for FALLBACK strategy) */
+  fallbackValue?: any;
+  /** Custom recovery function */
+  customRecovery?: () => Promise<any> | any;
+}
+
+/**
+ * Enhanced error context with recovery information
+ */
+export interface AstErrorContext extends Record<string, any> {
+  /** File path or resource involved */
+  path?: string;
+  /** Operation that failed */
+  operation?: string;
+  /** Command or method called */
+  command?: string;
+  /** Parameters passed to the operation */
+  parameters?: Record<string, any>;
+  /** Current working directory */
+  cwd?: string;
+  /** Environment variables */
+  environment?: Record<string, string>;
+  /** Recovery information */
+  recovery?: ErrorRecoveryInfo;
+}
