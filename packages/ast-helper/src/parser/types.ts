@@ -33,7 +33,7 @@ export interface ParseResult {
 }
 
 export interface ParseError {
-  type: 'syntax' | 'grammar' | 'runtime';
+  type: 'syntax' | 'grammar' | 'runtime' | 'timeout' | 'memory' | 'file_system' | 'network' | 'configuration' | 'validation';
   message: string;
   position?: NodePosition;
   context?: string;

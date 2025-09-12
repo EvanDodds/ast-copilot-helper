@@ -7,6 +7,7 @@ import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { BaseParser } from './parsers/base-parser.js';
+import { parseErrorHandler } from './parse-errors.js';
 import { ParseResult, ASTNode } from './types.js';
 import { isFileSupported, detectLanguage } from './languages.js';
 
@@ -562,14 +563,58 @@ export class BatchProcessor extends EventEmitter {
    * Create error result for failed files
    */
   private createErrorResult(file: string, error: any): ParseResult {
+    // Use the new error handling system to log and categorize errors
+    let parsedError;
+    
+    if (error instanceof Error) {
+      // Determine error type based on error message patterns
+      if (error.message.includes('timeout')) {
+        parsedError = parseErrorHandler.createTimeoutError(
+          error.message,
+          file,
+          undefined,
+          'Batch processing timeout'
+        );
+      } else if (error.message.includes('ENOENT') || error.message.includes('no such file')) {
+        parsedError = parseErrorHandler.createFileSystemError(
+          error.message,
+          file,
+          'File access during batch processing'
+        );
+      } else if (error.message.includes('EACCES') || error.message.includes('permission')) {
+        parsedError = parseErrorHandler.createFileSystemError(
+          error.message,
+          file,
+          'Permission error during batch processing'
+        );
+      } else if (error.message.includes('memory') || error.message.includes('heap')) {
+        parsedError = parseErrorHandler.createMemoryError(
+          error.message,
+          file,
+          undefined,
+          'Memory error during batch processing'
+        );
+      } else {
+        parsedError = parseErrorHandler.createRuntimeError(
+          error.message,
+          file,
+          'Batch processing runtime error'
+        );
+      }
+    } else {
+      parsedError = parseErrorHandler.createRuntimeError(
+        `Processing error: ${String(error)}`,
+        file,
+        'Unknown error during batch processing'
+      );
+    }
+
+    // Log the error using the error handling system
+    parseErrorHandler.logError(parsedError);
+
     return {
       nodes: [],
-      errors: [{
-        type: 'runtime',
-        message: `Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        position: { line: 0, column: 0 },
-        context: `filePath: ${file}`,
-      }],
+      errors: [parsedError],
       language: detectLanguage(file) || '',
       parseTime: 0,
     };
