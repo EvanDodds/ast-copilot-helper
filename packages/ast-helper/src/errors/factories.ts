@@ -10,7 +10,10 @@ import {
   ParseError,
   DatabaseError,
   NetworkError,
-  TimeoutError
+  TimeoutError,
+  GitError,
+  GlobError,
+  PathError
 } from './types.js';
 
 /**
@@ -328,6 +331,245 @@ export const TimeoutErrors = {
         `Check if the operation is stuck or inefficient`,
         `Reduce the scope of the operation if possible`,
         `Check system resources (CPU, memory, disk I/O)`
+      ]
+    );
+  }
+};
+
+/**
+ * Factory functions for Git errors
+ */
+export const GitErrors = {
+  /**
+   * Not a Git repository
+   */
+  notARepository(path: string): GitError {
+    return new GitError(
+      `Not a Git repository: ${path}`,
+      { path, operation: 'git-check' },
+      [
+        `Initialize a Git repository with: git init`,
+        `Verify you're in the correct directory`,
+        `Check if the .git directory exists`,
+        `Clone a repository if working with remote code`
+      ]
+    );
+  },
+
+  /**
+   * Git command failed
+   */
+  commandFailed(command: string, exitCode: number, stderr: string, cwd?: string): GitError {
+    return new GitError(
+      `Git command failed: ${command} (exit code ${exitCode})`,
+      { command, exitCode, stderr: stderr.substring(0, 500), cwd, operation: 'git-command' },
+      [
+        `Check the git command syntax: ${command}`,
+        `Ensure you have the necessary permissions`,
+        `Verify the repository state is clean`,
+        `Check Git configuration and credentials`
+      ]
+    );
+  },
+
+  /**
+   * Invalid Git reference
+   */
+  invalidReference(ref: string, repoPath: string): GitError {
+    return new GitError(
+      `Invalid Git reference: ${ref}`,
+      { ref, repoPath, operation: 'git-ref-validation' },
+      [
+        `Use a valid Git reference (branch, tag, or commit hash)`,
+        `Check available branches with: git branch -a`,
+        `Check available tags with: git tag -l`,
+        `Ensure the reference exists in the repository`
+      ]
+    );
+  },
+
+  /**
+   * Git repository not found
+   */
+  repositoryNotFound(path: string): GitError {
+    return new GitError(
+      `Git repository not found at: ${path}`,
+      { path, operation: 'git-repo-access' },
+      [
+        `Verify the path points to a Git repository`,
+        `Check if the repository was moved or deleted`,
+        `Clone the repository if it's remote`,
+        `Initialize a new repository if needed`
+      ]
+    );
+  },
+
+  /**
+   * Git operation permission denied
+   */
+  permissionDenied(operation: string, path: string): GitError {
+    return new GitError(
+      `Permission denied for Git operation: ${operation} at ${path}`,
+      { operation, path },
+      [
+        `Check file and directory permissions`,
+        `Ensure you have write access to the repository`,
+        `Run with appropriate user privileges`,
+        `Check Git configuration for user access`
+      ]
+    );
+  }
+};
+
+/**
+ * Factory functions for Glob pattern errors
+ */
+export const GlobErrors = {
+  /**
+   * Invalid glob pattern syntax
+   */
+  invalidPattern(pattern: string, reason: string): GlobError {
+    return new GlobError(
+      `Invalid glob pattern: ${pattern} - ${reason}`,
+      { pattern, reason, operation: 'glob-pattern-validation' },
+      [
+        `Check glob pattern syntax: ${pattern}`,
+        `Use valid glob characters: *, ?, [], {}, **`,
+        `Escape special characters if they're meant literally`,
+        `Refer to glob pattern documentation for examples`
+      ]
+    );
+  },
+
+  /**
+   * Glob pattern compilation failed
+   */
+  compilationFailed(pattern: string, error: string): GlobError {
+    return new GlobError(
+      `Glob pattern compilation failed: ${pattern}`,
+      { pattern, error, operation: 'glob-compilation' },
+      [
+        `Simplify the glob pattern if it's too complex`,
+        `Check for unmatched brackets or braces`,
+        `Verify brace expansion syntax: {a,b,c}`,
+        `Test pattern with a simpler version first`
+      ]
+    );
+  },
+
+  /**
+   * Glob expansion timeout
+   */
+  expansionTimeout(patterns: string[], timeoutMs: number): GlobError {
+    return new GlobError(
+      `Glob expansion timeout: patterns took longer than ${timeoutMs}ms`,
+      { patterns, timeoutMs, operation: 'glob-expansion' },
+      [
+        `Reduce the number of patterns to process`,
+        `Use more specific patterns to limit file scope`,
+        `Increase the timeout if processing large directories`,
+        `Consider using exclude patterns to filter results`
+      ]
+    );
+  },
+
+  /**
+   * Too many files matched
+   */
+  tooManyMatches(patterns: string[], matchCount: number, maxFiles: number): GlobError {
+    return new GlobError(
+      `Glob pattern matched too many files: ${matchCount} (limit: ${maxFiles})`,
+      { patterns, matchCount, maxFiles, operation: 'glob-expansion' },
+      [
+        `Use more specific glob patterns to reduce matches`,
+        `Add exclude patterns to filter out unwanted files`,
+        `Increase the file limit if processing is intentional`,
+        `Process files in smaller batches`
+      ]
+    );
+  },
+
+  /**
+   * Glob expansion failed
+   */
+  expansionFailed(patterns: string[], error: string): GlobError {
+    return new GlobError(
+      `Glob pattern expansion failed: ${error}`,
+      { patterns, error, operation: 'glob-expansion' },
+      [
+        `Check if the base directory exists and is accessible`,
+        `Verify file system permissions`,
+        `Ensure patterns are valid before expansion`,
+        `Try with simpler patterns to isolate the issue`
+      ]
+    );
+  }
+};
+
+/**
+ * Factory functions for Path errors
+ */
+export const PathErrors = {
+  /**
+   * Invalid path format
+   */
+  invalidFormat(path: string, reason: string): PathError {
+    return new PathError(
+      `Invalid path format: ${path} - ${reason}`,
+      { path, reason, operation: 'path-validation' },
+      [
+        `Use valid path separators for your platform`,
+        `Check for invalid characters in the path`,
+        `Ensure path length doesn't exceed system limits`,
+        `Use absolute or properly relative paths`
+      ]
+    );
+  },
+
+  /**
+   * Path resolution failed
+   */
+  resolutionFailed(path: string, basePath: string, error: string): PathError {
+    return new PathError(
+      `Path resolution failed: ${path} (base: ${basePath})`,
+      { path, basePath, error, operation: 'path-resolution' },
+      [
+        `Check if the path exists: ${path}`,
+        `Verify the base path is correct: ${basePath}`,
+        `Use absolute paths to avoid resolution issues`,
+        `Check file system permissions`
+      ]
+    );
+  },
+
+  /**
+   * Cross-platform path conversion failed
+   */
+  conversionFailed(path: string, targetPlatform: string, error: string): PathError {
+    return new PathError(
+      `Cross-platform path conversion failed: ${path} to ${targetPlatform}`,
+      { path, targetPlatform, error, operation: 'path-conversion' },
+      [
+        `Use path.resolve() or path.normalize() for cross-platform paths`,
+        `Check for platform-specific path characters`,
+        `Ensure path separators are handled correctly`,
+        `Test on the target platform if possible`
+      ]
+    );
+  },
+
+  /**
+   * Path too long for system
+   */
+  pathTooLong(path: string, maxLength: number): PathError {
+    return new PathError(
+      `Path too long: ${path.length} characters (limit: ${maxLength})`,
+      { path: path.substring(0, 100) + '...', pathLength: path.length, maxLength, operation: 'path-validation' },
+      [
+        `Use shorter file and directory names`,
+        `Move files closer to the root directory`,
+        `Use symbolic links to shorten paths`,
+        `Consider using a different file organization structure`
       ]
     );
   }

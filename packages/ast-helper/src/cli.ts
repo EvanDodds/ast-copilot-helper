@@ -575,7 +575,7 @@ class WatchCommandHandler implements CommandHandler<WatchOptions> {
 }
 
 // Run CLI if this file is executed directly
-const isMain = process.argv[1]?.endsWith('cli.js') || process.argv[1]?.endsWith('cli.ts');
+const isMain = process.argv && process.argv.length >= 2 && (process.argv[1]?.endsWith('cli.js') || process.argv[1]?.endsWith('cli.ts'));
 if (isMain) {
   const cli = new AstHelperCli();
   cli.run().catch((error) => {

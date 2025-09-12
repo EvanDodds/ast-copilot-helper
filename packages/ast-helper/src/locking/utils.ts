@@ -54,9 +54,18 @@ export function parseLockContent(content: string): Lock {
  */
 export function isProcessRunning(pid: number): boolean {
   try {
+    // In test environment, check if the process object exists and has the right PID
+    if (typeof process !== 'undefined' && process.pid === pid) {
+      return true;
+    }
+    
     // Sending signal 0 checks if process exists without actually sending a signal
-    process.kill(pid, 0);
-    return true;
+    if (typeof process !== 'undefined' && process.kill) {
+      process.kill(pid, 0);
+      return true;
+    }
+    
+    return false;
   } catch (error) {
     // Process doesn't exist or we don't have permission
     return false;
