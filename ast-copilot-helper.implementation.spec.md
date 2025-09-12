@@ -314,21 +314,28 @@ class QueryProcessor {
 - [ ] Debouncing (200ms) and batch processing
 - [ ] Live update pipeline (parse→annotate→embed)
 
-### Week 7: MCP Server & VS Code Extension
+### Week 7: Standalone MCP Server & Optional Extension
 
-#### Day 1-2: MCP Server Foundation
+#### Day 1-3: Standalone MCP Server
 **Deliverables:**
-- [ ] MCP protocol implementation
-- [ ] Server lifecycle management
-- [ ] Method handlers for AST queries
+- [ ] Standalone MCP server binary (`ast-mcp-server`)
+- [ ] CLI interface with stdio/websocket support
+- [ ] Process management and lifecycle controls
+- [ ] Cross-editor compatibility validation
 
-**MCP Server Structure:**
+**Standalone Server Structure:**
 ```
-src/mcp/
-├─ server.ts               # Main MCP server
-├─ handlers.ts             # Method implementations  
-├─ types.ts                # MCP protocol types
-└─ client.ts               # Connection management
+packages/server/
+├─ src/
+│  ├─ cli.ts               # CLI entry point & server launcher
+│  ├─ mcp/
+│  │  ├─ server.ts         # Main MCP server
+│  │  ├─ handlers.ts       # Method implementations  
+│  │  └─ types.ts          # MCP protocol types
+│  └─ modules/             # Existing parser, embedder, etc.
+├─ bin/
+│  └─ ast-mcp-server       # Executable
+└─ package.json            # Standalone package
 ```
 
 **Core MCP Methods:**
@@ -346,28 +353,35 @@ export const handlers = {
 };
 ```
 
-#### Day 3-4: VS Code Extension Integration  
+#### Day 4-5: Optional VS Code Extension (Server Manager)
 **Deliverables:**
-- [ ] VS Code extension with MCP client
-- [ ] Extension commands and UI integration
-- [ ] Settings and configuration management
+- [ ] VS Code extension for server management
+- [ ] Server lifecycle controls (start/stop/restart)
+- [ ] Status indicators and workspace settings
+- [ ] Server installation guidance
 
 **Extension Implementation:**
 ```typescript
-// extension/src/activate.ts
-export async function activate(context: vscode.ExtensionContext) {
-    const mcpManager = new MCPManager();
-    await mcpManager.startServer();
+// packages/vscode-extension/src/serverManager.ts
+export class ServerManager {
+    private serverProcess: ChildProcess | null = null;
     
-    context.subscriptions.push(
-        vscode.commands.registerCommand('astHelper.queryCodebase', async () => {
-            const query = await vscode.window.showInputBox({
-                prompt: 'What would you like to know about this codebase?'
-            });
-            const results = await mcpManager.querySemanticContext(query);
-            // Display results in output panel or webview
-        })
-    );
+    async startServer(workspaceRoot: string): Promise<void> {
+        const serverPath = vscode.workspace.getConfiguration()
+            .get('astCopilotHelper.serverPath', 'ast-mcp-server');
+            
+        this.serverProcess = spawn(serverPath, ['start', '--workspace', workspaceRoot]);
+        
+        vscode.window.showInformationMessage('AST MCP Server started');
+    }
+    
+    async stopServer(): Promise<void> {
+        if (this.serverProcess) {
+            this.serverProcess.kill();
+            this.serverProcess = null;
+            vscode.window.showInformationMessage('AST MCP Server stopped');
+        }
+    }
 }
     
     const context = await queryASTHelper(prompt);
@@ -521,10 +535,11 @@ docs/
 - [ ] Query latency <500ms for development
 - [ ] Memory usage linear with dataset size
 
-### Milestone 4 (Week 7): MCP Server & VS Code Extension
-- [ ] Extension functional with Copilot workflow
-- [ ] Proper error handling and user feedback
-- [ ] Configuration UI working
+### Milestone 4 (Week 7): Standalone MCP Server & Optional Extension
+- [ ] MCP server operational as standalone binary
+- [ ] Cross-editor compatibility demonstrated
+- [ ] Optional VS Code extension for server management
+- [ ] Multi-client MCP protocol support working
 
 ### Milestone 5 (Week 8): Performance Validation
 - [ ] Index 100k LOC in <10 minutes

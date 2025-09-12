@@ -2,7 +2,7 @@
 
 ## 1. Overview  
 
-ast-copilot-helper is a self-contained, filesystem-only AI codebase assistant that continuously extracts, annotates, embeds, indexes, and retrieves AST fragments from your codebase. It provides an embedded MCP (Model Context Protocol) server within a VS Code extension, enabling external AI models to access deep codebase understanding. There are no external services or databases—just files under `.astdb/` and a standard MCP interface for AI integration.  
+ast-copilot-helper is a self-contained, filesystem-only AI codebase assistant that continuously extracts, annotates, embeds, indexes, and retrieves AST fragments from your codebase. It provides a standalone MCP (Model Context Protocol) server that enables external AI models to access deep codebase understanding from any compatible editor or client. There are no external services or databases—just files under `.astdb/` and a standard MCP server for AI integration.  
 
 This design dramatically cuts Copilot’s token usage, improves suggestion relevance, and slots seamlessly into existing git workflows and CI pipelines.  
 
@@ -13,11 +13,11 @@ This design dramatically cuts Copilot’s token usage, improves suggestion relev
 - **File-only datastore**  
   All data—raw ASTs, annotations, vector index—lives under `.astdb/`. No Docker, no remote DB, no long-running MCP server.  
 
-- **Embedded MCP Server**  
-  VS Code extension contains embedded MCP server providing AST context and tools via standard protocol. External AI models (Claude, GPT-4, local) call MCP server to access codebase knowledge.
+- **Standalone MCP Server**  
+  Independent `ast-mcp-server` binary provides AST context and tools via standard MCP protocol. Works with any MCP-compatible client (Claude Desktop, VS Code, Neovim, etc.).
 
-- **MCP Protocol Integration**  
-  Standard Model Context Protocol enables any compatible AI client to access structured AST context and semantic search capabilities.  
+- **Editor Agnostic Design**  
+  Server runs independently of any specific editor, enabling broad compatibility. Optional VS Code extension provides convenience layer for server management and workspace integration.  
 
 - **Local embeddings + vector search**  
   Leverage an embedded JS/Node embedding model (e.g. `@xenova/transformers`) and `hnswlib-node` (with a pure-JS fallback) to build and query a nearest-neighbor index on disk (`.astdb/index.*`).  
@@ -49,25 +49,25 @@ Your Repo/
 1. **parse** reads only git-changed files, emits normalized AST JSON under `asts/`.  
 2. **annotate** consumes those ASTs, computes signatures, summaries, cyclomatic complexity, dependency lists, and writes to `annots/`.  
 3. **embed** loads annotations, runs each summary+signature through the embedding model, upserts vectors into `index.*`.  
-4. **MCP server** provides structured AST context and tools via Model Context Protocol.
-5. **External AI models** (Claude, GPT-4, local) call MCP server to access rich codebase context.
+4. **Standalone MCP server** (`ast-mcp-server`) provides structured AST context and tools via Model Context Protocol.
+5. **External AI clients** (Claude Desktop, VS Code MCP extension, Neovim MCP, etc.) connect to server to access rich codebase context.
 6. **watch** runs `parse→annotate→embed` on file changes in real time.  
-7. **VS Code Extension** hosts MCP server, enabling AI clients to access codebase knowledge.  
+7. **Optional VS Code Extension** manages server lifecycle and provides workspace integration conveniences.  
 
 ---  
 
 ## 4. Module Specifications  
 
-### 4.1 CLI Entrypoint (`ast-helper`)  
+### 4.1 CLI Entrypoint (`ast-mcp-server`)  
 
 - **Language**: TypeScript, compiled to JS.  
 - **Dispatch**: uses [commander.js](https://github.com/tj/commander.js).  
 - **Subcommands**:  
-  - `parse [--changed] [--glob <pattern>]`  
-  - `annotate [--changed]`  
-  - `embed [--changed] [--model <path>]`  
-  - `query --intent "<text>" [--top <N>]`  
-  - `watch [--glob <pattern>]`  
+  - `init [--workspace <path>]` (initialize repository)
+  - `start [--port <N>]` (start MCP server)
+  - `index [--changed] [--glob <pattern>]` (parse + annotate + embed)
+  - `query --intent "<text>" [--top <N>]` (standalone query)
+  - `watch [--glob <pattern>]` (live file monitoring)  
 
 **Configuration** lives in `.astdb/config.json`, merging CLI flags with defaults.
 
@@ -75,7 +75,7 @@ Your Repo/
 
 ```bash
 # Parse command - Extract AST from source files
-ast-helper parse [options]
+ast-mcp-server parse [options]
   --changed, -c          Process only changed files since last commit
   --glob <pattern>       File pattern to parse (overrides config)
   --base <ref>           Git reference for change detection (default: HEAD)
@@ -84,13 +84,13 @@ ast-helper parse [options]
   --help, -h             Show command help
 
 # Annotate command - Generate metadata for parsed AST nodes  
-ast-helper annotate [options]
+ast-mcp-server annotate [options]
   --changed, -c          Process only nodes from changed files
   --force, -f            Force re-annotation of existing nodes
   --help, -h             Show command help
 
 # Embed command - Generate vector embeddings for annotations
-ast-helper embed [options] 
+ast-mcp-server embed [options] 
   --changed, -c          Process only changed annotations
   --model <path>         Path to custom embedding model
   --runtime <type>       Runtime: wasm (default) or onnx
@@ -99,7 +99,7 @@ ast-helper embed [options]
   --help, -h             Show command help
 
 # Query command - Search for relevant code context
-ast-helper query [options]
+ast-mcp-server query [options]
   --intent <text>        Query text describing desired functionality
   --top <num>            Number of results to return (default: 5)
   --format <type>        Output format: plain (default), json, markdown
@@ -107,7 +107,7 @@ ast-helper query [options]
   --help, -h             Show command help
 
 # Watch command - Monitor files for changes and auto-update
-ast-helper watch [options]
+ast-mcp-server watch [options]
   --glob <pattern>       File pattern to watch (overrides config)
   --debounce <ms>        Debounce delay in milliseconds (default: 200)
   --batch                Enable batch processing for rapid changes
@@ -244,15 +244,15 @@ ast-helper watch [options]
   3. Support `--batch` and `--max-batch-size` options for large repositories.  
 - **Use Case**: live prompt enrichment during edit sessions.
 
-### 4.7 VS Code Extension with Embedded MCP Server
+### 4.7 VS Code Extension (Optional Server Manager)
 
-- **Language**: TypeScript, VS Code Extension API with embedded MCP server.
-- **Architecture**: Single VS Code extension hosting embedded MCP server for external AI model access.
+- **Language**: TypeScript, VS Code Extension API for process management.
+- **Architecture**: Lightweight extension managing external `ast-mcp-server` binary.
 - **Core Components**:
-  - Embedded MCP server providing AST context tools
-  - MCP protocol handlers for semantic queries
-  - Background indexing and context management
-  - No direct AI integration (AI models call our MCP server)
+  - External process management for `ast-mcp-server`
+  - Status monitoring and UI integration  
+  - Configuration management for server settings
+  - No embedded MCP server (manages standalone binary)
   
 - **Extension API Specifications**:  
   ```json
@@ -266,18 +266,28 @@ ast-helper watch [options]
     "contributes": {
       "commands": [
         {
-          "command": "ast-copilot-helper.startChat",
-          "title": "Start AI Chat",
+          "command": "ast-copilot-helper.startServer",
+          "title": "Start MCP Server",
+          "category": "AST Copilot Helper"
+        },
+        {
+          "command": "ast-copilot-helper.stopServer", 
+          "title": "Stop MCP Server",
+          "category": "AST Copilot Helper"
+        },
+        {
+          "command": "ast-copilot-helper.restartServer",
+          "title": "Restart MCP Server",
           "category": "AST Copilot Helper"
         },
         {
           "command": "ast-copilot-helper.indexRepository",
-          "title": "Index Repository",
+          "title": "Index Repository", 
           "category": "AST Copilot Helper"
         },
         {
           "command": "ast-copilot-helper.showSettings",
-          "title": "Settings",
+          "title": "Server Settings",
           "category": "AST Copilot Helper"
         }
       ],
@@ -293,76 +303,78 @@ ast-helper watch [options]
       "configuration": {
         "title": "AST Copilot Helper",
         "properties": {
-          "astCopilotHelper.mcpPort": {
-            "type": "number",
-            "default": 8765,
-            "description": "Port for embedded MCP server"
+          "astCopilotHelper.serverPath": {
+            "type": "string",
+            "default": "ast-mcp-server",
+            "description": "Path to ast-mcp-server executable"
           },
-          "astCopilotHelper.mcpAutoStart": {
+          "astCopilotHelper.serverAutoStart": {
             "type": "boolean",
             "default": true,
-            "description": "Automatically start MCP server with extension"
+            "description": "Automatically start MCP server with workspace"
           },
           "astCopilotHelper.autoIndex": {
             "type": "boolean",
             "default": true,
             "description": "Automatically index repositories on open"
           },
-          "astCopilotHelper.maxContextResults": {
-            "type": "number", 
-            "default": 5,
-            "description": "Maximum number of context results for AI"
+          "astCopilotHelper.serverArgs": {
+            "type": "array",
+            "default": [],
+            "description": "Additional arguments for ast-mcp-server"
           }
         }
       }
     }
   }
   ```  
-- **Integration Implementation**:  
+- **Server Management Implementation**:  
   ```typescript
-  // Key VS Code API integration points
-  async function activate(context: vscode.ExtensionContext) {
-    // File watching for auto-indexing
-    const watcher = vscode.workspace.createFileSystemWatcher('**/*.{ts,js,py}');
-    watcher.onDidChange(handleFileChange);
-    
-    // Command registration
-    context.subscriptions.push(
-      vscode.commands.registerCommand('ast-copilot-helper.enrichAndSend', enrichAndSend),
-      vscode.workspace.onDidChangeTextDocument(handleDocumentChange)
-    );
-  }
+  // VS Code extension manages external server process
+  import { ChildProcess, spawn } from 'child_process';
   
-  async function enrichAndSend() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
-  export async function provideMCPContext(params: MCPRequest) {
-    // Query AST database for relevant context
-    const retriever = new SemanticRetriever();
-    const results = await retriever.searchByIntent(
-      params.intent,
-      params.maxResults || 5,
-      params.minSimilarity || 0.7
-    );
+  class ServerManager {
+    private serverProcess: ChildProcess | null = null;
+    private serverPath: string;
     
-    // Return raw context data (no AI processing)
-    return {
-      matches: results.map(r => ({
-        file: r.filePath,
-        summary: r.summary,
-        signature: r.signature,
-        snippet: r.sourceSnippet
-      }))
-    };
+    constructor() {
+      this.serverPath = vscode.workspace.getConfiguration()
+        .get('astCopilotHelper.serverPath', 'ast-mcp-server');
+    }
+    
+    async startServer(workspaceRoot: string): Promise<void> {
+      if (this.serverProcess) return;
+      
+      const args = ['--workspace', workspaceRoot];
+      this.serverProcess = spawn(this.serverPath, args, {
+        stdio: 'pipe'
+      });
+      
+      this.serverProcess.on('exit', (code) => {
+        this.serverProcess = null;
+        vscode.window.showInformationMessage(`AST MCP Server exited with code ${code}`);
+      });
+    }
+    
+    async stopServer(): Promise<void> {
+      if (this.serverProcess) {
+        this.serverProcess.kill();
+        this.serverProcess = null;
+      }
+    }
+    
+    getServerStatus(): 'running' | 'stopped' {
+      return this.serverProcess ? 'running' : 'stopped';
+    }
   }
   ```  
 - **Logic**:  
-  1. VS Code extension hosts MCP server on localhost
-  2. External AI models (Claude, GPT-4) call MCP server as tool
+  1. Standalone `ast-mcp-server` runs as independent process
+  2. External AI models (Claude, GPT-4) connect to MCP server via stdio
   3. MCP server returns raw AST context data
   4. AI models use context to generate responses (outside our system)
-- **Packaging**: Single VS Code extension with embedded MCP server
-- **Settings**: MCP port, similarity thresholds, result limits
+- **Packaging**: Standalone MCP server binary + optional VS Code extension manager
+- **Settings**: Server configuration file, similarity thresholds, result limits
 
 ---  
 
@@ -370,28 +382,35 @@ ast-helper watch [options]
 
 ```txt
 ast-copilot-helper/
-├─ src/
-│  ├─ mcp/                   # MCP server implementation
-│  │  ├─ server.ts           # main MCP server
-│  │  ├─ handlers.ts         # MCP method handlers
-│  │  └─ types.ts            # MCP protocol types
-│  ├─ modules/
-│  │  ├─ parser.ts
-│  │  ├─ annotator.ts
-│  │  ├─ embedder.ts
-│  │  ├─ retriever.ts
-│  │  ├─ watcher.ts
-│  │  └─ downloader.ts       # model & artifact downloader
-│  ├─ types.ts               # ASTNode, Annot, config interfaces
-│  └─ util/
-│     ├─ fs.ts
-│     ├─ git.ts
-│     └─ crypto.ts           # checksum verification
-├─ extension/                # VS Code extension
-│  ├─ src/
-│  │  ├─ activate.ts
-│  │  └─ mcpManager.ts       # MCP server lifecycle
-│  └─ package.json
+├─ packages/
+│  ├─ server/                # ast-mcp-server (main product)
+│  │  ├─ src/
+│  │  │  ├─ mcp/             # MCP protocol implementation
+│  │  │  │  ├─ server.ts     # main MCP server
+│  │  │  │  ├─ handlers.ts   # MCP method handlers
+│  │  │  │  └─ types.ts      # MCP protocol types
+│  │  │  ├─ modules/
+│  │  │  │  ├─ parser.ts
+│  │  │  │  ├─ annotator.ts
+│  │  │  │  ├─ embedder.ts
+│  │  │  │  ├─ retriever.ts
+│  │  │  │  ├─ watcher.ts
+│  │  │  │  └─ downloader.ts
+│  │  │  ├─ cli.ts           # CLI entry point
+│  │  │  ├─ types.ts
+│  │  │  └─ util/
+│  │  │     ├─ fs.ts
+│  │  │     ├─ git.ts
+│  │  │     └─ crypto.ts
+│  │  ├─ bin/
+│  │  │  └─ ast-mcp-server   # executable
+│  │  └─ package.json
+│  └─ vscode-extension/      # optional convenience layer
+│     ├─ src/
+│     │  ├─ activate.ts
+│     │  ├─ serverManager.ts # manages ast-mcp-server lifecycle
+│     │  └─ ui/              # status indicators, settings
+│     └─ package.json
 ├─ .astdb/                   # created at runtime
 │  ├─ asts/                  # raw AST JSON per file
 │  ├─ annots/                # annotated metadata JSON per node
@@ -1029,11 +1048,11 @@ ast-helper doctor --fix          # Attempt to resolve common issues
 ```
 
 **Step-by-Step Setup**
-1. **Install**: `npm install -D ast-copilot-helper`
-2. **Initialize**: `ast-helper init` (creates `.astdb/` and default config)
-3. **First Parse**: `ast-helper parse` (processes entire repository)
-4. **Setup Git Hooks**: `ast-helper setup-hooks` (automated husky integration)
-5. **Install VS Code Extension**: Via marketplace or `ast-helper install-extension`
+1. **Install MCP Server**: `npm install -g ast-mcp-server`  
+2. **Initialize Repository**: `ast-mcp-server init` (creates `.astdb/` and default config)
+3. **First Parse**: `ast-mcp-server index` (processes entire repository)
+4. **Start Server**: `ast-mcp-server start` (launches MCP server for AI clients)
+5. **Optional VS Code Extension**: Install from marketplace for convenience management
 
 ### 15.2 Troubleshooting Guide
 
@@ -1042,7 +1061,7 @@ ast-helper doctor --fix          # Attempt to resolve common issues
 |-------|----------|----------|
 | Parse failures | "Unknown language" errors | Run `ast-helper grammar install <language>` |
 | Slow performance | High CPU/memory usage | Adjust batch size in config, use `--changed` flag |
-| VS Code integration broken | No prompt enrichment | Check extension logs, verify CLI in PATH |
+| VS Code server management | Server won't start/stop | Check server binary in PATH, verify workspace permissions |
 | Index corruption | Query errors | Run `ast-helper rebuild` to reconstruct index |
 | Model download fails | Network/checksum errors | Check internet connection, verify firewall settings |
 

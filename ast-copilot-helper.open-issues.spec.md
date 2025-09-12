@@ -16,11 +16,18 @@ This document identifies unresolved technical challenges, implementation uncerta
 
 **Revised Architecture**:
 ```typescript
-// Embedded MCP Server in VS Code Extension
-class ASTCodebaseAssistant {
-  private mcpServer: EmbeddedMCPServer;     // Provides AST context via MCP protocol
+// Standalone MCP Server Binary
+class ASTMCPServer {
+  private mcpServer: StandaloneMCPServer;   // Independent MCP server process
   private astDatabase: ASTDatabase;         // Local AST storage and indexing
-  // Note: No AI client - external AI models call our MCP server
+  private cliInterface: CLIInterface;       // Command-line management
+  // Note: No AI client - external AI models connect to our server
+}
+
+// Optional VS Code Extension (Server Manager)
+class ServerManager {
+  private serverProcess: ChildProcess;      // Manages ast-mcp-server binary
+  private statusProvider: StatusProvider;   // UI indicators for server state
 }
 ```
 
@@ -40,13 +47,13 @@ class ASTCodebaseAssistant {
 
 **Implementation Changes**:
 - **Weeks 1-6**: Same core AST system (parsing, annotation, embedding)
-- **Week 7**: Develop embedded MCP server (replaces CLI approach)
-- **Week 8**: VS Code extension hosting MCP server (no AI integration needed)
-- **Week 9-10**: Polish MCP protocol implementation and documentation
+- **Week 7**: Develop standalone MCP server binary (cross-editor compatible)
+- **Week 8**: Optional VS Code extension for server management (not required)
+- **Week 9-10**: Multi-editor support validation and deployment automation
 
 **New Product Identity**: 
 From "AST-based context enhancement for GitHub Copilot" 
-To "AI-powered codebase assistant with deep AST understanding"
+To "Standalone MCP server providing AI models with deep codebase understanding"
 
 **Status**: ✅ **RESOLVED** - This architectural pivot eliminates the critical API limitation and creates a superior product
 
@@ -327,11 +334,11 @@ git status --porcelain  # working directory state
 
 **Impact**: Low - good error handling improves user experience but doesn't affect core functionality
 
-### 10. VS Code Extension Distribution Strategy
+### 10. ~~VS Code Extension Distribution Strategy~~ → **RESOLVED: Optional Extension Approach**
 
-**Issue**: Whether to distribute extension separately or bundle with main package is undefined.
+**Status**: ✅ **RESOLVED** - Standalone server with optional VS Code extension for management
 
-**Context**: VS Code extensions can be published to marketplace independently or bundled with npm packages.
+**Context**: With standalone MCP server architecture, VS Code extension becomes optional convenience layer.
 
 **Distribution Options**:
 
@@ -458,15 +465,16 @@ git status --porcelain  # working directory state
 6. **HNSW Performance Tuning** - Required for performance targets
 7. **Error Recovery Mechanisms** - Important for user experience
 
-### New Items (Added for MCP Architecture)
-**New-1. MCP Protocol Implementation** - Embed MCP server in VS Code extension  
+### New Items (Added for Standalone MCP Architecture)
+**New-1. Standalone MCP Server Implementation** - Independent binary with CLI interface
 **New-2. MCP Tool Design** - Define AST context tools and response formats
-**New-3. External AI Compatibility** - Ensure MCP server works with various AI clients
+**New-3. Multi-Editor Compatibility** - Ensure MCP server works across different editors
+**New-4. Server Process Management** - Reliable startup, shutdown, and error recovery
 
 ### Future Enhancement Items (Can Defer)
 8. **Git Workflow Edge Cases** - Can add incrementally
 9. **Configuration Edge Cases** - Good error handling sufficient initially
-10. **~~Extension Distribution Strategy~~** → **Single VS Code Extension** - Simplified with embedded architecture
+10. **~~Extension Distribution Strategy~~** → **RESOLVED: Optional Extension** - Standalone server eliminates complexity
 
 ### Pre-Launch Requirements
 11. **Security Audit** - Must complete before production release
@@ -477,10 +485,10 @@ git status --porcelain  # working directory state
 
 ### Immediate Actions (Week 1) - **UPDATED FOR MCP ARCHITECTURE**
 - [x] ~~Define Copilot integration strategy~~ → **RESOLVED: MCP Architecture Eliminates This Need**
-- [ ] **NEW: Research MCP protocol implementation and AI model APIs**
+- [ ] **NEW: Research MCP protocol implementation and stdio/websocket transports**
 - [ ] Set up model hosting infrastructure with checksums  
 - [ ] Design memory management and batching strategy
-- [ ] **NEW: Design embedded MCP server architecture for VS Code extension**
+- [ ] **NEW: Design standalone MCP server binary architecture and CLI interface**
 
 ### Early Development (Weeks 2-4)
 - [ ] Implement robust error handling and recovery
@@ -489,8 +497,8 @@ git status --porcelain  # working directory state
 - [ ] **NEW: Prototype MCP server tools and test with external AI clients**
 
 ### Mid Development (Weeks 5-7) - **UPDATED FOR MCP ARCHITECTURE**
-- [ ] **NEW: Implement embedded MCP server with AST context tools**
-- [ ] **NEW: Build AI chat interface for VS Code extension**
+- [ ] **NEW: Implement standalone MCP server binary with AST context tools**
+- [ ] **NEW: Build optional VS Code extension for server management**
 - [ ] **NEW: Integrate conversation management and context handling**
 - [ ] Validate performance targets with large repositories
 
@@ -501,11 +509,11 @@ git status --porcelain  # working directory state
 - [ ] **NEW: Test AI conversation quality with diverse codebases**
 - [ ] **NEW: Optimize AI model costs and response latency**
 
-### **Key Architectural Benefits of MCP Pivot**
+### **Key Architectural Benefits of Standalone MCP Server**
 1. **Eliminates Critical Risk**: No dependency on GitHub Copilot's closed API
-2. **Superior User Experience**: Dedicated AI assistant vs trying to enhance existing tool
+2. **Editor Independence**: Works with VS Code, Vim, Emacs, or any MCP-compatible client
 3. **More Powerful**: Provides structured AST context to AI models via standardized MCP protocol
-4. **Future-Proof**: MCP standard enables extensibility to other AI models and clients
-5. **Simpler Deployment**: Single VS Code extension vs CLI + extension coordination
+4. **Future-Proof**: MCP standard enables extensibility to other AI models and tools
+5. **Flexible Deployment**: Standalone binary enables multiple use cases and deployment options
 
 This document serves as a living reference for implementation challenges and should be updated as issues are resolved or new concerns emerge during development.
