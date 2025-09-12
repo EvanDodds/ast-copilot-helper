@@ -70,6 +70,13 @@
     "@types/node": "^20.0.0",
     "commander": "^14.0.0"
   },
+  "optionalDependencies": {
+    "tree-sitter": "^0.21.0",
+    "tree-sitter-typescript": "^0.20.3",
+    "tree-sitter-javascript": "^0.20.1", 
+    "tree-sitter-python": "^0.20.4",
+    "web-tree-sitter": "^0.21.0"
+  },
   "devDependencies": {
     "ts-node": "^10.9.2",
     "typescript": "^5.5.0",
