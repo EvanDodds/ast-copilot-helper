@@ -30,29 +30,68 @@ This design dramatically cuts Copilot’s token usage, improves suggestion relev
 
 ---  
 
-## 3. High-Level Architecture  
+## 3. System Architecture & Data Flow
+
+### 3.1 Component Overview
+
+```txt
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   ast-helper    │    │   .astdb/ Store  │    │ ast-mcp-server  │
+│   (CLI Tool)    │    │  (File System)   │    │ (MCP Protocol)  │
+│                 │    │                  │    │                 │
+│ • parse         │───▶│ asts/           │◀───│ • query_ast     │
+│ • annotate      │───▶│ annots/         │◀───│ • get_node      │
+│ • embed         │───▶│ index.bin       │◀───│ • list_changes  │
+│ • watch         │    │ config.json     │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       ▲                       │
+         │                       │                       │
+         ▼                       │                       ▼
+┌─────────────────┐              │              ┌─────────────────┐
+│ VS Code Ext     │              │              │ AI Clients      │
+│ (Process Mgr)   │              │              │ (Claude, GPT-4) │
+│                 │              │              │                 │
+│ • Start/Stop    │──────────────┘              │ • MCP Protocol  │
+│ • Status UI     │                             │ • Context Aware │
+│ • Settings      │                             │ • Rich Prompts  │
+└─────────────────┘                             └─────────────────┘
+```
+
+### 3.2 File System Structure
 
 ```txt
 Your Repo/
 ├─ src/…                     # Your code
-├─ .astdb/
+├─ .astdb/                   # AST database (created at runtime)
 │  ├─ asts/                  # raw AST JSON per file
-│  ├─ annots/                # annotated metadata JSON per node
+│  ├─ annots/                # annotated metadata JSON per node  
+│  ├─ grammars/              # cached Tree-sitter grammars
+│  ├─ models/                # downloaded embedding models
+│  ├─ native/                # optional native binaries
 │  ├─ index.bin              # HNSW binary index
 │  ├─ index.meta.json        # mapping from index IDs → file + node
-│  └─ config.json            # user overrides (patterns, thresholds)
+│  ├─ config.json            # user overrides (patterns, thresholds)
+│  └─ .lock                  # process coordination
 ├─ .vscode/
-│  └─ extensions/            # VS Code extension with embedded MCP server
+│  └─ extensions/            # VS Code extension (optional)
 └─ package.json
 ```
 
-1. **parse** reads only git-changed files, emits normalized AST JSON under `asts/`.  
-2. **annotate** consumes those ASTs, computes signatures, summaries, cyclomatic complexity, dependency lists, and writes to `annots/`.  
-3. **embed** loads annotations, runs each summary+signature through the embedding model, upserts vectors into `index.*`.  
-4. **Standalone MCP server** (`ast-mcp-server`) provides structured AST context and tools via Model Context Protocol.
-5. **External AI clients** (Claude Desktop, VS Code MCP extension, Neovim MCP, etc.) connect to server to access rich codebase context.
-6. **watch** runs `parse→annotate→embed` on file changes in real time.  
-7. **Optional VS Code Extension** manages server lifecycle and provides workspace integration conveniences.  
+### 3.3 Data Processing Pipeline
+
+1. **Parse Phase**: `ast-helper parse` reads git-changed files, generates normalized AST JSON under `asts/`
+2. **Annotation Phase**: `ast-helper annotate` processes ASTs, computes signatures/summaries/complexity, writes to `annots/`  
+3. **Embedding Phase**: `ast-helper embed` vectorizes annotations using CodeBERT, builds HNSW index in `index.*`
+4. **Query Phase**: `ast-mcp-server` reads database, serves context via MCP protocol to AI clients
+5. **Watch Phase**: `ast-helper watch` monitors file changes, triggers pipeline updates in real-time
+
+### 3.4 Inter-Process Communication
+
+- **CLI ↔ Database**: Direct file I/O with `.lock` coordination
+- **MCP Server ↔ Database**: Read-only file access with hot reload detection  
+- **AI Clients ↔ MCP Server**: Standard MCP protocol over stdio/TCP
+- **VS Code Extension ↔ Both**: Process management via Node.js child_process
+- **Conflict Resolution**: File locking prevents read-during-write, atomic updates ensure consistency  
 
 ---  
 
@@ -77,11 +116,22 @@ Your Repo/
 - **Subcommands**:
   - `start [--workspace <path>] [--port <N>]` (launch MCP server)
   - `stop` (graceful shutdown)
-  - `status` (check server health)  
+  - `status` (check server health)
+
+**MCP Protocol Implementation**:
+- **Tools Exposed**:
+  - `query_ast_context`: Search for relevant AST nodes by intent/query
+  - `get_node_details`: Retrieve full details for specific AST node IDs
+  - `list_recent_changes`: Get recently modified AST nodes
+- **Resources Provided**:
+  - `ast://nodes/{nodeId}`: Individual AST node data
+  - `ast://files/{filePath}`: All nodes from a specific file
+  - `ast://search/{query}`: Search results for semantic queries
+- **Server Capabilities**: Supports MCP 1.0 protocol with tools and resources  
 
 **Configuration** lives in `.astdb/config.json`, merging CLI flags with defaults.
 
-**Detailed Command Specifications:**
+### 4.3 Command Line Interface Specification
 
 ```bash
 # Parse command - Extract AST from source files
@@ -109,8 +159,8 @@ ast-helper embed [options]
   --help, -h             Show command help
 
 # Query command - Search for relevant code context
-ast-helper query [options]
-  --intent <text>        Query text describing desired functionality
+ast-helper query <intent> [options]
+  <intent>               Query text describing desired functionality (required)
   --top <num>            Number of results to return (default: 5)
   --format <type>        Output format: plain (default), json, markdown
   --min-score <num>      Minimum similarity score (0.0-1.0, default: 0.3)
@@ -131,15 +181,16 @@ ast-helper watch [options]
   --help, -h             Show help information
 ```
 
-**Command Validation Rules:**
+### 4.4 Command Validation Rules
+
 - `--changed` and `--glob` are mutually exclusive
-- `--intent` is required for query command
+- `<intent>` is required for query command (positional argument)
 - `--top` must be positive integer ≤ 100
 - `--min-score` must be between 0.0 and 1.0
 - Model path validation for custom models
 - Git repository detection for `--changed` flag
 
-### 4.2 AST Extractor (parse)  
+### 4.5 AST Extractor (parse)  
 
 - **Parser**: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) for polyglot support (TS/JS/Python initially).  
 - **Runtime**: Prefer native `node-tree-sitter` with WASM fallback via `tree-sitter-wasm` for zero-dependency installs.  
@@ -150,17 +201,18 @@ ast-helper watch [options]
   ```ts
   interface ASTNode {
     id: string;               // deterministic hash of file+span+type+name
-    type: string;             // node type
-    name?: string;            // identifier if present
-    start: { line, column };
-    end:   { line, column };
-    parentId?: string;
+    type: string;             // node type (function, class, if_statement, etc.)
+    name?: string;            // identifier if present (function name, class name)
+    start: { line: number; column: number };  // source location start
+    end: { line: number; column: number };    // source location end
+    parentId?: string;        // parent node ID for tree navigation
     children: string[];       // child node IDs
+    filePath: string;         // absolute path to source file
   }
   ```
 - **Normalization**: strip comments, include only function/class/module definitions plus control-flow nodes.
 
-### 4.3 Annotator (annotate)  
+### 4.6 Annotator (annotate)  
 
 - **Input**: `.astdb/asts/*.json`  
 - **Metadata Computation**:  
@@ -201,7 +253,7 @@ ast-helper watch [options]
   }
   ```
 
-### 4.4 Embedder (embed)  
+### 4.7 Embedder (embed)  
 
 - **Model**: `@xenova/transformers` (WASM) as default runtime with CodeBERT-base ONNX (768-dim embeddings).  
 - **Model Delivery**: Downloaded from HuggingFace to `.astdb/models/` on first run with SHA256 checksum verification.  
@@ -227,13 +279,13 @@ ast-helper watch [options]
   4. Upsert via delete+insert using nodeId mapping.  
   5. Serialize index and metadata to disk.
 
-### 4.5 Retriever (query)  
+### 4.8 Retriever (query)  
 
 - **CLI**:  
 
   ```bash
   ast-helper query \
-    --intent "refactor payment module logging" \
+    "refactor payment module logging" \
     --top 5 \
     --format json
   ```
@@ -245,7 +297,7 @@ ast-helper watch [options]
   4. Load corresponding `annots/{nodeId}.json`.  
   5. Output array of `{ summary, signature, complexity, deps, sourceSnippet }` in requested format.
 
-### 4.6 Watcher (watch)  
+### 4.9 Watcher (watch)  
 
 - **Library**: [chokidar](https://github.com/paulmillr/chokidar).  
 - **Behavior**: on file add/change/delete under `config.watchGlob`:  
@@ -254,7 +306,7 @@ ast-helper watch [options]
   3. Support `--batch` and `--max-batch-size` options for large repositories.  
 - **Use Case**: live prompt enrichment during edit sessions.
 
-### 4.7 VS Code Extension (Optional Server Manager)
+### 4.10 VS Code Extension (Optional Server Manager)
 
 - **Language**: TypeScript, VS Code Extension API for process management.
 - **Architecture**: Lightweight extension managing external `ast-mcp-server` binary.
@@ -436,7 +488,7 @@ ast-copilot-helper/
 │  └─ .lock                  # process coordination
 ├─ tests/
 │  ├─ fixtures/              # small sample repos for testing
-│  └─ benchmarks/            # 100k LOC performance fixture
+│  └─ benchmarks/            # 100k node performance fixture
 ├─ LICENSES.md               # model and dependency licenses
 ├─ NOTICE                    # attribution file
 ├─ package.json
@@ -444,9 +496,30 @@ ast-copilot-helper/
 └─ tsconfig.json
 ```
 
----  
+---
 
-## 6. Configuration  
+## 6. Performance Scaling & Metrics
+
+### 6.1 AST Node Density Guidelines
+
+**Baseline Conversion Ratio**: ~15,000 significant AST nodes per 100,000 lines of code
+
+**Node Type Distribution** (typical mixed codebase):
+- **Functions/Methods**: 3,000-5,000 nodes (20-33%)
+- **Control Flow**: 8,000-12,000 nodes (53-80%) 
+- **Classes/Interfaces**: 500-1,500 nodes (3-10%)
+- **Module Constructs**: 100-500 nodes (1-3%)
+
+**Language Variations**:
+- **TypeScript/JavaScript**: ~1 node per 6-8 LOC (higher functional density)
+- **Python**: ~1 node per 8-12 LOC (larger function bodies)
+- **Java**: ~1 node per 10-15 LOC (more structured, verbose)
+
+**Performance Scaling**: All benchmarks target **100k significant nodes** as the primary scaling metric for consistent measurement across parsing, annotation, embedding, and query operations.
+
+---
+
+## 7. Configuration
 
 `.astdb/config.json` (auto-generated on first run, mergeable):  
 
@@ -455,7 +528,7 @@ ast-copilot-helper/
   "parseGlob": ["src/**/*.ts", "src/**/*.js", "src/**/*.py"],
   "watchGlob": ["src/**/*.{ts,js,py}"],
   "reuseIndex": true,
-  "embedModelPath": "./models/codebert-base.onnx",
+  "embedModelPath": ".astdb/models/codebert-base.onnx",
   "modelHost": "https://huggingface.co/microsoft/codebert-base/resolve/main/",
   "useNativeRuntime": false,
   "topK": 5,
@@ -474,7 +547,7 @@ ast-copilot-helper/
 }
 ```
 
-### 6.1 Configuration Precedence
+### 7.1 Configuration Precedence
 
 Configuration values are resolved in the following priority order (highest to lowest):
 
@@ -493,9 +566,130 @@ export AST_COPILOT_MODEL_HOST=https://custom/  # overrides modelHost
 
 ---
 
-## 7. Dependencies & Build Configuration
+## 8. Repository Management & CI/CD Strategy
 
-### 7.1 Package.json Specification
+### 8.1 Git Integration Strategy
+
+**Recommended Approach: .astdb/ is GITIGNORED**
+
+The `.astdb/` directory should be excluded from version control to avoid:
+- **Merge Conflicts**: Binary index files and frequent JSON changes create constant conflicts
+- **Repository Bloat**: Large model files and vector indices significantly increase repo size  
+- **Commit Noise**: Every code change triggers AST regeneration, cluttering git history
+
+### 8.2 .gitignore Configuration
+
+```gitignore
+# AST Copilot Helper - generated data
+.astdb/
+!.astdb/config.json     # Keep configuration in repo
+
+# Optional: ignore VS Code extension logs
+.vscode/ast-copilot-helper.log
+```
+
+**Rationale for config.json exception:**
+- Configuration should be shared across team members
+- Project-specific parsing globs and model preferences belong in version control
+- Small file size with infrequent changes, manageable merge conflicts
+
+### 8.3 New Repository Setup
+
+**Developer Onboarding (first clone):**
+```bash
+git clone <repo>
+cd <repo>
+npm install ast-copilot-helper -g   # or use npx
+ast-helper init                     # creates .astdb/ structure
+ast-helper parse                    # process all source files (~5-10 min for 100k nodes)
+ast-helper annotate                 # generate metadata (~2-3 min)  
+ast-helper embed                    # build vector index (~3-5 min)
+```
+
+**Total cold setup time: < 15 minutes for 100k significant nodes**
+
+### 8.4 CI/CD Optimization Strategies
+
+**GitHub Actions Example with Caching:**
+```yaml
+name: AST Context Setup
+on: [push, pull_request]
+
+jobs:
+  ast-context:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Cache .astdb based on source code hash
+      - name: Cache AST Database
+        uses: actions/cache@v3
+        with:
+          path: .astdb
+          key: astdb-v1-${{ runner.os }}-${{ hashFiles('src/**/*.{ts,js,py}') }}
+          restore-keys: |
+            astdb-v1-${{ runner.os }}-
+            
+      # Install ast-helper  
+      - name: Setup AST Helper
+        run: npm install -g ast-copilot-helper
+        
+      # Initialize if not cached
+      - name: Initialize AST Database
+        run: |
+          if [ ! -d ".astdb" ]; then
+            ast-helper init
+          fi
+          
+      # Incremental update (fast on cache hit)
+      - name: Update AST Context
+        run: |
+          ast-helper parse --changed --base origin/main
+          ast-helper annotate --changed  
+          ast-helper embed --changed
+          
+      # Your build/test steps can now use AST context
+      - name: Run Tests with AST Context
+        run: npm test
+```
+
+**Performance Targets:**
+- **Cache Hit**: < 1 minute to verify and update incremental changes
+- **Cache Miss**: < 10 minutes to rebuild entire 100k significant nodes  
+- **Typical PR**: < 30 seconds to process changed files
+
+### 8.5 Team Collaboration Strategies
+
+**Option 1: Individual Developer Databases (Recommended)**
+- Each developer maintains their own `.astdb/` 
+- Fast incremental updates as they work
+- No coordination overhead
+- Consistent configuration via shared `config.json`
+
+**Option 2: Shared Snapshot Artifacts (Optional)**
+- Team lead generates `.astdb/` snapshots for major releases
+- Distributed via GitHub Releases or artifact storage
+- New team members can download snapshot instead of cold build
+- Still maintain local incremental updates
+
+**Snapshot Generation Example:**
+```bash
+# Team lead creates snapshot
+ast-helper parse --all && ast-helper annotate && ast-helper embed
+tar -czf astdb-snapshot-v1.2.0.tar.gz .astdb/
+# Upload to GitHub Releases
+
+# New team member uses snapshot  
+wget https://github.com/org/repo/releases/download/v1.2.0/astdb-snapshot-v1.2.0.tar.gz
+tar -xzf astdb-snapshot-v1.2.0.tar.gz
+ast-helper parse --changed  # catch up to current state
+```
+
+---
+
+## 9. Dependencies & Build Configuration
+
+### 9.1 Package.json Specification
 
 ```json
 {
@@ -503,86 +697,133 @@ export AST_COPILOT_MODEL_HOST=https://custom/  # overrides modelHost
   "version": "1.0.0",
   "description": "AST-based context enhancement for GitHub Copilot",
   "main": "dist/index.js",
+  "type": "module",
   "bin": {
     "ast-helper": "bin/ast-helper.js"
   },
   "scripts": {
     "build": "tsc && cp -r extension dist/",
-    "test": "jest",
-    "test:integration": "jest --config jest.integration.config.js",
+    "test": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
     "benchmark": "node dist/benchmarks/performance.js",
     "prepare": "npm run build"
   },
   "dependencies": {
-    "commander": "^11.0.0",
-    "@xenova/transformers": "^2.17.0",
-    "tree-sitter": "^0.21.0",
-    "tree-sitter-typescript": "^0.20.3",
-    "tree-sitter-javascript": "^0.21.0", 
-    "tree-sitter-python": "^0.20.4",
-    "chokidar": "^3.5.3",
-    "glob": "^10.3.0",
+    "commander": "^12.1.0",
+    "@xenova/transformers": "^2.18.0",
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-typescript": "^0.21.2",
+    "tree-sitter-javascript": "^0.21.4", 
+    "tree-sitter-python": "^0.21.0",
+    "chokidar": "^4.0.1",
+    "glob": "^11.0.0",
     "hnswlib-node": "^3.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.2.0",
-    "@types/node": "^20.0.0",
-    "jest": "^29.6.0",
-    "@types/jest": "^29.5.0",
-    "ts-jest": "^29.1.0"
+    "typescript": "^5.6.2",
+    "@types/node": "^22.5.4",
+    "vitest": "^2.0.5",
+    "@vitest/coverage-v8": "^2.0.5",
+    "@vitest/ui": "^2.0.5"
   },
   "optionalDependencies": {
-    "onnxruntime-node": "^1.16.0"
+    "onnxruntime-node": "^1.19.2"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "os": ["darwin", "linux", "win32"],
   "cpu": ["x64", "arm64"]
 }
 ```
 
-### 7.2 TypeScript Configuration
+### 9.2 TypeScript Configuration
 
 ```json
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs", 
+    "module": "ES2022", 
+    "moduleResolution": "Node",
     "lib": ["ES2022"],
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "sourceMap": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": false,
+    "noEmitOnError": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
 ```
 
-### 7.3 Build Pipeline Requirements
+### 9.3 Build Pipeline Requirements
 
-- **Node.js**: 18+ for native ES modules and latest crypto APIs
+- **Node.js**: 20+ for native ES modules, latest crypto APIs, and improved performance
 - **Platform Support**: Windows 10+, macOS 12+, Linux (Ubuntu 20.04+)
 - **Architecture**: x64, arm64 (Apple Silicon)
 - **Binary Distribution**: Optional native binaries for performance-critical operations
 - **VS Code Extension**: Separate packaging for marketplace distribution
 
+### 9.4 Vitest Configuration
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.ts', 'tests/**/*.{test,spec}.ts'],
+    exclude: ['node_modules', 'dist'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'json'],
+      exclude: [
+        'node_modules/',
+        'dist/',
+        'tests/',
+        '**/*.d.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.ts'
+      ],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80
+        }
+      }
+    },
+    testTimeout: 10000,
+    hookTimeout: 10000
+  }
+})
+```
+
 ---
 
-## 8. Testing & Validation  
+## 10. Testing & Validation  
 
-- **Unit tests** for each module using Jest with comprehensive coverage targets.
+- **Unit tests** for each module using Vitest with comprehensive coverage targets.
 - **Integration tests** against sample repo fixtures: verify AST JSON schema, annotation completeness, index build/query accuracy.  
 - **Performance benchmarks**: 
-  - **Indexing Performance**: Index 100k nodes in <10 minutes on 2-CPU 8GB CI runner
-  - **Query Latency**: Top-5 query latency <200ms average, <500ms 95th percentile
-  - **Memory Usage**: Peak memory <1GB for 100k node repositories
+  - **Indexing Performance**: Index 100k significant nodes in <10 minutes on 2-CPU 8GB CI runner
+  - **Query Latency**: Top-5 query latency <200ms P95 across 100k indexed nodes
+  - **Memory Usage**: Peak memory <4GB for 100k significant nodes
   - **Startup Time**: CLI cold start <2s, warm start <500ms
   - **File Processing**: Parse 1k TypeScript files <30s
   - **Embedding Generation**: 1k code fragments <60s with WASM, <30s with native
@@ -591,12 +832,12 @@ export AST_COPILOT_MODEL_HOST=https://custom/  # overrides modelHost
 - **End-to-end workflow validation**: 
   - Git hooks: commit → parse/annotate → pre-push embed → index updates
   - VS Code extension: prompt enrichment → query execution → Copilot integration
-  - Scale testing: synthetic 100k LOC fixture with representative language distribution
+  - Scale testing: synthetic 100k node fixture with representative language distribution
 - **Security testing**: Model download verification, checksum validation, signature checking  
 
 ---  
 
-## 9. Example Usage  
+## 11. Example Usage  
 
 ```bash
 # Installation
@@ -611,7 +852,7 @@ npx husky add .husky/pre-push   "ast-helper embed --changed"
 ast-helper parse --glob "src/**/*.{ts,js,py}"    # Parse specific files
 ast-helper annotate --changed                    # Annotate changed files
 ast-helper embed --changed                       # Update embeddings
-ast-helper query --intent "error handling" --top 5  # Search for relevant code
+ast-helper query "error handling" --top 5           # Search for relevant code
 
 # Development workflow
 ast-helper watch                  # Live updates during development
@@ -621,14 +862,14 @@ ast-helper watch                  # Live updates during development
 ast-helper parse --changed        # Parse changed files
 ast-helper annotate --changed     # Generate annotations  
 ast-helper embed --changed        # Update vector index
-ast-helper query --intent "test coverage" --format json > context.json  # Export for other tools
+ast-helper query "test coverage" --format json > context.json       # Export for other tools
 ```
 
 ---
 
-## 10. Error Handling & Recovery
+## 12. Error Handling & Recovery
 
-### 10.1 Corruption Detection & Recovery
+### 11.1 Corruption Detection & Recovery
 
 **Index Corruption**
 - **Detection**: Checksum validation on index load, schema version checks
@@ -645,7 +886,7 @@ ast-helper query --intent "test coverage" --format json > context.json  # Export
 - **Grammar Issues**: Download latest grammar, retry once
 - **Syntax Errors**: Skip malformed files with detailed logging
 
-### 10.2 Concurrent Access Management
+### 11.2 Concurrent Access Management
 
 **File Locking Strategy**
 ```typescript
@@ -662,7 +903,7 @@ interface LockManager {
 - Timeout handling (30s default, configurable)
 - Deadlock detection and recovery
 
-### 10.3 Memory Management
+### 11.3 Memory Management
 
 **Large Repository Handling**
 - Streaming processing for files >10MB
@@ -670,7 +911,7 @@ interface LockManager {
 - Memory pressure detection and graceful degradation
 - Configurable memory limits per operation
 
-### 10.4 Error Code Framework
+### 11.4 Error Code Framework
 
 **Exit Codes and Error Classification**
 ```typescript
@@ -762,9 +1003,9 @@ const ErrorHelp: Partial<Record<ErrorCodes, string>> = {
 
 ---
 
-## 11. Deployment & Operations
+## 13. Deployment & Operations
 
-### 11.1 CI/CD Pipeline Specification
+### 12.1 CI/CD Pipeline Specification
 
 **GitHub Actions Workflow** (`.github/workflows/release.yml`)
 ```yaml
@@ -795,7 +1036,7 @@ jobs:
 
 **Note**: CodeBERT models are downloaded directly from HuggingFace at runtime, not distributed in releases.
 
-### 11.2 Monitoring & Observability
+### 12.2 Monitoring & Observability
 
 **Performance Metrics Collection**
 ```typescript
@@ -825,7 +1066,7 @@ interface Logger {
 }
 ```
 
-### 11.3 Migration & Upgrade Strategies
+### 12.3 Migration & Upgrade Strategies
 
 **Schema Versioning**
 ```typescript
@@ -846,9 +1087,9 @@ interface ASTDBVersion {
 
 ---
 
-## 12. Advanced Configuration & Tuning
+## 14. Advanced Configuration & Tuning
 
-### 12.1 Extended Configuration Schema
+### 13.1 Extended Configuration Schema
 
 ```json
 {
@@ -893,7 +1134,7 @@ interface ASTDBVersion {
 }
 ```
 
-### 12.2 Performance Optimization Guidelines  
+### 13.2 Performance Optimization Guidelines  
 
 **Large Repository Optimization**
 - Use `--changed` flag to limit scope
@@ -914,11 +1155,11 @@ interface ASTDBVersion {
 
 ---
 
-## 13. Testing & Quality Assurance
+## 15. Testing & Quality Assurance
 
-### 13.1 Comprehensive Testing Strategy
+### 14.1 Comprehensive Testing Strategy
 
-**Unit Testing (Jest + TypeScript)**
+**Unit Testing (Vitest + TypeScript)**
 - **Target Coverage**: 90%+ for core modules
 - **Test Categories**: 
   - Parser functionality with malformed ASTs
@@ -929,7 +1170,7 @@ interface ASTDBVersion {
 
 **Integration Testing**
 - **Multi-language Repository**: Test with TypeScript + Python + JavaScript
-- **Large Scale Testing**: 100k LOC synthetic repository  
+- **Large Scale Testing**: 100k significant nodes synthetic repository  
 - **Git Workflow Testing**: Various git states (clean, dirty, staged, conflicts)
 - **Cross-platform Testing**: Windows, macOS, Linux environments
 
@@ -966,7 +1207,7 @@ const edgeCases: EdgeCaseTest[] = [
 ];
 ```
 
-### 13.2 Performance Benchmarking Framework
+### 14.2 Performance Benchmarking Framework
 
 **Benchmark Scenarios**
 - Repository sizes: 1k, 10k, 100k, 500k LOC
@@ -989,16 +1230,16 @@ interface BenchmarkResult {
 ```
 
 **Automated Performance Gates**
-- Parse: <5 minutes per 100k LOC
-- Query: <500ms P95 latency
-- Memory: <4GB peak for 100k LOC
-- Index size: <200MB for 100k LOC
+- Parse: <5 minutes per 100k significant nodes
+- Query: <200ms P95 latency across 100k indexed nodes
+- Memory: <4GB peak for 100k significant nodes
+- Index size: <200MB for 100k significant nodes
 
 ---
 
-## 14. Security & Privacy
+## 16. Security & Privacy
 
-### 14.1 Security Hardening
+### 15.1 Security Hardening
 
 **Input Validation**
 - File path sanitization (prevent directory traversal)
@@ -1033,7 +1274,7 @@ const securityChecks: SecurityCheck[] = [
 ];
 ```
 
-### 14.2 Privacy Protection
+### 15.2 Privacy Protection
 
 **Data Locality Guarantees**
 - All code processing remains local (no cloud transmission)
@@ -1049,9 +1290,9 @@ const securityChecks: SecurityCheck[] = [
 
 ---
 
-## 15. User Documentation & Support
+## 17. User Documentation & Support
 
-### 15.1 Installation & Setup Guide
+### 16.1 Installation & Setup Guide
 
 **Prerequisites Check**
 ```bash
@@ -1068,7 +1309,7 @@ ast-helper doctor --fix          # Attempt to resolve common issues
 5. **Start MCP Server**: `ast-mcp-server start` (launches MCP server for AI clients)
 6. **Optional VS Code Extension**: Install from marketplace for managing both tools
 
-### 15.2 Troubleshooting Guide
+### 16.2 Troubleshooting Guide
 
 **Common Issues & Solutions**
 | Issue | Symptoms | Solution |
@@ -1087,7 +1328,7 @@ ast-helper debug --query "test" # Verbose query execution
 ast-helper logs --tail 50       # View recent operation logs
 ```
 
-### 15.3 Configuration Examples
+### 16.3 Configuration Examples
 
 **TypeScript Monorepo**
 ```json
@@ -1113,11 +1354,11 @@ ast-helper logs --tail 50       # View recent operation logs
 
 ---
 
-## 16. Architecture Decisions & Implementation Plan
+## 18. Architecture Decisions & Implementation Plan
 
 This section consolidates all architectural decisions, trade-offs, and implementation approaches into a unified plan. All previously open questions have been resolved and integrated below.
 
-### 16.1 Language & Parser Stack
+### 17.1 Language & Parser Stack
 
 **Decision**: Multi-language support with TS/JS/Python in initial release
 - **Parser**: Tree-sitter with native `node-tree-sitter` + WASM fallback via `tree-sitter-wasm`  
@@ -1126,7 +1367,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Normalization**: Include function/class/module definitions + control-flow; strip comments
 - **Rationale**: Balanced approach supporting major languages while maintaining package size and reliability
 
-### 16.2 Annotation & Analysis
+### 17.2 Annotation & Analysis
 
 **Decision**: Template-based approach with language-aware extraction
 - **Signatures**: Language-specific extraction for TS/JS/Python; generic fallback for others
@@ -1136,17 +1377,17 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Snippets**: Configurable lines (default 10) with truncation markers
 - **Rationale**: Provides deterministic, reproducible results without external dependencies
 
-### 16.3 Embedding & Indexing
+### 17.3 Embedding & Indexing
 
 **Decision**: Hybrid runtime approach with pure-JS default
 - **Model**: CodeBERT-base ONNX (768-dim) via `@xenova/transformers` WASM runtime
-- **Delivery**: Download from GitHub Releases with SHA256 verification + optional signing
+- **Delivery**: Download from HuggingFace with SHA256 verification
 - **Alternative**: `--runtime onnx` flag for `onnxruntime-node` (if available)
 - **Index**: Pure-JS/WASM HNSW by default; optional `hnswlib-node` via prebuilt binaries
 - **Upserts**: Delete+insert via `index.meta.json` mapping; tombstone cleanup for non-deletable backends
 - **Rationale**: Zero-dependency baseline with performance upgrade path for power users
 
-### 16.4 Git Integration & File Handling
+### 17.4 Git Integration & File Handling
 
 **Decision**: Flexible git workflow integration
 - **Default**: `git diff --name-only --diff-filter=ACMRT HEAD`
@@ -1155,7 +1396,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Concurrency**: File lock at `.astdb/.lock`; auto-rebuild on corruption (opt-in)
 - **Rationale**: Supports common git workflows while providing flexibility for different CI/development patterns
 
-### 16.5 VS Code Extension Strategy
+### 17.5 VS Code Extension Strategy
 
 **Decision**: Dual approach for reliability and UX
 - **Primary**: Explicit `ast-copilot-helper.enrichAndSend` command (stable)
@@ -1164,7 +1405,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Output**: `--format plain` for extension consumption
 - **Rationale**: Provides stable integration with experimental convenience feature for power users
 
-### 16.6 Distribution & Native Performance
+### 17.6 Distribution & Native Performance
 
 **Decision**: Zero-dependency default with optional native optimization
 - **Core Package**: Pure-JS/WASM, works everywhere, reasonable performance
@@ -1173,7 +1414,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Opt-in**: `--use-native` flag or postinstall configuration for performance users
 - **Rationale**: Maximizes compatibility while providing performance upgrade path
 
-### 16.7 Privacy & Telemetry
+### 17.7 Privacy & Telemetry
 
 **Decision**: Privacy-first with opt-in analytics
 - **Default**: No telemetry, explicit privacy guarantee (no code/embeddings leave machine)
@@ -1182,29 +1423,29 @@ This section consolidates all architectural decisions, trade-offs, and implement
 - **Endpoint**: Configurable URL (disabled until endpoint decided)
 - **Rationale**: Respects user privacy while enabling optional product improvement data
 
-### 16.8 Security & Supply Chain
+### 17.8 Security & Supply Chain
 
 **Decision**: Comprehensive verification pipeline
-- **Downloads**: HTTPS + SHA256 checksums for all artifacts (models, prebuilds)
-- **Signing**: Sigstore/cosign for artifact authenticity
+- **Downloads**: HTTPS + SHA256 checksums for all artifacts (models from HuggingFace, prebuilds from GitHub Releases)
+- **Signing**: Sigstore/cosign for prebuilt binary authenticity
 - **Verification**: Public keys stored in repo with documented validation steps
 - **Licenses**: `LICENSES.md` and `NOTICE` files with model attribution
 - **Rationale**: Enterprise-grade security practices for supply chain integrity
 
-### 16.9 Scale & Performance Targets
+### 17.9 Scale & Performance Targets
 
 **Decision**: Enterprise-grade scale planning
-- **Target**: 100k LOC repositories (validated requirement from stakeholders)
+- **Target**: 100k significant AST nodes (validated requirement from stakeholders)
 - **Benchmarks**: 
-  - Full index build: <10 minutes (2-CPU 8GB CI runner)
-  - Query latency: <200ms average for top-5 results
-  - Memory: Efficient for large codebases with batching
+  - Full index build: <10 minutes for 100k LOC / 15k nodes (2-CPU 8GB CI runner)
+  - Query latency: <200ms P95 for top-5 results across 15k indexed nodes
+  - Memory: <4GB peak processing 100k LOC / 15k nodes with efficient batching
 - **Testing**: Synthetic fixture combining real projects + generated code
 - **Rationale**: Targets real-world enterprise development environments
 
 ---
 
-## 18. Outstanding Implementation Dependencies
+## 19. Outstanding Implementation Dependencies
 
 ### 18.1 High Priority Implementation Details
 
@@ -1337,7 +1578,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 
 ---
 
-## 19. Implementation Readiness Assessment
+## 20. Implementation Readiness Assessment
 
 ### 19.1 Current Completeness Status
 
@@ -1397,15 +1638,15 @@ This section consolidates all architectural decisions, trade-offs, and implement
 
 ---
 
-## 20. Success Criteria & Delivery Readiness
+## 21. Success Criteria & Delivery Readiness
 
 ### 19.1 Technical Milestones
 
 **Core Functionality**
-- [ ] Parse 100k LOC repository in <10 minutes on 2-CPU 8GB CI runner
-- [ ] Query latency <200ms P95 for top-5 results with warm index
+- [ ] Parse 100k LOC repository (~15k significant nodes) in <10 minutes on 2-CPU 8GB CI runner
+- [ ] Query latency <200ms P95 for top-5 results across 15k indexed nodes with warm index
 - [ ] Zero-dependency install success rate >95% across supported platforms
-- [ ] Memory usage scales linearly with repository size (efficient batching)
+- [ ] Memory usage scales linearly with repository size (efficient batching, <4GB peak for 100k LOC)
 
 **Integration & User Experience**
 - [ ] VS Code extension functional with all major Copilot scenarios
