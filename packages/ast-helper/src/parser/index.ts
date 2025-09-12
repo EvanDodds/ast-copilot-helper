@@ -3,6 +3,7 @@
  */
 
 export { RuntimeDetector } from './runtime-detector.js';
+export { TreeSitterGrammarManager } from './grammar-manager.js';
 export * from './types.js';
 
 // Re-export from parsers when implemented
