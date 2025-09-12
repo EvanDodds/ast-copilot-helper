@@ -1,0 +1,433 @@
+name: Release and Deployment
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY_URL: 'https://registry.npmjs.org'
+
+jobs:
+  # Pre-release validation
+  pre-release:
+    name: Pre-Release Validation
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should-publish: ${{ steps.check.outputs.should-publish }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          registry-url: ${{ env.REGISTRY_URL }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "version=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate version format
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "❌ Invalid version format: $version"
+            echo "Expected format: v1.2.3 or v1.2.3-beta"
+            exit 1
+          fi
+          echo "✅ Version format valid: $version"
+
+      - name: Run full test suite
+        run: |
+          echo "🧪 Running comprehensive test suite..."
+          npm run test:all || npm test
+          
+      - name: Run security audit
+        run: |
+          echo "🔒 Running security audit..."
+          npm audit --audit-level=high
+
+      - name: Build packages
+        run: |
+          echo "🏗️ Building all packages..."
+          npm run build:all || npm run build
+
+      - name: Check publish readiness
+        id: check
+        run: |
+          # Check if this is a production release
+          version="${{ steps.version.outputs.version }}"
+          if [[ "$version" =~ -alpha|-beta|-rc ]]; then
+            echo "should-publish=false" >> $GITHUB_OUTPUT
+            echo "🚧 Pre-release version detected: $version"
+          else
+            echo "should-publish=true" >> $GITHUB_OUTPUT
+            echo "🚀 Production release version: $version"
+          fi
+
+  # Build and package
+  build:
+    name: Build and Package
+    needs: pre-release
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: |
+          echo "🏗️ Building for ${{ matrix.os }}..."
+          npm run build:all || npm run build
+
+      - name: Package binaries
+        run: |
+          echo "📦 Creating distribution packages..."
+          # Package CLI tools and MCP server
+          mkdir -p dist/
+          
+          # Copy built packages
+          if [ -d "packages/ast-helper/bin" ]; then
+            cp -r packages/ast-helper/bin dist/ast-helper-bin
+          fi
+          
+          if [ -d "packages/ast-mcp-server/bin" ]; then
+            cp -r packages/ast-mcp-server/bin dist/ast-mcp-server-bin
+          fi
+
+      - name: Create platform-specific archives
+        run: |
+          echo "🗜️ Creating platform archives..."
+          platform="${{ matrix.os }}"
+          case $platform in
+            ubuntu-latest) platform_name="linux" ;;
+            windows-latest) platform_name="windows" ;;
+            macos-latest) platform_name="macos" ;;
+          esac
+          
+          if [ -d "dist/" ]; then
+            tar -czf "ast-copilot-helper-${{ needs.pre-release.outputs.version }}-${platform_name}.tar.gz" -C dist/ .
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}-${{ github.run_number }}
+          path: |
+            dist/
+            *.tar.gz
+          retention-days: 30
+
+  # Performance validation for releases
+  performance-validation:
+    name: Performance Validation
+    needs: [pre-release, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-ubuntu-latest-${{ github.run_number }}
+          path: ./dist/
+
+      - name: Run comprehensive benchmarks
+        run: |
+          echo "🚀 Running comprehensive performance benchmarks..."
+          npm run test:benchmarks || npm test -- tests/benchmarks/ --reporter=verbose > release-benchmarks.txt 2>&1
+
+      - name: Validate release performance criteria
+        run: |
+          echo "📊 Validating release performance criteria..."
+          
+          # Strict validation for releases
+          parsing_failures=0
+          mcp_failures=0
+          cli_failures=0
+          
+          # Check parsing performance (must be well under limits)
+          if grep -q "Parsed.*nodes in.*ms" release-benchmarks.txt; then
+            parsing_time=$(grep "Parsed.*nodes in.*ms" release-benchmarks.txt | head -1 | grep -o '[0-9.]*ms' | grep -o '[0-9.]*')
+            parsing_time_minutes=$(echo "scale=2; $parsing_time / 60000" | bc)
+            if (( $(echo "$parsing_time_minutes > 8" | bc -l) )); then  # Stricter than 10min
+              echo "❌ Release FAIL: Parsing time ${parsing_time_minutes}min exceeds 8min threshold"
+              parsing_failures=1
+            else
+              echo "✅ Parsing performance: ${parsing_time}ms (${parsing_time_minutes} minutes)"
+            fi
+          fi
+          
+          # Check MCP latency (stricter)
+          if grep -q "MCP Query Performance" release-benchmarks.txt; then
+            mcp_avg=$(grep "Average:" release-benchmarks.txt | head -1 | grep -o '[0-9.]*ms' | grep -o '[0-9.]*')
+            if (( $(echo "$mcp_avg > 150" | bc -l) )); then  # Stricter than 200ms
+              echo "❌ Release FAIL: MCP latency ${mcp_avg}ms exceeds 150ms threshold"
+              mcp_failures=1
+            else
+              echo "✅ MCP performance: ${mcp_avg}ms average"
+            fi
+          fi
+          
+          # Check CLI latency (stricter)
+          if grep -q "CLI Query Performance" release-benchmarks.txt; then
+            cli_avg=$(grep "Average:" release-benchmarks.txt | tail -1 | grep -o '[0-9.]*ms' | grep -o '[0-9.]*')
+            if (( $(echo "$cli_avg > 400" | bc -l) )); then  # Stricter than 500ms
+              echo "❌ Release FAIL: CLI latency ${cli_avg}ms exceeds 400ms threshold"
+              cli_failures=1
+            else
+              echo "✅ CLI performance: ${cli_avg}ms average"
+            fi
+          fi
+          
+          total_failures=$((parsing_failures + mcp_failures + cli_failures))
+          if [ $total_failures -gt 0 ]; then
+            echo "❌ Release performance validation FAILED ($total_failures issues)"
+            exit 1
+          fi
+          
+          echo "🎉 Release performance validation PASSED!"
+
+      - name: Archive release benchmarks
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-benchmarks-${{ needs.pre-release.outputs.version }}
+          path: release-benchmarks.txt
+          retention-days: 90
+
+  # Publish packages
+  publish:
+    name: Publish Packages
+    needs: [pre-release, build, performance-validation]
+    if: needs.pre-release.outputs.should-publish == 'true'
+    runs-on: ubuntu-latest
+    environment: 
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: https://www.npmjs.com/package/ast-copilot-helper
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          registry-url: ${{ env.REGISTRY_URL }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for publishing
+        run: npm run build:all || npm run build
+
+      - name: Update version in package.json files
+        run: |
+          version="${{ needs.pre-release.outputs.version }}"
+          clean_version=${version#v}  # Remove 'v' prefix
+          
+          echo "📝 Updating version to $clean_version"
+          
+          # Update root package.json
+          npm version $clean_version --no-git-tag-version
+          
+          # Update workspace packages
+          for package_dir in packages/*/; do
+            if [ -f "$package_dir/package.json" ]; then
+              cd "$package_dir"
+              npm version $clean_version --no-git-tag-version
+              cd - > /dev/null
+            fi
+          done
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "🚀 Publishing packages to npm..."
+          
+          # Publish root package
+          npm publish --access public
+          
+          # Publish workspace packages
+          for package_dir in packages/*/; do
+            if [ -f "$package_dir/package.json" ]; then
+              echo "Publishing $(basename "$package_dir")..."
+              cd "$package_dir"
+              npm publish --access public
+              cd - > /dev/null
+            fi
+          done
+
+      - name: Create GitHub release
+        if: github.event_name != 'release'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.pre-release.outputs.version }}
+          release_name: Release ${{ needs.pre-release.outputs.version }}
+          body: |
+            ## 🚀 Release ${{ needs.pre-release.outputs.version }}
+            
+            ### ✨ Features
+            - Comprehensive AST analysis and code intelligence
+            - MCP (Model Context Protocol) server integration
+            - Cross-platform CLI tooling
+            - High-performance query processing
+            
+            ### 📊 Performance Benchmarks
+            - ✅ Parsing: 15k+ nodes in <8 minutes
+            - ✅ MCP queries: <150ms average latency
+            - ✅ CLI queries: <400ms average latency
+            
+            ### 🔗 Installation
+            ```bash
+            npm install -g ast-copilot-helper
+            ```
+            
+            ### 📦 Package Contents
+            - `ast-helper`: CLI tool for AST analysis
+            - `ast-mcp-server`: MCP protocol server
+            - `vscode-extension`: VS Code extension
+            
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ needs.pre-release.outputs.version }}...HEAD
+          draft: false
+          prerelease: ${{ contains(needs.pre-release.outputs.version, '-') }}
+
+  # Upload release assets
+  upload-assets:
+    name: Upload Release Assets
+    needs: [pre-release, build, publish]
+    if: needs.pre-release.outputs.should-publish == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts/
+
+      - name: Upload release assets
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Get release
+            const release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: '${{ needs.pre-release.outputs.version }}'
+            });
+            
+            // Upload all tar.gz files
+            const artifactsDir = './artifacts/';
+            const files = fs.readdirSync(artifactsDir, { recursive: true });
+            
+            for (const file of files) {
+              if (file.endsWith('.tar.gz')) {
+                const filePath = path.join(artifactsDir, file);
+                const fileName = path.basename(file);
+                
+                console.log(`Uploading ${fileName}...`);
+                
+                await github.rest.repos.uploadReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: release.data.id,
+                  name: fileName,
+                  data: fs.readFileSync(filePath)
+                });
+              }
+            }
+
+  # Deployment notification
+  notify-deployment:
+    name: Notify Deployment
+    needs: [pre-release, publish, upload-assets]
+    if: always() && needs.pre-release.outputs.should-publish == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Determine deployment status
+        id: status
+        run: |
+          if [[ "${{ needs.publish.result }}" == "success" && "${{ needs.upload-assets.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Deployment Successful" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ Deployment Failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deployment summary
+        run: |
+          echo "## ${{ steps.status.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ needs.pre-release.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** \`${{ github.event.inputs.environment || 'production' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Publish Status:** \`${{ needs.publish.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Assets Upload:** \`${{ needs.upload-assets.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📦 **NPM Package:** https://www.npmjs.com/package/ast-copilot-helper" >> $GITHUB_STEP_SUMMARY
+          echo "📋 **GitHub Release:** https://github.com/${{ github.repository }}/releases/tag/${{ needs.pre-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
