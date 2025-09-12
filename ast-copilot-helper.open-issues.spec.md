@@ -79,121 +79,91 @@ To "Standalone MCP server providing AI models with deep codebase understanding"
 
 **Impact**: High - affects installation success rate and security
 
-### 3. Tree-sitter Grammar Management Complexity
+### 3. ~~Tree-sitter Grammar Management Complexity~~ → **RESOLVED: Download-on-Demand Approach**
 
-**Issue**: Managing Tree-sitter grammars across languages, versions, and platforms presents significant complexity.
+**Original Issue**: Managing Tree-sitter grammars across languages, versions, and platforms presents significant complexity.
 
-**Context**: The system needs to parse multiple languages using Tree-sitter, which requires language-specific grammar files.
+**ARCHITECTURAL DECISION - Download-on-Demand Strategy**:
 
-**Challenges**:
-- Grammar versioning and compatibility
-- Download and caching strategy
-- Platform-specific binaries vs WASM
-- Error handling for unsupported languages
+**Resolution**: Implement download-on-demand grammar caching with version pinning, rejecting the bundled approach in favor of reduced package size and better version management.
 
-**Grammar Sources**:
-1. **Official Tree-sitter Registry**
-   ```
-   Pros: Official source, maintained, versioned
-   Cons: May not include all desired languages
-   ```
+**Implementation Details**:
+- **Grammar Storage**: `.astdb/grammars/` with version pins for reproducibility
+- **Core Languages**: TS/JS/Python grammars cached locally on first use  
+- **Format Choice**: WASM grammars for zero-dependency cross-platform support
+- **Fallback Strategy**: Graceful degradation for unsupported languages
+- **Update Mechanism**: Version-pinned downloads with integrity verification
 
-2. **Individual Language Repositories**
-   ```
-   Pros: Latest features, community maintained
-   Cons: Inconsistent APIs, varying quality
-   ```
+**Implementation Reference**: 
+- Main spec: "Downloaded on demand to `.astdb/grammars/` with version pins; TS/JS/Python grammars cached locally"
+- Implementation spec Week 2: "Grammar download and caching system"
 
-3. **Bundled Approach**
-   ```
-   Pros: Guaranteed availability, version control
-   Cons: Large package size, update complexity
-   ```
+**Benefits of Download-on-Demand**:
+1. **Smaller Package Size** - No bundled grammar binaries in npm package
+2. **Flexible Language Support** - Add languages without package updates  
+3. **Version Control** - Pin grammar versions for reproducible builds
+4. **Platform Independence** - WASM grammars work across all platforms
 
-**Technical Decisions Needed**:
-- Grammar file format (WASM vs native binaries)
-- Caching strategy and storage location
-- Update mechanism and version pinning
-- Error handling for grammar download failures
-
-**Recommendation**: Start with WASM grammars for core languages (TS/JS/Python) bundled in package. Add download-on-demand for additional languages in future versions.
+**Status**: ✅ **RESOLVED** - Main specification adopted download-on-demand approach with caching
 
 **Impact**: Medium - affects language support and installation complexity
 
-### 4. Cross-Platform File Locking Mechanism
+### 4. ~~Cross-Platform File Locking Mechanism~~ → **RESOLVED: Lockfile-Based Implementation**
 
-**Issue**: Reliable file locking across Windows, macOS, and Linux requires platform-specific considerations.
+**Original Issue**: Reliable file locking across Windows, macOS, and Linux requires platform-specific considerations.
 
-**Context**: Multiple CLI processes may run simultaneously and need coordination to avoid corruption of `.astdb/` files.
+**ARCHITECTURAL DECISION - Lockfile-Based Coordination**:
 
-**Platform Differences**:
-- Windows: Uses file handles and sharing modes
-- Unix-like: flock() system call
-- Network filesystems: Additional complications
+**Resolution**: Implement cross-platform lockfile approach using `.astdb/.lock` with timeout and cleanup mechanisms, providing reliable process coordination without platform-specific dependencies.
 
-**Locking Strategies**:
-1. **Lockfile-based** (Recommended)
-   ```typescript
-   // Create .astdb/.lock file with process info
-   interface LockInfo {
-     pid: number;
-     operation: string;
-     timestamp: number;
-   }
-   ```
+**Implementation Details**:
+- **Lock File Location**: `.astdb/.lock` for process coordination
+- **Strategy**: File-based locking with timeout and stale lock cleanup
+- **Cross-Platform**: Works consistently across Windows, macOS, Linux
+- **Recovery**: Automatic cleanup of stale locks from crashed processes
+- **Timeout Handling**: Configurable timeouts for long-running operations
 
-2. **File handle locking**
-   ```typescript
-   // Platform-specific file locking
-   // More reliable but complex cross-platform implementation
-   ```
+**Implementation Reference**:
+- Main spec: "`.lock` process coordination" and "atomic updates ensure consistency"
+- Implementation spec Week 1: "File locking mechanism (`.astdb/.lock`)"
 
-**Considerations**:
-- Stale lock detection and cleanup
-- Timeout handling for long operations
-- Process crash recovery
-- Network filesystem compatibility
+**Benefits of Lockfile Approach**:
+1. **Platform Independence** - No platform-specific system calls required
+2. **Simple Implementation** - File-based coordination is well-understood
+3. **Network Filesystem Support** - Works across different filesystem types
+4. **Process Crash Recovery** - Automatic detection and cleanup of stale locks
 
-**Recommendation**: Implement lockfile-based approach with timeout and cleanup mechanisms. Consider upgrade to handle-based locking in future versions.
+**Status**: ✅ **RESOLVED** - Lockfile-based implementation chosen for cross-platform reliability
 
 **Impact**: Medium - affects reliability in multi-process scenarios
 
 ## Implementation Uncertainties
 
-### 5. Memory Management for Large Repositories
+### 5. ~~Memory Management for Large Repositories~~ → **RESOLVED: Configurable Batch Processing**
 
-**Issue**: Strategy for processing very large repositories without exhausting system memory is undefined.
+**Original Issue**: Strategy for processing very large repositories without exhausting system memory is undefined.
 
-**Context**: Target is 100k significant AST nodes (~667k LOC repositories), which could generate millions of annotations.
+**ARCHITECTURAL DECISION - Batch Processing with Configurable Limits**:
 
-**Memory Pressure Points**:
-- AST parsing of large files (>10MB)
-- Annotation generation for many nodes
-- Embedding computation batch sizes
-- Vector index construction
+**Resolution**: Implement configurable batch processing for embeddings and AST operations, providing memory-efficient processing of large repositories while maintaining performance targets.
 
-**Mitigation Strategies**:
-1. **Streaming Processing**
-   - Process files individually rather than loading all at once
-   - Stream annotations through embedding pipeline
-   - Incremental index updates
+**Implementation Details**:
+- **Batch Processing**: Configurable batch sizes for embedding generation
+- **Memory Management**: Files processed individually rather than loading all at once
+- **Incremental Updates**: Index updates happen incrementally to manage memory
+- **Conservative Defaults**: Start with safe batch sizes, allow user configuration
+- **Streaming Strategy**: Process files individually to avoid memory spikes
 
-2. **Batch Size Optimization**
-   - Configurable batch sizes based on available memory
-   - Memory pressure detection and adaptive batching
-   - Garbage collection optimization
+**Implementation Reference**:
+- Main spec: "Batch processing" for memory management
+- Implementation spec Week 3: "Batch processing for embeddings (configurable batch sizes)" and "Memory management for large datasets"
 
-3. **Temporary File Usage**
-   - Offload intermediate results to disk
-   - Memory-mapped files for large datasets
-   - Cleanup strategies for temporary data
+**Mitigation Strategies Implemented**:
+1. **Configurable Batch Sizes** - Based on available memory and user configuration
+2. **Incremental Processing** - Files processed individually with streaming approach
+3. **Memory Monitoring** - Conservative defaults with optimization in future versions
 
-**Open Questions**:
-- What are reasonable memory limits for different system configurations?
-- How to detect memory pressure reliably across platforms?
-- What batch sizes provide optimal performance vs memory trade-offs?
-
-**Recommendation**: Implement configurable batch processing with memory monitoring. Start with conservative defaults and add optimization in later versions.
+**Status**: ✅ **RESOLVED** - Batch processing approach adopted with configurable limits
 
 **Impact**: High - affects scalability and user experience on large repositories
 
@@ -448,26 +418,230 @@ git status --porcelain  # working directory state
 
 **Impact**: Medium - affects long-term project sustainability
 
+## New Issues from MCP Architecture
+
+### 14. MCP Protocol Evolution and Compatibility
+
+**Issue**: MCP protocol is still evolving and different clients may implement different protocol versions, creating compatibility challenges.
+
+**Context**: Our standalone MCP server needs to support multiple AI clients (Claude Desktop, VS Code with MCP extensions, future MCP-compatible tools) that may implement different MCP protocol versions.
+
+**Challenges**:
+- Protocol version negotiation between server and clients
+- Feature compatibility matrix across different MCP implementations
+- Graceful degradation for unsupported MCP features
+- Future protocol evolution and backward compatibility
+
+**Technical Considerations**:
+- MCP server capability advertisement
+- Client feature detection and adaptation
+- Protocol version validation and error handling
+- Extensibility design for future MCP features
+
+**Recommendation**: Implement MCP 1.0 protocol strictly with capability negotiation. Design extensible architecture for future protocol versions.
+
+**Impact**: High - affects cross-client compatibility and future-proofing
+
+### 15. Monorepo Package Dependency Management
+
+**Issue**: Three separate packages (ast-helper, ast-mcp-server, vscode-extension) need coordinated versioning and release management to ensure compatibility.
+
+**Context**: Each package serves different purposes but must work together. Version mismatches could cause feature incompatibility or runtime errors.
+
+**Challenges**:
+- Coordinated version releases across three packages
+- Cross-package compatibility validation
+- Dependency resolution for shared utilities
+- Independent package deployment vs monolithic releases
+
+**Technical Considerations**:
+- Lerna/Rush for monorepo management
+- Semantic versioning strategy across packages
+- CI/CD pipeline coordination for releases
+- Version compatibility testing matrix
+
+**Recommendation**: Use Lerna for coordinated releases with shared versioning. Implement compatibility validation in CI/CD pipeline.
+
+**Impact**: Medium - affects user experience and maintenance complexity
+
+### 16. Process Lifecycle Management in VS Code Extension
+
+**Issue**: VS Code extension managing two external processes (ast-helper, ast-mcp-server) creates complex lifecycle coordination and error recovery scenarios.
+
+**Context**: Extension must start/stop both processes, handle crashes, coordinate database building before MCP serving, and provide proper cleanup on workspace changes.
+
+**Challenges**:
+- Process startup ordering (ast-helper database build before MCP server start)
+- Crash detection and automatic restart policies
+- Proper cleanup on VS Code restart or workspace change
+- User feedback and error reporting for process failures
+
+**Technical Considerations**:
+- Child process management and monitoring
+- Inter-process communication for coordination
+- Graceful shutdown procedures
+- Status reporting and user notifications
+
+**Recommendation**: Implement robust process management with clear error reporting and automatic recovery where appropriate.
+
+**Impact**: Medium - affects reliability and user experience in VS Code
+
+### 17. MCP Server Discovery and Connection Management
+
+**Issue**: How do AI clients discover and connect to workspace-specific MCP servers running on different ports or in different workspaces?
+
+**Context**: Multiple VS Code workspaces may each have their own MCP server running. AI clients need to connect to the correct server for the current workspace context.
+
+**Challenges**:
+- Server discovery mechanism for clients
+- Port allocation and conflict resolution
+- Workspace-specific server identification
+- Connection management for multiple concurrent servers
+
+**Technical Considerations**:
+- Port assignment strategy (dynamic vs configured)
+- Server registry or discovery protocol
+- Client configuration for workspace-specific connections
+- Connection pooling and cleanup
+
+**Recommendation**: Start with configured port approach. Implement server registry for multi-workspace scenarios in future versions.
+
+**Impact**: Medium - affects user setup complexity and multi-workspace workflows
+
+### 18. Performance Validation Methodology
+
+**Issue**: 100k node performance target needs standardized benchmarking approach and reproducible test scenarios.
+
+**Context**: Implementation spec mentions performance targets but lacks standardized methodology for validation across different hardware and repository types.
+
+**Challenges**:
+- Standardized benchmark repository creation (synthetic vs real-world)
+- Hardware normalization for consistent performance metrics
+- Continuous performance regression testing
+- Performance profiling and optimization guidance
+
+**Technical Considerations**:
+- Benchmark dataset generation (target: ~667k LOC, 100k significant nodes)
+- Performance testing automation in CI/CD
+- Memory usage and latency measurement tools
+- Cross-platform performance validation
+
+**Recommendation**: Create standardized benchmark repository with automated performance validation in CI pipeline.
+
+**Impact**: Medium - affects development validation and user expectations
+
+### 19. Cross-Platform Binary Distribution Strategy  
+
+**Issue**: Optional native binaries (hnswlib-node) vs WASM fallback creates installation complexity and performance trade-offs.
+
+**Context**: Main spec mentions both native and WASM approaches but implementation strategy for graceful fallback is undefined.
+
+**Challenges**:
+- Detection of native binary availability vs WASM fallback
+- Performance difference communication to users
+- Installation failure recovery (native → WASM fallback)
+- Platform-specific optimization opportunities
+
+**Technical Considerations**:
+- Optional dependency handling in npm
+- Runtime detection and fallback mechanisms
+- Performance benchmarking for different runtime approaches
+- Installation error handling and user guidance
+
+**Recommendation**: Implement WASM-first with optional native acceleration. Clear performance implications documentation.
+
+**Impact**: Medium - affects installation success rate and runtime performance
+
+## Cross-Document Updates Needed
+
+### Updates Required in Main Specification (ast-copilot-helper.spec.md)
+
+1. **Add Specific Model URLs and Checksums** (from Issue #2 resolution):
+   ```markdown
+   **Model Specifications**:
+   - **Primary Model**: microsoft/codebert-base (ONNX format)
+   - **Download URL**: https://huggingface.co/microsoft/codebert-base/resolve/main/onnx/model.onnx
+   - **Tokenizer URL**: https://huggingface.co/microsoft/codebert-base/resolve/main/tokenizer.json
+   - **Checksum Source**: HuggingFace manifest.json for integrity verification
+   ```
+
+2. **Make File Locking Approach Explicit** (from Issue #4 resolution):
+   ```markdown
+   **Process Coordination**: `.astdb/.lock` lockfile-based coordination with timeout and stale lock cleanup across all platforms
+   ```
+
+3. **Add HNSW Parameter Details** (from Issue #7 resolution):
+   ```markdown
+   **HNSW Parameters**: M=16 (connectivity), efConstruction=200 (build quality), ef=64 (query quality) - optimized for 100k node target
+   ```
+
+### Updates Required in Implementation Specification (ast-copilot-helper.implementation.spec.md)
+
+1. **Reference Open Issues Timeline** - Add note in Week 7-8 about remaining open issues:
+   ```markdown
+   **Remaining Open Issues**: Security audit (Issue #11) and legal review (Issue #12) must complete before production release
+   ```
+
+2. **Add New Issue Considerations** - Include MCP architecture issues in risk assessment:
+   ```markdown
+   **MCP Architecture Risks**: Protocol compatibility (Issue #14), process management (Issue #16), and monorepo coordination (Issue #15) require careful testing
+   ```
+
+3. **Performance Validation References** - Link to Issue #18 methodology:
+   ```markdown
+   **Performance Validation**: Implement standardized benchmark approach per Issue #18 for reproducible 100k node testing
+   ```
+
+### Validation Checklist for Implementation Alignment
+
+**✅ Resolved Issues Properly Implemented:**
+- [ ] Grammar download-on-demand reflected in Week 2 parser implementation
+- [ ] Lockfile coordination included in Week 1 infrastructure
+- [ ] Batch processing memory management in Week 3 embedding system
+- [ ] HNSW default parameters used in Week 3 indexing
+- [ ] Atomic operations for error recovery in Week 3-4 implementation
+- [ ] MCP server architecture properly sequenced in Week 5
+
+**⚠️ New Issues Requiring Implementation Attention:**
+- [ ] MCP protocol version handling in ast-mcp-server package
+- [ ] Monorepo version coordination in CI/CD pipeline
+- [ ] VS Code extension dual-process lifecycle management
+- [ ] Server discovery mechanism for multi-workspace scenarios
+- [ ] Benchmark repository creation for performance validation
+- [ ] Native binary fallback detection and graceful degradation
+
 ## Summary and Prioritization
 
-### ✅ **RESOLVED - Critical Path Items**
+### ✅ **RESOLVED - Implementation Decisions Made**
+
 1. **~~GitHub Copilot Integration Strategy~~** → **MCP Architecture Pivot** - Eliminates API dependency entirely
-   - **New approach**: Embedded MCP server providing AST context to external AI models
-   - **Impact**: Transforms product into superior standalone AI codebase assistant
+2. **~~Model Artifact Hosting~~** → **HuggingFace Distribution** - Official Microsoft CodeBERT models
+3. **~~Tree-sitter Grammar Management~~** → **Download-on-Demand** - Cached in `.astdb/grammars/`
+4. **~~Cross-Platform File Locking~~** → **Lockfile-Based** - Using `.astdb/.lock` coordination
+5. **~~Memory Management for Large Repositories~~** → **Configurable Batch Processing** - Memory-efficient embedding generation
+6. **~~HNSW Performance Tuning~~** → **Specification Defaults** - M=16, efConstruction=200, ef=64
+7. **~~Error Recovery and Corruption Handling~~** → **Atomic Operations** - Atomic writes with integrity checking
+8. **~~VS Code Extension Distribution~~** → **Optional Extension** - Standalone server with optional VS Code manager
 
-### Critical Path Items (Must Resolve Before Development)
-2. **Model Artifact Hosting Plan** - Required for basic functionality
-3. **Memory Management Strategy** - Needed for performance targets
+### Remaining Critical Path Items (Must Resolve Before Development)
 
-### Important Items (Resolve During Development)
-4. **Tree-sitter Grammar Management** - Affects language support
-5. **Cross-platform File Locking** - Needed for reliability  
-6. **HNSW Performance Tuning** - Required for performance targets
-7. **Error Recovery Mechanisms** - Important for user experience
+**No critical blockers remain** - all architectural decisions have been made and are reflected in the implementation specification.
 
-### New Items (Added for Standalone MCP Architecture)
-**New-1. Standalone MCP Server Implementation** - Independent binary with CLI interface
-**New-2. MCP Tool Design** - Define AST context tools and response formats
+### Important Items (Address During Development)
+
+9. **Git Workflow Edge Cases** - Basic implementation planned, complex scenarios deferred
+10. **Configuration Edge Cases and Conflicts** - Partially addressed with CLI validation
+11. **Security Audit and Vulnerability Management** - Required before production release
+12. **Legal and Licensing Compliance** - Legal review needed for model distribution
+
+### New Items from MCP Architecture (Monitor During Implementation)
+
+13. **MCP Protocol Evolution and Compatibility** - Cross-client compatibility challenges
+14. **Monorepo Package Dependency Management** - Three-package coordination complexity
+15. **Process Lifecycle Management in VS Code** - Dual process management reliability
+16. **MCP Server Discovery and Connection Management** - Multi-workspace server coordination
+17. **Performance Validation Methodology** - Standardized benchmarking approach needed
+18. **Cross-Platform Binary Distribution Strategy** - Native vs WASM fallback complexity
 **New-3. Multi-Editor Compatibility** - Ensure MCP server works across different editors
 **New-4. Server Process Management** - Reliable startup, shutdown, and error recovery
 
