@@ -408,7 +408,7 @@ export class SignificanceCalculator {
    * Calculate scope depth factor
    */
   private calculateScopeFactor(node: ASTNode, _context: SignificanceContext): number {
-    const scopeDepth = node.metadata.scope.length;
+    const scopeDepth = node.metadata?.scope?.length ?? 0;
     
     // Deeply nested items are less significant
     if (scopeDepth > 6) return -1;
@@ -463,17 +463,17 @@ export class SignificanceCalculator {
     }
     
     // Exported items are more significant
-    if (node.metadata.exports.length > 0) {
+    if (node.metadata?.exports && node.metadata.exports.length > 0) {
       contextFactor += 0.5;
     }
     
     // Items with documentation are more significant
-    if (node.metadata.docstring) {
+    if (node.metadata?.docstring) {
       contextFactor += 0.2;
     }
     
     // Items with many modifiers (public, static, etc.) are more significant
-    if (node.metadata.modifiers.length > 2) {
+    if (node.metadata?.modifiers && node.metadata.modifiers.length > 2) {
       contextFactor += 0.3;
     }
     

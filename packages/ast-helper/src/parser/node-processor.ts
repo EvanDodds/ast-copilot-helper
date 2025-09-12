@@ -182,6 +182,15 @@ export class NodeProcessor {
     const startMemory = this.getMemoryUsage();
 
     try {
+      // Validate input parameters
+      if (!filePath || filePath.trim() === '') {
+        throw new ProcessingError('File path cannot be empty', filePath, 'validation');
+      }
+      
+      if (!language || language.trim() === '') {
+        throw new ProcessingError('Language cannot be empty', filePath, 'validation');
+      }
+
       // Read source text if not provided
       if (!sourceText) {
         if (!fs.existsSync(filePath)) {
@@ -630,7 +639,8 @@ export class NodeProcessor {
       nodesBySignificance[node.significance] = (nodesBySignificance[node.significance] || 0) + 1;
     }
 
-    const nodesPerSecond = processingTimeMs > 0 ? (nodes.length * 1000) / processingTimeMs : 0;
+    const nodesPerSecond = processingTimeMs > 0 ? (nodes.length * 1000) / processingTimeMs : 
+                          nodes.length > 0 ? nodes.length * 1000 : 0; // If 0ms but nodes exist, assume 1ms
     const avgTimePerNodeUs = nodes.length > 0 ? (processingTimeMs * 1000) / nodes.length : 0;
 
     return {
@@ -681,7 +691,8 @@ export class NodeProcessor {
     const avgPeakMemory = successful.length > 0 ? totalPeakMemory / successful.length : 0;
     const avgAvgMemory = successful.length > 0 ? totalAvgMemory / successful.length : 0;
 
-    const nodesPerSecond = totalTimeMs > 0 ? (totalNodes * 1000) / totalTimeMs : 0;
+    const nodesPerSecond = totalTimeMs > 0 ? (totalNodes * 1000) / totalTimeMs : 
+                          totalNodes > 0 ? totalNodes * 1000 : 0; // If 0ms but nodes exist, assume 1ms
     const avgTimePerNodeUs = totalNodes > 0 ? (totalTimeMs * 1000) / totalNodes : 0;
 
     return {
@@ -972,7 +983,8 @@ export class ProcessingUtils {
       nodesBySignificance,
       memoryUsage: { peakMB: 0, averageMB: 0 },
       performance: {
-        nodesPerSecond: totalProcessingTime > 0 ? (totalNodes * 1000) / totalProcessingTime : 0,
+        nodesPerSecond: totalProcessingTime > 0 ? (totalNodes * 1000) / totalProcessingTime : 
+                       totalNodes > 0 ? totalNodes * 1000 : 0, // If 0ms but nodes exist, assume 1ms
         avgTimePerNodeUs: totalNodes > 0 ? (totalProcessingTime * 1000) / totalNodes : 0,
       },
     };
