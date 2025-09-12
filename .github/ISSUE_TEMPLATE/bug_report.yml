@@ -1,0 +1,51 @@
+---
+name: Bug report
+about: Create a report to help us improve
+title: '[BUG] '
+labels: ['bug', 'triage']
+assignees: ''
+
+---
+
+## 🐛 Bug Description
+
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+## 📊 Environment
+
+**System Information:**
+- OS: [e.g. Windows 11, macOS 13, Ubuntu 22.04]
+- Node.js version: [e.g. 20.11.0]
+- Package version: [e.g. 0.1.0]
+
+**Configuration:**
+- Configuration file location: [e.g. ~/.ast-copilot-helper/config.json]
+- Custom settings: [list any custom configurations]
+
+## 📝 Additional Context
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**Logs**
+```
+Paste any relevant log output here
+```
+
+**Additional context**
+Add any other context about the problem here.
+
+## 🔧 Possible Solution
+
+If you have ideas about what might be causing this issue or how to fix it, please share them here.
