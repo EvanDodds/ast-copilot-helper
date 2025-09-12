@@ -184,7 +184,13 @@ export class AstHelperCli {
       .description('Generate vector embeddings for annotations')
       .addOption(new Option('-c, --changed', 'Process only changed annotations'))
       .addOption(new Option('--model <name>', 'Embedding model to use').default('codebert-base'))
-      .addOption(new Option('--batch-size <n>', 'Batch size for embedding generation').default(32).argParser(parseInt))
+      .addOption(new Option('--batch-size <n>', 'Batch size for embedding generation').default(32).argParser((value) => {
+        const num = parseInt(value);
+        if (isNaN(num) || num < 1 || num > 1000) {
+          throw new Error('--batch-size must be between 1 and 1000');
+        }
+        return num;
+      }))
       .action(async (options: EmbedOptions) => {
         await this.executeCommand('embed', options);
       });
