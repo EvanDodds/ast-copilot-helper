@@ -6,6 +6,7 @@
 import type { Config } from '../types.js';
 import { createLogger } from '../logging/index.js';
 import { ValidationErrors } from '../errors/index.js';
+import { FileSelectionEngine } from '../file-selection/index.js';
 
 /**
  * Parse command options interface
@@ -82,9 +83,10 @@ export interface CommandHandler<T = any> {
  */
 export class ParseCommand implements CommandHandler<ParseOptions> {
   private logger = createLogger();
+  private fileSelectionEngine: FileSelectionEngine;
 
   constructor() {
-    // Constructor implementation will be added in later subtasks
+    this.fileSelectionEngine = new FileSelectionEngine();
   }
 
   /**
@@ -176,18 +178,15 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
   /**
    * Select files to process based on the specified strategy
    */
-  private async selectFiles(options: ParseOptions, _config: Config): Promise<FileSelectionResult> {
-    // This method will be implemented in Subtask 2 (File Selection Engine) and Subtask 3 (Git Integration)
+  private async selectFiles(options: ParseOptions, config: Config): Promise<FileSelectionResult> {
+    // Use the FileSelectionEngine to handle file selection strategies
     
     if (options.changed) {
       // Git-based file selection - will be implemented in Subtask 3
       throw new Error('Git integration not yet implemented');
-    } else if (options.glob) {
-      // Glob pattern file selection - will be implemented in Subtask 2
-      throw new Error('Glob pattern selection not yet implemented');
     } else {
-      // Configuration-based file selection - will be implemented in Subtask 2
-      throw new Error('Configuration-based file selection not yet implemented');
+      // Use FileSelectionEngine for glob and config-based selection
+      return await this.fileSelectionEngine.selectFiles(options, config);
     }
   }
 
