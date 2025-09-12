@@ -58,16 +58,26 @@ Your Repo/
 
 ## 4. Module Specifications  
 
-### 4.1 CLI Entrypoint (`ast-mcp-server`)  
+### 4.1 CLI Data Processor (`ast-helper`)  
 
+- **Purpose**: Builds and maintains AST database that MCP server reads from
 - **Language**: TypeScript, compiled to JS.  
 - **Dispatch**: uses [commander.js](https://github.com/tj/commander.js).  
 - **Subcommands**:  
-  - `init [--workspace <path>]` (initialize repository)
-  - `start [--port <N>]` (start MCP server)
-  - `index [--changed] [--glob <pattern>]` (parse + annotate + embed)
-  - `query --intent "<text>" [--top <N>]` (standalone query)
-  - `watch [--glob <pattern>]` (live file monitoring)  
+  - `init [--workspace <path>]` (initialize .astdb/ directory)
+  - `parse [--changed] [--glob <pattern>]` (generate ASTs)
+  - `annotate [--changed]` (generate metadata)
+  - `embed [--changed] [--model <path>]` (create vector embeddings)
+  - `watch [--glob <pattern>]` (live file monitoring & updates)
+
+### 4.2 MCP Server (`ast-mcp-server`)
+
+- **Purpose**: Serves AST data to AI models via MCP protocol
+- **Language**: TypeScript, compiled to JS.
+- **Subcommands**:
+  - `start [--workspace <path>] [--port <N>]` (launch MCP server)
+  - `stop` (graceful shutdown)
+  - `status` (check server health)  
 
 **Configuration** lives in `.astdb/config.json`, merging CLI flags with defaults.
 
@@ -75,7 +85,7 @@ Your Repo/
 
 ```bash
 # Parse command - Extract AST from source files
-ast-mcp-server parse [options]
+ast-helper parse [options]
   --changed, -c          Process only changed files since last commit
   --glob <pattern>       File pattern to parse (overrides config)
   --base <ref>           Git reference for change detection (default: HEAD)
@@ -84,13 +94,13 @@ ast-mcp-server parse [options]
   --help, -h             Show command help
 
 # Annotate command - Generate metadata for parsed AST nodes  
-ast-mcp-server annotate [options]
+ast-helper annotate [options]
   --changed, -c          Process only nodes from changed files
   --force, -f            Force re-annotation of existing nodes
   --help, -h             Show command help
 
 # Embed command - Generate vector embeddings for annotations
-ast-mcp-server embed [options] 
+ast-helper embed [options] 
   --changed, -c          Process only changed annotations
   --model <path>         Path to custom embedding model
   --runtime <type>       Runtime: wasm (default) or onnx
@@ -99,7 +109,7 @@ ast-mcp-server embed [options]
   --help, -h             Show command help
 
 # Query command - Search for relevant code context
-ast-mcp-server query [options]
+ast-helper query [options]
   --intent <text>        Query text describing desired functionality
   --top <num>            Number of results to return (default: 5)
   --format <type>        Output format: plain (default), json, markdown
@@ -107,7 +117,7 @@ ast-mcp-server query [options]
   --help, -h             Show command help
 
 # Watch command - Monitor files for changes and auto-update
-ast-mcp-server watch [options]
+ast-helper watch [options]
   --glob <pattern>       File pattern to watch (overrides config)
   --debounce <ms>        Debounce delay in milliseconds (default: 200)
   --batch                Enable batch processing for rapid changes
@@ -303,78 +313,73 @@ ast-mcp-server watch [options]
       "configuration": {
         "title": "AST Copilot Helper",
         "properties": {
-          "astCopilotHelper.serverPath": {
+          "astCopilotHelper.astHelperPath": {
+            "type": "string",
+            "default": "ast-helper",
+            "description": "Path to ast-helper CLI executable"
+          },
+          "astCopilotHelper.mcpServerPath": {
             "type": "string",
             "default": "ast-mcp-server",
             "description": "Path to ast-mcp-server executable"
           },
-          "astCopilotHelper.serverAutoStart": {
+          "astCopilotHelper.autoStart": {
             "type": "boolean",
             "default": true,
-            "description": "Automatically start MCP server with workspace"
+            "description": "Automatically process codebase and start MCP server"
           },
           "astCopilotHelper.autoIndex": {
             "type": "boolean",
             "default": true,
-            "description": "Automatically index repositories on open"
-          },
-          "astCopilotHelper.serverArgs": {
-            "type": "array",
-            "default": [],
-            "description": "Additional arguments for ast-mcp-server"
+            "description": "Automatically run ast-helper when files change"
           }
         }
       }
     }
   }
   ```  
-- **Server Management Implementation**:  
+- **Dual Tool Management Implementation**:  
   ```typescript
-  // VS Code extension manages external server process
+  // VS Code extension manages both ast-helper and ast-mcp-server
   import { ChildProcess, spawn } from 'child_process';
   
-  class ServerManager {
+  class ASTHelperManager {
+    private astHelperPath: string;
+    
+    constructor() {
+      this.astHelperPath = vscode.workspace.getConfiguration()
+        .get('astCopilotHelper.astHelperPath', 'ast-helper');
+    }
+    
+    async ensureIndexed(workspaceRoot: string): Promise<void> {
+      // Run ast-helper parse && ast-helper embed to build database
+      await this.runCommand(['parse', '--workspace', workspaceRoot]);
+      await this.runCommand(['embed', '--workspace', workspaceRoot]);
+    }
+    
+    async startWatcher(workspaceRoot: string): Promise<ChildProcess> {
+      return spawn(this.astHelperPath, ['watch', '--workspace', workspaceRoot]);
+    }
+  }
+  
+  class MCPServerManager {
     private serverProcess: ChildProcess | null = null;
     private serverPath: string;
     
-    constructor() {
-      this.serverPath = vscode.workspace.getConfiguration()
-        .get('astCopilotHelper.serverPath', 'ast-mcp-server');
-    }
-    
     async startServer(workspaceRoot: string): Promise<void> {
-      if (this.serverProcess) return;
-      
-      const args = ['--workspace', workspaceRoot];
-      this.serverProcess = spawn(this.serverPath, args, {
-        stdio: 'pipe'
-      });
-      
-      this.serverProcess.on('exit', (code) => {
-        this.serverProcess = null;
-        vscode.window.showInformationMessage(`AST MCP Server exited with code ${code}`);
-      });
-    }
-    
-    async stopServer(): Promise<void> {
-      if (this.serverProcess) {
-        this.serverProcess.kill();
-        this.serverProcess = null;
-      }
-    }
-    
-    getServerStatus(): 'running' | 'stopped' {
-      return this.serverProcess ? 'running' : 'stopped';
+      const args = ['start', '--workspace', workspaceRoot];
+      this.serverProcess = spawn(this.serverPath, args, { stdio: 'pipe' });
     }
   }
   ```  
-- **Logic**:  
-  1. Standalone `ast-mcp-server` runs as independent process
-  2. External AI models (Claude, GPT-4) connect to MCP server via stdio
-  3. MCP server returns raw AST context data
-  4. AI models use context to generate responses (outside our system)
-- **Packaging**: Standalone MCP server binary + optional VS Code extension manager
-- **Settings**: Server configuration file, similarity thresholds, result limits
+- **Workflow**:  
+  1. `ast-helper` processes codebase → builds `.astdb/` database
+  2. `ast-mcp-server` reads from `.astdb/` → serves via MCP protocol
+  3. External AI models (Claude, GPT-4) connect to MCP server via stdio
+  4. MCP server returns AST context data from pre-built database
+  5. AI models use context to generate responses (outside our system)
+- **Packaging**: Two separate tools + optional VS Code extension manager
+- **Settings**: Separate configs for data processing vs MCP serving
 
 ---  
 
@@ -383,32 +388,40 @@ ast-mcp-server watch [options]
 ```txt
 ast-copilot-helper/
 ├─ packages/
-│  ├─ server/                # ast-mcp-server (main product)
+│  ├─ ast-helper/            # CLI data processor (builds AST database)
 │  │  ├─ src/
-│  │  │  ├─ mcp/             # MCP protocol implementation
-│  │  │  │  ├─ server.ts     # main MCP server
-│  │  │  │  ├─ handlers.ts   # MCP method handlers
-│  │  │  │  └─ types.ts      # MCP protocol types
 │  │  │  ├─ modules/
-│  │  │  │  ├─ parser.ts
-│  │  │  │  ├─ annotator.ts
-│  │  │  │  ├─ embedder.ts
-│  │  │  │  ├─ retriever.ts
-│  │  │  │  ├─ watcher.ts
-│  │  │  │  └─ downloader.ts
-│  │  │  ├─ cli.ts           # CLI entry point
+│  │  │  │  ├─ parser.ts     # AST parsing with Tree-sitter
+│  │  │  │  ├─ annotator.ts  # Metadata generation
+│  │  │  │  ├─ embedder.ts   # Vector embeddings
+│  │  │  │  ├─ watcher.ts    # File system monitoring
+│  │  │  │  └─ downloader.ts # Model downloads
+│  │  │  ├─ cli.ts           # CLI commands (parse, embed, watch)
 │  │  │  ├─ types.ts
 │  │  │  └─ util/
 │  │  │     ├─ fs.ts
 │  │  │     ├─ git.ts
 │  │  │     └─ crypto.ts
 │  │  ├─ bin/
-│  │  │  └─ ast-mcp-server   # executable
+│  │  │  └─ ast-helper       # CLI executable
 │  │  └─ package.json
-│  └─ vscode-extension/      # optional convenience layer
+│  ├─ ast-mcp-server/        # MCP protocol server (serves AST data)
+│  │  ├─ src/
+│  │  │  ├─ mcp/
+│  │  │  │  ├─ server.ts     # MCP server implementation
+│  │  │  │  ├─ handlers.ts   # MCP method handlers
+│  │  │  │  └─ types.ts      # MCP protocol types
+│  │  │  ├─ retriever.ts     # Reads from .astdb/, serves via MCP
+│  │  │  ├─ server.ts        # MCP server entry point
+│  │  │  └─ types.ts
+│  │  ├─ bin/
+│  │  │  └─ ast-mcp-server   # MCP server executable
+│  │  └─ package.json
+│  └─ vscode-extension/      # optional management layer
 │     ├─ src/
 │     │  ├─ activate.ts
-│     │  ├─ serverManager.ts # manages ast-mcp-server lifecycle
+│     │  ├─ astHelperManager.ts  # manages ast-helper CLI
+│     │  ├─ mcpServerManager.ts  # manages ast-mcp-server
 │     │  └─ ui/              # status indicators, settings
 │     └─ package.json
 ├─ .astdb/                   # created at runtime
@@ -1048,11 +1061,12 @@ ast-helper doctor --fix          # Attempt to resolve common issues
 ```
 
 **Step-by-Step Setup**
-1. **Install MCP Server**: `npm install -g ast-mcp-server`  
-2. **Initialize Repository**: `ast-mcp-server init` (creates `.astdb/` and default config)
-3. **First Parse**: `ast-mcp-server index` (processes entire repository)
-4. **Start Server**: `ast-mcp-server start` (launches MCP server for AI clients)
-5. **Optional VS Code Extension**: Install from marketplace for convenience management
+1. **Install Data Processor**: `npm install -g ast-helper`
+2. **Install MCP Server**: `npm install -g ast-mcp-server`  
+3. **Initialize Repository**: `ast-helper init` (creates `.astdb/` and default config)
+4. **Build AST Database**: `ast-helper parse && ast-helper embed` (processes entire repository)
+5. **Start MCP Server**: `ast-mcp-server start` (launches MCP server for AI clients)
+6. **Optional VS Code Extension**: Install from marketplace for managing both tools
 
 ### 15.2 Troubleshooting Guide
 
