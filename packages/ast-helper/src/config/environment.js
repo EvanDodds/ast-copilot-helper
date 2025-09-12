@@ -1,0 +1,96 @@
+"use strict";
+/**
+ * Environment variable configuration parsing
+ * Maps AST_COPILOT_* environment variables to configuration options
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseEnvironmentConfig = parseEnvironmentConfig;
+/**
+ * Parse environment variables into partial configuration
+ */
+function parseEnvironmentConfig() {
+    var env = process.env;
+    var config = {};
+    // Parse numeric values
+    if (env.AST_COPILOT_TOP_K) {
+        var value = parseInt(env.AST_COPILOT_TOP_K, 10);
+        if (!isNaN(value)) {
+            config.topK = value;
+        }
+    }
+    if (env.AST_COPILOT_SNIPPET_LINES) {
+        var value = parseInt(env.AST_COPILOT_SNIPPET_LINES, 10);
+        if (!isNaN(value)) {
+            config.snippetLines = value;
+        }
+    }
+    if (env.AST_COPILOT_CONCURRENCY) {
+        var value = parseInt(env.AST_COPILOT_CONCURRENCY, 10);
+        if (!isNaN(value)) {
+            config.concurrency = value;
+        }
+    }
+    if (env.AST_COPILOT_BATCH_SIZE) {
+        var value = parseInt(env.AST_COPILOT_BATCH_SIZE, 10);
+        if (!isNaN(value)) {
+            config.batchSize = value;
+        }
+    }
+    // Parse index parameters
+    if (env.AST_COPILOT_EF_CONSTRUCTION || env.AST_COPILOT_M) {
+        config.indexParams = {};
+        if (env.AST_COPILOT_EF_CONSTRUCTION) {
+            var value = parseInt(env.AST_COPILOT_EF_CONSTRUCTION, 10);
+            if (!isNaN(value)) {
+                config.indexParams.efConstruction = value;
+            }
+        }
+        if (env.AST_COPILOT_M) {
+            var value = parseInt(env.AST_COPILOT_M, 10);
+            if (!isNaN(value)) {
+                config.indexParams.M = value;
+            }
+        }
+    }
+    // Parse string values
+    if (env.AST_COPILOT_MODEL_HOST) {
+        config.modelHost = env.AST_COPILOT_MODEL_HOST;
+    }
+    if (env.AST_COPILOT_OUTPUT_DIR) {
+        config.outputDir = env.AST_COPILOT_OUTPUT_DIR;
+    }
+    // Parse boolean values
+    if (env.AST_COPILOT_ENABLE_TELEMETRY) {
+        var value = env.AST_COPILOT_ENABLE_TELEMETRY.toLowerCase();
+        config.enableTelemetry = value === 'true' || value === '1' || value === 'yes';
+    }
+    if (env.AST_COPILOT_VERBOSE) {
+        var value = env.AST_COPILOT_VERBOSE.toLowerCase();
+        config.verbose = value === 'true' || value === '1' || value === 'yes';
+    }
+    if (env.AST_COPILOT_DEBUG) {
+        var value = env.AST_COPILOT_DEBUG.toLowerCase();
+        config.debug = value === 'true' || value === '1' || value === 'yes';
+    }
+    if (env.AST_COPILOT_JSON_LOGS) {
+        var value = env.AST_COPILOT_JSON_LOGS.toLowerCase();
+        config.jsonLogs = value === 'true' || value === '1' || value === 'yes';
+    }
+    if (env.AST_COPILOT_LOG_FILE) {
+        config.logFile = env.AST_COPILOT_LOG_FILE;
+    }
+    // Parse glob arrays (comma-separated)
+    if (env.AST_COPILOT_PARSE_GLOB) {
+        config.parseGlob = env.AST_COPILOT_PARSE_GLOB
+            .split(',')
+            .map(function (pattern) { return pattern.trim(); })
+            .filter(function (pattern) { return pattern.length > 0; });
+    }
+    if (env.AST_COPILOT_WATCH_GLOB) {
+        config.watchGlob = env.AST_COPILOT_WATCH_GLOB
+            .split(',')
+            .map(function (pattern) { return pattern.trim(); })
+            .filter(function (pattern) { return pattern.length > 0; });
+    }
+    return config;
+}

@@ -11,8 +11,10 @@
     "build:watch": "tsc --build --watch",
     "dev": "ts-node src/cli.ts",
     "clean": "rm -rf dist",
-    "test": "vitest",
-    "test:coverage": "vitest --coverage",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run --reporter=basic",
     "lint": "echo 'Linting not configured yet'",
     "typecheck": "tsc --noEmit"
   },

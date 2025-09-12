@@ -1,6 +1,6 @@
 "use strict";
 /**
  * Shared types for ast-helper package
- * This file will be expanded in future issues to define actual types
+ * Core configuration and type definitions for AST processing
  */
 Object.defineProperty(exports, "__esModule", { value: true });

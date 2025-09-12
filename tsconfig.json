@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/ast-helper"
+    },
+    {
+      "path": "./packages/ast-mcp-server"
+    },
+    {
+      "path": "./packages/vscode-extension"
+    }
+  ]
+}

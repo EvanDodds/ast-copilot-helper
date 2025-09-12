@@ -12,7 +12,9 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "build:watch": "npm run build:watch --workspaces --if-present",
-    "test": "npm test --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:watch": "npm run test:watch --workspaces --if-present",
+    "test:ci": "npm run test:ci --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
