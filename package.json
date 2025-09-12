@@ -38,7 +38,8 @@
     "deps:check": "npm outdated",
     "deps:update": "npm update",
     "install:all": "npm install",
-    "postinstall": "npm run build",
+    "postinstall": "npm run build && npm run prepare:husky",
+    "prepare:husky": "husky install",
     "prepack": "npm run build && npm run test:ci",
     "prepare": "npm run build",
     "release:dry": "echo 'Dry run - would publish to npm'",
@@ -52,7 +53,8 @@
     "typescript": "^5.5.0",
     "vitest": "^2.0.0",
     "tmp": "^0.2.3",
-    "@types/tmp": "^0.2.6"
+    "@types/tmp": "^0.2.6",
+    "husky": "^8.0.3"
   },
   "repository": {
     "type": "git",
