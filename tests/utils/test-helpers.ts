@@ -84,15 +84,56 @@ export class ASTTestHelpers {
     await repo.createGitRepository();
 
     // Generate files with specified number of significant AST nodes
-    const filesNeeded = Math.ceil(nodeCount / 100); // ~100 nodes per file
+    const filesNeeded = Math.ceil(nodeCount / 150); // ~150 nodes per file for better distribution
     
     for (let i = 0; i < filesNeeded; i++) {
-      const nodesInFile = Math.min(100, nodeCount - (i * 100));
-      const content = this.generateTypeScriptFile(nodesInFile, i);
-      await repo.createFile(`src/generated-${i}.ts`, content);
+      const nodesInFile = Math.min(150, nodeCount - (i * 150));
+      
+      // Create different file types for variety
+      if (i % 4 === 0) {
+        const content = this.generateTypeScriptFile(nodesInFile, i);
+        await repo.createFile(`src/typescript/module-${i}.ts`, content);
+      } else if (i % 4 === 1) {
+        const content = this.generateJavaScriptFile(nodesInFile, i);
+        await repo.createFile(`src/javascript/module-${i}.js`, content);
+      } else if (i % 4 === 2) {
+        const content = this.generateComplexTypeScriptFile(nodesInFile, i);
+        await repo.createFile(`src/complex/complex-${i}.ts`, content);
+      } else {
+        const content = this.generateUtilityFile(nodesInFile, i);
+        await repo.createFile(`src/utils/utils-${i}.ts`, content);
+      }
     }
 
-    await repo.commitFiles('Initial synthetic repository');
+    // Add some configuration files
+    await repo.createFile('package.json', JSON.stringify({
+      name: 'synthetic-test-repo',
+      version: '1.0.0',
+      description: `Synthetic repository with ${nodeCount} AST nodes`,
+      main: 'index.js',
+      scripts: { test: 'echo "test"' },
+      devDependencies: { typescript: '^5.0.0' }
+    }, null, 2));
+
+    await repo.createFile('tsconfig.json', JSON.stringify({
+      compilerOptions: {
+        target: 'ES2020',
+        module: 'commonjs',
+        lib: ['ES2020'],
+        outDir: './dist',
+        rootDir: './src',
+        strict: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        forceConsistentCasingInFileNames: true
+      },
+      include: ['src/**/*'],
+      exclude: ['node_modules', 'dist']
+    }, null, 2));
+
+    await repo.createFile('README.md', `# Synthetic Test Repository\n\nGenerated for performance testing with ${nodeCount} significant AST nodes.\n`);
+
+    await repo.commitFiles('Initial synthetic repository with ' + nodeCount + ' nodes');
     return tmpDir;
   }
 
@@ -104,6 +145,64 @@ export class ASTTestHelpers {
       content += `export function ${functionName}(param: string): string {\n`;
       content += `  return \`Function ${i} result: \${param}\`;\n`;
       content += `}\n\n`;
+    }
+    
+    return content;
+  }
+
+  private static generateJavaScriptFile(nodeCount: number, fileIndex: number): string {
+    let content = `// Generated JavaScript file ${fileIndex} with ${nodeCount} significant nodes\n\n`;
+    
+    for (let i = 0; i < nodeCount; i++) {
+      const functionName = `jsFunction_${fileIndex}_${i}`;
+      content += `function ${functionName}(param) {\n`;
+      content += `  return 'JS Function ${i} result: ' + param;\n`;
+      content += `}\n\n`;
+    }
+    
+    content += `module.exports = {\n`;
+    for (let i = 0; i < nodeCount; i++) {
+      content += `  jsFunction_${fileIndex}_${i},\n`;
+    }
+    content += `};\n`;
+    
+    return content;
+  }
+
+  private static generateComplexTypeScriptFile(nodeCount: number, fileIndex: number): string {
+    let content = `// Complex TypeScript file ${fileIndex} with ${nodeCount} significant nodes\n\n`;
+    
+    const classesNeeded = Math.ceil(nodeCount / 20); // ~20 nodes per class
+    
+    for (let classIdx = 0; classIdx < classesNeeded; classIdx++) {
+      const className = `ComplexClass_${fileIndex}_${classIdx}`;
+      const methodsInClass = Math.min(20, nodeCount - (classIdx * 20));
+      
+      content += `export class ${className} {\n`;
+      content += `  private data: Map<string, any> = new Map();\n\n`;
+      
+      for (let methodIdx = 0; methodIdx < methodsInClass; methodIdx++) {
+        const methodName = `method_${methodIdx}`;
+        content += `  public ${methodName}(param: string): any {\n`;
+        content += `    return { method: '${methodName}', param, timestamp: Date.now() };\n`;
+        content += `  }\n\n`;
+      }
+      
+      content += `}\n\n`;
+    }
+    
+    return content;
+  }
+
+  private static generateUtilityFile(nodeCount: number, fileIndex: number): string {
+    let content = `// Utility file ${fileIndex} with ${nodeCount} significant nodes\n\n`;
+    
+    // Generate utility functions
+    for (let i = 0; i < nodeCount; i++) {
+      const utilName = `utility_${fileIndex}_${i}`;
+      content += `export const ${utilName} = (input: any): any => {\n`;
+      content += `  return { utility: '${utilName}', input, processed: true };\n`;
+      content += `};\n\n`;
     }
     
     return content;

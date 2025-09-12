@@ -1,0 +1,65 @@
+name: test-config
+version: "1.0.0"
+
+database:
+  host: localhost
+  port: 5432
+  name: test_db
+  username: testuser
+  password: testpass
+  pool:
+    min: 2
+    max: 10
+    timeout: 30000
+
+server:
+  port: 3000
+  host: "0.0.0.0"
+  cors:
+    origin: "*"
+    credentials: true
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+
+logging:
+  level: info
+  format: json
+  destinations:
+    - type: console
+    - type: file
+      filename: app.log
+      maxSize: 10MB
+      maxFiles: 5
+
+features:
+  authentication: true
+  rate_limiting: true
+  caching: false
+  metrics: true
+
+environments:
+  development:
+    debug: true
+    hot_reload: true
+  
+  production:
+    debug: false
+    compression: true
+    ssl:
+      enabled: true
+      cert: /path/to/cert.pem
+      key: /path/to/key.pem
+
+external_services:
+  api:
+    base_url: https://api.example.com
+    timeout: 5000
+    retries: 3
+  
+  storage:
+    provider: s3
+    bucket: test-bucket
+    region: us-east-1
