@@ -1,0 +1,51 @@
+{
+  "name": "@ast-copilot-helper/ast-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP protocol server that serves AST data from .astdb/ database",
+  "main": "dist/index.js",
+  "bin": {
+    "ast-mcp-server": "./bin/ast-mcp-server"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "tsc --build --watch",
+    "dev": "ts-node src/cli.ts",
+    "clean": "rm -rf dist",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "echo 'Linting not configured yet'",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "os": [
+    "win32",
+    "darwin",
+    "linux"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "dependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.2",
+    "vitest": "^2.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "server",
+    "ast",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EvanDodds/ast-copilot-helper.git",
+    "directory": "packages/ast-mcp-server"
+  },
+  "license": "MIT"
+}

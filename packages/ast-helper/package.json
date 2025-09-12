@@ -1,0 +1,51 @@
+{
+  "name": "@ast-copilot-helper/ast-helper",
+  "version": "0.1.0",
+  "description": "CLI data processor that builds .astdb/ database from source code",
+  "main": "dist/index.js",
+  "bin": {
+    "ast-helper": "./bin/ast-helper"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "tsc --build --watch",
+    "dev": "ts-node src/cli.ts",
+    "clean": "rm -rf dist",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "echo 'Linting not configured yet'",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "os": [
+    "win32",
+    "darwin",
+    "linux"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "dependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.2",
+    "vitest": "^2.0.0"
+  },
+  "keywords": [
+    "ast",
+    "cli",
+    "typescript",
+    "code-analysis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EvanDodds/ast-copilot-helper.git",
+    "directory": "packages/ast-helper"
+  },
+  "license": "MIT"
+}
