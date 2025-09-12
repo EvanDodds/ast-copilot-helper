@@ -1,5 +1,0 @@
-{
-  "outputDir": ".custom-astdb",
-  "parseGlob": ["**/*.ts", "**/*.js"],
-  "debug": true
-}
