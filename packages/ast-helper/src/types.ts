@@ -14,6 +14,9 @@ export interface Config {
   /** File patterns to watch */
   watchGlob: string[];
   
+  /** Output directory for database files */
+  outputDir: string;
+  
   /** Number of results to return */
   topK: number;
   
@@ -39,6 +42,12 @@ export interface Config {
   
   /** Batch processing size */
   batchSize: number;
+  
+  /** CLI-specific logging options */
+  verbose?: boolean;
+  debug?: boolean;
+  jsonLogs?: boolean;
+  logFile?: string;
 }
 
 /**
@@ -47,6 +56,7 @@ export interface Config {
 export type PartialConfig = Partial<{
   parseGlob: string[];
   watchGlob: string[];
+  outputDir: string;
   topK: number;
   snippetLines: number;
   indexParams: Partial<{
@@ -57,6 +67,10 @@ export type PartialConfig = Partial<{
   enableTelemetry: boolean;
   concurrency: number;
   batchSize: number;
+  verbose: boolean;
+  debug: boolean;
+  jsonLogs: boolean;
+  logFile: string;
 }>;
 
 /**
@@ -74,12 +88,26 @@ export interface CliArgs {
   'enable-telemetry'?: boolean;
   'ef-construction'?: number;
   'M'?: number;
+  // Additional CLI-specific options
+  source?: string;
+  outputDir?: string;
+  parseGlob?: string[];
+  watchGlob?: string[];
+  topK?: number;
+  watch?: boolean;
+  verbose?: boolean;
+  debug?: boolean;
+  logFile?: string;
+  jsonLogs?: boolean;
+  help?: boolean;
+  version?: boolean;
 }
 
 /**
  * Environment variables mapping
  */
 export interface EnvConfig {
+  AST_COPILOT_OUTPUT_DIR?: string;
   AST_COPILOT_TOP_K?: string;
   AST_COPILOT_SNIPPET_LINES?: string;
   AST_COPILOT_PARSE_GLOB?: string;
@@ -90,6 +118,10 @@ export interface EnvConfig {
   AST_COPILOT_BATCH_SIZE?: string;
   AST_COPILOT_EF_CONSTRUCTION?: string;
   AST_COPILOT_M?: string;
+  AST_COPILOT_VERBOSE?: string;
+  AST_COPILOT_DEBUG?: string;
+  AST_COPILOT_JSON_LOGS?: string;
+  AST_COPILOT_LOG_FILE?: string;
 }
 
 // Legacy interface for backward compatibility

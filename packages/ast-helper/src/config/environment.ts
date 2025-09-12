@@ -65,10 +65,33 @@ export function parseEnvironmentConfig(): PartialConfig {
     config.modelHost = env.AST_COPILOT_MODEL_HOST;
   }
   
+  if (env.AST_COPILOT_OUTPUT_DIR) {
+    config.outputDir = env.AST_COPILOT_OUTPUT_DIR;
+  }
+  
   // Parse boolean values
   if (env.AST_COPILOT_ENABLE_TELEMETRY) {
     const value = env.AST_COPILOT_ENABLE_TELEMETRY.toLowerCase();
     config.enableTelemetry = value === 'true' || value === '1' || value === 'yes';
+  }
+
+  if (env.AST_COPILOT_VERBOSE) {
+    const value = env.AST_COPILOT_VERBOSE.toLowerCase();
+    config.verbose = value === 'true' || value === '1' || value === 'yes';
+  }
+
+  if (env.AST_COPILOT_DEBUG) {
+    const value = env.AST_COPILOT_DEBUG.toLowerCase();
+    config.debug = value === 'true' || value === '1' || value === 'yes';
+  }
+
+  if (env.AST_COPILOT_JSON_LOGS) {
+    const value = env.AST_COPILOT_JSON_LOGS.toLowerCase();
+    config.jsonLogs = value === 'true' || value === '1' || value === 'yes';
+  }
+
+  if (env.AST_COPILOT_LOG_FILE) {
+    config.logFile = env.AST_COPILOT_LOG_FILE;
   }
   
   // Parse glob arrays (comma-separated)

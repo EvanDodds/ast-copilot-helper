@@ -63,7 +63,7 @@ describe('Error Handling Framework', () => {
         cause
       );
       
-      expect(error.cause).toBe(cause);
+      expect(error.errorCause).toBe(cause);
       expect(error.context.path).toBe('/test/path');
     });
 

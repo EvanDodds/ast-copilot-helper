@@ -68,9 +68,9 @@ export class ErrorFormatter {
       }
 
       // Add cause information if requested
-      if (opts.includeCause && error.cause) {
+      if (opts.includeCause && 'errorCause' in error && (error as any).errorCause) {
         parts.push('');
-        parts.push(`🔗 Caused by: ${error.cause.message}`);
+        parts.push(`🔗 Caused by: ${(error as any).errorCause.message}`);
       }
     }
 
@@ -121,10 +121,10 @@ export class ErrorFormatter {
     }
 
     // Cause chain
-    if (opts.includeCause && error.cause instanceof Error) {
+    if (opts.includeCause && error && typeof error === 'object' && 'errorCause' in error && (error as any).errorCause instanceof Error) {
       parts.push('');
       parts.push('--- Caused by ---');
-      parts.push(this.formatForDebug(error.cause, opts));
+      parts.push(this.formatForDebug((error as any).errorCause, opts));
     }
 
     return parts.join('\n');
@@ -146,10 +146,10 @@ export class ErrorFormatter {
       logEntry.context = error.context;
       logEntry.suggestions = error.suggestions;
       
-      if (error.cause) {
+      if ('errorCause' in error && (error as any).errorCause) {
         logEntry.cause = {
-          name: error.cause.name,
-          message: error.cause.message
+          name: (error as any).errorCause.name,
+          message: (error as any).errorCause.message
         };
       }
     }

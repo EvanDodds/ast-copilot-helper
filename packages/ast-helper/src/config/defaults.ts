@@ -14,6 +14,7 @@ export const DEFAULT_CONFIG: Config = {
   watchGlob: [
     'src/**/*'
   ],
+  outputDir: '.astdb',
   topK: 5,
   snippetLines: 10,
   indexParams: {

@@ -177,13 +177,6 @@ export class LockManager {
   }
 
   /**
-   * Check if a lock has timed out
-   */
-  private checkLockTimeout(lock: Lock): boolean {
-    return isLockExpired(lock);
-  }
-
-  /**
    * Get all active locks managed by this instance
    */
   getActiveLocks(): Lock[] {

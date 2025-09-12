@@ -10,7 +10,6 @@ import {
   ParseError,
   DatabaseError,
   NetworkError,
-  PermissionError,
   TimeoutError
 } from './types.js';
 
@@ -61,6 +60,22 @@ export const ConfigurationErrors = {
         `Check file permissions and ownership`,
         `Verify the file is readable by the current user`,
         `Create a default configuration file if it doesn't exist`
+      ]
+    );
+  },
+
+  /**
+   * Failed to load configuration
+   */
+  loadFailed(message: string, cause?: Error): ConfigurationError {
+    return new ConfigurationError(
+      message,
+      { cause: cause?.message },
+      [
+        `Check your configuration files for syntax errors`,
+        `Verify all configuration sources are accessible`,
+        `Check environment variables and CLI arguments`,
+        `Use --debug to see detailed error information`
       ]
     );
   }
@@ -151,6 +166,36 @@ export const ValidationErrors = {
         `Use a value between ${min} and ${max}`,
         field ? `Check the ${field} configuration` : 'Check the input value',
         `Refer to documentation for valid ranges`
+      ]
+    );
+  },
+
+  /**
+   * Missing required value
+   */
+  missingValue(field: string, expectedType: string): ValidationError {
+    return new ValidationError(
+      `Missing value for ${field}: expected ${expectedType}`,
+      { field, expectedType },
+      [
+        `Provide a value for ${field}`,
+        `Check your command line arguments or configuration`,
+        `Use --help to see usage information`
+      ]
+    );
+  },
+
+  /**
+   * Invalid value
+   */
+  invalidValue(field: string, value: string, reason: string): ValidationError {
+    return new ValidationError(
+      `Invalid value for ${field}: ${value}. ${reason}`,
+      { field, value, reason },
+      [
+        `Provide a valid value for ${field}`,
+        reason,
+        `Use --help to see usage information`
       ]
     );
   }

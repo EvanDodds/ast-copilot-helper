@@ -63,6 +63,27 @@ export function parseCliArgs(args: CliArgs): PartialConfig {
       config.indexParams.M = args['M'];
     }
   }
+
+  // Parse CLI-specific options
+  if (args.outputDir !== undefined) {
+    config.outputDir = args.outputDir;
+  }
+
+  if (args.verbose !== undefined) {
+    config.verbose = args.verbose;
+  }
+
+  if (args.debug !== undefined) {
+    config.debug = args.debug;
+  }
+
+  if (args.jsonLogs !== undefined) {
+    config.jsonLogs = args.jsonLogs;
+  }
+
+  if (args.logFile !== undefined) {
+    config.logFile = args.logFile;
+  }
   
   return config;
 }

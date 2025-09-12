@@ -18,7 +18,10 @@ export abstract class AstError extends Error {
   readonly suggestions: string[];
   
   /** Original error that caused this error (if any) */
-  override readonly cause?: Error;
+  readonly errorCause?: Error;
+  
+  /** Marker property to identify AST errors */
+  readonly isAstError: true = true;
   
   constructor(
     message: string,
@@ -32,7 +35,7 @@ export abstract class AstError extends Error {
     this.code = code;
     this.context = context;
     this.suggestions = suggestions;
-    this.cause = cause;
+    this.errorCause = cause;
     
     // Maintain proper stack trace
     if (Error.captureStackTrace) {
@@ -51,10 +54,10 @@ export abstract class AstError extends Error {
       context: this.context,
       suggestions: this.suggestions,
       stack: this.stack,
-      cause: this.cause ? {
-        name: this.cause.name,
-        message: this.cause.message,
-        stack: this.cause.stack
+      cause: this.errorCause ? {
+        name: this.errorCause.name,
+        message: this.errorCause.message,
+        stack: this.errorCause.stack
       } : undefined
     };
   }
