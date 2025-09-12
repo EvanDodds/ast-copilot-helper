@@ -31,11 +31,12 @@
     "arm64"
   ],
   "dependencies": {
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "commander": "^14.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
     "ts-node": "^10.9.2",
+    "typescript": "^5.5.0",
     "vitest": "^2.0.0"
   },
   "keywords": [
