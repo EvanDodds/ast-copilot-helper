@@ -23,31 +23,50 @@ npm install -D typescript @types/node ts-node nodemon jest @types/jest ts-jest
 # Set up TypeScript configuration
 ```
 
-**File Structure to Create:**
+**File Structure to Create (Monorepo):**
 ```
 ast-copilot-helper/
-├─ src/
-│  ├─ cli/
-│  │  └─ index.ts                # CLI entry point
-│  ├─ modules/
-│  │  ├─ parser.ts               # AST parsing
-│  │  ├─ annotator.ts            # Metadata generation
-│  │  ├─ embedder.ts             # Vector embeddings
-│  │  ├─ retriever.ts            # Query processing
-│  │  ├─ watcher.ts              # File watching
-│  │  └─ downloader.ts           # Model downloads
-│  ├─ types.ts                   # TypeScript interfaces
-│  └─ util/
-│     ├─ fs.ts                   # File system utilities
-│     ├─ git.ts                  # Git integration
-│     └─ crypto.ts               # Checksum verification
-├─ bin/
-│  └─ ast-helper.js              # CLI executable
+├─ packages/
+│  ├─ ast-helper/            # CLI data processor (builds AST database)
+│  │  ├─ src/
+│  │  │  ├─ modules/
+│  │  │  │  ├─ parser.ts     # AST parsing with Tree-sitter
+│  │  │  │  ├─ annotator.ts  # Metadata generation
+│  │  │  │  ├─ embedder.ts   # Vector embeddings
+│  │  │  │  ├─ watcher.ts    # File system monitoring
+│  │  │  │  └─ downloader.ts # Model downloads
+│  │  │  ├─ cli.ts           # CLI commands (parse, embed, watch)
+│  │  │  ├─ types.ts
+│  │  │  └─ util/
+│  │  │     ├─ fs.ts
+│  │  │     ├─ git.ts
+│  │  │     └─ crypto.ts
+│  │  ├─ bin/
+│  │  │  └─ ast-helper       # CLI executable
+│  │  └─ package.json
+│  ├─ ast-mcp-server/        # MCP protocol server (serves AST data)
+│  │  ├─ src/
+│  │  │  ├─ mcp/
+│  │  │  │  ├─ server.ts     # MCP server implementation
+│  │  │  │  ├─ handlers.ts   # MCP method handlers
+│  │  │  │  └─ types.ts      # MCP protocol types
+│  │  │  ├─ retriever.ts     # Reads from .astdb/, serves via MCP
+│  │  │  ├─ server.ts        # MCP server entry point
+│  │  │  └─ types.ts
+│  │  ├─ bin/
+│  │  │  └─ ast-mcp-server   # MCP server executable
+│  │  └─ package.json
+│  └─ vscode-extension/      # optional management layer
+│     ├─ src/
+│     │  ├─ activate.ts
+│     │  ├─ astHelperManager.ts  # manages ast-helper CLI
+│     │  ├─ mcpServerManager.ts  # manages ast-mcp-server
+│     │  └─ ui/              # status indicators, settings
+│     └─ package.json
 ├─ tests/
-│  └─ fixtures/                  # Test data
-└─ extension/                    # VS Code extension
-   └─ src/
-      └─ activate.ts
+│  ├─ fixtures/              # small sample repos for testing
+│  └─ benchmarks/            # 100k node performance fixture
+└─ package.json              # root package.json for workspace management
 ```
 
 **Configuration Files:**
@@ -282,13 +301,13 @@ class EmbeddingGenerator {
 - Memory usage scales linearly with dataset size
 - Index build for 100k nodes in <10 minutes
 
-### Week 6: Query System & File Watching
+### Week 6: Query System & CLI Enhancement
 
-#### Day 1-2: Query Processing
+#### Day 1-2: Query Processing via MCP
 **Deliverables:**
-- [ ] Vector similarity search
+- [ ] Vector similarity search through MCP tools
 - [ ] Result ranking and scoring
-- [ ] Multiple output formats (plain, JSON, markdown)
+- [ ] Multiple MCP response formats (structured data)
 
 **Implementation:**
 ```typescript
@@ -301,42 +320,48 @@ class QueryProcessor {
 }
 ```
 
-#### Day 3-4: Query Command & Optimization
+#### Day 3-4: Enhanced CLI & Query Commands
 **Deliverables:**
-- [ ] Complete query command functionality
-- [ ] Performance optimization to meet <200ms target
-- [ ] Query result caching
-- [ ] Debugging and verbose output
+- [ ] Complete query command functionality (CLI)
+- [ ] MCP server query optimization to meet <200ms target
+- [ ] Query result caching for both CLI and MCP
+- [ ] Debugging and verbose output modes
 
-#### Day 5: File Watching System
+#### Day 5: File Watching & Live Updates
 **Deliverables:**
 - [ ] Chokidar integration for file watching
 - [ ] Debouncing (200ms) and batch processing
-- [ ] Live update pipeline (parse→annotate→embed)
+- [ ] Live update pipeline via MCP (parse→annotate→embed)
 
-### Week 7: Standalone MCP Server & Optional Extension
+### Week 4-5: MCP Server Development (Primary Integration)
 
-#### Day 1-3: Standalone MCP Server
+#### Week 4, Day 1-2: MCP Server Architecture
 **Deliverables:**
-- [ ] Standalone MCP server binary (`ast-mcp-server`)
-- [ ] CLI interface with stdio/websocket support
-- [ ] Process management and lifecycle controls
-- [ ] Cross-editor compatibility validation
+- [ ] MCP server foundation and protocol implementation
+- [ ] Core MCP method handlers for AST operations
+- [ ] Standalone server binary architecture (`ast-mcp-server`)
 
-**Standalone Server Structure:**
+**MCP Server Structure (Monorepo Package):**
 ```
-packages/server/
+packages/ast-mcp-server/
 ├─ src/
-│  ├─ cli.ts               # CLI entry point & server launcher
+│  ├─ server.ts            # CLI entry point & server launcher
 │  ├─ mcp/
-│  │  ├─ server.ts         # Main MCP server
-│  │  ├─ handlers.ts       # Method implementations  
+│  │  ├─ server.ts         # Main MCP server implementation
+│  │  ├─ handlers.ts       # MCP method implementations  
 │  │  └─ types.ts          # MCP protocol types
-│  └─ modules/             # Existing parser, embedder, etc.
+│  ├─ retriever.ts         # Reads from .astdb/, serves via MCP
+│  └─ types.ts             # Server-specific types
 ├─ bin/
 │  └─ ast-mcp-server       # Executable
-└─ package.json            # Standalone package
+└─ package.json            # MCP server package.json
 ```
+
+#### Week 4, Day 3-4: Core MCP Methods
+**Deliverables:**
+- [ ] Essential MCP tool implementations
+- [ ] AST query and retrieval via MCP protocol
+- [ ] Cross-editor compatibility foundation
 
 **Core MCP Methods:**
 ```typescript
@@ -349,18 +374,75 @@ export const handlers = {
     'getFileAST': async (params: any) => {
         const parser = new ASTParser();
         return parser.parseFile(params.filePath);
+    },
+    'searchCodePatterns': async (params: any) => {
+        const searcher = new PatternSearcher();
+        return searcher.findPatterns(params.pattern, params.scope);
     }
 };
 ```
 
-#### Day 4-5: Optional VS Code Extension (Server Manager)
+#### Week 4, Day 5: MCP Server Testing & Integration
 **Deliverables:**
-- [ ] VS Code extension for server management
-- [ ] Server lifecycle controls (start/stop/restart)
-- [ ] Status indicators and workspace settings
-- [ ] Server installation guidance
+- [ ] MCP protocol compliance testing
+- [ ] Server lifecycle management (start/stop/restart)
+- [ ] Multi-client connection support
 
-**Extension Implementation:**
+#### Week 5: Embedding Integration & MCP Enhancement
+
+#### Week 5, Day 1-2: Model Management for MCP
+**Deliverables:**
+- [ ] Secure model download with verification
+- [ ] Model caching in `.astdb/models/`
+- [ ] MCP-integrated embedding generation
+
+**Implementation:**
+```typescript
+// src/modules/downloader.ts
+class ModelDownloader {
+  async downloadModel(modelUrl: string, checksumUrl: string): Promise<string>;
+  async verifyChecksum(filePath: string, expectedChecksum: string): Promise<boolean>;
+  async getCachedModelPath(modelName: string): Promise<string>;
+}
+```
+
+#### Week 5, Day 3-4: Embedding Integration
+**Deliverables:**
+- [ ] @xenova/transformers integration
+- [ ] Batch processing for embeddings
+- [ ] MCP methods for embedding operations
+
+**Key Implementation:**
+```typescript
+// src/modules/embedder.ts
+class EmbeddingGenerator {
+  private model: any;
+  
+  async initialize(modelPath: string): Promise<void>;
+  async generateEmbeddings(texts: string[]): Promise<number[][]>;
+  async batchProcess(annotations: Annotation[]): Promise<EmbeddingResult[]>;
+}
+```
+
+#### Week 5, Day 5: Index Operations via MCP
+**Deliverables:**
+- [ ] HNSW index integration through MCP
+- [ ] Index serialization/deserialization
+- [ ] MCP tools for index operations
+
+**Critical Performance Targets:**
+- Process 1000 annotations in <60s with WASM
+- MCP response time <200ms for queries
+### Week 7: Optional VS Code Extension & MCP Testing
+
+#### Day 1-2: Lightweight VS Code Extension (Server Manager)
+**Deliverables:**
+- [ ] Optional VS Code extension for server management only
+- [ ] Server lifecycle controls (start/stop/restart)
+- [ ] Basic status indicators and workspace settings
+- [ ] MCP server installation guidance
+
+**Extension Implementation (Simplified):**
 ```typescript
 // packages/vscode-extension/src/serverManager.ts
 export class ServerManager {
@@ -371,7 +453,6 @@ export class ServerManager {
             .get('astCopilotHelper.serverPath', 'ast-mcp-server');
             
         this.serverProcess = spawn(serverPath, ['start', '--workspace', workspaceRoot]);
-        
         vscode.window.showInformationMessage('AST MCP Server started');
     }
     
@@ -383,20 +464,14 @@ export class ServerManager {
         }
     }
 }
-    
-    const context = await queryASTHelper(prompt);
-    const enrichedPrompt = `Context: ${context}\n\nRequest: ${prompt}`;
-    
-    await vscode.env.clipboard.writeText(enrichedPrompt);
-    vscode.window.showInformationMessage('Enriched prompt copied to clipboard');
-}
 ```
 
-#### Day 5: MCP Protocol Testing & Validation
+#### Day 3-4: MCP Protocol Testing & Validation
 **Deliverables:**
 - [ ] MCP protocol compliance testing
 - [ ] Tool method validation and response formatting
 - [ ] Cross-platform MCP server compatibility testing
+- [ ] Multi-editor integration validation
 
 **Testing Implementation:**
 ```typescript
@@ -412,6 +487,13 @@ describe('MCP Server Integration', () => {
   });
 });
 ```
+
+#### Day 5: Integration Testing & Documentation
+**Deliverables:**
+- [ ] End-to-end MCP workflow testing
+- [ ] VS Code extension marketplace preparation
+- [ ] MCP server deployment documentation
+- [ ] Cross-editor usage examples
 
 ### Week 8: Testing & Validation
 
@@ -438,7 +520,7 @@ describe('End-to-End Workflow', () => {
 
 #### Day 3: Performance & Scale Testing
 **Deliverables:**
-- [ ] 100k LOC synthetic test repository
+- [ ] 100k significant node synthetic test repository (~667k LOC)
 - [ ] Performance benchmarking suite
 - [ ] Memory usage validation
 
@@ -535,14 +617,19 @@ docs/
 - [ ] Query latency <500ms for development
 - [ ] Memory usage linear with dataset size
 
-### Milestone 4 (Week 7): Standalone MCP Server & Optional Extension
+### Milestone 4 (Week 5): MCP Server & Embedding Integration
 - [ ] MCP server operational as standalone binary
+- [ ] Core MCP methods for AST operations functional
+- [ ] Embedding generation integrated with MCP
 - [ ] Cross-editor compatibility demonstrated
+
+### Milestone 4.5 (Week 7): Optional Extension & MCP Validation
 - [ ] Optional VS Code extension for server management
 - [ ] Multi-client MCP protocol support working
+- [ ] MCP server performance targets met
 
 ### Milestone 5 (Week 8): Performance Validation
-- [ ] Index 100k LOC in <10 minutes
+- [ ] Index 100k significant nodes in <10 minutes
 - [ ] Query latency <200ms average
 - [ ] Memory usage <4GB for large repositories
 

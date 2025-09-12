@@ -25,8 +25,9 @@ This design dramatically cuts Copilot’s token usage, improves suggestion relev
 - **TypeScript implementation**  
   Provides strong types for AST schemas, annotation metadata, and index records. Distributes as a transpiled NPM module.  
 
-- **Copilot prompt augmentation**  
-  A lightweight VS Code extension intercepts Copilot Chat or “Ask Copilot” events, runs `ast-helper query`, and merges in the top-K AST snippets before sending to GitHub’s endpoint.  
+- **MCP Integration**  
+  Standalone MCP server provides AST context directly to AI models via standard protocol. Optional VS Code extension provides convenient server management and workspace integration.  
+
 
 ---  
 
@@ -134,6 +135,12 @@ Your Repo/
 ### 4.3 Command Line Interface Specification
 
 ```bash
+# Init command - Initialize AST database directory structure
+ast-helper init [options]
+  --workspace <path>     Workspace directory to initialize (default: current)
+  --force, -f            Force reinitialization of existing .astdb
+  --help, -h             Show command help
+
 # Parse command - Extract AST from source files
 ast-helper parse [options]
   --changed, -c          Process only changed files since last commit
@@ -171,6 +178,21 @@ ast-helper watch [options]
   --glob <pattern>       File pattern to watch (overrides config)
   --debounce <ms>        Debounce delay in milliseconds (default: 200)
   --batch                Enable batch processing for rapid changes
+  --help, -h             Show command help
+
+# MCP Server commands - Serve AST data via MCP protocol
+ast-mcp-server start [options]
+  --workspace <path>     Workspace directory (default: current)
+  --port <num>           TCP port for MCP server (optional)
+  --stdio                Use stdio for MCP communication (default)
+  --help, -h             Show command help
+
+ast-mcp-server stop [options]
+  --workspace <path>     Workspace directory (default: current)
+  --help, -h             Show command help
+
+ast-mcp-server status [options]
+  --workspace <path>     Workspace directory (default: current)
   --help, -h             Show command help
 
 # Global options (available for all commands)
@@ -856,7 +878,7 @@ ast-helper query "error handling" --top 5           # Search for relevant code
 
 # Development workflow
 ast-helper watch                  # Live updates during development
-# In VS Code: use Copilot Chat - prompts are auto-enriched with relevant AST context
+# AI models connect to MCP server for context-aware assistance
 
 # CI/CD workflow
 ast-helper parse --changed        # Parse changed files
@@ -1210,7 +1232,7 @@ const edgeCases: EdgeCaseTest[] = [
 ### 14.2 Performance Benchmarking Framework
 
 **Benchmark Scenarios**
-- Repository sizes: 1k, 10k, 100k, 500k LOC
+- Repository sizes: 1k, 10k, 100k, 500k significant AST nodes (equivalent to ~6k-333k LOC)
 - Language distributions: TS-only, multi-language, Python-heavy
 - Query types: Simple keywords, complex semantic queries, frequent vs. rare terms
 
@@ -1398,12 +1420,12 @@ This section consolidates all architectural decisions, trade-offs, and implement
 
 ### 17.5 VS Code Extension Strategy
 
-**Decision**: Dual approach for reliability and UX
-- **Primary**: Explicit `ast-copilot-helper.enrichAndSend` command (stable)
-- **Experimental**: Optional Copilot interception via `enableExperimentalCopilotIntercept` setting
-- **Settings**: Configurable `topK`, `snippetLines`, augmentation enable/disable
-- **Output**: `--format plain` for extension consumption
-- **Rationale**: Provides stable integration with experimental convenience feature for power users
+**Decision**: Optional server management with MCP protocol integration
+- **Primary**: Standalone MCP server provides direct AI model integration
+- **Extension Role**: Optional process management, status monitoring, workspace settings
+- **Integration**: AI clients connect directly to MCP server via standard protocol
+- **Configuration**: Server settings managed through extension UI when present
+- **Rationale**: Editor-agnostic architecture with convenient VS Code management layer
 
 ### 17.6 Distribution & Native Performance
 
@@ -1437,9 +1459,9 @@ This section consolidates all architectural decisions, trade-offs, and implement
 **Decision**: Enterprise-grade scale planning
 - **Target**: 100k significant AST nodes (validated requirement from stakeholders)
 - **Benchmarks**: 
-  - Full index build: <10 minutes for 100k LOC / 15k nodes (2-CPU 8GB CI runner)
+  - Full index build: <10 minutes for 100k significant nodes (~667k LOC, 2-CPU 8GB CI runner)
   - Query latency: <200ms P95 for top-5 results across 15k indexed nodes
-  - Memory: <4GB peak processing 100k LOC / 15k nodes with efficient batching
+  - Memory: <4GB peak processing 100k significant nodes (~667k LOC) with efficient batching
 - **Testing**: Synthetic fixture combining real projects + generated code
 - **Rationale**: Targets real-world enterprise development environments
 
@@ -1458,7 +1480,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
   1. **Command Palette Integration**: User runs command, enters prompt, system enriches and copies to clipboard with instruction to paste in Copilot Chat
   2. **Document Context**: Listen to `vscode.window.onDidChangeActiveTextEditor` to provide context-aware suggestions
   3. **Selection-Based**: Enrich prompts based on current text selection and cursor position
-  4. **Future Extension API**: Monitor GitHub Copilot extension API for official prompt enrichment hooks
+  4. **MCP Integration**: Seamless integration with external AI models via standardized MCP protocol
 - **Implementation Details**:
   ```typescript
   // Primary implementation approach
@@ -1520,7 +1542,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 
 **Testing Infrastructure**
 - **Fixture Development**: Create comprehensive test repositories covering target languages and patterns
-- **Performance Benchmarking**: Set up automated testing against 100k LOC repositories  
+- **Performance Benchmarking**: Set up automated testing against 100k significant node repositories  
 - **Integration Testing**: Develop end-to-end workflows covering all major use cases
 - **Security Testing**: Validate model download verification and input sanitization
 
@@ -1562,7 +1584,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 18.3 Technical Validation
 
 **Performance Baseline Establishment** (QA/Engineering)
-- [ ] Create 100k LOC synthetic test repository with representative code
+- [ ] Create 100k significant node synthetic test repository with representative code
 - [ ] Establish baseline performance metrics on standard CI hardware
 - [ ] Define automated performance regression testing procedures
 
@@ -1614,12 +1636,12 @@ This section consolidates all architectural decisions, trade-offs, and implement
 
 **Integration Development** (Ready with Dependencies):
 - ✅ VS Code extension approach defined with fallback strategies
-- ⏳ GitHub Copilot integration dependent on API availability
+- ✅ MCP server integration with standardized protocol
 - ✅ Model download and verification procedures specified
 - ✅ Git workflow integration patterns documented
 
 **Production Readiness** (Requires Completion):
-- ⏳ Model artifact URLs and checksums need finalization
+- ✅ Model artifact URLs and checksums finalized with HuggingFace distribution
 - ⏳ Signing infrastructure setup required
 - ⏳ Performance validation against target workloads needed
 - ⏳ Security audit and compliance review required
@@ -1630,7 +1652,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 
 **Parallel Workstreams**:
 1. **Core CLI Implementation**: Begin with parser, annotator, and embedder modules
-2. **VS Code Extension**: Implement command-based approach while monitoring Copilot API
+2. **VS Code Extension**: Implement optional server management extension for MCP server lifecycle
 3. **Infrastructure Setup**: Configure build pipelines, signing, and artifact hosting
 4. **Testing Framework**: Develop comprehensive test suites and performance benchmarks
 

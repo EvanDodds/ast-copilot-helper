@@ -164,7 +164,7 @@ To "Standalone MCP server providing AI models with deep codebase understanding"
 
 **Issue**: Strategy for processing very large repositories without exhausting system memory is undefined.
 
-**Context**: Target is 100k LOC repositories, which could generate millions of AST nodes and annotations.
+**Context**: Target is 100k significant AST nodes (~667k LOC repositories), which could generate millions of annotations.
 
 **Memory Pressure Points**:
 - AST parsing of large files (>10MB)
@@ -211,7 +211,7 @@ To "Standalone MCP server providing AI models with deep codebase understanding"
 **Repository Size Considerations**:
 - Small (<1k nodes): Simple parameters acceptable
 - Medium (1k-10k): Need balanced performance
-- Large (10k-100k): Require optimization for both build and query
+- Large (10k-100k nodes): Require optimization for both build and query
 
 **Benchmarking Needed**:
 - Build time vs accuracy for different parameter sets
