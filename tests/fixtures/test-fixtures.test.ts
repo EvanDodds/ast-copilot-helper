@@ -1,6 +1,6 @@
-import { describe, it, expect, afterEach } from 'vitest';
-import { ASTTestHelpers, TestRepository } from '../utils/test-helpers';
 import { promises as fs } from 'fs';
+import { afterEach, describe, expect, it } from 'vitest';
+import { ASTTestHelpers, TestRepository } from '../utils/test-helpers';
 
 describe('Test Fixtures and Synthetic Data', () => {
   let tempDirs: string[] = [];
@@ -37,7 +37,7 @@ describe('Test Fixtures and Synthetic Data', () => {
     // Count generated files
     const files = await fs.readdir(repoPath + '/src', { recursive: true });
     const codeFiles = files.filter(file => typeof file === 'string' && (file.endsWith('.ts') || file.endsWith('.js')));
-    
+
     // Should generate appropriate number of files for the node count
     expect(codeFiles.length).toBeGreaterThan(0);
     expect(codeFiles.length).toBeLessThanOrEqual(Math.ceil(nodeCount / 100) * 2); // Account for different file types
@@ -51,7 +51,7 @@ describe('Test Fixtures and Synthetic Data', () => {
     // Small repository should have minimal files
     const files = await fs.readdir(repoPath + '/src', { recursive: true });
     const codeFiles = files.filter(file => typeof file === 'string' && (file.endsWith('.ts') || file.endsWith('.js')));
-    
+
     expect(codeFiles.length).toBeGreaterThan(0);
     expect(codeFiles.length).toBeLessThanOrEqual(5); // Should be small number for 50 nodes
   });
@@ -88,13 +88,13 @@ describe('Test Fixtures and Synthetic Data', () => {
     tempDirs.push(tmpDir);
 
     const repo = new TestRepository(tmpDir);
-    
+
     // Test file creation
     await repo.createFile('test/sample.ts', 'export const test = "hello";');
-    
+
     const fileExists = await fs.access(tmpDir + '/test/sample.ts').then(() => true).catch(() => false);
     expect(fileExists).toBe(true);
-    
+
     const content = await fs.readFile(tmpDir + '/test/sample.ts', 'utf8');
     expect(content).toBe('export const test = "hello";');
   });

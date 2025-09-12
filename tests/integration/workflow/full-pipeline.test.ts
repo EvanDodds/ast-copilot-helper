@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('End-to-End Workflow', () => {
   it('should complete full pipeline: parse → annotate → embed → query', async () => {

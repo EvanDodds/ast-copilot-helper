@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { promises as fs } from 'fs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AstHelperCli } from '../../../packages/ast-helper/src/cli';
 import { ConfigManager } from '../../../packages/ast-helper/src/config';
-import { createLogger } from '../../../packages/ast-helper/src/logging';
 import { ErrorFormatter } from '../../../packages/ast-helper/src/errors';
 import { LockManager } from '../../../packages/ast-helper/src/locking';
-import { promises as fs } from 'fs';
+import { createLogger } from '../../../packages/ast-helper/src/logging';
 
 // Mock all dependencies
 vi.mock('../../../packages/ast-helper/src/config');
@@ -77,21 +77,21 @@ describe('CLI Commands', () => {
 
   describe('help system', () => {
     it('should display general help when no command provided', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+
       process.argv = ['node', 'cli.ts'];
       await cli.run();
 
       expect(consoleSpy).toHaveBeenCalled();
       const output = consoleSpy.mock.calls.map(call => call[0]).join(' ');
       expect(output).toContain('Usage:');
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should display version information', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+
       process.argv = ['node', 'cli.ts', '--version'];
       await cli.run();
 
@@ -100,15 +100,15 @@ describe('CLI Commands', () => {
     });
 
     it('should display command-specific help', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+
       process.argv = ['node', 'cli.ts', 'init', '--help'];
       await cli.run();
 
       expect(consoleSpy).toHaveBeenCalled();
       const output = consoleSpy.mock.calls.map(call => call[0]).join(' ');
       expect(output).toContain('init');
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -116,17 +116,17 @@ describe('CLI Commands', () => {
   describe('command validation', () => {
     it('should validate --top option range for query command', async () => {
       vi.mocked(fs.access).mockRejectedValue(new Error('Not found'));
-      
+
       process.argv = ['node', 'cli.ts', 'query', '--top', '0', 'test query'];
       await expect(cli.run()).rejects.toThrow();
     });
 
     it('should accept valid --top option for query command', async () => {
       vi.mocked(fs.access).mockResolvedValue(undefined);
-      
+
       process.argv = ['node', 'cli.ts', 'query', '--top', '10', 'test query'];
       await cli.run();
-      
+
       expect(mockConfigManager.loadConfig).toHaveBeenCalled();
     });
 
@@ -137,7 +137,7 @@ describe('CLI Commands', () => {
 
     it('should validate Git repository requirement for --changed option', async () => {
       vi.mocked(fs.access).mockRejectedValue(new Error('Git not found'));
-      
+
       process.argv = ['node', 'cli.ts', 'parse', '--changed'];
       await expect(cli.run()).rejects.toThrow();
     });
@@ -158,7 +158,7 @@ describe('CLI Commands', () => {
     it('should execute init command successfully', async () => {
       process.argv = ['node', 'cli.ts', 'init', '/test/workspace'];
       await cli.run();
-      
+
       expect(mockConfigManager.loadConfig).toHaveBeenCalledWith('/test/workspace', expect.any(Object));
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Initializing'));
     });
@@ -166,7 +166,7 @@ describe('CLI Commands', () => {
     it('should execute parse command with files', async () => {
       process.argv = ['node', 'cli.ts', 'parse', 'src/**/*.ts'];
       await cli.run();
-      
+
       expect(mockConfigManager.loadConfig).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Parsing'));
     });
@@ -174,7 +174,7 @@ describe('CLI Commands', () => {
     it('should execute annotate command with positional argument', async () => {
       process.argv = ['node', 'cli.ts', 'annotate', 'test-id'];
       await cli.run();
-      
+
       expect(mockConfigManager.loadConfig).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Annotating'));
     });
@@ -182,7 +182,7 @@ describe('CLI Commands', () => {
     it('should execute embed command with files', async () => {
       process.argv = ['node', 'cli.ts', 'embed', 'src/**/*.ts'];
       await cli.run();
-      
+
       expect(mockConfigManager.loadConfig).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Embedding'));
     });
@@ -190,7 +190,7 @@ describe('CLI Commands', () => {
     it('should execute query command with query string', async () => {
       process.argv = ['node', 'cli.ts', 'query', 'test query'];
       await cli.run();
-      
+
       expect(mockConfigManager.loadConfig).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Querying'));
     });
@@ -198,7 +198,7 @@ describe('CLI Commands', () => {
     it('should execute watch command with files', async () => {
       process.argv = ['node', 'cli.ts', 'watch', 'src/**/*.ts'];
       await cli.run();
-      
+
       expect(mockConfigManager.loadConfig).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Watching'));
     });
@@ -207,10 +207,10 @@ describe('CLI Commands', () => {
   describe('global options', () => {
     it('should handle --config option', async () => {
       vi.mocked(fs.access).mockResolvedValue(undefined);
-      
+
       process.argv = ['node', 'cli.ts', '--config', '/custom/config.json', 'init', '/test'];
       await cli.run();
-      
+
       expect(mockConfigManager.loadConfig).toHaveBeenCalledWith('/test', expect.objectContaining({
         config: '/custom/config.json'
       }));
@@ -218,10 +218,10 @@ describe('CLI Commands', () => {
 
     it('should handle --workspace option', async () => {
       vi.mocked(fs.access).mockResolvedValue(undefined);
-      
+
       process.argv = ['node', 'cli.ts', '--workspace', '/custom/workspace', 'init'];
       await cli.run();
-      
+
       expect(mockConfigManager.loadConfig).toHaveBeenCalledWith('/custom/workspace', expect.any(Object));
     });
   });
@@ -229,13 +229,13 @@ describe('CLI Commands', () => {
   describe('error handling', () => {
     it('should handle unknown commands', async () => {
       process.argv = ['node', 'cli.ts', 'unknown-command'];
-      
+
       await expect(cli.run()).rejects.toThrow();
     });
 
     it('should handle invalid options', async () => {
       process.argv = ['node', 'cli.ts', 'init', '--invalid-option'];
-      
+
       await expect(cli.run()).rejects.toThrow();
     });
   });

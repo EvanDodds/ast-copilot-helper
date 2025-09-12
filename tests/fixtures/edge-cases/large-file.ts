@@ -17,7 +17,7 @@ export namespace LargeTestNamespace {
   // Large class with many methods
   export class MassiveTestClass {
     private data: Map<string, any> = new Map();
-    
+
     constructor() {
       for (let i = 0; i < 100; i++) {
         this.data.set(`key${i}`, `value${i}`);
@@ -35,7 +35,7 @@ export namespace LargeTestNamespace {
     public method008(): string { return this.processData("method008"); }
     public method009(): string { return this.processData("method009"); }
     public method010(): string { return this.processData("method010"); }
-    
+
     public method011(): string { return this.processData("method011"); }
     public method012(): string { return this.processData("method012"); }
     public method013(): string { return this.processData("method013"); }
@@ -101,7 +101,7 @@ export namespace LargeTestNamespace {
         case 'DEBUG': return this.debugOperation(value);
         case 'TEST': return this.testOperation(value);
         case 'BENCHMARK': return this.benchmarkOperation(value);
-        default: 
+        default:
           throw new Error(`Unknown operation: ${operation}`);
       }
     }

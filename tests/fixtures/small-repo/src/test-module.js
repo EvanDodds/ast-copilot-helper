@@ -35,7 +35,7 @@ class JavaScriptTestClass {
   // Method with complex control flow
   processItems(processor) {
     const results = [];
-    
+
     for (let i = 0; i < this.items.length; i++) {
       try {
         const result = processor(this.items[i], i);
@@ -46,7 +46,7 @@ class JavaScriptTestClass {
         console.warn(`Processing item ${i} failed:`, error);
       }
     }
-    
+
     return results;
   }
 }

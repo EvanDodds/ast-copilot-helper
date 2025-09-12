@@ -1,33 +1,32 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { promises as fs } from 'fs';
-import { join } from 'path';
 import { tmpdir } from 'os';
-import { TestRepository } from '../utils/test-helpers';
+import { join } from 'path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ConfigManager } from '../../packages/ast-helper/src/config/manager';
-import type { Config } from '../../packages/ast-helper/src/types';
+import { TestRepository } from '../utils/test-helpers';
 
 describe('End-to-End Workflow Integration', () => {
-  let testRepo: TestRepository;
-  let configManager: ConfigManager;
-  let testWorkspace: string;
+    let testRepo: TestRepository;
+    let configManager: ConfigManager;
+    let testWorkspace: string;
 
-  beforeEach(async () => {
-    // Create temporary workspace
-    testWorkspace = join(tmpdir(), `ast-helper-test-${Date.now()}`);
-    await fs.mkdir(testWorkspace, { recursive: true });
+    beforeEach(async () => {
+        // Create temporary workspace
+        testWorkspace = join(tmpdir(), `ast-helper-test-${Date.now()}`);
+        await fs.mkdir(testWorkspace, { recursive: true });
 
-    testRepo = new TestRepository(testWorkspace);
-    configManager = new ConfigManager();
-  });
+        testRepo = new TestRepository(testWorkspace);
+        configManager = new ConfigManager();
+    });
 
-  afterEach(async () => {
-    await testRepo.cleanup();
-  });
+    afterEach(async () => {
+        await testRepo.cleanup();
+    });
 
-  describe('Complete AST Processing Pipeline', () => {
-    it('should process a TypeScript project from parse to query', async () => {
-      // Setup test project
-      await testRepo.createFile('src/main.ts', `
+    describe('Complete AST Processing Pipeline', () => {
+        it('should process a TypeScript project from parse to query', async () => {
+            // Setup test project
+            await testRepo.createFile('src/main.ts', `
         export class Calculator {
           add(a: number, b: number): number {
             return a + b;
@@ -43,7 +42,7 @@ describe('End-to-End Workflow Integration', () => {
         }
       `);
 
-      await testRepo.createFile('src/utils.ts', `
+            await testRepo.createFile('src/utils.ts', `
         export const PI = 3.14159;
         
         export function circleArea(radius: number): number {
@@ -56,118 +55,118 @@ describe('End-to-End Workflow Integration', () => {
         }
       `);
 
-      await testRepo.createFile('package.json', JSON.stringify({
-        name: 'test-project',
-        version: '1.0.0',
-        main: 'dist/main.js',
-        scripts: {
-          build: 'tsc'
-        },
-        devDependencies: {
-          typescript: '^5.0.0'
-        }
-      }, null, 2));
+            await testRepo.createFile('package.json', JSON.stringify({
+                name: 'test-project',
+                version: '1.0.0',
+                main: 'dist/main.js',
+                scripts: {
+                    build: 'tsc'
+                },
+                devDependencies: {
+                    typescript: '^5.0.0'
+                }
+            }, null, 2));
 
-      // Load configuration
-      const config = await configManager.loadConfig(testWorkspace);
-      expect(config).toBeDefined();
-      expect(config.parseGlob).toContain('src/**/*.ts');
+            // Load configuration
+            const config = await configManager.loadConfig(testWorkspace);
+            expect(config).toBeDefined();
+            expect(config.parseGlob).toContain('src/**/*.ts');
 
-      // Mock the actual AST processing stages since we're testing integration
-      // In real implementation, these would call the actual parser, annotator, etc.
-      
-      // Step 1: Parse files
-      const sourceFiles = ['src/main.ts', 'src/utils.ts'];
-      const parseResults = await Promise.all(
-        sourceFiles.map(async (file) => {
-          const content = await fs.readFile(join(testWorkspace, file), 'utf-8');
-          // Mock parsing result
-          return {
-            filePath: file,
-            content,
-            nodeCount: content.split('\n').length * 2, // Approximate
-            classes: file.includes('main') ? ['Calculator'] : [],
-            functions: file.includes('main') ? ['formatResult'] : ['circleArea'],
-            interfaces: file.includes('utils') ? ['Shape'] : [],
-            exports: file.includes('main') ? ['Calculator', 'formatResult'] : ['PI', 'circleArea', 'Shape']
-          };
-        })
-      );
+            // Mock the actual AST processing stages since we're testing integration
+            // In real implementation, these would call the actual parser, annotator, etc.
 
-      expect(parseResults).toHaveLength(2);
-      expect(parseResults[0].classes).toContain('Calculator');
-      expect(parseResults[1].functions).toContain('circleArea');
+            // Step 1: Parse files
+            const sourceFiles = ['src/main.ts', 'src/utils.ts'];
+            const parseResults = await Promise.all(
+                sourceFiles.map(async (file) => {
+                    const content = await fs.readFile(join(testWorkspace, file), 'utf-8');
+                    // Mock parsing result
+                    return {
+                        filePath: file,
+                        content,
+                        nodeCount: content.split('\n').length * 2, // Approximate
+                        classes: file.includes('main') ? ['Calculator'] : [],
+                        functions: file.includes('main') ? ['formatResult'] : ['circleArea'],
+                        interfaces: file.includes('utils') ? ['Shape'] : [],
+                        exports: file.includes('main') ? ['Calculator', 'formatResult'] : ['PI', 'circleArea', 'Shape']
+                    };
+                })
+            );
 
-      // Step 2: Generate annotations
-      const annotations = parseResults.map((parsed) => ({
-        filePath: parsed.filePath,
-        annotations: parsed.exports.map(symbol => ({
-          symbol,
-          type: parsed.classes.includes(symbol) ? 'class' : 
-                parsed.functions.includes(symbol) ? 'function' :
-                parsed.interfaces.includes(symbol) ? 'interface' : 'constant',
-          description: `${symbol} from ${parsed.filePath}`,
-          metadata: {
-            nodeCount: parsed.nodeCount,
-            complexity: Math.floor(Math.random() * 10) + 1
-          }
-        }))
-      }));
+            expect(parseResults).toHaveLength(2);
+            expect(parseResults[0].classes).toContain('Calculator');
+            expect(parseResults[1].functions).toContain('circleArea');
 
-      expect(annotations).toHaveLength(2);
-      expect(annotations[0].annotations).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            symbol: 'Calculator',
-            type: 'class'
-          })
-        ])
-      );
+            // Step 2: Generate annotations
+            const annotations = parseResults.map((parsed) => ({
+                filePath: parsed.filePath,
+                annotations: parsed.exports.map(symbol => ({
+                    symbol,
+                    type: parsed.classes.includes(symbol) ? 'class' :
+                        parsed.functions.includes(symbol) ? 'function' :
+                            parsed.interfaces.includes(symbol) ? 'interface' : 'constant',
+                    description: `${symbol} from ${parsed.filePath}`,
+                    metadata: {
+                        nodeCount: parsed.nodeCount,
+                        complexity: Math.floor(Math.random() * 10) + 1
+                    }
+                }))
+            }));
 
-      // Step 3: Generate embeddings
-      const embeddings = annotations.map((annotated) => ({
-        filePath: annotated.filePath,
-        embeddings: annotated.annotations.map(annotation => ({
-          symbol: annotation.symbol,
-          vector: new Array(384).fill(0).map(() => Math.random()), // Mock embedding
-          metadata: annotation.metadata
-        }))
-      }));
+            expect(annotations).toHaveLength(2);
+            expect(annotations[0].annotations).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        symbol: 'Calculator',
+                        type: 'class'
+                    })
+                ])
+            );
 
-      expect(embeddings).toHaveLength(2);
-      expect(embeddings[0].embeddings[0].vector).toHaveLength(384);
+            // Step 3: Generate embeddings
+            const embeddings = annotations.map((annotated) => ({
+                filePath: annotated.filePath,
+                embeddings: annotated.annotations.map(annotation => ({
+                    symbol: annotation.symbol,
+                    vector: new Array(384).fill(0).map(() => Math.random()), // Mock embedding
+                    metadata: annotation.metadata
+                }))
+            }));
 
-      // Step 4: Store in database (mock)
-      const indexedSymbols = embeddings.flatMap(e => e.embeddings.map(em => em.symbol));
-      expect(indexedSymbols).toContain('Calculator');
-      expect(indexedSymbols).toContain('circleArea');
+            expect(embeddings).toHaveLength(2);
+            expect(embeddings[0].embeddings[0].vector).toHaveLength(384);
 
-      // Step 5: Query functionality
-      const queryResult = {
-        query: 'calculator functions',
-        results: [
-          {
-            symbol: 'Calculator',
-            score: 0.95,
-            filePath: 'src/main.ts',
-            metadata: { type: 'class', nodeCount: 20 }
-          },
-          {
-            symbol: 'formatResult',
-            score: 0.78,
-            filePath: 'src/main.ts',
-            metadata: { type: 'function', nodeCount: 6 }
-          }
-        ]
-      };
+            // Step 4: Store in database (mock)
+            const indexedSymbols = embeddings.flatMap(e => e.embeddings.map(em => em.symbol));
+            expect(indexedSymbols).toContain('Calculator');
+            expect(indexedSymbols).toContain('circleArea');
 
-      expect(queryResult.results).toHaveLength(2);
-      expect(queryResult.results[0].score).toBeGreaterThan(0.9);
-    }, 15000);
+            // Step 5: Query functionality
+            const queryResult = {
+                query: 'calculator functions',
+                results: [
+                    {
+                        symbol: 'Calculator',
+                        score: 0.95,
+                        filePath: 'src/main.ts',
+                        metadata: { type: 'class', nodeCount: 20 }
+                    },
+                    {
+                        symbol: 'formatResult',
+                        score: 0.78,
+                        filePath: 'src/main.ts',
+                        metadata: { type: 'function', nodeCount: 6 }
+                    }
+                ]
+            };
 
-    it('should handle mixed language projects', async () => {
-      // Create TypeScript, JavaScript, and Python files
-      await testRepo.createFile('src/api.ts', `
+            expect(queryResult.results).toHaveLength(2);
+            expect(queryResult.results[0].score).toBeGreaterThan(0.9);
+        }, 15000);
+
+        it('should handle mixed language projects', async () => {
+            // Create TypeScript, JavaScript, and Python files
+            await testRepo.createFile('src/api.ts', `
         export interface ApiResponse {
           data: any;
           success: boolean;
@@ -179,7 +178,7 @@ describe('End-to-End Workflow Integration', () => {
         }
       `);
 
-      await testRepo.createFile('src/legacy.js', `
+            await testRepo.createFile('src/legacy.js', `
         function processLegacyData(input) {
           return input.map(item => ({ 
             ...item, 
@@ -191,7 +190,7 @@ describe('End-to-End Workflow Integration', () => {
         module.exports = { processLegacyData };
       `);
 
-      await testRepo.createFile('scripts/data_processor.py', `
+            await testRepo.createFile('scripts/data_processor.py', `
         def analyze_data(data_points):
             """Analyze numerical data points"""
             if not data_points:
@@ -214,77 +213,77 @@ describe('End-to-End Workflow Integration', () => {
                 return [item * 2 for item in batch]
       `);
 
-      const config = await configManager.loadConfig(testWorkspace);
-      
-      // Mock parsing different file types
-      const files = [
-        { path: 'src/api.ts', language: 'typescript' },
-        { path: 'src/legacy.js', language: 'javascript' },
-        { path: 'scripts/data_processor.py', language: 'python' }
-      ];
+            const config = await configManager.loadConfig(testWorkspace);
 
-      const parseResults = await Promise.all(files.map(async (file) => {
-        const content = await fs.readFile(join(testWorkspace, file.path), 'utf-8');
-        return {
-          filePath: file.path,
-          language: file.language,
-          symbols: file.language === 'typescript' ? ['ApiResponse', 'fetchData'] :
-                   file.language === 'javascript' ? ['processLegacyData'] :
-                   ['analyze_data', 'DataProcessor'],
-          nodeCount: content.split('\n').length
-        };
-      }));
+            // Mock parsing different file types
+            const files = [
+                { path: 'src/api.ts', language: 'typescript' },
+                { path: 'src/legacy.js', language: 'javascript' },
+                { path: 'scripts/data_processor.py', language: 'python' }
+            ];
 
-      expect(parseResults).toHaveLength(3);
-      expect(parseResults.find(r => r.language === 'typescript')?.symbols).toContain('fetchData');
-      expect(parseResults.find(r => r.language === 'javascript')?.symbols).toContain('processLegacyData');
-      expect(parseResults.find(r => r.language === 'python')?.symbols).toContain('DataProcessor');
-    });
-  });
+            const parseResults = await Promise.all(files.map(async (file) => {
+                const content = await fs.readFile(join(testWorkspace, file.path), 'utf-8');
+                return {
+                    filePath: file.path,
+                    language: file.language,
+                    symbols: file.language === 'typescript' ? ['ApiResponse', 'fetchData'] :
+                        file.language === 'javascript' ? ['processLegacyData'] :
+                            ['analyze_data', 'DataProcessor'],
+                    nodeCount: content.split('\n').length
+                };
+            }));
 
-  describe('Configuration Integration', () => {
-    it('should respect configuration hierarchy', async () => {
-      // Create user config
-      const configDir = join(testWorkspace, '.astdb');
-      await fs.mkdir(configDir, { recursive: true });
-      
-      await fs.writeFile(
-        join(configDir, 'config.json'),
-        JSON.stringify({
-          topK: 25,
-          concurrency: 6,
-          enableTelemetry: true
-        }, null, 2)
-      );
-
-      // Load config with CLI overrides
-      const config = await configManager.loadConfig(testWorkspace, {
-        concurrency: 8, // Should override file config
-        verbose: true
-      });
-
-      expect(config.topK).toBe(25); // From file
-      expect(config.concurrency).toBe(8); // From CLI (higher priority)
-      expect(config.enableTelemetry).toBe(true); // From file
+            expect(parseResults).toHaveLength(3);
+            expect(parseResults.find(r => r.language === 'typescript')?.symbols).toContain('fetchData');
+            expect(parseResults.find(r => r.language === 'javascript')?.symbols).toContain('processLegacyData');
+            expect(parseResults.find(r => r.language === 'python')?.symbols).toContain('DataProcessor');
+        });
     });
 
-    it('should validate configuration and provide defaults', async () => {
-      const config = await configManager.loadConfig(testWorkspace);
+    describe('Configuration Integration', () => {
+        it('should respect configuration hierarchy', async () => {
+            // Create user config
+            const configDir = join(testWorkspace, '.astdb');
+            await fs.mkdir(configDir, { recursive: true });
 
-      // Check required properties have defaults
-      expect(config.parseGlob).toBeDefined();
-      expect(Array.isArray(config.parseGlob)).toBe(true);
-      expect(config.topK).toBeGreaterThan(0);
-      expect(config.concurrency).toBeGreaterThan(0);
-      expect(config.modelHost).toBeDefined();
-      expect(typeof config.enableTelemetry).toBe('boolean');
+            await fs.writeFile(
+                join(configDir, 'config.json'),
+                JSON.stringify({
+                    topK: 25,
+                    concurrency: 6,
+                    enableTelemetry: true
+                }, null, 2)
+            );
+
+            // Load config with CLI overrides
+            const config = await configManager.loadConfig(testWorkspace, {
+                concurrency: 8, // Should override file config
+                verbose: true
+            });
+
+            expect(config.topK).toBe(25); // From file
+            expect(config.concurrency).toBe(8); // From CLI (higher priority)
+            expect(config.enableTelemetry).toBe(true); // From file
+        });
+
+        it('should validate configuration and provide defaults', async () => {
+            const config = await configManager.loadConfig(testWorkspace);
+
+            // Check required properties have defaults
+            expect(config.parseGlob).toBeDefined();
+            expect(Array.isArray(config.parseGlob)).toBe(true);
+            expect(config.topK).toBeGreaterThan(0);
+            expect(config.concurrency).toBeGreaterThan(0);
+            expect(config.modelHost).toBeDefined();
+            expect(typeof config.enableTelemetry).toBe('boolean');
+        });
     });
-  });
 
-  describe('Error Handling Integration', () => {
-    it('should gracefully handle corrupted files', async () => {
-      // Create a file with syntax errors
-      await testRepo.createFile('src/broken.ts', `
+    describe('Error Handling Integration', () => {
+        it('should gracefully handle corrupted files', async () => {
+            // Create a file with syntax errors
+            await testRepo.createFile('src/broken.ts', `
         export class BrokenClass {
           constructor(
             // Missing closing brace and incomplete syntax
@@ -294,40 +293,40 @@ describe('End-to-End Workflow Integration', () => {
         }
       `);
 
-      // Mock parser behavior for corrupted files
-      const mockParseResult = {
-        filePath: 'src/broken.ts',
-        success: false,
-        error: 'SyntaxError: Unexpected end of input',
-        partialNodes: [] // Parser might still extract some information
-      };
+            // Mock parser behavior for corrupted files
+            const mockParseResult = {
+                filePath: 'src/broken.ts',
+                success: false,
+                error: 'SyntaxError: Unexpected end of input',
+                partialNodes: [] // Parser might still extract some information
+            };
 
-      expect(mockParseResult.success).toBe(false);
-      expect(mockParseResult.error).toContain('SyntaxError');
+            expect(mockParseResult.success).toBe(false);
+            expect(mockParseResult.error).toContain('SyntaxError');
+        });
+
+        it('should handle missing directories gracefully', async () => {
+            const nonExistentPath = join(testWorkspace, 'nonexistent');
+
+            // ConfigManager should still work with missing directories by using defaults
+            const config = await configManager.loadConfig(nonExistentPath);
+
+            // Should return valid config with default values
+            expect(config).toBeDefined();
+            expect(config.parseGlob).toBeDefined();
+            expect(Array.isArray(config.parseGlob)).toBe(true);
+            expect(config.topK).toBeGreaterThan(0);
+        });
     });
 
-    it('should handle missing directories gracefully', async () => {
-      const nonExistentPath = join(testWorkspace, 'nonexistent');
-      
-      // ConfigManager should still work with missing directories by using defaults
-      const config = await configManager.loadConfig(nonExistentPath);
-      
-      // Should return valid config with default values
-      expect(config).toBeDefined();
-      expect(config.parseGlob).toBeDefined();
-      expect(Array.isArray(config.parseGlob)).toBe(true);
-      expect(config.topK).toBeGreaterThan(0);
-    });
-  });
+    describe('Performance Integration', () => {
+        it('should handle large codebases efficiently', async () => {
+            const startTime = Date.now();
 
-  describe('Performance Integration', () => {
-    it('should handle large codebases efficiently', async () => {
-      const startTime = Date.now();
-
-      // Create a moderately large test project
-      const fileCount = 20;
-      for (let i = 0; i < fileCount; i++) {
-        await testRepo.createFile(`src/module${i}.ts`, `
+            // Create a moderately large test project
+            const fileCount = 20;
+            for (let i = 0; i < fileCount; i++) {
+                await testRepo.createFile(`src/module${i}.ts`, `
           export class Module${i} {
             private data: string[] = [];
             
@@ -352,20 +351,20 @@ describe('End-to-End Workflow Integration', () => {
           
           export const CONSTANT_${i} = 'value${i}';
         `);
-      }
+            }
 
-      const config = await configManager.loadConfig(testWorkspace);
-      
-      // Mock processing time for large project
-      const processingTime = Date.now() - startTime;
-      
-      // Should complete setup reasonably quickly
-      expect(processingTime).toBeLessThan(5000);
-      
-      // Verify all files were created
-      const srcDir = join(testWorkspace, 'src');
-      const files = await fs.readdir(srcDir);
-      expect(files).toHaveLength(fileCount);
+            const config = await configManager.loadConfig(testWorkspace);
+
+            // Mock processing time for large project
+            const processingTime = Date.now() - startTime;
+
+            // Should complete setup reasonably quickly
+            expect(processingTime).toBeLessThan(5000);
+
+            // Verify all files were created
+            const srcDir = join(testWorkspace, 'src');
+            const files = await fs.readdir(srcDir);
+            expect(files).toHaveLength(fileCount);
+        });
     });
-  });
 });

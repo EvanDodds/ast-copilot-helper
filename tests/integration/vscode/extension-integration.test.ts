@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('VS Code Extension Integration', () => {
   it('should manage extension process lifecycle', async () => {

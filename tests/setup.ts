@@ -1,5 +1,5 @@
 // Global test setup
-import { beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach } from 'vitest';
 
 // Global setup for all tests
 beforeEach(() => {

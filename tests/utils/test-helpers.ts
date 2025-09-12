@@ -1,13 +1,13 @@
-import * as tmp from 'tmp';
+import { execFile } from 'child_process';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
-import { execFile } from 'child_process';
+import * as tmp from 'tmp';
 import { promisify } from 'util';
 
 const execFileAsync = promisify(execFile);
 
 export class TestRepository {
-  constructor(private basePath: string) {}
+  constructor(private basePath: string) { }
 
   async createFile(relativePath: string, content: string): Promise<void> {
     const fullPath = resolve(this.basePath, relativePath);
@@ -85,10 +85,10 @@ export class ASTTestHelpers {
 
     // Generate files with specified number of significant AST nodes
     const filesNeeded = Math.ceil(nodeCount / 150); // ~150 nodes per file for better distribution
-    
+
     for (let i = 0; i < filesNeeded; i++) {
       const nodesInFile = Math.min(150, nodeCount - (i * 150));
-      
+
       // Create different file types for variety
       if (i % 4 === 0) {
         const content = this.generateTypeScriptFile(nodesInFile, i);
@@ -139,64 +139,64 @@ export class ASTTestHelpers {
 
   private static generateTypeScriptFile(nodeCount: number, fileIndex: number): string {
     let content = `// Generated TypeScript file ${fileIndex} with ${nodeCount} significant nodes\n\n`;
-    
+
     for (let i = 0; i < nodeCount; i++) {
       const functionName = `generatedFunction_${fileIndex}_${i}`;
       content += `export function ${functionName}(param: string): string {\n`;
       content += `  return \`Function ${i} result: \${param}\`;\n`;
       content += `}\n\n`;
     }
-    
+
     return content;
   }
 
   private static generateJavaScriptFile(nodeCount: number, fileIndex: number): string {
     let content = `// Generated JavaScript file ${fileIndex} with ${nodeCount} significant nodes\n\n`;
-    
+
     for (let i = 0; i < nodeCount; i++) {
       const functionName = `jsFunction_${fileIndex}_${i}`;
       content += `function ${functionName}(param) {\n`;
       content += `  return 'JS Function ${i} result: ' + param;\n`;
       content += `}\n\n`;
     }
-    
+
     content += `module.exports = {\n`;
     for (let i = 0; i < nodeCount; i++) {
       content += `  jsFunction_${fileIndex}_${i},\n`;
     }
     content += `};\n`;
-    
+
     return content;
   }
 
   private static generateComplexTypeScriptFile(nodeCount: number, fileIndex: number): string {
     let content = `// Complex TypeScript file ${fileIndex} with ${nodeCount} significant nodes\n\n`;
-    
+
     const classesNeeded = Math.ceil(nodeCount / 20); // ~20 nodes per class
-    
+
     for (let classIdx = 0; classIdx < classesNeeded; classIdx++) {
       const className = `ComplexClass_${fileIndex}_${classIdx}`;
       const methodsInClass = Math.min(20, nodeCount - (classIdx * 20));
-      
+
       content += `export class ${className} {\n`;
       content += `  private data: Map<string, any> = new Map();\n\n`;
-      
+
       for (let methodIdx = 0; methodIdx < methodsInClass; methodIdx++) {
         const methodName = `method_${methodIdx}`;
         content += `  public ${methodName}(param: string): any {\n`;
         content += `    return { method: '${methodName}', param, timestamp: Date.now() };\n`;
         content += `  }\n\n`;
       }
-      
+
       content += `}\n\n`;
     }
-    
+
     return content;
   }
 
   private static generateUtilityFile(nodeCount: number, fileIndex: number): string {
     let content = `// Utility file ${fileIndex} with ${nodeCount} significant nodes\n\n`;
-    
+
     // Generate utility functions
     for (let i = 0; i < nodeCount; i++) {
       const utilName = `utility_${fileIndex}_${i}`;
@@ -204,14 +204,14 @@ export class ASTTestHelpers {
       content += `  return { utility: '${utilName}', input, processed: true };\n`;
       content += `};\n\n`;
     }
-    
+
     return content;
   }
 }
 
 export class PerformanceTimer {
   private timers: Map<string, number> = new Map();
-  
+
   static async measure<T>(fn: () => Promise<T>): Promise<{ result: T; duration: number }> {
     const start = performance.now();
     const result = await fn();

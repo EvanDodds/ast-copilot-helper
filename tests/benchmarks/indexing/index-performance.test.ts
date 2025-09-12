@@ -1,10 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { PerformanceTimer } from '../../utils/test-helpers';
 
 describe('Index Building Performance', () => {
   it('should build index for 100k nodes in under 10 minutes', async () => {
     const timeout = 10 * 60 * 1000; // 10 minutes in ms
-    
+
     // TODO: Implement index building benchmark
     const mockIndexBuild = async () => {
       // Simulate index building operation
@@ -13,7 +13,7 @@ describe('Index Building Performance', () => {
     };
 
     const { result, duration } = await PerformanceTimer.measure(mockIndexBuild);
-    
+
     expect(result.nodeCount).toBeGreaterThanOrEqual(100000);
     expect(result.indexSize).toBeGreaterThan(0);
     PerformanceTimer.assertPerformance(duration, timeout, 'Index Building');
