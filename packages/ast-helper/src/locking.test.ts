@@ -70,8 +70,9 @@ describe('File Locking System', () => {
       };
 
       const content = createLockContent(lock);
-      expect(content).toContain('"type":"exclusive"');
-      expect(content).toContain('"operation":"test-operation"');
+      const jsonParsed = JSON.parse(content);
+      expect(jsonParsed.type).toBe('exclusive');
+      expect(jsonParsed.operation).toBe('test-operation');
 
       const parsed = parseLockContent(content);
       expect(parsed.type).toBe('exclusive');
