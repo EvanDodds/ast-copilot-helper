@@ -76,6 +76,10 @@ lib/
 .astdb/
 *.astdb
 
+# SQLite database temporary files
+*.db-shm
+*.db-wal
+
 # Test-related temporary files and directories
 .test-cache-models/
 .test-metadata/
