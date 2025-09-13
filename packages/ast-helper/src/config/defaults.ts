@@ -31,7 +31,23 @@ export const DEFAULT_CONFIG: Config = {
   },
   enableTelemetry: false,
   concurrency: 4,
-  batchSize: 100
+  batchSize: 100,
+  embeddings: {
+    model: 'codebert-base',
+    modelPath: '.astdb/models/codebert-base',
+    batchSize: 32,
+    maxConcurrency: 2,
+    memoryLimit: 2048,
+    showProgress: true,
+    enableConfidenceScoring: true,
+    textProcessing: {
+      maxTokenLength: 2048,
+      preserveCodeStructure: true,
+      normalizeWhitespace: true,
+      preserveComments: false,
+      maxSnippetLength: 500,
+    }
+  }
 };
 
 /**

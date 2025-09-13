@@ -57,6 +57,37 @@ export interface Config {
   /** Batch processing size */
   batchSize: number;
   
+  /** Embedding generation configuration */
+  embeddings?: {
+    /** Embedding model name (e.g., 'codebert-base') */
+    model: string;
+    /** Path to model files directory */
+    modelPath: string;
+    /** Embedding batch size (1-128) */
+    batchSize: number;
+    /** Maximum concurrency for batch processing (1-8) */
+    maxConcurrency: number;
+    /** Memory limit in MB */
+    memoryLimit: number;
+    /** Enable progress reporting */
+    showProgress: boolean;
+    /** Enable confidence scoring */
+    enableConfidenceScoring: boolean;
+    /** Text processing configuration */
+    textProcessing?: {
+      /** Max token length (characters) */
+      maxTokenLength: number;
+      /** Preserve code structure */
+      preserveCodeStructure: boolean;
+      /** Normalize whitespace */
+      normalizeWhitespace: boolean;
+      /** Preserve comments in code */
+      preserveComments: boolean;
+      /** Max snippet length */
+      maxSnippetLength: number;
+    };
+  };
+  
   /** CLI-specific logging options */
   verbose?: boolean;
   debug?: boolean;
@@ -88,6 +119,22 @@ export type PartialConfig = Partial<{
   enableTelemetry: boolean;
   concurrency: number;
   batchSize: number;
+  embeddings: Partial<{
+    model: string;
+    modelPath: string;
+    batchSize: number;
+    maxConcurrency: number;
+    memoryLimit: number;
+    showProgress: boolean;
+    enableConfidenceScoring: boolean;
+    textProcessing: Partial<{
+      maxTokenLength: number;
+      preserveCodeStructure: boolean;
+      normalizeWhitespace: boolean;
+      preserveComments: boolean;
+      maxSnippetLength: number;
+    }>;
+  }>;
   verbose: boolean;
   debug: boolean;
   jsonLogs: boolean;

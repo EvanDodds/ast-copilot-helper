@@ -902,9 +902,34 @@ class ParseCommandHandler implements CommandHandler<ParseOptions> {
 
 class EmbedCommandHandler implements CommandHandler<EmbedOptions> {
   async execute(options: EmbedOptions, config: Config): Promise<void> {
-    console.log('Embed command executed with options:', options);
-    console.log('Using config:', { outputDir: config.outputDir });
-    // TODO: Implement actual embed logic
+    const logger = createLogger({ 
+      operation: 'embed',
+      level: parseLogLevel(process.env.LOG_LEVEL || 'info')
+    });
+    
+    try {
+      // Import the embed command
+      const { EmbedCommand } = await import('./commands/embed.js');
+      
+      // Create and execute the embed command
+      const embedCommand = new EmbedCommand(config, logger);
+      
+      // Map CLI options to command options
+      const commandOptions = {
+        input: options.changed ? undefined : options.workspace, // Use workspace if not changed mode
+        model: options.model,
+        batchSize: options.batchSize,
+        verbose: true, // Always enable progress reporting in CLI
+        force: false, // TODO: Add --force flag to CLI options
+        dryRun: false, // TODO: Add --dry-run flag to CLI options
+      };
+      
+      await embedCommand.execute(commandOptions);
+      
+    } catch (error: any) {
+      logger.error('❌ Embed command failed:', error.message);
+      process.exit(1);
+    }
   }
 }
 
