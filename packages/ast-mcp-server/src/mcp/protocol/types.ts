@@ -211,3 +211,45 @@ export interface ResourceContent {
   text?: string;
   blob?: string; // base64 encoded
 }
+
+/**
+ * Resource validation result
+ */
+export interface ResourceValidationResult {
+  /** Whether the resource is valid */
+  isValid: boolean;
+  /** Validation errors if any */
+  errors: string[];
+}
+
+/**
+ * Resource metadata for registry management
+ */
+export interface ResourceMetadata {
+  /** Unique resource identifier (URI) */
+  uri: string;
+  /** Human-readable name */
+  name: string;
+  /** Resource description */
+  description: string;
+  /** MIME type of the resource */
+  mimeType?: string;
+  /** Resource category for organization */
+  category: string;
+  /** Tags for resource discovery */
+  tags: string[];
+  /** When the resource was registered */
+  registeredAt: Date;
+  /** Last modification timestamp */
+  lastModified: Date;
+  /** Resource version */
+  version: string;
+  /** Resource author/creator */
+  author: string;
+  /** Additional configuration */
+  config: Record<string, any>;
+  /** Whether resource supports caching */
+  cacheable: boolean;
+  /** Cache TTL in milliseconds */
+  cacheTtl: number;
+}
