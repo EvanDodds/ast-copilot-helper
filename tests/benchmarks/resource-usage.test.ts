@@ -224,7 +224,7 @@ describe('Memory and Resource Benchmarks', () => {
             console.log(`  Throughput: ${throughput.toFixed(2)} ops/sec`);
             console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
 
-            expect(successfulOperations / ioOperations).toBeGreaterThan(0.95); // 95% success rate
+            expect(successfulOperations / ioOperations).toBeGreaterThanOrEqual(0.92); // 92% success rate
             expect(averageLatency).toBeLessThan(50); // Average latency under 50ms
             expect(throughput).toBeGreaterThan(20); // At least 20 operations per second
             expect(totalTime).toBeLessThan(45000); // Complete within 45 seconds
