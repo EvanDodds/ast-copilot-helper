@@ -8,8 +8,8 @@ echo "🧪 Running core test suite..."
 npm run test:unit || exit 1
 npm run test:integration || exit 1
 
-# Security audit (only fail on high/critical vulnerabilities for now)
+# Security audit
 echo "🔒 Running security audit..."
-npm audit --audit-level=high || exit 1
+npm run security:audit || exit 1
 
 echo "✅ Pre-push hooks completed successfully!"
