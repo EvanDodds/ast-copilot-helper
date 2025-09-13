@@ -201,6 +201,50 @@ export const COMPLEXITY_THRESHOLDS = {
 } as const;
 
 /**
+ * Types of dependencies that can be detected
+ */
+export enum DependencyType {
+  IMPORT = 'import',
+  EXPORT = 'export',
+  REQUIRE = 'require',
+  CALL = 'call',
+  INHERITANCE = 'inheritance',
+  COMPOSITION = 'composition'
+}
+
+/**
+ * Information about a dependency relationship
+ */
+export interface DependencyInfo {
+  type: DependencyType;
+  source: string;
+  specifiers: string[];
+  location: {
+    line: number;
+    column: number;
+  };
+  isExternal: boolean;
+  isDynamic: boolean;
+  isTypeOnly: boolean;
+  resolvedPath: string | null;
+  callArguments?: number;
+  circularDependency?: string[];
+}
+
+/**
+ * Configuration for dependency analysis
+ */
+export interface DependencyAnalysisConfig {
+  maxDepth: number;
+  includeDynamicImports: boolean;
+  includeTypeImports: boolean;
+  detectCycles: boolean;
+  followChain: boolean;
+  ignoreNodeModules: boolean;
+  customModuleResolver: ((source: string, basePath?: string) => Promise<string | null>) | null;
+}
+
+/**
  * Default annotation configuration
  */
 export const DEFAULT_ANNOTATION_CONFIG: AnnotationConfig = {

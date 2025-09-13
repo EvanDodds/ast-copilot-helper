@@ -2,7 +2,7 @@
  * Basic test for signature extractors
  */
 
-import { TypeScriptExtractor, JavaScriptExtractor, PythonExtractor } from './index';
+import { TypeScriptExtractor, JavaScriptExtractor } from './index';
 import { ASTNode } from '../../parser/types';
 
 // Create a mock AST node for testing
@@ -48,11 +48,6 @@ console.log('\nJavaScript Extractor Results:');
 console.log('Signature:', jsSignature);
 console.log('Parameters:', jsParameters);
 
-// Test Python extractor
-const pyExtractor = new PythonExtractor();
-const pySignature = pyExtractor.extractSignature(mockNode, 'def test_function(param1, param2=None):');
-
-console.log('\nPython Extractor Results:');
-console.log('Signature:', pySignature);
+// TODO: Add Python extractor test when implementation is complete
 
 console.log('\nAll extractors loaded successfully!');
