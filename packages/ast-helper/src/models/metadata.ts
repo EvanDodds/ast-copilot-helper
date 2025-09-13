@@ -107,7 +107,20 @@ export class MetadataManager {
     try {
       const metadataPath = this.getMetadataPath(modelConfig);
       const data = await fs.readFile(metadataPath, 'utf-8');
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      
+      // Convert date strings back to Date objects
+      if (parsed.downloadedAt) {
+        parsed.downloadedAt = new Date(parsed.downloadedAt);
+      }
+      if (parsed.lastVerified) {
+        parsed.lastVerified = new Date(parsed.lastVerified);
+      }
+      if (parsed.usageStats?.lastUsed) {
+        parsed.usageStats.lastUsed = new Date(parsed.usageStats.lastUsed);
+      }
+      
+      return parsed;
     } catch (error) {
       logger.debug(`Metadata not found for ${modelConfig.name} v${modelConfig.version}`);
       return null;

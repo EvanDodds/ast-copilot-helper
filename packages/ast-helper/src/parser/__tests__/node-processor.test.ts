@@ -226,8 +226,8 @@ describe('NodeProcessor', () => {
         
       mockFs.statSync.mockImplementation((path: string) => ({
         size: 1000,
-        isDirectory: () => path.includes('subdir'),
-        isFile: () => !path.includes('subdir'),
+        isDirectory: () => path.endsWith('subdir'),
+        isFile: () => !path.endsWith('subdir'),
       }));
 
       const result = await processor.processDirectory('/test/src', { recursive: true });

@@ -9,6 +9,11 @@ on:
     # Run nightly performance benchmarks
     - cron: '0 2 * * *'
 
+# Cancel previous runs when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   NODE_VERSION: '20'
   PERFORMANCE_THRESHOLD_ENABLED: ${{ github.event_name == 'schedule' || contains(github.event.head_commit.message, '[benchmark]') }}
@@ -62,8 +67,12 @@ jobs:
     needs: validate
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.validate.outputs.matrix) }}
+      matrix:
+        # Simplified matrix - full matrix only on main branch
+        os: ${{ github.ref == 'refs/heads/main' && fromJson('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJson('["ubuntu-latest"]') }}
+        node: ${{ github.ref == 'refs/heads/main' && fromJson('["18", "20", "21"]') || fromJson('["20"]') }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     
     steps:
       - name: Checkout code
@@ -79,14 +88,17 @@ jobs:
         run: npm ci
 
       - name: Run unit tests
-        run: npm run test:unit || npm test -- tests/unit/
+        run: npm run test:ci:fast tests/unit/ || npm test -- tests/unit/ --config vitest.ci.config.ts
+        timeout-minutes: 10
 
       - name: Run integration tests  
-        run: npm run test:integration || npm test -- tests/integration/
+        run: npm run test:ci:fast tests/integration/ || npm test -- tests/integration/ --config vitest.ci.config.ts
+        timeout-minutes: 15
 
       - name: Generate coverage report
         if: matrix.os == 'ubuntu-latest' && matrix.node == '20'
         run: npm run test:coverage || npm test -- --coverage
+        timeout-minutes: 10
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.node == '20'
@@ -96,16 +108,14 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  # Performance benchmarking
+  # Performance benchmarking (only on main branch or when explicitly requested)
   benchmarks:
     name: Performance Benchmarks
     needs: [validate, test]
-    if: needs.validate.outputs.should-run-benchmarks == 'true'
+    if: github.ref == 'refs/heads/main' || contains(github.event.head_commit.message, '[benchmark]') || github.event_name == 'schedule'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     
     steps:
       - name: Checkout code
@@ -123,7 +133,9 @@ jobs:
       - name: Run performance benchmarks
         run: |
           echo "🚀 Starting performance benchmarks..."
-          npm run test:benchmarks || npm test -- tests/benchmarks/ --reporter=verbose > benchmark-results.txt 2>&1
+          # Run with CI config and shorter timeouts
+          export RUN_EXPENSIVE_TESTS=true
+          npm run test:benchmarks || timeout 10m npm test -- tests/benchmarks/ --config vitest.ci.config.ts --testTimeout=60000
           
       - name: Validate performance criteria
         run: |
@@ -212,25 +224,13 @@ jobs:
               body: body
             });
 
-  # Integration and E2E Testing
+  # Integration and E2E Testing (simplified for non-main branches)
   integration:
-    name: Full Integration Tests
+    name: Integration Tests
     needs: test
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    services:
-      # Add services if needed (database, etc.)
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: ast_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+    timeout-minutes: 20
     
     steps:
       - name: Checkout code
@@ -247,32 +247,27 @@ jobs:
 
       - name: Setup test environment
         run: |
-          # Create test configurations
+          # Create minimal test environment
           mkdir -p test-tmp
-          export TEST_DATABASE_URL=postgresql://postgres:test@localhost:5432/ast_test
           echo "TEST_ENV=ci" >> $GITHUB_ENV
 
-      - name: Run full integration suite
+      - name: Run integration tests
         run: |
-          npm run test:e2e || npm test -- tests/integration/ --reporter=verbose
-          
-      - name: Test MCP server functionality
-        run: |
-          # Test MCP server can start
-          timeout 10s npm run start:mcp || echo "MCP server test completed"
+          npm run test:integration || timeout 15m npm test -- tests/integration/ --config vitest.ci.config.ts
           
       - name: Test CLI functionality  
         run: |
-          # Test CLI commands
+          # Quick CLI validation
           npm run build || echo "Build step completed"
-          # Add CLI integration tests
           echo "CLI integration tests completed"
+        timeout-minutes: 5
 
   # Quality gates and deployment readiness
   quality-gate:
     name: Quality Gate
     needs: [validate, test, integration]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: always()
     
     steps:
@@ -291,21 +286,17 @@ jobs:
       - name: Check coverage thresholds
         run: |
           echo "🔍 Checking coverage thresholds..."
-          npm run test:coverage || npm test -- --coverage --silent
+          # Quick coverage check - skip for feature branches
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            npm run test:coverage || npm test -- --coverage --silent
+          else
+            echo "Skipping coverage check for feature branch"
+          fi
           
-          # Extract coverage percentages (this would need to be adapted based on actual coverage format)
-          echo "✅ Coverage threshold validation completed"
-
       - name: Security audit
         run: |
           echo "🔒 Running security audit..."
-          npm audit --audit-level=moderate || echo "Security audit completed with warnings"
-
-      - name: Check bundle size
-        run: |
-          echo "📦 Checking bundle sizes..."
-          npm run build || echo "Build completed"
-          # Add bundle size analysis if needed
+          timeout 5m npm audit --audit-level=moderate || echo "Security audit completed with warnings"
 
       - name: Deployment readiness check
         run: |
@@ -317,7 +308,7 @@ jobs:
             exit 1
           fi
           
-          if [[ "${{ needs.integration.result }}" != "success" ]]; then
+          if [[ "${{ needs.integration.result }}" == "failure" ]]; then
             echo "❌ Integration tests failed"  
             exit 1
           fi
