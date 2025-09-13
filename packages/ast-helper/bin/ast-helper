@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Import the CLI class from the compiled JavaScript
-const AstHelperCli = require('../dist/cli.js').default;
+import { AstHelperCli } from '../dist/cli.js';
 
 // Create and run the CLI
 const cli = new AstHelperCli();
