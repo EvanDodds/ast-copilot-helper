@@ -14,6 +14,15 @@ export const DEFAULT_CONFIG: Config = {
   watchGlob: [
     'src/**/*'
   ],
+  fileWatching: {
+    watchPaths: ['src', 'lib'],
+    includePatterns: ['**/*.ts', '**/*.js', '**/*.py'],
+    excludePatterns: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.astdb/**'],
+    debounceMs: 100,
+    batchSize: 50,
+    enableRecursive: true,
+    followSymlinks: false
+  },
   outputDir: '.astdb',
   topK: 5,
   snippetLines: 10,
@@ -132,6 +141,72 @@ export function validateConfig(config: PartialConfig): Config {
       throw new Error('modelHost must be a non-empty string');
     }
     result.modelHost = config.modelHost.trim();
+  }
+  
+  // Validate file watching configuration
+  if (config.fileWatching) {
+    const watchConfig = config.fileWatching;
+    
+    // Validate watchPaths
+    if (watchConfig.watchPaths !== undefined) {
+      if (!Array.isArray(watchConfig.watchPaths)) {
+        throw new Error('fileWatching.watchPaths must be an array of strings');
+      }
+      const validPaths = watchConfig.watchPaths.filter(path => 
+        typeof path === 'string' && path.trim().length > 0
+      );
+      if (validPaths.length === 0) {
+        throw new Error('fileWatching.watchPaths must contain at least one valid path');
+      }
+      result.fileWatching!.watchPaths = validPaths;
+    }
+    
+    // Validate includePatterns
+    if (watchConfig.includePatterns !== undefined) {
+      if (!Array.isArray(watchConfig.includePatterns)) {
+        throw new Error('fileWatching.includePatterns must be an array of strings');
+      }
+      result.fileWatching!.includePatterns = watchConfig.includePatterns.filter(
+        pattern => typeof pattern === 'string' && pattern.trim().length > 0
+      );
+    }
+    
+    // Validate excludePatterns
+    if (watchConfig.excludePatterns !== undefined) {
+      if (!Array.isArray(watchConfig.excludePatterns)) {
+        throw new Error('fileWatching.excludePatterns must be an array of strings');
+      }
+      result.fileWatching!.excludePatterns = watchConfig.excludePatterns.filter(
+        pattern => typeof pattern === 'string' && pattern.trim().length > 0
+      );
+    }
+    
+    // Validate debounceMs
+    if (watchConfig.debounceMs !== undefined) {
+      const debounce = Number(watchConfig.debounceMs);
+      if (!Number.isInteger(debounce) || debounce < 0 || debounce > 5000) {
+        throw new Error('fileWatching.debounceMs must be an integer between 0 and 5000');
+      }
+      result.fileWatching!.debounceMs = debounce;
+    }
+    
+    // Validate batchSize
+    if (watchConfig.batchSize !== undefined) {
+      const batchSize = Number(watchConfig.batchSize);
+      if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 1000) {
+        throw new Error('fileWatching.batchSize must be an integer between 1 and 1000');
+      }
+      result.fileWatching!.batchSize = batchSize;
+    }
+    
+    // Validate boolean flags
+    if (watchConfig.enableRecursive !== undefined) {
+      result.fileWatching!.enableRecursive = Boolean(watchConfig.enableRecursive);
+    }
+    
+    if (watchConfig.followSymlinks !== undefined) {
+      result.fileWatching!.followSymlinks = Boolean(watchConfig.followSymlinks);
+    }
   }
   
   // Validate boolean values
