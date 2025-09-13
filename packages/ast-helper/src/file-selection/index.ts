@@ -11,6 +11,9 @@ import { createLogger } from '../logging/index.js';
 import { ValidationErrors } from '../errors/index.js';
 import type { FileSelectionResult, ParseOptions } from '../commands/parse.js';
 
+// Import Git integration
+import { GitFileSelector } from '../git-integration/index.js';
+
 /**
  * Supported file extensions and MIME types
  */
@@ -459,6 +462,7 @@ export class FileSelectionEngine {
     // Register available file selectors
     this.selectors.set('glob', new GlobFileSelector());
     this.selectors.set('config', new ConfigFileSelector());
+    this.selectors.set('git', new GitFileSelector());
   }
 
   /**
@@ -502,7 +506,10 @@ export class FileSelectionEngine {
    * Determine which selection strategy to use based on options
    */
   private determineStrategy(options: ParseOptions): string {
-    if (options.glob) {
+    // Git-based selection takes priority
+    if (options.changed || options.staged) {
+      return 'git';
+    } else if (options.glob) {
       return 'glob';
     } else {
       return 'config';  // Default to configuration-based selection

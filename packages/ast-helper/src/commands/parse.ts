@@ -7,6 +7,8 @@ import type { Config } from '../types.js';
 import { createLogger } from '../logging/index.js';
 import { ValidationErrors } from '../errors/index.js';
 import { FileSelectionEngine } from '../file-selection/index.js';
+import { ParseGitUtils } from '../git-integration/index.js';
+import { FileProcessor } from './file-processor.js';
 
 /**
  * Parse command options interface
@@ -84,9 +86,11 @@ export interface CommandHandler<T = any> {
 export class ParseCommand implements CommandHandler<ParseOptions> {
   private logger = createLogger();
   private fileSelectionEngine: FileSelectionEngine;
+  private gitUtils: ParseGitUtils;
 
   constructor() {
     this.fileSelectionEngine = new FileSelectionEngine();
+    this.gitUtils = new ParseGitUtils();
   }
 
   /**
@@ -169,9 +173,15 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
       );
     }
 
+    // Validate Git-specific preconditions
+    if (options.changed || options.staged) {
+      await this.gitUtils.validateGitPreconditions(options);
+    }
+
     this.logger.debug('Preconditions validated', {
       outputDir: config.outputDir,
-      workspace: options.workspace || process.cwd()
+      workspace: options.workspace || process.cwd(),
+      hasGitOptions: !!(options.changed || options.staged)
     });
   }
 
@@ -179,15 +189,8 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
    * Select files to process based on the specified strategy
    */
   private async selectFiles(options: ParseOptions, config: Config): Promise<FileSelectionResult> {
-    // Use the FileSelectionEngine to handle file selection strategies
-    
-    if (options.changed) {
-      // Git-based file selection - will be implemented in Subtask 3
-      throw new Error('Git integration not yet implemented');
-    } else {
-      // Use FileSelectionEngine for glob and config-based selection
-      return await this.fileSelectionEngine.selectFiles(options, config);
-    }
+    // Use the FileSelectionEngine which will route to appropriate selector (git, glob, or config)
+    return await this.fileSelectionEngine.selectFiles(options, config);
   }
 
   /**
@@ -246,13 +249,125 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
    * Execute parsing with batch processing and progress reporting
    */
   private async executeParsing(
-    _fileSelection: FileSelectionResult, 
-    _options: ParseOptions, 
-    _config: Config
+    fileSelection: FileSelectionResult, 
+    options: ParseOptions, 
+    config: Config
   ): Promise<BatchResult> {
-    // This method will be implemented in Subtask 4 (AST Processing), Subtask 5 (Batch Processing),
-    // and Subtask 6 (Progress Reporting)
-    throw new Error('Batch processing not yet implemented');
+    const startTime = Date.now();
+    
+    try {
+      this.logger.info('Starting AST parsing', {
+        totalFiles: fileSelection.files.length,
+        batchSize: options.batchSize,
+        outputDir: config.outputDir
+      });
+
+      // Create FileProcessor instance
+      const fileProcessor = await FileProcessor.create(config);
+
+      // Process files with progress reporting
+      const progressCallback = options.outputStats ? (progress: {
+        completed: number;
+        total: number;
+        currentFile: string;
+        rate: number;
+        estimatedTimeRemaining: number;
+        memoryUsageMB: number;
+      }) => {
+        if (progress.completed % Math.max(1, Math.floor(progress.total / 10)) === 0) {
+          const percent = Math.round((progress.completed / progress.total) * 100);
+          const etaSeconds = Math.round(progress.estimatedTimeRemaining / 1000);
+          console.log(`🔄 Processing: ${percent}% (${progress.completed}/${progress.total}) - ETA: ${etaSeconds}s - Memory: ${progress.memoryUsageMB.toFixed(1)}MB`);
+        }
+      } : undefined;
+
+      // Process files
+      const results = await fileProcessor.processFiles(
+        fileSelection.files,
+        options,
+        config,
+        progressCallback
+      );
+
+      // Clean up
+      await fileProcessor.dispose();
+
+      const processingTime = Date.now() - startTime;
+
+      this.logger.info('AST parsing completed', {
+        totalFiles: results.totalFiles,
+        successful: results.successful,
+        failed: results.failed,
+        totalTimeMs: processingTime,
+        totalNodes: results.totalNodes
+      });
+
+      // Transform results to BatchResult format
+      const batchResult: BatchResult = {
+        totalFiles: results.totalFiles,
+        processedFiles: results.successful,
+        skippedFiles: results.skipped,
+        errorFiles: results.failed,
+        totalNodes: results.totalNodes,
+        processingTime,
+        errors: results.errors.map(error => ({
+          filePath: error.split(':')[0] || 'unknown',
+          error: error.split(':').slice(1).join(':').trim() || 'Unknown error',
+          type: 'parse' as const,
+          recoverable: true
+        })),
+        statistics: options.outputStats ? {
+          averageFileSize: 0, // Would need to calculate from file metadata
+          averageProcessingTime: results.totalTimeMs / Math.max(1, results.totalFiles),
+          averageNodesPerFile: results.totalNodes / Math.max(1, results.successful),
+          totalBytesProcessed: 0, // Would need to calculate from file metadata  
+          filesPerSecond: results.totalFiles / Math.max(1, results.totalTimeMs / 1000),
+          memoryUsageMB: results.memoryStats.peakUsageMB
+        } : {
+          averageFileSize: 0,
+          averageProcessingTime: 0,
+          averageNodesPerFile: 0,
+          totalBytesProcessed: 0,
+          filesPerSecond: 0,
+          memoryUsageMB: 0
+        }
+      };
+
+      return batchResult;
+
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      
+      this.logger.error('AST parsing failed', {
+        error: (error as Error).message,
+        processingTime,
+        totalFiles: fileSelection.files.length
+      });
+
+      // Return error result
+      return {
+        totalFiles: fileSelection.files.length,
+        processedFiles: 0,
+        skippedFiles: 0,
+        errorFiles: fileSelection.files.length,
+        totalNodes: 0,
+        processingTime,
+        errors: [{
+          filePath: 'batch',
+          error: `Batch processing failed: ${(error as Error).message}`,
+          type: 'parse' as const,
+          recoverable: false
+        }],
+        statistics: {
+          averageFileSize: 0,
+          averageProcessingTime: 0,
+          averageNodesPerFile: 0,
+          totalBytesProcessed: 0,
+          filesPerSecond: 0,
+          memoryUsageMB: 0
+        }
+      };
+    }
   }
 
   /**
