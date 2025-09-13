@@ -22,6 +22,13 @@ export const DEFAULT_CONFIG: Config = {
     M: 16
   },
   modelHost: 'https://huggingface.co',
+  model: {
+    defaultModel: 'all-minilm-l6-v2',
+    modelsDir: '.astdb/models',
+    downloadTimeout: 300000, // 5 minutes
+    maxConcurrentDownloads: 2,
+    showProgress: true
+  },
   enableTelemetry: false,
   concurrency: 4,
   batchSize: 100
