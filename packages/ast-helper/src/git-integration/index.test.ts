@@ -3,7 +3,7 @@
  * Validates Git-based file selection, repository validation, and integration with file selection engine
  */
 
-import { resolve } from 'node:path';
+import { resolve, relative, extname } from 'node:path';
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import type { ParseOptions } from '../commands/parse.js';
 import { ValidationErrors } from '../errors/index.js';
@@ -18,6 +18,11 @@ import {
 // Mock dependencies
 vi.mock('../git/index.js');
 vi.mock('node:fs/promises');
+vi.mock('node:path', () => ({
+    resolve: vi.fn(),
+    relative: vi.fn(), 
+    extname: vi.fn()
+}));
 
 const MockedGitManager = GitManager as unknown as Mock;
 
@@ -102,6 +107,23 @@ describe('GitFileSelector', () => {
     beforeEach(() => {
         vi.clearAllMocks();
 
+        // Setup path mocks
+        vi.mocked(resolve).mockImplementation((...segments: string[]) => {
+            return segments.filter(s => s).join('/').replace(/\/+/g, '/');
+        });
+        
+        vi.mocked(relative).mockImplementation((from: string, to: string) => {
+            if (to.startsWith(from)) {
+                return to.substring(from.length).replace(/^\//, '');
+            }
+            return to;
+        });
+        
+        vi.mocked(extname).mockImplementation((filePath: string) => {
+            const lastDot = filePath.lastIndexOf('.');
+            return lastDot === -1 ? '' : filePath.substring(lastDot);
+        });
+
         mockGitManager = {
             getChangedFiles: vi.fn(),
             getStagedFiles: vi.fn(),
@@ -128,7 +150,7 @@ describe('GitFileSelector', () => {
 
         const mockConfig: Config = {
             outputDir: '/test/output',
-            parseGlob: ['**/*.ts', '**/*.js']
+            parseGlob: ['src/*.ts', 'src/*.js']  // Use simple glob patterns instead of globstar
         } as Config;
 
         it('should select changed files successfully', async () => {
@@ -148,14 +170,58 @@ describe('GitFileSelector', () => {
                 if (filePath.includes('file1.ts')) {
                     return Promise.resolve({
                         isFile: () => true,
+                        isDirectory: () => false,
+                        isBlockDevice: () => false,
+                        isCharacterDevice: () => false,
+                        isSymbolicLink: () => false,
+                        isFIFO: () => false,
+                        isSocket: () => false,
                         size: 1024,
-                        mtime: new Date('2024-01-01')
+                        mtime: new Date('2024-01-01'),
+                        atime: new Date('2024-01-01'),
+                        ctime: new Date('2024-01-01'),
+                        birthtime: new Date('2024-01-01'),
+                        dev: 1,
+                        ino: 1,
+                        mode: 33188,
+                        nlink: 1,
+                        uid: 1000,
+                        gid: 1000,
+                        rdev: 0,
+                        blocks: 8,
+                        blksize: 4096,
+                        atimeMs: Date.now(),
+                        mtimeMs: Date.now(),
+                        ctimeMs: Date.now(),
+                        birthtimeMs: Date.now()
                     });
                 } else if (filePath.includes('file2.js')) {
                     return Promise.resolve({
                         isFile: () => true,
+                        isDirectory: () => false,
+                        isBlockDevice: () => false,
+                        isCharacterDevice: () => false,
+                        isSymbolicLink: () => false,
+                        isFIFO: () => false,
+                        isSocket: () => false,
                         size: 2048,
-                        mtime: new Date('2024-01-01')
+                        mtime: new Date('2024-01-01'),
+                        atime: new Date('2024-01-01'),
+                        ctime: new Date('2024-01-01'),
+                        birthtime: new Date('2024-01-01'),
+                        dev: 1,
+                        ino: 1,
+                        mode: 33188,
+                        nlink: 1,
+                        uid: 1000,
+                        gid: 1000,
+                        rdev: 0,
+                        blocks: 8,
+                        blksize: 4096,
+                        atimeMs: Date.now(),
+                        mtimeMs: Date.now(),
+                        ctimeMs: Date.now(),
+                        birthtimeMs: Date.now()
                     });
                 }
                 return Promise.reject(new Error('File not found'));

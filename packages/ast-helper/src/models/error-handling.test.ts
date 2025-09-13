@@ -49,12 +49,22 @@ describe('ErrorHandler', () => {
       // Test acceptance criteria: ✅ Network connectivity validation
       mockFetch.mockResolvedValue(new Response(null, { status: 200 }));
 
+      // Mock Date.now to simulate latency
+      let callCount = 0;
+      const originalDateNow = Date.now;
+      vi.spyOn(Date, 'now').mockImplementation(() => {
+        return originalDateNow() + (callCount++ * 50); // Simulate 50ms increments
+      });
+
       const connectivity = await errorHandler.validateConnectivity(['https://test.com']);
 
       expect(connectivity.status).toBe(ConnectivityStatus.ONLINE);
       expect(connectivity.endpoints['https://test.com']).toBe(true);
       expect(connectivity.errors).toHaveLength(0);
       expect(connectivity.latency['https://test.com']).toBeGreaterThan(0);
+      
+      // Restore Date.now
+      vi.restoreAllMocks();
     });
 
     it('should detect offline connectivity when no endpoints are reachable', async () => {

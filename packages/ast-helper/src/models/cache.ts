@@ -8,6 +8,7 @@ import { join, dirname } from 'path';
 import { ModelConfig, ModelMetadata } from './types.js';
 import { createModuleLogger } from '../logging/index.js';
 import { fileVerifier } from './verification.js';
+import { validateModelConfig } from './validation.js';
 
 const logger = createModuleLogger('ModelCache');
 
@@ -232,6 +233,12 @@ export class ModelCache {
    */
   async storeModel(modelConfig: ModelConfig, sourceFilePath: string): Promise<string> {
     try {
+      // Validate model configuration
+      const validation = validateModelConfig(modelConfig);
+      if (!validation.valid) {
+        throw new Error(`Invalid model configuration: ${validation.errors.join(', ')}`);
+      }
+
       await this.initialize();
 
       const modelPath = this.getModelPath(modelConfig);
