@@ -408,8 +408,8 @@ export class AstHelperCli {
         // Validate mutually exclusive file selection options
         if (opts.changed && opts.glob) {
           throw ValidationErrors.invalidValue(
-            '--changed and --glob', 
-            'both specified', 
+            '--changed and --glob',
+            'both specified',
             'These options are mutually exclusive. Use either --changed to process Git changes or --glob to specify file patterns.'
           );
         }
@@ -417,8 +417,8 @@ export class AstHelperCli {
         // Validate staged option only works with changed
         if (opts.staged && !opts.changed) {
           throw ValidationErrors.invalidValue(
-            '--staged', 
-            'used without --changed', 
+            '--staged',
+            'used without --changed',
             'The --staged option can only be used with --changed to process staged Git changes.'
           );
         }
@@ -435,8 +435,8 @@ export class AstHelperCli {
         // Validate Git repository for Git-related options
         if ((opts.changed || opts.staged) && !this.isGitRepository(opts.workspace || process.cwd())) {
           throw ValidationErrors.invalidValue(
-            '--changed/--staged', 
-            'used outside Git repository', 
+            '--changed/--staged',
+            'used outside Git repository',
             'Git repository detection required for --changed and --staged flags. Initialize git with "git init" or run from within a Git repository.'
           );
         }
