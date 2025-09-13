@@ -40,6 +40,10 @@ interface ParseOptions extends GlobalOptions {
   glob?: string;
   base?: string;
   staged?: boolean;
+  force?: boolean;
+  batchSize?: number;
+  dryRun?: boolean;
+  outputStats?: boolean;
 }
 
 /**
@@ -156,11 +160,21 @@ export class AstHelperCli {
   private setupParseCommand(): void {
     this.program
       .command('parse')
-      .description('Extract AST from source files')
+      .description('Extract AST from source files and save to .astdb database')
       .addOption(new Option('-c, --changed', 'Process only changed files since last commit'))
-      .addOption(new Option('--glob <pattern>', 'File pattern to parse (overrides config)'))
+      .addOption(new Option('--glob <pattern>', 'File pattern to parse (overrides config parseGlob)'))
       .addOption(new Option('--base <ref>', 'Git reference for --changed comparison').default('HEAD'))
-      .addOption(new Option('--staged', 'Process only staged files (with --changed)'))
+      .addOption(new Option('--staged', 'Process only staged files (requires --changed)'))
+      .addOption(new Option('--force', 'Reparse files even if AST already exists and is up-to-date'))
+      .addOption(new Option('--batch-size <n>', 'Number of files to process in parallel').default(10).argParser((value) => {
+        const num = parseInt(value);
+        if (isNaN(num) || num < 1 || num > 100) {
+          throw new Error('--batch-size must be between 1 and 100');
+        }
+        return num;
+      }))
+      .addOption(new Option('--dry-run', 'Show what would be parsed without actually parsing'))
+      .addOption(new Option('--output-stats', 'Display detailed parsing statistics'))
       .action(async (options: ParseOptions) => {
         await this.executeCommand('parse', options);
       });
@@ -285,19 +299,55 @@ export class AstHelperCli {
 
       // Validate mutually exclusive options for parse command
       if (actionCommand.name() === 'parse') {
+        // Validate mutually exclusive file selection options
         if (opts.changed && opts.glob) {
-          throw ValidationErrors.invalidValue('--changed and --glob', 'both specified', 'These options are mutually exclusive');
+          throw ValidationErrors.invalidValue(
+            '--changed and --glob', 
+            'both specified', 
+            'These options are mutually exclusive. Use either --changed to process Git changes or --glob to specify file patterns.'
+          );
         }
 
         // Validate staged option only works with changed
         if (opts.staged && !opts.changed) {
-          throw ValidationErrors.invalidValue('--staged', 'used without --changed', 'The --staged option can only be used with --changed');
+          throw ValidationErrors.invalidValue(
+            '--staged', 
+            'used without --changed', 
+            'The --staged option can only be used with --changed to process staged Git changes.'
+          );
         }
-      }
 
-      // Validate Git repository for --changed flag
-      if ((opts.changed || opts.staged) && !this.isGitRepository(opts.workspace || process.cwd())) {
-        throw ValidationErrors.invalidValue('--changed', 'used outside Git repository', 'Git repository detection required for --changed flag');
+        // Validate batch size is reasonable
+        if (opts.batchSize && (opts.batchSize < 1 || opts.batchSize > 100)) {
+          throw ValidationErrors.invalidValue(
+            '--batch-size',
+            String(opts.batchSize),
+            'Batch size must be between 1 and 100 for optimal performance.'
+          );
+        }
+
+        // Validate Git repository for Git-related options
+        if ((opts.changed || opts.staged) && !this.isGitRepository(opts.workspace || process.cwd())) {
+          throw ValidationErrors.invalidValue(
+            '--changed/--staged', 
+            'used outside Git repository', 
+            'Git repository detection required for --changed and --staged flags. Initialize git with "git init" or run from within a Git repository.'
+          );
+        }
+
+        // Validate Git base reference format
+        if (opts.base && opts.base !== 'HEAD' && !this.isValidGitRef(opts.base)) {
+          throw ValidationErrors.invalidValue(
+            '--base',
+            opts.base,
+            'Git reference must be a valid commit SHA, branch name, or tag. Examples: HEAD, main, origin/main, abc123, v1.0.0'
+          );
+        }
+
+        // Warn about performance implications
+        if (opts.batchSize && opts.batchSize > 50) {
+          console.warn('⚠️  Warning: Large batch sizes (>50) may impact system performance. Consider reducing if you experience memory issues.');
+        }
       }
     });
   }
@@ -380,6 +430,39 @@ export class AstHelperCli {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Validate if a string is a valid Git reference format
+   */
+  private isValidGitRef(ref: string): boolean {
+    // Basic validation for Git reference format
+    // Allow: commit SHAs (7-40 chars), branch names, tag names
+    if (!ref || ref.length === 0) {
+      return false;
+    }
+
+    // Disallow invalid characters for Git refs
+    const invalidChars = /[~^:\s\\\[\]]/;
+    if (invalidChars.test(ref)) {
+      return false;
+    }
+
+    // Disallow refs starting with dash or ending with lock
+    if (ref.startsWith('-') || ref.endsWith('.lock')) {
+      return false;
+    }
+
+    // Allow common patterns: HEAD, branch names, commit SHAs, origin/branch, tags
+    const validPatterns = [
+      /^HEAD$/,                                    // HEAD
+      /^[a-f0-9]{7,40}$/,                         // Commit SHA (7-40 chars)
+      /^[a-zA-Z][a-zA-Z0-9._/-]+$/,              // Branch/tag name
+      /^(origin|upstream)\/[a-zA-Z][a-zA-Z0-9._/-]+$/, // Remote branch
+      /^refs\/(heads|tags)\/[a-zA-Z][a-zA-Z0-9._/-]+$/ // Full ref path
+    ];
+
+    return validPatterns.some(pattern => pattern.test(ref));
   }
 
   /**
@@ -688,9 +771,10 @@ class InitCommandHandler implements CommandHandler<InitOptions> {
 
 class ParseCommandHandler implements CommandHandler<ParseOptions> {
   async execute(options: ParseOptions, config: Config): Promise<void> {
-    console.log('Parse command executed with options:', options);
-    console.log('Using config:', { outputDir: config.outputDir, parseGlob: config.parseGlob });
-    // TODO: Implement actual parse logic
+    // Import ParseCommand dynamically to avoid circular dependencies
+    const { ParseCommand } = await import('./commands/parse.js');
+    const parseCommand = new ParseCommand();
+    await parseCommand.execute(options, config);
   }
 }
 
