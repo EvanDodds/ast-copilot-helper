@@ -122,3 +122,31 @@ export interface ModelMetadata {
     lastUsed: Date;
   };
 }
+
+/**
+ * Verification options for model files
+ */
+export interface VerificationOptions {
+  /** Skip checksum verification (useful for testing) */
+  skipChecksum?: boolean;
+  /** Skip file size verification */
+  skipSizeCheck?: boolean;
+  /** Skip ONNX format verification */
+  skipFormatCheck?: boolean;
+  /** Custom quarantine directory */
+  quarantineDir?: string;
+}
+
+/**
+ * Quarantine entry metadata for failed verifications
+ */
+export interface QuarantineEntry {
+  filePath: string;
+  reason: string;
+  timestamp: Date;
+  expectedChecksum?: string;
+  actualChecksum?: string;
+  expectedSize?: number;
+  actualSize?: number;
+  errorDetails?: string;
+}
