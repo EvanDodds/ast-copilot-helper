@@ -28,8 +28,10 @@ describe('FileSystemManager', () => {
   
   describe('path operations', () => {
     it('should normalize paths', () => {
-      expect(fsManager.normalizePath('path/to/../file.txt')).toBe('path\\file.txt');
-      expect(fsManager.normalizePath('path//double//slash')).toBe('path\\double\\slash');
+      // Use platform-specific path separators
+      const sep = require('path').sep;
+      expect(fsManager.normalizePath('path/to/../file.txt')).toBe(`path${sep}file.txt`);
+      expect(fsManager.normalizePath('path//double//slash')).toBe(`path${sep}double${sep}slash`);
     });
     
     it('should resolve paths', () => {
@@ -39,7 +41,13 @@ describe('FileSystemManager', () => {
     
     it('should detect absolute paths', () => {
       expect(fsManager.isAbsolutePath('/absolute/path')).toBe(true);
-      expect(fsManager.isAbsolutePath('C:\\absolute\\path')).toBe(true);
+      // On Windows, C:\path is absolute, but on Unix it's relative
+      if (process.platform === 'win32') {
+        expect(fsManager.isAbsolutePath('C:\\absolute\\path')).toBe(true);
+      } else {
+        // On Unix, this is treated as a relative path
+        expect(fsManager.isAbsolutePath('C:\\absolute\\path')).toBe(false);
+      }
       expect(fsManager.isAbsolutePath('relative/path')).toBe(false);
     });
   });
@@ -202,11 +210,12 @@ describe('FileSystemManager', () => {
     it('should list files recursively', async () => {
       const options: ListOptions = { recursive: true };
       const files = await fsManager.listFiles(tempDir, options);
+      const sep = require('path').sep;
       
       expect(files.length).toBeGreaterThan(2);
       expect(files).toContain('file1.txt');
-      expect(files).toContain('subdir1\\file3.txt');
-      expect(files).toContain('subdir1\\nested\\file4.py');
+      expect(files).toContain(`subdir1${sep}file3.txt`);
+      expect(files).toContain(`subdir1${sep}nested${sep}file4.py`);
     });
     
     it('should include directories when requested', async () => {
@@ -237,10 +246,11 @@ describe('FileSystemManager', () => {
         maxDepth: 1
       };
       const files = await fsManager.listFiles(tempDir, options);
+      const sep = require('path').sep;
       
       expect(files).toContain('file1.txt');
-      expect(files).toContain('subdir1\\file3.txt');
-      expect(files).not.toContain('subdir1\\nested\\file4.py'); // Too deep
+      expect(files).toContain(`subdir1${sep}file3.txt`);
+      expect(files).not.toContain(`subdir1${sep}nested${sep}file4.py`); // Too deep
     });
   });
   

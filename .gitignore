@@ -76,6 +76,16 @@ lib/
 .astdb/
 *.astdb
 
+# Test-related temporary files and directories
+.test-cache-models/
+.test-metadata/
+test-output/
+.test-verification/
+.test-*/
+*-test-*/
+ast-integration-test-*/
+git-test-*/
+
 # OS generated files
 .DS_Store
 .DS_Store?

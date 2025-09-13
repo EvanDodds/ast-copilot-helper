@@ -40,6 +40,13 @@ import type {
  * File system manager implementation with cross-platform support
  */
 export class FileSystemManager implements FileSystemUtils {
+  private rootDir: string;
+  
+  constructor(cwd?: string) {
+    const workingDir = cwd || (typeof process !== 'undefined' && process.cwd ? process.cwd() : '/');
+    this.rootDir = resolve(workingDir);
+  }
+
   /**
    * Normalize path separators for current platform
    */
@@ -54,7 +61,7 @@ export class FileSystemManager implements FileSystemUtils {
     if (isAbsolute(path)) {
       return normalize(path);
     }
-    const baseDir = base || (typeof process !== 'undefined' && process.cwd ? process.cwd() : '/');
+    const baseDir = base || this.rootDir;
     return resolve(baseDir, path);
   }
   

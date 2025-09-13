@@ -139,11 +139,34 @@ describe('Git File Selection Logic', () => {
         // Simple pattern matcher for testing
         const matchesPattern = (file: string, pattern: string): boolean => {
             if (pattern.includes('**')) {
-                // Convert **/*.ts to .*\.ts and *.js to [^/]*\.js
-                let regex = pattern
-                    .replace(/\*\*/g, '.*')     // ** matches any path
-                    .replace(/(?<!\.\*)\*/g, '[^/]*')  // * matches filename only (not after .*)
-                    .replace(/\./g, '\\.');      // Escape dots
+                // Split pattern and handle each part
+                let parts = pattern.split('/');
+                let regexParts = [];
+                
+                for (let i = 0; i < parts.length; i++) {
+                    let part = parts[i];
+                    if (part === '**') {
+                        if (i === parts.length - 1) {
+                            regexParts.push('.*'); // ** at end
+                        } else {
+                            regexParts.push('(?:.*/)?'); // **/ becomes optional path
+                            continue; // Skip the next part processing for /
+                        }
+                    } else {
+                        // Replace * with [^/]* and escape dots in filename parts
+                        let regexPart = part
+                            .replace(/\*/g, '[^/]*')
+                            .replace(/\./g, '\\.');
+                        regexParts.push(regexPart);
+                    }
+                    
+                    // Add slash between parts (except for **/ case handled above)
+                    if (i < parts.length - 1 && parts[i] !== '**') {
+                        regexParts.push('/');
+                    }
+                }
+                
+                let regex = regexParts.join('');
                 return new RegExp(`^${regex}$`).test(file);
             }
             return false;

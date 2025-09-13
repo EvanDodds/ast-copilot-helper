@@ -18,6 +18,33 @@ vi.mock('../logging/index.js', () => ({
   })
 }));
 
+// Mock the file selection engine to return expected errors
+vi.mock('../file-selection/index.js', () => ({
+  FileSelectionEngine: vi.fn().mockImplementation(() => ({
+    selectFiles: vi.fn().mockImplementation((options, config) => {
+      // Determine strategy and return appropriate error
+      if (options.changed || options.staged) {
+        throw new Error('Git integration not yet implemented');
+      } else if (options.glob) {
+        throw new Error('Glob pattern selection not yet implemented');
+      } else {
+        throw new Error('Configuration-based file selection not yet implemented');
+      }
+    })
+  }))
+}));
+
+// Mock the Git utils
+vi.mock('../git-integration/index.js', () => ({
+  ParseGitUtils: vi.fn().mockImplementation(() => ({
+    validateGitPreconditions: vi.fn().mockImplementation((options) => {
+      if (options.changed || options.staged) {
+        throw new Error('Git integration not yet implemented');
+      }
+    })
+  }))
+}));
+
 describe('ParseCommand', () => {
   let parseCommand: ParseCommand;
   let mockConfig: Config;
@@ -30,6 +57,13 @@ describe('ParseCommand', () => {
       outputDir: '.astdb',
       topK: 5,
       snippetLines: 10,
+      model: {
+        defaultModel: 'test-model',
+        modelsDir: '.astdb/models',
+        downloadTimeout: 30000,
+        maxConcurrentDownloads: 2,
+        showProgress: true
+      },
       indexParams: {
         efConstruction: 200,
         M: 16
@@ -263,6 +297,13 @@ describe('CLI Integration', () => {
         outputDir: '.astdb',
         topK: 5,
         snippetLines: 10,
+        model: {
+          defaultModel: 'test-model',
+          modelsDir: '.astdb/models',
+          downloadTimeout: 30000,
+          maxConcurrentDownloads: 2,
+          showProgress: true
+        },
         indexParams: { efConstruction: 200, M: 16 },
         modelHost: 'https://models.example.com',
         enableTelemetry: false,

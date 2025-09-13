@@ -77,9 +77,45 @@ interface QueryOptions extends GlobalOptions {
  * Options for the watch command
  */
 interface WatchOptions extends GlobalOptions {
+  changed?: boolean;
   glob?: string;
   debounce?: number;
   batchSize?: number;
+}
+
+/**
+ * Options for model management commands
+ */
+interface ModelDownloadOptions extends GlobalOptions {
+  output?: string;
+  force?: boolean;
+  verify?: boolean;
+  progress?: boolean;
+}
+
+interface ModelCacheOptions extends GlobalOptions {
+  clear?: boolean;
+  stats?: boolean;
+  list?: boolean;
+  size?: string;
+}
+
+interface ModelVerifyOptions extends GlobalOptions {
+  quarantine?: boolean;
+  strict?: boolean;
+  format?: boolean;
+}
+
+interface ModelListOptions extends GlobalOptions {
+  format?: 'table' | 'json' | 'yaml';
+  filter?: string;
+  cached?: boolean;
+}
+
+interface ModelStatusOptions extends GlobalOptions {
+  detailed?: boolean;
+  performance?: boolean;
+  health?: boolean;
 }
 
 /**
@@ -135,6 +171,7 @@ export class AstHelperCli {
     this.setupEmbedCommand();
     this.setupQueryCommand();
     this.setupWatchCommand();
+    this.setupModelCommands();
   }
 
   /**
@@ -271,6 +308,75 @@ export class AstHelperCli {
   }
 
   /**
+   * Set up model management commands
+   */
+  private setupModelCommands(): void {
+    // Create model command group
+    const modelCmd = this.program
+      .command('model')
+      .description('Manage AI models for embedding and processing');
+
+    // model download <name> - Download a specific model
+    modelCmd
+      .command('download')
+      .description('Download and cache a model')
+      .argument('<name>', 'Model name to download')
+      .addOption(new Option('-o, --output <path>', 'Custom download directory'))
+      .addOption(new Option('-f, --force', 'Force re-download even if cached'))
+      .addOption(new Option('--no-verify', 'Skip model verification after download'))
+      .addOption(new Option('--no-progress', 'Hide download progress'))
+      .action(async (name: string, options: ModelDownloadOptions) => {
+        await this.executeCommand('model:download', { ...options, name });
+      });
+
+    // model cache - Manage model cache
+    modelCmd
+      .command('cache')
+      .description('Manage model cache')
+      .addOption(new Option('--clear', 'Clear entire cache'))
+      .addOption(new Option('--stats', 'Show cache statistics'))
+      .addOption(new Option('--list', 'List cached models'))
+      .addOption(new Option('--size <size>', 'Set cache size limit (e.g., "10GB")'))
+      .action(async (options: ModelCacheOptions) => {
+        await this.executeCommand('model:cache', options);
+      });
+
+    // model verify <name> - Verify a cached model
+    modelCmd
+      .command('verify')
+      .description('Verify model integrity and security')
+      .argument('[name]', 'Model name to verify (verifies all if omitted)')
+      .addOption(new Option('--quarantine', 'Show quarantined files'))
+      .addOption(new Option('--strict', 'Enable strict validation'))
+      .addOption(new Option('--no-format', 'Skip format validation'))
+      .action(async (name: string | undefined, options: ModelVerifyOptions) => {
+        await this.executeCommand('model:verify', { ...options, name });
+      });
+
+    // model list - List available models
+    modelCmd
+      .command('list')
+      .description('List available and cached models')
+      .addOption(new Option('-f, --format <fmt>', 'Output format').choices(['table', 'json', 'yaml']).default('table'))
+      .addOption(new Option('--filter <pattern>', 'Filter models by name pattern'))
+      .addOption(new Option('--cached', 'Show only cached models'))
+      .action(async (options: ModelListOptions) => {
+        await this.executeCommand('model:list', options);
+      });
+
+    // model status - Show system status
+    modelCmd
+      .command('status')
+      .description('Show model system status and health')
+      .addOption(new Option('--detailed', 'Show detailed system information'))
+      .addOption(new Option('--performance', 'Show performance metrics'))
+      .addOption(new Option('--health', 'Run health checks'))
+      .action(async (options: ModelStatusOptions) => {
+        await this.executeCommand('model:status', options);
+      });
+  }
+
+  /**
    * Main entry point for CLI
    */
   async run(args: string[] = process.argv.slice(2)): Promise<void> {
@@ -302,8 +408,8 @@ export class AstHelperCli {
         // Validate mutually exclusive file selection options
         if (opts.changed && opts.glob) {
           throw ValidationErrors.invalidValue(
-            '--changed and --glob', 
-            'both specified', 
+            '--changed and --glob',
+            'both specified',
             'These options are mutually exclusive. Use either --changed to process Git changes or --glob to specify file patterns.'
           );
         }
@@ -311,8 +417,8 @@ export class AstHelperCli {
         // Validate staged option only works with changed
         if (opts.staged && !opts.changed) {
           throw ValidationErrors.invalidValue(
-            '--staged', 
-            'used without --changed', 
+            '--staged',
+            'used without --changed',
             'The --staged option can only be used with --changed to process staged Git changes.'
           );
         }
@@ -329,8 +435,8 @@ export class AstHelperCli {
         // Validate Git repository for Git-related options
         if ((opts.changed || opts.staged) && !this.isGitRepository(opts.workspace || process.cwd())) {
           throw ValidationErrors.invalidValue(
-            '--changed/--staged', 
-            'used outside Git repository', 
+            '--changed/--staged',
+            'used outside Git repository',
             'Git repository detection required for --changed and --staged flags. Initialize git with "git init" or run from within a Git repository.'
           );
         }
@@ -416,6 +522,21 @@ export class AstHelperCli {
         return new QueryCommandHandler();
       case 'watch':
         return new WatchCommandHandler();
+      case 'model:download':
+        const { ModelDownloadCommandHandler } = await import('./commands/model-download.js');
+        return new ModelDownloadCommandHandler();
+      case 'model:cache':
+        const { ModelCacheCommandHandler } = await import('./commands/model-cache.js');
+        return new ModelCacheCommandHandler();
+      case 'model:verify':
+        const { ModelVerifyCommandHandler } = await import('./commands/model-verify.js');
+        return new ModelVerifyCommandHandler();
+      case 'model:list':
+        const { ModelListCommandHandler } = await import('./commands/model-list.js');
+        return new ModelListCommandHandler();
+      case 'model:status':
+        const { ModelStatusCommandHandler } = await import('./commands/model-status.js');
+        return new ModelStatusCommandHandler();
       default:
         throw ValidationErrors.invalidValue('command', commandName, 'Unknown command');
     }

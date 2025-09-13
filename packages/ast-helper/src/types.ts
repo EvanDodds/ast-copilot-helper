@@ -34,6 +34,20 @@ export interface Config {
   /** Model download URL */
   modelHost: string;
   
+  /** Model configuration */
+  model: {
+    /** Default model name to use */
+    defaultModel: string;
+    /** Models directory path */
+    modelsDir: string;
+    /** Download timeout in milliseconds */
+    downloadTimeout: number;
+    /** Maximum concurrent downloads */
+    maxConcurrentDownloads: number;
+    /** Enable download progress reporting */
+    showProgress: boolean;
+  };
+  
   /** Usage analytics enabled */
   enableTelemetry: boolean;
   
@@ -64,6 +78,13 @@ export type PartialConfig = Partial<{
     M: number;
   }>;
   modelHost: string;
+  model: Partial<{
+    defaultModel: string;
+    modelsDir: string;
+    downloadTimeout: number;
+    maxConcurrentDownloads: number;
+    showProgress: boolean;
+  }>;
   enableTelemetry: boolean;
   concurrency: number;
   batchSize: number;

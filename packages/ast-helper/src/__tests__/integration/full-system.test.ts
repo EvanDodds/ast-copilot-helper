@@ -28,7 +28,7 @@ describe('Integration Tests', () => {
     
     gitManager = new GitManager(testDir);
     fsManager = new FileSystemManager(testDir);
-    globManager = new GlobManager(testDir);
+    globManager = new GlobManager({ baseDirectory: testDir });
   });
 
   afterEach(() => {
