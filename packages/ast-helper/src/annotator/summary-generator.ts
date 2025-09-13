@@ -161,9 +161,9 @@ export class SummaryGenerator {
 
     // Merge custom templates
     if (config.customTemplates) {
-      for (const [key, template] of config.customTemplates) {
+      Array.from(config.customTemplates.entries()).forEach(([key, template]) => {
         this.defaultTemplates.set(key, template);
-      }
+      });
     }
 
     // Add custom patterns
