@@ -5,7 +5,7 @@
  * as specified in issue #10.
  */
 
-import { NodeType, Position } from './ast-schema.js';
+import { NodeType } from './ast-schema.js';
 
 /**
  * Core annotation interface for AST nodes

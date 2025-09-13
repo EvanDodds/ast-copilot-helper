@@ -453,7 +453,9 @@ export class AnnotationGenerator {
     for (let i = startLine; i < endLine; i++) {
       if (i < sourceLines.length) {
         const line = sourceLines[i];
-        complexity += this.countComplexityPatterns(line);
+        if (line) {
+          complexity += this.countComplexityPatterns(line);
+        }
       }
     }
 
@@ -485,7 +487,7 @@ export class AnnotationGenerator {
   /**
    * Apply language-specific complexity rules
    */
-  private applyLanguageComplexityRules(complexity: number, node: ASTNode, context: AnnotationContext, rules: any): number {
+  private applyLanguageComplexityRules(complexity: number, _node: ASTNode, _context: AnnotationContext, _rules: any): number {
     // This would contain language-specific complexity adjustments
     // For now, return the base complexity
     return complexity;
@@ -531,15 +533,17 @@ export class AnnotationGenerator {
     for (let i = startLine; i < endLine; i++) {
       if (i < sourceLines.length) {
         const line = sourceLines[i];
-        // Simple regex to find function calls
-        const callMatches = line.match(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g);
-        if (callMatches) {
-          callMatches.forEach(match => {
-            const funcName = match.replace(/\s*\($/, '');
-            if (funcName !== node.name) { // Don't include self-references
-              calls.push(funcName);
-            }
-          });
+        if (line) {
+          // Simple regex to find function calls
+          const callMatches = line.match(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g);
+          if (callMatches) {
+            callMatches.forEach(match => {
+              const funcName = match.replace(/\s*\($/, '');
+              if (funcName !== node.name) { // Don't include self-references
+                calls.push(funcName);
+              }
+            });
+          }
         }
       }
     }
@@ -559,13 +563,15 @@ export class AnnotationGenerator {
     for (let i = startLine; i < endLine; i++) {
       if (i < sourceLines.length) {
         const line = sourceLines[i];
-        // Regex to find namespaced calls
-        const namespacedMatches = line.match(/\b([a-zA-Z_$][a-zA-Z0-9_$]*\.[a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g);
-        if (namespacedMatches) {
-          namespacedMatches.forEach(match => {
-            const call = match.replace(/\s*\($/, '');
-            calls.push(call);
-          });
+        if (line) {
+          // Regex to find namespaced calls
+          const namespacedMatches = line.match(/\b([a-zA-Z_$][a-zA-Z0-9_$]*\.[a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g);
+          if (namespacedMatches) {
+            namespacedMatches.forEach(match => {
+              const call = match.replace(/\s*\($/, '');
+              calls.push(call);
+            });
+          }
         }
       }
     }
@@ -635,7 +641,10 @@ export class AnnotationGenerator {
 
     // Add type information
     if (features.typeAnnotations && features.typeAnnotations.length > 0) {
-      variables.type = features.typeAnnotations[0];
+      const typeInfo = features.typeAnnotations[0];
+      if (typeInfo) {
+        variables.type = typeInfo;
+      }
     }
 
     return variables;
@@ -644,7 +653,7 @@ export class AnnotationGenerator {
   /**
    * Infer the purpose of a node from its name and context
    */
-  private inferPurpose(node: ASTNode, context: AnnotationContext): string {
+  private inferPurpose(node: ASTNode, _context: AnnotationContext): string {
     if (!node.name) return 'performs some operation';
 
     const name = node.name.toLowerCase();
@@ -682,7 +691,6 @@ export class AnnotationGenerator {
 
     // Limit total lines
     if (snippetLines.length > this.config.snippet.maxLines) {
-      const excess = snippetLines.length - this.config.snippet.maxLines;
       snippetLines = snippetLines.slice(0, this.config.snippet.maxLines);
       snippetLines.push(this.config.snippet.truncationIndicator);
     }
@@ -693,7 +701,7 @@ export class AnnotationGenerator {
   /**
    * Calculate quality metrics for the annotation
    */
-  private calculateQuality(node: ASTNode, signature: string, summary: string, context: AnnotationContext): QualityMetrics {
+  private calculateQuality(node: ASTNode, signature: string, summary: string, _context: AnnotationContext): QualityMetrics {
     const issues: string[] = [];
 
     // Check signature quality
