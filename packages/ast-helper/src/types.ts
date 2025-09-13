@@ -3,6 +3,9 @@
  * Core configuration and type definitions for AST processing
  */
 
+// Import file watching types
+import type { FileWatchConfig } from './filesystem/types.js';
+
 /**
  * Core configuration interface for AST Copilot Helper
  * Configuration values are resolved in priority order: CLI > env > project > user > defaults
@@ -13,6 +16,9 @@ export interface Config {
   
   /** File patterns to watch */
   watchGlob: string[];
+  
+  /** File watching configuration */
+  fileWatching?: FileWatchConfig;
   
   /** Output directory for database files */
   outputDir: string;
@@ -101,6 +107,7 @@ export interface Config {
 export type PartialConfig = Partial<{
   parseGlob: string[];
   watchGlob: string[];
+  fileWatching: Partial<FileWatchConfig>;
   outputDir: string;
   topK: number;
   snippetLines: number;

@@ -197,3 +197,179 @@ export interface FileSystemUtils {
    */
   createTempFilePath(prefix?: string, suffix?: string, dir?: string): Promise<string>;
 }
+
+/**
+ * File watching types and interfaces
+ * Provides comprehensive file system monitoring capabilities
+ */
+
+/**
+ * Configuration options for file watching
+ */
+export interface FileWatchConfig {
+  /** Directories to watch for changes */
+  watchPaths: string[];
+  
+  /** File patterns to include (e.g., '*.ts', '*.js') */
+  includePatterns: string[];
+  
+  /** Patterns to exclude (e.g., 'node_modules/**') */
+  excludePatterns: string[];
+  
+  /** Debounce delay for file changes in milliseconds */
+  debounceMs: number;
+  
+  /** Maximum files to process in one batch */
+  batchSize: number;
+  
+  /** Watch subdirectories recursively */
+  enableRecursive: boolean;
+  
+  /** Follow symbolic links */
+  followSymlinks: boolean;
+}
+
+/**
+ * File change event details
+ */
+export interface FileChangeEvent {
+  /** Type of file system event */
+  type: 'add' | 'change' | 'unlink' | 'addDir' | 'unlinkDir';
+  
+  /** Full path to the file or directory */
+  filePath: string;
+  
+  /** File statistics (for add/change events) */
+  stats?: Stats;
+  
+  /** Timestamp when event was detected */
+  timestamp: Date;
+}
+
+/**
+ * File watcher statistics
+ */
+export interface WatchStats {
+  /** Number of files currently being watched */
+  watchedFiles: number;
+  
+  /** Total events detected since start */
+  totalEvents: number;
+  
+  /** Number of changes successfully processed */
+  processedChanges: number;
+  
+  /** Last time changes were processed */
+  lastProcessedAt: Date;
+  
+  /** Average processing time per change in milliseconds */
+  averageProcessingTime: number;
+}
+
+/**
+ * Main file watcher interface
+ */
+export interface FileWatcher {
+  /**
+   * Initialize the file watcher with configuration
+   * @param config - File watching configuration
+   */
+  initialize(config: FileWatchConfig): Promise<void>;
+  
+  /**
+   * Start watching for file changes
+   */
+  start(): Promise<void>;
+  
+  /**
+   * Stop watching and cleanup resources
+   */
+  stop(): Promise<void>;
+  
+  /**
+   * Add a new path to watch
+   * @param path - Directory or file path to watch
+   */
+  addWatchPath(path: string): Promise<void>;
+  
+  /**
+   * Remove a path from watching
+   * @param path - Path to stop watching
+   */
+  removeWatchPath(path: string): Promise<void>;
+  
+  /**
+   * Get list of currently watched paths
+   * @returns Array of watched paths
+   */
+  getWatchedPaths(): string[];
+  
+  /**
+   * Get current watcher statistics
+   * @returns Statistics object
+   */
+  getWatchStats(): WatchStats;
+}
+
+/**
+ * File watcher event emitter interface
+ */
+export interface FileWatcherEvents {
+  /** Emitted when file watcher is ready */
+  ready: () => void;
+  
+  /** Emitted when a file change is detected */
+  fileChange: (event: FileChangeEvent) => void;
+  
+  /** Emitted when an error occurs */
+  error: (error: Error) => void;
+  
+  /** Emitted when file processing encounters an error */
+  processingError: (details: { change: FileChangeEvent; error: Error }) => void;
+}
+
+/**
+ * Incremental update manager interface
+ */
+export interface IncrementalUpdateManager {
+  /**
+   * Determine if a file should be fully reparsed
+   * @param filePath - Path to the file
+   * @param change - Change event details
+   * @returns True if full reparse is needed
+   */
+  shouldFullReparse(filePath: string, change: FileChangeEvent): Promise<boolean>;
+  
+  /**
+   * Optimize a batch of changes for processing
+   * @param changes - Array of file change events
+   * @returns Optimized array of changes
+   */
+  optimizeUpdateBatch(changes: FileChangeEvent[]): FileChangeEvent[];
+  
+  /**
+   * Validate consistency between file system and indexes
+   * @returns Consistency report
+   */
+  validateIndexConsistency(): Promise<ConsistencyReport>;
+}
+
+/**
+ * Index consistency report
+ */
+export interface ConsistencyReport {
+  /** Files with inconsistent index data */
+  inconsistentFiles: string[];
+  
+  /** Vector entries without corresponding files */
+  orphanedVectors: string[];
+  
+  /** Files missing vector entries */
+  missingVectors: string[];
+  
+  /** Total files checked */
+  totalChecked: number;
+  
+  /** Number of issues found */
+  issuesFound: number;
+}
