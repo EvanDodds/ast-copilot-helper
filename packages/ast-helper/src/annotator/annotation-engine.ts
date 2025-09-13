@@ -7,7 +7,7 @@ import {
   SemanticTag,
   PurposeCategory
 } from './types.js';
-import { TypeScriptExtractor, JavaScriptExtractor } from './extractors/index.js';
+import { TypeScriptExtractor, JavaScriptExtractor, PythonExtractor } from './extractors/index.js';
 import { ComplexityAnalyzer } from './complexity-analyzer.js';
 import { DependencyAnalyzer } from './dependency-analyzer.js';
 import { SummaryGenerator } from './summary-generator.js';
@@ -35,7 +35,7 @@ export class AnnotationEngine {
     // Initialize language-specific extractors
     this.extractors.set('typescript', new TypeScriptExtractor());
     this.extractors.set('javascript', new JavaScriptExtractor());
-    // Note: PythonExtractor not included due to implementation issues
+    this.extractors.set('python', new PythonExtractor());
     
     // Initialize analysis components
     this.complexityAnalyzer = new ComplexityAnalyzer({

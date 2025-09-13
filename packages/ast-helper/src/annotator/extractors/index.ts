@@ -5,6 +5,5 @@
 
 export { TypeScriptExtractor } from './typescript-extractor.js';
 export { JavaScriptExtractor } from './javascript-extractor.js';
-// Python extractor temporarily disabled due to implementation issues
-// export { PythonExtractor } from './python-extractor.js';
+export { PythonExtractor } from './python-extractor.js';
 export { ExtractionUtils } from './extraction-utils.js';
