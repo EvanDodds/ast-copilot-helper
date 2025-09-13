@@ -15,10 +15,10 @@ console.log('JavaScript:', extractor.canHandle('javascript')); // Should be fals
 
 // Test 2: Access modifiers
 console.log('\n=== Access Modifier Tests ===');
-const publicNode = { id: '1', type: 'function', name: 'public_func', filePath: '/test.py', start: {line:1,column:0}, end: {line:1,column:10}, metadata: {language:'python',scope:[],modifiers:[]} };
-const protectedNode = { id: '2', type: 'function', name: '_protected_func', filePath: '/test.py', start: {line:1,column:0}, end: {line:1,column:10}, metadata: {language:'python',scope:[],modifiers:[]} };
-const privateNode = { id: '3', type: 'function', name: '__private_func', filePath: '/test.py', start: {line:1,column:0}, end: {line:1,column:10}, metadata: {language:'python',scope:[],modifiers:[]} };
-const magicNode = { id: '4', type: 'function', name: '__init__', filePath: '/test.py', start: {line:1,column:0}, end: {line:1,column:10}, metadata: {language:'python',scope:[],modifiers:[]} };
+const publicNode = { id: '1', type: 'function', name: 'public_func', filePath: '/test.py', start: { line: 1, column: 0 }, end: { line: 1, column: 10 }, metadata: { language: 'python', scope: [], modifiers: [] } };
+const protectedNode = { id: '2', type: 'function', name: '_protected_func', filePath: '/test.py', start: { line: 1, column: 0 }, end: { line: 1, column: 10 }, metadata: { language: 'python', scope: [], modifiers: [] } };
+const privateNode = { id: '3', type: 'function', name: '__private_func', filePath: '/test.py', start: { line: 1, column: 0 }, end: { line: 1, column: 10 }, metadata: { language: 'python', scope: [], modifiers: [] } };
+const magicNode = { id: '4', type: 'function', name: '__init__', filePath: '/test.py', start: { line: 1, column: 0 }, end: { line: 1, column: 10 }, metadata: { language: 'python', scope: [], modifiers: [] } };
 
 console.log('Public function modifiers:', extractor.extractAccessModifiers(publicNode, ''));
 console.log('Protected function modifiers:', extractor.extractAccessModifiers(protectedNode, ''));
@@ -27,7 +27,7 @@ console.log('Magic method modifiers:', extractor.extractAccessModifiers(magicNod
 
 console.log('\n=== Python Extractor Integration Complete ===');
 console.log('✅ PythonExtractor successfully created and integrated');
-console.log('✅ Supports Python language detection');  
+console.log('✅ Supports Python language detection');
 console.log('✅ Handles Python naming conventions for access modifiers');
 console.log('✅ Implements full SignatureExtractor interface');
 console.log('✅ Ready for use in annotation system');
