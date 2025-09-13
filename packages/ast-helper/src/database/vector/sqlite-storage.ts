@@ -541,6 +541,45 @@ export class SQLiteVectorStorage {
     };
   }
 
+  /**
+   * Get label mapping for a specific node ID
+   */
+  async getLabelMapping(nodeId: string): Promise<number | null> {
+    this.ensureInitialized();
+    
+    const row = this.db.prepare('SELECT label FROM labels WHERE node_id = ?').get(nodeId) as { label: number } | undefined;
+    return row ? row.label : null;
+  }
+
+  /**
+   * Get node ID from label mapping (reverse lookup)
+   */
+  async getNodeIdFromLabel(label: number): Promise<string | null> {
+    this.ensureInitialized();
+    
+    const row = this.db.prepare('SELECT node_id FROM labels WHERE label = ?').get(label) as { node_id: string } | undefined;
+    return row ? row.node_id : null;
+  }
+
+  /**
+   * Get all node IDs (for index rebuilding)
+   */
+  async getAllNodeIds(): Promise<string[]> {
+    this.ensureInitialized();
+    
+    const rows = this.db.prepare('SELECT node_id FROM vectors').all() as Array<{ node_id: string }>;
+    return rows.map(row => row.node_id);
+  }
+
+  /**
+   * Close database connection
+   */
+  async close(): Promise<void> {
+    if (this.db) {
+      this.db.close();
+    }
+  }
+
   private calculateVectorHash(vector: number[]): string {
     // Simple hash for deduplication - sum of squares modulo large prime
     const sum = vector.reduce((acc, val) => acc + val * val, 0);

@@ -26,3 +26,7 @@ export {
   createVectorConfig,
   loadVectorConfig,
 } from './vector-config.js';
+
+// Storage and database implementations
+export { SQLiteVectorStorage } from './sqlite-storage.js';
+export { HNSWVectorDatabase } from './hnsw-database.js';
