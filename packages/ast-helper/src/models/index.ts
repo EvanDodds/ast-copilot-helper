@@ -69,6 +69,23 @@ export {
   type RecoveryResult
 } from './error-handling.js';
 
+// Performance optimization system
+export {
+  PerformanceOptimizer,
+  DownloadStatus,
+  performanceOptimizer,
+  downloadModelsParallel,
+  downloadModelWithResume,
+  getPerformanceMetrics,
+  getActiveDownloads,
+  type PerformanceMetrics,
+  type DownloadProgress,
+  type ResumeInfo,
+  type ThrottlingConfig,
+  type ParallelConfig,
+  type StreamingConfig
+} from './performance.js';
+
 // Convenience functions for common operations
 export async function ensureModelReady(modelName: string): Promise<string> {
   const { ModelCache } = await import('./cache.js');
