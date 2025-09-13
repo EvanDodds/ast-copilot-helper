@@ -29,9 +29,9 @@
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
-    "typescript": "^5.5.0",
     "ts-node": "^10.9.2",
-    "vitest": "^2.0.0"
+    "typescript": "^5.5.0",
+    "vitest": "^3.2.4"
   },
   "keywords": [
     "vscode-extension",
