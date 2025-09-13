@@ -370,7 +370,7 @@ export class NativeTreeSitterParser extends BaseParser {
               const childId = generateNodeId('', childStartPos.row + 1, childStartPos.column + 1, child.type);
               const childAstNode = nodeMap.get(childId.replace(/^[^:]*:/, ''));
               if (childAstNode) {
-                astNode.children?.push(childAstNode.id);
+                astNode.children?.push(childAstNode);
               }
             }
             processHierarchy();
