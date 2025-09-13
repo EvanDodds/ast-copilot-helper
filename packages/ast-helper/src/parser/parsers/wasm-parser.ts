@@ -145,13 +145,11 @@ export class WASMTreeSitterParser extends BaseParser {
         }
       }
 
-      // Collect child IDs
-      const childIds: string[] = [];
+      // Process children and collect them for later relationship establishment
+      const childNodes: ASTNode[] = [];
       for (let i = 0; i < node.childCount; i++) {
-        const childId = processNode(node.child(i));
-        if (childId) {
-          childIds.push(childId);
-        }
+        processNode(node.child(i));
+        // childNodes will be populated in second pass
       }
 
       // Pop scope for container nodes
@@ -167,7 +165,7 @@ export class WASMTreeSitterParser extends BaseParser {
         filePath,
         start: { line: startPos.row + 1, column: startPos.column + 1 },
         end: { line: endPos.row + 1, column: endPos.column + 1 },
-        children: childIds,
+        children: childNodes,
         metadata: {
           language,
           scope: nodeScope,

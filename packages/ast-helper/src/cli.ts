@@ -373,7 +373,7 @@ export class AstHelperCli {
       await this.ensureDatabaseDirectory();
 
       // Execute the appropriate command handler
-      const handler = this.getCommandHandler(commandName);
+      const handler = await this.getCommandHandler(commandName);
       await handler.execute(options, this.config!);
 
       // Release lock
@@ -401,13 +401,14 @@ export class AstHelperCli {
   /**
    * Get command handler for a specific command
    */
-  private getCommandHandler(commandName: string): CommandHandler {
+  private async getCommandHandler(commandName: string): Promise<CommandHandler> {
     switch (commandName) {
       case 'init':
         return new InitCommandHandler();
       case 'parse':
         return new ParseCommandHandler();
       case 'annotate':
+        const { AnnotateCommandHandler } = await import('./commands/annotate.js');
         return new AnnotateCommandHandler();
       case 'embed':
         return new EmbedCommandHandler();
@@ -775,14 +776,6 @@ class ParseCommandHandler implements CommandHandler<ParseOptions> {
     const { ParseCommand } = await import('./commands/parse.js');
     const parseCommand = new ParseCommand();
     await parseCommand.execute(options, config);
-  }
-}
-
-class AnnotateCommandHandler implements CommandHandler<AnnotateOptions> {
-  async execute(options: AnnotateOptions, config: Config): Promise<void> {
-    console.log('Annotate command executed with options:', options);
-    console.log('Using config:', { outputDir: config.outputDir });
-    // TODO: Implement actual annotate logic
   }
 }
 
