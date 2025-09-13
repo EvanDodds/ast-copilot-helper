@@ -91,6 +91,59 @@ describe('XenovaEmbeddingGenerator - Xenova Integration', () => {
       await expect(generator.shutdown()).resolves.not.toThrow();
     });
   });
+  
+  describe('Enhanced Embedding Generation', () => {
+    it('should use text processor for annotation preparation', () => {
+      const annotation: Annotation = {
+        nodeId: 'test-1',
+        signature: 'function test()',
+        summary: 'Test function',
+        sourceSnippet: 'function test() { return true; }'
+      };
+      
+      // Access private method for testing
+      const prepareMethod = (generator as any).prepareTextForEmbedding.bind(generator);
+      const result = prepareMethod(annotation);
+      
+      expect(result).toContain('Signature:');
+      expect(result).toContain('Summary:');
+      expect(result).toContain('Code:');
+    });
+    
+    it('should validate embedding vectors properly', () => {
+      // Mock the validation method
+      const validateMethod = (generator as any).validateEmbeddings.bind(generator);
+      
+      // Valid embeddings
+      const validEmbeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]];
+      expect(() => validateMethod(validEmbeddings, 2)).not.toThrow();
+      
+      // Wrong count
+      expect(() => validateMethod(validEmbeddings, 3)).toThrow('Expected 3 embeddings, got 2');
+      
+      // Empty embeddings
+      expect(() => validateMethod([], 1)).toThrow('No embeddings generated');
+    });
+    
+    it('should calculate embedding confidence scores', () => {
+      const confidenceMethod = (generator as any).calculateEmbeddingConfidence.bind(generator);
+      
+      // Normal embedding vector
+      const normalEmbedding = Array.from({ length: 768 }, () => Math.random() * 2 - 1);
+      const confidence = confidenceMethod(normalEmbedding);
+      expect(confidence).toBeGreaterThanOrEqual(0);
+      expect(confidence).toBeLessThanOrEqual(1);
+      
+      // Zero vector (should have low confidence)
+      const zeroEmbedding = new Array(768).fill(0);
+      const zeroConfidence = confidenceMethod(zeroEmbedding);
+      expect(zeroConfidence).toBe(0);
+      
+      // Empty array
+      const emptyConfidence = confidenceMethod([]);
+      expect(emptyConfidence).toBe(0);
+    });
+  });
 });
 
 // Test helper functions and mock data

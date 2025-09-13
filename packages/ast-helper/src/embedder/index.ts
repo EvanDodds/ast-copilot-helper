@@ -7,6 +7,7 @@
 
 export * from './types.js';
 export { XenovaEmbeddingGenerator } from './XenovaEmbeddingGenerator.js';
+export { CodeTextProcessor } from './TextProcessor.js';
 
 // Re-export the main interfaces for convenience
 export type {

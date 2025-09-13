@@ -13,6 +13,7 @@ import {
   ModelInitializationError,
   EmbeddingGenerationError,
 } from './types.js';
+import { CodeTextProcessor } from './TextProcessor.js';
 
 /**
  * Default configuration values
@@ -33,6 +34,11 @@ export class XenovaEmbeddingGenerator implements EmbeddingGenerator {
   private isInitialized: boolean = false;
   private modelName: string = '';
   private initializationTime: number = 0;
+  private textProcessor: CodeTextProcessor;
+
+  constructor() {
+    this.textProcessor = new CodeTextProcessor();
+  }
 
   /**
    * Initialize the embedding model
@@ -121,10 +127,8 @@ export class XenovaEmbeddingGenerator implements EmbeddingGenerator {
       // Convert tensor outputs to standard JavaScript arrays
       const embeddings: number[][] = outputs.tolist();
       
-      // Validate output dimensions
-      if (embeddings.length > 0 && embeddings[0] && embeddings[0].length !== DEFAULT_CONFIG.modelDimensions) {
-        console.warn(`⚠️  Expected ${DEFAULT_CONFIG.modelDimensions} dimensions, got ${embeddings[0].length}`);
-      }
+      // Validate output embeddings
+      this.validateEmbeddings(embeddings, texts.length);
       
       console.log(`Generated ${embeddings.length} embeddings in ${processingTime}ms (${(processingTime / texts.length).toFixed(2)}ms per embedding)`);
       
@@ -353,38 +357,75 @@ export class XenovaEmbeddingGenerator implements EmbeddingGenerator {
   }
 
   private prepareTextForEmbedding(annotation: Annotation): string {
-    // Combine signature, summary, and source snippet for rich context
-    const components: string[] = [];
+    // Use the specialized code text processor
+    const processedText = this.textProcessor.prepareTextForEmbedding(annotation);
     
-    if (annotation.signature) {
-      components.push(`Signature: ${annotation.signature}`);
+    // Validate the processed text
+    const validation = this.textProcessor.validateInputText(processedText);
+    if (!validation.isValid) {
+      console.warn(`⚠️  Text validation issues for ${annotation.nodeId}:`, validation.issues);
+      
+      // Use fallback if text is invalid
+      if (processedText.length === 0) {
+        return `Node: ${annotation.nodeId}`;
+      }
     }
     
-    if (annotation.summary) {
-      components.push(`Summary: ${annotation.summary}`);
+    return processedText;
+  }
+
+  private validateEmbeddings(embeddings: number[][], expectedCount: number): void {
+    if (!embeddings || embeddings.length === 0) {
+      throw new EmbeddingGenerationError('No embeddings generated');
     }
     
-    if (annotation.sourceSnippet) {
-      // Limit snippet size to prevent token overflow
-      const snippet = annotation.sourceSnippet.length > 500 
-        ? annotation.sourceSnippet.substring(0, 500) + '...'
-        : annotation.sourceSnippet;
-      components.push(`Code: ${snippet}`);
+    if (embeddings.length !== expectedCount) {
+      throw new EmbeddingGenerationError(
+        `Expected ${expectedCount} embeddings, got ${embeddings.length}`
+      );
     }
     
-    let combinedText = components.join(' | ');
-    
-    // Ensure text is within token limits
-    if (combinedText.length > DEFAULT_CONFIG.maxTokens) {
-      combinedText = combinedText.substring(0, DEFAULT_CONFIG.maxTokens - 3) + '...';
+    // Validate each embedding vector
+    for (let i = 0; i < embeddings.length; i++) {
+      const embedding = embeddings[i];
+      
+      if (!embedding || !Array.isArray(embedding)) {
+        throw new EmbeddingGenerationError(`Invalid embedding at index ${i}: not an array`);
+      }
+      
+      if (embedding.length === 0) {
+        throw new EmbeddingGenerationError(`Empty embedding vector at index ${i}`);
+      }
+      
+      // Check dimensions (should be 768 for CodeBERT, but allow flexibility)
+      if (i === 0) {
+        if (embedding.length !== DEFAULT_CONFIG.modelDimensions) {
+          console.warn(`⚠️  Expected ${DEFAULT_CONFIG.modelDimensions} dimensions, got ${embedding.length}`);
+        }
+      } else if (embeddings[0] && embedding.length !== embeddings[0].length) {
+        throw new EmbeddingGenerationError(
+          `Inconsistent embedding dimensions: expected ${embeddings[0].length}, got ${embedding.length} at index ${i}`
+        );
+      }
+      
+      // Check for valid numeric values
+      for (let j = 0; j < embedding.length; j++) {
+        const value = embedding[j];
+        if (typeof value !== 'number' || !isFinite(value)) {
+          throw new EmbeddingGenerationError(
+            `Invalid embedding value at [${i}][${j}]: ${value} (not a finite number)`
+          );
+        }
+      }
+      
+      // Check for reasonable value ranges (embeddings should be normalized)
+      const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
+      if (magnitude > 10 || magnitude < 0.01) {
+        console.warn(`⚠️  Unusual embedding magnitude ${magnitude.toFixed(4)} at index ${i}`);
+      }
     }
     
-    // Validate that we have some content
-    if (!combinedText.trim()) {
-      combinedText = `Node: ${annotation.nodeId}`; // Fallback content
-    }
-    
-    return combinedText;
+    console.log(`✅ Validated ${embeddings.length} embeddings (${embeddings[0]?.length || 0} dimensions each)`);
   }
 
   private calculateEmbeddingConfidence(embedding: number[]): number {
@@ -392,19 +433,41 @@ export class XenovaEmbeddingGenerator implements EmbeddingGenerator {
       return 0;
     }
     
-    // Calculate confidence based on embedding magnitude and distribution
-    const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-    const mean = embedding.reduce((sum, val) => sum + val, 0) / embedding.length;
-    const variance = embedding.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / embedding.length;
-    
-    // Normalize metrics to 0-1 range
-    const normalizedMagnitude = Math.min(magnitude, 1.0);
-    const normalizedVariance = Math.min(variance * 10, 1.0); // Scale variance
-    
-    // Combine metrics for confidence score
-    const confidence = (normalizedMagnitude + normalizedVariance) / 2;
-    
-    return Math.max(0, Math.min(1, confidence)); // Ensure 0-1 range
+    try {
+      // Calculate statistical properties
+      const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
+      const mean = embedding.reduce((sum, val) => sum + val, 0) / embedding.length;
+      const variance = embedding.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / embedding.length;
+      const stdDev = Math.sqrt(variance);
+      
+      // Check for degenerate cases
+      if (magnitude === 0 || !isFinite(magnitude)) {
+        return 0;
+      }
+      
+      // Calculate entropy-like measure (higher diversity = higher confidence)
+      const nonZeroValues = embedding.filter(val => Math.abs(val) > 1e-6);
+      const diversityRatio = nonZeroValues.length / embedding.length;
+      
+      // Normalize magnitude (good embeddings typically have magnitude around 1 for normalized vectors)
+      const normalizedMagnitude = Math.min(magnitude, 2.0) / 2.0;
+      
+      // Normalize standard deviation (measure of distribution spread)
+      const normalizedStdDev = Math.min(stdDev * 2, 1.0);
+      
+      // Combine metrics: magnitude + distribution + diversity
+      const confidence = (
+        normalizedMagnitude * 0.4 +        // 40% weight on magnitude
+        normalizedStdDev * 0.3 +           // 30% weight on distribution
+        diversityRatio * 0.3               // 30% weight on diversity
+      );
+      
+      return Math.max(0, Math.min(1, confidence));
+      
+    } catch (error) {
+      console.warn('⚠️  Error calculating embedding confidence:', error);
+      return 0.5; // Default confidence on error
+    }
   }
 
   private createBatches<T>(items: T[], batchSize: number): T[][] {
