@@ -10,6 +10,7 @@ import { XenovaEmbeddingGenerator } from '../../../ast-helper/src/embedder/index
 import { HNSWVectorDatabase } from '../../../ast-helper/src/database/vector/index.js';
 import type { ASTDatabaseReader } from '../database/reader.js';
 import { SemanticQueryProcessor } from './semantic-processor.js';
+import { SignatureQueryProcessor } from './signature-processor.js';
 import { ResponseAssembler } from './response-assembler.js';
 import { PerformanceMonitor } from './performance-monitor.js';
 
@@ -144,6 +145,7 @@ export class MCPQueryProcessor implements QueryProcessor {
   
   // Specialized processors
   private semanticProcessor?: SemanticQueryProcessor;
+  private signatureProcessor: SignatureQueryProcessor;
   private responseAssembler: ResponseAssembler;
   private performanceMonitor: PerformanceMonitor;
   
@@ -191,6 +193,12 @@ export class MCPQueryProcessor implements QueryProcessor {
     
     // Initialize performance monitor
     this.performanceMonitor = new PerformanceMonitor();
+    
+    // Initialize signature processor
+    this.signatureProcessor = new SignatureQueryProcessor(
+      this.annotationDatabase,
+      this.config
+    );
   }
 
   /**
@@ -367,41 +375,7 @@ export class MCPQueryProcessor implements QueryProcessor {
    * Process signature-based queries for exact matching
    */
   async processSignatureQuery(signature: string, options: SignatureQueryOptions = {}, maxResults?: number): Promise<QueryResponse> {
-    const startTime = Date.now();
-    
-    // Use database text search for signature matching
-    const matches = await this.annotationDatabase.searchNodes(signature, {
-      maxResults: maxResults || this.config.search.defaultMaxResults,
-      minScore: options.fuzzyThreshold || this.config.search.defaultMinScore,
-    });
-    
-    const searchTime = Date.now() - startTime;
-    
-    const response: QueryResponse = {
-      results: [], // Will be populated by response formatter
-      totalMatches: matches.length,
-      queryTime: 0, // Will be set by caller
-      searchStrategy: 'signature_exact_match',
-      metadata: {
-        vectorSearchTime: 0,
-        rankingTime: searchTime,
-        totalCandidates: matches.length,
-        appliedFilters: this.getAppliedFilters(options),
-        searchParameters: {
-          exactMatch: options.exactMatch ?? true,
-          fuzzyThreshold: options.fuzzyThreshold,
-          includeReturnType: options.includeReturnType ?? true,
-        },
-      },
-    };
-    
-    this.logger.debug('Signature query processed', {
-      matches: matches.length,
-      searchTime,
-      exactMatch: options.exactMatch,
-    });
-    
-    return response;
+    return this.signatureProcessor.processQuery(signature, options, maxResults);
   }
 
   /**
