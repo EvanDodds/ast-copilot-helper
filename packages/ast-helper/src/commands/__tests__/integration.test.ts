@@ -6,101 +6,100 @@
  * and comprehensive validation.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mkdir, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { mkdir, writeFile, rmdir, rm } from 'fs/promises';
-import { FileProcessor } from '../file-processor.js';
-import { ProgressReporter, ProgressDisplayOptions } from '../progress-reporter.js';
-import { ParseBatchOrchestrator } from '../parse-batch-orchestrator.js';
-import { createLogger } from '../../logging/index.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Config } from '../../types.js';
+import { FileProcessor } from '../file-processor.js';
+import { ParseBatchOrchestrator } from '../parse-batch-orchestrator.js';
 import { ParseOptions } from '../parse.js';
+import { ProgressDisplayOptions, ProgressReporter } from '../progress-reporter.js';
 
 // Mock ASTDatabaseManager to avoid disk space validation issues in test environment
 vi.mock('../../database/manager.js', () => {
-  return {
-    ASTDatabaseManager: vi.fn().mockImplementation(() => ({
-      astdbPath: '',
-      isInitialized: vi.fn().mockResolvedValue(false),
-      createDirectoryStructure: vi.fn().mockResolvedValue(undefined),
-      validateDatabaseStructure: vi.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        warnings: [],
-        missingDirectories: [],
-        missingFiles: []
-      }),
-      getDatabaseStructure: vi.fn().mockReturnValue({
-        root: '',
-        asts: '',
-        annots: '',
-        grammars: '',
-        models: '',
-        native: '',
-        indexBin: '',
-        indexMeta: '',
-        config: '',
-        version: '',
-        lock: ''
-      }),
-      ensureDirectoryExists: vi.fn().mockImplementation((subPath: string) => Promise.resolve(subPath))
-    }))
-  };
+    return {
+        ASTDatabaseManager: vi.fn().mockImplementation(() => ({
+            astdbPath: '',
+            isInitialized: vi.fn().mockResolvedValue(false),
+            createDirectoryStructure: vi.fn().mockResolvedValue(undefined),
+            validateDatabaseStructure: vi.fn().mockResolvedValue({
+                isValid: true,
+                errors: [],
+                warnings: [],
+                missingDirectories: [],
+                missingFiles: []
+            }),
+            getDatabaseStructure: vi.fn().mockReturnValue({
+                root: '',
+                asts: '',
+                annots: '',
+                grammars: '',
+                models: '',
+                native: '',
+                indexBin: '',
+                indexMeta: '',
+                config: '',
+                version: '',
+                lock: ''
+            }),
+            ensureDirectoryExists: vi.fn().mockImplementation((subPath: string) => Promise.resolve(subPath))
+        }))
+    };
 });
 
 describe('Parse Command Integration Tests (Subtask 7)', () => {
-  let tempDir: string;
-  let testConfig: Config;
-  let mockLogger: any;
+    let tempDir: string;
+    let testConfig: Config;
+    let mockLogger: any;
 
-  beforeEach(async () => {
-    // Create temporary directory for test files
-    tempDir = join(tmpdir(), `ast-integration-test-${Date.now()}`);
-    await mkdir(tempDir, { recursive: true });
+    beforeEach(async () => {
+        // Create temporary directory for test files
+        tempDir = join(tmpdir(), `ast-integration-test-${Date.now()}`);
+        await mkdir(tempDir, { recursive: true });
 
-    // Create minimal test config
-    testConfig = {
-      parseGlob: ['**/*.ts', '**/*.js', '**/*.py'],
-      watchGlob: ['**/*.ts', '**/*.js'],
-      outputDir: join(tempDir, 'ast-output'),
-      topK: 10,
-      snippetLines: 3,
-      indexParams: {
-        efConstruction: 200,
-        M: 16
-      },
-      modelHost: 'https://huggingface.co',
-      enableTelemetry: false,
-      concurrency: 2,
-      batchSize: 10
-    };
+        // Create minimal test config
+        testConfig = {
+            parseGlob: ['**/*.ts', '**/*.js', '**/*.py'],
+            watchGlob: ['**/*.ts', '**/*.js'],
+            outputDir: join(tempDir, 'ast-output'),
+            topK: 10,
+            snippetLines: 3,
+            indexParams: {
+                efConstruction: 200,
+                M: 16
+            },
+            modelHost: 'https://huggingface.co',
+            enableTelemetry: false,
+            concurrency: 2,
+            batchSize: 10
+        };
 
-    // Create mock logger
-    mockLogger = {
-      info: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
-      debug: vi.fn()
-    };
-  });
+        // Create mock logger
+        mockLogger = {
+            info: vi.fn(),
+            error: vi.fn(),
+            warn: vi.fn(),
+            debug: vi.fn()
+        };
+    });
 
-  afterEach(async () => {
-    try {
-      // Clean up temporary directory
-      await rm(tempDir, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
-    }
-  });
+    afterEach(async () => {
+        try {
+            // Clean up temporary directory
+            await rm(tempDir, { recursive: true, force: true });
+        } catch (error) {
+            // Ignore cleanup errors
+        }
+    });
 
-  describe('End-to-End Workflow Integration', () => {
-    it('should process multiple TypeScript files end-to-end', async () => {
-      // Create test TypeScript files
-      const testFiles = [
-        {
-          path: join(tempDir, 'file1.ts'),
-          content: `
+    describe('End-to-End Workflow Integration', () => {
+        it('should process multiple TypeScript files end-to-end', async () => {
+            // Create test TypeScript files
+            const testFiles = [
+                {
+                    path: join(tempDir, 'file1.ts'),
+                    content: `
             interface User {
               id: number;
               name: string;
@@ -112,20 +111,20 @@ describe('Parse Command Integration Tests (Subtask 7)', () => {
               }
             }
           `
-        },
-        {
-          path: join(tempDir, 'file2.ts'),
-          content: `
+                },
+                {
+                    path: join(tempDir, 'file2.ts'),
+                    content: `
             export function calculateSum(a: number, b: number): number {
               return a + b;
             }
             
             export const MAX_VALUE = 100;
           `
-        },
-        {
-          path: join(tempDir, 'file3.ts'),
-          content: `
+                },
+                {
+                    path: join(tempDir, 'file3.ts'),
+                    content: `
             import { calculateSum } from './file2';
             
             function main() {
@@ -135,65 +134,65 @@ describe('Parse Command Integration Tests (Subtask 7)', () => {
             
             main();
           `
-        }
-      ];
+                }
+            ];
 
-      // Write test files
-      for (const file of testFiles) {
-        await writeFile(file.path, file.content);
-      }
+            // Write test files
+            for (const file of testFiles) {
+                await writeFile(file.path, file.content);
+            }
 
-      // Create FileProcessor
-      const fileProcessor = await FileProcessor.create(testConfig);
+            // Create FileProcessor
+            const fileProcessor = await FileProcessor.create(testConfig);
 
-      const parseOptions: ParseOptions = {
-        batchSize: 2,
-        dryRun: false
-      };
+            const parseOptions: ParseOptions = {
+                batchSize: 2,
+                dryRun: false
+            };
 
-      const filePaths = testFiles.map(f => f.path);
-      
-      // Track progress updates
-      const progressUpdates: any[] = [];
-      const progressCallback = (progress: any) => {
-        progressUpdates.push({ ...progress });
-      };
+            const filePaths = testFiles.map(f => f.path);
 
-      // Process files
-      const results = await fileProcessor.processFiles(
-        filePaths,
-        parseOptions,
-        testConfig,
-        progressCallback
-      );
+            // Track progress updates
+            const progressUpdates: any[] = [];
+            const progressCallback = (progress: any) => {
+                progressUpdates.push({ ...progress });
+            };
 
-      // Verify the workflow completed (files processed through pipeline)
-      expect(results).toBeDefined();
-      expect(results.totalFiles).toBe(3);
-      expect(results.totalTimeMs).toBeGreaterThan(0);
-      
-      // In test environment, parsing may fail due to missing tree-sitter binaries
-      // We're testing workflow integration, not parsing success
-      expect(results.totalFiles).toBeGreaterThan(0);
+            // Process files
+            const results = await fileProcessor.processFiles(
+                filePaths,
+                parseOptions,
+                testConfig,
+                progressCallback
+            );
 
-      // Verify workflow completed (integration working)
-      expect(results.totalFiles).toBe(3);
-      expect(results.totalTimeMs).toBeGreaterThan(0);
-      
-      // In test environment, files won't parse successfully but workflow should complete
-      // Progress updates may not be received due to test environment constraints
+            // Verify the workflow completed (files processed through pipeline)
+            expect(results).toBeDefined();
+            expect(results.totalFiles).toBe(3);
+            expect(results.totalTimeMs).toBeGreaterThan(0);
 
-      // Verify workflow integrated properly (no crashes)
-      expect(typeof results.totalTimeMs).toBe('number');
-      await fileProcessor.dispose();
-    }, 30000);
+            // In test environment, parsing may fail due to missing tree-sitter binaries
+            // We're testing workflow integration, not parsing success
+            expect(results.totalFiles).toBeGreaterThan(0);
 
-    it('should handle mixed language files correctly', async () => {
-      // Create test files in different languages
-      const testFiles = [
-        {
-          path: join(tempDir, 'component.tsx'),
-          content: `
+            // Verify workflow completed (integration working)
+            expect(results.totalFiles).toBe(3);
+            expect(results.totalTimeMs).toBeGreaterThan(0);
+
+            // In test environment, files won't parse successfully but workflow should complete
+            // Progress updates may not be received due to test environment constraints
+
+            // Verify workflow integrated properly (no crashes)
+            expect(typeof results.totalTimeMs).toBe('number');
+            await fileProcessor.dispose();
+        }, 30000);
+
+        it('should handle mixed language files correctly', async () => {
+            // Create test files in different languages
+            const testFiles = [
+                {
+                    path: join(tempDir, 'component.tsx'),
+                    content: `
             import React from 'react';
             
             interface Props {
@@ -204,10 +203,10 @@ describe('Parse Command Integration Tests (Subtask 7)', () => {
               return <h1>{title}</h1>;
             };
           `
-        },
-        {
-          path: join(tempDir, 'script.js'),
-          content: `
+                },
+                {
+                    path: join(tempDir, 'script.js'),
+                    content: `
             function fibonacci(n) {
               if (n <= 1) return n;
               return fibonacci(n - 1) + fibonacci(n - 2);
@@ -215,10 +214,10 @@ describe('Parse Command Integration Tests (Subtask 7)', () => {
             
             module.exports = { fibonacci };
           `
-        },
-        {
-          path: join(tempDir, 'utils.py'),
-          content: `
+                },
+                {
+                    path: join(tempDir, 'utils.py'),
+                    content: `
             def calculate_average(numbers):
                 if not numbers:
                     return 0
@@ -228,45 +227,45 @@ describe('Parse Command Integration Tests (Subtask 7)', () => {
                 def add(self, a, b):
                     return a + b
           `
-        }
-      ];
+                }
+            ];
 
-      // Write test files
-      for (const file of testFiles) {
-        await writeFile(file.path, file.content);
-      }
+            // Write test files
+            for (const file of testFiles) {
+                await writeFile(file.path, file.content);
+            }
 
-      const fileProcessor = await FileProcessor.create(testConfig);
-      const parseOptions: ParseOptions = {
-        batchSize: 3
-      };
+            const fileProcessor = await FileProcessor.create(testConfig);
+            const parseOptions: ParseOptions = {
+                batchSize: 3
+            };
 
-      const filePaths = testFiles.map(f => f.path);
-      
-      const results = await fileProcessor.processFiles(
-        filePaths,
-        parseOptions,
-        testConfig
-      );
+            const filePaths = testFiles.map(f => f.path);
 
-      // Verify mixed language processing workflow
-      expect(results.totalFiles).toBe(3);
-      expect(results.totalTimeMs).toBeGreaterThan(0);
-      
-      // In test environment, focus on workflow integration
-      // Parsing may fail due to missing tree-sitter binaries
-      expect(results.totalFiles).toBe(3);
+            const results = await fileProcessor.processFiles(
+                filePaths,
+                parseOptions,
+                testConfig
+            );
 
-      await fileProcessor.dispose();
-    }, 20000);
-  });
+            // Verify mixed language processing workflow
+            expect(results.totalFiles).toBe(3);
+            expect(results.totalTimeMs).toBeGreaterThan(0);
 
-  describe('Progress Reporting Integration', () => {
-    it('should integrate FileProcessor with ProgressReporter', async () => {
-      // Create test files
-      const testFiles = Array.from({ length: 5 }, (_, i) => ({
-        path: join(tempDir, `test-${i}.ts`),
-        content: `
+            // In test environment, focus on workflow integration
+            // Parsing may fail due to missing tree-sitter binaries
+            expect(results.totalFiles).toBe(3);
+
+            await fileProcessor.dispose();
+        }, 20000);
+    });
+
+    describe('Progress Reporting Integration', () => {
+        it('should integrate FileProcessor with ProgressReporter', async () => {
+            // Create test files
+            const testFiles = Array.from({ length: 5 }, (_, i) => ({
+                path: join(tempDir, `test-${i}.ts`),
+                content: `
           export class Test${i} {
             value: number = ${i};
             
@@ -275,57 +274,57 @@ describe('Parse Command Integration Tests (Subtask 7)', () => {
             }
           }
         `
-      }));
+            }));
 
-      for (const file of testFiles) {
-        await writeFile(file.path, file.content);
-      }
+            for (const file of testFiles) {
+                await writeFile(file.path, file.content);
+            }
 
-      const fileProcessor = await FileProcessor.create(testConfig);
-      const parseOptions: ParseOptions = {
-        batchSize: 2
-      };
+            const fileProcessor = await FileProcessor.create(testConfig);
+            const parseOptions: ParseOptions = {
+                batchSize: 2
+            };
 
-      const progressReporterOptions: Partial<ProgressDisplayOptions> = {
-        updateIntervalMs: 0, // Disable timer for testing
-        clearLine: false,
-        useColors: false
-      };
+            const progressReporterOptions: Partial<ProgressDisplayOptions> = {
+                updateIntervalMs: 0, // Disable timer for testing
+                clearLine: false,
+                useColors: false
+            };
 
-      const filePaths = testFiles.map(f => f.path);
+            const filePaths = testFiles.map(f => f.path);
 
-      // Track events from progress reporter
-      const progressEvents: any[] = [];
-      let progressReporter: ProgressReporter | undefined;
+            // Track events from progress reporter
+            const progressEvents: any[] = [];
+            let progressReporter: ProgressReporter | undefined;
 
-      const progressCallback = (progress: any) => {
-        progressEvents.push({ ...progress });
-      };
+            const progressCallback = (progress: any) => {
+                progressEvents.push({ ...progress });
+            };
 
-      // Process files with integrated progress reporting
-      const results = await fileProcessor.processFiles(
-        filePaths,
-        parseOptions,
-        testConfig,
-        progressCallback,
-        progressReporterOptions
-      );
+            // Process files with integrated progress reporting
+            const results = await fileProcessor.processFiles(
+                filePaths,
+                parseOptions,
+                testConfig,
+                progressCallback,
+                progressReporterOptions
+            );
 
-      // Verify progress integration worked (events received)
-      expect(results.totalFiles).toBe(5);
-      // Progress events may not be emitted in test environment due to parsing constraints
-      // but the integration workflow should complete successfully
-      
-      // Verify ProgressReporter integration completed
+            // Verify progress integration worked (events received)
+            expect(results.totalFiles).toBe(5);
+            // Progress events may not be emitted in test environment due to parsing constraints
+            // but the integration workflow should complete successfully
 
-      await fileProcessor.dispose();
-    }, 15000);
+            // Verify ProgressReporter integration completed
 
-    it('should handle memory pressure events during processing', async () => {
-      // Create a larger test file that might trigger memory monitoring
-      const largeTestFile = {
-        path: join(tempDir, 'large-file.ts'),
-        content: Array.from({ length: 100 }, (_, i) => `
+            await fileProcessor.dispose();
+        }, 15000);
+
+        it('should handle memory pressure events during processing', async () => {
+            // Create a larger test file that might trigger memory monitoring
+            const largeTestFile = {
+                path: join(tempDir, 'large-file.ts'),
+                content: Array.from({ length: 100 }, (_, i) => `
           export class LargeClass${i} {
             ${Array.from({ length: 10 }, (_, j) => `
               method${j}(): void {
@@ -336,130 +335,130 @@ describe('Parse Command Integration Tests (Subtask 7)', () => {
             `).join('\n')}
           }
         `).join('\n')
-      };
+            };
 
-      await writeFile(largeTestFile.path, largeTestFile.content);
+            await writeFile(largeTestFile.path, largeTestFile.content);
 
-      const fileProcessor = await FileProcessor.create(testConfig);
-      const parseOptions: ParseOptions = {
-        batchSize: 1
-      };
+            const fileProcessor = await FileProcessor.create(testConfig);
+            const parseOptions: ParseOptions = {
+                batchSize: 1
+            };
 
-      const progressReporterOptions: Partial<ProgressDisplayOptions> = {
-        updateIntervalMs: 0, // Disable timer for testing
-        clearLine: false,
-        useColors: false
-      };
+            const progressReporterOptions: Partial<ProgressDisplayOptions> = {
+                updateIntervalMs: 0, // Disable timer for testing
+                clearLine: false,
+                useColors: false
+            };
 
-      let memoryUpdatesReceived = 0;
-      const progressCallback = (progress: any) => {
-        if (progress.memoryUsageMB && progress.memoryUsageMB > 0) {
-          memoryUpdatesReceived++;
-        }
-      };
+            let memoryUpdatesReceived = 0;
+            const progressCallback = (progress: any) => {
+                if (progress.memoryUsageMB && progress.memoryUsageMB > 0) {
+                    memoryUpdatesReceived++;
+                }
+            };
 
-      const results = await fileProcessor.processFiles(
-        [largeTestFile.path],
-        parseOptions,
-        testConfig,
-        progressCallback,
-        progressReporterOptions
-      );
+            const results = await fileProcessor.processFiles(
+                [largeTestFile.path],
+                parseOptions,
+                testConfig,
+                progressCallback,
+                progressReporterOptions
+            );
 
-      expect(results.totalFiles).toBe(1);
-      // Memory pressure events may not be triggered in test environment
-      // but workflow integration should complete successfully
+            expect(results.totalFiles).toBe(1);
+            // Memory pressure events may not be triggered in test environment
+            // but workflow integration should complete successfully
 
-      await fileProcessor.dispose();
-    }, 15000);
-  });
+            await fileProcessor.dispose();
+        }, 15000);
+    });
 
-  describe('Error Handling Integration', () => {
-    it('should handle malformed files gracefully', async () => {
-      // Create files with syntax errors
-      const testFiles = [
-        {
-          path: join(tempDir, 'valid.ts'),
-          content: `
+    describe('Error Handling Integration', () => {
+        it('should handle malformed files gracefully', async () => {
+            // Create files with syntax errors
+            const testFiles = [
+                {
+                    path: join(tempDir, 'valid.ts'),
+                    content: `
             export class ValidClass {
               test(): void {}
             }
           `
-        },
-        {
-          path: join(tempDir, 'invalid.ts'),
-          content: `
+                },
+                {
+                    path: join(tempDir, 'invalid.ts'),
+                    content: `
             export class InvalidClass {
               test(: void // Missing closing parenthesis
             }
           `
-        },
-        {
-          path: join(tempDir, 'another-valid.ts'),
-          content: `
+                },
+                {
+                    path: join(tempDir, 'another-valid.ts'),
+                    content: `
             export const value = 42;
           `
-        }
-      ];
+                }
+            ];
 
-      for (const file of testFiles) {
-        await writeFile(file.path, file.content);
-      }
+            for (const file of testFiles) {
+                await writeFile(file.path, file.content);
+            }
 
-      const fileProcessor = await FileProcessor.create(testConfig);
-      const parseOptions: ParseOptions = {
-        batchSize: 3,
-        force: true // Continue processing despite errors
-      };
+            const fileProcessor = await FileProcessor.create(testConfig);
+            const parseOptions: ParseOptions = {
+                batchSize: 3,
+                force: true // Continue processing despite errors
+            };
 
-      const filePaths = testFiles.map(f => f.path);
-      
-      const results = await fileProcessor.processFiles(
-        filePaths,
-        parseOptions,
-        testConfig
-      );
+            const filePaths = testFiles.map(f => f.path);
 
-      // Should process all files through the pipeline
-      expect(results.totalFiles).toBe(3);
-      expect(results.totalTimeMs).toBeGreaterThan(0);
-      // Error handling integration tested by having no crashes
+            const results = await fileProcessor.processFiles(
+                filePaths,
+                parseOptions,
+                testConfig
+            );
 
-      await fileProcessor.dispose();
-    }, 15000);
+            // Should process all files through the pipeline
+            expect(results.totalFiles).toBe(3);
+            expect(results.totalTimeMs).toBeGreaterThan(0);
+            // Error handling integration tested by having no crashes
 
-    it('should handle non-existent files gracefully', async () => {
-      const fileProcessor = await FileProcessor.create(testConfig);
-      const parseOptions: ParseOptions = {
-        force: true // Continue processing despite errors
-      };
+            await fileProcessor.dispose();
+        }, 15000);
 
-      const filePaths = [
-        join(tempDir, 'nonexistent1.ts'),
-        join(tempDir, 'nonexistent2.js')
-      ];
+        it('should handle non-existent files gracefully', async () => {
+            const fileProcessor = await FileProcessor.create(testConfig);
+            const parseOptions: ParseOptions = {
+                force: true // Continue processing despite errors
+            };
 
-      // Non-existent files should be handled gracefully
-      // (filtered out during metadata preparation)
-      const results = await fileProcessor.processFiles(
-        filePaths,
-        parseOptions,
-        testConfig
-      );
+            const filePaths = [
+                join(tempDir, 'nonexistent1.ts'),
+                join(tempDir, 'nonexistent2.js')
+            ];
 
-      // Should not crash, but no files to process
-      expect(results.totalFiles).toBe(0);
+            // Non-existent files should be handled gracefully
+            // (filtered out during metadata preparation)
+            const results = await fileProcessor.processFiles(
+                filePaths,
+                parseOptions,
+                testConfig
+            );
 
-      await fileProcessor.dispose();
+            // Should not crash, but no files to process
+            expect(results.totalFiles).toBe(0);
+
+            await fileProcessor.dispose();
+        });
     });
-  });
 
-  describe('Performance and Memory Management', () => {
-    it('should handle large batches efficiently', async () => {
-      // Create many small files to test batch processing
-      const testFiles = Array.from({ length: 20 }, (_, i) => ({
-        path: join(tempDir, `batch-test-${i}.ts`),
-        content: `
+    describe('Performance and Memory Management', () => {
+        it('should handle large batches efficiently', async () => {
+            // Create many small files to test batch processing
+            const testFiles = Array.from({ length: 20 }, (_, i) => ({
+                path: join(tempDir, `batch-test-${i}.ts`),
+                content: `
           export class BatchTest${i} {
             id = ${i};
             
@@ -468,45 +467,45 @@ describe('Parse Command Integration Tests (Subtask 7)', () => {
             }
           }
         `
-      }));
+            }));
 
-      for (const file of testFiles) {
-        await writeFile(file.path, file.content);
-      }
+            for (const file of testFiles) {
+                await writeFile(file.path, file.content);
+            }
 
-      const fileProcessor = await FileProcessor.create(testConfig);
-      const parseOptions: ParseOptions = {
-        batchSize: 5 // Process in batches of 5
-      };
+            const fileProcessor = await FileProcessor.create(testConfig);
+            const parseOptions: ParseOptions = {
+                batchSize: 5 // Process in batches of 5
+            };
 
-      const startTime = Date.now();
-      const filePaths = testFiles.map(f => f.path);
+            const startTime = Date.now();
+            const filePaths = testFiles.map(f => f.path);
 
-      const results = await fileProcessor.processFiles(
-        filePaths,
-        parseOptions,
-        testConfig
-      );
+            const results = await fileProcessor.processFiles(
+                filePaths,
+                parseOptions,
+                testConfig
+            );
 
-      const processingTime = Date.now() - startTime;
+            const processingTime = Date.now() - startTime;
 
-      // Verify batch processing workflow completed
-      expect(results.totalFiles).toBe(20);
-      expect(results.totalTimeMs).toBeGreaterThan(0);
-      expect(processingTime).toBeLessThan(30000); // Should complete in reasonable time
+            // Verify batch processing workflow completed
+            expect(results.totalFiles).toBe(20);
+            expect(results.totalTimeMs).toBeGreaterThan(0);
+            expect(processingTime).toBeLessThan(30000); // Should complete in reasonable time
 
-      // Verify batch processing handled large volume without crashes
-      expect(results.totalFiles).toBeGreaterThan(10);
+            // Verify batch processing handled large volume without crashes
+            expect(results.totalFiles).toBeGreaterThan(10);
 
-      await fileProcessor.dispose();
-    }, 30000);
-  });
+            await fileProcessor.dispose();
+        }, 30000);
+    });
 
-  describe('Output Generation Integration', () => {
-    it('should generate proper AST output files', async () => {
-      const testFile = {
-        path: join(tempDir, 'output-test.ts'),
-        content: `
+    describe('Output Generation Integration', () => {
+        it('should generate proper AST output files', async () => {
+            const testFile = {
+                path: join(tempDir, 'output-test.ts'),
+                content: `
           interface Config {
             enabled: boolean;
             timeout: number;
@@ -524,58 +523,58 @@ describe('Parse Command Integration Tests (Subtask 7)', () => {
             }
           }
         `
-      };
+            };
 
-      await writeFile(testFile.path, testFile.content);
+            await writeFile(testFile.path, testFile.content);
 
-      const fileProcessor = await FileProcessor.create(testConfig);
-      const parseOptions: ParseOptions = {
-        batchSize: 1
-      };
+            const fileProcessor = await FileProcessor.create(testConfig);
+            const parseOptions: ParseOptions = {
+                batchSize: 1
+            };
 
-      const results = await fileProcessor.processFiles(
-        [testFile.path],
-        parseOptions,
-        testConfig
-      );
+            const results = await fileProcessor.processFiles(
+                [testFile.path],
+                parseOptions,
+                testConfig
+            );
 
-      expect(results.totalFiles).toBe(1);
-      
-      // Verify workflow completed (integration testing)
-      expect(results.totalTimeMs).toBeGreaterThan(0);
+            expect(results.totalFiles).toBe(1);
 
-      await fileProcessor.dispose();
-    }, 10000);
-  });
+            // Verify workflow completed (integration testing)
+            expect(results.totalTimeMs).toBeGreaterThan(0);
+
+            await fileProcessor.dispose();
+        }, 10000);
+    });
 });
 
 /**
  * ParseBatchOrchestrator Integration Tests
  */
 describe('ParseBatchOrchestrator Integration', () => {
-  let tempDir: string;
-  let orchestrator: ParseBatchOrchestrator;
+    let tempDir: string;
+    let orchestrator: ParseBatchOrchestrator;
 
-  beforeEach(async () => {
-    tempDir = join(tmpdir(), `orchestrator-test-${Date.now()}`);
-    await mkdir(tempDir, { recursive: true });
-    orchestrator = await ParseBatchOrchestrator.create();
-  });
+    beforeEach(async () => {
+        tempDir = join(tmpdir(), `orchestrator-test-${Date.now()}`);
+        await mkdir(tempDir, { recursive: true });
+        orchestrator = await ParseBatchOrchestrator.create();
+    });
 
-  afterEach(async () => {
-    await orchestrator?.dispose();
-    try {
-      await rm(tempDir, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
-    }
-  });
+    afterEach(async () => {
+        await orchestrator?.dispose();
+        try {
+            await rm(tempDir, { recursive: true, force: true });
+        } catch (error) {
+            // Ignore cleanup errors
+        }
+    });
 
-  it('should orchestrate batch processing with enhanced features', async () => {
-    // Create test files
-    const testFiles = Array.from({ length: 8 }, (_, i) => ({
-      path: join(tempDir, `orchestrator-test-${i}.js`),
-      content: `
+    it('should orchestrate batch processing with enhanced features', async () => {
+        // Create test files
+        const testFiles = Array.from({ length: 8 }, (_, i) => ({
+            path: join(tempDir, `orchestrator-test-${i}.js`),
+            content: `
         function test${i}() {
           const value = ${i};
           return value * 2;
@@ -583,44 +582,44 @@ describe('ParseBatchOrchestrator Integration', () => {
         
         module.exports = { test${i} };
       `
-    }));
+        }));
 
-    for (const file of testFiles) {
-      await writeFile(file.path, file.content);
-    }
+        for (const file of testFiles) {
+            await writeFile(file.path, file.content);
+        }
 
-    const parseOptions: ParseOptions = {
-      batchSize: 3
-    };
+        const parseOptions: ParseOptions = {
+            batchSize: 3
+        };
 
-    const config: Config = {
-      outputDir: join(tempDir, 'output')
-    } as Config;
+        const config: Config = {
+            outputDir: join(tempDir, 'output')
+        } as Config;
 
-    const progressEvents: any[] = [];
-    const progressCallback = (progress: any) => {
-      progressEvents.push({ ...progress });
-    };
+        const progressEvents: any[] = [];
+        const progressCallback = (progress: any) => {
+            progressEvents.push({ ...progress });
+        };
 
-    const filePaths = testFiles.map(f => f.path);
-    
-    const result = await orchestrator.processFiles(
-      filePaths,
-      parseOptions,
-      config,
-      progressCallback
-    );
+        const filePaths = testFiles.map(f => f.path);
 
-    // Verify orchestration workflow completed
-    expect(result.results.size).toBe(8);
-    expect(result.summary.totalFiles).toBe(8);
-    expect(result.summary.totalTimeMs).toBeGreaterThan(0);
+        const result = await orchestrator.processFiles(
+            filePaths,
+            parseOptions,
+            config,
+            progressCallback
+        );
 
-    // Progress events may not be emitted in test environment due to parsing constraints
-    // but the orchestration workflow should complete successfully
+        // Verify orchestration workflow completed
+        expect(result.results.size).toBe(8);
+        expect(result.summary.totalFiles).toBe(8);
+        expect(result.summary.totalTimeMs).toBeGreaterThan(0);
 
-    // Verify performance metrics were collected
-    expect(result.summary.successful + result.summary.failed).toBe(8);
-    expect(typeof result.summary.totalTimeMs).toBe('number');
-  }, 20000);
+        // Progress events may not be emitted in test environment due to parsing constraints
+        // but the orchestration workflow should complete successfully
+
+        // Verify performance metrics were collected
+        expect(result.summary.successful + result.summary.failed).toBe(8);
+        expect(typeof result.summary.totalTimeMs).toBe('number');
+    }, 20000);
 });
