@@ -50,6 +50,25 @@ export {
   type MetadataQuery
 } from './metadata.js';
 
+// Error handling and fallback logic
+export { 
+  ErrorHandler,
+  ErrorCategory,
+  ErrorSeverity,
+  RecoveryStrategy,
+  ConnectivityStatus,
+  errorHandler,
+  categorizeError,
+  validateConnectivity,
+  validateDiskSpace,
+  attemptRecovery,
+  type ErrorInfo,
+  type ConnectivityInfo,
+  type DiskSpaceInfo,
+  type FallbackModel,
+  type RecoveryResult
+} from './error-handling.js';
+
 // Convenience functions for common operations
 export async function ensureModelReady(modelName: string): Promise<string> {
   const { ModelCache } = await import('./cache.js');
