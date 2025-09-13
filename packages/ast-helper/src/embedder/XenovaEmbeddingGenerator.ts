@@ -264,6 +264,13 @@ export class XenovaEmbeddingGenerator implements EmbeddingGenerator {
     };
   }
 
+  /**
+   * Cleanup method for embeddings (alias for shutdown)
+   */
+  async cleanup(): Promise<void> {
+    await this.shutdown();
+  }
+
   // Private helper methods
 
   private async validateModelPath(modelPath: string): Promise<boolean> {

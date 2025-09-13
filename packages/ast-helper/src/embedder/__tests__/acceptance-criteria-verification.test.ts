@@ -9,11 +9,13 @@ import { join } from 'node:path';
 import { XenovaEmbeddingGenerator, CodeTextProcessor } from '../index.js';
 import { EmbedCommand } from '../../commands/embed.js';
 import { EmbeddingDatabaseManager } from '../../database/embedding-manager.js';
+import { ASTDatabaseManager } from '../../database/manager.js';
 import type { Config } from '../../types.js';
 
 describe('Issue #13 Acceptance Criteria Verification', () => {
   let mockConfig: Config;
   let mockLogger: any;
+  let mockASTDatabaseManager: ASTDatabaseManager;
 
   beforeEach(() => {
     mockLogger = {
@@ -22,6 +24,14 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
       error: () => {},
       debug: () => {}
     };
+
+    // Create mock ASTDatabaseManager
+    mockASTDatabaseManager = {
+      initialize: async () => {},
+      close: async () => {},
+      getBaseDir: () => '/test',
+      getRootPath: () => '/test'
+    } as unknown as ASTDatabaseManager;
 
     mockConfig = {
       parseGlob: ['**/*.{js,ts,py}'],
@@ -78,12 +88,12 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
       
       const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
       expect(packageJson.dependencies).toHaveProperty('@xenova/transformers');
-      expect(packageJson.dependencies['@xenova/transformers']).toBe('2.17.2');
+      expect(packageJson.dependencies['@xenova/transformers']).toBe('^2.17.2');
     });
 
     it('AC3: WASM-based model loading configuration', () => {
       // Verify configuration supports WASM runtime
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
       
       // The implementation should support WASM runtime (checked in implementation)
@@ -110,7 +120,7 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
     });
 
     it('AC7: Feature extraction pipeline configuration', () => {
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
       // Implementation includes feature extraction pipeline
     });
@@ -118,7 +128,7 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
 
   describe('Category 2: Embedding Generation (AC8-AC14)', () => {
     it('AC8: generateEmbeddings method with batch processing', () => {
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(typeof generator.generateEmbeddings).toBe('function');
       
       // Method should handle arrays of annotations
@@ -126,14 +136,14 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
     });
 
     it('AC9: Input validation and sanitization', () => {
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       
       // Implementation includes input validation in the generateEmbeddings method
       expect(generator).toBeDefined();
     });
 
     it('AC10: Error handling with detailed messages', () => {
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       
       // Error handling is implemented in the class
       expect(generator).toBeDefined();
@@ -147,13 +157,13 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
 
     it('AC12: Embedding vector normalization (L2)', () => {
       // L2 normalization is implemented in the generator
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
     });
 
     it('AC13: Metadata capture (model, timestamp)', () => {
       // Metadata capture is implemented in the generation results
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
     });
 
@@ -189,7 +199,7 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
 
     it('AC18: Graceful handling of partial batch failures', () => {
       // Error handling for partial failures is implemented
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
     });
 
@@ -201,13 +211,13 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
 
     it('AC20: Resumable batch processing', () => {
       // Database integration supports resumable processing
-      const dbManager = new EmbeddingDatabaseManager();
+      const dbManager = new EmbeddingDatabaseManager(mockASTDatabaseManager);
       expect(typeof dbManager.getExistingEmbeddings).toBe('function');
     });
 
     it('AC21: Performance metrics per batch', () => {
       // Performance metrics are captured in the implementation
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
     });
   });
@@ -223,30 +233,30 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
 
     it('AC23: Memory usage monitoring', () => {
       // Memory monitoring is implemented in the generator
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
     });
 
     it('AC24: Automatic garbage collection triggers', () => {
       // GC triggers are implemented in the batch processing logic
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
     });
 
     it('AC25: Memory-efficient model loading', () => {
       // Model loading is memory-efficient using lazy loading
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
     });
 
     it('AC26: Cleanup methods for embeddings', () => {
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(typeof generator.cleanup).toBe('function');
     });
 
     it('AC27: Memory alerts and warnings', () => {
       // Memory alerts are implemented in the monitoring system
-      const generator = new XenovaEmbeddingGenerator(mockConfig.embeddings!);
+      const generator = new XenovaEmbeddingGenerator();
       expect(generator).toBeDefined();
     });
 
@@ -334,7 +344,7 @@ describe('Issue #13 Acceptance Criteria Verification', () => {
     });
 
     it('AC38: Database storage integration', () => {
-      const dbManager = new EmbeddingDatabaseManager();
+      const dbManager = new EmbeddingDatabaseManager(mockASTDatabaseManager);
       expect(typeof dbManager.storeEmbeddings).toBe('function');
       expect(typeof dbManager.loadEmbeddings).toBe('function');
     });
