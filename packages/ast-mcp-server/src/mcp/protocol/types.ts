@@ -103,11 +103,83 @@ export interface MCPServerConfig {
 }
 
 // Tool and Resource Base Types
+// Basic JSON Schema interface
+export interface JSONSchema {
+  type?: string;
+  properties?: Record<string, JSONSchema>;
+  required?: string[];
+  items?: JSONSchema;
+  enum?: any[];
+  const?: any;
+  description?: string;
+  default?: any;
+}
+
+// Tool and Resource types
 export interface MCPTool {
   name: string;
   description: string;
-  inputSchema: any; // JSON Schema
+  inputSchema?: JSONSchema;
+  handler: (params: Record<string, any>, context?: ToolExecutionContext) => Promise<CallToolResult>;
+  capabilities?: ToolCapabilities[];
 }
+
+// Tool request/response types
+export interface CallToolRequest extends MCPRequest {
+  method: 'tools/call';
+  params: {
+    name: string;
+    arguments?: Record<string, any>;
+  };
+}
+
+export interface CallToolResult {
+  content: Array<{
+    type: 'text' | 'image' | 'resource';
+    text?: string;
+    data?: string;
+    mimeType?: string;
+  }>;
+  isError: boolean;
+}
+
+export interface MCPToolResult extends CallToolResult {
+  errorMessage?: string;
+}export interface ToolExecutionContext {
+  requestId?: string;
+  timestamp: Date;
+  clientInfo?: {
+    name: string;
+    version: string;
+  };
+  environment?: Record<string, any>;
+}
+
+export interface ToolValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+export interface ToolMetadata {
+  name: string;
+  description: string;
+  category: string;
+  tags: string[];
+  capabilities: ToolCapabilities[];
+  registeredAt: Date;
+  lastModified: Date;
+  version: string;
+  author: string;
+  config: Record<string, any>;
+}
+
+export type ToolCapabilities = 
+  | 'read-only'
+  | 'write'
+  | 'system-access'
+  | 'network-access'
+  | 'file-access'
+  | 'database-access';
 
 export interface MCPResource {
   uri: string;
