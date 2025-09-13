@@ -84,6 +84,27 @@ export interface FileQueryOptions extends QueryOptions {
 }
 
 /**
+ * File query structure
+ */
+export interface FileQuery {
+  type: 'file';
+  text: string;              // Search text/pattern
+  criteria?: FileMatchCriteria;
+  options?: FileQueryOptions;
+}
+
+/**
+ * File match criteria for filtering
+ */
+export interface FileMatchCriteria {
+  extensions?: string[];     // File extensions to include
+  directories?: string[];    // Directory patterns to include
+  excludePatterns?: string[]; // Patterns to exclude
+  includeContent?: boolean;   // Search file content
+  maxFileSize?: number;      // Maximum file size in bytes
+}
+
+/**
  * Query response structure
  */
 export interface QueryResponse {
@@ -159,12 +180,40 @@ export interface PerformanceMetrics {
 }
 
 /**
+ * Query performance metrics (alias for compatibility)
+ */
+export type QueryPerformanceMetrics = {
+  totalTime: number;          // Total processing time in ms
+  searchTime: number;         // Database search time in ms
+  processingTime: number;     // Post-processing time in ms
+  resultCount: number;        // Number of results returned
+  cacheHit: boolean;          // Whether cache was used
+  timestamp: Date;            // When the query was processed
+  error?: string;             // Error message if query failed
+};
+
+/**
  * Search result from vector database (used internally)
  */
 export interface SearchResult {
   nodeId: string;
   score: number;
   metadata: SearchMetadata;
+}
+
+/**
+ * AST Node match result from database queries
+ */
+export interface ASTNodeMatch {
+  id: string;
+  type: string;
+  name: string;
+  filePath: string;
+  startLine: number;
+  endLine: number;
+  sourceSnippet: string;
+  score: number;
+  metadata?: Record<string, any>;
 }
 
 /**

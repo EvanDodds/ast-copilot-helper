@@ -8,9 +8,11 @@
 import { createLogger } from '../../../ast-helper/src/logging/index.js';
 import { XenovaEmbeddingGenerator } from '../../../ast-helper/src/embedder/index.js';
 import { HNSWVectorDatabase } from '../../../ast-helper/src/database/vector/index.js';
+import path from 'path';
 import type { ASTDatabaseReader } from '../database/reader.js';
 import { SemanticQueryProcessor } from './semantic-processor.js';
 import { SignatureQueryProcessor } from './signature-processor.js';
+import { FileQueryProcessor } from './file-processor.js';
 import { ResponseAssembler } from './response-assembler.js';
 import { PerformanceMonitor } from './performance-monitor.js';
 
@@ -21,6 +23,7 @@ import type {
   SemanticQueryOptions,
   SignatureQueryOptions,  
   FileQueryOptions,
+  FileQuery,
   QueryStats,
   QuerySystemConfig,
   QueryType,
@@ -146,6 +149,7 @@ export class MCPQueryProcessor implements QueryProcessor {
   // Specialized processors
   private semanticProcessor?: SemanticQueryProcessor;
   private signatureProcessor: SignatureQueryProcessor;
+  private fileProcessor: FileQueryProcessor;
   private responseAssembler: ResponseAssembler;
   private performanceMonitor: PerformanceMonitor;
   
@@ -198,6 +202,20 @@ export class MCPQueryProcessor implements QueryProcessor {
     this.signatureProcessor = new SignatureQueryProcessor(
       this.annotationDatabase,
       this.config
+    );
+    
+    // Initialize file processor
+    this.fileProcessor = new FileQueryProcessor(
+      this.annotationDatabase,
+      {
+        maxResults: this.config.search.defaultMaxResults,
+        caseSensitive: false,
+        includeHidden: false,
+        maxDepth: 10,
+        enableGlobPatterns: true,
+        fuzzyMatching: true,
+        fuzzyThreshold: 0.6
+      }
     );
   }
 
@@ -384,49 +402,88 @@ export class MCPQueryProcessor implements QueryProcessor {
   async processFileQuery(filePath: string, options: FileQueryOptions = {}, maxResults?: number): Promise<QueryResponse> {
     const startTime = Date.now();
     
-    // Get nodes from specific file or pattern
-    let matches = [];
-    
-    if (filePath.includes('*')) {
-      // Handle glob patterns
-      matches = await this.annotationDatabase.searchNodes('*', {
-        maxResults: maxResults || this.config.search.defaultMaxResults,
-        filePattern: filePath,
-      });
-    } else {
-      // Handle specific file path
-      const fileNodes = await this.annotationDatabase.getFileNodes(filePath);
-      matches = fileNodes.map(node => ({ ...node, score: 1.0 })); // Perfect match score for file queries
-    }
-    
-    const searchTime = Date.now() - startTime;
-    
-    const response: QueryResponse = {
-      results: [], // Will be populated by response formatter  
-      totalMatches: matches.length,
-      queryTime: 0, // Will be set by caller
-      searchStrategy: 'file_path_filter',
-      metadata: {
-        vectorSearchTime: 0,
-        rankingTime: searchTime,
-        totalCandidates: matches.length,
-        appliedFilters: this.getAppliedFilters(options),
-        searchParameters: {
-          filePath,
-          recursive: options.recursive ?? true,
-          includeHidden: options.includeHidden ?? false,
-          maxDepth: options.maxDepth,
+    try {
+      // Create file query object
+      const fileQuery: FileQuery = {
+        type: 'file',
+        text: filePath,
+        criteria: {
+          extensions: options.fileFilter?.map(f => path.extname(f)) || [],
+          directories: options.fileFilter?.map(f => path.dirname(f)) || [],
+          includeContent: true
         },
-      },
-    };
-    
-    this.logger.debug('File query processed', {
-      matches: matches.length,
-      searchTime,
-      filePath,
-    });
-    
-    return response;
+        options
+      };
+      
+      // Process with file processor
+      const { matches, performance } = await this.fileProcessor.processQuery(fileQuery);
+      
+      // Create QueryResponse structure for assembler
+      const queryResponse: QueryResponse = {
+        results: matches,
+        totalMatches: matches.length,
+        queryTime: performance.totalTime,
+        searchStrategy: 'file-based-search',
+        metadata: {
+          vectorSearchTime: 0,
+          rankingTime: performance.searchTime,
+          totalCandidates: matches.length,
+          appliedFilters: this.getAppliedFilters(options),
+          searchParameters: {
+            filePath,
+            recursive: options.recursive ?? true,
+            includeHidden: options.includeHidden ?? false,
+            maxDepth: options.maxDepth,
+          },
+        }
+      };
+      
+      // Create minimal MCPQuery for assembler
+      const mcpQuery: MCPQuery = {
+        type: 'file',
+        text: filePath,
+        options,
+        maxResults: maxResults || this.config.search.defaultMaxResults
+      };
+      
+      // Assemble response using response assembler (for protocol compliance)
+      await this.responseAssembler.assembleResponse(
+        queryResponse,
+        mcpQuery
+      );
+
+      this.logger.debug('File query processed', {
+        matches: matches.length,
+        queryTime: performance.totalTime,
+        filePath,
+      });
+
+      // Return the original QueryResponse format expected by the interface
+      return queryResponse;
+      
+    } catch (error) {
+      const queryTime = Date.now() - startTime;
+      
+      this.logger.error('File query failed', {
+        filePath,
+        error: error instanceof Error ? error.message : String(error),
+        queryTime
+      });
+
+      return {
+        results: [],
+        totalMatches: 0,
+        queryTime,
+        searchStrategy: 'file-search-error',
+        metadata: {
+          vectorSearchTime: 0,
+          rankingTime: 0,
+          totalCandidates: 0,
+          appliedFilters: [],
+          searchParameters: { filePath, error: String(error) }
+        }
+      };
+    }
   }
 
   /**
