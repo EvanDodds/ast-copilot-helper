@@ -9,5 +9,12 @@ export type {
   ListOptions, 
   FileStats,
   AtomicWriteOptions,
-  CopyOptions
+  CopyOptions,
+  FileWatchConfig,
+  FileChangeEvent,
+  WatchStats,
+  FileWatcher,
+  FileWatcherEvents,
+  IncrementalUpdateManager,
+  ConsistencyReport
 } from './types.js';
