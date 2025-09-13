@@ -11,11 +11,11 @@ import {
   MCPServerCapabilities,
   MCPErrorCode,
   createErrorResponse,
-  createSuccessResponse,
   isValidMCPRequest
 } from './mcp/protocol';
 import { MCPTransport } from './mcp/transport';
 import { DatabaseReader, ServerStats } from './types';
+import { StandardHandlerFactory } from './mcp/standard-handlers.js';
 
 /**
  * Server events interface
@@ -49,6 +49,7 @@ export class ASTMCPServer extends EventEmitter {
   private database: DatabaseReader;
   private config: ServerConfig;
   private requestHandlers: Map<string, MCPHandler> = new Map();
+  private handlerFactory: StandardHandlerFactory;
   private isRunning: boolean = false;
   private isInitialized: boolean = false;
   private stats: ServerStats;
@@ -63,6 +64,7 @@ export class ASTMCPServer extends EventEmitter {
     this.transport = transport;
     this.database = database;
     this.config = config;
+    this.handlerFactory = new StandardHandlerFactory(database);
     this.stats = this.initializeStats();
     
     this.setupTransportHandlers();
@@ -218,12 +220,23 @@ export class ASTMCPServer extends EventEmitter {
    */
   private registerDefaultHandlers(): void {
     // Initialize handler
-    this.registerHandler('initialize', new InitializeHandler(this.config, this.getCapabilities()));
+    this.registerHandler('initialize', this.handlerFactory.createInitializeHandler(
+      {
+        serverName: this.config.serverName,
+        serverVersion: this.config.serverVersion,
+        protocolVersion: this.config.protocolVersion
+      },
+      this.getCapabilities()
+    ));
     
     // Ping handler
-    this.registerHandler('ping', new PingHandler());
+    this.registerHandler('ping', this.handlerFactory.createPingHandler());
     
-    // Note: Tool and resource handlers will be registered by subsequent subtasks
+    // Tools handlers
+    this.registerHandler('tools/list', this.handlerFactory.createToolsListHandler());
+    this.registerHandler('tools/call', this.handlerFactory.createToolsCallHandler());
+    
+    // Note: Resource handlers will be registered by subsequent subtasks
   }
 
   /**
@@ -409,54 +422,3 @@ export class ASTMCPServer extends EventEmitter {
   }
 }
 
-/**
- * Initialize request handler
- */
-class InitializeHandler implements MCPHandler {
-  constructor(
-    private config: ServerConfig,
-    private capabilities: MCPServerCapabilities
-  ) {}
-
-  async handle(request: JSONRPCRequest): Promise<JSONRPCResponse> {
-    const { protocolVersion, clientInfo } = request.params || {};
-
-    if (!protocolVersion || !clientInfo?.name) {
-      return createErrorResponse(
-        request.id,
-        {
-          code: MCPErrorCode.INVALID_PARAMS,
-          message: 'Missing required parameters: protocolVersion and clientInfo.name'
-        }
-      );
-    }
-
-    if (protocolVersion !== this.config.protocolVersion) {
-      return createErrorResponse(
-        request.id,
-        {
-          code: MCPErrorCode.INITIALIZATION_FAILED,
-          message: `Unsupported protocol version: ${protocolVersion}. Expected: ${this.config.protocolVersion}`
-        }
-      );
-    }
-
-    return createSuccessResponse(request.id, {
-      protocolVersion: this.config.protocolVersion,
-      capabilities: this.capabilities,
-      serverInfo: {
-        name: this.config.serverName,
-        version: this.config.serverVersion
-      }
-    });
-  }
-}
-
-/**
- * Ping request handler
- */
-class PingHandler implements MCPHandler {
-  async handle(request: JSONRPCRequest): Promise<JSONRPCResponse> {
-    return createSuccessResponse(request.id, {});
-  }
-}
