@@ -174,7 +174,29 @@ export enum SemanticTag {
   CONSTANT = 'constant',
   TYPE = 'type',
   INTERFACE = 'interface',
-  ENUM = 'enum'
+  ENUM = 'enum',
+  
+  // Additional semantic tags
+  EVENT_DRIVEN = 'event-driven',
+  CREATIONAL = 'creational',
+  API_ENDPOINT = 'api-endpoint',
+  HTTP_HANDLER = 'http-handler',
+  DATABASE = 'database',
+  PERSISTENCE = 'persistence',
+  INTERCEPTOR = 'interceptor',
+  COMPONENT = 'component',
+  UI = 'ui',
+  TEST = 'test',
+  VERIFICATION = 'verification',
+  FUNCTION = 'function',
+  CLASS = 'class',
+  METHOD = 'method',
+  VARIABLE = 'variable',
+  HIGH_COMPLEXITY = 'high-complexity',
+  MEDIUM_COMPLEXITY = 'medium-complexity',
+  EXTERNAL_DEPENDENCY = 'external-dependency',
+  CIRCULAR_DEPENDENCY = 'circular-dependency',
+  UNKNOWN = 'unknown'
 }
 
 /**
@@ -187,7 +209,18 @@ export enum PurposeCategory {
   INFRASTRUCTURE = 'infrastructure',
   TESTING = 'testing',
   CONFIGURATION = 'configuration',
-  UTILITY = 'utility'
+  UTILITY = 'utility',
+  
+  // Additional purpose categories
+  EVENT_HANDLING = 'event-handling',
+  OBJECT_CREATION = 'object-creation',
+  VALIDATION = 'validation',
+  DATA_TRANSFORMATION = 'data-transformation',
+  API_HANDLING = 'api-handling',
+  DATA_PERSISTENCE = 'data-persistence',
+  REQUEST_PROCESSING = 'request-processing',
+  UI_RENDERING = 'ui-rendering',
+  TYPE_DEFINITION = 'type-definition'
 }
 
 /**
@@ -242,6 +275,39 @@ export interface DependencyAnalysisConfig {
   followChain: boolean;
   ignoreNodeModules: boolean;
   customModuleResolver: ((source: string, basePath?: string) => Promise<string | null>) | null;
+}
+
+/**
+ * Template for generating summaries
+ */
+export interface SummaryTemplate {
+  pattern: string;
+  placeholders: Record<string, string[]>;
+}
+
+/**
+ * Pattern for matching specific code structures
+ */
+export interface SummaryPattern {
+  name: string;
+  matcher: (node: ASTNode) => boolean | Promise<boolean>;
+  template: string;
+  tags: SemanticTag[];
+  purpose: PurposeCategory;
+}
+
+/**
+ * Configuration for summary generation
+ */
+export interface SummaryGenerationConfig {
+  maxSummaryLength: number;
+  includeComplexity: boolean;
+  includeDependencies: boolean;
+  includeSemanticTags: boolean;
+  usePatternMatching: boolean;
+  customTemplates: Map<string, SummaryTemplate>;
+  customPatterns: SummaryPattern[];
+  enableCaching: boolean;
 }
 
 /**
