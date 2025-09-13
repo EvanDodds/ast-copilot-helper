@@ -15,6 +15,7 @@ import {
 } from './protocol.js';
 
 import { ToolHandlerRegistry } from './tools.js';
+import { ResourceHandlerFactory } from './resources.js';
 import type { DatabaseReader } from '../types.js';
 
 /**
@@ -216,9 +217,11 @@ export class ToolsCallHandler extends BaseHandler {
  */
 export class StandardHandlerFactory {
   private toolRegistry: ToolHandlerRegistry;
+  private resourceFactory: ResourceHandlerFactory;
 
   constructor(database: DatabaseReader) {
     this.toolRegistry = new ToolHandlerRegistry(database);
+    this.resourceFactory = new ResourceHandlerFactory();
   }
 
   createInitializeHandler(
@@ -238,6 +241,14 @@ export class StandardHandlerFactory {
 
   createToolsCallHandler(): ToolsCallHandler {
     return new ToolsCallHandler(this.toolRegistry);
+  }
+
+  createResourcesListHandler(): BaseHandler {
+    return this.resourceFactory.createResourcesListHandler();
+  }
+
+  createResourcesReadHandler(database: DatabaseReader): BaseHandler {
+    return this.resourceFactory.createResourcesReadHandler(database);
   }
 
   getToolRegistry(): ToolHandlerRegistry {

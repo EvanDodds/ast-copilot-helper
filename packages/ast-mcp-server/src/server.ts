@@ -236,7 +236,9 @@ export class ASTMCPServer extends EventEmitter {
     this.registerHandler('tools/list', this.handlerFactory.createToolsListHandler());
     this.registerHandler('tools/call', this.handlerFactory.createToolsCallHandler());
     
-    // Note: Resource handlers will be registered by subsequent subtasks
+    // Resource handlers
+    this.registerHandler('resources/list', this.handlerFactory.createResourcesListHandler());
+    this.registerHandler('resources/read', this.handlerFactory.createResourcesReadHandler(this.database));
   }
 
   /**

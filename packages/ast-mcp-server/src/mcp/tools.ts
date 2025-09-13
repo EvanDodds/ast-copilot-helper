@@ -138,32 +138,29 @@ export class IntentQueryHandler extends BaseHandler {
 
   static getDefinition(): MCPToolDefinition {
     return {
-      name: "ast_intent_query",
-      description: "Query the AST database using intent-based semantic search. Finds code elements that match the described intent or purpose.",
+      name: "query_ast_context",
+      description: "Search for relevant AST nodes by intent/query text",
       inputSchema: {
         type: "object",
         properties: {
-          intent: {
-            type: "string",
-            description: "Natural language description of what you're looking for (e.g., 'functions that handle user authentication', 'classes that extend BaseComponent')"
+          intent: { 
+            type: "string", 
+            description: "Query describing desired functionality" 
           },
-          maxResults: {
-            type: "number",
-            description: "Maximum number of results to return (1-100, default: 10)",
-            minimum: 1,
-            maximum: 100,
-            default: 10
+          maxResults: { 
+            type: "number", 
+            default: 5, 
+            maximum: 100 
           },
-          includeChildren: {
-            type: "boolean",
-            description: "Whether to include child nodes in results (default: false)",
-            default: false
+          minScore: { 
+            type: "number", 
+            default: 0.0, 
+            minimum: 0.0, 
+            maximum: 1.0 
           },
-          sortBy: {
-            type: "string",
-            description: "Sort order for results: 'relevance' or 'location' (default: 'relevance')",
-            enum: ["relevance", "location"],
-            default: "relevance"
+          includeContext: { 
+            type: "boolean", 
+            default: true 
           }
         },
         required: ["intent"]
@@ -307,29 +304,22 @@ export class NodeLookupHandler extends BaseHandler {
 
   static getDefinition(): MCPToolDefinition {
     return {
-      name: "ast_node_lookup",
-      description: "Retrieve detailed information about a specific AST node by its ID, including optional children and parent information.",
+      name: "get_node_details",
+      description: "Get detailed information about a specific AST node",
       inputSchema: {
         type: "object",
         properties: {
-          nodeId: {
-            type: "string",
-            description: "The unique ID of the AST node to retrieve"
+          nodeId: { 
+            type: "string", 
+            description: "AST node identifier" 
           },
-          includeChildren: {
-            type: "boolean",
-            description: "Include child nodes in the response (default: false)",
-            default: false
-          },
-          includeParent: {
+          includeChildren: { 
             type: "boolean", 
-            description: "Include parent node information (default: false)",
-            default: false
+            default: false 
           },
-          includeText: {
-            type: "boolean",
-            description: "Include the full text content of the node (default: true)",
-            default: true
+          includeSource: { 
+            type: "boolean", 
+            default: true 
           }
         },
         required: ["nodeId"]
@@ -795,23 +785,23 @@ export class RecentChangesHandler extends BaseHandler {
 
   static getDefinition(): MCPToolDefinition {
     return {
-      name: "ast_recent_changes",
-      description: "Get recently modified AST nodes since a specified timestamp, useful for tracking code changes.",
+      name: "list_recent_changes",
+      description: "Get recently modified AST nodes",
       inputSchema: {
         type: "object",
         properties: {
-          since: {
-            type: "string",
-            description: "ISO timestamp to get changes since (default: 24 hours ago)",
-            format: "date-time",
-            default: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+          since: { 
+            type: "string", 
+            description: "ISO timestamp or relative time (1h, 1d)" 
           },
-          maxResults: {
-            type: "number",
-            description: "Maximum number of results to return (1-200, default: 50)",
-            minimum: 1,
-            maximum: 200,
-            default: 50
+          maxResults: { 
+            type: "number", 
+            default: 20, 
+            maximum: 100 
+          },
+          filePattern: { 
+            type: "string", 
+            description: "Optional file pattern filter" 
           }
         },
         required: []
@@ -827,13 +817,13 @@ export class ToolHandlerRegistry {
   private handlers: Map<string, BaseHandler> = new Map();
   
   constructor(db: DatabaseReader) {
-    // Register all tool handlers
-    this.handlers.set('ast_intent_query', new IntentQueryHandler(db));
-    this.handlers.set('ast_node_lookup', new NodeLookupHandler(db));
+    // Register all tool handlers with correct MCP-compliant names
+    this.handlers.set('query_ast_context', new IntentQueryHandler(db));
+    this.handlers.set('get_node_details', new NodeLookupHandler(db));
     this.handlers.set('ast_file_query', new FileQueryHandler(db));
     this.handlers.set('ast_text_search', new TextSearchHandler(db));
     this.handlers.set('ast_index_status', new IndexStatusHandler(db));
-    this.handlers.set('ast_recent_changes', new RecentChangesHandler(db));
+    this.handlers.set('list_recent_changes', new RecentChangesHandler(db));
   }
 
   getHandler(toolName: string): BaseHandler | null {

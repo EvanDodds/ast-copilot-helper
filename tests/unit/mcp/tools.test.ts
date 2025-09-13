@@ -166,7 +166,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-1',
-        method: 'ast_intent_query',
+        method: 'query_ast_context',
         params: {
           intent: 'data processing functions',
           maxResults: 5
@@ -189,7 +189,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-2',
-        method: 'ast_intent_query',
+        method: 'query_ast_context',
         params: {}
       };
 
@@ -204,7 +204,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-3',
-        method: 'ast_intent_query',
+        method: 'query_ast_context',
         params: {
           intent: 'test query'
         }
@@ -221,7 +221,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-4',
-        method: 'ast_intent_query',
+        method: 'query_ast_context',
         params: {
           intent: 'test query',
           maxResults: 150 // exceeds max of 100
@@ -241,7 +241,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-5',
-        method: 'ast_node_lookup',
+        method: 'get_node_details',
         params: {
           nodeId: 'node-1',
           includeChildren: false,
@@ -262,7 +262,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-6',
-        method: 'ast_node_lookup',
+        method: 'get_node_details',
         params: {
           nodeId: 'non-existent'
         }
@@ -278,7 +278,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-7',
-        method: 'ast_node_lookup',
+        method: 'get_node_details',
         params: {
           nodeId: 'node-root',
           includeChildren: true
@@ -399,7 +399,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-13',
-        method: 'ast_recent_changes',
+        method: 'list_recent_changes',
         params: {}
       };
 
@@ -417,7 +417,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-14',
-        method: 'ast_recent_changes',
+        method: 'list_recent_changes',
         params: {
           since: customSince,
           maxResults: 20
@@ -436,16 +436,16 @@ describe('Tool Handlers', () => {
     it('should register all tool handlers', () => {
       const toolNames = registry.getToolNames();
       
-      expect(toolNames).toContain('ast_intent_query');
-      expect(toolNames).toContain('ast_node_lookup');
+      expect(toolNames).toContain('query_ast_context');
+      expect(toolNames).toContain('get_node_details');
       expect(toolNames).toContain('ast_file_query');
       expect(toolNames).toContain('ast_text_search');
       expect(toolNames).toContain('ast_index_status');
-      expect(toolNames).toContain('ast_recent_changes');
+      expect(toolNames).toContain('list_recent_changes');
     });
 
     it('should return handler for valid tool names', () => {
-      const handler = registry.getHandler('ast_intent_query');
+      const handler = registry.getHandler('query_ast_context');
       expect(handler).toBeInstanceOf(IntentQueryHandler);
     });
 
@@ -483,7 +483,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-error',
-        method: 'ast_intent_query',
+        method: 'query_ast_context',
         params: {
           intent: 'test query'
         }
@@ -500,7 +500,7 @@ describe('Tool Handlers', () => {
       const request: JSONRPCRequest = {
         jsonrpc: '2.0',
         id: 'test-type-error',
-        method: 'ast_intent_query',
+        method: 'query_ast_context',
         params: {
           intent: 123, // should be string
           maxResults: 'invalid' // should be number
