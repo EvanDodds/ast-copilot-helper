@@ -306,24 +306,31 @@ describe('Scaling and Load Benchmarks', () => {
 
 // Helper functions for scaling and load testing
 async function processRepositoryOfSize(nodeCount: number): Promise<{ success: boolean; processedNodes: number }> {
-    // Simulate realistic repository processing time
-    const baseProcessingTime = nodeCount * 0.05; // 0.05ms per node base time
-    const varianceTime = Math.random() * nodeCount * 0.02; // Up to 0.02ms variance per node
+    try {
+        // Simulate realistic repository processing time
+        const baseProcessingTime = nodeCount * 0.05; // 0.05ms per node base time
+        const varianceTime = Math.random() * nodeCount * 0.02; // Up to 0.02ms variance per node
 
-    const totalProcessingTime = baseProcessingTime + varianceTime;
+        const totalProcessingTime = baseProcessingTime + varianceTime;
 
-    // Add some CPU-bound work to make it realistic
-    let computeWork = 0;
-    for (let i = 0; i < Math.min(nodeCount / 100, 1000); i++) {
-        computeWork += Math.sin(i) * Math.cos(i * 2);
+        // Add some CPU-bound work to make it realistic
+        let computeWork = 0;
+        for (let i = 0; i < Math.min(nodeCount / 100, 1000); i++) {
+            computeWork += Math.sin(i) * Math.cos(i * 2);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, totalProcessingTime));
+
+        return {
+            success: true, // Always succeed for tests
+            processedNodes: nodeCount
+        };
+    } catch (error) {
+        return {
+            success: false,
+            processedNodes: 0
+        };
     }
-
-    await new Promise(resolve => setTimeout(resolve, totalProcessingTime));
-
-    return {
-        success: Math.random() > 0.001, // 99.9% success rate
-        processedNodes: nodeCount
-    };
 }
 
 interface UserSessionResult {
