@@ -12,11 +12,12 @@ import type { ASTDatabaseReader } from '../database/reader.js';
 
 import type {
   SemanticQueryOptions,
+  SemanticQuery,
   QueryResponse,
   AnnotationMatch,
   QueryMetadata,
   QuerySystemConfig,
-  Annotation,
+  MCPQuery,
 } from './types.js';
 
 /**
@@ -67,7 +68,6 @@ export class SemanticQueryProcessor {
   
   // Dependencies
   private embeddingGenerator: XenovaEmbeddingGenerator;
-  private vectorDatabase: HNSWVectorDatabase;
   private annotationDatabase: ASTDatabaseReader;
   
   // Configuration
@@ -84,13 +84,12 @@ export class SemanticQueryProcessor {
 
   constructor(
     embeddingGenerator: XenovaEmbeddingGenerator,
-    vectorDatabase: HNSWVectorDatabase,
+    _vectorDatabase: HNSWVectorDatabase, // Unused but kept for API compatibility
     annotationDatabase: ASTDatabaseReader,
     config: QuerySystemConfig,
     performanceMonitor?: any // Using any to avoid circular import for now
   ) {
     this.embeddingGenerator = embeddingGenerator;
-    this.vectorDatabase = vectorDatabase;
     this.annotationDatabase = annotationDatabase;
     this.config = config;
     this.performanceMonitor = performanceMonitor;
@@ -117,23 +116,79 @@ export class SemanticQueryProcessor {
    * Process semantic query with vector similarity search
    */
   async processQuery(
-    queryText: string, 
+    queryOrText: string | MCPQuery | SemanticQuery,
     options: SemanticQueryOptions = {},
     maxResults?: number,
     currentFile?: string,
     selectedText?: string,
     recentFiles?: string[]
   ): Promise<QueryResponse> {
+    // Handle both query object and text string inputs
+    let queryText: string;
+    let queryOptions: SemanticQueryOptions;
+    let queryMaxResults: number | undefined;
+    
+    if (typeof queryOrText === 'object') {
+      // Handle MCPQuery object
+      queryText = queryOrText.text;
+      queryOptions = { ...options, ...queryOrText.options };
+      queryMaxResults = queryOrText.maxResults || maxResults;
+    } else {
+      // Handle string input (legacy)
+      queryText = queryOrText;
+      queryOptions = options;
+      queryMaxResults = maxResults;
+    }
+    
+    // Validate required fields
+    if (!queryText || typeof queryText !== 'string' || queryText.trim().length === 0) {
+      throw new Error('Invalid query: text field is required and must be a non-empty string');
+    }
+    
     const startTime = Date.now();
     
     this.logger.debug('Processing semantic query', {
       queryText,
-      options,
-      maxResults,
+      options: queryOptions,
+      maxResults: queryMaxResults,
       hasCurrentFile: !!currentFile,
       hasSelectedText: !!selectedText,
       recentFilesCount: recentFiles?.length || 0,
     });
+    
+    // Check for cached query response first  
+    // Extract minScore from the query if available
+    const queryMinScore = typeof queryOrText === 'object' && 'minScore' in queryOrText ? queryOrText.minScore : undefined;
+    
+    const query: MCPQuery = {
+      type: 'semantic',
+      text: queryText,
+      maxResults: queryMaxResults,
+      minScore: queryMinScore,
+      options: Object.keys(queryOptions).length > 0 ? queryOptions : undefined,
+    };
+    
+    if (this.performanceMonitor) {
+      const cachedResponse = this.performanceMonitor.getCachedQueryResponse(query);
+      if (cachedResponse) {
+        // Update the metadata to reflect cache hit
+        const cachedResponseWithMeta = {
+          ...cachedResponse,
+          metadata: {
+            ...cachedResponse.metadata,
+            cacheHit: true,
+            timestamp: new Date(),
+          }
+        };
+        
+        this.logger.debug('Returning cached query response', {
+          queryText,
+          cachedResultsCount: cachedResponse.results.length,
+        });
+        
+        return cachedResponseWithMeta;
+      }
+    }
     
     try {
       // Step 1: Generate query embedding (with caching)
@@ -179,39 +234,117 @@ export class SemanticQueryProcessor {
       
       const embeddingTime = Date.now() - queryEmbeddingStartTime;
       
-      // Step 2: Vector similarity search
+      // Step 2: Vector similarity search using database reader
       const vectorSearchStartTime = Date.now();
-      const vectorResults = await this.vectorDatabase.searchSimilar(
-        queryEmbedding,
-        Math.min(
-          maxResults || this.rankingConfig.maxResults,
+      
+      // Build options object based on query type and properties
+      let vectorSearchOptions: any = {
+        maxResults: Math.min(
+          queryMaxResults || this.rankingConfig.maxResults,
           1000 // hard-coded candidate limit
         ),
-        options.searchEf || this.config.search.defaultSearchEf
-      );
+        searchEf: queryOptions.searchEf || this.config.search.defaultSearchEf,
+        ef: queryOptions.searchEf || this.config.search.defaultSearchEf, // Legacy compatibility
+      };
       
+      // For SemanticQuery, map direct properties
+      if (typeof queryOrText === 'object' && 'language' in queryOrText && queryOrText.language) {
+        vectorSearchOptions.language = queryOrText.language;
+      }
+      if (typeof queryOrText === 'object' && 'filePath' in queryOrText && queryOrText.filePath) {
+        vectorSearchOptions.filePath = queryOrText.filePath;
+      }
+      if (typeof queryOrText === 'object' && 'nodeType' in queryOrText && queryOrText.nodeType) {
+        vectorSearchOptions.nodeType = queryOrText.nodeType;
+      }
+      
+      // Also check languageFilter and fileFilter for older API compatibility
+      if (queryOptions.languageFilter && queryOptions.languageFilter.length > 0) {
+        vectorSearchOptions.language = queryOptions.languageFilter[0];
+      }
+      if (queryOptions.fileFilter && queryOptions.fileFilter.length > 0) {
+        vectorSearchOptions.filePath = queryOptions.fileFilter[0];
+      }
+      
+      // Add context boosting if enabled
+      if (queryOptions.useContextBoosting) {
+        vectorSearchOptions.useContextBoosting = queryOptions.useContextBoosting;
+      }
+      
+      const vectorResults = await this.annotationDatabase.vectorSearch(
+        queryText,
+        vectorSearchOptions
+      );
+
       this.vectorSearchTime = Date.now() - vectorSearchStartTime;
       
-      // Step 3: Convert vector results to annotation matches
-      const conversionStartTime = Date.now();
-      const candidateMatches = await this.convertVectorResultsToAnnotations(vectorResults);
-      const conversionTime = Date.now() - conversionStartTime;
+      // Handle case where vectorResults might be undefined
+      if (!vectorResults || !Array.isArray(vectorResults)) {
+        this.logger.warn('Vector search returned no results or invalid format', {
+          queryText: queryText.substring(0, 100),
+          vectorResults
+        });
+        
+        const totalTime = Date.now() - startTime;
+        return {
+          results: [],
+          totalMatches: 0,
+          queryTime: totalTime,
+          searchStrategy: 'semantic-vector-search' as const,
+          metadata: {
+            vectorSearchTime: this.vectorSearchTime,
+            rankingTime: 0,
+            totalCandidates: 0,
+            appliedFilters: this.getAppliedFilters(queryOptions),
+            searchParameters: {},
+            totalTime,
+            searchTime: totalTime,
+            cacheHit: false,
+            timestamp: new Date(),
+            error: 'No valid results from vector search'
+          }
+        };
+      }
       
-      // Step 4: Apply context-aware ranking and filtering
+      // Step 3: Convert to expected format (ASTNodeMatch -> AnnotationMatch with vectorScore)
+      const conversionStartTime = Date.now();
+      const candidateMatches = vectorResults.map((match) => ({
+        annotation: {
+          nodeId: match.nodeId,
+          signature: match.signature,
+          summary: match.summary,
+          filePath: match.filePath,
+          lineNumber: match.startLine,
+          language: this.getLanguageFromFilePath(match.filePath) || 'unknown',
+          confidence: match.score,
+          lastUpdated: new Date(match.updatedAt),
+          nodeType: match.nodeType
+        },
+        score: match.score,
+        matchReason: match.matchReason || 'Vector similarity match',
+        contextSnippet: match.sourceSnippet,
+        vectorScore: match.score
+      }));
+      const conversionTime = Date.now() - conversionStartTime;      // Step 4: Apply context-aware ranking and filtering
       const rankingStartTime = Date.now();
+      
+      // Extract minScore from query if available
+      const minScore = typeof queryOrText === 'object' && 'minScore' in queryOrText ? queryOrText.minScore : undefined;
+      
       const rankedMatches = await this.rankAndFilterResults(
         candidateMatches,
         queryText,
-        options,
+        queryOptions,
         currentFile,
         selectedText,
-        recentFiles
+        recentFiles,
+        minScore
       );
       
       this.rankingTime = Date.now() - rankingStartTime;
       
       // Step 5: Apply final result limits and formatting
-      const finalResults = rankedMatches.slice(0, maxResults || this.rankingConfig.maxResults);
+      const finalResults = rankedMatches.slice(0, queryMaxResults || this.rankingConfig.maxResults);
       
       const totalTime = Date.now() - startTime;
       
@@ -223,16 +356,20 @@ export class SemanticQueryProcessor {
         vectorSearchTime: this.vectorSearchTime,
         rankingTime: this.rankingTime,
         totalCandidates: vectorResults.length,
-        appliedFilters: this.getAppliedFilters(options),
+        appliedFilters: this.getAppliedFilters(queryOptions),
         searchParameters: {
           embedding: 'codebert-base',
           similarity: 'cosine',
-          k: maxResults || this.rankingConfig.maxResults,
-          ef: options.searchEf || this.config.search.defaultSearchEf,
-          contextBoosting: options.useContextBoosting ?? false,
+          k: queryMaxResults || this.rankingConfig.maxResults,
+          ef: queryOptions.searchEf || this.config.search.defaultSearchEf,
+          contextBoosting: queryOptions.useContextBoosting ?? false,
           embeddingTime,
           conversionTime,
         },
+        totalTime,
+        searchTime: totalTime,
+        cacheHit: false, // Default to false, will be updated by cache logic if applicable
+        timestamp: new Date(),
       };
       
       this.logger.info('Semantic query processed successfully', {
@@ -244,7 +381,7 @@ export class SemanticQueryProcessor {
         rankingTime: this.rankingTime,
       });
       
-      return {
+      const response: QueryResponse = {
         results: finalResults,
         totalMatches: rankedMatches.length,
         queryTime: totalTime,
@@ -252,56 +389,41 @@ export class SemanticQueryProcessor {
         metadata,
       };
       
+      // Cache the response for future use
+      if (this.performanceMonitor) {
+        this.performanceMonitor.cacheQueryResponse(query, response);
+      }
+      
+      return response;
+      
     } catch (error) {
       this.logger.error('Semantic query processing failed', {
         error: error instanceof Error ? error.message : String(error),
         queryText,
-        options,
+        queryOptions,
       });
-      throw error;
-    }
-  }
-
-  /**
-   * Convert vector search results to annotation matches with metadata
-   */
-  private async convertVectorResultsToAnnotations(
-    vectorResults: Array<{ nodeId: string; score: number }>
-  ): Promise<Array<AnnotationMatch & { vectorScore: number }>> {
-    const matches: Array<AnnotationMatch & { vectorScore: number }> = [];
-    
-    // For now, fetch nodes individually until we have a batch method
-    for (const vectorResult of vectorResults) {
-      const node = await this.annotationDatabase.getNodeById(vectorResult.nodeId);
-      if (!node) {
-        this.logger.warn('Vector result node not found in annotation database', {
-          nodeId: vectorResult.nodeId,
-        });
-        continue;
-      }
       
-      // Convert ASTNode to Annotation
-      const annotation: Annotation = {
-        nodeId: node.nodeId,
-        signature: node.signature,
-        summary: node.summary,
-        filePath: node.filePath,
-        lineNumber: node.startLine,
-        language: this.getLanguageFromFilePath(node.filePath) || 'unknown',
-        confidence: 1.0, // Default confidence
-        lastUpdated: node.updatedAt,
+      // Return error response instead of throwing
+      const totalTime = Date.now() - startTime;
+      return {
+        results: [],
+        totalMatches: 0,
+        queryTime: totalTime,
+        searchStrategy: 'semantic-vector-search',
+        metadata: {
+          vectorSearchTime: 0,
+          rankingTime: 0,
+          totalCandidates: 0,
+          appliedFilters: [],
+          searchParameters: {},
+          totalTime,
+          searchTime: totalTime,
+          cacheHit: false,
+          timestamp: new Date(),
+          error: error instanceof Error ? error.message : String(error)
+        }
       };
-      
-      matches.push({
-        annotation,
-        score: vectorResult.score,
-        matchReason: 'vector_similarity_search',
-        contextSnippet: node.sourceSnippet,
-        vectorScore: vectorResult.score,
-      });
     }
-    
-    return matches;
   }
 
   /**
@@ -313,7 +435,8 @@ export class SemanticQueryProcessor {
     options: SemanticQueryOptions,
     currentFile?: string,
     selectedText?: string,
-    recentFiles?: string[]
+    recentFiles?: string[],
+    minScore?: number
   ): Promise<AnnotationMatch[]> {
     const rankedMatches: AnnotationMatch[] = [];
     
@@ -365,6 +488,11 @@ export class SemanticQueryProcessor {
       
       // Filter by minimum similarity
       if (boostedScore < this.rankingConfig.minSimilarity) {
+        continue;
+      }
+      
+      // Filter by user-provided minimum score (from SemanticQuery.minScore)
+      if (minScore !== undefined && boostedScore < minScore) {
         continue;
       }
       
@@ -450,31 +578,6 @@ export class SemanticQueryProcessor {
   }
 
   /**
-   * Get programming language from file path
-   */
-  private getLanguageFromFilePath(filePath: string): string | null {
-    const extension = filePath.split('.').pop()?.toLowerCase();
-    
-    const extensionMap: Record<string, string> = {
-      'ts': 'typescript',
-      'tsx': 'typescript',
-      'js': 'javascript',
-      'jsx': 'javascript',
-      'py': 'python',
-      'java': 'java',
-      'cpp': 'cpp',
-      'c': 'cpp',
-      'h': 'cpp',
-      'hpp': 'cpp',
-      'cs': 'csharp',
-      'go': 'go',
-      'rs': 'rust',
-    };
-    
-    return extension ? extensionMap[extension] || null : null;
-  }
-
-  /**
    * Check if file path matches filter patterns
    */
   private matchesFileFilter(filePath: string, fileFilter: string[]): boolean {
@@ -539,7 +642,7 @@ export class SemanticQueryProcessor {
     this.rankingConfig = { ...this.rankingConfig, ...config };
     
     this.logger.info('Ranking configuration updated', {
-      newConfig: this.rankingConfig,
+      config: this.rankingConfig
     });
   }
 
@@ -552,5 +655,28 @@ export class SemanticQueryProcessor {
     this.logger.info('Context boost configuration updated', {
       newConfig: this.contextBoostConfig,
     });
+  }
+
+  /**
+   * Get programming language from file path
+   */
+  private getLanguageFromFilePath(filePath: string): string | null {
+    const ext = filePath.split('.').pop()?.toLowerCase();
+    const languageMap: Record<string, string> = {
+      'ts': 'typescript',
+      'js': 'javascript',
+      'py': 'python',
+      'java': 'java',
+      'cpp': 'cpp',
+      'c': 'c',
+      'cs': 'csharp',
+      'go': 'go',
+      'rs': 'rust',
+      'php': 'php',
+      'rb': 'ruby',
+      'swift': 'swift',
+      'kt': 'kotlin'
+    };
+    return ext ? languageMap[ext] || ext : null;
   }
 }
