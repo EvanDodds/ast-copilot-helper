@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     // CI-specific test configuration
+    watch: false, // Never watch in CI environments
     testTimeout: 30000, // 30 seconds max per test (vs default 60s)
     hookTimeout: 10000, // 10 seconds for setup/teardown
     teardownTimeout: 5000, // 5 seconds for cleanup

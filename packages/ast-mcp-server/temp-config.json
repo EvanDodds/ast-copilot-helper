@@ -1,0 +1,13 @@
+{
+  "name": "Integration Test Server",
+  "version": "1.0.0-test",
+  "transport": {
+    "type": "stdio"
+  },
+  "database": {
+    "path": ":memory:"
+  },
+  "logging": {
+    "level": "info"
+  }
+}
