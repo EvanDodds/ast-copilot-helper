@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
 import { ServerProcessManager } from './managers/ServerProcessManager';
+import { MCPClientManager } from './managers/MCPClientManager';
+import { CommandHandlers } from './managers/CommandHandlers';
+import { UIManager } from './managers/UIManager';
+import { ConfigurationManager } from './managers/ConfigurationManager';
 
 /**
  * VS Code Extension for AST MCP Server Management
@@ -10,9 +14,11 @@ import { ServerProcessManager } from './managers/ServerProcessManager';
  */
 
 let outputChannel: vscode.OutputChannel;
+let configurationManager: ConfigurationManager | null = null;
 let serverProcessManager: ServerProcessManager | null = null;
-let mcpClient: any; // Will be implemented in Subtask 4
-let statusBarItem: vscode.StatusBarItem;
+let mcpClientManager: MCPClientManager | null = null;
+let commandHandlers: CommandHandlers | null = null;
+let uiManager: UIManager | null = null;
 let disposables: vscode.Disposable[] = [];
 
 /**
@@ -26,55 +32,93 @@ export function activate(context: vscode.ExtensionContext): void {
     // Initialize output channel for logging
     initializeOutputChannel();
     
-    // Initialize status bar integration
-    initializeStatusBar(context);
+    // Initialize configuration manager
+    configurationManager = new ConfigurationManager(outputChannel);
+    disposables.push(configurationManager);
+    
+    // Initialize user interface manager
+    uiManager = new UIManager(outputChannel, null, null);
+    
+    // Initialize server and client managers
+    initializeManagers();
+    
+    // Update UI manager with initialized references
+    if (uiManager) {
+      uiManager.updateReferences(serverProcessManager, mcpClientManager);
+      disposables.push(uiManager);
+    }
     
     // Register all extension commands
-    registerCommands(context);
+    commandHandlers = new CommandHandlers(
+      outputChannel, 
+      serverProcessManager, 
+      mcpClientManager, 
+      uiManager!.getStatusBarItem()
+    );
+    const commandDisposables = commandHandlers.registerCommands(context);
+    disposables.push(...commandDisposables);
     
     // Initialize configuration monitoring
     initializeConfigurationWatcher(context);
     
-    // Load initial configuration and start server if auto-start enabled
-    initializeExtension();
+    // Auto-start server if enabled
+    handleAutoStart();
     
     // Store disposables in context for proper cleanup
     context.subscriptions.push(...disposables);
     
     outputChannel.appendLine('AST MCP Helper extension activated successfully');
-    console.log('AST MCP Helper extension activated successfully');
-    
   } catch (error) {
-    const errorMessage = `Failed to activate AST MCP Helper extension: ${error}`;
-    outputChannel?.appendLine(errorMessage);
-    console.error(errorMessage, error);
-    vscode.window.showErrorMessage(errorMessage);
+    const message = `Failed to activate extension: ${error}`;
+    console.error(message);
+    
+    // Create output channel even if activation fails
+    if (!outputChannel) {
+      outputChannel = vscode.window.createOutputChannel('AST MCP Helper');
+    }
+    
+    outputChannel.appendLine(message);
+    vscode.window.showErrorMessage(`AST MCP Helper activation failed: ${error}`);
   }
 }
 
 /**
- * Extension deactivation cleanup
+ * Extension deactivation entry point
  * Called when VS Code deactivates the extension
  */
 export async function deactivate(): Promise<void> {
   console.log('AST MCP Helper extension is deactivating...');
   
   try {
-    // Stop server if running
+    // Stop server process if running
     if (serverProcessManager) {
-      outputChannel?.appendLine('Stopping MCP server during extension deactivation...');
       try {
-        await serverProcessManager.stop(true); // Force stop during deactivation
-        outputChannel?.appendLine('MCP server stopped successfully');
+        outputChannel?.appendLine('Stopping server during deactivation...');
+        await serverProcessManager.stop();
+        outputChannel?.appendLine('Server stopped successfully during deactivation');
       } catch (error) {
         outputChannel?.appendLine(`Failed to stop server during deactivation: ${error}`);
       }
     }
     
     // Close MCP client connection
-    if (mcpClient) {
-      // Will be implemented in Subtask 4
-      outputChannel?.appendLine('Closing MCP client connection...');
+    if (mcpClientManager) {
+      try {
+        outputChannel?.appendLine('Closing MCP client connection...');
+        await mcpClientManager.disconnect();
+      } catch (error) {
+        outputChannel?.appendLine(`Failed to close MCP client: ${error}`);
+      }
+    }
+    
+    // Dispose configuration manager
+    if (configurationManager) {
+      configurationManager.dispose();
+    }
+    
+    // Dispose UI manager
+    if (uiManager) {
+      uiManager.dispose();
     }
     
     // Dispose all resources
@@ -88,260 +132,103 @@ export async function deactivate(): Promise<void> {
     
     // Clean up output channel
     if (outputChannel) {
-      outputChannel.appendLine('AST MCP Helper extension deactivated');
       outputChannel.dispose();
     }
     
     console.log('AST MCP Helper extension deactivated successfully');
-    
   } catch (error) {
     console.error('Error during extension deactivation:', error);
   }
 }
 
 /**
- * Initialize output channel for extension logging
+ * Initialize the output channel for extension logging
  */
 function initializeOutputChannel(): void {
   outputChannel = vscode.window.createOutputChannel('AST MCP Helper');
   disposables.push(outputChannel);
-  
-  outputChannel.appendLine('='.repeat(50));
-  outputChannel.appendLine('AST MCP Helper Extension Log');
-  outputChannel.appendLine(`Activated at: ${new Date().toISOString()}`);
-  outputChannel.appendLine('='.repeat(50));
+  outputChannel.appendLine('AST MCP Helper extension starting...');
 }
 
 /**
- * Initialize status bar item for server status display
+ * Initialize server and client managers
  */
-function initializeStatusBar(_context: vscode.ExtensionContext): void {
-  statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBarItem.command = 'astHelper.serverStatus';
-  statusBarItem.tooltip = 'Click to view AST MCP server status';
-  updateStatusBar('initializing', 'AST Server: Initializing...');
-  statusBarItem.show();
+function initializeManagers(): void {
+  outputChannel.appendLine('Initializing server and client managers...');
   
-  disposables.push(statusBarItem);
-}
+  // Use configuration manager for settings
+  const serverConfig = configurationManager?.getServerConfiguration() || {
+    serverPath: '',
+    args: [],
+    autoRestart: true,
+    maxRestarts: 3,
+    restartDelay: 2000,
+    healthCheckInterval: 30000,
+    startupTimeout: 10000
+  };
 
-/**
- * Update status bar with current server state
- */
-function updateStatusBar(state: string, text: string): void {
-  if (!statusBarItem) return;
+  // Initialize server process manager
+  serverProcessManager = new ServerProcessManager(serverConfig, outputChannel);
   
-  statusBarItem.text = text;
+  // Use configuration manager for client settings
+  const clientConfig = configurationManager?.getClientConfiguration() || {
+    connectionTimeout: 30000,
+    requestTimeout: 15000,
+    heartbeatInterval: 30000,
+    maxReconnectAttempts: 5,
+    reconnectDelay: 2000,
+    autoConnect: true,
+    enableHeartbeat: true
+  };
   
-  // Set different colors based on server state
-  switch (state) {
-    case 'running':
-      statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-      statusBarItem.color = new vscode.ThemeColor('statusBarItem.warningForeground');
-      break;
-    case 'stopped':
-      statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-      statusBarItem.color = new vscode.ThemeColor('statusBarItem.errorForeground');
-      break;
-    case 'error':
-      statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-      statusBarItem.color = new vscode.ThemeColor('statusBarItem.errorForeground');
-      break;
-    default:
-      statusBarItem.backgroundColor = undefined;
-      statusBarItem.color = undefined;
-  }
-}
-
-/**
- * Register all extension commands
- */
-function registerCommands(_context: vscode.ExtensionContext): void {
-  const commands: Array<{
-    command: string;
-    handler: (...args: any[]) => Promise<void>;
-    title: string;
-  }> = [
-    // Server management commands
-    {
-      command: 'astHelper.startServer',
-      handler: handleStartServer,
-      title: 'Start AST MCP Server'
-    },
-    {
-      command: 'astHelper.stopServer', 
-      handler: handleStopServer,
-      title: 'Stop AST MCP Server'
-    },
-    {
-      command: 'astHelper.restartServer',
-      handler: handleRestartServer,
-      title: 'Restart AST MCP Server'
-    },
-    {
-      command: 'astHelper.serverStatus',
-      handler: handleServerStatus,
-      title: 'Show AST MCP Server Status'
-    },
-    
-    // Configuration and workspace commands
-    {
-      command: 'astHelper.openSettings',
-      handler: handleOpenSettings,
-      title: 'Open AST Helper Settings'
-    },
-    {
-      command: 'astHelper.parseWorkspace',
-      handler: handleParseWorkspace,
-      title: 'Parse Workspace with AST Helper'
-    },
-    {
-      command: 'astHelper.clearIndex',
-      handler: handleClearIndex,
-      title: 'Clear AST Index'
-    },
-    {
-      command: 'astHelper.showLogs',
-      handler: handleShowLogs,
-      title: 'Show AST Helper Logs'
-    }
-  ];
+  // Initialize MCP client manager
+  mcpClientManager = new MCPClientManager(serverProcessManager, clientConfig, outputChannel);
   
-  // Register each command
-  commands.forEach(({ command, handler, title }) => {
-    const disposable = vscode.commands.registerCommand(command, async (...args: any[]) => {
-      try {
-        outputChannel.appendLine(`Executing command: ${title}`);
-        await handler(...args);
-      } catch (error) {
-        const errorMessage = `Error executing ${title}: ${error}`;
-        outputChannel.appendLine(errorMessage);
-        vscode.window.showErrorMessage(errorMessage);
-      }
-    });
-    
-    disposables.push(disposable);
-    outputChannel.appendLine(`Registered command: ${command}`);
-  });
+  // Add to disposables
+  disposables.push(serverProcessManager, mcpClientManager);
+  
+  outputChannel.appendLine('Server and client managers initialized');
 }
 
 /**
  * Initialize configuration change monitoring
  */
-function initializeConfigurationWatcher(_context: vscode.ExtensionContext): void {
+function initializeConfigurationWatcher(context: vscode.ExtensionContext): void {
   const configWatcher = vscode.workspace.onDidChangeConfiguration((event) => {
-    if (event.affectsConfiguration('astHelper')) {
+    if (event.affectsConfiguration('astCopilotHelper')) {
       outputChannel.appendLine('AST Helper configuration changed, applying updates...');
       handleConfigurationChange();
     }
   });
   
   disposables.push(configWatcher);
-  outputChannel.appendLine('Configuration watcher initialized');
+  context.subscriptions.push(configWatcher);
 }
 
 /**
- * Initialize extension with current configuration
+ * Handle auto-start functionality
  */
-function initializeExtension(): void {
-  const config = vscode.workspace.getConfiguration('astHelper');
+function handleAutoStart(): void {
+  const extensionConfig = configurationManager?.getExtensionConfiguration();
+  const autoStart = extensionConfig?.autoStart ?? true;
   
-  // Initialize ServerProcessManager
-  initializeServerManager();
-  
-  const autoStart = config.get<boolean>('server.autoStart', false);
-  
-  outputChannel.appendLine(`Auto-start server: ${autoStart}`);
-  
-  if (autoStart && serverProcessManager) {
+  if (autoStart) {
     outputChannel.appendLine('Auto-start enabled, starting server...');
-    serverProcessManager.start().catch(error => {
-      outputChannel.appendLine(`Failed to auto-start server: ${error.message}`);
-      updateStatusBar('error', 'AST Server: Failed to Start');
-    });
+    // Start with a small delay to allow extension to fully initialize
+    setTimeout(async () => {
+      if (serverProcessManager) {
+        try {
+          await serverProcessManager.start();
+        } catch (error) {
+          outputChannel.appendLine(`Failed to auto-start server: ${error}`);
+          if (uiManager) {
+            uiManager.showErrorNotification(`Failed to auto-start server: ${error}`, true);
+          }
+        }
+      }
+    }, 1000); // 1 second delay
   } else {
-    updateStatusBar('stopped', 'AST Server: Stopped');
-  }
-}
-
-/**
- * Initialize the ServerProcessManager
- */
-function initializeServerManager(): void {
-  if (serverProcessManager) {
-    serverProcessManager.dispose();
-  }
-
-  const config = vscode.workspace.getConfiguration('astHelper');
-  const serverConfig = {
-    serverPath: config.get<string>('server.path', ''),
-    args: config.get<string[]>('server.args', []),
-    autoRestart: config.get<boolean>('server.autoRestart', true),
-    maxRestarts: config.get<number>('server.maxRestarts', 3),
-    restartDelay: config.get<number>('server.restartDelay', 2000),
-    healthCheckInterval: config.get<number>('server.healthCheckInterval', 30000),
-    startupTimeout: config.get<number>('server.startupTimeout', 10000)
-  };
-
-  serverProcessManager = new ServerProcessManager(serverConfig, outputChannel);
-  
-  // Set up event handlers for server state changes
-  serverProcessManager.on('stateChanged', (newState, _previousState) => {
-    updateServerStatusBar(newState);
-  });
-
-  serverProcessManager.on('started', (info) => {
-    vscode.window.showInformationMessage(`AST MCP Server started (PID: ${info.pid})`);
-  });
-
-  serverProcessManager.on('stopped', () => {
-    vscode.window.showInformationMessage('AST MCP Server stopped');
-  });
-
-  serverProcessManager.on('error', (error, _info) => {
-    const message = `Server error: ${error.message}`;
-    outputChannel.appendLine(message);
-    vscode.window.showErrorMessage(message);
-  });
-
-  serverProcessManager.on('crashed', (exitCode, signal, _info) => {
-    const message = `Server crashed (exit code: ${exitCode}, signal: ${signal})`;
-    outputChannel.appendLine(message);
-    vscode.window.showWarningMessage(message);
-  });
-
-  serverProcessManager.on('restarting', (attempt, maxAttempts) => {
-    const message = `Restarting server (attempt ${attempt}/${maxAttempts})`;
-    outputChannel.appendLine(message);
-    vscode.window.showInformationMessage(message);
-  });
-
-  disposables.push(serverProcessManager);
-}
-
-/**
- * Update status bar based on server state
- */
-function updateServerStatusBar(state: string): void {
-  switch (state) {
-    case 'stopped':
-      updateStatusBar('stopped', 'AST Server: Stopped');
-      break;
-    case 'starting':
-      updateStatusBar('starting', 'AST Server: Starting...');
-      break;
-    case 'running':
-      updateStatusBar('running', 'AST Server: Running');
-      break;
-    case 'stopping':
-      updateStatusBar('stopping', 'AST Server: Stopping...');
-      break;
-    case 'error':
-    case 'crashed':
-      updateStatusBar('error', 'AST Server: Error');
-      break;
-    default:
-      updateStatusBar('unknown', 'AST Server: Unknown');
+    outputChannel.appendLine('Auto-start disabled');
   }
 }
 
@@ -349,168 +236,27 @@ function updateServerStatusBar(state: string): void {
  * Handle configuration changes
  */
 function handleConfigurationChange(): void {
-  // Re-initialize server manager with new configuration
-  if (serverProcessManager) {
-    initializeServerManager();
-    outputChannel.appendLine('Server manager re-initialized due to configuration change');
+  outputChannel.appendLine('Handling configuration change...');
+  
+  if (configurationManager) {
+    const validation = configurationManager.validateConfiguration();
+    
+    if (!validation.isValid) {
+      outputChannel.appendLine(`Configuration validation errors: ${validation.errors.join(', ')}`);
+      if (uiManager) {
+        uiManager.showErrorNotification(
+          `Configuration errors: ${validation.errors.join(', ')}`,
+          true
+        );
+      }
+    } else {
+      outputChannel.appendLine('Configuration is valid');
+      if (uiManager) {
+        uiManager.showInfoNotification(
+          'Configuration changed and validated successfully.',
+          true
+        );
+      }
+    }
   }
-}
-
-// =============================================================================
-// COMMAND HANDLERS (Will be fully implemented in Subtask 5)
-// =============================================================================
-
-/**
- * Start MCP Server command handler
- */
-async function handleStartServer(..._args: any[]): Promise<void> {
-  outputChannel.appendLine('Start server command executed');
-  
-  if (!serverProcessManager) {
-    const message = 'Server process manager not initialized';
-    outputChannel.appendLine(message);
-    vscode.window.showErrorMessage(message);
-    return;
-  }
-  
-  if (serverProcessManager.isRunning()) {
-    const message = 'Server is already running';
-    outputChannel.appendLine(message);
-    vscode.window.showWarningMessage(message);
-    return;
-  }
-  
-  try {
-    updateStatusBar('starting', 'AST Server: Starting...');
-    await serverProcessManager.start();
-    outputChannel.appendLine('Server started successfully');
-  } catch (error: any) {
-    const message = `Failed to start server: ${error.message}`;
-    outputChannel.appendLine(message);
-    vscode.window.showErrorMessage(message);
-    updateStatusBar('error', 'AST Server: Failed to Start');
-  }
-}
-
-/**
- * Stop MCP Server command handler
- */
-async function handleStopServer(..._args: any[]): Promise<void> {
-  outputChannel.appendLine('Stop server command executed');
-  
-  if (!serverProcessManager) {
-    const message = 'Server process manager not initialized';
-    outputChannel.appendLine(message);
-    vscode.window.showErrorMessage(message);
-    return;
-  }
-  
-  if (!serverProcessManager.isRunning()) {
-    const message = 'Server is not running';
-    outputChannel.appendLine(message);
-    vscode.window.showWarningMessage(message);
-    return;
-  }
-  
-  try {
-    updateStatusBar('stopping', 'AST Server: Stopping...');
-    await serverProcessManager.stop();
-    outputChannel.appendLine('Server stopped successfully');
-    updateStatusBar('stopped', 'AST Server: Stopped');
-  } catch (error: any) {
-    const message = `Failed to stop server: ${error.message}`;
-    outputChannel.appendLine(message);
-    vscode.window.showErrorMessage(message);
-  }
-}
-
-/**
- * Restart MCP Server command handler
- */
-async function handleRestartServer(..._args: any[]): Promise<void> {
-  outputChannel.appendLine('Restart server command executed');
-  
-  if (!serverProcessManager) {
-    const message = 'Server process manager not initialized';
-    outputChannel.appendLine(message);
-    vscode.window.showErrorMessage(message);
-    return;
-  }
-  
-  try {
-    updateStatusBar('starting', 'AST Server: Restarting...');
-    await serverProcessManager.restart();
-    outputChannel.appendLine('Server restarted successfully');
-  } catch (error: any) {
-    const message = `Failed to restart server: ${error.message}`;
-    outputChannel.appendLine(message);
-    vscode.window.showErrorMessage(message);
-    updateStatusBar('error', 'AST Server: Failed to Restart');
-  }
-}
-
-/**
- * Show server status command handler
- */
-async function handleServerStatus(..._args: any[]): Promise<void> {
-  outputChannel.appendLine('Server status command executed');
-  
-  if (!serverProcessManager) {
-    const message = 'Server process manager not initialized';
-    outputChannel.appendLine(message);
-    vscode.window.showErrorMessage(message);
-    return;
-  }
-  
-  const info = serverProcessManager.getProcessInfo();
-  const statusMessage = [
-    `State: ${info.state}`,
-    `PID: ${info.pid || 'N/A'}`,
-    `Uptime: ${info.uptime ? Math.floor(info.uptime / 1000) + 's' : 'N/A'}`,
-    `Restarts: ${info.restarts}`,
-    info.lastError ? `Last Error: ${info.lastError}` : null
-  ].filter(Boolean).join(' | ');
-  
-  vscode.window.showInformationMessage(`AST MCP Server Status: ${statusMessage}`);
-  outputChannel.appendLine(`Server status: ${statusMessage}`);
-}
-
-/**
- * Open extension settings command handler
- */
-async function handleOpenSettings(..._args: any[]): Promise<void> {
-  outputChannel.appendLine('Open settings command executed');
-  
-  // Open VS Code settings focused on AST Helper extension
-  await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:ast-copilot-helper.vscode-extension');
-}
-
-/**
- * Parse workspace command handler
- */
-async function handleParseWorkspace(..._args: any[]): Promise<void> {
-  outputChannel.appendLine('Parse workspace command executed');
-  
-  // Implementation pending - Subtask 7: Workspace Integration Features
-  vscode.window.showInformationMessage('Parse workspace functionality will be implemented in Subtask 7');
-}
-
-/**
- * Clear AST index command handler
- */
-async function handleClearIndex(..._args: any[]): Promise<void> {
-  outputChannel.appendLine('Clear index command executed');
-  
-  // Implementation pending - Subtask 7: Workspace Integration Features
-  vscode.window.showInformationMessage('Clear index functionality will be implemented in Subtask 7');
-}
-
-/**
- * Show logs command handler
- */
-async function handleShowLogs(..._args: any[]): Promise<void> {
-  outputChannel.appendLine('Show logs command executed');
-  
-  // Show the output channel
-  outputChannel.show();
 }

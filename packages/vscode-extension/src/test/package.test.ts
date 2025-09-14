@@ -17,7 +17,7 @@ describe('Extension Package Configuration', () => {
     expect(packageJson.activationEvents).toContain('onStartupFinished');
     
     // Check commands are defined
-    expect(packageJson.contributes.commands).toHaveLength(8);
+    expect(packageJson.contributes.commands).toHaveLength(13);
     expect(packageJson.contributes.commands).toContainEqual(
       expect.objectContaining({
         command: 'astCopilotHelper.startServer',
@@ -74,10 +74,10 @@ describe('Extension Package Configuration', () => {
       })
     );
     
-    expect(config['astCopilotHelper.logLevel']).toEqual(
+    expect(config['astCopilotHelper.ui.logLevel']).toEqual(
       expect.objectContaining({
         type: 'string',
-        enum: ['debug', 'info', 'warn', 'error']
+        enum: ['error', 'warn', 'info', 'debug']
       })
     );
   });
