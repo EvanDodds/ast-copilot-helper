@@ -6,6 +6,8 @@ export default defineConfig({
     exclude: ['node_modules/', 'dist/'],
     environment: 'node',
     globals: true,
+    // Ensure tests run once and exit in CI/non-interactive environments
+    watch: false,
     coverage: {
       reporter: ['text', 'html'],
       exclude: [
