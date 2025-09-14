@@ -224,9 +224,9 @@ describe('VS Code Extension', () => {
           const handler = commandCall[1] as Function;
           await handler();
           
-          // Should show implementation pending message
-          expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
-            expect.stringContaining('functionality will be implemented')
+          // Should show server manager not initialized message
+          expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+            'Server process manager not initialized'
           );
         }
       }
