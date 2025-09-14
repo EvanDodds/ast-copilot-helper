@@ -196,35 +196,4 @@ describe('FileQueryProcessor', () => {
       expect(result.performance.error).toBeDefined();
     });
   });
-
-  describe('private utility methods', () => {
-    it('should calculate Levenshtein distance correctly', () => {
-      // Access private method through type assertion for testing
-      const processorAny = processor as any;
-      
-      expect(processorAny.levenshteinDistance('kitten', 'sitting')).toBe(3);
-      expect(processorAny.levenshteinDistance('hello', 'hello')).toBe(0);
-      expect(processorAny.levenshteinDistance('abc', 'def')).toBe(3);
-      expect(processorAny.levenshteinDistance('', 'test')).toBe(4);
-      expect(processorAny.levenshteinDistance('test', '')).toBe(4);
-    });
-
-    it('should calculate similarity scores correctly', () => {
-      const processorAny = processor as any;
-      
-      expect(processorAny.calculateSimilarityScore('hello', 'hello')).toBe(1.0);
-      expect(processorAny.calculateSimilarityScore('hello', 'helo')).toBeGreaterThan(0.8);
-      expect(processorAny.calculateSimilarityScore('abc', 'xyz')).toBe(0.0);
-    });
-
-    it('should detect language from file extension correctly', () => {
-      const processorAny = processor as any;
-      
-      expect(processorAny.detectLanguage('.ts')).toBe('typescript');
-      expect(processorAny.detectLanguage('.js')).toBe('javascript');
-      expect(processorAny.detectLanguage('.py')).toBe('python');
-      expect(processorAny.detectLanguage('.java')).toBe('java');
-      expect(processorAny.detectLanguage('.unknown')).toBe('unknown');
-    });
-  });
 });

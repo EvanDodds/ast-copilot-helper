@@ -296,11 +296,16 @@ describe('StdioTransport', () => {
         errorMessages.push(error);
       });
 
-      // Simulate input stream error
-      mockInput.emit('error', new Error('Stream error'));
+      // Since the mock stream will throw when we emit error, we expect this to be thrown
+      // But the transport should still handle it and emit transport-error events
+      expect(() => {
+        mockInput.emit('error', new Error('Stream error'));
+      }).toThrow('Stream error');
 
+      // Give a moment for async error handling to complete
       await new Promise(resolve => setTimeout(resolve, 10));
 
+      // The transport should have emitted error events despite the thrown error
       expect(errorMessages.length).toBeGreaterThan(0);
     });
   });

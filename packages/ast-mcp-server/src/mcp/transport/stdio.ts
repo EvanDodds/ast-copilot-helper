@@ -63,15 +63,53 @@ export class StdioTransport extends Transport {
         userAgent: 'stdio'
       });
 
+      // Set up error handlers first to catch initialization errors
+      this.setupErrorHandlers();
+
+      // Test stream availability and catch immediate errors
+      await new Promise<void>((resolve, reject) => {
+        const errorTimeout = setTimeout(() => {
+          reject(new Error('Stream initialization timeout'));
+        }, 1000);
+
+        const cleanup = () => {
+          clearTimeout(errorTimeout);
+          this.input.off('error', handleError);
+          this.output.off('error', handleError);
+        };
+
+        const handleError = (error: Error) => {
+          cleanup();
+          reject(error);
+        };
+
+        // Listen for immediate errors during initialization
+        this.input.once('error', handleError);
+        this.output.once('error', handleError);
+
+        // Try to access the streams - this may trigger errors in faulty streams
+        process.nextTick(() => {
+          try {
+            // For readable streams that might error on read attempt
+            if (typeof (this.input as any)._read === 'function') {
+              // Force a read attempt to trigger potential errors
+              (this.input as any)._read(0);
+            }
+            cleanup();
+            resolve();
+          } catch (error) {
+            cleanup();
+            reject(error instanceof Error ? error : new Error(String(error)));
+          }
+        });
+      });
+
       // Set up input stream handling
       if (this.lineBuffering) {
         this.setupLineBufferedInput();
       } else {
         this.setupRawInput();
       }
-
-      // Set up error handlers
-      this.setupErrorHandlers();
 
       this.updateConnectionState(this.connectionId, 'connected');
       this.state = 'connected';

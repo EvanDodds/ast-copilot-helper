@@ -66,6 +66,20 @@ export interface SemanticQueryOptions extends QueryOptions {
 }
 
 /**
+ * Semantic query request structure
+ */
+export interface SemanticQuery {
+  type: 'semantic';
+  text: string;
+  maxResults?: number;
+  minScore?: number;
+  nodeType?: string;        // Filter by node type (method, class, etc.)
+  languageFilter?: string;  // Filter by programming language
+  filePath?: string;        // Filter by file path
+  options?: SemanticQueryOptions;
+}
+
+/**
  * Signature query specific options
  */
 export interface SignatureQueryOptions extends QueryOptions {
@@ -153,6 +167,11 @@ export interface QueryMetadata {
   totalCandidates: number;
   appliedFilters: string[];
   searchParameters: Record<string, any>;
+  totalTime?: number;
+  searchTime?: number;
+  cacheHit?: boolean;
+  timestamp?: Date;
+  error?: string; // Optional error message for debugging
 }
 
 /**

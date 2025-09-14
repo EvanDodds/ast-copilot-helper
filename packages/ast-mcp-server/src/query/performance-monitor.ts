@@ -379,8 +379,8 @@ export class PerformanceMonitor {
   cacheQueryResponse(query: MCPQuery, response: QueryResponse): void {
     const cacheKey = this.generateQueryCacheKey(query);
     
-    // Only cache successful responses with reasonable size
-    if (response.results.length > 0 && response.results.length < 100) {
+    // Cache all responses, including empty ones, but limit very large result sets
+    if (response.results.length < 100) {
       this.queryCache.set(cacheKey, response);
       this.cacheableQueries++;
     }

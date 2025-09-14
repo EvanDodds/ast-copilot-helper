@@ -311,6 +311,36 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
   }
 
   /**
+   * Search AST nodes using vector similarity search
+   */
+  async vectorSearch(query: string, options: { maxResults?: number; ef?: number } = {}): Promise<ASTNodeMatch[]> {
+    this.ensureInitialized();
+
+    const cacheKey = `vector:${query}:${JSON.stringify(options)}`;
+    const cached = this.getCachedResult(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      // For now, delegate to text search - this would be replaced with actual vector search
+      const queryOptions: QueryOptions = {
+        maxResults: options.maxResults,
+        minScore: 0.3 // Default min score for vector search
+      };
+      
+      const results = await this.textSearch(query, queryOptions);
+      
+      this.setCachedResult(cacheKey, results);
+      return results;
+
+    } catch (error) {
+      this.logger.error('Vector search failed', { query, error });
+      return [];
+    }
+  }
+
+  /**
    * Get recent changes since a specific date
    */
   async getRecentChanges(since: Date | string, options: QueryOptions = {}): Promise<ASTNode[]> {
