@@ -1,43 +1,323 @@
 {
-  "name": "@ast-copilot-helper/vscode-extension",
+  "name": "ast-copilot-helper",
+  "displayName": "AST Copilot Helper",
+  "description": "VS Code extension for managing AST-based code analysis server with MCP protocol support",
   "version": "0.1.0",
-  "description": "VS Code extension for managing AST helper processes",
-  "main": "dist/extension.js",
+  "publisher": "ast-copilot-helper",
+  "main": "./dist/extension.js",
+  "icon": "resources/icon.png",
   "scripts": {
+    "vscode:prepublish": "npm run build",
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",
     "dev": "npm run build:watch",
     "clean": "rm -rf dist",
-    "test": "vitest",
+    "test": "vitest run",
     "test:coverage": "vitest --coverage",
     "lint": "echo 'Linting not configured yet'",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
   "engines": {
     "vscode": "^1.80.0",
     "node": ">=20.0.0"
   },
   "categories": [
+    "Programming Languages",
     "Other"
   ],
-  "activationEvents": [],
+  "keywords": [
+    "ast",
+    "mcp",
+    "code-analysis",
+    "parser",
+    "copilot"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
-    "commands": []
+    "commands": [
+      {
+        "command": "astCopilotHelper.startServer",
+        "title": "Start AST MCP Server",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.stopServer",
+        "title": "Stop AST MCP Server",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.restartServer",
+        "title": "Restart AST MCP Server",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.showStatus",
+        "title": "Show Server Status",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.openSettings",
+        "title": "Open Settings",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.parseWorkspace",
+        "title": "Parse Workspace",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.clearIndex",
+        "title": "Clear Index",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.showLogs",
+        "title": "Show Logs",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.validateConfiguration",
+        "title": "Validate Configuration",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.analyzeIssue",
+        "title": "Analyze GitHub Issue",
+        "category": "GitHub Workflow"
+      },
+      {
+        "command": "astCopilotHelper.generateCode",
+        "title": "Generate Code from Analysis",
+        "category": "GitHub Workflow"
+      },
+      {
+        "command": "astCopilotHelper.createPullRequest",
+        "title": "Create Pull Request",
+        "category": "GitHub Workflow"
+      },
+      {
+        "command": "astCopilotHelper.reviewCode",
+        "title": "Review Code Changes",
+        "category": "GitHub Workflow"
+      }
+    ],
+    "configuration": {
+      "title": "AST Copilot Helper",
+      "properties": {
+        "astCopilotHelper.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the AST MCP server executable",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.server.args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Command line arguments for the server",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.server.autoRestart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically restart server on crash",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.server.maxRestarts": {
+          "type": "number",
+          "default": 3,
+          "minimum": 0,
+          "description": "Maximum number of automatic restarts",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.server.restartDelay": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 1000,
+          "description": "Delay between restart attempts (ms)",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.server.healthCheckInterval": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 5000,
+          "description": "Health check interval (ms)",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.server.startupTimeout": {
+          "type": "number",
+          "default": 10000,
+          "minimum": 5000,
+          "description": "Server startup timeout (ms)",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.client.connectionTimeout": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 5000,
+          "description": "MCP client connection timeout (ms)",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.client.requestTimeout": {
+          "type": "number",
+          "default": 15000,
+          "minimum": 1000,
+          "description": "MCP request timeout (ms)",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.client.heartbeatInterval": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 5000,
+          "description": "MCP client heartbeat interval (ms)",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.client.maxReconnectAttempts": {
+          "type": "number",
+          "default": 5,
+          "minimum": 0,
+          "description": "Maximum MCP reconnection attempts",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.client.reconnectDelay": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 1000,
+          "description": "MCP reconnection delay (ms)",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.client.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically connect MCP client",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.client.enableHeartbeat": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable MCP client heartbeat",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.ui.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show status bar item",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.ui.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notifications",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.ui.autoHideStatusBar": {
+          "type": "boolean",
+          "default": false,
+          "description": "Auto-hide status bar when inactive",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.ui.notificationTimeout": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1000,
+          "description": "Notification timeout (ms)",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.ui.showProgressIndicators": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show progress indicators",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.ui.enableLogging": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable extension logging",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.ui.logLevel": {
+          "type": "string",
+          "enum": ["error", "warn", "info", "debug"],
+          "default": "info",
+          "description": "Logging level",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.github.enableGitHubIntegration": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable GitHub workflow integration",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.github.defaultBranch": {
+          "type": "string",
+          "default": "main",
+          "description": "Default branch for GitHub operations",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.github.pullRequestTemplate": {
+          "type": "string",
+          "default": "",
+          "description": "Pull request template",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.github.reviewers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Default reviewers for pull requests",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.github.labels": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Default labels for issues and pull requests",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.github.autoAssign": {
+          "type": "boolean",
+          "default": false,
+          "description": "Auto-assign pull requests to author",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start server on extension activation",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.autoUpdate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically update configuration on changes",
+          "scope": "workspace"
+        },
+        "astCopilotHelper.enableTelemetry": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable telemetry reporting",
+          "scope": "workspace"
+        }
+      }
+    }
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
     "@types/node": "^20.0.0"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.6",
+    "@vscode/vsce": "^2.21.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.0",
     "vitest": "^3.2.4"
   },
-  "keywords": [
-    "vscode-extension",
-    "ast",
-    "typescript"
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/EvanDodds/ast-copilot-helper.git",
