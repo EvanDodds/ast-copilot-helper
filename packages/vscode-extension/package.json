@@ -1,9 +1,13 @@
 {
-  "name": "@ast-copilot-helper/vscode-extension",
+  "name": "ast-copilot-helper",
+  "displayName": "AST Copilot Helper",
+  "description": "VS Code extension for managing AST-based code analysis server with MCP protocol support",
   "version": "0.1.0",
-  "description": "VS Code extension for managing AST helper processes",
-  "main": "dist/extension.js",
+  "publisher": "ast-copilot-helper",
+  "main": "./dist/extension.js",
+  "icon": "resources/icon.png",
   "scripts": {
+    "vscode:prepublish": "npm run build",
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",
     "dev": "npm run build:watch",
@@ -11,33 +15,184 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "echo 'Linting not configured yet'",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
   "engines": {
     "vscode": "^1.80.0",
     "node": ">=20.0.0"
   },
   "categories": [
+    "Programming Languages",
     "Other"
   ],
-  "activationEvents": [],
+  "keywords": [
+    "ast",
+    "mcp",
+    "code-analysis",
+    "parser",
+    "copilot"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
-    "commands": []
+    "commands": [
+      {
+        "command": "astCopilotHelper.startServer",
+        "title": "Start AST MCP Server",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.stopServer",
+        "title": "Stop AST MCP Server",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.restartServer",
+        "title": "Restart AST MCP Server",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.showStatus",
+        "title": "Show Server Status",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.openSettings",
+        "title": "Open Settings",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.parseWorkspace",
+        "title": "Parse Workspace",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.clearIndex",
+        "title": "Clear Index",
+        "category": "AST Helper"
+      },
+      {
+        "command": "astCopilotHelper.showLogs",
+        "title": "Show Logs",
+        "category": "AST Helper"
+      }
+    ],
+    "configuration": {
+      "title": "AST Copilot Helper",
+      "properties": {
+        "astCopilotHelper.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to ast-mcp-server binary. Leave empty to auto-detect.",
+          "scope": "machine-overridable"
+        },
+        "astCopilotHelper.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start MCP server when VS Code opens",
+          "scope": "window"
+        },
+        "astCopilotHelper.watchPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Additional directories to watch for changes (relative to workspace root)",
+          "scope": "window"
+        },
+        "astCopilotHelper.includePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/*.{ts,js,jsx,tsx,py,java,cpp,c,h,hpp,cs,rb,go,rs,php,kt,swift,dart,scala}"
+          ],
+          "description": "File patterns to include in parsing",
+          "scope": "window"
+        },
+        "astCopilotHelper.excludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/.git/**",
+            "**/coverage/**",
+            "**/.vscode/**",
+            "**/out/**"
+          ],
+          "description": "File patterns to exclude from parsing",
+          "scope": "window"
+        },
+        "astCopilotHelper.maxMemoryMB": {
+          "type": "number",
+          "default": 2048,
+          "minimum": 512,
+          "maximum": 8192,
+          "description": "Maximum memory usage for MCP server in MB",
+          "scope": "window"
+        },
+        "astCopilotHelper.logLevel": {
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "default": "info",
+          "description": "Log level for MCP server",
+          "scope": "window"
+        },
+        "astCopilotHelper.enableTelemetry": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable usage analytics and telemetry",
+          "scope": "application"
+        },
+        "astCopilotHelper.healthCheckInterval": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 5000,
+          "maximum": 300000,
+          "description": "Health check interval in milliseconds",
+          "scope": "window"
+        },
+        "astCopilotHelper.parseOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically parse files when saved",
+          "scope": "window"
+        },
+        "astCopilotHelper.enableStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show server status in status bar",
+          "scope": "window"
+        }
+      }
+    }
   },
   "dependencies": {
     "@types/node": "^20.0.0"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.6",
+    "@vscode/vsce": "^2.21.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.0",
     "vitest": "^3.2.4"
   },
-  "keywords": [
-    "vscode-extension",
-    "ast",
-    "typescript"
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/EvanDodds/ast-copilot-helper.git",
