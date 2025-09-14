@@ -14,9 +14,18 @@ import {
   MCPToolDefinition
 } from './protocol.js';
 
-import { ToolHandlerRegistry } from './tools.js';
+import { Issue17ToolRegistry } from './issue17-tools.js';
 import { ResourceHandlerFactory } from './resources.js';
 import type { DatabaseReader } from '../types.js';
+
+/**
+ * Common interface for tool registries
+ */
+interface IToolRegistry {
+  getHandler(toolName: string): BaseHandler | null;
+  getAllToolDefinitions(): MCPToolDefinition[];
+  getToolNames(): string[];
+}
 
 /**
  * MCP Initialize handler
@@ -101,7 +110,7 @@ export class PingHandler extends BaseHandler {
  * MCP Tools List handler
  */
 export class ToolsListHandler extends BaseHandler {
-  constructor(private toolRegistry: ToolHandlerRegistry) {
+  constructor(private toolRegistry: IToolRegistry) {
     super();
   }
 
@@ -134,7 +143,7 @@ export class ToolsListHandler extends BaseHandler {
  * MCP Tools Call handler
  */
 export class ToolsCallHandler extends BaseHandler {
-  constructor(private toolRegistry: ToolHandlerRegistry) {
+  constructor(private toolRegistry: IToolRegistry) {
     super();
   }
 
@@ -216,11 +225,11 @@ export class ToolsCallHandler extends BaseHandler {
  * Handler factory for creating and managing standard MCP handlers
  */
 export class StandardHandlerFactory {
-  private toolRegistry: ToolHandlerRegistry;
+  private toolRegistry: IToolRegistry;
   private resourceFactory: ResourceHandlerFactory;
 
   constructor(database: DatabaseReader) {
-    this.toolRegistry = new ToolHandlerRegistry(database);
+    this.toolRegistry = new Issue17ToolRegistry(database);
     this.resourceFactory = new ResourceHandlerFactory();
   }
 
@@ -251,7 +260,7 @@ export class StandardHandlerFactory {
     return this.resourceFactory.createResourcesReadHandler(database);
   }
 
-  getToolRegistry(): ToolHandlerRegistry {
+  getToolRegistry(): IToolRegistry {
     return this.toolRegistry;
   }
 

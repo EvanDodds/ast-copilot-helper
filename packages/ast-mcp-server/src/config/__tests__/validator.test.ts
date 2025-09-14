@@ -7,7 +7,7 @@ describe('Configuration Validator', () => {
   let validConfig: MCPServerConfig;
 
   beforeEach(() => {
-    validConfig = { ...DEFAULT_MCP_SERVER_CONFIG };
+    validConfig = JSON.parse(JSON.stringify(DEFAULT_MCP_SERVER_CONFIG));
   });
 
   describe('Basic Validation', () => {

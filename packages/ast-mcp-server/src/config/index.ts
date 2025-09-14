@@ -32,15 +32,38 @@ export async function createDevelopmentConfig(): Promise<import('./types.js').MC
   
   const configManager = new ConfigManager();
   
-  // Load base config and merge with development overrides
-  const config = await configManager.loadConfig({
-    validateConfig: true,
-    allowEnvironmentOverrides: true,
-    enableDefaults: true,
-  });
+  // Temporarily set NODE_ENV for this config creation
+  const originalNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'development';
   
-  // Apply development-specific configuration
-  return configManager.mergeConfigs(config, DEVELOPMENT_CONFIG);
+  try {
+    // Load config without environment overrides first
+    await configManager.loadConfig({
+      validateConfig: true,
+      allowEnvironmentOverrides: false,
+      enableDefaults: true,
+    });
+    
+    // Apply development-specific configuration first
+    const baseConfig = configManager.getConfig();
+    const withDevConfig = configManager.mergeConfigs(baseConfig, DEVELOPMENT_CONFIG);
+    
+    // Then apply environment overrides on top
+    const envOverrides = (configManager as any).loadEnvironmentOverrides();
+    const finalConfig = configManager.mergeConfigs(withDevConfig, envOverrides);
+    
+    // Set the final merged config
+    (configManager as any).config = finalConfig;
+    
+    return configManager.getConfig();
+  } finally {
+    // Restore original NODE_ENV
+    if (originalNodeEnv !== undefined) {
+      process.env.NODE_ENV = originalNodeEnv;
+    } else {
+      delete process.env.NODE_ENV;
+    }
+  }
 }
 
 /**

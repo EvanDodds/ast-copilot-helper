@@ -36,6 +36,18 @@ export const MCP_RESOURCES: MCPResourceDefinition[] = [
     name: "Search Results",
     description: "AST nodes matching semantic search query", 
     mimeType: "application/json"
+  },
+  {
+    uri: "ast://stats/server",
+    name: "Server Statistics",
+    description: "Server performance metrics and runtime statistics",
+    mimeType: "application/json"
+  },
+  {
+    uri: "ast://stats/index", 
+    name: "Index Statistics",
+    description: "Database index status and statistics",
+    mimeType: "application/json"
   }
 ];
 
@@ -43,7 +55,7 @@ export const MCP_RESOURCES: MCPResourceDefinition[] = [
  * Parsed resource URI components
  */
 interface ParsedResourceURI {
-  type: 'nodes' | 'files' | 'search';
+  type: 'nodes' | 'files' | 'search' | 'stats';
   identifier: string;
 }
 
@@ -114,6 +126,9 @@ export class ResourcesReadHandler extends BaseHandler {
         case 'search':
           content = await this.handleSearchResource(parsed.identifier);
           break;
+        case 'stats':
+          content = await this.handleStatsResource(parsed.identifier);
+          break;
         default:
           throw new Error(`Unsupported resource type: ${parsed.type}`);
       }
@@ -156,12 +171,12 @@ export class ResourcesReadHandler extends BaseHandler {
       throw new Error(`Malformed resource URI: ${uri}`);
     }
     
-    if (!['nodes', 'files', 'search'].includes(type)) {
+    if (!['nodes', 'files', 'search', 'stats'].includes(type)) {
       throw new Error(`Unknown resource type: ${type}`);
     }
     
     return {
-      type: type as 'nodes' | 'files' | 'search',
+      type: type as 'nodes' | 'files' | 'search' | 'stats',
       identifier: decodeURIComponent(identifier)
     };
   }
@@ -199,6 +214,42 @@ export class ResourcesReadHandler extends BaseHandler {
       matches: results,
       totalCount: results.length
     };
+  }
+
+  /**
+   * Handle ast://stats/{type} resource requests
+   */
+  private async handleStatsResource(statsType: string): Promise<any> {
+    switch (statsType) {
+      case 'server':
+        return {
+          type: 'server',
+          uptime: process.uptime(),
+          memoryUsage: process.memoryUsage(),
+          processInfo: {
+            pid: process.pid,
+            version: process.version,
+            arch: process.arch,
+            platform: process.platform
+          },
+          timestamp: new Date().toISOString()
+        };
+      
+      case 'index':
+        const indexStats = await this.db.getIndexStats();
+        const isReady = await this.db.isIndexReady();
+        return {
+          type: 'index',
+          ready: isReady,
+          nodeCount: indexStats.nodeCount,
+          fileCount: indexStats.fileCount,
+          lastUpdated: indexStats.lastUpdated.toISOString(),
+          timestamp: new Date().toISOString()
+        };
+      
+      default:
+        throw new Error(`Unknown stats type: ${statsType}`);
+    }
   }
 }
 

@@ -4,6 +4,7 @@
  */
 
 import { promises as fs } from 'fs';
+import * as fsSync from 'fs';
 import path from 'path';
 import { EventEmitter } from 'events';
 import { MCPServerConfig, ConfigLoadOptions, ConfigSource } from './types.js';
@@ -41,22 +42,22 @@ export class ConfigManager extends EventEmitter {
         this.addSource({ type: 'environment', priority: 1 });
       }
 
-      // Load from configuration file
+      // Apply environment variable overrides first (lower priority)
+      if (options.allowEnvironmentOverrides !== false) {
+        const envOverrides = this.loadEnvironmentOverrides();
+        config = this.mergeConfigs(config, envOverrides);
+        if (Object.keys(envOverrides).length > 0) {
+          this.addSource({ type: 'environment', priority: 2 });
+        }
+      }
+
+      // Load from configuration file (higher priority - overrides environment)
       if (options.configFile || this.findConfigFile()) {
         const configFile = options.configFile || this.findConfigFile();
         if (configFile) {
           const fileConfig = await this.loadConfigFile(configFile);
           config = this.mergeConfigs(config, fileConfig);
-          this.addSource({ type: 'file', path: configFile, priority: 2 });
-        }
-      }
-
-      // Apply environment variable overrides
-      if (options.allowEnvironmentOverrides !== false) {
-        const envOverrides = this.loadEnvironmentOverrides();
-        config = this.mergeConfigs(config, envOverrides);
-        if (Object.keys(envOverrides).length > 0) {
-          this.addSource({ type: 'environment', priority: 3 });
+          this.addSource({ type: 'file', path: configFile, priority: 3 });
         }
       }
 
@@ -120,8 +121,7 @@ export class ConfigManager extends EventEmitter {
     }
 
     try {
-      const fs = await import('fs');
-      const watcher = fs.watch(filePath, async (eventType) => {
+      const watcher = fsSync.watch(filePath, async (eventType) => {
         if (eventType === 'change') {
           try {
             const fileConfig = await this.loadConfigFile(filePath);
@@ -184,6 +184,17 @@ export class ConfigManager extends EventEmitter {
 
       return config;
     } catch (error) {
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('ENOENT') || error.message.includes('no such file or directory')) {
+          throw new Error(`Configuration file not found: ${filePath}`);
+        } else if (error instanceof SyntaxError || error.message.includes('Unexpected token') || error.message.includes('JSON')) {
+          throw new Error(`Invalid JSON in configuration file: ${filePath}`);
+        } else if (error.message.includes('Permission denied') || error.message.includes('EACCES')) {
+          throw new Error(`Permission denied reading configuration file: ${filePath}`);
+        }
+      }
+      
       throw new Error(`Failed to load config file ${filePath}: ${error}`);
     }
   }

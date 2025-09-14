@@ -172,13 +172,10 @@ describe('Configuration Index', () => {
         },
       };
 
-      // Update config and validate
-      configManager.updateConfig(invalidOverrides);
-      const config = configManager.getConfig();
-      const validation = validateConfig(config);
-      
-      expect(validation.isValid).toBe(false);
-      expect(validation.errors.length).toBeGreaterThan(0);
+      // Update should throw validation error
+      expect(() => {
+        configManager.updateConfig(invalidOverrides);
+      }).toThrow(/Configuration update failed validation/);
     });
 
     it('should handle partial overrides correctly', async () => {

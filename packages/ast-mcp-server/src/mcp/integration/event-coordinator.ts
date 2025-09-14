@@ -26,6 +26,7 @@ export class EventCoordinator extends EventEmitter {
   private eventMetrics = new Map<string, EventMetrics>();
   private eventHandlers = new Map<string, Set<(...args: any[]) => void>>();
   private processingEvents = new Set<string>();
+  private pendingWaits = new Set<{ reject: (reason?: any) => void; eventType: string }>();
 
   constructor(config: EventCoordinatorConfig = {}) {
     super();
@@ -126,12 +127,17 @@ export class EventCoordinator extends EventEmitter {
     const eventTimeout = timeout || this.config.eventTimeout!;
     
     return new Promise((resolve, reject) => {
+      const waitInfo = { reject, eventType };
+      this.pendingWaits.add(waitInfo);
+      
       const timer = setTimeout(() => {
+        this.pendingWaits.delete(waitInfo);
         this.off(eventType, handler);
         reject(new Error(`Event timeout: ${eventType} not received within ${eventTimeout}ms`));
       }, eventTimeout);
 
       const handler = (...args: any[]) => {
+        this.pendingWaits.delete(waitInfo);
         clearTimeout(timer);
         this.off(eventType, handler);
         resolve(args);
@@ -230,8 +236,15 @@ export class EventCoordinator extends EventEmitter {
   async shutdown(): Promise<void> {
     logger.info('Shutting down event coordinator', {
       eventTypes: this.eventHandlers.size,
-      processingEvents: this.processingEvents.size
+      processingEvents: this.processingEvents.size,
+      pendingWaits: this.pendingWaits.size
     });
+
+    // Cancel all pending waits
+    for (const waitInfo of this.pendingWaits) {
+      waitInfo.reject(new Error(`Event coordinator shutdown, cancelled waiting for: ${waitInfo.eventType}`));
+    }
+    this.pendingWaits.clear();
 
     // Wait for processing events to complete
     const shutdownTimeout = 5000; // 5 seconds

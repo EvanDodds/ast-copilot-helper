@@ -78,7 +78,7 @@ function validateTransportConfig(transport: TransportConfig | undefined, errors:
   
   // WebSocket/HTTP specific validation
   if (transport.type !== 'stdio') {
-    if (!transport.port) {
+    if (transport.port === undefined || transport.port === null) {
       errors.push(`Port is required for ${transport.type} transport`);
     } else if (transport.port < 1 || transport.port > 65535) {
       errors.push(`Port must be between 1 and 65535, got: ${transport.port}`);
@@ -264,23 +264,23 @@ function validateDatabaseConfig(database: any, errors: string[], warnings: strin
  * Environment-specific validation
  */
 function validateEnvironmentSpecific(config: MCPServerConfig, _errors: string[], warnings: string[]): void {
-  const nodeEnv = config.environment.nodeEnv || 'production';
+  const nodeEnv = config.environment?.nodeEnv || 'production';
   
   // Production environment checks
   if (nodeEnv === 'production') {
-    if (config.logging.level === 'debug' || config.logging.level === 'trace') {
+    if (config.logging?.level === 'debug' || config.logging?.level === 'trace') {
       warnings.push('Debug logging enabled in production environment');
     }
     
-    if (config.features.enableTestEndpoints) {
+    if (config.features?.enableTestEndpoints) {
       warnings.push('Test endpoints enabled in production environment');
     }
     
-    if (!config.security.enableRateLimit) {
+    if (!config.security?.enableRateLimit) {
       warnings.push('Rate limiting disabled in production environment');
     }
     
-    if (config.security.corsOrigins?.includes('*')) {
+            if (config.security?.corsOrigins?.includes('*')) {
       warnings.push('Open CORS policy in production environment');
     }
   }
