@@ -1,13 +1,21 @@
 # Development Guide
 
+## Prerequisites
+
+- **Node.js**: 20.0.0 or higher
+- **Yarn**: 4.9.4 or higher (modern Yarn v4)
+- **Operating Systems**: Windows, macOS, Linux (x64, arm64)
+
 ## Quick Start
 
 1. **Install dependencies**
+
    ```bash
    yarn install
    ```
 
 2. **Build all packages**
+
    ```bash
    yarn run build
    ```
@@ -16,6 +24,28 @@
    ```bash
    yarn run test:all
    ```
+
+## Package Manager
+
+This project uses **Yarn v4** (Berry) as the package manager for several advantages:
+
+- **Zero-Install**: Faster CI/CD with dependency caching
+- **Workspace Protocol**: Improved monorepo dependency management
+- **Plug'n'Play**: Better dependency resolution
+- **Modern CLI**: Enhanced developer experience
+
+Key Yarn v4 commands for this project:
+
+```bash
+# Install all dependencies
+yarn install
+
+# Run commands across all workspaces
+yarn workspaces foreach -ptv run <command>
+
+# Add dependency to specific workspace
+yarn workspace <workspace-name> add <package>
+```
 
 ## Development Workflow
 
@@ -100,16 +130,19 @@ yarn run clean:all         # Deep clean including node_modules
 ## Package Architecture
 
 ### AST Helper (`packages/ast-helper`)
+
 - **Purpose**: CLI tool for AST analysis and code querying
 - **Key Features**: Configuration management, logging, file locking
 - **Performance Target**: Query latency < 500ms
 
 ### MCP Server (`packages/ast-mcp-server`)
+
 - **Purpose**: Model Context Protocol server for IDE integration
 - **Key Features**: Database management, protocol implementation
 - **Performance Target**: Query latency < 200ms
 
 ### VS Code Extension (`packages/vscode-extension`)
+
 - **Purpose**: IDE integration for seamless development
 - **Key Features**: UI components, manager classes
 - **Integration**: Works with MCP server for real-time analysis
@@ -129,11 +162,13 @@ tests/
 ### Test Types
 
 1. **Unit Tests**
+
    - Fast, isolated component testing
    - High coverage of core logic
    - Mock external dependencies
 
 2. **Integration Tests**
+
    - Package interaction validation
    - End-to-end workflow testing
    - Real-world scenario simulation
@@ -154,12 +189,14 @@ tests/
 ### GitHub Actions Workflows
 
 1. **CI Pipeline** (`.github/workflows/ci.yml`)
+
    - Multi-platform testing (Windows, macOS, Linux)
    - Node.js version matrix (18, 20, 21)
    - Performance benchmark validation
    - Coverage reporting
 
 2. **Release Pipeline** (`.github/workflows/release.yml`)
+
    - Automated semantic versioning
    - Cross-platform builds
    - NPM package publishing
@@ -181,16 +218,19 @@ tests/
 ## Contributing
 
 1. **Create Feature Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 2. **Develop with Tests**
+
    - Write tests first (TDD approach)
    - Ensure all existing tests pass
    - Add performance tests for new features
 
 3. **Commit Standards**
+
    - Use conventional commit format
    - Include performance impact notes
    - Reference issue numbers
@@ -205,24 +245,27 @@ tests/
 ### Common Issues
 
 1. **Build Failures**
+
    ```bash
    yarn run clean:all && yarn install && yarn run build
    ```
 
 2. **Test Failures**
+
    ```bash
    # Check specific test output
    yarn run test:unit -- --reporter=verbose
-   
+
    # Run specific test file
    npx vitest path/to/test.test.ts
    ```
 
 3. **Performance Issues**
+
    ```bash
    # Run benchmarks to identify bottlenecks
    yarn run test:benchmarks
-   
+
    # Profile specific operations
    yarn run test:benchmarks -- --reporter=verbose
    ```

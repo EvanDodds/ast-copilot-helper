@@ -10,9 +10,9 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "yarn workspaces run build",
+    "build": "yarn workspaces foreach --all --parallel --topological --verbose run build",
     "build:all": "yarn run build",
-    "build:watch": "yarn workspaces run build:watch",
+    "build:watch": "yarn workspaces foreach --all --parallel --verbose run build:watch",
     "test": "vitest run",
     "test:all": "yarn run test && yarn run test:integration && yarn run test:benchmarks",
     "test:unit": "vitest run tests/unit",
@@ -25,17 +25,17 @@
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:e2e": "vitest run tests/integration",
-    "dev": "yarn workspaces run dev",
+    "dev": "yarn workspaces foreach --all --parallel --verbose run dev",
     "start:mcp": "yarn workspace ast-mcp-server run start",
     "start:cli": "yarn workspace ast-helper run start",
-    "clean": "yarn workspaces run clean && rm -rf coverage test-output test-tmp *.log",
+    "clean": "yarn workspaces foreach --all --parallel --verbose run clean && rm -rf coverage test-output test-tmp *.log",
     "clean:all": "yarn run clean && rm -rf node_modules packages/*/node_modules",
-    "lint": "yarn workspaces run lint",
-    "lint:fix": "yarn workspaces run lint:fix",
+    "lint": "yarn workspaces foreach --all --parallel --verbose run lint",
+    "lint:fix": "yarn workspaces foreach --all --parallel --verbose run lint:fix",
     "type-check": "tsc --build --verbose",
     "typecheck": "yarn run type-check",
-    "security:audit": "yarn audit --level moderate",
-    "security:fix": "yarn audit --fix",
+    "security:audit": "yarn npm audit --severity moderate",
+    "security:fix": "yarn npm audit --severity moderate --json",
     "deps:check": "yarn outdated",
     "deps:update": "yarn upgrade",
     "install:all": "yarn install",
@@ -79,5 +79,6 @@
   "cpu": [
     "x64",
     "arm64"
-  ]
+  ],
+  "packageManager": "yarn@4.9.4"
 }

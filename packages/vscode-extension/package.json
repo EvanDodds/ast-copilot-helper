@@ -1,5 +1,5 @@
 {
-  "name": "ast-copilot-helper",
+  "name": "ast-copilot-helper-extension",
   "displayName": "AST Copilot Helper",
   "description": "VS Code extension for managing AST-based code analysis server with MCP protocol support",
   "version": "0.1.0",
@@ -116,7 +116,9 @@
         },
         "astCopilotHelper.server.args": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Command line arguments for the server",
           "scope": "workspace"
@@ -241,7 +243,12 @@
         },
         "astCopilotHelper.ui.logLevel": {
           "type": "string",
-          "enum": ["error", "warn", "info", "debug"],
+          "enum": [
+            "error",
+            "warn",
+            "info",
+            "debug"
+          ],
           "default": "info",
           "description": "Logging level",
           "scope": "workspace"
@@ -266,14 +273,18 @@
         },
         "astCopilotHelper.github.reviewers": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Default reviewers for pull requests",
           "scope": "workspace"
         },
         "astCopilotHelper.github.labels": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Default labels for issues and pull requests",
           "scope": "workspace"

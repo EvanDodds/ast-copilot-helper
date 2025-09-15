@@ -1,13 +1,33 @@
 # AST Copilot Helper
 
-A monorepo for AST-based code analysis tools and Model Context Protocol (MCP) server implementation.
+A monorepo fo## Prerequisites
+
+- **Node.js**: 20.0.0 or higher
+- **Yarn**: 4.9.4 or higher (modern Yarn v4)
+- **Operating Systems**: Windows, macOS, Linux (x64, arm64)
+
+## Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/EvanDodds/ast-copilot-helper.git
+cd ast-copilot-helper
+yarn install
+```
+
+This will:
+
+1. Install all dependencies using Yarn v4 workspaces
+2. Set up inter-package linking
+3. Build all packages automaticallylysis tools and Model Context Protocol (MCP) server implementation.
 
 ## Overview
 
 This project provides a comprehensive toolkit for analyzing Abstract Syntax Trees (ASTs) of codebases and serving that data through a Model Context Protocol server. It consists of three main packages:
 
 - **`ast-helper`** - CLI data processor that builds `.astdb/` database from source code
-- **`ast-mcp-server`** - MCP protocol server that serves AST data from the database  
+- **`ast-mcp-server`** - MCP protocol server that serves AST data from the database
 - **`vscode-extension`** - VS Code extension for managing AST helper processes (optional)
 
 ## Architecture
@@ -52,6 +72,7 @@ yarn install
 ```
 
 This will:
+
 1. Install all dependencies using npm workspaces
 2. Set up inter-package linking
 3. Build all packages automatically
@@ -61,11 +82,13 @@ This will:
 ### Building
 
 Build all packages:
+
 ```bash
 yarn run build
 ```
 
 Build and watch for changes:
+
 ```bash
 yarn run build:watch
 ```
@@ -73,11 +96,13 @@ yarn run build:watch
 ### Testing
 
 Run tests across all packages:
+
 ```bash
 yarn test
 ```
 
 Run tests with coverage:
+
 ```bash
 yarn run test:coverage
 ```
@@ -85,6 +110,7 @@ yarn run test:coverage
 ### Type Checking
 
 Check TypeScript types across all packages:
+
 ```bash
 yarn run typecheck
 ```
@@ -118,6 +144,7 @@ yarn test
 ### AST Helper CLI
 
 Process source code and build AST database:
+
 ```bash
 node packages/ast-helper/bin/ast-helper
 # or after building:
@@ -127,6 +154,7 @@ node packages/ast-helper/bin/ast-helper
 ### MCP Server
 
 Start the Model Context Protocol server:
+
 ```bash
 node packages/ast-mcp-server/bin/ast-mcp-server
 # or after building:

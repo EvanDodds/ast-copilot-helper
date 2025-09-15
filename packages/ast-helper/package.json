@@ -5,9 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": {
-    "ast-helper": "./bin/ast-helper"
-  },
+  "bin": "./bin/ast-helper",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
