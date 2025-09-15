@@ -5,7 +5,7 @@
 
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { ModelConfig, ModelMetadata } from './types.js';
+import { ModelConfig, ModelMetadata, ModelUsageStats, ModelUsageAnalytics, SystemUsageAnalytics } from './types.js';
 import { createModuleLogger } from '../logging/index.js';
 
 const logger = createModuleLogger('ModelMetadata');
@@ -118,6 +118,9 @@ export class MetadataManager {
       }
       if (parsed.usageStats?.lastUsed) {
         parsed.usageStats.lastUsed = new Date(parsed.usageStats.lastUsed);
+      }
+      if (parsed.usageStats?.firstUsed) {
+        parsed.usageStats.firstUsed = new Date(parsed.usageStats.firstUsed);
       }
       
       return parsed;
@@ -339,10 +342,7 @@ export class MetadataManager {
               lastVerified: new Date(),
               downloadDuration: 0,
               verified: false,
-              usageStats: {
-                loadCount: 0,
-                lastUsed: new Date()
-              }
+              usageStats: this.createInitialUsageStats()
             };
             
             await this.storeMetadata(mockConfig, basicMetadata);
@@ -411,6 +411,264 @@ export class MetadataManager {
       logger.error(`Failed to get metadata stats: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
+  }
+
+  /**
+   * Record model usage for analytics
+   * Addresses acceptance criteria:
+   * - ✅ Usage tracking and analytics
+   */
+  async recordModelUsage(
+    modelConfig: ModelConfig,
+    usageData: {
+      processingTime: number;
+      memoryUsage: number;
+      itemsProcessed: number;
+      success: boolean;
+      errorMessage?: string;
+      cacheHitRate?: number;
+    }
+  ): Promise<void> {
+    try {
+      let metadata = await this.getMetadata(modelConfig);
+      if (!metadata) {
+        logger.warn(`No metadata found for ${modelConfig.name}, creating basic entry`);
+        metadata = {
+          config: modelConfig,
+          downloadedAt: new Date(),
+          lastVerified: new Date(),
+          downloadDuration: 0,
+          verified: false,
+          usageStats: this.createInitialUsageStats()
+        };
+      }
+
+      const now = new Date();
+      const stats = metadata.usageStats || this.createInitialUsageStats();
+
+      // Update basic usage counters
+      stats.loadCount += 1;
+      stats.lastUsed = now;
+      if (!stats.firstUsed) stats.firstUsed = now;
+
+      // Update processing statistics
+      stats.totalProcessingTime += usageData.processingTime;
+      stats.embeddingRequests += usageData.itemsProcessed;
+      stats.averageProcessingTime = stats.totalProcessingTime / stats.loadCount;
+
+      // Update memory tracking
+      if (usageData.memoryUsage > stats.peakMemoryUsage) {
+        stats.peakMemoryUsage = usageData.memoryUsage;
+      }
+
+      // Update error tracking and success rate
+      if (!usageData.success) {
+        stats.errorCount += 1;
+      }
+      const totalRequests = stats.loadCount;
+      const successfulRequests = totalRequests - stats.errorCount;
+      stats.successRate = (successfulRequests / totalRequests) * 100;
+
+      // Add performance history entry
+      const performanceEntry = {
+        timestamp: now,
+        processingTime: usageData.processingTime,
+        memoryUsage: usageData.memoryUsage,
+        itemsProcessed: usageData.itemsProcessed,
+        success: usageData.success,
+        errorMessage: usageData.errorMessage,
+        cacheHitRate: usageData.cacheHitRate
+      };
+      
+      stats.performanceHistory.push(performanceEntry);
+      
+      // Keep only last 100 performance entries to prevent unbounded growth
+      if (stats.performanceHistory.length > 100) {
+        stats.performanceHistory = stats.performanceHistory.slice(-100);
+      }
+
+      // Update usage patterns
+      const hour = now.getHours();
+      const dayOfWeek = now.getDay();
+      stats.hourlyUsage[hour] = (stats.hourlyUsage[hour] || 0) + 1;
+      stats.weeklyUsage[dayOfWeek] = (stats.weeklyUsage[dayOfWeek] || 0) + 1;
+
+      // Update cache hit rate if provided
+      if (usageData.cacheHitRate !== undefined) {
+        stats.cacheHitRate = stats.cacheHitRate 
+          ? (stats.cacheHitRate + usageData.cacheHitRate) / 2 
+          : usageData.cacheHitRate;
+      }
+
+      metadata.usageStats = stats;
+      await this.storeMetadata(modelConfig, metadata);
+
+      logger.debug(`Recorded usage for ${modelConfig.name}: ${usageData.itemsProcessed} items, ${usageData.processingTime}ms`);
+    } catch (error) {
+      logger.error(`Failed to record usage for ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Get usage analytics report for a model
+   */
+  async getUsageAnalytics(modelConfig: ModelConfig): Promise<ModelUsageAnalytics | null> {
+    try {
+      const metadata = await this.getMetadata(modelConfig);
+      if (!metadata?.usageStats) {
+        return null;
+      }
+
+      const stats = metadata.usageStats;
+      const now = Date.now();
+      
+      // Ensure dates are properly converted from strings if needed
+      const firstUsedDate = stats.firstUsed instanceof Date 
+        ? stats.firstUsed 
+        : new Date(stats.firstUsed);
+        
+      const daysSinceFirstUse = stats.firstUsed 
+        ? Math.floor((now - firstUsedDate.getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
+
+      return {
+        modelName: modelConfig.name,
+        modelVersion: modelConfig.version,
+        totalUsage: stats.loadCount,
+        totalProcessingTime: stats.totalProcessingTime,
+        averageProcessingTime: stats.averageProcessingTime,
+        peakMemoryUsage: stats.peakMemoryUsage,
+        successRate: stats.successRate,
+        errorCount: stats.errorCount,
+        daysSinceFirstUse,
+        recentPerformance: stats.performanceHistory.slice(-10), // Last 10 entries
+        usageByHour: stats.hourlyUsage,
+        usageByDay: stats.weeklyUsage,
+        cacheEfficiency: stats.cacheHitRate,
+        recommendedOptimizations: this.generateOptimizationRecommendations(stats)
+      };
+    } catch (error) {
+      logger.error(`Failed to get usage analytics for ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get system-wide usage analytics
+   */
+  async getSystemUsageAnalytics(): Promise<SystemUsageAnalytics> {
+    try {
+      const allMetadata = await this.queryMetadata();
+      const analytics: SystemUsageAnalytics = {
+        totalModels: allMetadata.length,
+        totalUsage: 0,
+        averageSuccessRate: 0,
+        totalProcessingTime: 0,
+        topPerformingModels: [],
+        recommendedActions: []
+      };
+
+      let totalSuccessRate = 0;
+      const modelPerformance: Array<{ name: string; version: string; score: number }> = [];
+
+      for (const metadata of allMetadata) {
+        if (metadata.usageStats) {
+          const stats = metadata.usageStats;
+          analytics.totalUsage += stats.loadCount;
+          analytics.totalProcessingTime += stats.totalProcessingTime;
+          totalSuccessRate += stats.successRate;
+
+          // Calculate performance score (higher is better)
+          const score = (stats.successRate * 0.4) + 
+                       (Math.max(0, 100 - stats.averageProcessingTime) * 0.3) + 
+                       (Math.max(0, 100 - stats.errorCount) * 0.3);
+          
+          modelPerformance.push({
+            name: metadata.config.name,
+            version: metadata.config.version,
+            score
+          });
+        }
+      }
+
+      analytics.averageSuccessRate = allMetadata.length > 0 ? totalSuccessRate / allMetadata.length : 0;
+      analytics.topPerformingModels = modelPerformance
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+
+      // Generate system-level recommendations
+      if (analytics.averageSuccessRate < 90) {
+        analytics.recommendedActions.push('Consider model optimization - success rate below 90%');
+      }
+      
+      const avgProcessingTime = analytics.totalUsage > 0 
+        ? analytics.totalProcessingTime / analytics.totalUsage 
+        : 0;
+      
+      if (avgProcessingTime > 1000) {
+        analytics.recommendedActions.push('Performance optimization needed - average processing time > 1s');
+      }
+
+      return analytics;
+    } catch (error) {
+      logger.error(`Failed to get system usage analytics: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Create initial usage statistics structure
+   */
+  private createInitialUsageStats(): ModelUsageStats {
+    return {
+      loadCount: 0,
+      lastUsed: new Date(),
+      firstUsed: new Date(),
+      totalProcessingTime: 0,
+      embeddingRequests: 0,
+      averageProcessingTime: 0,
+      peakMemoryUsage: 0,
+      errorCount: 0,
+      successRate: 100,
+      performanceHistory: [],
+      hourlyUsage: {},
+      weeklyUsage: {},
+      cacheHitRate: 0
+    };
+  }
+
+  /**
+   * Generate optimization recommendations based on usage patterns
+   */
+  private generateOptimizationRecommendations(stats: ModelUsageStats): string[] {
+    const recommendations: string[] = [];
+
+    if (stats.successRate < 95) {
+      recommendations.push(`Success rate is ${stats.successRate.toFixed(1)}% - investigate error patterns`);
+    }
+
+    if (stats.averageProcessingTime > 500) {
+      recommendations.push(`Average processing time ${stats.averageProcessingTime.toFixed(0)}ms is high - consider optimization`);
+    }
+
+    if (stats.errorCount > stats.loadCount * 0.1) {
+      recommendations.push(`Error rate ${(stats.errorCount / stats.loadCount * 100).toFixed(1)}% is high - review error handling`);
+    }
+
+    const recentPerformance = stats.performanceHistory.slice(-10);
+    if (recentPerformance.length >= 5) {
+      const recentAverage = recentPerformance.reduce((sum: number, entry) => sum + entry.processingTime, 0) / recentPerformance.length;
+      if (recentAverage > stats.averageProcessingTime * 1.5) {
+        recommendations.push('Recent performance degradation detected - consider model refresh');
+      }
+    }
+
+    if (stats.cacheHitRate !== undefined && stats.cacheHitRate < 50) {
+      recommendations.push(`Cache hit rate ${stats.cacheHitRate.toFixed(1)}% is low - review caching strategy`);
+    }
+
+    return recommendations;
   }
 
   // Private helper methods

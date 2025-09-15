@@ -263,7 +263,17 @@ export class ModelCache {
         verified: true,
         usageStats: {
           loadCount: 0,
-          lastUsed: new Date()
+          lastUsed: new Date(),
+          firstUsed: new Date(),
+          totalProcessingTime: 0,
+          embeddingRequests: 0,
+          averageProcessingTime: 0,
+          peakMemoryUsage: 0,
+          errorCount: 0,
+          successRate: 100,
+          performanceHistory: [],
+          hourlyUsage: {},
+          weeklyUsage: {}
         }
       };
 
@@ -311,7 +321,24 @@ export class ModelCache {
       const metadata = await this.loadModelMetadata(modelConfig);
       if (!metadata) return;
 
-      metadata.usageStats = metadata.usageStats || { loadCount: 0, lastUsed: new Date() };
+      // Initialize usage stats if not present or create full stats object
+      if (!metadata.usageStats) {
+        metadata.usageStats = {
+          loadCount: 0,
+          lastUsed: new Date(),
+          firstUsed: new Date(),
+          totalProcessingTime: 0,
+          embeddingRequests: 0,
+          averageProcessingTime: 0,
+          peakMemoryUsage: 0,
+          errorCount: 0,
+          successRate: 100,
+          performanceHistory: [],
+          hourlyUsage: {},
+          weeklyUsage: {}
+        };
+      }
+      
       metadata.usageStats.loadCount++;
       metadata.usageStats.lastUsed = new Date();
 
