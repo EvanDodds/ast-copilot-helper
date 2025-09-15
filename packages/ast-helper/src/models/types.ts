@@ -116,11 +116,113 @@ export interface ModelMetadata {
   /** Verification status */
   verified: boolean;
   
-  /** Usage statistics */
-  usageStats?: {
-    loadCount: number;
-    lastUsed: Date;
-  };
+  /** Enhanced usage statistics for analytics */
+  usageStats?: ModelUsageStats;
+}
+
+/**
+ * Comprehensive model usage statistics for analytics and optimization
+ */
+export interface ModelUsageStats {
+  /** Total number of times model was loaded */
+  loadCount: number;
+  
+  /** Last time the model was used */
+  lastUsed: Date;
+  
+  /** First time the model was used */
+  firstUsed: Date;
+  
+  /** Total processing time in milliseconds */
+  totalProcessingTime: number;
+  
+  /** Number of embedding requests processed */
+  embeddingRequests: number;
+  
+  /** Average processing time per request in milliseconds */
+  averageProcessingTime: number;
+  
+  /** Peak memory usage during processing in bytes */
+  peakMemoryUsage: number;
+  
+  /** Total number of errors encountered */
+  errorCount: number;
+  
+  /** Success rate as percentage (0-100) */
+  successRate: number;
+  
+  /** Performance metrics over time */
+  performanceHistory: ModelPerformanceEntry[];
+  
+  /** Usage patterns by hour of day (0-23) */
+  hourlyUsage: Record<number, number>;
+  
+  /** Usage patterns by day of week (0-6, Sunday=0) */
+  weeklyUsage: Record<number, number>;
+  
+  /** Cache hit rate percentage (0-100) */
+  cacheHitRate?: number;
+  
+  /** Last performance optimization date */
+  lastOptimized?: Date;
+}
+
+/**
+ * Performance entry for tracking model performance over time
+ */
+export interface ModelPerformanceEntry {
+  /** Timestamp of the performance measurement */
+  timestamp: Date;
+  
+  /** Processing time in milliseconds */
+  processingTime: number;
+  
+  /** Memory usage in bytes */
+  memoryUsage: number;
+  
+  /** Number of items processed in this session */
+  itemsProcessed: number;
+  
+  /** Whether this session completed successfully */
+  success: boolean;
+  
+  /** Error message if session failed */
+  errorMessage?: string;
+  
+  /** Cache hit rate for this session (0-100) */
+  cacheHitRate?: number;
+}
+
+/**
+ * Model usage analytics report
+ */
+export interface ModelUsageAnalytics {
+  modelName: string;
+  modelVersion: string;
+  totalUsage: number;
+  totalProcessingTime: number;
+  averageProcessingTime: number;
+  peakMemoryUsage: number;
+  successRate: number;
+  errorCount: number;
+  daysSinceFirstUse: number;
+  recentPerformance: ModelPerformanceEntry[];
+  usageByHour: Record<number, number>;
+  usageByDay: Record<number, number>;
+  cacheEfficiency?: number;
+  recommendedOptimizations: string[];
+}
+
+/**
+ * System-wide usage analytics
+ */
+export interface SystemUsageAnalytics {
+  totalModels: number;
+  totalUsage: number;
+  averageSuccessRate: number;
+  totalProcessingTime: number;
+  topPerformingModels: Array<{ name: string; version: string; score: number }>;
+  recommendedActions: string[];
 }
 
 /**

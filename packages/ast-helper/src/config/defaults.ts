@@ -1,9 +1,11 @@
 /**
  * Default configuration values for AST Copilot Helper
  * These serve as the final fallback when no other configuration is provided
+ * Now includes enhanced validation with detailed error reporting
  */
 
 import { Config, PartialConfig } from '../types.js';
+import { validateConfigStrict, type ValidationResult, defaultValidator } from './enhanced-validator.js';
 
 export const DEFAULT_CONFIG: Config = {
   parseGlob: [
@@ -60,9 +62,41 @@ export const DEFAULT_CONFIG: Config = {
 };
 
 /**
- * Validate configuration values and provide defaults for missing values
+ * Enhanced configuration validation with detailed error reporting
+ * Validates configuration using comprehensive schema and provides cleaned results
+ * 
+ * @param config - Partial configuration to validate and merge with defaults
+ * @returns Complete validated configuration with defaults applied
+ * @throws Error with detailed validation report if invalid
  */
 export function validateConfig(config: PartialConfig): Config {
+  // First validate the input configuration with detailed reporting
+  const validatedConfig = validateConfigStrict(config);
+  
+  // Merge with defaults to create complete configuration
+  const result: Config = { ...DEFAULT_CONFIG };
+  
+  // Apply validated configuration values, preserving type safety
+  Object.assign(result, validatedConfig);
+  
+  return result;
+}
+
+/**
+ * Validate configuration with detailed result reporting (non-throwing version)
+ * 
+ * @param config - Configuration object to validate
+ * @returns Detailed validation result with errors, warnings, and cleaned config
+ */
+export function validateConfigDetailed(config: PartialConfig): ValidationResult {
+  return defaultValidator.validate(config);
+}
+
+/**
+ * Legacy validation function with basic error messages
+ * Kept for backward compatibility - prefer validateConfig() for new code
+ */
+export function validateConfigLegacy(config: PartialConfig): Config {
   const result: Config = { ...DEFAULT_CONFIG };
   
   // Validate and set parseGlob

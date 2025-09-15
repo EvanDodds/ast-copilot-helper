@@ -252,7 +252,7 @@ describe('Supported Models Configuration', () => {
     for (const model of SUPPORTED_MODELS) {
       const result = validateModelConfig(model);
       
-      // We expect warnings (e.g., placeholder checksums), but no errors
+      // We expect warnings (e.g., for non-semantic versions), but no errors
       expect(result.errors).toHaveLength(0);
     }
   });

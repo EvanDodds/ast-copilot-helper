@@ -13,6 +13,40 @@ import { ModelConfig, DownloadProgress } from './types.js';
 export type ProgressCallback = (progress: DownloadProgress) => void;
 
 /**
+ * Proxy configuration for HTTP requests
+ */
+export interface ProxyConfig {
+  /** Proxy host */
+  host: string;
+  
+  /** Proxy port */
+  port: number;
+  
+  /** Proxy protocol (http or https) */
+  protocol?: 'http' | 'https';
+  
+  /** Authentication credentials */
+  auth?: {
+    username: string;
+    password: string;
+  };
+}
+
+/**
+ * Rate limiting configuration
+ */
+export interface RateLimitConfig {
+  /** Maximum bytes per second (0 = unlimited) */
+  maxBytesPerSecond?: number;
+  
+  /** Minimum delay between chunks in milliseconds */
+  minChunkDelay?: number;
+  
+  /** Chunk size for rate limiting in bytes */
+  chunkSize?: number;
+}
+
+/**
  * Download options
  */
 export interface DownloadOptions {
@@ -27,6 +61,12 @@ export interface DownloadOptions {
   
   /** Resume partial downloads */
   resumeDownload?: boolean;
+  
+  /** HTTP proxy configuration */
+  proxy?: ProxyConfig;
+  
+  /** Bandwidth throttling configuration */
+  rateLimit?: RateLimitConfig;
 }
 
 /**
@@ -130,15 +170,76 @@ export class ProgressTracker {
 }
 
 /**
+ * Rate limiting utility class
+ */
+export class RateLimiter {
+  private lastChunkTime: number = 0;
+  private readonly config: Required<RateLimitConfig>;
+
+  constructor(config: RateLimitConfig = {}) {
+    this.config = {
+      maxBytesPerSecond: config.maxBytesPerSecond || 0, // 0 = unlimited
+      minChunkDelay: config.minChunkDelay || 0,
+      chunkSize: config.chunkSize || 64 * 1024 // 64KB default
+    };
+  }
+
+  /**
+   * Apply rate limiting delay based on chunk size
+   */
+  async throttle(chunkSize: number): Promise<void> {
+    const now = Date.now();
+    
+    // Apply minimum chunk delay
+    if (this.config.minChunkDelay > 0) {
+      const timeSinceLastChunk = now - this.lastChunkTime;
+      if (timeSinceLastChunk < this.config.minChunkDelay) {
+        await this.delay(this.config.minChunkDelay - timeSinceLastChunk);
+      }
+    }
+    
+    // Apply bandwidth limiting
+    if (this.config.maxBytesPerSecond > 0) {
+      const expectedDurationMs = (chunkSize / this.config.maxBytesPerSecond) * 1000;
+      const actualDurationMs = Date.now() - this.lastChunkTime;
+      
+      if (actualDurationMs < expectedDurationMs) {
+        await this.delay(expectedDurationMs - actualDurationMs);
+      }
+    }
+    
+    this.lastChunkTime = Date.now();
+  }
+
+  /**
+   * Get optimal chunk size based on rate limiting configuration
+   */
+  getOptimalChunkSize(): number {
+    return this.config.chunkSize;
+  }
+
+  /**
+   * Utility to delay execution
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
+/**
  * Core model downloader with retry logic and progress tracking
  */
 export class ModelDownloader {
-  private readonly defaultOptions: Required<DownloadOptions> = {
+  private readonly defaultOptions: DownloadOptions = {
     maxRetries: 3,
     timeout: 300000, // 5 minutes
     onProgress: () => {}, // No-op default
-    resumeDownload: true
+    resumeDownload: true,
+    proxy: undefined,
+    rateLimit: {}
   };
+
+  private rateLimiter?: RateLimiter;
 
   constructor(
     private logger?: Console
@@ -154,9 +255,25 @@ export class ModelDownloader {
   ): Promise<string> {
     const opts = { ...this.defaultOptions, ...options };
     
+    // Initialize rate limiter if needed
+    if (opts.rateLimit && Object.keys(opts.rateLimit).length > 0) {
+      this.rateLimiter = new RateLimiter(opts.rateLimit);
+    } else {
+      this.rateLimiter = undefined;
+    }
+    
     this.log(`Starting download: ${modelConfig.name} from ${modelConfig.url}`);
     this.log(`Destination: ${destinationPath}`);
     this.log(`Expected size: ${this.formatBytes(modelConfig.size)}`);
+    
+    if (opts.proxy) {
+      this.log(`Using proxy: ${opts.proxy.protocol || 'http'}://${opts.proxy.host}:${opts.proxy.port}`);
+    }
+    
+    if (this.rateLimiter) {
+      const config = opts.rateLimit!;
+      this.log(`Rate limiting enabled: ${config.maxBytesPerSecond ? this.formatBytes(config.maxBytesPerSecond) + '/s' : 'no bandwidth limit'}`);
+    }
 
     // Ensure destination directory exists
     await fs.mkdir(path.dirname(destinationPath), { recursive: true });
@@ -183,7 +300,7 @@ export class ModelDownloader {
       throw new DownloadError(
         `Failed to download ${modelConfig.name} after ${opts.maxRetries} attempts`,
         modelConfig.url,
-        opts.maxRetries,
+        opts.maxRetries!,
         error instanceof Error ? error : new Error(String(error))
       );
     }
@@ -196,11 +313,12 @@ export class ModelDownloader {
     url: string,
     destinationPath: string,
     expectedSize: number,
-    options: Required<DownloadOptions>
+    options: DownloadOptions
   ): Promise<void> {
+    const maxRetries = options.maxRetries || this.defaultOptions.maxRetries!;
     let lastError: Error | null = null;
 
-    for (let attempt = 1; attempt <= options.maxRetries; attempt++) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         // Check if partial file exists and should be resumed
         let resumeFrom = 0;
@@ -222,7 +340,7 @@ export class ModelDownloader {
         lastError = error instanceof Error ? error : new Error(String(error));
         this.log(`Download attempt ${attempt} failed: ${lastError.message}`);
 
-        if (attempt < options.maxRetries) {
+        if (attempt < maxRetries) {
           // Exponential backoff: 2^attempt seconds
           const delayMs = Math.pow(2, attempt) * 1000;
           this.log(`Retrying in ${delayMs}ms...`);
@@ -242,14 +360,15 @@ export class ModelDownloader {
     destinationPath: string,
     expectedSize: number,
     resumeFrom: number,
-    options: Required<DownloadOptions>
+    options: DownloadOptions
   ): Promise<void> {
+    const timeout = options.timeout || this.defaultOptions.timeout!;
     const controller = new AbortController();
     
     // Setup timeout
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, options.timeout);
+    }, timeout);
 
     try {
       // Prepare request headers for resuming
@@ -258,11 +377,21 @@ export class ModelDownloader {
         headers['Range'] = `bytes=${resumeFrom}-`;
       }
 
-      // Make HTTP request
-      const response = await fetch(url, {
+      // Create fetch options with proxy support
+      const fetchOptions: RequestInit = {
         headers,
         signal: controller.signal
-      });
+      };
+
+      // Configure proxy if provided (Note: Proxy support requires additional libraries like node-fetch or undici)
+      if (options.proxy) {
+        this.log(`Proxy configuration detected but requires additional implementation for Node.js fetch`);
+        // TODO: Implement proxy support with appropriate HTTP agent
+        // This would require libraries like https-proxy-agent or similar
+      }
+
+      // Make HTTP request
+      const response = await fetch(url, fetchOptions);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -292,13 +421,18 @@ export class ModelDownloader {
           throw new Error('Response body is null');
         }
 
-        // Stream the response body
+        // Stream the response body with rate limiting
         const reader = response.body.getReader();
         
         while (true) {
           const { done, value } = await reader.read();
           
           if (done) break;
+
+          // Apply rate limiting if configured
+          if (this.rateLimiter) {
+            await this.rateLimiter.throttle(value.length);
+          }
 
           // Write chunk to file
           await new Promise<void>((resolve, reject) => {
@@ -312,7 +446,8 @@ export class ModelDownloader {
           
           // Update progress
           const progress = progressTracker.updateProgress(downloadedBytes);
-          options.onProgress(progress);
+          const onProgress = options.onProgress || this.defaultOptions.onProgress!;
+          onProgress(progress);
         }
 
       } finally {
@@ -322,7 +457,8 @@ export class ModelDownloader {
       // Final progress update
       const finalProgress = progressTracker.updateProgress(downloadedBytes);
       finalProgress.phase = 'complete';
-      options.onProgress(finalProgress);
+      const onProgress = options.onProgress || this.defaultOptions.onProgress!;
+      onProgress(finalProgress);
 
     } finally {
       clearTimeout(timeoutId);

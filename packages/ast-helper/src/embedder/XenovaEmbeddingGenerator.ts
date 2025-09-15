@@ -318,47 +318,67 @@ export class XenovaEmbeddingGenerator implements EmbeddingGenerator {
     totalBatches: number
   ): Promise<EmbeddingResult[]> {
     const startTime = Date.now();
+    const results: EmbeddingResult[] = [];
+    const errors: Array<{ nodeId: string; error: string }> = [];
     
     try {
-      // Prepare input texts for embedding
-      const inputTexts = annotations.map(annotation => 
-        this.prepareTextForEmbedding(annotation)
-      );
-      
-      // Generate embeddings for the batch
-      const embeddings = await this.generateEmbeddings(inputTexts);
+      // Process annotations individually with error isolation
+      for (let i = 0; i < annotations.length; i++) {
+        const annotation = annotations[i];
+        if (!annotation) {
+          continue; // Skip undefined annotations
+        }
+        
+        try {
+          // Prepare input text for this annotation
+          const inputText = this.prepareTextForEmbedding(annotation);
+          
+          // Generate embedding for this single annotation
+          const embeddings = await this.generateEmbeddings([inputText]);
+          
+          if (embeddings && embeddings.length > 0 && embeddings[0]) {
+            const embedding = embeddings[0];
+            const avgTimePerItem = (Date.now() - startTime) / (i + 1);
+            
+            results.push({
+              nodeId: annotation.nodeId,
+              embedding,
+              inputText,
+              processingTime: avgTimePerItem,
+              modelUsed: this.modelName,
+              confidence: this.calculateEmbeddingConfidence(embedding),
+            });
+          } else {
+            throw new Error('No embedding generated');
+          }
+          
+        } catch (error: any) {
+          // Isolate the error - don't let one annotation failure stop the entire batch
+          const errorMsg = error.message || 'Unknown error during embedding generation';
+          errors.push({ nodeId: annotation.nodeId, error: errorMsg });
+          console.warn(`⚠️  Failed to process annotation ${annotation.nodeId}: ${errorMsg}`);
+        }
+      }
       
       const processingTime = Date.now() - startTime;
       const avgTimePerItem = processingTime / annotations.length;
       
-      console.log(`📦 Batch ${batchNumber}/${totalBatches} completed in ${processingTime}ms (${avgTimePerItem.toFixed(2)}ms per item)`);
-      
-      // Create embedding results
-      const results: EmbeddingResult[] = annotations.map((annotation, index) => {
-        const embedding = embeddings[index];
-        const inputText = inputTexts[index];
-        
-        if (!embedding || !inputText) {
-          throw new EmbeddingGenerationError(`Missing embedding or input text for annotation ${annotation.nodeId}`);
-        }
-        
-        return {
-          nodeId: annotation.nodeId,
-          embedding,
-          inputText,
-          processingTime: avgTimePerItem,
-          modelUsed: this.modelName,
-          confidence: this.calculateEmbeddingConfidence(embedding),
-        };
-      });
+      // Log batch completion with error summary
+      if (errors.length > 0) {
+        console.log(`📦 Batch ${batchNumber}/${totalBatches} completed with ${errors.length} errors in ${processingTime}ms (${avgTimePerItem.toFixed(2)}ms per item)`);
+        console.log(`❌ Failed annotations: ${errors.map(e => e.nodeId).join(', ')}`);
+      } else {
+        console.log(`📦 Batch ${batchNumber}/${totalBatches} completed successfully in ${processingTime}ms (${avgTimePerItem.toFixed(2)}ms per item)`);
+      }
       
       return results;
       
     } catch (error: any) {
-      console.error(`❌ Batch ${batchNumber} failed:`, error.message);
+      // Only throw if there's a systemic error (not individual annotation failures)
+      console.error(`❌ Batch ${batchNumber} failed completely:`, error.message);
       throw new EmbeddingGenerationError(
-        `Batch processing failed for batch ${batchNumber}: ${error.message}`,
-        { batchNumber, batchSize: annotations.length }
+        `Batch processing failed completely for batch ${batchNumber}: ${error.message}`,
+        { batchNumber, batchSize: annotations.length, errors: errors }
       );
     }
   }
