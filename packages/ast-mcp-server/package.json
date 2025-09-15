@@ -3,9 +3,7 @@
   "version": "0.1.0",
   "description": "MCP protocol server that serves AST data from .astdb/ database",
   "main": "dist/index.js",
-  "bin": {
-    "ast-mcp-server": "./bin/ast-mcp-server"
-  },
+  "bin": "./bin/ast-mcp-server",
   "scripts": {
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",

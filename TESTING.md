@@ -6,17 +6,17 @@ This guide provides comprehensive instructions for testing in the AST Copilot He
 
 ```bash
 # Run all tests (recommended for CI/CD)
-npm run test:all
+yarn run test:all
 
 # Run specific test types
-npm run test:unit         # Fast unit tests
-npm run test:integration  # Cross-package integration tests
-npm run test:benchmarks   # Performance validation tests
+yarn run test:unit         # Fast unit tests
+yarn run test:integration  # Cross-package integration tests
+yarn run test:benchmarks   # Performance validation tests
 
 # Interactive testing
-npm run test:watch        # Watch mode for development
-npm run test:ui           # Visual test interface
-npm run test:coverage     # Generate coverage reports
+yarn run test:watch        # Watch mode for development
+yarn run test:ui           # Visual test interface
+yarn run test:coverage     # Generate coverage reports
 ```
 
 ## Test Organization
@@ -30,7 +30,7 @@ tests/
 │   └── memory.test.ts        # Memory usage validation
 ├── fixtures/              # Shared test utilities
 │   ├── generators.ts         # Mock data generators
-│   ├── synthetic-repo.ts     # Repository simulators  
+│   ├── synthetic-repo.ts     # Repository simulators
 │   └── database-mock.ts      # Database test helpers
 ├── integration/           # Cross-package tests
 │   ├── mcp-cli.test.ts      # MCP server + CLI interaction
@@ -44,6 +44,7 @@ tests/
 ### Test Types by Purpose
 
 #### 1. Unit Tests (`tests/unit/`)
+
 - **Purpose**: Test individual components in isolation
 - **Speed**: Very fast (< 1s total)
 - **Coverage Target**: > 90% for core modules
@@ -51,13 +52,14 @@ tests/
 
 ```bash
 # Run only unit tests
-npm run test:unit
+yarn run test:unit
 
 # Run unit tests for specific package
 npx vitest tests/unit/ast-helper/
 ```
 
 #### 2. Integration Tests (`tests/integration/`)
+
 - **Purpose**: Test component interactions and workflows
 - **Speed**: Medium (1-5s total)
 - **Coverage Target**: Critical user paths
@@ -65,16 +67,17 @@ npx vitest tests/unit/ast-helper/
 
 ```bash
 # Run integration tests
-npm run test:integration
+yarn run test:integration
 
 # Run specific integration test
 npx vitest tests/integration/mcp-cli.test.ts
 ```
 
 #### 3. Performance Benchmarks (`tests/benchmarks/`)
+
 - **Purpose**: Validate acceptance criteria and performance requirements
 - **Speed**: Slower (5-30s depending on test)
-- **Acceptance Criteria**: 
+- **Acceptance Criteria**:
   - Parse 15,000+ AST nodes in < 10 minutes
   - MCP query latency < 200ms average
   - CLI query latency < 500ms average
@@ -82,7 +85,7 @@ npx vitest tests/integration/mcp-cli.test.ts
 
 ```bash
 # Run performance benchmarks
-npm run test:benchmarks
+yarn run test:benchmarks
 
 # Run specific benchmark
 npx vitest tests/benchmarks/performance.test.ts --reporter=verbose
@@ -95,37 +98,41 @@ npx vitest tests/benchmarks/performance.test.ts --reporter=verbose
 Our performance tests validate critical acceptance criteria:
 
 1. **Large Repository Parsing**
+
    - Creates synthetic repository with 15,000+ AST nodes
    - Measures parsing time and memory usage
    - **Target**: Complete parsing < 10 minutes
 
-2. **MCP Query Latency**  
+2. **MCP Query Latency**
+
    - Simulates realistic database queries
    - Tests both simple and complex query patterns
    - **Target**: Average response < 200ms
 
 3. **CLI Query Performance**
+
    - Tests command-line query operations
    - Includes file system and processing overhead
    - **Target**: Average response < 500ms
 
 4. **Concurrent Load Testing**
+
    - Simulates multiple simultaneous operations
    - Tests resource utilization under load
    - **Target**: Maintain performance under 10 concurrent operations
 
 5. **Memory Usage Validation**
    - Monitors heap usage during operations
-   - Detects memory leaks in long-running processes  
+   - Detects memory leaks in long-running processes
    - **Target**: Stable memory usage patterns
 
 ### Running Specific Benchmarks
 
 ```bash
 # All performance tests
-npm run test:benchmarks
+yarn run test:benchmarks
 
-# Specific benchmark categories  
+# Specific benchmark categories
 npx vitest tests/benchmarks/performance.test.ts --reporter=verbose
 npx vitest tests/benchmarks/memory.test.ts --reporter=verbose
 
@@ -144,7 +151,7 @@ Performance test output includes:
   ├─ Rate: 7,006 nodes/second ✓
   └─ Memory: 45.2MB peak usage ✓
 
-✓ MCP server query latency 0.123s  
+✓ MCP server query latency 0.123s
   ├─ Average latency: 123ms (target: <200ms) ✓
   ├─ 95th percentile: 156ms ✓
   └─ Max latency: 189ms ✓
@@ -155,20 +162,23 @@ Performance test output includes:
 ### Test-Driven Development (TDD)
 
 1. **Write Test First**
+
    ```bash
    # Create test file
    touch tests/unit/new-feature.test.ts
-   
+
    # Write failing test
-   npm run test:watch  # Keep running to see immediate feedback
+   yarn run test:watch  # Keep running to see immediate feedback
    ```
 
 2. **Implement Feature**
+
    - Write minimal code to make test pass
    - Run tests continuously in watch mode
    - Refactor while maintaining green tests
 
 3. **Add Integration Tests**
+
    - Test feature integration with existing components
    - Verify end-to-end workflows work correctly
 
@@ -181,7 +191,7 @@ Performance test output includes:
 Our Husky hooks automatically run:
 
 1. **Type Checking**: Ensures TypeScript compilation
-2. **Unit Tests**: Fast validation of core functionality  
+2. **Unit Tests**: Fast validation of core functionality
 3. **Linting**: Code style and quality checks
 4. **Build Verification**: Ensures packages compile correctly
 
@@ -203,14 +213,15 @@ Our CI pipeline runs comprehensive testing:
 # Simplified workflow overview
 - name: Run Tests
   run: |
-    npm run test:all        # Complete test suite
-    npm run test:coverage   # Generate coverage
-    npm run test:benchmarks # Validate performance
+    yarn run test:all        # Complete test suite
+    yarn run test:coverage   # Generate coverage
+    yarn run test:benchmarks # Validate performance
 ```
 
 ### Multi-Platform Testing
 
 Tests run across:
+
 - **Operating Systems**: Windows, macOS, Linux
 - **Node.js Versions**: 18, 20, 21
 - **Architectures**: x64, ARM64
@@ -218,6 +229,7 @@ Tests run across:
 ### Performance Monitoring
 
 CI automatically:
+
 - Validates all acceptance criteria are met
 - Comments on PRs with benchmark results
 - Fails builds if performance regresses
@@ -227,25 +239,28 @@ CI automatically:
 ### Common Issues
 
 1. **Timeout Issues**
+
    ```bash
    # Increase timeout for specific test
    npx vitest path/to/test.ts --timeout=30000
-   
+
    # For performance tests
    npx vitest tests/benchmarks/ --timeout=60000
    ```
 
 2. **Memory Issues**
+
    ```bash
    # Run with memory profiling
    npx vitest --reporter=verbose --run tests/benchmarks/memory.test.ts
    ```
 
 3. **Flaky Tests**
+
    ```bash
    # Run test multiple times
    npx vitest path/to/test.ts --repeat=10
-   
+
    # Run with detailed output
    npx vitest path/to/test.ts --reporter=verbose
    ```
@@ -257,14 +272,14 @@ CI automatically:
 npx vitest --inspect-brk path/to/test.ts
 
 # Use test UI for visual debugging
-npm run test:ui
+yarn run test:ui
 ```
 
 ### Coverage Analysis
 
 ```bash
 # Generate detailed coverage report
-npm run test:coverage
+yarn run test:coverage
 
 # View coverage in browser
 open coverage/index.html
@@ -278,10 +293,10 @@ npx vitest run --coverage src/specific-file.ts
 ### Unit Test Template
 
 ```typescript
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { YourModule } from '../src/your-module';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { YourModule } from "../src/your-module";
 
-describe('YourModule', () => {
+describe("YourModule", () => {
   beforeEach(() => {
     // Setup before each test
   });
@@ -291,19 +306,19 @@ describe('YourModule', () => {
     vi.clearAllMocks();
   });
 
-  describe('methodName', () => {
-    it('should handle normal case', () => {
+  describe("methodName", () => {
+    it("should handle normal case", () => {
       // Arrange
-      const input = 'test';
-      
-      // Act  
+      const input = "test";
+
+      // Act
       const result = YourModule.methodName(input);
-      
+
       // Assert
-      expect(result).toBe('expected');
+      expect(result).toBe("expected");
     });
 
-    it('should handle edge case', () => {
+    it("should handle edge case", () => {
       // Test edge cases
     });
   });
@@ -313,23 +328,23 @@ describe('YourModule', () => {
 ### Integration Test Template
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { McpServer } from '../../packages/ast-mcp-server/src';
-import { CliHelper } from '../../packages/ast-helper/src';
+import { describe, it, expect } from "vitest";
+import { McpServer } from "../../packages/ast-mcp-server/src";
+import { CliHelper } from "../../packages/ast-helper/src";
 
-describe('MCP-CLI Integration', () => {
-  it('should query MCP server from CLI', async () => {
+describe("MCP-CLI Integration", () => {
+  it("should query MCP server from CLI", async () => {
     // Arrange: Start MCP server
     const server = new McpServer();
     await server.start();
 
     // Act: Execute CLI query
     const cli = new CliHelper();
-    const result = await cli.query('test query');
+    const result = await cli.query("test query");
 
     // Assert: Verify integration
     expect(result).toBeDefined();
-    
+
     // Cleanup
     await server.stop();
   });
@@ -339,22 +354,22 @@ describe('MCP-CLI Integration', () => {
 ### Performance Test Template
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { PerformanceTimer } from '../fixtures/performance-timer';
+import { describe, it, expect } from "vitest";
+import { PerformanceTimer } from "../fixtures/performance-timer";
 
-describe('Performance: Feature Name', () => {
-  it('should meet performance criteria', async () => {
+describe("Performance: Feature Name", () => {
+  it("should meet performance criteria", async () => {
     const timer = new PerformanceTimer();
-    
+
     // Arrange: Setup test data
     const largeDataSet = generateLargeDataSet(15000);
-    
+
     // Act: Measure operation
     timer.start();
     const result = await processLargeDataSet(largeDataSet);
     const duration = timer.end();
-    
-    // Assert: Verify performance  
+
+    // Assert: Verify performance
     expect(duration).toBeLessThan(600000); // < 10 minutes
     expect(result.nodeCount).toBeGreaterThanOrEqual(15000);
   });
@@ -366,7 +381,7 @@ describe('Performance: Feature Name', () => {
 ### Coverage Thresholds
 
 - **Global Coverage**: > 90%
-- **Per-File Coverage**: > 85%  
+- **Per-File Coverage**: > 85%
 - **Branch Coverage**: > 85%
 - **Function Coverage**: > 90%
 
@@ -374,13 +389,13 @@ describe('Performance: Feature Name', () => {
 
 ```bash
 # Generate coverage report
-npm run test:coverage
+yarn run test:coverage
 
 # View in browser
 open coverage/index.html
 
 # Coverage summary
-npm run test:coverage -- --reporter=text-summary
+yarn run test:coverage -- --reporter=text-summary
 ```
 
 ### CI Coverage Integration
@@ -394,20 +409,23 @@ npm run test:coverage -- --reporter=text-summary
 ### Performance Test Failures
 
 1. **Check System Resources**
+
    - Ensure adequate RAM (8GB+ recommended)
    - Close resource-intensive applications
    - Run on a consistent environment
 
 2. **Review Test Expectations**
+
    - Performance criteria are based on reasonable hardware
    - CI environment may be slower than development machine
    - Consider adjusting timeouts for specific environments
 
 3. **Analyze Bottlenecks**
+
    ```bash
    # Run with detailed timing
-   npm run test:benchmarks -- --reporter=verbose
-   
+   yarn run test:benchmarks -- --reporter=verbose
+
    # Check memory usage patterns
    npx vitest tests/benchmarks/memory.test.ts --reporter=verbose
    ```
@@ -415,17 +433,19 @@ npm run test:coverage -- --reporter=text-summary
 ### Test Environment Issues
 
 1. **Clean Test Environment**
+
    ```bash
-   npm run clean:all
-   npm install
-   npm run build
-   npm run test:all
+   yarn run clean:all
+   yarn install
+   yarn run build
+   yarn run test:all
    ```
 
 2. **Reset Test Database**
+
    ```bash
    rm -rf test-output/
-   npm run test:integration
+   yarn run test:integration
    ```
 
 3. **Check Node.js Version**

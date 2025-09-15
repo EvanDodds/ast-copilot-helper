@@ -50,7 +50,7 @@ A comprehensive VS Code extension for managing AST-based code analysis with MCP 
 
 2. Install dependencies:
    ```bash
-   npm install
+   yarn install
    ```
 
 3. Build the extension:
@@ -254,7 +254,7 @@ git clone https://github.com/EvanDodds/ast-copilot-helper.git
 cd ast-copilot-helper/packages/vscode-extension
 
 # Install dependencies
-npm install
+yarn install
 
 # Build extension
 npm run build

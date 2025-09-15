@@ -1,21 +1,51 @@
 # Development Guide
 
+## Prerequisites
+
+- **Node.js**: 20.0.0 or higher
+- **Yarn**: 4.9.4 or higher (modern Yarn v4)
+- **Operating Systems**: Windows, macOS, Linux (x64, arm64)
+
 ## Quick Start
 
 1. **Install dependencies**
+
    ```bash
-   npm install
+   yarn install
    ```
 
 2. **Build all packages**
+
    ```bash
-   npm run build
+   yarn run build
    ```
 
 3. **Run tests**
    ```bash
-   npm run test:all
+   yarn run test:all
    ```
+
+## Package Manager
+
+This project uses **Yarn v4** (Berry) as the package manager for several advantages:
+
+- **Zero-Install**: Faster CI/CD with dependency caching
+- **Workspace Protocol**: Improved monorepo dependency management
+- **Plug'n'Play**: Better dependency resolution
+- **Modern CLI**: Enhanced developer experience
+
+Key Yarn v4 commands for this project:
+
+```bash
+# Install all dependencies
+yarn install
+
+# Run commands across all workspaces
+yarn workspaces foreach -ptv run <command>
+
+# Add dependency to specific workspace
+yarn workspace <workspace-name> add <package>
+```
 
 ## Development Workflow
 
@@ -25,22 +55,22 @@ Our testing strategy follows a comprehensive approach with multiple layers:
 
 ```bash
 # Unit tests (fast, isolated)
-npm run test:unit
+yarn run test:unit
 
 # Integration tests (component interaction)
-npm run test:integration
+yarn run test:integration
 
 # Performance benchmarks (acceptance criteria validation)
-npm run test:benchmarks
+yarn run test:benchmarks
 
 # Full test suite with coverage
-npm run test:coverage
+yarn run test:coverage
 
 # Interactive test UI
-npm run test:ui
+yarn run test:ui
 
 # Watch mode for development
-npm run test:watch
+yarn run test:watch
 ```
 
 ### Performance Requirements
@@ -52,7 +82,7 @@ Our codebase must meet strict performance criteria:
 - **CLI Tool**: Query latency < 500ms average
 - **Memory**: Efficient memory usage for large repositories
 
-Run benchmarks to validate: `npm run test:benchmarks`
+Run benchmarks to validate: `yarn run test:benchmarks`
 
 ### Code Quality
 
@@ -76,40 +106,43 @@ Before code reaches remote:
 
 ```bash
 # Development
-npm run dev                 # Start all packages in dev mode
-npm run build:watch        # Build packages in watch mode
+yarn run dev                 # Start all packages in dev mode
+yarn run build:watch        # Build packages in watch mode
 
 # Quality
-npm run lint               # Lint all packages
-npm run lint:fix          # Auto-fix linting issues
-npm run type-check        # TypeScript type checking
+yarn run lint               # Lint all packages
+yarn run lint:fix          # Auto-fix linting issues
+yarn run type-check        # TypeScript type checking
 
 # Security
-npm run security:audit    # Check for vulnerabilities
-npm run security:fix      # Auto-fix security issues
+yarn run security:audit    # Check for vulnerabilities
+yarn run security:fix      # Auto-fix security issues
 
 # Dependencies
-npm run deps:check        # Check for outdated packages
-npm run deps:update       # Update dependencies
+yarn run deps:check        # Check for outdated packages
+yarn run deps:update       # Update dependencies
 
 # Cleanup
-npm run clean             # Clean build artifacts
-npm run clean:all         # Deep clean including node_modules
+yarn run clean             # Clean build artifacts
+yarn run clean:all         # Deep clean including node_modules
 ```
 
 ## Package Architecture
 
 ### AST Helper (`packages/ast-helper`)
+
 - **Purpose**: CLI tool for AST analysis and code querying
 - **Key Features**: Configuration management, logging, file locking
 - **Performance Target**: Query latency < 500ms
 
 ### MCP Server (`packages/ast-mcp-server`)
+
 - **Purpose**: Model Context Protocol server for IDE integration
 - **Key Features**: Database management, protocol implementation
 - **Performance Target**: Query latency < 200ms
 
 ### VS Code Extension (`packages/vscode-extension`)
+
 - **Purpose**: IDE integration for seamless development
 - **Key Features**: UI components, manager classes
 - **Integration**: Works with MCP server for real-time analysis
@@ -129,11 +162,13 @@ tests/
 ### Test Types
 
 1. **Unit Tests**
+
    - Fast, isolated component testing
    - High coverage of core logic
    - Mock external dependencies
 
 2. **Integration Tests**
+
    - Package interaction validation
    - End-to-end workflow testing
    - Real-world scenario simulation
@@ -154,12 +189,14 @@ tests/
 ### GitHub Actions Workflows
 
 1. **CI Pipeline** (`.github/workflows/ci.yml`)
+
    - Multi-platform testing (Windows, macOS, Linux)
    - Node.js version matrix (18, 20, 21)
    - Performance benchmark validation
    - Coverage reporting
 
 2. **Release Pipeline** (`.github/workflows/release.yml`)
+
    - Automated semantic versioning
    - Cross-platform builds
    - NPM package publishing
@@ -181,16 +218,19 @@ tests/
 ## Contributing
 
 1. **Create Feature Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 2. **Develop with Tests**
+
    - Write tests first (TDD approach)
    - Ensure all existing tests pass
    - Add performance tests for new features
 
 3. **Commit Standards**
+
    - Use conventional commit format
    - Include performance impact notes
    - Reference issue numbers
@@ -205,32 +245,35 @@ tests/
 ### Common Issues
 
 1. **Build Failures**
+
    ```bash
-   npm run clean:all && npm install && npm run build
+   yarn run clean:all && yarn install && yarn run build
    ```
 
 2. **Test Failures**
+
    ```bash
    # Check specific test output
-   npm run test:unit -- --reporter=verbose
-   
+   yarn run test:unit -- --reporter=verbose
+
    # Run specific test file
    npx vitest path/to/test.test.ts
    ```
 
 3. **Performance Issues**
+
    ```bash
    # Run benchmarks to identify bottlenecks
-   npm run test:benchmarks
-   
+   yarn run test:benchmarks
+
    # Profile specific operations
-   npm run test:benchmarks -- --reporter=verbose
+   yarn run test:benchmarks -- --reporter=verbose
    ```
 
 4. **Type Checking Issues**
    ```bash
    # Clean type cache and rebuild
-   npm run clean && npm run type-check
+   yarn run clean && yarn run type-check
    ```
 
 ### Getting Help
@@ -238,4 +281,4 @@ tests/
 - Check existing issues in the repository
 - Review test output for specific error details
 - Run benchmarks to validate performance assumptions
-- Use `npm run test:ui` for interactive debugging
+- Use `yarn run test:ui` for interactive debugging

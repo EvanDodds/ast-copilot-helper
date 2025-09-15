@@ -5,11 +5,11 @@ echo "🚀 Running pre-push hooks..."
 
 # Run unit tests and integrations (skip benchmarks with onnx issues temporarily)
 echo "🧪 Running core test suite..."
-npm run test:unit || exit 1
-npm run test:integration || exit 1
+yarn run test:unit || exit 1
+yarn run test:integration || exit 1
 
 # Security audit
 echo "🔒 Running security audit..."
-npm run security:audit || exit 1
+yarn run security:audit || exit 1
 
 echo "✅ Pre-push hooks completed successfully!"

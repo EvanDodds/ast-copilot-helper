@@ -5,18 +5,18 @@ echo "🔍 Running pre-commit hooks..."
 
 # Type checking
 echo "📝 Type checking..."
-npm run type-check || exit 1
+yarn run type-check || exit 1
 
 # Linting
 echo "🧹 Linting code..."
-npm run lint || exit 1
+yarn run lint || exit 1
 
 # Unit tests (fast feedback)
 echo "🧪 Running unit tests..."
-npm run test:unit || exit 1
+yarn run test:unit || exit 1
 
 # Build verification
 echo "🔨 Building packages..."
-npm run build || exit 1
+yarn run build || exit 1
 
 echo "✅ Pre-commit hooks completed successfully!"
