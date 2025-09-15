@@ -48,7 +48,7 @@ Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/EvanDodds/ast-copilot-helper.git
 cd ast-copilot-helper
-npm install
+yarn install
 ```
 
 This will:
@@ -62,31 +62,31 @@ This will:
 
 Build all packages:
 ```bash
-npm run build
+yarn run build
 ```
 
 Build and watch for changes:
 ```bash
-npm run build:watch
+yarn run build:watch
 ```
 
 ### Testing
 
 Run tests across all packages:
 ```bash
-npm test
+yarn test
 ```
 
 Run tests with coverage:
 ```bash
-npm run test:coverage
+yarn run test:coverage
 ```
 
 ### Type Checking
 
 Check TypeScript types across all packages:
 ```bash
-npm run typecheck
+yarn run typecheck
 ```
 
 ### Package-Specific Commands
@@ -96,21 +96,21 @@ You can run commands in specific packages:
 ```bash
 # Run commands in ast-helper package
 cd packages/ast-helper
-npm run build
-npm run dev
-npm test
+yarn run build
+yarn run dev
+yarn test
 
 # Run commands in ast-mcp-server package
 cd packages/ast-mcp-server
-npm run build
-npm run dev
-npm test
+yarn run build
+yarn run dev
+yarn test
 
 # Run commands in vscode-extension package
 cd packages/vscode-extension
-npm run build
-npm run dev
-npm test
+yarn run build
+yarn run dev
+yarn test
 ```
 
 ## Usage
@@ -150,7 +150,7 @@ This project is currently in the foundational setup phase. The monorepo structur
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
 3. Make your changes and ensure tests pass: `npm test`
-4. Build and verify: `npm run build`
+4. Build and verify: `yarn run build`
 5. Commit your changes: `git commit -am 'Add some feature'`
 6. Push to the branch: `git push origin feature/your-feature`
 7. Submit a pull request

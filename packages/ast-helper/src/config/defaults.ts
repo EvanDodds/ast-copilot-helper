@@ -73,11 +73,40 @@ export function validateConfig(config: PartialConfig): Config {
   // First validate the input configuration with detailed reporting
   const validatedConfig = validateConfigStrict(config);
   
-  // Merge with defaults to create complete configuration
+  // Deep merge with defaults to create complete configuration
   const result: Config = { ...DEFAULT_CONFIG };
   
-  // Apply validated configuration values, preserving type safety
-  Object.assign(result, validatedConfig);
+  // Apply validated configuration values with proper merging for nested objects
+  for (const [key, value] of Object.entries(validatedConfig)) {
+    if (key === 'fileWatching' && value && typeof value === 'object' && !Array.isArray(value)) {
+      // Deep merge fileWatching configuration
+      result.fileWatching = {
+        ...DEFAULT_CONFIG.fileWatching!,
+        ...(value as any)
+      };
+    } else if (key === 'indexParams' && value && typeof value === 'object' && !Array.isArray(value)) {
+      // Deep merge indexParams configuration
+      result.indexParams = {
+        ...DEFAULT_CONFIG.indexParams,
+        ...(value as any)
+      };
+    } else if (key === 'model' && value && typeof value === 'object' && !Array.isArray(value)) {
+      // Deep merge model configuration
+      result.model = {
+        ...DEFAULT_CONFIG.model,
+        ...(value as any)
+      };
+    } else if (key === 'embeddings' && value && typeof value === 'object' && !Array.isArray(value)) {
+      // Deep merge embeddings configuration
+      result.embeddings = {
+        ...DEFAULT_CONFIG.embeddings,
+        ...(value as any)
+      };
+    } else {
+      // Direct assignment for primitive values and arrays
+      (result as any)[key] = value;
+    }
+  }
   
   return result;
 }

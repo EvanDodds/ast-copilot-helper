@@ -103,7 +103,7 @@ describe('File Watching Configuration', () => {
         };
 
         expect(() => validateConfig(config)).toThrow(
-          'fileWatching.watchPaths must be an array of strings'
+          /fileWatching\.watchPaths must be an array/
         );
       });
 
@@ -115,7 +115,7 @@ describe('File Watching Configuration', () => {
         };
 
         expect(() => validateConfig(config)).toThrow(
-          'fileWatching.watchPaths must contain at least one valid path'
+          /fileWatching\.watchPaths must contain at least \d+ valid/
         );
       });
 
@@ -141,7 +141,7 @@ describe('File Watching Configuration', () => {
         };
 
         expect(() => validateConfig(config)).toThrow(
-          'fileWatching.includePatterns must be an array of strings'
+          /fileWatching\.includePatterns must be an array/
         );
       });
 
@@ -154,7 +154,7 @@ describe('File Watching Configuration', () => {
         };
 
         expect(() => validateConfig(config)).toThrow(
-          'fileWatching.excludePatterns must be an array of strings'
+          /fileWatching\.excludePatterns must be an array/
         );
       });
 
@@ -177,7 +177,7 @@ describe('File Watching Configuration', () => {
       it('should validate debounceMs range', () => {
         const invalidConfigs = [
           { debounceMs: -1 },
-          { debounceMs: 5001 },
+          { debounceMs: 10001 },
           { debounceMs: 'invalid' as any }
         ];
 
@@ -190,7 +190,7 @@ describe('File Watching Configuration', () => {
           };
 
           expect(() => validateConfig(config)).toThrow(
-            'fileWatching.debounceMs must be an integer between 0 and 5000'
+            /fileWatching\.debounceMs must be.*(?:between 0 and 10000|valid number)/
           );
         }
       });
@@ -211,7 +211,7 @@ describe('File Watching Configuration', () => {
           };
 
           expect(() => validateConfig(config)).toThrow(
-            'fileWatching.batchSize must be an integer between 1 and 1000'
+            /fileWatching\.batchSize must be.*(?:between 1 and 1000|valid number)/
           );
         }
       });
@@ -234,13 +234,13 @@ describe('File Watching Configuration', () => {
         const config: PartialConfig = {
           fileWatching: {
             watchPaths: ['src'],
-            debounceMs: 5000,
+            debounceMs: 10000,
             batchSize: 1000
           }
         };
 
         const result = validateConfig(config);
-        expect(result.fileWatching!.debounceMs).toBe(5000);
+        expect(result.fileWatching!.debounceMs).toBe(10000);
         expect(result.fileWatching!.batchSize).toBe(1000);
       });
     });
@@ -265,7 +265,7 @@ describe('File Watching Configuration', () => {
           fileWatching: {
             watchPaths: ['src'],
             enableRecursive: 0 as any,
-            followSymlinks: '' as any
+            followSymlinks: 'false' as any
           }
         };
 

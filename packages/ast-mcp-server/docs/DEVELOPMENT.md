@@ -30,25 +30,25 @@ git clone https://github.com/your-org/ast-copilot-helper.git
 cd ast-copilot-helper
 
 # Install dependencies
-npm install
+yarn install
 
 # Build all packages
-npm run build
+yarn run build
 
 # Navigate to MCP server package
 cd packages/ast-mcp-server
 
 # Install package-specific dependencies
-npm install
+yarn install
 
 # Build the server
-npm run build
+yarn run build
 
 # Run tests
 npm test
 
 # Start development server
-npm run dev
+yarn run dev
 ```
 
 ### Development Dependencies
@@ -406,11 +406,11 @@ Fixes #456
 
 3. **Code Quality Checks**
    ```bash
-   npm run lint          # ESLint checks
-   npm run format        # Prettier formatting
-   npm run type-check    # TypeScript type checking
+   yarn run lint          # ESLint checks
+   yarn run format        # Prettier formatting
+   yarn run type-check    # TypeScript type checking
    npm test              # Run all tests
-   npm run coverage      # Generate coverage report
+   yarn run coverage      # Generate coverage report
    ```
 
 4. **Commit Changes**
@@ -689,19 +689,19 @@ export default defineConfig({
 npm test
 
 # Run tests in watch mode
-npm run test:watch
+yarn run test:watch
 
 # Run specific test file
 npm test -- src/config/__tests__/validator.test.ts
 
 # Run tests with coverage
-npm run test:coverage
+yarn run test:coverage
 
 # Run only integration tests
-npm run test:integration
+yarn run test:integration
 
 # Run only e2e tests
-npm run test:e2e
+yarn run test:e2e
 ```
 
 ### Test Utilities
@@ -749,7 +749,7 @@ export async function waitFor(condition: () => boolean, timeout = 5000) {
 
 ```bash
 # Enable debug logging
-DEBUG=ast-mcp-server:* npm run dev
+DEBUG=ast-mcp-server:* yarn run dev
 
 # Start with Node.js debugger
 node --inspect dist/cli.js
@@ -1098,8 +1098,8 @@ class PerformanceMonitor {
 
 2. **Set Up Development Environment**
    ```bash
-   npm install
-   npm run build
+   yarn install
+   yarn run build
    cd packages/ast-mcp-server
    npm test
    ```
@@ -1185,9 +1185,9 @@ We follow **Semantic Versioning** (SemVer):
 
 3. **Final Testing**
    ```bash
-   npm run test:all
-   npm run build
-   npm run test:e2e
+   yarn run test:all
+   yarn run build
+   yarn run test:e2e
    ```
 
 4. **Create Release PR**

@@ -7,10 +7,10 @@
   "main": "./dist/extension.js",
   "icon": "resources/icon.png",
   "scripts": {
-    "vscode:prepublish": "npm run build",
+    "vscode:prepublish": "yarn run build",
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",
-    "dev": "npm run build:watch",
+    "dev": "yarn run build:watch",
     "clean": "rm -rf dist",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",

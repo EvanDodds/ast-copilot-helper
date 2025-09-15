@@ -6,17 +6,17 @@ This guide provides comprehensive instructions for testing in the AST Copilot He
 
 ```bash
 # Run all tests (recommended for CI/CD)
-npm run test:all
+yarn run test:all
 
 # Run specific test types
-npm run test:unit         # Fast unit tests
-npm run test:integration  # Cross-package integration tests
-npm run test:benchmarks   # Performance validation tests
+yarn run test:unit         # Fast unit tests
+yarn run test:integration  # Cross-package integration tests
+yarn run test:benchmarks   # Performance validation tests
 
 # Interactive testing
-npm run test:watch        # Watch mode for development
-npm run test:ui           # Visual test interface
-npm run test:coverage     # Generate coverage reports
+yarn run test:watch        # Watch mode for development
+yarn run test:ui           # Visual test interface
+yarn run test:coverage     # Generate coverage reports
 ```
 
 ## Test Organization
@@ -51,7 +51,7 @@ tests/
 
 ```bash
 # Run only unit tests
-npm run test:unit
+yarn run test:unit
 
 # Run unit tests for specific package
 npx vitest tests/unit/ast-helper/
@@ -65,7 +65,7 @@ npx vitest tests/unit/ast-helper/
 
 ```bash
 # Run integration tests
-npm run test:integration
+yarn run test:integration
 
 # Run specific integration test
 npx vitest tests/integration/mcp-cli.test.ts
@@ -82,7 +82,7 @@ npx vitest tests/integration/mcp-cli.test.ts
 
 ```bash
 # Run performance benchmarks
-npm run test:benchmarks
+yarn run test:benchmarks
 
 # Run specific benchmark
 npx vitest tests/benchmarks/performance.test.ts --reporter=verbose
@@ -123,7 +123,7 @@ Our performance tests validate critical acceptance criteria:
 
 ```bash
 # All performance tests
-npm run test:benchmarks
+yarn run test:benchmarks
 
 # Specific benchmark categories  
 npx vitest tests/benchmarks/performance.test.ts --reporter=verbose
@@ -160,7 +160,7 @@ Performance test output includes:
    touch tests/unit/new-feature.test.ts
    
    # Write failing test
-   npm run test:watch  # Keep running to see immediate feedback
+   yarn run test:watch  # Keep running to see immediate feedback
    ```
 
 2. **Implement Feature**
@@ -203,9 +203,9 @@ Our CI pipeline runs comprehensive testing:
 # Simplified workflow overview
 - name: Run Tests
   run: |
-    npm run test:all        # Complete test suite
-    npm run test:coverage   # Generate coverage
-    npm run test:benchmarks # Validate performance
+    yarn run test:all        # Complete test suite
+    yarn run test:coverage   # Generate coverage
+    yarn run test:benchmarks # Validate performance
 ```
 
 ### Multi-Platform Testing
@@ -257,14 +257,14 @@ CI automatically:
 npx vitest --inspect-brk path/to/test.ts
 
 # Use test UI for visual debugging
-npm run test:ui
+yarn run test:ui
 ```
 
 ### Coverage Analysis
 
 ```bash
 # Generate detailed coverage report
-npm run test:coverage
+yarn run test:coverage
 
 # View coverage in browser
 open coverage/index.html
@@ -374,13 +374,13 @@ describe('Performance: Feature Name', () => {
 
 ```bash
 # Generate coverage report
-npm run test:coverage
+yarn run test:coverage
 
 # View in browser
 open coverage/index.html
 
 # Coverage summary
-npm run test:coverage -- --reporter=text-summary
+yarn run test:coverage -- --reporter=text-summary
 ```
 
 ### CI Coverage Integration
@@ -406,7 +406,7 @@ npm run test:coverage -- --reporter=text-summary
 3. **Analyze Bottlenecks**
    ```bash
    # Run with detailed timing
-   npm run test:benchmarks -- --reporter=verbose
+   yarn run test:benchmarks -- --reporter=verbose
    
    # Check memory usage patterns
    npx vitest tests/benchmarks/memory.test.ts --reporter=verbose
@@ -416,16 +416,16 @@ npm run test:coverage -- --reporter=text-summary
 
 1. **Clean Test Environment**
    ```bash
-   npm run clean:all
-   npm install
-   npm run build
-   npm run test:all
+   yarn run clean:all
+   yarn install
+   yarn run build
+   yarn run test:all
    ```
 
 2. **Reset Test Database**
    ```bash
    rm -rf test-output/
-   npm run test:integration
+   yarn run test:integration
    ```
 
 3. **Check Node.js Version**
