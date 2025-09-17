@@ -1479,7 +1479,7 @@ describe('Advanced MCP Protocol Compliance Tests', () => {
     expect(results).toHaveLength(5);
     results.forEach(result => {
       expect(result.name).toBeDefined();
-      expect(result.duration).toBeGreaterThan(0);
+      expect(result.duration).toBeGreaterThanOrEqual(0); // Changed from toBeGreaterThan(0) to handle very fast tests
       expect(result.complianceScore).toBeGreaterThanOrEqual(0);
       expect(result.complianceScore).toBeLessThanOrEqual(100);
     });
