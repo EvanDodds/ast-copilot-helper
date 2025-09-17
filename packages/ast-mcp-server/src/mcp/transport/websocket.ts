@@ -94,10 +94,12 @@ export class WebSocketTransport extends Transport {
       
       if (this.mode === 'server') {
         logger.info(`WebSocket server would start on ${this.host}:${this.port}`);
-        // TODO: Implement WebSocket server using 'ws' library
+        // NOTE: WebSocket transport is optional per Issue #17 acceptance criteria
+        // Future enhancement: Implement WebSocket server using 'ws' library
       } else {
         logger.info(`WebSocket client would connect to ${this.url}`);
-        // TODO: Implement WebSocket client using 'ws' library
+        // NOTE: WebSocket transport is optional per Issue #17 acceptance criteria  
+        // Future enhancement: Implement WebSocket client using 'ws' library
       }
 
       // Simulate successful startup
