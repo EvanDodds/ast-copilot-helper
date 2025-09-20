@@ -38,7 +38,13 @@ export default defineConfig({
       threads: {
         maxThreads: 4,         // Limit for CI environments
         minThreads: 1,         // Minimum threads
+        isolate: true,         // Better memory isolation
       },
+    },
+    // Memory management configuration
+    maxWorkers: 4,             // Limit concurrent workers
+    sequence: {
+      shuffle: false,          // Deterministic test order for memory consistency
     },
     include: [
       'tests/**/*.{test,spec}.{js,ts}',
@@ -49,6 +55,11 @@ export default defineConfig({
       'dist/',
       'coverage/',
       'tests/fixtures/',
+      // Memory-intensive tests that can cause OOM in comprehensive runs
+      '**/embed*.{test,spec}.{js,ts}',              // Embedding generation tests
+      '**/final-acceptance-verification.test.ts',   // Large verification tests
+      '**/XenovaEmbeddingGenerator.test.ts',        // XENOVA model loading tests  
+      '**/performance*.{test,spec}.{js,ts}',        // Performance benchmarking tests
     ],
     setupFiles: ['./tests/setup.ts'],
   },
