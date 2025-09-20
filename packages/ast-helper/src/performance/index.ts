@@ -4,6 +4,7 @@
 
 export * from './types';
 export * from './benchmark-runner';
+export * from './parsing-benchmarks';
 export * from './utils';
 
 // Re-export main classes for convenience

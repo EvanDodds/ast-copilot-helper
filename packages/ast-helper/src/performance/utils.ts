@@ -14,8 +14,9 @@ export class PerformanceTimer {
     return { result, duration };
   }
 
-  start(label: string): void {
+  start(label: string): string {
     this.timers.set(label, performance.now());
+    return label;
   }
 
   lap(label: string): number {
@@ -50,6 +51,7 @@ export class CPUMonitor {
   private startUsage: NodeJS.CpuUsage | null = null;
   private intervalId: NodeJS.Timeout | null = null;
   private samples: number[] = [];
+  private monitoring = false;
 
   start(): void {
     this.startUsage = process.cpuUsage();
@@ -65,6 +67,28 @@ export class CPUMonitor {
         this.samples.push(cpuPercent);
       }
     }, 100);
+  }
+
+  startMonitoring(_interval = 100): void {
+    if (this.monitoring) return;
+    this.start();
+    this.monitoring = true;
+  }
+
+  stopMonitoring(): void {
+    if (!this.monitoring) return;
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.monitoring = false;
+  }
+
+  getAverageUsage(): number {
+    if (this.samples.length === 0) {
+      return 0;
+    }
+    return this.samples.reduce((sum, sample) => sum + sample, 0) / this.samples.length;
   }
 
   async stop(): Promise<number> {
@@ -94,6 +118,20 @@ export class MemoryMonitor {
     this.intervalId = setInterval(() => {
       this.samples.push(process.memoryUsage());
     }, 100);
+  }
+
+  getCurrentUsage(): { used: number; total: number; free: number; percentage: number } {
+    const os = require('os');
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
+    const usedMemory = totalMemory - freeMemory;
+    
+    return {
+      used: usedMemory,
+      total: totalMemory,
+      free: freeMemory,
+      percentage: (usedMemory / totalMemory) * 100
+    };
   }
 
   stop(): MemoryStats {

@@ -119,6 +119,60 @@ export interface ConcurrencyLevel {
   throughput: number;
 }
 
+/**
+ * Node count specifications for benchmarks
+ */
+export type NodeCount = 'small' | 'medium' | 'large' | 'xlarge' | number;
+
+/**
+ * Individual benchmark run result
+ */
+export interface BenchmarkRun {
+  success: boolean;
+  duration: number;
+  parseTime: number;
+  nodesParsed: number;
+  throughput: number;
+  memoryUsed: number;
+  memoryPeak: number;
+  cpuUsage: number;
+  error?: string;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Parsing benchmark configuration
+ */
+export interface ParsingBenchmarkConfig {
+  nodeCount: NodeCount;
+  language: string;
+  iterations: number;
+  timeout?: number;
+}
+
+/**
+ * Single benchmark result
+ */
+export interface BenchmarkResult {
+  name: string;
+  status: 'passed' | 'failed' | 'warning';
+  duration: number;
+  iterations: number;
+  successRate: number;
+  metrics: {
+    averageDuration: number;
+    minDuration: number;
+    maxDuration: number;
+    parseTime?: number;
+    throughput: number;
+    memoryUsed: number;
+    cpuUsage: number;
+  };
+  errors: string[];
+  warnings: string[];
+  details: Record<string, any>;
+}
+
 export interface ScalabilityReport {
   results: ScalabilityResult[];
   scalingFactors: Record<string, number>;
