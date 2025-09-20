@@ -56,28 +56,31 @@ export class ParsingBenchmarkRunner {
       const testData = await this.generateTestData(config.nodeCount, config.language);
       
       this.timer.start('parse-operation');
-      const results = await this.parseTestData(testData, config);
+      await this.parseTestData(testData, config);
       const parseTime = this.timer.end('parse-operation');
 
       const totalTime = this.timer.end('parsing-benchmark');
       const endMetrics = this.memoryMonitor.getCurrentUsage();
-      const cpuMetrics = this.cpuMonitor.getAverageUsage();
+      const cpuMetrics = await this.cpuMonitor.getAverageUsage();
       this.cpuMonitor.stopMonitoring();
 
+      // Calculate metrics
+      const memoryUsed = endMetrics.used - startMetrics.used;
+      const estimatedNodeCount = this.getNumericNodeCount(config.nodeCount);
+      const throughput = estimatedNodeCount / totalTime * 1000;
+
       return {
+        subtype: `${config.language}_parsing`,
         success: true,
         duration: totalTime,
-        parseTime,
-        nodesParsed: results.nodesParsed,
-        throughput: results.nodesParsed / (parseTime / 1000), // nodes per second
-        memoryUsed: endMetrics.used - startMetrics.used,
-        memoryPeak: Math.max(endMetrics.used, startMetrics.used),
+        nodeCount: estimatedNodeCount,
+        throughput,
+        memoryUsed,
         cpuUsage: cpuMetrics,
-        error: undefined,
         metadata: {
-          language: config.language,
-          testDataSize: testData.length,
-          nodeCount: config.nodeCount
+          actualLanguage: config.language,
+          files: testData.length,
+          parseTime
         }
       };
     } catch (error) {
@@ -85,13 +88,12 @@ export class ParsingBenchmarkRunner {
       this.cpuMonitor.stopMonitoring();
 
       return {
+        subtype: `${config.language}_parsing`,
         success: false,
         duration: totalTime,
-        parseTime: 0,
-        nodesParsed: 0,
+        nodeCount: 0,
         throughput: 0,
         memoryUsed: 0,
-        memoryPeak: 0,
         cpuUsage: 0,
         error: error instanceof Error ? error.message : String(error),
         metadata: {
@@ -415,32 +417,26 @@ export class ParsingBenchmarkRunner {
 
     if (successfulRuns.length === 0) {
       return {
-        name: 'parsing_benchmark',
-        status: 'failed',
-        duration: 0,
-        iterations: runs.length,
-        successRate: 0,
-        metrics: {
-          averageDuration: 0,
-          minDuration: 0,
-          maxDuration: 0,
-          throughput: 0,
-          memoryUsed: 0,
-          cpuUsage: 0
-        },
+        benchmarkType: 'parsing_benchmark',
+        totalRuns: runs.length,
+        successfulRuns: 0,
+        failedRuns: runs.length,
+        averageDuration: 0,
+        averageThroughput: 0,
+        averageMemoryUsed: 0,
+        averageCpuUsage: 0,
+        peakMemoryUsed: 0,
+        totalNodesProcessed: 0,
         errors: failedRuns.map(run => run.error!),
         warnings: [],
-        details: {
-          targetNodeCount: config.nodeCount,
-          language: config.language,
-          runsCompleted: successfulRuns.length,
-          runsFailed: failedRuns.length
-        }
+        meetsPerformanceTargets: false,
+        performanceScore: 0,
+        recommendations: ['All benchmark runs failed - check system resources and test data']
       };
     }
 
     const durations = successfulRuns.map(run => run.duration);
-    const parseTimes = successfulRuns.map(run => run.parseTime);
+    const parseTimes = successfulRuns.map(run => run.metadata?.parseTime || run.duration);
     const throughputs = successfulRuns.map(run => run.throughput);
     const memoryUsages = successfulRuns.map(run => run.memoryUsed);
     const cpuUsages = successfulRuns.map(run => run.cpuUsage);
@@ -472,33 +468,34 @@ export class ParsingBenchmarkRunner {
       warnings.push(`High memory usage: ${memoryMB.toFixed(0)}MB`);
     }
 
-    const status = warnings.length > 0 ? 'warning' : 'passed';
+    // Calculate performance targets and score
+    const meetsTargets = avgThroughput >= 300 && avgDuration <= 5 * 60 * 1000;
+    const performanceScore = Math.min(100, Math.max(0, (avgThroughput / 300) * 100));
+
+    const recommendations: string[] = [];
+    if (avgThroughput < 300) {
+      recommendations.push('Consider optimizing parsing algorithms for better throughput');
+    }
+    if (avgMemory > 1000 * 1024 * 1024) { // > 1GB
+      recommendations.push('Memory usage is high - consider memory optimization');
+    }
 
     return {
-      name: 'parsing_benchmark',
-      status,
-      duration: avgDuration,
-      iterations: successfulRuns.length,
-      successRate: successfulRuns.length / runs.length,
-      metrics: {
-        averageDuration: avgDuration,
-        minDuration: Math.min(...durations),
-        maxDuration: Math.max(...durations),
-        parseTime: avgParseTime,
-        throughput: avgThroughput,
-        memoryUsed: avgMemory,
-        cpuUsage: avgCpu
-      },
+      benchmarkType: 'parsing_benchmark',
+      totalRuns: runs.length,
+      successfulRuns: successfulRuns.length,
+      failedRuns: failedRuns.length,
+      averageDuration: avgDuration,
+      averageThroughput: avgThroughput,
+      averageMemoryUsed: avgMemory,
+      averageCpuUsage: avgCpu,
+      peakMemoryUsed: Math.max(...memoryUsages),
+      totalNodesProcessed: successfulRuns.reduce((total, run) => total + run.nodeCount, 0),
       errors: failedRuns.map(run => run.error!),
       warnings,
-      details: {
-        targetNodeCount: config.nodeCount,
-        language: config.language,
-        runsCompleted: successfulRuns.length,
-        runsFailed: failedRuns.length,
-        avgNodesPerSecond: avgThroughput,
-        peakMemoryMB: Math.max(...memoryUsages) / (1024 * 1024)
-      }
+      meetsPerformanceTargets: meetsTargets,
+      performanceScore,
+      recommendations
     };
   }
 }

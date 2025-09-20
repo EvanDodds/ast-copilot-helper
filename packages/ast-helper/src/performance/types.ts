@@ -125,16 +125,20 @@ export interface ConcurrencyLevel {
 export type NodeCount = 'small' | 'medium' | 'large' | 'xlarge' | number;
 
 /**
+ * Query type specifications for benchmarks
+ */
+export type QueryType = 'file' | 'ast' | 'semantic';
+
+/**
  * Individual benchmark run result
  */
 export interface BenchmarkRun {
+  subtype: string;
   success: boolean;
   duration: number;
-  parseTime: number;
-  nodesParsed: number;
+  nodeCount: number;
   throughput: number;
   memoryUsed: number;
-  memoryPeak: number;
   cpuUsage: number;
   error?: string;
   metadata?: Record<string, any>;
@@ -151,26 +155,35 @@ export interface ParsingBenchmarkConfig {
 }
 
 /**
+ * Query benchmark configuration
+ */
+export interface QueryBenchmarkConfig {
+  nodeCount: NodeCount;
+  iterations: number;
+  timeout?: number;
+  enableCaching?: boolean;
+  concurrencyLevels?: number[];
+}
+
+/**
  * Single benchmark result
  */
 export interface BenchmarkResult {
-  name: string;
-  status: 'passed' | 'failed' | 'warning';
-  duration: number;
-  iterations: number;
-  successRate: number;
-  metrics: {
-    averageDuration: number;
-    minDuration: number;
-    maxDuration: number;
-    parseTime?: number;
-    throughput: number;
-    memoryUsed: number;
-    cpuUsage: number;
-  };
+  benchmarkType: string;
+  totalRuns: number;
+  successfulRuns: number;
+  failedRuns: number;
+  averageDuration: number;
+  averageThroughput: number;
+  averageMemoryUsed: number;
+  averageCpuUsage: number;
+  peakMemoryUsed: number;
+  totalNodesProcessed: number;
   errors: string[];
   warnings: string[];
-  details: Record<string, any>;
+  meetsPerformanceTargets: boolean;
+  performanceScore: number;
+  recommendations: string[];
 }
 
 export interface ScalabilityReport {
