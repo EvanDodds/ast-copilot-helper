@@ -158,12 +158,17 @@ export interface ParsingBenchmarkConfig {
  * Query benchmark configuration
  */
 export interface QueryBenchmarkConfig {
-  nodeCount: NodeCount;
+  queryTypes: QueryType[];
+  nodeCounts: NodeCount[];
+  cacheEnabled: boolean;
+  concurrentRequests: number;
+  mcpTimeout: number; // MCP response timeout in ms (target: <200ms)
+  cliTimeout: number; // CLI response timeout in ms (target: <500ms)
   iterations: number;
-  timeout?: number;
-  enableCaching?: boolean;
-  concurrencyLevels?: number[];
 }
+
+
+
 
 /**
  * Single benchmark result

@@ -31,15 +31,18 @@ export class QueryBenchmarkRunner {
     try {
       const runs: BenchmarkRun[] = [];
       
-      // Test different query types
-      const queryTypes: QueryType[] = ['file', 'ast', 'semantic'];
-      
-      for (const queryType of queryTypes) {
+      // Test different query types and node counts
+      for (const queryType of config.queryTypes) {
         console.log(`Testing ${queryType} queries...`);
         
-        for (let i = 0; i < config.iterations; i++) {
-          const run = await this.runSingleQueryBenchmark(queryType, config);
-          runs.push(run);
+        for (const nodeCount of config.nodeCounts) {
+          console.log(`  Testing with ${nodeCount} nodes...`);
+          
+          for (let i = 0; i < config.iterations; i++) {
+            const singleNodeConfig = { ...config, nodeCount };
+            const run = await this.runSingleQueryBenchmark(queryType, singleNodeConfig);
+            runs.push(run);
+          }
         }
       }
 
@@ -56,7 +59,7 @@ export class QueryBenchmarkRunner {
   /**
    * Run MCP query response time benchmarks
    */
-  async runMCPQueryBenchmarks(config: QueryBenchmarkConfig): Promise<BenchmarkResult> {
+  async runMCPQueryBenchmarks(config: QueryBenchmarkConfig & { nodeCount: NodeCount }): Promise<BenchmarkResult> {
     console.log('⚡ Testing MCP query response times (target: <200ms)...');
     
     const runs: BenchmarkRun[] = [];
@@ -127,7 +130,7 @@ export class QueryBenchmarkRunner {
   /**
    * Run CLI query response time benchmarks
    */
-  async runCLIQueryBenchmarks(config: QueryBenchmarkConfig): Promise<BenchmarkResult> {
+  async runCLIQueryBenchmarks(config: QueryBenchmarkConfig & { nodeCount: NodeCount }): Promise<BenchmarkResult> {
     console.log('⚡ Testing CLI query response times (target: <500ms)...');
     
     const runs: BenchmarkRun[] = [];
@@ -198,7 +201,7 @@ export class QueryBenchmarkRunner {
   /**
    * Test query caching performance
    */
-  async runCachingBenchmarks(config: QueryBenchmarkConfig): Promise<BenchmarkResult> {
+  async runCachingBenchmarks(config: QueryBenchmarkConfig & { nodeCount: NodeCount }): Promise<BenchmarkResult> {
     console.log('💾 Testing query caching performance...');
     
     const runs: BenchmarkRun[] = [];
@@ -244,7 +247,7 @@ export class QueryBenchmarkRunner {
   /**
    * Test concurrent query performance
    */
-  async runConcurrentQueryBenchmarks(config: QueryBenchmarkConfig): Promise<BenchmarkResult> {
+  async runConcurrentQueryBenchmarks(config: QueryBenchmarkConfig & { nodeCount: NodeCount }): Promise<BenchmarkResult> {
     console.log('🔄 Testing concurrent query performance...');
     
     const runs: BenchmarkRun[] = [];
@@ -293,7 +296,10 @@ export class QueryBenchmarkRunner {
   /**
    * Run single query benchmark
    */
-  private async runSingleQueryBenchmark(queryType: QueryType, config: QueryBenchmarkConfig): Promise<BenchmarkRun> {
+  /**
+   * Run single query benchmark for a specific type and node count
+   */
+  private async runSingleQueryBenchmark(queryType: QueryType, config: QueryBenchmarkConfig & { nodeCount: NodeCount }): Promise<BenchmarkRun> {
     const testData = this.generateTestQueryData(queryType, config.nodeCount);
     
     this.timer.start(`${queryType}-query`);
