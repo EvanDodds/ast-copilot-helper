@@ -46,6 +46,8 @@ export default defineConfig({
       '**/file-processor.test.ts',                     // File processing tests
       '**/integrity*.test.ts',                         // All integrity tests 
       '**/manager.test.ts',                            // Glob manager tests causing OOM
+      '**/downloader-throttling.test.ts',              // Model downloader tests with long delays
+      '**/models/**/*.test.ts',                        // All model-related tests
     ],
     
     setupFiles: ['./tests/setup.ts'],
