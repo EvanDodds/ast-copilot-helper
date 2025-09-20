@@ -15,6 +15,7 @@ import {
   TestResult,
   BinaryValidation,
   BinaryTestResult,
+  BinaryComponentResult,
   FileSystemTests,
   FileSystemTestResult,
   NodeVersionTests,
@@ -25,6 +26,9 @@ import {
   PlatformIssue
 } from './types.js';
 import { FileSystemTester } from './filesystem/FileSystemTester.js';
+import { BinaryCompatibilityTester } from './binary/BinaryCompatibilityTester.js';
+import { NodeVersionCompatibilityTester } from './nodejs/NodeVersionCompatibilityTester.js';
+import { PerformanceBenchmarker } from './performance/PerformanceBenchmarker.js';
 
 export class CrossPlatformTestRunner implements PlatformTester {
   private currentPlatform: NodeJS.Platform;
@@ -41,7 +45,7 @@ export class CrossPlatformTestRunner implements PlatformTester {
     this.config = {
       platforms: ['win32', 'darwin', 'linux'],
       nodeVersions: ['18.x', '20.x', '22.x'],
-      testCategories: ['filesystem', 'binary', 'nodejs', 'platform_specific'],
+      testCategories: ['filesystem', 'binary', 'nodejs', 'platform_specific', 'performance'],
       skipBinaryTests: false,
       skipPerformanceTests: false,
       timeout: 30000,
@@ -111,19 +115,41 @@ export class CrossPlatformTestRunner implements PlatformTester {
       }
 
       if (this.config.testCategories.includes('binary') && !this.config.skipBinaryTests) {
-        const binaryValidation = await this.validateBinaryDistribution();
-        result.binaryTests = binaryValidation.binaryTests;
-        result.testResults.push(...this.extractBinaryTestResults(binaryValidation));
+        const binaryTester = new BinaryCompatibilityTester();
+        const binaryResult = await binaryTester.runTests();
+        result.testResults.push(...binaryResult.testResults);
       }
 
       if (this.config.testCategories.includes('nodejs')) {
-        const nodeTests = await this.testNodeVersionCompatibility();
-        result.testResults.push(...this.extractNodeTestResults(nodeTests));
+        const nodeTester = new NodeVersionCompatibilityTester();
+        const nodeResult = await nodeTester.runTests();
+        // Ensure all Node.js test results have the correct category
+        const nodeTestResults = nodeResult.testResults.map((test: any) => ({
+          ...test,
+          category: 'nodejs' as const
+        }));
+        result.testResults.push(...nodeTestResults);
       }
 
       if (this.config.testCategories.includes('platform_specific')) {
         const platformTests = await this.runPlatformSpecificTests();
         result.testResults.push(...this.extractPlatformSpecificResults(platformTests));
+      }
+
+      if (this.config.testCategories.includes('performance')) {
+        console.log('🚀 Running performance benchmarks...');
+        const performanceBenchmarker = new PerformanceBenchmarker();
+        const benchmarkResult = await performanceBenchmarker.runBenchmarks();
+        result.testResults.push(...benchmarkResult.testResults);
+        
+        // Store performance metrics - use any to avoid type conflicts
+        result.performanceMetrics = {
+          ...(result.performanceMetrics || {}),
+          benchmarks: benchmarkResult.summary as any,
+          detailedMetrics: benchmarkResult.performanceMetrics as any
+        } as any;
+        
+        console.log(`✅ Performance benchmarks completed: ${benchmarkResult.summary.performanceGrade} grade`);
       }
 
       // Performance metrics
@@ -257,18 +283,20 @@ export class CrossPlatformTestRunner implements PlatformTester {
   }
 
   // Helper methods for individual tests
-  private async testTreeSitterBinary(): Promise<BinaryTestResult> {
+  private async testTreeSitterBinary(): Promise<BinaryComponentResult> {
     const startTime = Date.now();
     
     try {
-      // Dynamic import to handle potential missing modules
-      const Parser = await import('tree-sitter');
-      const TypeScript = await import('tree-sitter-typescript') as any;
+      // Try loading tree-sitter
+      const TreeSitter = await import('tree-sitter');
+      const JavaScript = await import('tree-sitter-javascript');
       
-      const parser = new Parser.default();
-      parser.setLanguage(TypeScript.typescript);
+      // Test basic functionality
+      const Parser = TreeSitter.default;
+      const parser = new Parser();
+      parser.setLanguage(JavaScript.default);
       
-      const testCode = 'function test() { return "hello"; }';
+      const testCode = 'console.log("Hello, world!");';
       const tree = parser.parse(testCode);
       
       if (tree.rootNode.type !== 'program' || tree.rootNode.childCount === 0) {
@@ -296,7 +324,7 @@ export class CrossPlatformTestRunner implements PlatformTester {
     }
   }
 
-  private async testONNXCompatibility(): Promise<BinaryTestResult> {
+  private async testONNXCompatibility(): Promise<BinaryComponentResult> {
     const startTime = Date.now();
     
     try {
@@ -321,7 +349,7 @@ export class CrossPlatformTestRunner implements PlatformTester {
     }
   }
 
-  private async testSQLiteBinary(): Promise<BinaryTestResult> {
+  private async testSQLiteBinary(): Promise<BinaryComponentResult> {
     const startTime = Date.now();
     
     try {
@@ -356,7 +384,7 @@ export class CrossPlatformTestRunner implements PlatformTester {
     }
   }
 
-  private async testHNSWLibBinary(): Promise<BinaryTestResult> {
+  private async testHNSWLibBinary(): Promise<BinaryComponentResult> {
     const startTime = Date.now();
     
     try {

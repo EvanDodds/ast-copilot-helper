@@ -42,7 +42,8 @@ export type TestCategory =
   | 'platform_specific'
   | 'filesystem'
   | 'binary'
-  | 'nodejs';
+  | 'nodejs'
+  | 'performance';
 
 /**
  * Core test result interface
@@ -57,16 +58,33 @@ export interface TestResult {
   details?: Record<string, any>;
 }
 
+/**
+ * Binary compatibility test result
+ */
+export interface BinaryTestResult {
+  platform: string;
+  architecture: string;
+  nodeVersion: string;
+  testResults: TestResult[];
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    duration: number;
+    compatibility: number;
+  };
+}
+
 export interface BinaryValidation {
   platform: string;
   architecture: string;
   nodeVersion: string;
-  binaryTests: BinaryTestResult[];
+  binaryTests: BinaryComponentResult[];
   dependencyTests: DependencyTestResult[];
-  nativeModuleTests: BinaryTestResult[];
+  nativeModuleTests: BinaryComponentResult[];
 }
 
-export interface BinaryTestResult {
+export interface BinaryComponentResult {
   component: string;
   platform: string;
   architecture: string;
