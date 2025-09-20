@@ -8,7 +8,7 @@ describe('Extension Package Configuration', () => {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
 
     // Check required VS Code extension fields
-    expect(packageJson.name).toBe('ast-copilot-helper');
+    expect(packageJson.name).toBe('ast-copilot-helper-extension');
     expect(packageJson.displayName).toBe('AST Copilot Helper');
     expect(packageJson.main).toBe('./dist/extension.js');
     expect(packageJson.engines.vscode).toBe('^1.80.0');

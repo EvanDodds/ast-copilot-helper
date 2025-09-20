@@ -38,6 +38,8 @@ export default defineConfig({
       '**/concurrency-profiler*.{test,spec}.{js,ts}', // Skip concurrency profiler tests
       '**/memory-profiler*.{test,spec}.{js,ts}',       // Skip memory profiler tests
       '**/benchmark-runner*.{test,spec}.{js,ts}',      // Skip benchmark runner tests
+      '**/embed*.{test,spec}.{js,ts}',                 // Skip embedding tests (ONNX heavy)
+      '**/acceptance-criteria-verification*.{test,spec}.{js,ts}', // Skip ONNX acceptance tests
     ],
     
     setupFiles: ['./tests/setup.ts'],
