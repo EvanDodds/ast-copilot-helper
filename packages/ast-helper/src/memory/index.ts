@@ -12,6 +12,7 @@
 export * from './types.js';
 export * from './resource-manager.js';
 export * from './monitor.js';
+export * from './leak-detector.js';
 
 // Re-export the main resource manager as default
 export { AdvancedResourceManager as default } from './resource-manager.js';
