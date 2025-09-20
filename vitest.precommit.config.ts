@@ -15,7 +15,7 @@ export default defineConfig({
     pool: 'threads',
     poolOptions: {
       threads: {
-        maxThreads: 2,         // Less parallelism for faster startup
+        maxThreads: 1,         // Single thread to reduce memory usage
         minThreads: 1,
       },
     },
@@ -48,6 +48,8 @@ export default defineConfig({
       '**/manager.test.ts',                            // Glob manager tests causing OOM
       '**/downloader-throttling.test.ts',              // Model downloader tests with long delays
       '**/models/**/*.test.ts',                        // All model-related tests
+      '**/database/**/*.test.ts',                      // All database tests 
+      '**/version.test.ts',                            // Database version tests
     ],
     
     setupFiles: ['./tests/setup.ts'],
