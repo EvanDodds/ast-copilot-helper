@@ -55,17 +55,17 @@ export default defineConfig({
       'dist/',
       'coverage/',
       'tests/fixtures/',
-      // Memory-intensive tests that can cause OOM in comprehensive runs
+      // Memory-intensive tests that can cause OOM in comprehensive runs - use absolute file paths
+      'packages/ast-helper/src/embedder/XenovaEmbeddingGenerator.test.ts',                            // XENOVA model loading tests  
+      'packages/ast-helper/src/embedder/__tests__/final-acceptance-verification.test.ts',             // Large verification tests
+      'packages/ast-helper/src/commands/__tests__/file-processor.test.ts',                            // File processing tests
+      'packages/ast-helper/src/database/__tests__/integrity.test.ts',                                 // Database integrity tests
+      'packages/ast-helper/src/database/__tests__/integrity-clean.test.ts',                           // Database integrity clean tests
+      'packages/ast-helper/src/glob/manager.test.ts',                                                 // Glob processing tests causing failures
+      // Pattern-based exclusions for comprehensive coverage
       '**/embed*.{test,spec}.{js,ts}',                                  // Embedding generation tests
-      '**/final-acceptance-verification.test.ts',                       // Large verification tests
-      '**/XenovaEmbeddingGenerator.test.ts',                            // XENOVA model loading tests  
       '**/performance*.{test,spec}.{js,ts}',                            // Performance benchmarking tests
-      '**/glob/manager.test.ts',                                        // Glob processing tests causing test failures
-      'packages/ast-helper/src/commands/__tests__/file-processor.test.ts', // File processing tests
-      'packages/ast-helper/src/database/__tests__/**',                  // All database tests
-      '**/integrity*.{test,spec}.{js,ts}',                              // Integrity validation tests
       '**/benchmarks/**/*.{test,spec}.{js,ts}',                         // Benchmark tests
-      // Additional memory-intensive test patterns
       'tests/benchmarks/**/*.{test,spec}.{js,ts}',                      // All benchmark tests
       'tests/integration/**performance*.{test,spec}.{js,ts}',           // Performance integration tests
       '**/scaling*.{test,spec}.{js,ts}',                                // Scaling tests
