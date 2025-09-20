@@ -1,0 +1,186 @@
+/**
+ * Performance Testing Framework for AST Copilot Helper
+ * 
+ * Provides comprehensive performance validation, benchmarking, and optimization
+ * validation to ensure the system meets specified performance targets.
+ */
+
+export interface PerformanceTester {
+  runBenchmarkSuite(): Promise<BenchmarkResults>;
+  validatePerformanceTargets(): Promise<PerformanceValidation>;
+  profileMemoryUsage(): Promise<MemoryProfile>;
+  testConcurrentOperations(): Promise<ConcurrencyResults>;
+  measureScalabilityLimits(): Promise<ScalabilityReport>;
+  generatePerformanceReport(): Promise<PerformanceReport>;
+}
+
+export interface BenchmarkResults {
+  parsingBenchmarks: ParsingBenchmark[];
+  queryBenchmarks: QueryBenchmark[];
+  embeddingBenchmarks: EmbeddingBenchmark[];
+  vectorSearchBenchmarks: VectorSearchBenchmark[];
+  systemBenchmarks: SystemBenchmark[];
+}
+
+export interface ParsingBenchmark {
+  testName: string;
+  fileCount: number;
+  totalNodes: number;
+  significantNodes: number;
+  parseTime: number;           // Total parsing time in ms
+  nodesPerSecond: number;      // Processing rate
+  memoryUsage: number;         // Peak memory usage in MB
+  cpuUsage: number;           // Average CPU usage percentage
+  language: string;           // Programming language tested
+}
+
+export interface QueryBenchmark {
+  testName: string;
+  queryType: 'semantic' | 'signature' | 'file';
+  query: string;
+  resultCount: number;
+  responseTime: number;        // Query response time in ms
+  vectorSearchTime: number;    // Vector search portion
+  rankingTime: number;         // Result ranking portion
+  databaseTime: number;        // Database query portion
+  memoryAllocated: number;     // Memory allocated during query
+}
+
+export interface EmbeddingBenchmark {
+  testName: string;
+  nodeCount: number;
+  embeddingTime: number;       // Time to generate embeddings in ms
+  embeddingsPerSecond: number; // Processing rate
+  memoryUsage: number;         // Memory usage in MB
+  modelSize: string;           // Embedding model used
+}
+
+export interface VectorSearchBenchmark {
+  testName: string;
+  vectorCount: number;
+  queryVectorDimensions: number;
+  searchTime: number;          // Vector search time in ms
+  accuracy: number;            // Search accuracy percentage
+  memoryUsage: number;         // Memory usage in MB
+}
+
+export interface SystemBenchmark {
+  testName: string;
+  operation: string;
+  duration: number;            // Operation duration in ms
+  memoryUsage: number;         // Memory usage in MB
+  cpuUsage: number;           // CPU usage percentage
+  diskIO: number;             // Disk I/O in MB/s
+}
+
+export interface PerformanceTargets {
+  maxParseTimeFor100k: number;     // 100k nodes in X milliseconds
+  maxMCPQueryTime: number;         // <200ms for MCP queries
+  maxCLIQueryTime: number;         // <500ms for CLI queries
+  maxMemoryUsage: number;          // Peak memory limit in MB
+  minThroughput: number;           // Nodes processed per second
+  maxConcurrentQueries: number;    // Concurrent query limit
+}
+
+export interface PerformanceValidation {
+  passed: boolean;
+  results: PerformanceValidationResult[];
+  summary: ValidationSummary;
+}
+
+export interface PerformanceValidationResult {
+  criterion: string;
+  target: number;
+  actual: number;
+  passed: boolean;
+  message: string;
+}
+
+export interface ValidationSummary {
+  totalTests: number;
+  passedTests: number;
+  failedTests: number;
+  passRate: number;
+}
+
+export interface ConcurrencyResults {
+  levels: ConcurrencyLevel[];
+  maxSustainableConcurrency: number;
+  degradationPoint: number;
+}
+
+export interface ConcurrencyLevel {
+  concurrencyLevel: number;
+  totalTime: number;
+  avgResponseTime: number;
+  maxResponseTime: number;
+  successCount: number;
+  failureCount: number;
+  throughput: number;
+}
+
+export interface ScalabilityReport {
+  results: ScalabilityResult[];
+  scalingFactors: Record<string, number>;
+  recommendedLimits: Record<string, number>;
+}
+
+export interface ScalabilityResult {
+  annotationCount: number;
+  indexingTime: number;
+  avgQueryTime: number;
+  maxQueryTime: number;
+  memoryUsage: number;
+  indexSize: number;
+}
+
+export interface MemoryProfile {
+  phases: PhaseMemoryProfile[];
+  peakUsage: number;
+  averageUsage: number;
+  memoryLeaks: MemoryLeak[];
+  gcPerformance: GCMetrics[];
+}
+
+export interface PhaseMemoryProfile {
+  phase: string;
+  startMemory: number;
+  peakMemory: number;
+  endMemory: number;
+  avgMemory: number;
+  duration: number;
+}
+
+export interface MemoryLeak {
+  location: string;
+  severity: 'low' | 'medium' | 'high';
+  leakRate: number; // MB/s
+  description: string;
+}
+
+export interface GCMetrics {
+  timestamp: number;
+  gcType: string;
+  duration: number;
+  memoryFreed: number;
+}
+
+export interface PerformanceReport {
+  timestamp: Date;
+  systemInfo: SystemInfo;
+  benchmarkResults: BenchmarkResults;
+  validation: PerformanceValidation;
+  memoryProfile: MemoryProfile;
+  concurrencyResults: ConcurrencyResults;
+  scalabilityReport: ScalabilityReport;
+  recommendations: string[];
+}
+
+export interface SystemInfo {
+  platform: string;
+  arch: string;
+  nodeVersion: string;
+  cpuCount: number;
+  totalMemory: number;
+  freeMemory: number;
+}
