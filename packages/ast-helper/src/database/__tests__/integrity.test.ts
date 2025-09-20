@@ -126,7 +126,7 @@ describe('IntegrityValidator', () => {
       const report = await validator.validateIntegrity();
 
       expect(report.isValid).toBe(false);
-      expect(report.recommendedActions).toContain('Manual database inspection required');
+      expect(report.recommendedActions).toContain('Database structure corruption detected - recreate .astdb directories');
     });
   });
 

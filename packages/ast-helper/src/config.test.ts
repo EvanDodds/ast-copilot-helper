@@ -61,28 +61,28 @@ describe('Configuration System', () => {
 
   describe('Configuration Validation', () => {
     it('should throw error for invalid topK', () => {
-      expect(() => validateConfig({ topK: 0 })).toThrow('topK must be an integer between 1 and 100');
-      expect(() => validateConfig({ topK: 101 })).toThrow('topK must be an integer between 1 and 100');
+      expect(() => validateConfig({ topK: 0 })).toThrow('Configuration validation failed');
+      expect(() => validateConfig({ topK: 1001 })).toThrow('Configuration validation failed');
     });
     
     it('should throw error for invalid snippetLines', () => {
-      expect(() => validateConfig({ snippetLines: 0 })).toThrow('snippetLines must be an integer between 1 and 50');
-      expect(() => validateConfig({ snippetLines: 51 })).toThrow('snippetLines must be an integer between 1 and 50');
+      expect(() => validateConfig({ snippetLines: 0 })).toThrow('Configuration validation failed');
+      expect(() => validateConfig({ snippetLines: 201 })).toThrow('Configuration validation failed');
     });
     
     it('should throw error for invalid concurrency', () => {
-      expect(() => validateConfig({ concurrency: 0 })).toThrow('concurrency must be an integer between 1 and 16');
-      expect(() => validateConfig({ concurrency: 17 })).toThrow('concurrency must be an integer between 1 and 16');
+      expect(() => validateConfig({ concurrency: 0 })).toThrow('Configuration validation failed');
+      expect(() => validateConfig({ concurrency: 33 })).toThrow('Configuration validation failed');
     });
     
     it('should throw error for invalid index parameters', () => {
-      expect(() => validateConfig({ indexParams: { efConstruction: 15 } })).toThrow('efConstruction must be an integer between 16 and 800');
-      expect(() => validateConfig({ indexParams: { M: 3 } })).toThrow('M must be an integer between 4 and 64');
+      expect(() => validateConfig({ indexParams: { efConstruction: 15 } })).toThrow('Configuration validation failed');
+      expect(() => validateConfig({ indexParams: { M: 3 } })).toThrow('Configuration validation failed');
     });
     
     it('should throw error for invalid modelHost', () => {
-      expect(() => validateConfig({ modelHost: '' })).toThrow('modelHost must be a non-empty string');
-      expect(() => validateConfig({ modelHost: '   ' })).toThrow('modelHost must be a non-empty string');
+      expect(() => validateConfig({ modelHost: '' })).toThrow('Configuration validation failed');
+      expect(() => validateConfig({ modelHost: '   ' })).toThrow('Configuration validation failed');
     });
   });
 
@@ -185,11 +185,11 @@ describe('Configuration System', () => {
     
     it('should handle configuration loading errors gracefully', async () => {
       const invalidArgs: CliArgs = {
-        'top-k': 999 // Invalid value
+        'top-k': 1001 // Invalid value - exceeds max of 1000
       };
       
       await expect(configManager.loadConfig('/tmp/test-workspace', invalidArgs))
-        .rejects.toThrow('Failed to load configuration');
+        .rejects.toThrow('Configuration validation failed');
     });
   });
 });

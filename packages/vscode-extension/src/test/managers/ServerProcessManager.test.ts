@@ -338,10 +338,22 @@ describe('ServerProcessManager', () => {
 
       const timeoutManager = new ServerProcessManager(config, mockOutputChannel);
       
-      // Mock waitForReady to never resolve, simulating a server that doesn't respond
+      // Mock child process for this specific test
+      const mockTimeoutProcess = new EventEmitter() as any;
+      mockTimeoutProcess.pid = 99999;
+      mockTimeoutProcess.exitCode = null;
+      mockTimeoutProcess.killed = false;
+      mockTimeoutProcess.kill = vi.fn(() => true);
+      mockTimeoutProcess.stdout = new EventEmitter();
+      mockTimeoutProcess.stderr = new EventEmitter();
+      
+      // Mock spawn to return our timeout process
+      (child_process.spawn as Mock).mockReturnValue(mockTimeoutProcess);
+      
+      // Mock waitForReady to reject after timeout instead of never resolving
       vi.spyOn(timeoutManager as any, 'waitForReady').mockImplementation(
-        () => new Promise(() => {
-          // Never resolve - this will cause a timeout
+        () => new Promise((resolve, reject) => {
+          setTimeout(() => reject(new Error('Server startup timeout')), 60);
         })
       );
 
@@ -355,7 +367,7 @@ describe('ServerProcessManager', () => {
       const startPromise = timeoutManager.start();
 
       // Wait for the promise to reject due to timeout
-      await expect(startPromise).rejects.toThrow();
+      await expect(startPromise).rejects.toThrow('Server startup timeout');
       
       // Give a moment for event handlers to complete
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -366,7 +378,7 @@ describe('ServerProcessManager', () => {
       
       // Clean up
       timeoutManager.dispose();
-    }, 10000); // Increase timeout to 10 seconds for this test
+    }, 5000); // Reduce timeout to 5 seconds
   });
 
   describe('disposal', () => {

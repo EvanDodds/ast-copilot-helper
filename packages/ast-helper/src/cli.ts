@@ -119,6 +119,19 @@ interface ModelStatusOptions extends GlobalOptions {
 }
 
 /**
+ * Options for the performance command
+ */
+interface PerformanceOptions extends GlobalOptions {
+  type?: string;
+  verbose?: boolean;
+  outputDir?: string;
+  targets?: string;
+  reportFormat?: string;
+  memoryLimit?: number;
+  concurrencyLimit?: number;
+}
+
+/**
  * Interface for command handlers
  */
 interface CommandHandler<T = any> {
@@ -172,6 +185,7 @@ export class AstHelperCli {
     this.setupQueryCommand();
     this.setupWatchCommand();
     this.setupModelCommands();
+    this.setupPerformanceCommand();
   }
 
   /**
@@ -377,6 +391,67 @@ export class AstHelperCli {
   }
 
   /**
+   * Set up performance testing commands
+   */
+  private setupPerformanceCommand(): void {
+    const perfCmd = this.program
+      .command('performance')
+      .alias('perf')
+      .description('Run performance benchmarks and validation');
+
+    // performance benchmark - Run comprehensive benchmarks
+    perfCmd
+      .command('benchmark')
+      .alias('bench')
+      .description('Run comprehensive performance benchmarks')
+      .addOption(new Option('-t, --type <type>', 'Benchmark type').choices(['parsing', 'querying', 'memory', 'concurrency', 'all']).default('all'))
+      .addOption(new Option('-v, --verbose', 'Enable verbose output'))
+      .addOption(new Option('-o, --output-dir <dir>', 'Output directory for reports'))
+      .addOption(new Option('--targets <file>', 'Custom performance targets file'))
+      .addOption(new Option('-f, --format <fmt>', 'Report format').choices(['json', 'table', 'html']).default('table'))
+      .action(async (options: PerformanceOptions) => {
+        await this.executeCommand('performance:benchmark', options);
+      });
+
+    // performance validate - Validate against performance targets
+    perfCmd
+      .command('validate')
+      .alias('val')
+      .description('Validate performance against defined targets')
+      .addOption(new Option('--targets <file>', 'Custom performance targets file'))
+      .addOption(new Option('--memory-limit <mb>', 'Memory usage limit in MB').argParser(parseInt))
+      .addOption(new Option('--concurrency-limit <num>', 'Max concurrent operations').argParser(parseInt))
+      .addOption(new Option('-f, --format <fmt>', 'Output format').choices(['json', 'table']).default('table'))
+      .action(async (options: PerformanceOptions) => {
+        await this.executeCommand('performance:validate', options);
+      });
+
+    // performance report - Generate detailed performance report
+    perfCmd
+      .command('report')
+      .description('Generate comprehensive performance report')
+      .addOption(new Option('-o, --output-dir <dir>', 'Output directory for report').default('./performance-report'))
+      .addOption(new Option('-f, --format <fmt>', 'Report format').choices(['html', 'pdf', 'json']).default('html'))
+      .addOption(new Option('--include-charts', 'Include performance charts'))
+      .addOption(new Option('--compare <baseline>', 'Compare with baseline report'))
+      .action(async (options: PerformanceOptions) => {
+        await this.executeCommand('performance:report', options);
+      });
+
+    // performance monitor - Real-time performance monitoring
+    perfCmd
+      .command('monitor')
+      .alias('mon')
+      .description('Monitor real-time performance metrics')
+      .addOption(new Option('--duration <seconds>', 'Monitoring duration in seconds').argParser(parseInt).default(60))
+      .addOption(new Option('--interval <ms>', 'Sampling interval in milliseconds').argParser(parseInt).default(1000))
+      .addOption(new Option('--output <file>', 'Save monitoring data to file'))
+      .action(async (options: PerformanceOptions) => {
+        await this.executeCommand('performance:monitor', options);
+      });
+  }
+
+  /**
    * Main entry point for CLI
    */
   async run(args: string[] = process.argv.slice(2)): Promise<void> {
@@ -537,6 +612,18 @@ export class AstHelperCli {
       case 'model:status':
         const { ModelStatusCommandHandler } = await import('./commands/model-status.js');
         return new ModelStatusCommandHandler();
+      case 'performance:benchmark':
+        const { PerformanceBenchmarkCommandHandler } = await import('./commands/performance-benchmark.js');
+        return new PerformanceBenchmarkCommandHandler();
+      case 'performance:validate':
+        const { PerformanceValidateCommandHandler } = await import('./commands/performance-validate.js');
+        return new PerformanceValidateCommandHandler();
+      case 'performance:report':
+        const { PerformanceReportCommandHandler } = await import('./commands/performance-report.js');
+        return new PerformanceReportCommandHandler();
+      case 'performance:monitor':
+        const { PerformanceMonitorCommandHandler } = await import('./commands/performance-monitor.js');
+        return new PerformanceMonitorCommandHandler();
       default:
         throw ValidationErrors.invalidValue('command', commandName, 'Unknown command');
     }
