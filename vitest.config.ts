@@ -56,15 +56,15 @@ export default defineConfig({
       'coverage/',
       'tests/fixtures/',
       // Memory-intensive tests that can cause OOM in comprehensive runs
-      '**/embed*.{test,spec}.{js,ts}',              // Embedding generation tests
-      '**/final-acceptance-verification.test.ts',   // Large verification tests
-      '**/XenovaEmbeddingGenerator.test.ts',        // XENOVA model loading tests  
-      '**/performance*.{test,spec}.{js,ts}',        // Performance benchmarking tests
-      '**/glob/manager.test.ts',                    // Glob processing tests
-      '**/file-processor.test.ts',                  // File processing tests
-      '**/database/**/*.test.ts',                   // Database integrity tests
-      '**/integrity*.{test,spec}.{js,ts}',          // Integrity validation tests
-      '**/benchmarks/**/*.{test,spec}.{js,ts}',     // Benchmark tests
+      '**/embed*.{test,spec}.{js,ts}',                                  // Embedding generation tests
+      '**/final-acceptance-verification.test.ts',                       // Large verification tests
+      '**/XenovaEmbeddingGenerator.test.ts',                            // XENOVA model loading tests  
+      '**/performance*.{test,spec}.{js,ts}',                            // Performance benchmarking tests
+      '**/glob/manager.test.ts',                                        // Glob processing tests
+      'packages/ast-helper/src/commands/__tests__/file-processor.test.ts', // File processing tests
+      'packages/ast-helper/src/database/__tests__/**',                  // All database tests
+      '**/integrity*.{test,spec}.{js,ts}',                              // Integrity validation tests
+      '**/benchmarks/**/*.{test,spec}.{js,ts}',                         // Benchmark tests
     ],
     setupFiles: ['./tests/setup.ts'],
   },
