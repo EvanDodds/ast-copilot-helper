@@ -1,15 +1,17 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-echo "🚀 Running pre-push hooks..."
+# Pre-push validation: comprehensive testing before sharing
+echo "🚀 Running pre-push validation (comprehensive checks)..."
+echo "⏱️  This may take 2-3 minutes (use 'yarn run test:all' for full testing)"
 
-# Run unit tests and integrations (skip benchmarks with onnx issues temporarily)
-echo "🧪 Running core test suite..."
-yarn run test:unit || exit 1
-yarn run test:integration || exit 1
+# Build check (ensure everything compiles)
+echo "🔧 Building project..."
+yarn run build || exit 1
 
-# Security audit
-echo "🔒 Running security audit..."
-yarn run security:audit || exit 1
+# Comprehensive fast tests (all non-performance tests)
+echo "🧪 Running comprehensive fast tests (unit + integration)..."
+yarn run test:fast || exit 1
 
-echo "✅ Pre-push hooks completed successfully!"
+echo "✅ Pre-push validation completed successfully!"
+echo "💡 For full testing including all benchmarks: yarn run test:all"

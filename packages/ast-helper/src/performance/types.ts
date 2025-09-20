@@ -256,3 +256,93 @@ export interface SystemInfo {
   totalMemory: number;
   freeMemory: number;
 }
+
+// Concurrency Testing Types
+
+export interface ConcurrencyBenchmarkConfig {
+  maxWorkers: number;
+  workerCounts: number[];
+  totalTasks: number;
+  workloadTypes: string[];
+  taskTimeout?: number;
+  minThroughput?: number;
+}
+
+export interface ConcurrencyBenchmarkResult {
+  benchmarkType: 'concurrency';
+  totalWorkers: number;
+  totalTasks: number;
+  successfulTasks: number;
+  failedTasks: number;
+  averageDuration: number;
+  peakConcurrency: number;
+  averageThroughput: number;
+  peakMemoryUsage: number;
+  averageCpuUsage: number;
+  resourceContentions: number;
+  deadlocksDetected: number;
+  threadSafetyViolations: number;
+  scalabilityMetrics: ScalabilityMetrics;
+  meetsPerformanceTargets: boolean;
+  performanceScore: number;
+  warnings: string[];
+  recommendations: string[];
+  errors: string[];
+}
+
+export interface ConcurrencyMetrics {
+  successfulTasks: number;
+  failedTasks: number;
+  averageDuration: number;
+  peakConcurrency: number;
+  averageThroughput: number;
+  peakMemoryUsage: number;
+  resourceContentions: number;
+  deadlocksDetected: number;
+  threadSafetyViolations: number;
+}
+
+export interface WorkerTask {
+  id: string;
+  type: string;
+  data: any;
+  priority: number;
+  timeout: number;
+  resourceRequirements: ResourceRequirements;
+}
+
+export interface ResourceRequirements {
+  memory: number; // MB
+  cpu: number; // Percentage
+  sharedResources: string[];
+}
+
+export interface ScalabilityMetrics {
+  optimalWorkerCount: number;
+  throughputScaling: ScalingPoint[];
+  memoryScaling: ScalingPoint[];
+  latencyScaling: ScalingPoint[];
+}
+
+export interface ScalingPoint {
+  workerCount: number;
+  throughput?: number;
+  memoryUsage?: number;
+  latency?: number;
+}
+
+export interface ResourceContentionResult {
+  resource: string;
+  contentionCount: number;
+  averageWaitTime: number;
+  maxWaitTime: number;
+  affectedWorkers: string[];
+}
+
+export interface DeadlockDetectionResult {
+  detected: boolean;
+  involvedWorkers: string[];
+  involvedResources: string[];
+  detectionTime: number;
+  resolutionStrategy: string;
+}

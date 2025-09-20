@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🔍 Running pre-commit hooks..."
+echo "🔍 Running pre-commit validation (quick checks)..."
+echo "⏱️  This should take ~30-45 seconds"
 
 # Type checking
 echo "📝 Type checking..."
@@ -11,12 +12,11 @@ yarn run type-check || exit 1
 echo "🧹 Linting code..."
 yarn run lint || exit 1
 
-# Unit tests (fast feedback)
-echo "🧪 Running unit tests..."
+# Essential unit tests only (fastest subset)
+echo "🧪 Running essential unit tests..."
 yarn run test:unit || exit 1
 
-# Build verification
-echo "🔨 Building packages..."
-yarn run build || exit 1
+echo "✅ Pre-commit validation completed!"
+echo "� Pre-push will run more comprehensive tests"
 
 echo "✅ Pre-commit hooks completed successfully!"

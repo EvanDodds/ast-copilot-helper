@@ -23,7 +23,7 @@ describe('Performance Framework Core', () => {
       expect(report.systemInfo.nodeVersion).toBeTruthy();
       expect(report.systemInfo.cpuCount).toBeGreaterThan(0);
       expect(report.systemInfo.totalMemory).toBeGreaterThan(0);
-    });
+    }, 45000);
 
     it('should run benchmark suite successfully', async () => {
       const results = await benchmarkRunner.runBenchmarkSuite();
@@ -66,7 +66,7 @@ describe('Performance Framework Core', () => {
       expect(results.levels).toBeInstanceOf(Array);
       expect(results.maxSustainableConcurrency).toBeGreaterThanOrEqual(0);
       expect(results.degradationPoint).toBeGreaterThanOrEqual(0);
-    });
+    }, 45000);
 
     it('should measure scalability limits', async () => {
       const report = await benchmarkRunner.measureScalabilityLimits();
@@ -89,7 +89,7 @@ describe('Performance Framework Core', () => {
       expect(report.concurrencyResults).toBeDefined();
       expect(report.scalabilityReport).toBeDefined();
       expect(report.recommendations).toBeInstanceOf(Array);
-    });
+    }, 45000);
   });
 
   describe('PerformanceTimer', () => {

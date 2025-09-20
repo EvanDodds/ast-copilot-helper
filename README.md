@@ -95,17 +95,59 @@ yarn run build:watch
 
 ### Testing
 
-Run tests across all packages:
+We have a multi-tiered testing strategy optimized for both development speed and comprehensive validation:
 
+### Testing Strategy
+
+We use a multi-tiered testing approach optimized for different development phases:
+
+#### Git Hook Testing (Automated)
+- **Pre-commit** (~30-45 seconds): Essential unit tests + type checking + linting
+  - Runs fastest subset to catch basic issues before commit
+  - Prevents broken code from entering the repository
+- **Pre-push** (~1-2 minutes): Comprehensive fast tests + build verification
+  - All tests except performance benchmarks
+  - Ensures code is ready to be shared/reviewed
+
+#### Manual Testing Commands
 ```bash
-yarn test
+# Essential unit tests only (fastest, used by pre-commit)
+yarn run test:unit
+
+# Fast comprehensive tests (used by pre-push, excludes benchmarks)
+yarn run test:fast
+yarn run test:precommit  # Alias for test:fast
+
+# Integration and end-to-end tests
+yarn run test:integration
+
+# Complete test suite including performance benchmarks
+yarn run test:all  # Takes 5-7 minutes, use sparingly
 ```
 
-Run tests with coverage:
+#### Performance & Benchmarks
+```bash
+# Performance benchmarks (slowest tests)
+yarn run test:benchmarks
+```
 
+#### Comprehensive Testing
+```bash
+# Run ALL tests (unit + integration + benchmarks) - use for thorough validation
+yarn run test:all
+yarn run test:dev        # Same as above
+yarn run test:comprehensive  # Same as above
+```
+
+#### With Coverage
 ```bash
 yarn run test:coverage
 ```
+
+**Git Hook Strategy:**
+- **Pre-commit**: Fast tests only (type-check, lint, fast unit tests, build)
+- **Pre-push**: Comprehensive tests (unit + integration, skip benchmarks)
+- **Manual/CI**: All tests including performance benchmarks
 
 ### Type Checking
 

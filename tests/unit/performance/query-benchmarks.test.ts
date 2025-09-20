@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QueryBenchmarkRunner } from '../../../packages/ast-helper/src/performance/query-benchmarks';
-import type { QueryBenchmarkConfig, BenchmarkResult } from '../../../packages/ast-helper/src/performance/types';
+import type { QueryBenchmarkConfig, BenchmarkResult, NodeCount } from '../../../packages/ast-helper/src/performance/types';
 
 describe('Query Performance Benchmarks', () => {
   let runner: QueryBenchmarkRunner;
@@ -193,7 +193,12 @@ describe('Query Performance Benchmarks', () => {
     describe('General Query Benchmarks', () => {
       it('should run comprehensive query benchmark suite', async () => {
         const config: QueryBenchmarkConfig = {
-          nodeCount: 'small',
+          queryTypes: ['file', 'ast', 'semantic'],
+          nodeCounts: ['small'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 2
         };
 
@@ -208,28 +213,38 @@ describe('Query Performance Benchmarks', () => {
       it('should handle different node count sizes', async () => {
         for (const nodeCount of ['small', 'medium', 'large'] as const) {
           const config: QueryBenchmarkConfig = {
-            nodeCount,
+            queryTypes: ['file', 'ast'],
+            nodeCounts: [nodeCount],
+            cacheEnabled: false,
+            concurrentRequests: 1,
+            mcpTimeout: 200,
+            cliTimeout: 500,
             iterations: 1
           };
 
           const result = await runner.runQueryBenchmarks(config);
           
-          expect(result.totalRuns).toBe(3);
-          expect(result.successfulRuns).toBe(3);
+          expect(result.totalRuns).toBe(2);
+          expect(result.successfulRuns).toBe(2);
           expect(result.totalNodesProcessed).toBeGreaterThan(0);
         }
       }, 15000);
 
       it('should handle numeric node counts', async () => {
         const config: QueryBenchmarkConfig = {
-          nodeCount: 1000,
+          queryTypes: ['file'],
+          nodeCounts: [1000],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
         const result = await runner.runQueryBenchmarks(config);
         
-        expect(result.totalRuns).toBe(3);
-        expect(result.successfulRuns).toBe(3);
+        expect(result.totalRuns).toBe(1);
+        expect(result.successfulRuns).toBe(1);
       }, 8000);
     });
 
@@ -242,7 +257,12 @@ describe('Query Performance Benchmarks', () => {
         });
 
         const config: QueryBenchmarkConfig = {
-          nodeCount: 'small',
+          queryTypes: ['file'],
+          nodeCounts: ['small'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
@@ -259,7 +279,12 @@ describe('Query Performance Benchmarks', () => {
 
       it('should provide meaningful error messages', async () => {
         const config: QueryBenchmarkConfig = {
-          nodeCount: 'small',
+          queryTypes: ['file'],
+          nodeCounts: ['small'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
@@ -269,7 +294,7 @@ describe('Query Performance Benchmarks', () => {
 
         const result = await runner.runQueryBenchmarks(config);
         
-        expect(result.failedRuns).toBe(3);
+        expect(result.failedRuns).toBe(1);
         expect(result.successfulRuns).toBe(0);
         expect(result.errors).toContain('Query simulation failed');
 
@@ -279,7 +304,12 @@ describe('Query Performance Benchmarks', () => {
 
       it('should handle zero successful runs', async () => {
         const config: QueryBenchmarkConfig = {
-          nodeCount: 'small',
+          queryTypes: ['file'],
+          nodeCounts: ['small'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
@@ -289,7 +319,7 @@ describe('Query Performance Benchmarks', () => {
         const result = await runner.runQueryBenchmarks(config);
         
         expect(result.successfulRuns).toBe(0);
-        expect(result.failedRuns).toBe(3);
+        expect(result.failedRuns).toBe(1);
         expect(result.meetsPerformanceTargets).toBe(false);
         expect(result.performanceScore).toBe(0);
         expect(result.averageDuration).toBe(0);
@@ -300,14 +330,19 @@ describe('Query Performance Benchmarks', () => {
     describe('Performance Metrics Validation', () => {
       it('should provide comprehensive performance metrics', async () => {
         const config: QueryBenchmarkConfig = {
-          nodeCount: 'medium',
+          queryTypes: ['file', 'ast'],
+          nodeCounts: ['medium'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 2
         };
 
         const result = await runner.runQueryBenchmarks(config);
         
         expect(result.benchmarkType).toBe('query');
-        expect(result.totalRuns).toBe(6);
+        expect(result.totalRuns).toBe(4);
         expect(result.successfulRuns).toBeGreaterThanOrEqual(0);
         expect(result.failedRuns).toBeGreaterThanOrEqual(0);
         expect(result.averageDuration).toBeGreaterThanOrEqual(0);
@@ -321,8 +356,14 @@ describe('Query Performance Benchmarks', () => {
       }, 10000);
 
       it('should validate performance targets correctly', async () => {
-        const config: QueryBenchmarkConfig = {
-          nodeCount: 'small',
+        const config: QueryBenchmarkConfig & { nodeCount: NodeCount } = {
+          queryTypes: ['file'],
+          nodeCounts: ['small'],
+          nodeCount: 'small', // Added for backward compatibility
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
@@ -335,7 +376,12 @@ describe('Query Performance Benchmarks', () => {
 
       it('should generate appropriate warnings and recommendations', async () => {
         const config: QueryBenchmarkConfig = {
-          nodeCount: 'large',
+          queryTypes: ['file'],
+          nodeCounts: ['large'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
@@ -350,7 +396,12 @@ describe('Query Performance Benchmarks', () => {
 
       it('should calculate performance scores accurately', async () => {
         const config: QueryBenchmarkConfig = {
-          nodeCount: 'small',
+          queryTypes: ['file'],
+          nodeCounts: ['small'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
@@ -370,7 +421,12 @@ describe('Query Performance Benchmarks', () => {
     describe('Test Data Generation', () => {
       it('should generate appropriate test data for different query types', async () => {
         const config: QueryBenchmarkConfig = {
-          nodeCount: 'small',
+          queryTypes: ['file', 'ast', 'semantic'],
+          nodeCounts: ['small'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
@@ -383,12 +439,22 @@ describe('Query Performance Benchmarks', () => {
 
       it('should scale test data based on node count', async () => {
         const smallConfig: QueryBenchmarkConfig = {
-          nodeCount: 'small',
+          queryTypes: ['file'],
+          nodeCounts: ['small'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
         
         const largeConfig: QueryBenchmarkConfig = {
-          nodeCount: 'large',
+          queryTypes: ['file'],
+          nodeCounts: ['large'],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
@@ -401,13 +467,18 @@ describe('Query Performance Benchmarks', () => {
 
       it('should handle custom numeric node counts', async () => {
         const config: QueryBenchmarkConfig = {
-          nodeCount: 500,
+          queryTypes: ['file'],
+          nodeCounts: [500],
+          cacheEnabled: false,
+          concurrentRequests: 1,
+          mcpTimeout: 200,
+          cliTimeout: 500,
           iterations: 1
         };
 
         const result = await runner.runQueryBenchmarks(config);
         
-        expect(result.successfulRuns).toBe(3);
+        expect(result.successfulRuns).toBe(1);
         expect(result.totalNodesProcessed).toBeGreaterThan(0);
       }, 5000);
     });
