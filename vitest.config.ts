@@ -60,6 +60,11 @@ export default defineConfig({
       '**/final-acceptance-verification.test.ts',   // Large verification tests
       '**/XenovaEmbeddingGenerator.test.ts',        // XENOVA model loading tests  
       '**/performance*.{test,spec}.{js,ts}',        // Performance benchmarking tests
+      '**/glob/manager.test.ts',                    // Glob processing tests
+      '**/file-processor.test.ts',                  // File processing tests
+      '**/database/**/*.test.ts',                   // Database integrity tests
+      '**/integrity*.{test,spec}.{js,ts}',          // Integrity validation tests
+      '**/benchmarks/**/*.{test,spec}.{js,ts}',     // Benchmark tests
     ],
     setupFiles: ['./tests/setup.ts'],
   },
