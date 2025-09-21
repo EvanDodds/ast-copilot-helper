@@ -116,7 +116,7 @@ describe('Core Security Architecture', () => {
       
       expect(report).toBeDefined();
       expect(report.timestamp).toBeInstanceOf(Date);
-      expect(report.duration).toBeGreaterThan(0);
+      expect(report.duration).toBeGreaterThanOrEqual(0); // Allow for very fast test execution
       expect(report.overallScore).toBeGreaterThanOrEqual(0);
       expect(report.overallScore).toBeLessThanOrEqual(100);
       expect(report.overallSeverity).toMatch(/^(low|medium|high|critical)$/);
