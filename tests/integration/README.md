@@ -144,7 +144,7 @@ npm test -- tests/integration/mcp-protocol-compliance.test.ts
 npm test -- tests/integration/
 
 # Run integration tests with coverage
-npm run test:coverage -- tests/integration/
+yarn run test:coverage -- tests/integration/
 ```
 
 ### Test Environment Setup
@@ -322,7 +322,7 @@ Generate coverage reports:
 
 ```bash
 # Generate integration test coverage
-npm run test:coverage:integration
+yarn run test:coverage:integration
 
 # View coverage report
 open coverage/integration/index.html

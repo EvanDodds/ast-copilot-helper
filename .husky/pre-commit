@@ -14,7 +14,7 @@ yarn run lint || exit 1
 
 # Essential unit tests only (fastest subset)
 echo "🧪 Running essential unit tests..."
-yarn run test:unit || exit 1
+yarn run test:precommit || exit 1
 
 echo "✅ Pre-commit validation completed!"
 echo "� Pre-push will run more comprehensive tests"

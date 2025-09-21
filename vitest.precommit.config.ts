@@ -1,65 +1,88 @@
-import { resolve } from 'path';
 import { defineConfig } from 'vitest/config';
+import { resolve } from 'path';
 
-// Fast configuration for pre-commit hooks
-// Only runs critical syntax/logic tests, skips performance benchmarks
 export default defineConfig({
   test: {
-    globals: true,
-    environment: 'node',
-    watch: false,
+    // Pre-commit: Only core configuration and validation tests
+    include: [
+      'tests/unit/config/**/*.test.ts',
+      'packages/*/src/config/**/*.test.ts',
+      'packages/*/src/__tests__/unit/**/types.test.ts',
+      'packages/*/src/__tests__/unit/**/defaults.test.ts',
+      'packages/*/src/__tests__/unit/**/validator.test.ts',
+    ],
+    exclude: [
+      // Exclude ALL slow/memory-intensive tests
+      '**/performance/**',
+      '**/benchmarks/**', 
+      '**/integration/**',
+      '**/file-watcher.test.ts', // Memory leaks
+      '**/git/**',
+      '**/filesystem/**',
+      '**/database/**',
+      '**/parser/**',
+      '**/logging/**',
+      '**/mcp/**',
+      '**/query/**',
+      '**/embedder/**',
+      '**/models/**',
+      '**/commands/**',
+      '**/locking.test.ts',
+      '**/extension.test.ts',
+      '**/UIManager.test.ts',
+      '**/cli.test.ts',
+      // All integration patterns
+      '**/*integration*.test.ts',
+      '**/*processor*.test.ts',
+      // Exclude all but core config tests
+      '**/scaling/**',
+      '**/indexing/**',
+      '**/parsing/**',
+      '**/end-to-end/**',
+      '**/workflow/**',
+      '**/memory/**',
+      '**/resource-pools.test.ts',
+      '**/glob/**',
+      '**/security/**',
+      '**/test-debug/**',
+      '**/test-manual/**',
+      '**/test-perf-workspace/**'
+    ],
     
-    // Faster test execution settings
-    testTimeout: 10000,        // 10s timeout (faster than main config)
-    hookTimeout: 5000,         // 5s for setup/teardown
-    pool: 'threads',
+    // Ultra-fast configuration for pre-commit - minimal tests only
+    reporters: ['basic'],
+    pool: 'forks',
     poolOptions: {
-      threads: {
-        maxThreads: 1,         // Single thread to reduce memory usage
-        minThreads: 1,
+      forks: {
+        minForks: 1,
+        maxForks: 1, // Single fork to minimize memory usage
+        isolate: true,
+        execArgv: ['--max-old-space-size=256'], // Strict memory limit
       },
     },
     
-    // Only include unit tests, exclude slow benchmarks and integration tests
-    include: [
-      'tests/unit/**/*.{test,spec}.{js,ts}',
-      'packages/*/src/**/*.{test,spec}.{js,ts}',
-    ],
-    exclude: [
-      'node_modules/',
-      'dist/',
-      'coverage/',
-      'tests/fixtures/',
-      'tests/benchmarks/**',      // Skip performance benchmarks
-      'tests/integration/**',     // Skip integration tests for speed
-      '**/*performance*.{test,spec}.{js,ts}',  // Skip any performance tests
-      '**/*benchmark*.{test,spec}.{js,ts}',    // Skip any benchmark tests
-      'tests/unit/performance/**', // Skip performance unit tests specifically
-      '**/concurrency-profiler*.{test,spec}.{js,ts}', // Skip concurrency profiler tests
-      '**/memory-profiler*.{test,spec}.{js,ts}',       // Skip memory profiler tests
-      '**/benchmark-runner*.{test,spec}.{js,ts}',      // Skip benchmark runner tests
-      '**/embed*.{test,spec}.{js,ts}',                 // Skip embedding tests (ONNX heavy)
-      '**/acceptance-criteria-verification*.{test,spec}.{js,ts}', // Skip ONNX acceptance tests
-      // Memory-intensive tests causing OOM in comprehensive runs
-      '**/XenovaEmbeddingGenerator.test.ts',           // XENOVA model loading tests  
-      '**/final-acceptance-verification.test.ts',      // Large verification tests
-      '**/file-processor.test.ts',                     // File processing tests
-      '**/integrity*.test.ts',                         // All integrity tests 
-      '**/manager.test.ts',                            // Glob manager tests causing OOM
-      '**/downloader-throttling.test.ts',              // Model downloader tests with long delays
-      '**/models/**/*.test.ts',                        // All model-related tests
-      '**/database/**/*.test.ts',                      // All database tests 
-      '**/version.test.ts',                            // Database version tests
-    ],
+    // Aggressive timeouts for pre-commit
+    testTimeout: 2000,
+    hookTimeout: 2000,
     
-    setupFiles: ['./tests/setup.ts'],
+    // No setup files for speed
+    // setupFiles: ['./tests/setup.ts'],
+    
+    // Ultra minimal settings for stability
+    maxConcurrency: 1, // Only one test at a time
+    isolate: true,
+    fileParallelism: false, // No parallel file processing
+    
+    // Coverage disabled for speed
+    coverage: {
+      enabled: false,
+    },
   },
   resolve: {
     alias: {
-      '@ast-helper': resolve(__dirname, 'packages/ast-helper/src'),
-      '@ast-mcp-server': resolve(__dirname, 'packages/ast-mcp-server/src'),
-      '@vscode-ext': resolve(__dirname, 'packages/vscode-extension/src'),
-      '@tests': resolve(__dirname, 'tests'),
+      '@': resolve(__dirname, './packages/ast-helper/src'),
+      '@ast-mcp-server': resolve(__dirname, './packages/ast-mcp-server/src'),
+      '@vscode-extension': resolve(__dirname, './packages/vscode-extension/src'),
     },
   },
 });

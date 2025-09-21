@@ -72,15 +72,15 @@ The `test-helpers.ts` module provides:
 npm test
 
 # Specific test categories
-npm run test:unit
-npm run test:integration  
-npm run test:benchmark
+yarn run test:unit
+yarn run test:integration  
+yarn run test:benchmark
 
 # With coverage
-npm run test:coverage
+yarn run test:coverage
 
 # Watch mode for development
-npm run test:watch
+yarn run test:watch
 ```
 
 ## Coverage Requirements
