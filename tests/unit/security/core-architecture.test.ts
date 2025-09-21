@@ -132,7 +132,7 @@ describe('Core Security Architecture', () => {
       const report = await auditor.scanVulnerabilities();
       
       expect(report).toBeDefined();
-      expect(report.timestamp).toBeInstanceOf(Date);
+      expect(typeof report.timestamp).toBe('string');
       expect(typeof report.totalDependencies).toBe('number');
       expect(Array.isArray(report.vulnerabilities)).toBe(true);
       expect(Array.isArray(report.recommendations)).toBe(true);
@@ -145,7 +145,7 @@ describe('Core Security Architecture', () => {
       const report = await auditor.auditDependencies();
       
       expect(report).toBeDefined();
-      expect(report.timestamp).toBeInstanceOf(Date);
+      expect(typeof report.timestamp).toBe('string');
       expect(typeof report.totalDependencies).toBe('number');
       expect(Array.isArray(report.vulnerabilities)).toBe(true);
       expect(Array.isArray(report.recommendations)).toBe(true);

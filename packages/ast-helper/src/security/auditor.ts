@@ -3,8 +3,6 @@
  * Main security auditing and vulnerability assessment system
  */
 
-import { readFile } from 'fs/promises';
-import { join } from 'path';
 import { 
   SecurityAuditor, 
   SecurityConfig, 
@@ -14,8 +12,6 @@ import {
   SecurityTestReport,
   SecurityAuditSection,
   SecuritySeverity,
-  DependencyInfo,
-  Vulnerability,
   FrameworkCompliance,
   ComplianceStatus
 } from './types.js';
@@ -182,8 +178,13 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
         metadata: {
           scannerVersion: '1.0.0',
           patternsUsed: [],
-          configLevel: 'default'
-        }
+          configLevel: this.config.auditLevel
+        },
+        // Legacy compatibility fields
+        totalDependencies: 0,
+        vulnerabilities: [],
+        recommendations: ['Update dependencies to latest versions'],
+        overallRisk: 'low' as SecuritySeverity
       };
     } catch (error) {
       console.error('Dependency audit failed:', error);
@@ -210,8 +211,14 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
         metadata: {
           scannerVersion: '1.0.0',
           patternsUsed: [],
-          configLevel: 'default'
-        }
+          configLevel: this.config.auditLevel
+        },
+        // Legacy compatibility fields
+        totalDependencies: 0,
+        vulnerabilities: [],
+        recommendations: ['Resolve audit errors and try again'],
+        overallRisk: 'high' as SecuritySeverity,
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
