@@ -316,6 +316,7 @@ export class AdvancedResourceManager implements ResourceManager {
         name: poolConfig.name,
         type: poolConfig.type,
         drain: async () => { /* placeholder */ },
+        cleanup: async () => { /* placeholder cleanup */ },
       };
       
       this.resourcePools.set(poolConfig.name, pool);

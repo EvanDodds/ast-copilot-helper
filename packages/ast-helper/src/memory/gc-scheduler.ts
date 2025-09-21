@@ -174,13 +174,13 @@ export class GCScheduler extends EventEmitter {
     let level: MemoryPressure['level'];
     let recommendation: MemoryPressure['recommendation'];
 
-    if (score < 0.3) {
+    if (score < 0.4) {
       level = 'low';
       recommendation = 'none';
-    } else if (score < 0.6) {
+    } else if (score < 0.55) {
       level = 'medium';
       recommendation = 'schedule';
-    } else if (score < 0.8) {
+    } else if (score < 0.75) {
       level = 'high';
       recommendation = 'immediate';
     } else {
