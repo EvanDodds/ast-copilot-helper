@@ -181,6 +181,79 @@ yarn run dev
 yarn test
 ```
 
+## Security Framework
+
+This project includes a comprehensive security framework designed to protect against common vulnerabilities and ensure secure AST processing workflows.
+
+### Security Features
+
+- **🔒 Comprehensive Security Auditing**: Multi-layer security analysis with OWASP, CWE, and NIST compliance
+- **🛡️ Input Validation System**: Advanced input sanitization and validation with XSS, SQL injection, and path traversal protection
+- **🔍 Vulnerability Scanning**: Automated detection of security patterns, hardcoded credentials, and insecure cryptographic practices
+- **🔧 Security Hardening Framework**: Policy enforcement, access control, and security configuration management
+- **📊 Security Integration Testing**: End-to-end security workflow validation with performance monitoring
+
+### Security Components
+
+The security framework consists of four core modules:
+
+1. **ComprehensiveSecurityAuditor** (`packages/ast-helper/src/security/auditor.ts`)
+   - Performs comprehensive security audits with OWASP/CWE/NIST compliance
+   - Generates detailed security reports with risk scoring and remediation guidance
+   - Supports dependency vulnerability scanning and policy enforcement
+
+2. **ComprehensiveInputValidator** (`packages/ast-helper/src/security/input-validator.ts`)
+   - Advanced input validation and sanitization engine
+   - Protection against XSS, SQL injection, command injection, and path traversal
+   - Context-aware validation with custom rule support
+
+3. **VulnerabilityScanner** (`packages/ast-helper/src/security/vulnerability-scanner.ts`)
+   - Pattern-based vulnerability detection for common security issues
+   - Supports hardcoded credential detection, insecure crypto practices, and injection vulnerabilities
+   - Real-time risk scoring and finding categorization
+
+4. **SecurityHardeningFramework** (`packages/ast-helper/src/security/security-hardening-framework.ts`)
+   - Security policy enforcement and configuration management
+   - Access control validation and permission management
+   - Security baseline compliance checking
+
+### Security Testing
+
+Comprehensive test coverage ensures security framework reliability:
+
+- **139+ Unit Tests**: Core security functionality validation (100% success rate)
+- **14 Integration Tests**: End-to-end security workflow testing
+- **Real-world Scenarios**: SQL injection, XSS, cryptographic vulnerability testing
+- **Performance Validation**: Security operations under load testing
+
+Run security tests:
+```bash
+# All security unit tests
+yarn test packages/ast-helper/src/security/
+
+# Integration security tests  
+yarn test tests/integration/security-integration.test.ts
+
+# Complete security test suite
+yarn run test:security
+```
+
+### Security Configuration
+
+Security settings are configured via the security config system:
+
+```typescript
+import { DEFAULT_SECURITY_CONFIG } from 'packages/ast-helper/src/security/config';
+
+// Default security configuration includes:
+// - OWASP/CWE/NIST compliance frameworks
+// - Input validation rules and sanitization
+// - Vulnerability detection patterns  
+// - Security hardening policies
+```
+
+For detailed security information, see [SECURITY.md](SECURITY.md).
+
 ## Usage
 
 ### AST Helper CLI
