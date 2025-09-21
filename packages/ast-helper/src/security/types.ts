@@ -26,35 +26,172 @@ export interface SecurityAuditor {
 }
 
 /**
- * Security audit configuration
+ * Configuration for comprehensive security system
  */
 export interface SecurityConfig {
-  /** Level of audit depth to perform */
+  /** Audit level for security analysis */
   auditLevel: AuditLevel;
-  
-  /** Include third-party code analysis */
-  includeThirdParty: boolean;
-  
-  /** Enable dependency vulnerability scanning */
+  /** Maximum time for audit operations (ms) */
+  maxAuditTime?: number;
+  /** Enable dependency scanning */
   dependencyScanning: boolean;
-  
-  /** Enable static code analysis */
-  codeAnalysis: boolean;
-  
-  /** Enable configuration security audit */
-  configurationAudit: boolean;
-  
-  /** Enable penetration testing simulation */
+  /** Include third-party dependencies in scan */
+  includeThirdParty: boolean;
+  /** Enable penetration testing (use with caution) */
   penetrationTesting: boolean;
-  
   /** Compliance frameworks to validate against */
   complianceFrameworks: string[];
-  
-  /** Maximum time to spend on audit in milliseconds */
-  maxAuditTime?: number;
-  
-  /** Custom security rules to apply */
-  customRules?: SecurityRule[];
+  /** Enable code analysis scanning */
+  codeAnalysis?: boolean;
+  /** Enable configuration audit */
+  configurationAudit?: boolean;
+  /** Custom security rules */
+  customRules?: any[];
+
+  /** Audit configuration */
+  audit: {
+    /** Level of audit detail */
+    level: AuditLevel;
+    /** Maximum time for audit operations (ms) */
+    maxAuditTime: number;
+    /** Enable dependency scanning */
+    enableDependencyScanning: boolean;
+    /** Compliance frameworks to validate against */
+    complianceFrameworks: string[];
+  };
+
+  /** Vulnerability detection configuration */
+  vulnerability: {
+    /** Enable vulnerability scanning */
+    enabled: boolean;
+    /** Severity levels to report */
+    reportSeverities: SecuritySeverity[];
+    /** Custom vulnerability patterns */
+    customPatterns: string[];
+  };
+
+  /** Security hardening configuration */
+  hardening: {
+    /** Enable security hardening checks */
+    enabled: boolean;
+    /** Security rules to apply */
+    rules: SecurityRule[];
+  };
+
+  /** Compliance reporting configuration */
+  compliance: {
+    /** Enable compliance reporting */
+    enabled: boolean;
+    /** Output format for reports */
+    reportFormat: 'json' | 'xml' | 'html' | 'pdf';
+    /** Include remediation suggestions */
+    includeRemediation: boolean;
+  };
+}
+
+/**
+ * Input validation and sanitization types
+ */
+
+export interface ValidationRule {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  validate: (input: unknown, context?: ValidationContext) => Promise<{ isValid: boolean; message: string }>;
+}
+
+export interface SanitizationRule {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  sanitize: (input: unknown, context?: SanitizationContext) => Promise<string>;
+}
+
+export interface ValidationContext {
+  inputType?: 'text' | 'path' | 'command' | 'sql' | 'html' | 'url' | 'email';
+  source?: string;
+  userRole?: string;
+  additionalRules?: string[];
+}
+
+export interface SanitizationContext {
+  inputType?: 'text' | 'path' | 'command' | 'sql' | 'html' | 'url' | 'email';
+  outputFormat?: 'plain' | 'html' | 'json' | 'xml';
+  preserveFormatting?: boolean;
+  strictMode?: boolean;
+}
+
+export interface InputValidationResult {
+  isValid: boolean;
+  message: string;
+  violations: string[];
+  timestamp: string;
+  context: Record<string, any>;
+}
+
+export interface SanitizationResult {
+  sanitizedInput: string;
+  wasModified: boolean;
+  message: string;
+  timestamp: string;
+  context: Record<string, any>;
+}
+
+export interface InputValidationConfig {
+  sqlInjection: {
+    enabled: boolean;
+    strictMode: boolean;
+    blockedPatterns: RegExp[];
+    allowedCharacters: RegExp;
+    maxLength: number;
+  };
+  xssProtection: {
+    enabled: boolean;
+    strictMode: boolean;
+    blockedTags: string[];
+    blockedAttributes: string[];
+    blockedPatterns: RegExp[];
+    allowedTags: string[];
+    encodeOutput: boolean;
+  };
+  pathTraversal: {
+    enabled: boolean;
+    strictMode: boolean;
+    blockedPatterns: RegExp[];
+    allowedPaths: string[];
+    maxPathLength: number;
+    allowAbsolutePaths: boolean;
+  };
+  commandInjection: {
+    enabled: boolean;
+    strictMode: boolean;
+    blockedCommands: string[];
+    blockedPatterns: RegExp[];
+    allowedCharacters: RegExp;
+    maxLength: number;
+  };
+  dataTypes: {
+    enabled: boolean;
+    strictTypeChecking: boolean;
+    allowedTypes: string[];
+    maxStringLength: number;
+    maxArrayLength: number;
+    maxObjectDepth: number;
+    numberRange: {
+      min: number;
+      max: number;
+    };
+  };
+  general: {
+    caseSensitive: boolean;
+    trimWhitespace: boolean;
+    normalizeUnicode: boolean;
+    maxInputSize: number;
+    enableLogging: boolean;
+    logLevel: 'error' | 'warn' | 'info' | 'debug';
+  };
 }
 
 /**

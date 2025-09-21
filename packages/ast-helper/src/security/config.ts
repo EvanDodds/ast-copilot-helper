@@ -17,7 +17,32 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   penetrationTesting: false, // Disabled by default for safety
   complianceFrameworks: ['OWASP', 'CWE', 'NIST'],
   maxAuditTime: 300000, // 5 minutes
-  customRules: []
+  customRules: [],
+
+  // Nested configuration objects for comprehensive system
+  audit: {
+    level: 'comprehensive' as const,
+    maxAuditTime: 300000,
+    enableDependencyScanning: true,
+    complianceFrameworks: ['OWASP', 'CWE', 'NIST']
+  },
+  
+  vulnerability: {
+    enabled: true,
+    reportSeverities: ['low', 'medium', 'high', 'critical'],
+    customPatterns: []
+  },
+  
+  hardening: {
+    enabled: true,
+    rules: [] // Will be populated with DEFAULT_SECURITY_RULES
+  },
+  
+  compliance: {
+    enabled: true,
+    reportFormat: 'json' as const,
+    includeRemediation: true
+  }
 };
 
 /**
@@ -149,6 +174,13 @@ export class SecurityConfigValidator {
           penetrationTesting: false,
           complianceFrameworks: ['OWASP'],
           maxAuditTime: 60000, // 1 minute
+          audit: {
+            ...baseConfig.audit,
+            level: 'basic',
+            maxAuditTime: 60000,
+            enableDependencyScanning: false,
+            complianceFrameworks: ['OWASP']
+          },
           ...overrides
         });
 
@@ -160,6 +192,13 @@ export class SecurityConfigValidator {
           penetrationTesting: false,
           complianceFrameworks: ['OWASP', 'CWE'],
           maxAuditTime: 300000, // 5 minutes
+          audit: {
+            ...baseConfig.audit,
+            level: 'comprehensive',
+            maxAuditTime: 300000,
+            enableDependencyScanning: true,
+            complianceFrameworks: ['OWASP', 'CWE']
+          },
           ...overrides
         });
 
@@ -171,6 +210,13 @@ export class SecurityConfigValidator {
           penetrationTesting: true,
           complianceFrameworks: ['OWASP', 'CWE', 'NIST', 'ISO27001'],
           maxAuditTime: 900000, // 15 minutes
+          audit: {
+            ...baseConfig.audit,
+            level: 'enterprise',
+            maxAuditTime: 900000,
+            enableDependencyScanning: true,
+            complianceFrameworks: ['OWASP', 'CWE', 'NIST', 'ISO27001']
+          },
           ...overrides
         });
 
