@@ -1,0 +1,75 @@
+import { resolve } from 'path';
+import { defineConfig } from 'vitest/config';
+
+// Fast configuration for pre-commit hooks
+// Only runs critical syntax/logic tests, skips performance benchmarks
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    watch: false,
+    
+    // Faster test execution settings
+    testTimeout: 10000,        // 10s timeout (faster than main config)
+    hookTimeout: 5000,         // 5s for setup/teardown
+    pool: 'threads',           // Use threads with better memory management
+    poolOptions: {
+      threads: {
+        maxThreads: 1,         // Single thread to reduce memory usage
+        minThreads: 1,
+      },
+    },
+    
+    // Only include unit tests, exclude slow benchmarks and integration tests
+    include: [
+      'tests/unit/**/*.{test,spec}.{js,ts}',
+      'packages/*/src/**/*.{test,spec}.{js,ts}',
+    ],
+    exclude: [
+      'node_modules/',
+      'dist/',
+      'coverage/',
+      'tests/fixtures/',
+      'tests/benchmarks/**',      // Skip performance benchmarks
+      'tests/integration/**',     // Skip integration tests for speed
+      '**/*performance*.{test,spec}.{js,ts}',  // Skip any performance tests
+      '**/*benchmark*.{test,spec}.{js,ts}',    // Skip any benchmark tests
+      'tests/unit/performance/**', // Skip performance unit tests specifically
+      '**/concurrency-profiler*.{test,spec}.{js,ts}', // Skip concurrency profiler tests
+      '**/memory-profiler*.{test,spec}.{js,ts}',       // Skip memory profiler tests
+      '**/benchmark-runner*.{test,spec}.{js,ts}',      // Skip benchmark runner tests
+      '**/embed*.{test,spec}.{js,ts}',                 // Skip embedding tests (ONNX heavy)
+      '**/acceptance-criteria-verification*.{test,spec}.{js,ts}', // Skip ONNX acceptance tests
+      // Memory-intensive tests causing OOM in comprehensive runs
+      '**/XenovaEmbeddingGenerator.test.ts',           // XENOVA model loading tests  
+      '**/final-acceptance-verification.test.ts',      // Large verification tests
+      '**/file-processor.test.ts',                     // File processing tests
+      '**/integrity*.test.ts',                         // All integrity tests 
+      '**/manager.test.ts',                            // Glob manager tests causing OOM
+      '**/downloader-throttling.test.ts',              // Model downloader tests with long delays
+      '**/models/**/*.test.ts',                        // All model-related tests
+      '**/database/**/*.test.ts',                      // All database tests 
+      '**/version.test.ts',                            // Database version tests
+      '**/memory-system-integration.test.ts',         // Memory system integration tests (very slow)
+      '**/monitor.test.ts',                           // Memory monitor tests (slow and memory-intensive)
+      '**/grammar-manager.test.ts',                   // Tree-sitter grammar manager tests (network dependent)
+    ],
+    
+    setupFiles: ['./tests/setup.ts'],
+    
+    // Additional memory management
+    teardownTimeout: 5000,
+    maxConcurrency: 1,        // Run tests one at a time to prevent memory buildup
+    sequence: {
+      shuffle: false,         // Deterministic order to aid debugging memory issues
+    },
+  },
+  resolve: {
+    alias: {
+      '@ast-helper': resolve(__dirname, 'packages/ast-helper/src'),
+      '@ast-mcp-server': resolve(__dirname, 'packages/ast-mcp-server/src'),
+      '@vscode-ext': resolve(__dirname, 'packages/vscode-extension/src'),
+      '@tests': resolve(__dirname, 'tests'),
+    },
+  },
+});

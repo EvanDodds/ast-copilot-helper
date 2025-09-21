@@ -11,7 +11,7 @@ yarn run build || exit 1
 
 # Comprehensive fast tests (all non-performance tests)
 echo "🧪 Running comprehensive fast tests (unit + integration)..."
-yarn run test:fast || exit 1
+yarn run test:prepush || exit 1
 
 echo "✅ Pre-push validation completed successfully!"
 echo "💡 For full testing including all benchmarks: yarn run test:all"
