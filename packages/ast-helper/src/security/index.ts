@@ -16,4 +16,5 @@ export {
   DEFAULT_INPUT_VALIDATION_CONFIG,
   InputValidationUtils 
 } from './input-validator.js';
+export { VulnerabilityScanner } from './vulnerability-scanner.js';
 export type { InputValidator } from './input-validator.js';

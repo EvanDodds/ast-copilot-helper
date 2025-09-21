@@ -283,12 +283,80 @@ export interface FrameworkCompliance {
  * Vulnerability report for dependencies
  */
 export interface VulnerabilityReport {
-  timestamp: Date;
-  totalDependencies: number;
-  vulnerabilities: Vulnerability[];
-  recommendations: string[];
-  overallRisk: SecuritySeverity;
+  timestamp: string;
+  scanDuration: number;
+  totalFindings: number;
+  findingsBySeverity: Record<SecuritySeverity, VulnerabilityFinding[]>;
+  findings: VulnerabilityFinding[];
+  hotspots: SecurityHotspot[];
+  summary: VulnerabilityReportSummary;
+  metadata: {
+    scannerVersion: string;
+    patternsUsed: string[];
+    configLevel: string;
+  };
+  // Legacy compatibility
+  totalDependencies?: number;
+  vulnerabilities?: Vulnerability[];
+  recommendations?: string[];
+  overallRisk?: SecuritySeverity;
   error?: string;
+}
+
+/**
+ * Summary of vulnerability report
+ */
+export interface VulnerabilityReportSummary {
+  criticalCount: number;
+  highCount: number;
+  mediumCount: number;
+  lowCount: number;
+  hotspotsCount: number;
+  riskScore: number;
+}
+
+/**
+ * Individual vulnerability finding
+ */
+export interface VulnerabilityFinding {
+  id: string;
+  title: string;
+  description: string;
+  severity: SecuritySeverity;
+  category: 'injection' | 'xss' | 'cryptographic' | 'authentication' | 'authorization' | 'configuration' | 'dependency' | 'other';
+  location: {
+    file: string;
+    line: number;
+    column?: number;
+    snippet?: string;
+  };
+  cveIds?: string[];
+  owaspCategories?: string[];
+  cweIds?: string[];
+  remediation: string;
+  references: string[];
+  confidence: 'high' | 'medium' | 'low';
+  firstDetected: string;
+}
+
+/**
+ * Security hotspot for prioritized attention
+ */
+export interface SecurityHotspot {
+  id: string;
+  title: string;
+  description: string;
+  severity: SecuritySeverity;
+  confidence: 'high' | 'medium' | 'low';
+  location: {
+    file: string;
+    line: number;
+    column?: number;
+    snippet?: string;
+  };
+  category: string;
+  remediation: string;
+  references: string[];
 }
 
 /**
