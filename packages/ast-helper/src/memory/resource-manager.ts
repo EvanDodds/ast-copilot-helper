@@ -224,14 +224,30 @@ export class AdvancedResourceManager implements ResourceManager {
     console.log('Cleaning up resource manager...');
     
     try {
-      // Execute all registered cleanup handlers
-      for (const handler of this.cleanupHandlers) {
-        try {
-          await handler();
-        } catch (error) {
-          console.error('Error in cleanup handler:', error);
-        }
+      // Stop monitoring first
+      if (this.memoryMonitor) {
+        await this.memoryMonitor.stop();
       }
+      
+      if (this.leakDetector) {
+        await this.leakDetector.cleanup();
+      }
+      
+      if (this.gcScheduler) {
+        await this.gcScheduler.stop();
+      }
+      
+      // Cleanup resource pools
+      for (const pool of this.resourcePools.values()) {
+        await pool.cleanup();
+      }
+      
+      // Clean node.js process handlers (but don't call cleanup again)
+      process.removeAllListeners('exit');
+      process.removeAllListeners('SIGINT');
+      process.removeAllListeners('SIGTERM');
+      process.removeAllListeners('uncaughtException');
+      process.removeAllListeners('unhandledRejection');
       
       // Stop monitoring and detection services
       if (this.memoryMonitor?.stop) {

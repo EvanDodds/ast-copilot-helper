@@ -188,7 +188,7 @@ describe('AdvancedResourceManager', () => {
       const usage = monitor.getCurrentUsage();
 
       expect(usage).toMatchObject({
-        timestamp: expect.any(Date),
+        timestamp: expect.any(Number),
         heapUsed: expect.any(Number),
         heapTotal: expect.any(Number),
         external: expect.any(Number),

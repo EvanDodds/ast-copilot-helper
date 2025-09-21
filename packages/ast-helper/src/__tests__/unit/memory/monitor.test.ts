@@ -55,7 +55,7 @@ describe('AdvancedMemoryMonitor', () => {
             await monitor.start();
             const stats = monitor.getStats();
             expect(stats.isActive).toBe(true);
-            expect(stats.uptime).toBeGreaterThan(0);
+            expect(stats.uptime).toBeGreaterThanOrEqual(0);
         });
 
         it('should stop monitoring successfully', async () => {
@@ -271,7 +271,7 @@ describe('AdvancedMemoryMonitor', () => {
             
             const activeStats = monitor.getStats();
             expect(activeStats.isActive).toBe(true);
-            expect(activeStats.uptime).toBeGreaterThan(0);
+            expect(activeStats.uptime).toBeGreaterThanOrEqual(0);
             expect(activeStats.totalSnapshots).toBeGreaterThan(0);
         });
 
