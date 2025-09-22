@@ -18,7 +18,7 @@ This comprehensive guide covers all aspects of testing ast-copilot-helper, from 
 graph TD
     A[Unit Tests - 70%] --> B[Integration Tests - 20%]
     B --> C[End-to-End Tests - 10%]
-    
+
     A --> D[Fast, Isolated, Detailed]
     B --> E[Component Interaction, Moderate Speed]
     C --> F[User Scenarios, Slow, High-Level]
@@ -107,56 +107,58 @@ tests/
 ### Configuration
 
 **vitest.config.ts:**
+
 ```typescript
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
-    setupFiles: ['./tests/setup.ts'],
+    environment: "node",
+    setupFiles: ["./tests/setup.ts"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html', 'json'],
+      provider: "v8",
+      reporter: ["text", "html", "json"],
       exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.d.ts',
-        '**/*.test.ts',
-        '**/__tests__/**'
+        "node_modules/",
+        "dist/",
+        "**/*.d.ts",
+        "**/*.test.ts",
+        "**/__tests__/**",
       ],
       thresholds: {
         global: {
           statements: 90,
           branches: 85,
           functions: 90,
-          lines: 90
-        }
-      }
+          lines: 90,
+        },
+      },
     },
     testTimeout: 30000,
     poolOptions: {
       threads: {
-        singleThread: true // For database tests
-      }
-    }
-  }
+        singleThread: true, // For database tests
+      },
+    },
+  },
 });
 ```
 
 **tests/setup.ts:**
+
 ```typescript
-import { beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { tmpdir } from 'os';
-import { mkdtemp, rm } from 'fs/promises';
-import { join } from 'path';
+import { beforeAll, afterAll, beforeEach, afterEach } from "vitest";
+import { tmpdir } from "os";
+import { mkdtemp, rm } from "fs/promises";
+import { join } from "path";
 
 let tempDir: string;
 
 beforeAll(async () => {
   // Global setup
-  process.env.NODE_ENV = 'test';
-  process.env.LOG_LEVEL = 'silent';
+  process.env.NODE_ENV = "test";
+  process.env.LOG_LEVEL = "silent";
 });
 
 afterAll(async () => {
@@ -165,7 +167,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   // Create temp directory for each test
-  tempDir = await mkdtemp(join(tmpdir(), 'ast-helper-test-'));
+  tempDir = await mkdtemp(join(tmpdir(), "ast-helper-test-"));
 });
 
 afterEach(async () => {
@@ -184,24 +186,25 @@ global.getTempDir = () => tempDir;
 ### Parser Tests
 
 **tests/unit/parser/typescript.test.ts:**
-```typescript
-import { describe, it, expect, beforeEach } from 'vitest';
-import { TypeScriptParser } from '../../../packages/ast-helper/src/parser/typescript';
-import { ASTAnnotation } from '../../../packages/ast-helper/src/types';
 
-describe('TypeScriptParser', () => {
+```typescript
+import { describe, it, expect, beforeEach } from "vitest";
+import { TypeScriptParser } from "../../../packages/ast-helper/src/parser/typescript";
+import { ASTAnnotation } from "../../../packages/ast-helper/src/types";
+
+describe("TypeScriptParser", () => {
   let parser: TypeScriptParser;
 
   beforeEach(() => {
     parser = new TypeScriptParser({
       includePrivateMembers: false,
       extractComments: true,
-      resolveTypes: true
+      resolveTypes: true,
     });
   });
 
-  describe('parseFunction', () => {
-    it('should extract basic function information', async () => {
+  describe("parseFunction", () => {
+    it("should extract basic function information", async () => {
       const source = `
         /**
          * Calculates tax based on income
@@ -217,18 +220,18 @@ describe('TypeScriptParser', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
-        type: 'function',
-        name: 'calculateTax',
-        description: 'Calculates tax based on income',
+        type: "function",
+        name: "calculateTax",
+        description: "Calculates tax based on income",
         parameters: [
-          { name: 'income', type: 'number' },
-          { name: 'rate', type: 'number' }
+          { name: "income", type: "number" },
+          { name: "rate", type: "number" },
         ],
-        returnType: 'number'
+        returnType: "number",
       });
     });
 
-    it('should handle async functions', async () => {
+    it("should handle async functions", async () => {
       const source = `
         async function fetchUserData(id: string): Promise<User> {
           return await api.getUser(id);
@@ -238,14 +241,14 @@ describe('TypeScriptParser', () => {
       const result = await parser.parse(source);
 
       expect(result[0]).toMatchObject({
-        type: 'function',
-        name: 'fetchUserData',
+        type: "function",
+        name: "fetchUserData",
         isAsync: true,
-        returnType: 'Promise<User>'
+        returnType: "Promise<User>",
       });
     });
 
-    it('should extract arrow functions', async () => {
+    it("should extract arrow functions", async () => {
       const source = `
         const validateEmail = (email: string): boolean => {
           return /^[^@]+@[^@]+\\.[^@]+$/.test(email);
@@ -255,17 +258,17 @@ describe('TypeScriptParser', () => {
       const result = await parser.parse(source);
 
       expect(result[0]).toMatchObject({
-        type: 'function',
-        name: 'validateEmail',
+        type: "function",
+        name: "validateEmail",
         isArrowFunction: true,
-        parameters: [{ name: 'email', type: 'string' }],
-        returnType: 'boolean'
+        parameters: [{ name: "email", type: "string" }],
+        returnType: "boolean",
       });
     });
   });
 
-  describe('parseClass', () => {
-    it('should extract class with methods and properties', async () => {
+  describe("parseClass", () => {
+    it("should extract class with methods and properties", async () => {
       const source = `
         /**
          * User management class
@@ -292,29 +295,29 @@ describe('TypeScriptParser', () => {
 
       const result = await parser.parse(source);
 
-      const classAnnotation = result.find(a => a.type === 'class');
+      const classAnnotation = result.find((a) => a.type === "class");
       expect(classAnnotation).toMatchObject({
-        type: 'class',
-        name: 'UserManager',
-        description: 'User management class'
+        type: "class",
+        name: "UserManager",
+        description: "User management class",
       });
 
-      const methods = result.filter(a => a.type === 'method');
+      const methods = result.filter((a) => a.type === "method");
       expect(methods).toHaveLength(3); // constructor, addUser, get userCount
 
-      const addUserMethod = methods.find(m => m.name === 'addUser');
+      const addUserMethod = methods.find((m) => m.name === "addUser");
       expect(addUserMethod).toMatchObject({
-        type: 'method',
-        name: 'addUser',
-        visibility: 'public',
-        parameters: [{ name: 'user', type: 'User' }],
-        returnType: 'void'
+        type: "method",
+        name: "addUser",
+        visibility: "public",
+        parameters: [{ name: "user", type: "User" }],
+        returnType: "void",
       });
     });
   });
 
-  describe('parseInterface', () => {
-    it('should extract interface definitions', async () => {
+  describe("parseInterface", () => {
+    it("should extract interface definitions", async () => {
       const source = `
         /**
          * User interface definition
@@ -330,33 +333,31 @@ describe('TypeScriptParser', () => {
       const result = await parser.parse(source);
 
       expect(result[0]).toMatchObject({
-        type: 'interface',
-        name: 'User',
-        description: 'User interface definition',
+        type: "interface",
+        name: "User",
+        description: "User interface definition",
         properties: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'email', type: 'string', required: true },
-          { name: 'age', type: 'number', required: false },
-          { name: 'preferences', type: 'UserPreferences', required: true }
-        ]
+          { name: "id", type: "string", required: true },
+          { name: "email", type: "string", required: true },
+          { name: "age", type: "number", required: false },
+          { name: "preferences", type: "UserPreferences", required: true },
+        ],
       });
     });
   });
 
-  describe('error handling', () => {
-    it('should handle syntax errors gracefully', async () => {
+  describe("error handling", () => {
+    it("should handle syntax errors gracefully", async () => {
       const invalidSource = `
         function invalidSyntax() {
           return // missing value
         }
       `;
 
-      await expect(parser.parse(invalidSource))
-        .rejects
-        .toThrow(/Syntax error/);
+      await expect(parser.parse(invalidSource)).rejects.toThrow(/Syntax error/);
     });
 
-    it('should continue parsing after recoverable errors', async () => {
+    it("should continue parsing after recoverable errors", async () => {
       const sourceWithErrors = `
         function validFunction(): void {}
         
@@ -373,9 +374,9 @@ describe('TypeScriptParser', () => {
 
       // Should parse valid functions despite syntax errors
       expect(result).toHaveLength(2);
-      expect(result.map(r => r.name)).toEqual([
-        'validFunction',
-        'anotherValidFunction'
+      expect(result.map((r) => r.name)).toEqual([
+        "validFunction",
+        "anotherValidFunction",
       ]);
     });
   });
@@ -385,36 +386,37 @@ describe('TypeScriptParser', () => {
 ### Query Engine Tests
 
 **tests/unit/query/engine.test.ts:**
+
 ```typescript
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { QueryEngine } from '../../../packages/ast-helper/src/query/engine';
-import { DatabaseManager } from '../../../packages/ast-helper/src/database/manager';
-import { EmbeddingGenerator } from '../../../packages/ast-helper/src/ai/embedding-generator';
-import { createMockAnnotations } from '../../utils/mock-factories';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { QueryEngine } from "../../../packages/ast-helper/src/query/engine";
+import { DatabaseManager } from "../../../packages/ast-helper/src/database/manager";
+import { EmbeddingGenerator } from "../../../packages/ast-helper/src/ai/embedding-generator";
+import { createMockAnnotations } from "../../utils/mock-factories";
 
 // Mock dependencies
-vi.mock('../../../packages/ast-helper/src/database/manager');
-vi.mock('../../../packages/ast-helper/src/ai/embedding-generator');
+vi.mock("../../../packages/ast-helper/src/database/manager");
+vi.mock("../../../packages/ast-helper/src/ai/embedding-generator");
 
-describe('QueryEngine', () => {
+describe("QueryEngine", () => {
   let queryEngine: QueryEngine;
   let mockDatabase: vi.Mocked<DatabaseManager>;
   let mockEmbeddingGenerator: vi.Mocked<EmbeddingGenerator>;
 
   beforeEach(() => {
-    mockDatabase = vi.mocked(new DatabaseManager('test.db'));
+    mockDatabase = vi.mocked(new DatabaseManager("test.db"));
     mockEmbeddingGenerator = vi.mocked(new EmbeddingGenerator());
     queryEngine = new QueryEngine(mockDatabase, mockEmbeddingGenerator);
   });
 
-  describe('semantic search', () => {
-    it('should perform vector similarity search', async () => {
+  describe("semantic search", () => {
+    it("should perform vector similarity search", async () => {
       // Arrange
-      const query = 'authentication functions';
+      const query = "authentication functions";
       const queryEmbedding = [0.1, 0.2, 0.3];
       const mockResults = createMockAnnotations([
-        { name: 'authenticateUser', type: 'function', score: 0.89 },
-        { name: 'validateToken', type: 'function', score: 0.85 }
+        { name: "authenticateUser", type: "function", score: 0.89 },
+        { name: "validateToken", type: "function", score: 0.85 },
       ]);
 
       mockEmbeddingGenerator.generate.mockResolvedValue([queryEmbedding]);
@@ -423,7 +425,7 @@ describe('QueryEngine', () => {
       // Act
       const results = await queryEngine.query(query, {
         similarityThreshold: 0.7,
-        maxResults: 10
+        maxResults: 10,
       });
 
       // Assert
@@ -434,36 +436,36 @@ describe('QueryEngine', () => {
         10
       );
       expect(results).toHaveLength(2);
-      expect(results[0].name).toBe('authenticateUser');
+      expect(results[0].name).toBe("authenticateUser");
     });
 
-    it('should handle empty results', async () => {
+    it("should handle empty results", async () => {
       // Arrange
       mockEmbeddingGenerator.generate.mockResolvedValue([[0.1, 0.2, 0.3]]);
       mockDatabase.searchBySimilarity.mockResolvedValue([]);
 
       // Act
-      const results = await queryEngine.query('nonexistent function');
+      const results = await queryEngine.query("nonexistent function");
 
       // Assert
       expect(results).toHaveLength(0);
     });
   });
 
-  describe('text search', () => {
-    it('should perform full-text search when embeddings disabled', async () => {
+  describe("text search", () => {
+    it("should perform full-text search when embeddings disabled", async () => {
       // Arrange
-      const query = 'user management';
+      const query = "user management";
       const mockResults = createMockAnnotations([
-        { name: 'createUser', type: 'function' },
-        { name: 'UserManager', type: 'class' }
+        { name: "createUser", type: "function" },
+        { name: "UserManager", type: "class" },
       ]);
 
       mockDatabase.searchByText.mockResolvedValue(mockResults);
 
       // Act
       const results = await queryEngine.query(query, {
-        useSemanticSearch: false
+        useSemanticSearch: false,
       });
 
       // Assert
@@ -473,39 +475,47 @@ describe('QueryEngine', () => {
     });
   });
 
-  describe('filtering', () => {
-    it('should filter results by type', async () => {
+  describe("filtering", () => {
+    it("should filter results by type", async () => {
       // Arrange
       const mockResults = createMockAnnotations([
-        { name: 'User', type: 'interface' },
-        { name: 'createUser', type: 'function' },
-        { name: 'UserManager', type: 'class' }
+        { name: "User", type: "interface" },
+        { name: "createUser", type: "function" },
+        { name: "UserManager", type: "class" },
       ]);
 
       mockEmbeddingGenerator.generate.mockResolvedValue([[0.1, 0.2, 0.3]]);
       mockDatabase.searchBySimilarity.mockResolvedValue(mockResults);
 
       // Act
-      const results = await queryEngine.query('user', { type: 'function' });
+      const results = await queryEngine.query("user", { type: "function" });
 
       // Assert
       expect(results).toHaveLength(1);
-      expect(results[0].type).toBe('function');
+      expect(results[0].type).toBe("function");
     });
 
-    it('should filter results by file pattern', async () => {
+    it("should filter results by file pattern", async () => {
       // Arrange
       const mockResults = createMockAnnotations([
-        { name: 'authFunction', type: 'function', filePath: 'src/auth/login.ts' },
-        { name: 'userFunction', type: 'function', filePath: 'src/user/manager.ts' }
+        {
+          name: "authFunction",
+          type: "function",
+          filePath: "src/auth/login.ts",
+        },
+        {
+          name: "userFunction",
+          type: "function",
+          filePath: "src/user/manager.ts",
+        },
       ]);
 
       mockEmbeddingGenerator.generate.mockResolvedValue([[0.1, 0.2, 0.3]]);
       mockDatabase.searchBySimilarity.mockResolvedValue(mockResults);
 
       // Act
-      const results = await queryEngine.query('function', {
-        filePattern: 'src/auth/**'
+      const results = await queryEngine.query("function", {
+        filePattern: "src/auth/**",
       });
 
       // Assert
@@ -514,30 +524,30 @@ describe('QueryEngine', () => {
     });
   });
 
-  describe('error handling', () => {
-    it('should handle embedding generation errors', async () => {
+  describe("error handling", () => {
+    it("should handle embedding generation errors", async () => {
       // Arrange
       mockEmbeddingGenerator.generate.mockRejectedValue(
-        new Error('API rate limit exceeded')
+        new Error("API rate limit exceeded")
       );
       mockDatabase.searchByText.mockResolvedValue([]);
 
       // Act & Assert
-      await expect(queryEngine.query('test query'))
-        .rejects
-        .toThrow('API rate limit exceeded');
+      await expect(queryEngine.query("test query")).rejects.toThrow(
+        "API rate limit exceeded"
+      );
     });
 
-    it('should fall back to text search on embedding errors', async () => {
+    it("should fall back to text search on embedding errors", async () => {
       // Arrange
       mockEmbeddingGenerator.generate.mockRejectedValue(
-        new Error('Network error')
+        new Error("Network error")
       );
       mockDatabase.searchByText.mockResolvedValue([]);
 
       // Act
-      const results = await queryEngine.query('test query', {
-        fallbackToTextSearch: true
+      const results = await queryEngine.query("test query", {
+        fallbackToTextSearch: true,
       });
 
       // Assert
@@ -551,19 +561,20 @@ describe('QueryEngine', () => {
 ### Database Tests
 
 **tests/unit/database/manager.test.ts:**
-```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DatabaseManager } from '../../../packages/ast-helper/src/database/manager';
-import { ASTAnnotation } from '../../../packages/ast-helper/src/types';
-import { join } from 'path';
-import { rm } from 'fs/promises';
 
-describe('DatabaseManager', () => {
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { DatabaseManager } from "../../../packages/ast-helper/src/database/manager";
+import { ASTAnnotation } from "../../../packages/ast-helper/src/types";
+import { join } from "path";
+import { rm } from "fs/promises";
+
+describe("DatabaseManager", () => {
   let dbManager: DatabaseManager;
   let dbPath: string;
 
   beforeEach(async () => {
-    dbPath = join(getTempDir(), 'test.db');
+    dbPath = join(getTempDir(), "test.db");
     dbManager = new DatabaseManager(dbPath);
     await dbManager.initialize();
   });
@@ -573,96 +584,96 @@ describe('DatabaseManager', () => {
     await rm(dbPath, { force: true });
   });
 
-  describe('annotation operations', () => {
-    it('should insert and retrieve annotations', async () => {
+  describe("annotation operations", () => {
+    it("should insert and retrieve annotations", async () => {
       // Arrange
       const annotation: ASTAnnotation = {
-        id: 'func_test_1',
-        name: 'testFunction',
-        type: 'function',
-        filePath: 'test.ts',
+        id: "func_test_1",
+        name: "testFunction",
+        type: "function",
+        filePath: "test.ts",
         lineNumber: 10,
-        description: 'Test function',
-        parameters: [{ name: 'param1', type: 'string' }],
-        returnType: 'void'
+        description: "Test function",
+        parameters: [{ name: "param1", type: "string" }],
+        returnType: "void",
       };
 
       // Act
       await dbManager.insertAnnotation(annotation);
-      const retrieved = await dbManager.getAnnotation('func_test_1');
+      const retrieved = await dbManager.getAnnotation("func_test_1");
 
       // Assert
       expect(retrieved).toMatchObject(annotation);
     });
 
-    it('should update existing annotations', async () => {
+    it("should update existing annotations", async () => {
       // Arrange
       const annotation: ASTAnnotation = {
-        id: 'func_test_2',
-        name: 'testFunction',
-        type: 'function',
-        filePath: 'test.ts',
-        lineNumber: 10
+        id: "func_test_2",
+        name: "testFunction",
+        type: "function",
+        filePath: "test.ts",
+        lineNumber: 10,
       };
 
       await dbManager.insertAnnotation(annotation);
 
       // Act
-      await dbManager.updateAnnotation('func_test_2', {
-        description: 'Updated description'
+      await dbManager.updateAnnotation("func_test_2", {
+        description: "Updated description",
       });
 
-      const updated = await dbManager.getAnnotation('func_test_2');
+      const updated = await dbManager.getAnnotation("func_test_2");
 
       // Assert
-      expect(updated?.description).toBe('Updated description');
+      expect(updated?.description).toBe("Updated description");
     });
 
-    it('should delete annotations', async () => {
+    it("should delete annotations", async () => {
       // Arrange
       const annotation: ASTAnnotation = {
-        id: 'func_test_3',
-        name: 'testFunction',
-        type: 'function',
-        filePath: 'test.ts',
-        lineNumber: 10
+        id: "func_test_3",
+        name: "testFunction",
+        type: "function",
+        filePath: "test.ts",
+        lineNumber: 10,
       };
 
       await dbManager.insertAnnotation(annotation);
 
       // Act
-      await dbManager.deleteAnnotation('func_test_3');
-      const deleted = await dbManager.getAnnotation('func_test_3');
+      await dbManager.deleteAnnotation("func_test_3");
+      const deleted = await dbManager.getAnnotation("func_test_3");
 
       // Assert
       expect(deleted).toBeNull();
     });
   });
 
-  describe('search operations', () => {
+  describe("search operations", () => {
     beforeEach(async () => {
       const annotations: ASTAnnotation[] = [
         {
-          id: 'func_auth_1',
-          name: 'authenticateUser',
-          type: 'function',
-          filePath: 'auth.ts',
-          description: 'Authenticates user with credentials'
+          id: "func_auth_1",
+          name: "authenticateUser",
+          type: "function",
+          filePath: "auth.ts",
+          description: "Authenticates user with credentials",
         },
         {
-          id: 'func_auth_2',
-          name: 'validateToken',
-          type: 'function',
-          filePath: 'auth.ts',
-          description: 'Validates authentication token'
+          id: "func_auth_2",
+          name: "validateToken",
+          type: "function",
+          filePath: "auth.ts",
+          description: "Validates authentication token",
         },
         {
-          id: 'class_user_1',
-          name: 'UserManager',
-          type: 'class',
-          filePath: 'user.ts',
-          description: 'Manages user operations'
-        }
+          id: "class_user_1",
+          name: "UserManager",
+          type: "class",
+          filePath: "user.ts",
+          description: "Manages user operations",
+        },
       ];
 
       for (const annotation of annotations) {
@@ -670,50 +681,50 @@ describe('DatabaseManager', () => {
       }
     });
 
-    it('should search by text', async () => {
+    it("should search by text", async () => {
       // Act
-      const results = await dbManager.searchByText('authentication');
+      const results = await dbManager.searchByText("authentication");
 
       // Assert
       expect(results).toHaveLength(2);
-      expect(results.map(r => r.name)).toEqual([
-        'authenticateUser',
-        'validateToken'
+      expect(results.map((r) => r.name)).toEqual([
+        "authenticateUser",
+        "validateToken",
       ]);
     });
 
-    it('should filter by type', async () => {
+    it("should filter by type", async () => {
       // Act
-      const results = await dbManager.searchByText('user', { type: 'class' });
+      const results = await dbManager.searchByText("user", { type: "class" });
 
       // Assert
       expect(results).toHaveLength(1);
-      expect(results[0].type).toBe('class');
+      expect(results[0].type).toBe("class");
     });
 
-    it('should filter by file pattern', async () => {
+    it("should filter by file pattern", async () => {
       // Act
-      const results = await dbManager.searchByText('', {
-        filePattern: 'auth.ts'
+      const results = await dbManager.searchByText("", {
+        filePattern: "auth.ts",
       });
 
       // Assert
       expect(results).toHaveLength(2);
-      expect(results.every(r => r.filePath === 'auth.ts')).toBe(true);
+      expect(results.every((r) => r.filePath === "auth.ts")).toBe(true);
     });
   });
 
-  describe('batch operations', () => {
-    it('should handle large batch inserts', async () => {
+  describe("batch operations", () => {
+    it("should handle large batch inserts", async () => {
       // Arrange
       const annotations: ASTAnnotation[] = [];
       for (let i = 0; i < 1000; i++) {
         annotations.push({
           id: `func_${i}`,
           name: `function${i}`,
-          type: 'function',
+          type: "function",
           filePath: `file${i}.ts`,
-          lineNumber: i
+          lineNumber: i,
         });
       }
 
@@ -736,51 +747,52 @@ describe('DatabaseManager', () => {
 ### CLI Integration Tests
 
 **tests/integration/cli/parse-command.test.ts:**
-```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { execSync } from 'child_process';
-import { writeFile, mkdir, rm } from 'fs/promises';
-import { join } from 'path';
-import { readFileSync, existsSync } from 'fs';
 
-describe('CLI Parse Command Integration', () => {
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { execSync } from "child_process";
+import { writeFile, mkdir, rm } from "fs/promises";
+import { join } from "path";
+import { readFileSync, existsSync } from "fs";
+
+describe("CLI Parse Command Integration", () => {
   let testProjectDir: string;
   let cliPath: string;
 
   beforeEach(async () => {
-    testProjectDir = join(getTempDir(), 'test-project');
+    testProjectDir = join(getTempDir(), "test-project");
     await mkdir(testProjectDir, { recursive: true });
-    
+
     // Build CLI if not already built
-    cliPath = join(__dirname, '../../../packages/ast-helper/bin/ast-helper.js');
+    cliPath = join(__dirname, "../../../packages/ast-helper/bin/ast-helper.js");
   });
 
   afterEach(async () => {
     await rm(testProjectDir, { recursive: true, force: true });
   });
 
-  it('should initialize project configuration', async () => {
+  it("should initialize project configuration", async () => {
     // Act
     const output = execSync(`node ${cliPath} init --yes`, {
       cwd: testProjectDir,
-      encoding: 'utf8'
+      encoding: "utf8",
     });
 
     // Assert
-    expect(output).toContain('Initialized ast-copilot-helper');
-    expect(existsSync(join(testProjectDir, '.ast-helper.json'))).toBe(true);
+    expect(output).toContain("Initialized ast-copilot-helper");
+    expect(existsSync(join(testProjectDir, ".ast-helper.json"))).toBe(true);
 
     const config = JSON.parse(
-      readFileSync(join(testProjectDir, '.ast-helper.json'), 'utf8')
+      readFileSync(join(testProjectDir, ".ast-helper.json"), "utf8")
     );
-    expect(config).toHaveProperty('parser');
-    expect(config).toHaveProperty('ai');
+    expect(config).toHaveProperty("parser");
+    expect(config).toHaveProperty("ai");
   });
 
-  it('should parse TypeScript files', async () => {
+  it("should parse TypeScript files", async () => {
     // Arrange
     await writeFile(
-      join(testProjectDir, 'sample.ts'),
+      join(testProjectDir, "sample.ts"),
       `
         /**
          * Sample authentication function
@@ -802,35 +814,35 @@ describe('CLI Parse Command Integration', () => {
 
     // Initialize project
     execSync(`node ${cliPath} init --yes`, {
-      cwd: testProjectDir
+      cwd: testProjectDir,
     });
 
     // Act
     const output = execSync(`node ${cliPath} parse sample.ts`, {
       cwd: testProjectDir,
-      encoding: 'utf8'
+      encoding: "utf8",
     });
 
     // Assert
-    expect(output).toContain('Successfully parsed');
-    expect(output).toContain('2 annotations'); // function + interface
-    expect(existsSync(join(testProjectDir, '.ast-helper.db'))).toBe(true);
+    expect(output).toContain("Successfully parsed");
+    expect(output).toContain("2 annotations"); // function + interface
+    expect(existsSync(join(testProjectDir, ".ast-helper.db"))).toBe(true);
 
     // Verify database contents
     const queryOutput = execSync(`node ${cliPath} query "auth" --format json`, {
       cwd: testProjectDir,
-      encoding: 'utf8'
+      encoding: "utf8",
     });
 
     const results = JSON.parse(queryOutput);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe('authenticateUser');
+    expect(results[0].name).toBe("authenticateUser");
   });
 
-  it('should handle parsing errors gracefully', async () => {
+  it("should handle parsing errors gracefully", async () => {
     // Arrange
     await writeFile(
-      join(testProjectDir, 'invalid.ts'),
+      join(testProjectDir, "invalid.ts"),
       `
         function invalidSyntax() {
           return // missing value
@@ -839,27 +851,27 @@ describe('CLI Parse Command Integration', () => {
     );
 
     execSync(`node ${cliPath} init --yes`, {
-      cwd: testProjectDir
+      cwd: testProjectDir,
     });
 
     // Act & Assert
     expect(() => {
       execSync(`node ${cliPath} parse invalid.ts`, {
         cwd: testProjectDir,
-        encoding: 'utf8'
+        encoding: "utf8",
       });
     }).toThrow();
   });
 
-  it('should support batch parsing', async () => {
+  it("should support batch parsing", async () => {
     // Arrange
-    const files = ['file1.ts', 'file2.ts', 'file3.ts'];
-    
+    const files = ["file1.ts", "file2.ts", "file3.ts"];
+
     for (const file of files) {
       await writeFile(
         join(testProjectDir, file),
         `
-          export function ${file.replace('.ts', '')}Function(): void {
+          export function ${file.replace(".ts", "")}Function(): void {
             console.log('${file}');
           }
         `
@@ -867,18 +879,18 @@ describe('CLI Parse Command Integration', () => {
     }
 
     execSync(`node ${cliPath} init --yes`, {
-      cwd: testProjectDir
+      cwd: testProjectDir,
     });
 
     // Act
     const output = execSync(`node ${cliPath} parse *.ts`, {
       cwd: testProjectDir,
-      encoding: 'utf8'
+      encoding: "utf8",
     });
 
     // Assert
-    expect(output).toContain('Successfully parsed 3 files');
-    expect(output).toContain('3 annotations');
+    expect(output).toContain("Successfully parsed 3 files");
+    expect(output).toContain("3 annotations");
   });
 });
 ```
@@ -886,18 +898,19 @@ describe('CLI Parse Command Integration', () => {
 ### MCP Server Integration Tests
 
 **tests/integration/mcp-server/protocol.test.ts:**
-```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { spawn, ChildProcess } from 'child_process';
-import { join } from 'path';
-import { writeFile, mkdir, rm } from 'fs/promises';
 
-describe('MCP Server Protocol Integration', () => {
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { spawn, ChildProcess } from "child_process";
+import { join } from "path";
+import { writeFile, mkdir, rm } from "fs/promises";
+
+describe("MCP Server Protocol Integration", () => {
   let serverProcess: ChildProcess;
   let testProjectDir: string;
 
   beforeEach(async () => {
-    testProjectDir = join(getTempDir(), 'mcp-test-project');
+    testProjectDir = join(getTempDir(), "mcp-test-project");
     await mkdir(testProjectDir, { recursive: true });
 
     // Set up test project with sample code
@@ -911,22 +924,25 @@ describe('MCP Server Protocol Integration', () => {
     await rm(testProjectDir, { recursive: true, force: true });
   });
 
-  it('should handle MCP initialize request', async () => {
+  it("should handle MCP initialize request", async () => {
     // Arrange
-    const serverPath = join(__dirname, '../../../packages/ast-mcp-server/bin/mcp-server.js');
-    serverProcess = spawn('node', [serverPath, '--transport', 'stdio'], {
-      cwd: testProjectDir
+    const serverPath = join(
+      __dirname,
+      "../../../packages/ast-mcp-server/bin/mcp-server.js"
+    );
+    serverProcess = spawn("node", [serverPath, "--transport", "stdio"], {
+      cwd: testProjectDir,
     });
 
     const initRequest = {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: 1,
-      method: 'initialize',
+      method: "initialize",
       params: {
-        protocolVersion: '2024-11-05',
+        protocolVersion: "2024-11-05",
         capabilities: {},
-        clientInfo: { name: 'test-client', version: '1.0.0' }
-      }
+        clientInfo: { name: "test-client", version: "1.0.0" },
+      },
     };
 
     // Act
@@ -934,21 +950,21 @@ describe('MCP Server Protocol Integration', () => {
 
     // Assert
     expect(response.id).toBe(1);
-    expect(response.result).toHaveProperty('capabilities');
-    expect(response.result.capabilities).toHaveProperty('resources');
-    expect(response.result.capabilities).toHaveProperty('tools');
+    expect(response.result).toHaveProperty("capabilities");
+    expect(response.result.capabilities).toHaveProperty("resources");
+    expect(response.result.capabilities).toHaveProperty("tools");
   });
 
-  it('should list available tools', async () => {
+  it("should list available tools", async () => {
     // Arrange
     serverProcess = startMCPServer(testProjectDir);
     await initializeMCPServer(serverProcess);
 
     const listToolsRequest = {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: 2,
-      method: 'tools/list',
-      params: {}
+      method: "tools/list",
+      params: {},
     };
 
     // Act
@@ -957,29 +973,29 @@ describe('MCP Server Protocol Integration', () => {
     // Assert
     expect(response.result.tools).toBeInstanceOf(Array);
     expect(response.result.tools.length).toBeGreaterThan(0);
-    
-    const toolNames = response.result.tools.map(t => t.name);
-    expect(toolNames).toContain('query_codebase');
-    expect(toolNames).toContain('get_file_content');
-    expect(toolNames).toContain('get_function_details');
+
+    const toolNames = response.result.tools.map((t) => t.name);
+    expect(toolNames).toContain("query_codebase");
+    expect(toolNames).toContain("get_file_content");
+    expect(toolNames).toContain("get_function_details");
   });
 
-  it('should execute query_codebase tool', async () => {
+  it("should execute query_codebase tool", async () => {
     // Arrange
     serverProcess = startMCPServer(testProjectDir);
     await initializeMCPServer(serverProcess);
 
     const queryRequest = {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: 3,
-      method: 'tools/call',
+      method: "tools/call",
       params: {
-        name: 'query_codebase',
+        name: "query_codebase",
         arguments: {
-          query: 'authentication functions',
-          limit: 5
-        }
-      }
+          query: "authentication functions",
+          limit: 5,
+        },
+      },
     };
 
     // Act
@@ -987,54 +1003,54 @@ describe('MCP Server Protocol Integration', () => {
 
     // Assert
     expect(response.result.content).toBeInstanceOf(Array);
-    expect(response.result.content[0].type).toBe('text');
-    expect(response.result.content[0].text).toContain('authenticateUser');
+    expect(response.result.content[0].type).toBe("text");
+    expect(response.result.content[0].text).toContain("authenticateUser");
   });
 
-  it('should handle concurrent requests', async () => {
+  it("should handle concurrent requests", async () => {
     // Arrange
     serverProcess = startMCPServer(testProjectDir);
     await initializeMCPServer(serverProcess);
 
     const requests = [
       {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 4,
-        method: 'tools/call',
+        method: "tools/call",
         params: {
-          name: 'query_codebase',
-          arguments: { query: 'function', limit: 3 }
-        }
+          name: "query_codebase",
+          arguments: { query: "function", limit: 3 },
+        },
       },
       {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 5,
-        method: 'tools/call',
+        method: "tools/call",
         params: {
-          name: 'query_codebase',
-          arguments: { query: 'class', limit: 3 }
-        }
-      }
+          name: "query_codebase",
+          arguments: { query: "class", limit: 3 },
+        },
+      },
     ];
 
     // Act
     const responses = await Promise.all(
-      requests.map(req => sendMCPRequest(serverProcess, req))
+      requests.map((req) => sendMCPRequest(serverProcess, req))
     );
 
     // Assert
     expect(responses).toHaveLength(2);
     expect(responses[0].id).toBe(4);
     expect(responses[1].id).toBe(5);
-    responses.forEach(response => {
-      expect(response.result).toHaveProperty('content');
+    responses.forEach((response) => {
+      expect(response.result).toHaveProperty("content");
     });
   });
 
   async function setupTestProject(projectDir: string) {
     // Create sample TypeScript files
     await writeFile(
-      join(projectDir, 'auth.ts'),
+      join(projectDir, "auth.ts"),
       `
         export async function authenticateUser(username: string, password: string): Promise<boolean> {
           return username === 'admin' && password === 'secret';
@@ -1047,7 +1063,7 @@ describe('MCP Server Protocol Integration', () => {
     );
 
     await writeFile(
-      join(projectDir, 'user.ts'),
+      join(projectDir, "user.ts"),
       `
         export class UserManager {
           private users: User[] = [];
@@ -1070,31 +1086,37 @@ describe('MCP Server Protocol Integration', () => {
     );
 
     // Initialize and parse project
-    const { execSync } = require('child_process');
-    const cliPath = join(__dirname, '../../../packages/ast-helper/bin/ast-helper.js');
-    
+    const { execSync } = require("child_process");
+    const cliPath = join(
+      __dirname,
+      "../../../packages/ast-helper/bin/ast-helper.js"
+    );
+
     execSync(`node ${cliPath} init --yes`, { cwd: projectDir });
     execSync(`node ${cliPath} parse *.ts`, { cwd: projectDir });
   }
 
   function startMCPServer(projectDir: string): ChildProcess {
-    const serverPath = join(__dirname, '../../../packages/ast-mcp-server/bin/mcp-server.js');
-    return spawn('node', [serverPath, '--transport', 'stdio'], {
+    const serverPath = join(
+      __dirname,
+      "../../../packages/ast-mcp-server/bin/mcp-server.js"
+    );
+    return spawn("node", [serverPath, "--transport", "stdio"], {
       cwd: projectDir,
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ["pipe", "pipe", "pipe"],
     });
   }
 
   async function initializeMCPServer(process: ChildProcess): Promise<void> {
     const initRequest = {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: 0,
-      method: 'initialize',
+      method: "initialize",
       params: {
-        protocolVersion: '2024-11-05',
+        protocolVersion: "2024-11-05",
         capabilities: {},
-        clientInfo: { name: 'test-client', version: '1.0.0' }
-      }
+        clientInfo: { name: "test-client", version: "1.0.0" },
+      },
     };
 
     await sendMCPRequest(process, initRequest);
@@ -1103,10 +1125,10 @@ describe('MCP Server Protocol Integration', () => {
   function sendMCPRequest(process: ChildProcess, request: any): Promise<any> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error('MCP request timeout'));
+        reject(new Error("MCP request timeout"));
       }, 10000);
 
-      process.stdout?.once('data', (data) => {
+      process.stdout?.once("data", (data) => {
         clearTimeout(timeout);
         try {
           const response = JSON.parse(data.toString());
@@ -1116,7 +1138,7 @@ describe('MCP Server Protocol Integration', () => {
         }
       });
 
-      process.stdin?.write(JSON.stringify(request) + '\n');
+      process.stdin?.write(JSON.stringify(request) + "\n");
     });
   }
 });
@@ -1127,161 +1149,183 @@ describe('MCP Server Protocol Integration', () => {
 ### User Workflow Tests
 
 **tests/e2e/workflows/new-project-setup.test.ts:**
-```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { execSync } from 'child_process';
-import { writeFile, mkdir, rm } from 'fs/promises';
-import { join } from 'path';
-import { existsSync, readFileSync } from 'fs';
 
-describe('New Project Setup E2E Workflow', () => {
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { execSync } from "child_process";
+import { writeFile, mkdir, rm } from "fs/promises";
+import { join } from "path";
+import { existsSync, readFileSync } from "fs";
+
+describe("New Project Setup E2E Workflow", () => {
   let projectDir: string;
   let cliPath: string;
 
   beforeEach(async () => {
-    projectDir = join(getTempDir(), 'e2e-project');
+    projectDir = join(getTempDir(), "e2e-project");
     await mkdir(projectDir, { recursive: true });
-    cliPath = join(__dirname, '../../../packages/ast-helper/bin/ast-helper.js');
+    cliPath = join(__dirname, "../../../packages/ast-helper/bin/ast-helper.js");
   });
 
   afterEach(async () => {
     await rm(projectDir, { recursive: true, force: true });
   });
 
-  it('should complete full project setup and analysis workflow', async () => {
+  it("should complete full project setup and analysis workflow", async () => {
     // Step 1: Create a realistic project structure
     await createSampleProject(projectDir);
 
     // Step 2: Initialize ast-copilot-helper
     const initOutput = execSync(`node ${cliPath} init --yes`, {
       cwd: projectDir,
-      encoding: 'utf8'
+      encoding: "utf8",
     });
 
-    expect(initOutput).toContain('Initialized ast-copilot-helper');
-    expect(existsSync(join(projectDir, '.ast-helper.json'))).toBe(true);
+    expect(initOutput).toContain("Initialized ast-copilot-helper");
+    expect(existsSync(join(projectDir, ".ast-helper.json"))).toBe(true);
 
     // Step 3: Parse the entire project
     const parseOutput = execSync(`node ${cliPath} parse src/`, {
       cwd: projectDir,
-      encoding: 'utf8'
+      encoding: "utf8",
     });
 
-    expect(parseOutput).toContain('Successfully parsed');
+    expect(parseOutput).toContain("Successfully parsed");
     expect(parseOutput).toMatch(/\d+ annotations/);
-    expect(existsSync(join(projectDir, '.ast-helper.db'))).toBe(true);
+    expect(existsSync(join(projectDir, ".ast-helper.db"))).toBe(true);
 
     // Step 4: Perform various queries
-    const authQuery = execSync(`node ${cliPath} query "authentication functions" --format json`, {
-      cwd: projectDir,
-      encoding: 'utf8'
-    });
+    const authQuery = execSync(
+      `node ${cliPath} query "authentication functions" --format json`,
+      {
+        cwd: projectDir,
+        encoding: "utf8",
+      }
+    );
 
     const authResults = JSON.parse(authQuery);
     expect(authResults.length).toBeGreaterThan(0);
     expect(authResults[0].name).toMatch(/auth|login|validate/i);
 
     // Step 5: Query by type
-    const classQuery = execSync(`node ${cliPath} query "*" --type class --format json`, {
-      cwd: projectDir,
-      encoding: 'utf8'
-    });
+    const classQuery = execSync(
+      `node ${cliPath} query "*" --type class --format json`,
+      {
+        cwd: projectDir,
+        encoding: "utf8",
+      }
+    );
 
     const classResults = JSON.parse(classQuery);
-    expect(classResults.every(r => r.type === 'class')).toBe(true);
+    expect(classResults.every((r) => r.type === "class")).toBe(true);
 
     // Step 6: Generate analysis report
     const analysisOutput = execSync(`node ${cliPath} analyze --format json`, {
       cwd: projectDir,
-      encoding: 'utf8'
+      encoding: "utf8",
     });
 
     const analysis = JSON.parse(analysisOutput);
-    expect(analysis).toHaveProperty('summary');
+    expect(analysis).toHaveProperty("summary");
     expect(analysis.summary.totalFiles).toBeGreaterThan(0);
     expect(analysis.summary.totalAnnotations).toBeGreaterThan(0);
 
     // Step 7: Start and test MCP server (basic connectivity)
-    const serverProcess = spawn('node', [cliPath, 'server', '--transport', 'stdio'], {
-      cwd: projectDir,
-      stdio: ['pipe', 'pipe', 'pipe']
-    });
+    const serverProcess = spawn(
+      "node",
+      [cliPath, "server", "--transport", "stdio"],
+      {
+        cwd: projectDir,
+        stdio: ["pipe", "pipe", "pipe"],
+      }
+    );
 
     try {
       // Send basic initialize request
       const initRequest = {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 1,
-        method: 'initialize',
+        method: "initialize",
         params: {
-          protocolVersion: '2024-11-05',
+          protocolVersion: "2024-11-05",
           capabilities: {},
-          clientInfo: { name: 'e2e-test', version: '1.0.0' }
-        }
+          clientInfo: { name: "e2e-test", version: "1.0.0" },
+        },
       };
 
-      serverProcess.stdin?.write(JSON.stringify(initRequest) + '\n');
+      serverProcess.stdin?.write(JSON.stringify(initRequest) + "\n");
 
       const response = await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Server timeout')), 5000);
-        
-        serverProcess.stdout?.once('data', (data) => {
+        const timeout = setTimeout(
+          () => reject(new Error("Server timeout")),
+          5000
+        );
+
+        serverProcess.stdout?.once("data", (data) => {
           clearTimeout(timeout);
           resolve(JSON.parse(data.toString()));
         });
       });
 
-      expect(response).toHaveProperty('result');
-      expect(response.result).toHaveProperty('capabilities');
+      expect(response).toHaveProperty("result");
+      expect(response.result).toHaveProperty("capabilities");
     } finally {
       serverProcess.kill();
     }
   });
 
   async function createSampleProject(projectDir: string) {
-    const srcDir = join(projectDir, 'src');
+    const srcDir = join(projectDir, "src");
     await mkdir(srcDir, { recursive: true });
-    await mkdir(join(srcDir, 'auth'), { recursive: true });
-    await mkdir(join(srcDir, 'user'), { recursive: true });
-    await mkdir(join(srcDir, 'utils'), { recursive: true });
+    await mkdir(join(srcDir, "auth"), { recursive: true });
+    await mkdir(join(srcDir, "user"), { recursive: true });
+    await mkdir(join(srcDir, "utils"), { recursive: true });
 
     // Package.json
     await writeFile(
-      join(projectDir, 'package.json'),
-      JSON.stringify({
-        name: 'sample-project',
-        version: '1.0.0',
-        dependencies: {
-          'express': '^4.18.0',
-          'jsonwebtoken': '^9.0.0'
+      join(projectDir, "package.json"),
+      JSON.stringify(
+        {
+          name: "sample-project",
+          version: "1.0.0",
+          dependencies: {
+            express: "^4.18.0",
+            jsonwebtoken: "^9.0.0",
+          },
+          devDependencies: {
+            typescript: "^5.0.0",
+            "@types/node": "^18.0.0",
+          },
         },
-        devDependencies: {
-          'typescript': '^5.0.0',
-          '@types/node': '^18.0.0'
-        }
-      }, null, 2)
+        null,
+        2
+      )
     );
 
     // TypeScript config
     await writeFile(
-      join(projectDir, 'tsconfig.json'),
-      JSON.stringify({
-        compilerOptions: {
-          target: 'es2020',
-          module: 'commonjs',
-          outDir: 'dist',
-          rootDir: 'src',
-          strict: true,
-          esModuleInterop: true
+      join(projectDir, "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "es2020",
+            module: "commonjs",
+            outDir: "dist",
+            rootDir: "src",
+            strict: true,
+            esModuleInterop: true,
+          },
+          include: ["src/**/*"],
+          exclude: ["node_modules", "dist"],
         },
-        include: ['src/**/*'],
-        exclude: ['node_modules', 'dist']
-      }, null, 2)
+        null,
+        2
+      )
     );
 
     // Auth module
     await writeFile(
-      join(srcDir, 'auth/auth.ts'),
+      join(srcDir, "auth/auth.ts"),
       `
         import jwt from 'jsonwebtoken';
         import { User } from '../user/types';
@@ -1343,7 +1387,7 @@ describe('New Project Setup E2E Workflow', () => {
 
     // User module
     await writeFile(
-      join(srcDir, 'user/manager.ts'),
+      join(srcDir, "user/manager.ts"),
       `
         import { User, CreateUserRequest } from './types';
         import { validateEmail } from '../utils/validation';
@@ -1429,7 +1473,7 @@ describe('New Project Setup E2E Workflow', () => {
 
     // User types
     await writeFile(
-      join(srcDir, 'user/types.ts'),
+      join(srcDir, "user/types.ts"),
       `
         /**
          * User entity definition
@@ -1475,7 +1519,7 @@ describe('New Project Setup E2E Workflow', () => {
 
     // Utils
     await writeFile(
-      join(srcDir, 'utils/validation.ts'),
+      join(srcDir, "utils/validation.ts"),
       `
         /**
          * Validates email address format
@@ -1526,7 +1570,7 @@ describe('New Project Setup E2E Workflow', () => {
 
     // Main application file
     await writeFile(
-      join(srcDir, 'index.ts'),
+      join(srcDir, "index.ts"),
       `
         import express from 'express';
         import { authenticateUser, validateToken } from './auth/auth';
@@ -1627,41 +1671,54 @@ describe('New Project Setup E2E Workflow', () => {
 ### Benchmarks
 
 **tests/performance/parsing/large-files.bench.ts:**
-```typescript
-import { describe, bench } from 'vitest';
-import { TypeScriptParser } from '../../../packages/ast-helper/src/parser/typescript';
-import { generateLargeTypeScriptFile } from '../../utils/test-helpers';
 
-describe('Large File Parsing Benchmarks', () => {
+```typescript
+import { describe, bench } from "vitest";
+import { TypeScriptParser } from "../../../packages/ast-helper/src/parser/typescript";
+import { generateLargeTypeScriptFile } from "../../utils/test-helpers";
+
+describe("Large File Parsing Benchmarks", () => {
   const parser = new TypeScriptParser();
 
-  bench('parse 1000 function file', async () => {
-    const source = generateLargeTypeScriptFile(1000);
-    await parser.parse(source);
-  }, { iterations: 5 });
+  bench(
+    "parse 1000 function file",
+    async () => {
+      const source = generateLargeTypeScriptFile(1000);
+      await parser.parse(source);
+    },
+    { iterations: 5 }
+  );
 
-  bench('parse 5000 function file', async () => {
-    const source = generateLargeTypeScriptFile(5000);
-    await parser.parse(source);
-  }, { iterations: 3 });
+  bench(
+    "parse 5000 function file",
+    async () => {
+      const source = generateLargeTypeScriptFile(5000);
+      await parser.parse(source);
+    },
+    { iterations: 3 }
+  );
 
-  bench('parse 10000 function file', async () => {
-    const source = generateLargeTypeScriptFile(10000);
-    await parser.parse(source);
-  }, { iterations: 1 });
+  bench(
+    "parse 10000 function file",
+    async () => {
+      const source = generateLargeTypeScriptFile(10000);
+      await parser.parse(source);
+    },
+    { iterations: 1 }
+  );
 });
 
-describe('Memory Usage Tests', () => {
-  bench('memory usage for large file parsing', async () => {
+describe("Memory Usage Tests", () => {
+  bench("memory usage for large file parsing", async () => {
     const parser = new TypeScriptParser();
     const initialMemory = process.memoryUsage().heapUsed;
-    
+
     const source = generateLargeTypeScriptFile(5000);
     await parser.parse(source);
-    
+
     const finalMemory = process.memoryUsage().heapUsed;
     const memoryIncrease = finalMemory - initialMemory;
-    
+
     // Should not use more than 500MB for 5000 functions
     expect(memoryIncrease).toBeLessThan(500 * 1024 * 1024);
   });
@@ -1673,27 +1730,33 @@ describe('Memory Usage Tests', () => {
 ### Mock Factories
 
 **tests/utils/mock-factories.ts:**
-```typescript
-import { ASTAnnotation, QueryResult } from '../../packages/ast-helper/src/types';
 
-export function createMockAnnotation(overrides: Partial<ASTAnnotation> = {}): ASTAnnotation {
+```typescript
+import {
+  ASTAnnotation,
+  QueryResult,
+} from "../../packages/ast-helper/src/types";
+
+export function createMockAnnotation(
+  overrides: Partial<ASTAnnotation> = {}
+): ASTAnnotation {
   return {
-    id: 'mock_id_' + Math.random().toString(36).substring(2),
-    name: 'mockFunction',
-    type: 'function',
-    filePath: 'mock.ts',
+    id: "mock_id_" + Math.random().toString(36).substring(2),
+    name: "mockFunction",
+    type: "function",
+    filePath: "mock.ts",
     lineNumber: 1,
-    description: 'Mock function description',
+    description: "Mock function description",
     parameters: [],
-    returnType: 'void',
-    ...overrides
+    returnType: "void",
+    ...overrides,
   };
 }
 
 export function createMockAnnotations(
   configs: Array<Partial<ASTAnnotation>>
 ): ASTAnnotation[] {
-  return configs.map(config => createMockAnnotation(config));
+  return configs.map((config) => createMockAnnotation(config));
 }
 
 export function createMockQueryResult(
@@ -1702,7 +1765,7 @@ export function createMockQueryResult(
 ): QueryResult {
   return {
     ...createMockAnnotation(annotation),
-    score
+    score,
   };
 }
 
@@ -1714,13 +1777,14 @@ export function createMockEmbedding(dimensions: number = 1536): number[] {
 ### Test Helpers
 
 **tests/utils/test-helpers.ts:**
+
 ```typescript
-import { tmpdir } from 'os';
-import { mkdtemp, writeFile, rm } from 'fs/promises';
-import { join } from 'path';
+import { tmpdir } from "os";
+import { mkdtemp, writeFile, rm } from "fs/promises";
+import { join } from "path";
 
 export async function createTempProject(): Promise<string> {
-  const tempDir = await mkdtemp(join(tmpdir(), 'ast-helper-test-'));
+  const tempDir = await mkdtemp(join(tmpdir(), "ast-helper-test-"));
   return tempDir;
 }
 
@@ -1729,8 +1793,8 @@ export async function cleanupTempProject(projectDir: string): Promise<void> {
 }
 
 export function generateLargeTypeScriptFile(functionCount: number): string {
-  let source = '';
-  
+  let source = "";
+
   for (let i = 0; i < functionCount; i++) {
     source += `
       /**
@@ -1741,12 +1805,12 @@ export function generateLargeTypeScriptFile(functionCount: number): string {
       }
     `;
   }
-  
+
   return source;
 }
 
 export function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class TestProject {
@@ -1758,12 +1822,19 @@ export class TestProject {
   }
 
   async initialize(): Promise<void> {
-    await this.writeFile('.ast-helper.json', JSON.stringify({
-      parser: {
-        languages: ['typescript'],
-        includePatterns: ['**/*.ts']
-      }
-    }, null, 2));
+    await this.writeFile(
+      ".ast-helper.json",
+      JSON.stringify(
+        {
+          parser: {
+            languages: ["typescript"],
+            includePatterns: ["**/*.ts"],
+          },
+        },
+        null,
+        2
+      )
+    );
   }
 
   getPath(): string {
@@ -1782,7 +1853,7 @@ npm test
 
 # Run specific test categories
 npm run test:unit
-npm run test:integration  
+npm run test:integration
 npm run test:e2e
 npm run test:performance
 
@@ -1810,6 +1881,7 @@ npm test -- --verbose
 ### CI/CD Integration
 
 **GitHub Actions test workflow:**
+
 ```yaml
 name: Tests
 
@@ -1821,36 +1893,36 @@ jobs:
     strategy:
       matrix:
         node-version: [18, 20]
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run linting
         run: npm run lint
-      
+
       - name: Run type checking
         run: npm run type-check
-      
+
       - name: Run unit tests
         run: npm run test:unit
-      
+
       - name: Run integration tests
         run: npm run test:integration
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      
+
       - name: Run E2E tests
         run: npm run test:e2e
-      
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:

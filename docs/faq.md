@@ -9,6 +9,7 @@ Get quick answers to common questions about ast-copilot-helper. This FAQ covers 
 **Q**: What exactly does ast-copilot-helper do?
 
 **A**: ast-copilot-helper is a powerful code analysis and AI integration tool that:
+
 - Parses your codebase to extract functions, classes, interfaces, and other code elements
 - Creates searchable semantic embeddings of your code using AI
 - Provides intelligent code search and discovery capabilities
@@ -21,13 +22,13 @@ Get quick answers to common questions about ast-copilot-helper. This FAQ covers 
 
 **A**: ast-copilot-helper offers unique advantages:
 
-| Feature | ast-copilot-helper | Traditional Search | IDE Search |
-|---------|-------------------|-------------------|------------|
-| Semantic Understanding | ✅ AI-powered semantic search | ❌ Text-only | ❌ Limited context |
-| AI Integration | ✅ MCP protocol support | ❌ No AI integration | ❌ No AI integration |
-| Cross-language | ✅ TypeScript, Python, JavaScript | ✅ Language agnostic | ✅ Language-specific |
-| Context Awareness | ✅ Understands code relationships | ❌ String matching only | ⚠️ Limited context |
-| Offline Usage | ✅ Local database | ✅ Fully offline | ✅ Fully offline |
+| Feature                | ast-copilot-helper                | Traditional Search      | IDE Search           |
+| ---------------------- | --------------------------------- | ----------------------- | -------------------- |
+| Semantic Understanding | ✅ AI-powered semantic search     | ❌ Text-only            | ❌ Limited context   |
+| AI Integration         | ✅ MCP protocol support           | ❌ No AI integration    | ❌ No AI integration |
+| Cross-language         | ✅ TypeScript, Python, JavaScript | ✅ Language agnostic    | ✅ Language-specific |
+| Context Awareness      | ✅ Understands code relationships | ❌ String matching only | ⚠️ Limited context   |
+| Offline Usage          | ✅ Local database                 | ✅ Fully offline        | ✅ Fully offline     |
 
 ## Installation and Setup
 
@@ -35,7 +36,8 @@ Get quick answers to common questions about ast-copilot-helper. This FAQ covers 
 
 **Q**: What are the minimum system requirements?
 
-**A**: 
+**A**:
+
 - **Node.js**: 18.x or higher
 - **Operating System**: Windows 10+, macOS 10.15+, Linux (Ubuntu 18+)
 - **Memory**: 4GB RAM minimum, 8GB recommended
@@ -117,10 +119,7 @@ ast-helper query "authentication functions"
       "packages/*/src/**/*.{ts,js}",
       "apps/*/src/**/*.{ts,js}"
     ],
-    "excludePatterns": [
-      "packages/*/dist/**",
-      "packages/*/node_modules/**"
-    ]
+    "excludePatterns": ["packages/*/dist/**", "packages/*/node_modules/**"]
   }
 }
 ```
@@ -155,6 +154,7 @@ ast-helper config set ai.enableEmbeddings false
 **Q**: Can I use other AI providers besides OpenAI?
 
 **A**: Currently OpenAI only, but we're adding support for:
+
 - Anthropic Claude (coming soon)
 - Azure OpenAI (coming soon)
 - Local models via Ollama (planned)
@@ -172,6 +172,7 @@ ast-helper config set ai.enableEmbeddings false
 - **Large project** (10K+ files): 5-30 minutes
 
 **Optimization tips:**
+
 ```bash
 # Exclude unnecessary files
 echo "*.test.ts" >> .ast-helper-ignore
@@ -185,14 +186,14 @@ ast-helper parse src/ --incremental
 
 **A**: Currently supported:
 
-| Language | Extensions | Status |
-|----------|------------|--------|
-| TypeScript | `.ts`, `.tsx` | ✅ Full support |
+| Language   | Extensions            | Status          |
+| ---------- | --------------------- | --------------- |
+| TypeScript | `.ts`, `.tsx`         | ✅ Full support |
 | JavaScript | `.js`, `.jsx`, `.mjs` | ✅ Full support |
-| Python | `.py` | ✅ Full support |
-| Java | `.java` | 🔄 Beta |
-| C/C++ | `.c`, `.cpp`, `.h` | 📋 Planned |
-| Go | `.go` | 📋 Planned |
+| Python     | `.py`                 | ✅ Full support |
+| Java       | `.java`               | 🔄 Beta         |
+| C/C++      | `.c`, `.cpp`, `.h`    | 📋 Planned      |
+| Go         | `.go`                 | 📋 Planned      |
 
 ### Searching Code
 
@@ -219,12 +220,14 @@ ast-helper query "auth" --file "src/auth/**"
 **A**: Common issues and solutions:
 
 1. **Database not populated**:
+
    ```bash
    ast-helper stats  # Check if files are parsed
    ast-helper parse src/  # Re-parse if needed
    ```
 
 2. **Search mode mismatch**:
+
    ```bash
    # Try different search modes
    ast-helper query "auth" --mode text
@@ -268,7 +271,7 @@ code --install-extension publisher.ast-copilot-helper
 **A**: Current features:
 
 - **Code Search**: Search your codebase from Command Palette
-- **Contextual Hints**: Hover information for functions/classes  
+- **Contextual Hints**: Hover information for functions/classes
 - **Quick Navigation**: Jump to definitions across files
 - **AI Integration**: Enhanced IntelliSense with codebase context
 
@@ -281,7 +284,7 @@ code --install-extension publisher.ast-copilot-helper
 **A**: MCP (Model Context Protocol) allows AI assistants to understand your codebase:
 
 - **Better Code Suggestions**: AI knows your existing functions
-- **Contextual Help**: AI understands your project structure  
+- **Contextual Help**: AI understands your project structure
 - **Intelligent Refactoring**: AI suggests improvements based on your patterns
 - **Code Generation**: AI creates code that fits your style
 
@@ -311,7 +314,7 @@ ast-helper server
 **A**: Growing ecosystem:
 
 - **Anthropic Claude Desktop**: ✅ Full support
-- **Continue.dev**: ✅ Full support  
+- **Continue.dev**: ✅ Full support
 - **Cursor**: 🔄 In development
 - **GitHub Copilot**: 📋 Planned
 - **Custom integrations**: ✅ Via MCP protocol
@@ -323,12 +326,14 @@ ast-helper server
 **A**: Embeddings enable semantic understanding:
 
 **Without embeddings** (text search):
+
 - Query: "authentication" → matches "authenticate", "auth", "login"
 - Fast and free
 - Good for exact matches
 
 **With embeddings** (semantic search):
-- Query: "user login" → matches "authenticate", "signIn", "validateCredentials"  
+
+- Query: "user login" → matches "authenticate", "signIn", "validateCredentials"
 - Understands meaning and context
 - Better for discovery and exploration
 
@@ -471,7 +476,7 @@ cd project-a
 ast-helper init
 ast-helper config set parser.languages '["typescript"]'
 
-cd ../project-b  
+cd ../project-b
 ast-helper init
 ast-helper config set parser.languages '["python"]'
 
@@ -530,7 +535,7 @@ ast-helper export --format markdown > API.md
 **A**: Multiple channels:
 
 - **GitHub Issues**: [Bug reports and feature requests](https://github.com/yourusername/ast-copilot-helper/issues)
-- **GitHub Discussions**: [Questions and community help](https://github.com/yourusername/ast-copilot-helper/discussions)  
+- **GitHub Discussions**: [Questions and community help](https://github.com/yourusername/ast-copilot-helper/discussions)
 - **Discord/Slack**: [Real-time community chat] (link when available)
 
 ### Diagnostic Information
@@ -546,7 +551,7 @@ ast-helper doctor
 # Configuration dump
 ast-helper config --export
 
-# Project statistics  
+# Project statistics
 ast-helper stats --verbose
 
 # Recent logs
@@ -581,18 +586,21 @@ tail -n 50 ~/.ast-helper/logs/error.log
 **A**: Exciting developments ahead:
 
 **Near-term** (next 3 months):
+
 - Support for more AI providers (Anthropic, Azure)
 - Java and C++ language support
 - Enhanced VS Code integration
 - Performance optimizations
 
 **Medium-term** (6 months):
+
 - Web-based dashboard
 - Team collaboration features
 - Plugin system for custom parsers
 - Integration with more IDEs
 
 **Long-term** (1 year):
+
 - Local AI model support
 - Advanced code analytics
 - Automated refactoring suggestions
@@ -601,6 +609,7 @@ tail -n 50 ~/.ast-helper/logs/error.log
 **Q**: Is this project actively maintained?
 
 **A**: Yes! Active development with:
+
 - Regular releases (monthly)
 - Responsive issue handling (< 48 hours)
 - Active community engagement

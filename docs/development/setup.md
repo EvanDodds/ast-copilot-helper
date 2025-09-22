@@ -9,6 +9,7 @@ This guide will help you set up a complete development environment for ast-copil
 Before setting up the development environment, ensure you have the following software installed:
 
 #### Node.js and npm
+
 - **Node.js**: Version 18.x or higher
 - **npm**: Version 9.x or higher (comes with Node.js)
 
@@ -19,10 +20,12 @@ npm --version   # Should be 9.x.x or higher
 ```
 
 **Installation:**
+
 - **Windows/macOS**: Download from [nodejs.org](https://nodejs.org/)
 - **Linux**: Use your package manager or Node Version Manager (recommended)
 
 #### Git
+
 Version control system for managing source code.
 
 ```bash
@@ -31,11 +34,13 @@ git --version  # Should be 2.x.x or higher
 ```
 
 **Installation:**
+
 - **Windows**: Download from [git-scm.com](https://git-scm.com/)
 - **macOS**: Install Xcode Command Line Tools: `xcode-select --install`
 - **Linux**: `sudo apt install git` (Ubuntu/Debian) or equivalent
 
 #### Python (Optional but Recommended)
+
 Required for Python language parsing features.
 
 - **Python**: Version 3.8 or higher
@@ -50,9 +55,11 @@ pip3 --version
 ### Recommended Software
 
 #### Node Version Manager (nvm)
+
 Allows easy switching between Node.js versions.
 
 **Installation:**
+
 ```bash
 # Install nvm (Linux/macOS)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
@@ -66,9 +73,11 @@ nvm use 18
 ```
 
 #### VS Code
+
 Recommended IDE with excellent TypeScript support.
 
 **Required Extensions:**
+
 - TypeScript and JavaScript Language Features (built-in)
 - ESLint
 - Prettier - Code formatter
@@ -76,6 +85,7 @@ Recommended IDE with excellent TypeScript support.
 - GitLens
 
 **Optional Extensions:**
+
 - Bracket Pair Colorizer 2
 - Auto Rename Tag
 - Path Intellisense
@@ -109,7 +119,7 @@ npm install
 # This will install dependencies for:
 # - Root workspace
 # - packages/ast-helper
-# - packages/ast-mcp-server  
+# - packages/ast-mcp-server
 # - packages/vscode-extension
 ```
 
@@ -152,6 +162,7 @@ npm run type-check
 ### Daily Development Setup
 
 1. **Pull Latest Changes**
+
 ```bash
 git pull upstream main  # If using fork
 # or
@@ -159,11 +170,13 @@ git pull origin main    # If using original repo
 ```
 
 2. **Install New Dependencies** (if package.json changed)
+
 ```bash
 npm install
 ```
 
 3. **Start Development Mode**
+
 ```bash
 # Start all services in development mode
 npm run dev
@@ -231,6 +244,7 @@ npm run test:manual        # Manual testing scripts
 ```
 
 **Key directories:**
+
 - `src/parser/`: Language parsers
 - `src/query/`: Query engine and embeddings
 - `src/database/`: SQLite database management
@@ -252,6 +266,7 @@ npm run test:mcp           # MCP-specific tests
 ```
 
 **Key directories:**
+
 - `src/server/`: MCP server implementation
 - `src/tools/`: MCP tool definitions
 - `src/resources/`: MCP resource handlers
@@ -269,6 +284,7 @@ code .                     # Open in VS Code
 ```
 
 **Key directories:**
+
 - `src/`: Extension source code
 - `media/`: Images, icons, stylesheets
 - `test/`: Extension tests
@@ -306,7 +322,7 @@ Create `.vscode/settings.json`:
   },
   "eslint.workingDirectories": [
     "packages/ast-helper",
-    "packages/ast-mcp-server", 
+    "packages/ast-mcp-server",
     "packages/vscode-extension"
   ],
   "typescript.validate.enable": true,
@@ -344,7 +360,7 @@ Create `.vscode/launch.json` for debugging:
     },
     {
       "name": "Extension Development Host",
-      "type": "extensionHost", 
+      "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": [
@@ -364,6 +380,7 @@ Create `.vscode/launch.json` for debugging:
 **Problem**: Different Node.js versions across projects.
 
 **Solution**:
+
 ```bash
 # Use nvm to manage Node versions
 nvm install 18
@@ -376,6 +393,7 @@ nvm alias default 18
 **Problem**: TypeScript errors after pulling changes.
 
 **Solution**:
+
 ```bash
 # Clean and rebuild
 npm run clean
@@ -388,6 +406,7 @@ npm run build
 **Problem**: Tests failing locally.
 
 **Solution**:
+
 ```bash
 # Update dependencies
 npm install
@@ -404,6 +423,7 @@ npm run test:verbose
 **Problem**: Development server port already in use.
 
 **Solution**:
+
 ```bash
 # Kill processes using port (macOS/Linux)
 lsof -ti:3000 | xargs kill
@@ -417,6 +437,7 @@ PORT=3001 npm run dev
 **Problem**: npm install fails with dependency conflicts.
 
 **Solution**:
+
 ```bash
 # Clear npm cache
 npm cache clean --force
@@ -440,12 +461,12 @@ Set breakpoints in TypeScript source files and use the launch configurations in 
 Add debug statements:
 
 ```typescript
-import { createLogger } from '../utils/logger';
-const logger = createLogger('component-name');
+import { createLogger } from "../utils/logger";
+const logger = createLogger("component-name");
 
-logger.debug('Debug information', { data });
-logger.info('Information message');
-logger.error('Error occurred', error);
+logger.debug("Debug information", { data });
+logger.info("Information message");
+logger.error("Error occurred", error);
 ```
 
 #### 3. Test Debugging
@@ -498,6 +519,7 @@ npm run benchmark:querying
 ### VS Code Setup
 
 1. **Install recommended extensions**:
+
 ```bash
 code --install-extension esbenp.prettier-vscode
 code --install-extension dbaeumer.vscode-eslint
@@ -507,9 +529,10 @@ code --install-extension ms-vscode.vscode-typescript-next
 2. **Configure workspace settings** (see `.vscode/settings.json` above)
 
 3. **Set up tasks** (`.vscode/tasks.json`):
+
 ```json
 {
-  "version": "2.0.0", 
+  "version": "2.0.0",
   "tasks": [
     {
       "label": "Build All",
@@ -519,7 +542,7 @@ code --install-extension ms-vscode.vscode-typescript-next
     },
     {
       "label": "Test All",
-      "type": "npm", 
+      "type": "npm",
       "script": "test",
       "group": "test"
     },
@@ -537,11 +560,13 @@ code --install-extension ms-vscode.vscode-typescript-next
 ### Other IDEs
 
 #### WebStorm/IntelliJ IDEA
+
 - Enable TypeScript service
 - Configure ESLint and Prettier
 - Set up run configurations for npm scripts
 
 #### Vim/Neovim
+
 - Use CoC (Conquer of Completion) with coc-tsserver
 - Configure ALE for linting
 - Set up key mappings for common tasks
@@ -600,7 +625,7 @@ npm run ci
 
 # Individual checks
 npm run lint:ci
-npm run type-check:ci  
+npm run type-check:ci
 npm run test:ci
 npm run build:ci
 ```
@@ -624,7 +649,7 @@ npm run prepare
 After setting up your development environment:
 
 1. **Read the [Contributing Guide](./contributing.md)**
-2. **Review the [Architecture Overview](./architecture.md)**  
+2. **Review the [Architecture Overview](./architecture.md)**
 3. **Check [Testing Guide](./testing.md) for testing practices**
 4. **Look at [Good First Issues](https://github.com/yourusername/ast-copilot-helper/labels/good%20first%20issue)**
 5. **Join community discussions**

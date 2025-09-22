@@ -10,13 +10,13 @@ The `ast-helper` CLI provides powerful tools for parsing, querying, and managing
 
 These options work with all commands:
 
-| Option | Description | Default |
-|--------|-------------|---------|
+| Option            | Description                | Default            |
+| ----------------- | -------------------------- | ------------------ |
 | `--config <file>` | Path to configuration file | `.ast-helper.json` |
-| `--verbose, -v` | Enable verbose logging | `false` |
-| `--quiet, -q` | Suppress non-error output | `false` |
-| `--help, -h` | Show help for command | - |
-| `--version` | Show version information | - |
+| `--verbose, -v`   | Enable verbose logging     | `false`            |
+| `--quiet, -q`     | Suppress non-error output  | `false`            |
+| `--help, -h`      | Show help for command      | -                  |
+| `--version`       | Show version information   | -                  |
 
 ## Core Commands
 
@@ -40,13 +40,13 @@ ast-helper init --yes
 
 #### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--language, -l <lang>` | Primary language (typescript, javascript, python) | Auto-detect |
-| `--workspace-root <dir>` | Root directory for analysis | Current directory |
-| `--include <patterns>` | File patterns to include | Language defaults |
-| `--exclude <patterns>` | File patterns to exclude | `node_modules/**` |
-| `--yes, -y` | Skip interactive prompts | `false` |
+| Option                   | Description                                       | Default           |
+| ------------------------ | ------------------------------------------------- | ----------------- |
+| `--language, -l <lang>`  | Primary language (typescript, javascript, python) | Auto-detect       |
+| `--workspace-root <dir>` | Root directory for analysis                       | Current directory |
+| `--include <patterns>`   | File patterns to include                          | Language defaults |
+| `--exclude <patterns>`   | File patterns to exclude                          | `node_modules/**` |
+| `--yes, -y`              | Skip interactive prompts                          | `false`           |
 
 #### Examples
 
@@ -81,16 +81,16 @@ ast-helper parse src/ --progress
 
 #### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--include <patterns>` | File patterns to include | Config default |
-| `--exclude <patterns>` | File patterns to exclude | Config default |
-| `--language <lang>` | Force specific language | Auto-detect |
-| `--output, -o <file>` | Output database file | `.ast-helper.db` |
-| `--format <type>` | Output format (db, json) | `db` |
-| `--progress` | Show parsing progress | `false` |
-| `--parallel <num>` | Max parallel processes | CPU count |
-| `--force` | Overwrite existing database | `false` |
+| Option                 | Description                 | Default          |
+| ---------------------- | --------------------------- | ---------------- |
+| `--include <patterns>` | File patterns to include    | Config default   |
+| `--exclude <patterns>` | File patterns to exclude    | Config default   |
+| `--language <lang>`    | Force specific language     | Auto-detect      |
+| `--output, -o <file>`  | Output database file        | `.ast-helper.db` |
+| `--format <type>`      | Output format (db, json)    | `db`             |
+| `--progress`           | Show parsing progress       | `false`          |
+| `--parallel <num>`     | Max parallel processes      | CPU count        |
+| `--force`              | Overwrite existing database | `false`          |
 
 #### Examples
 
@@ -114,12 +114,14 @@ ast-helper parse src/ --format json --output annotations.json
 #### Output Formats
 
 **Database Format (Default):**
+
 ```bash
 ast-helper parse src/
 # Creates .ast-helper.db SQLite database
 ```
 
 **JSON Format:**
+
 ```bash
 ast-helper parse src/ --format json --output annotations.json
 # Creates annotations.json with all extracted data
@@ -145,19 +147,20 @@ ast-helper query "database operations" --limit 5
 
 #### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--type <type>` | Filter by annotation type | All types |
-| `--file <pattern>` | Filter by file pattern | All files |
-| `--limit, -l <num>` | Maximum results to return | 10 |
-| `--similarity <num>` | Similarity threshold (0-1) | 0.7 |
-| `--format <type>` | Output format (table, json, detailed) | `table` |
-| `--sort <field>` | Sort by field (score, name, file) | `score` |
-| `--no-embeddings` | Use text search instead of semantic | `false` |
+| Option               | Description                           | Default   |
+| -------------------- | ------------------------------------- | --------- |
+| `--type <type>`      | Filter by annotation type             | All types |
+| `--file <pattern>`   | Filter by file pattern                | All files |
+| `--limit, -l <num>`  | Maximum results to return             | 10        |
+| `--similarity <num>` | Similarity threshold (0-1)            | 0.7       |
+| `--format <type>`    | Output format (table, json, detailed) | `table`   |
+| `--sort <field>`     | Sort by field (score, name, file)     | `score`   |
+| `--no-embeddings`    | Use text search instead of semantic   | `false`   |
 
 #### Query Types
 
 **Natural Language:**
+
 ```bash
 ast-helper query "functions that handle user authentication"
 ast-helper query "error handling and exception management"
@@ -166,6 +169,7 @@ ast-helper query "utility functions for string manipulation"
 ```
 
 **Type-Specific:**
+
 ```bash
 ast-helper query "*" --type function      # All functions
 ast-helper query "*" --type class         # All classes
@@ -174,6 +178,7 @@ ast-helper query "*" --type variable      # All variables
 ```
 
 **File-Specific:**
+
 ```bash
 ast-helper query "database" --file "**/*model*"    # Only model files
 ast-helper query "auth" --file "src/auth/**"       # Only auth directory
@@ -183,6 +188,7 @@ ast-helper query "test" --file "**/*.test.ts"      # Only test files
 #### Output Formats
 
 **Table Format (Default):**
+
 ```bash
 ast-helper query "auth functions"
 # ┌─────────────────┬──────────────────┬───────┬─────────┐
@@ -194,6 +200,7 @@ ast-helper query "auth functions"
 ```
 
 **JSON Format:**
+
 ```bash
 ast-helper query "auth functions" --format json
 # [
@@ -210,13 +217,14 @@ ast-helper query "auth functions" --format json
 ```
 
 **Detailed Format:**
+
 ```bash
 ast-helper query "auth functions" --format detailed
 # 🔍 authenticateUser (src/auth.ts:23) [Score: 0.89]
 #    Authenticates user with credentials
 #    Parameters: username: string, password: string
 #    Returns: Promise<AuthResult>
-#    
+#
 # 🔍 validateToken (src/auth.ts:45) [Score: 0.85]
 #    Validates JWT authentication token
 #    Parameters: token: string
@@ -240,18 +248,19 @@ ast-helper server --transport sse --port 3002
 
 #### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--transport, -t <type>` | Transport type (stdio, http, sse) | `stdio` |
-| `--port, -p <num>` | Port for HTTP/SSE server | `3001` |
-| `--host <address>` | Host address to bind to | `localhost` |
-| `--cors` | Enable CORS for HTTP requests | `false` |
-| `--auth-token <token>` | Authentication token | None |
-| `--max-results <num>` | Maximum query results | `50` |
+| Option                   | Description                       | Default     |
+| ------------------------ | --------------------------------- | ----------- |
+| `--transport, -t <type>` | Transport type (stdio, http, sse) | `stdio`     |
+| `--port, -p <num>`       | Port for HTTP/SSE server          | `3001`      |
+| `--host <address>`       | Host address to bind to           | `localhost` |
+| `--cors`                 | Enable CORS for HTTP requests     | `false`     |
+| `--auth-token <token>`   | Authentication token              | None        |
+| `--max-results <num>`    | Maximum query results             | `50`        |
 
 #### Transport Types
 
 **STDIO Transport:**
+
 ```bash
 ast-helper server --transport stdio
 # For desktop AI clients (Claude Desktop, etc.)
@@ -259,6 +268,7 @@ ast-helper server --transport stdio
 ```
 
 **HTTP Transport:**
+
 ```bash
 ast-helper server --transport http --port 3001 --cors
 # RESTful HTTP API
@@ -266,6 +276,7 @@ ast-helper server --transport http --port 3001 --cors
 ```
 
 **Server-Sent Events (SSE):**
+
 ```bash
 ast-helper server --transport sse --port 3002
 # Real-time streaming for web clients
@@ -303,6 +314,7 @@ ast-helper config get ai.embeddingModel
 #### Subcommands
 
 **`ast-helper config show`**
+
 ```bash
 ast-helper config show
 # Displays complete configuration with comments
@@ -312,6 +324,7 @@ ast-helper config show --format json
 ```
 
 **`ast-helper config validate`**
+
 ```bash
 ast-helper config validate
 # ✅ Configuration is valid
@@ -321,6 +334,7 @@ ast-helper config validate
 ```
 
 **`ast-helper config set/get`**
+
 ```bash
 # Set values
 ast-helper config set parser.languages "typescript,javascript"
@@ -351,13 +365,13 @@ ast-helper analyze --focus complexity,dependencies
 
 #### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--output, -o <file>` | Output file for report | stdout |
-| `--format <type>` | Report format (json, html, md) | `json` |
-| `--detailed` | Include detailed metrics | `false` |
-| `--metrics` | Include code metrics | `false` |
-| `--focus <aspects>` | Focus on specific aspects | All |
+| Option                | Description                    | Default |
+| --------------------- | ------------------------------ | ------- |
+| `--output, -o <file>` | Output file for report         | stdout  |
+| `--format <type>`     | Report format (json, html, md) | `json`  |
+| `--detailed`          | Include detailed metrics       | `false` |
+| `--metrics`           | Include code metrics           | `false` |
+| `--focus <aspects>`   | Focus on specific aspects      | All     |
 
 #### Analysis Aspects
 
@@ -392,13 +406,13 @@ ast-helper export --include-embeddings --format json
 
 #### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--format <type>` | Export format (json, csv, xml) | `json` |
-| `--type <type>` | Filter by annotation type | All types |
-| `--output, -o <file>` | Output file path | stdout |
-| `--include-embeddings` | Include embedding vectors | `false` |
-| `--pretty` | Pretty-print JSON output | `false` |
+| Option                 | Description                    | Default   |
+| ---------------------- | ------------------------------ | --------- |
+| `--format <type>`      | Export format (json, csv, xml) | `json`    |
+| `--type <type>`        | Filter by annotation type      | All types |
+| `--output, -o <file>`  | Output file path               | stdout    |
+| `--include-embeddings` | Include embedding vectors      | `false`   |
+| `--pretty`             | Pretty-print JSON output       | `false`   |
 
 ## Advanced Usage Patterns
 
@@ -509,6 +523,7 @@ ast-helper config validate
 ### Common Error Solutions
 
 **No results found:**
+
 ```bash
 # Check if files were parsed
 ast-helper query "*" --limit 1
@@ -521,6 +536,7 @@ ast-helper config get parser.includePatterns
 ```
 
 **Permission errors:**
+
 ```bash
 # Check database permissions
 ls -la .ast-helper.db
@@ -530,6 +546,7 @@ ast-helper parse src/ --output ~/analysis.db
 ```
 
 **Memory issues with large codebases:**
+
 ```bash
 # Limit parallel processing
 ast-helper parse src/ --parallel 2
@@ -551,7 +568,7 @@ Add to `.vscode/tasks.json`:
   "tasks": [
     {
       "label": "Parse Codebase",
-      "type": "shell", 
+      "type": "shell",
       "command": "ast-helper",
       "args": ["parse", "src/", "--progress"],
       "group": "build"
@@ -559,7 +576,7 @@ Add to `.vscode/tasks.json`:
     {
       "label": "Query Functions",
       "type": "shell",
-      "command": "ast-helper", 
+      "command": "ast-helper",
       "args": ["query", "${input:searchTerm}", "--type", "function"],
       "group": "test"
     }
@@ -578,6 +595,7 @@ Add to `.vscode/tasks.json`:
 ### Git Hooks
 
 **Pre-commit hook** (`.git/hooks/pre-commit`):
+
 ```bash
 #!/bin/bash
 # Parse changed files
@@ -643,7 +661,7 @@ Now that you've mastered the CLI:
 ```bash
 # Essential Commands
 ast-helper init                    # Initialize project
-ast-helper parse src/              # Parse codebase  
+ast-helper parse src/              # Parse codebase
 ast-helper query "search term"     # Search code
 ast-helper server --transport stdio # Start MCP server
 
@@ -653,7 +671,7 @@ ast-helper server --transport stdio # Start MCP server
 --config <file>                   # Custom config
 --format json                     # JSON output
 
-# Query Filters  
+# Query Filters
 --type function                   # Filter by type
 --file "**/*test*"               # Filter by file
 --limit 20                       # Limit results
