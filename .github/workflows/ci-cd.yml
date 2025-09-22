@@ -1,0 +1,709 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]  # Full suite only on main branch after merge
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened, ready_for_review ]  # Only ready-for-review PRs
+  release:
+    types: [ published ]
+
+env:
+  NODE_VERSION_MATRIX: "[18, 20, 22]"
+  PLATFORM_MATRIX: "[ubuntu-latest, windows-latest, macos-latest]"
+
+jobs:
+  # Job 1: Code Quality and Linting
+  lint-and-format:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    # Skip draft PRs - only run on ready-for-review PRs or main branch
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: false
+        
+      - name: Run Prettier format check
+        run: npm run format:check
+        continue-on-error: false
+        
+      - name: Run TypeScript type check
+        run: npm run type-check
+        continue-on-error: false
+        
+      - name: Upload lint results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint-results
+          path: |
+            eslint-results.xml
+            prettier-results.txt
+          retention-days: 7
+
+  # Job 2: Security Audit
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    # Skip draft PRs - only run on ready-for-review PRs or main branch
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: false
+        
+      - name: Run security scanning
+        run: npm run security:scan
+        continue-on-error: false
+        
+      - name: Upload security results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-results
+          path: security-audit-report.json
+          retention-days: 30
+
+  # Job 3: Multi-Platform Unit Tests
+  unit-tests:
+    name: Unit Tests
+    needs: [lint-and-format]
+    # Skip draft PRs - only run on ready-for-review PRs or main branch
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        # Lightweight for PRs: single OS, single Node version
+        # Full suite for main branch: multi-platform, multi-version
+        os: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && fromJson('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJson('["ubuntu-latest"]') }}
+        node-version: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && fromJson('["18", "20", "22"]') || fromJson('["20"]') }}
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          CI: true
+          
+      - name: Generate coverage report
+        run: npm run test:coverage
+        
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: unit-tests
+          name: coverage-${{ matrix.os }}-node${{ matrix.node-version }}
+          fail_ci_if_error: false
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results-${{ matrix.os }}-node${{ matrix.node-version }}
+          path: |
+            test-results.xml
+            coverage/
+          retention-days: 7
+
+  # Job 4: Integration Tests
+  integration-tests:
+    name: Integration Tests
+    needs: [unit-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build project
+        run: npm run build
+        
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          CI: true
+          TEST_TIMEOUT: 120000
+          
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results-${{ matrix.os }}
+          path: integration-test-results.xml
+          retention-days: 7
+
+  # Job 5: Performance Tests
+  performance-tests:
+    name: Performance Tests
+    needs: [integration-tests]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build project
+        run: npm run build
+        
+      - name: Run performance tests
+        run: npm run test:performance
+        
+      - name: Generate performance report
+        run: npm run perf:report
+        
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-test-results
+          path: performance-report.html
+          retention-days: 30
+
+  # Job 6: Multi-Platform Build
+  build:
+    name: Build Packages
+    needs: [security-audit, unit-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build packages
+        run: npm run build:all
+        
+      - name: Package CLI application
+        run: npm run package:cli
+        
+      - name: Package VS Code extension
+        run: npm run package:vscode
+        
+      - name: Run build validation
+        run: npm run validate:build
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.os }}
+          path: |
+            dist/
+            packages/ast-helper/dist/
+            packages/ast-mcp-server/dist/
+            packages/vscode-extension/*.vsix
+          retention-days: 30
+
+  # Job 7: Quality Gates
+  quality-gates:
+    name: Quality Gates
+    needs: [unit-tests, integration-tests, performance-tests, build]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Check code coverage threshold
+        run: |
+          echo "Checking code coverage threshold..."
+          npm run coverage:check -- --threshold=80
+          
+      - name: Check security vulnerabilities
+        run: |
+          echo "Checking security score..."
+          npm run security:score
+          
+      - name: Check performance benchmarks
+        run: |
+          echo "Checking performance benchmarks..."
+          npm run perf:score
+          
+      - name: Generate quality report
+        run: npm run quality:report
+        
+      - name: Upload quality report
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-report
+          path: quality-report.html
+          retention-days: 30
+
+  # Job 8: E2E Tests
+  e2e-tests:
+    name: End-to-End Tests
+    needs: [build, quality-gates]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.os }}
+          path: dist/
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install VS Code for testing (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+          sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+          sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+          sudo apt update
+          sudo apt install code
+          
+      - name: Setup virtual display (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get install -y xvfb
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          CI: true
+          DISPLAY: ':99'
+          
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results-${{ matrix.os }}
+          path: |
+            e2e-test-results.xml
+            screenshots/
+          retention-days: 7
+
+  # Job 9: Release Preparation
+  prepare-release:
+    name: Prepare Release
+    if: github.event_name == 'release'
+    needs: [e2e-tests]
+    runs-on: ubuntu-latest
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Get version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CHANGELOG=$(npm run changelog:generate -- --version=${{ steps.version.outputs.version }})
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+      - name: Update package versions
+        run: npm run version:update -- ${{ steps.version.outputs.version }}
+        
+      - name: Commit version updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "chore: update version to ${{ steps.version.outputs.version }}" || true
+          git push || true
+
+  # Job 10: Deploy to NPM
+  deploy-npm:
+    name: Deploy to NPM
+    if: github.event_name == 'release'
+    needs: [prepare-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-ubuntu-latest
+          path: dist/
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Publish to NPM
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # Job 11: Deploy VS Code Extension
+  deploy-vscode:
+    name: Deploy VS Code Extension
+    if: github.event_name == 'release'
+    needs: [prepare-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-ubuntu-latest
+          path: dist/
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+        
+      - name: Publish to VS Code Marketplace
+        run: vsce publish
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+  # Job 12: Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [e2e-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-ubuntu-latest
+          path: dist/
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Deploy to staging
+        run: npm run deploy:staging
+        env:
+          CI_COMMIT_SHA: ${{ github.sha }}
+          CI_BUILD_ID: ${{ github.run_id }}
+          STAGING_HEALTH_CHECK_URL: ${{ secrets.STAGING_HEALTH_CHECK_URL }}
+          DEPLOYMENT_TIMEOUT: '10'
+          
+      - name: Upload deployment logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staging-deployment-logs
+          path: |
+            deployment.log
+            staging-deployment-state.json
+          retention-days: 30
+
+  # Job 13: Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    needs: [deploy-staging]
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-ubuntu-latest
+          path: dist/
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Deploy to production
+        run: npm run deploy:production
+        env:
+          CI_COMMIT_SHA: ${{ github.sha }}
+          CI_BUILD_ID: ${{ github.run_id }}
+          PRODUCTION_HEALTH_CHECK_URLS: ${{ secrets.PRODUCTION_HEALTH_CHECK_URLS }}
+          PRODUCTION_ROLLBACK_ENABLED: 'true'
+          DEPLOYMENT_TIMEOUT: '30'
+          REQUIRE_DEPLOYMENT_APPROVAL: 'true'
+          DEPLOYMENT_APPROVAL_TOKEN: ${{ secrets.DEPLOYMENT_APPROVAL_TOKEN }}
+          BLUE_GREEN_DEPLOYMENT: ${{ secrets.BLUE_GREEN_DEPLOYMENT }}
+          
+      - name: Upload deployment logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-deployment-logs
+          path: |
+            production-deployment.log
+            production-deployment-state.json
+          retention-days: 90
+
+  # Job 14: Rollback on Failure
+  rollback-on-failure:
+    name: Automated Rollback
+    needs: [deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Rollback staging on failure
+        if: needs.deploy-staging.result == 'failure'
+        run: |
+          echo "Staging deployment failed, initiating rollback..."
+          npm run rollback:staging "Automated rollback due to deployment failure"
+        env:
+          CI: true
+          
+      - name: Rollback production on failure
+        if: needs.deploy-production.result == 'failure'
+        run: |
+          echo "Production deployment failed, initiating rollback..."
+          npm run rollback:production "Automated rollback due to deployment failure"
+        env:
+          CI: true
+          BLUE_GREEN_DEPLOYMENT: ${{ secrets.BLUE_GREEN_DEPLOYMENT }}
+          
+      - name: Upload rollback logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rollback-logs
+          path: |
+            *-rollback.log
+            *-rollback-history.json
+          retention-days: 90
+
+  # Job 15: Notification and Reporting
+  notify-completion:
+    name: Notify Completion
+    if: always()
+    needs: [deploy-npm, deploy-vscode, deploy-staging, deploy-production, rollback-on-failure]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Determine workflow status
+        id: status
+        run: |
+          # Check all deployment jobs
+          STAGING_OK=$([[ "${{ needs.deploy-staging.result }}" == "success" || "${{ needs.deploy-staging.result }}" == "skipped" ]] && echo "true" || echo "false")
+          PRODUCTION_OK=$([[ "${{ needs.deploy-production.result }}" == "success" || "${{ needs.deploy-production.result }}" == "skipped" ]] && echo "true" || echo "false")
+          NPM_OK=$([[ "${{ needs.deploy-npm.result }}" == "success" || "${{ needs.deploy-npm.result }}" == "skipped" ]] && echo "true" || echo "false")
+          VSCODE_OK=$([[ "${{ needs.deploy-vscode.result }}" == "success" || "${{ needs.deploy-vscode.result }}" == "skipped" ]] && echo "true" || echo "false")
+          
+          if [[ "$STAGING_OK" == "true" && "$PRODUCTION_OK" == "true" && "$NPM_OK" == "true" && "$VSCODE_OK" == "true" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Send success notification
+        if: steps.status.outputs.status == 'success'
+        run: |
+          echo "🎉 CI/CD Pipeline completed successfully!"
+          echo "✅ All tests passed"
+          echo "✅ All quality gates passed"  
+          echo "✅ All deployments successful"
+          npm run ci:build-notifications success
+          
+      - name: Send failure notification
+        if: steps.status.outputs.status == 'failure'
+        run: |
+          echo "❌ CI/CD Pipeline failed!"
+          npm run ci:build-notifications failure
+        
+      - name: Run Performance Monitoring
+        if: always()
+        run: |
+          echo "📊 Generating performance monitoring report..."
+          npm run ci:performance-monitor
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+
+      - name: Run Alerting System
+        if: always()  
+        run: |
+          echo "🚨 Evaluating performance alerts..."
+          npm run ci:alerting-system
+
+      - name: Generate Monitoring Dashboard
+        if: always()
+        run: |
+          echo "📈 Generating monitoring dashboard..."
+          npm run ci:monitoring-dashboard
+
+      - name: Upload Monitoring Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-reports-${{ github.run_number }}
+          path: |
+            monitoring-dashboard.html
+            performance-report.html
+            monitoring/
+            performance-history.json
+            active-alerts.json
+          retention-days: 30
+          
+      - name: Send failure notification
+        if: steps.status.outputs.status == 'failure'
+        run: |
+          echo "❌ CI/CD Pipeline failed!"
+          npm run ci:build-notifications failure

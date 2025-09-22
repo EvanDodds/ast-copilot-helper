@@ -77,6 +77,45 @@ This will:
 2. Set up inter-package linking
 3. Build all packages automatically
 
+## CI/CD Pipeline
+
+This project implements a comprehensive CI/CD pipeline with 36 acceptance criteria across 6 categories:
+
+### 🚀 Pipeline Features
+- **Multi-platform builds**: Windows, macOS, Linux with Node.js 18, 20, 21
+- **Comprehensive testing**: Unit, integration, and performance tests
+- **Quality gates**: 90%+ coverage, security scanning, performance validation
+- **Blue-Green deployment**: Zero-downtime staging and production deployments
+- **Real-time monitoring**: Performance tracking, alerting, and interactive dashboards
+- **Multi-channel notifications**: Slack, email, and GitHub integration
+
+### 📊 Monitoring & Alerts
+- **Performance monitoring** with trend analysis and A-F grading
+- **Real-time dashboards** with Chart.js visualization and auto-refresh
+- **Intelligent alerting** with escalation rules and cooldown management
+- **Build failure notifications** with multi-channel delivery
+
+### 🔧 CI/CD Commands
+```bash
+# Quality gates
+yarn run ci:quality-gate
+yarn run ci:security-scan
+yarn run ci:performance-score
+
+# Deployment
+yarn run ci:deploy-staging
+yarn run ci:deploy-production
+yarn run ci:health-check
+yarn run ci:rollback
+
+# Monitoring
+yarn run ci:performance-monitor
+yarn run ci:monitoring-dashboard
+yarn run ci:alerting-system
+```
+
+For complete CI/CD documentation, see [docs/CI-CD-PIPELINE.md](docs/CI-CD-PIPELINE.md).
+
 ## Development
 
 ### Building

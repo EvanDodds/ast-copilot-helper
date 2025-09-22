@@ -49,6 +49,39 @@ yarn workspace <workspace-name> add <package>
 
 ## Development Workflow
 
+### CI/CD Pipeline
+
+This project implements a comprehensive CI/CD pipeline addressing 36 acceptance criteria:
+
+#### Quick CI/CD Commands
+```bash
+# Quality validation
+yarn run ci:quality-gate      # Coverage, security, performance checks
+yarn run ci:security-scan     # Vulnerability scanning
+yarn run ci:performance-score # Performance grade calculation
+
+# Deployment
+yarn run ci:deploy-staging    # Deploy to staging environment
+yarn run ci:deploy-production # Blue-Green production deployment
+yarn run ci:health-check      # Validate deployment health
+yarn run ci:rollback         # Automated rollback if needed
+
+# Monitoring and notifications
+yarn run ci:performance-monitor # Generate performance reports
+yarn run ci:monitoring-dashboard # Update real-time dashboards
+yarn run ci:alerting-system     # Configure alerting rules
+yarn run ci:notify-build-failure # Test notification system
+```
+
+#### CI/CD Features
+- **Multi-platform builds**: Windows, macOS, Linux with Node.js 18, 20, 21
+- **Quality gates**: 90%+ coverage, security scanning, performance validation
+- **Blue-Green deployment** with automated rollback
+- **Real-time monitoring** with performance tracking and alerting
+- **Multi-channel notifications**: Slack, email, GitHub integration
+
+For detailed CI/CD documentation: [docs/CI-CD-PIPELINE.md](docs/CI-CD-PIPELINE.md)
+
 ### Testing
 
 Our testing strategy follows a comprehensive approach with multiple layers:

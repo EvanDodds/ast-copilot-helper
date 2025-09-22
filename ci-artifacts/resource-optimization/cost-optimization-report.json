@@ -1,0 +1,83 @@
+{
+  "timestamp": "2025-09-22T02:54:30.142Z",
+  "current_costs": {
+    "total": "$0.168",
+    "per_job": [
+      {
+        "job": "validate-code",
+        "cost": "$0.024",
+        "duration": "3m 0s"
+      },
+      {
+        "job": "build-and-test",
+        "cost": "$0.064",
+        "duration": "8m 0s"
+      },
+      {
+        "job": "performance-benchmarks",
+        "cost": "$0.048",
+        "duration": "6m 0s"
+      },
+      {
+        "job": "deploy-staging",
+        "cost": "$0.032",
+        "duration": "4m 0s"
+      }
+    ]
+  },
+  "optimized_costs": {
+    "total": "$0.336",
+    "savings": "$-0.168 (-100.0%)"
+  },
+  "recommendations": [
+    {
+      "jobName": "validate-code",
+      "currentRunner": "ubuntu-latest",
+      "recommendedRunner": "ubuntu-latest-4-cores",
+      "expectedSavings": {
+        "time": 55.00000000000001,
+        "cost": -100,
+        "efficiency": 95
+      },
+      "reason": "Memory over-provisioned, Better resource allocation match"
+    },
+    {
+      "jobName": "build-and-test",
+      "currentRunner": "ubuntu-latest",
+      "recommendedRunner": "ubuntu-latest-4-cores",
+      "expectedSavings": {
+        "time": 55.00000000000001,
+        "cost": -100,
+        "efficiency": 95
+      },
+      "reason": "Better resource allocation match"
+    },
+    {
+      "jobName": "performance-benchmarks",
+      "currentRunner": "ubuntu-latest",
+      "recommendedRunner": "ubuntu-latest-4-cores",
+      "expectedSavings": {
+        "time": 55.00000000000001,
+        "cost": -100,
+        "efficiency": 95
+      },
+      "reason": "Better resource allocation match"
+    },
+    {
+      "jobName": "deploy-staging",
+      "currentRunner": "ubuntu-latest",
+      "recommendedRunner": "ubuntu-latest-4-cores",
+      "expectedSavings": {
+        "time": 55.00000000000001,
+        "cost": -100,
+        "efficiency": 88.88888888888889
+      },
+      "reason": "CPU under-utilized, Memory over-provisioned, Better resource allocation match"
+    }
+  ],
+  "efficiency_gains": {
+    "resource_utilization": "50%",
+    "time_reduction": "55%",
+    "cost_savings": "-100%"
+  }
+}
