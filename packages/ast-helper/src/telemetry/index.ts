@@ -11,12 +11,26 @@ export { DEFAULT_TELEMETRY_CONFIG, validateTelemetryConfig, mergeTelemetryConfig
 export { PrivacyRespectingConsentManager, FileConsentStorage } from './consent/index.js';
 export type { ConsentRecord, ConsentFeature, ConsentStorage, ConsentValidationResult } from './consent/index.js';
 
+// Data Collection System (NEW)
+export * from './collection/index.js';
+
+// Storage and Queuing System (NEW)
+export * from './storage/index.js';
+
+// Transmission and Reporting System (NEW)
+export * from './transmission/index.js';
+
 // Data Anonymization (NEW)
 export { PrivacyRespectingDataAnonymizer } from './anonymization/index.js';
 export type { AnonymizationConfig, AnonymizationResult, AnonymizationStrategy, DataCategory } from './anonymization/index.js';
 
-// Core types and interfaces
-export type * from './types.js';
+// Core types - only export what's not conflicting
+export type {
+  TelemetryConfig,
+  TelemetryManager,
+  TelemetryResult,
+  TelemetrySettings
+} from './types.js';
 
 // Factory functions and utilities
 import { PrivacyRespectingTelemetryManager } from './manager.js';
