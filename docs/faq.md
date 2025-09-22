@@ -571,7 +571,7 @@ tail -n 50 ~/.ast-helper/logs/error.log
 
 1. **Check existing issues**: See if someone is already working on it
 2. **Create issue**: Propose the new language support
-3. **Follow guide**: See [Adding Language Support](./development/contributing.md#adding-language-support)
+3. **Follow guide**: See [Adding Language Support](./development/contributing.md)
 4. **Submit PR**: Include parser, tests, and documentation
 
 ## Roadmap and Future

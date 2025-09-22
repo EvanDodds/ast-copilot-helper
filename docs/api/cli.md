@@ -1,4 +1,4 @@
-# CLI Commands Reference
+# CLI API Reference
 
 The ast-copilot-helper CLI provides powerful commands for parsing source code and querying AST annotations.
 
@@ -180,6 +180,44 @@ The query command supports multiple query types:
 2. **Semantic**: `"authentication logic"`
 3. **Structural**: `type:function name:get*`
 4. **Combined**: `"user management" AND type:class`
+
+### `ast-helper analyze`
+
+Analyze code patterns, quality metrics, and potential issues.
+
+#### Usage
+```bash
+ast-helper analyze [options] <files...>
+```
+
+#### Options
+
+| Option | Alias | Description | Default |
+|--------|-------|-------------|---------|
+| `--output <file>` | `-o` | Output file for analysis results | `stdout` |
+| `--format <format>` | `-f` | Output format (json, yaml, table) | `table` |
+| `--metrics` | `-m` | Include code metrics | `true` |
+| `--security` | `-s` | Run security analysis | `false` |
+| `--performance` | `-p` | Check performance patterns | `false` |
+| `--complexity` | `-c` | Calculate complexity metrics | `true` |
+| `--threshold <num>` | `-t` | Complexity threshold for warnings | `10` |
+
+#### Examples
+
+**Analyze code quality:**
+```bash
+ast-helper analyze src/ --metrics --complexity
+```
+
+**Security analysis:**
+```bash
+ast-helper analyze src/ --security --format json
+```
+
+**Performance analysis:**
+```bash
+ast-helper analyze src/ --performance --threshold 5
+```
 
 ### `ast-helper init`
 

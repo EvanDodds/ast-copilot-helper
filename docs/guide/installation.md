@@ -543,4 +543,4 @@ Need help with installation?
 
 - 💬 [GitHub Discussions](https://github.com/EvanDodds/ast-copilot-helper/discussions) - Community support
 - 🐛 [Report Issues](https://github.com/EvanDodds/ast-copilot-helper/issues) - Installation bugs
-- 📖 [Troubleshooting Guide](../troubleshooting) - Common problems and solutions
+- 📖 [Troubleshooting Guide](../troubleshooting.md) - Common problems and solutions
