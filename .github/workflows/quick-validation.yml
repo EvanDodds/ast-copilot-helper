@@ -2,6 +2,7 @@ name: Quick Validation
 
 on:
   pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]  # Only ready-for-review PRs
     paths:
       - '**.ts'
       - '**.js'
@@ -13,6 +14,8 @@ jobs:
   quick-check:
     name: Quick Check
     runs-on: ubuntu-latest
+    # Skip draft PRs - only run on ready-for-review PRs
+    if: github.event.pull_request.draft == false
     
     steps:
       - name: Checkout code

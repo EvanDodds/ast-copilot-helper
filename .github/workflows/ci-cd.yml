@@ -2,9 +2,10 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]  # Full suite only on main branch after merge
   pull_request:
     branches: [ main ]
+    types: [ opened, synchronize, reopened, ready_for_review ]  # Only ready-for-review PRs
   release:
     types: [ published ]
 
@@ -17,6 +18,8 @@ jobs:
   lint-and-format:
     name: Code Quality Check
     runs-on: ubuntu-latest
+    # Skip draft PRs - only run on ready-for-review PRs or main branch
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
     
     steps:
       - name: Checkout code
@@ -57,6 +60,8 @@ jobs:
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
+    # Skip draft PRs - only run on ready-for-review PRs or main branch
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
     
     steps:
       - name: Checkout code
@@ -91,11 +96,15 @@ jobs:
   unit-tests:
     name: Unit Tests
     needs: [lint-and-format]
+    # Skip draft PRs - only run on ready-for-review PRs or main branch
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [18, 20, 22]
+        # Lightweight for PRs: single OS, single Node version
+        # Full suite for main branch: multi-platform, multi-version
+        os: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && fromJson('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJson('["ubuntu-latest"]') }}
+        node-version: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && fromJson('["18", "20", "22"]') || fromJson('["20"]') }}
         
     runs-on: ${{ matrix.os }}
     
