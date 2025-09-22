@@ -50,11 +50,11 @@ export default defineConfig({
           ]
         },
         {
-          text: 'Advanced',
-          collapsed: true,
+          text: 'Help & Support',
+          collapsed: false,
           items: [
-            { text: 'Performance Tuning', link: '/guide/performance' },
-            { text: 'Troubleshooting', link: '/guide/troubleshooting' }
+            { text: 'Troubleshooting', link: '/troubleshooting' },
+            { text: 'FAQ', link: '/faq' }
           ]
         }
       ],
@@ -75,11 +75,10 @@ export default defineConfig({
           text: 'Examples & Tutorials',
           collapsed: false,
           items: [
-            { text: 'Basic Examples', link: '/examples/' },
+            { text: 'Overview', link: '/examples/' },
             { text: 'CLI Examples', link: '/examples/cli' },
-            { text: 'AI Integration', link: '/examples/ai-integration' },
-            { text: 'Custom Parsers', link: '/examples/custom-parsers' },
-            { text: 'Plugin Development', link: '/examples/plugins' }
+            { text: 'Interactive Tutorials', link: '/examples/tutorials' },
+            { text: 'Integration Examples', link: '/examples/integrations' }
           ]
         }
       ],
@@ -90,6 +89,7 @@ export default defineConfig({
           items: [
             { text: 'Architecture', link: '/development/architecture' },
             { text: 'Contributing', link: '/development/contributing' },
+            { text: 'Development Setup', link: '/development/setup' },
             { text: 'Testing', link: '/development/testing' },
             { text: 'Release Process', link: '/development/release-process' }
           ]
