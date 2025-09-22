@@ -83,8 +83,8 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     // Higher confidence if we have more code context
     let confidence = 0.5;
     
-    if (context.error.location) confidence += 0.2;
-    if (context.codebase.dependencies) confidence += 0.1;
+    if (context.error.stack) confidence += 0.2;
+    if (context.environment.dependencies) confidence += 0.1;
     if (context.codebase.recentChanges?.length) confidence += 0.1;
 
     return Math.min(confidence, 0.9);
@@ -118,35 +118,37 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     if (moduleMatch) {
       const moduleName = moduleMatch[1];
       
-      results.push({
-        issue: 'missing-module',
-        severity: 'error',
-        suggestion: `Install missing module: ${moduleName}`,
-        fixable: true,
-        confidence: 0.9
-      });
-
-      // Check if it's a relative import issue
-      if (moduleName.startsWith('./') || moduleName.startsWith('../')) {
+      if (moduleName) {
         results.push({
-          issue: 'relative-import-path',
+          issue: 'missing-module',
           severity: 'error',
-          suggestion: `Check relative import path: ${moduleName}`,
+          suggestion: `Install missing module: ${moduleName}`,
           fixable: true,
-          confidence: 0.8
+          confidence: 0.9
         });
-      }
 
-      // Check if it's a Node.js built-in module
-      const builtinModules = ['fs', 'path', 'http', 'https', 'crypto', 'url', 'os'];
-      if (builtinModules.includes(moduleName)) {
-        results.push({
-          issue: 'builtin-module-import',
-          severity: 'warning',
-          suggestion: `Use Node.js built-in module correctly: node:${moduleName}`,
-          fixable: true,
-          confidence: 0.7
-        });
+        // Check if it's a relative import issue
+        if (moduleName.startsWith('./') || moduleName.startsWith('../')) {
+          results.push({
+            issue: 'relative-import-path',
+            severity: 'error',
+            suggestion: `Check relative import path: ${moduleName}`,
+            fixable: true,
+            confidence: 0.8
+          });
+        }
+
+        // Check if it's a Node.js built-in module
+        const builtinModules = ['fs', 'path', 'http', 'https', 'crypto', 'url', 'os'];
+        if (builtinModules.includes(moduleName)) {
+          results.push({
+            issue: 'builtin-module-import',
+            severity: 'warning',
+            suggestion: `Use Node.js built-in module correctly: node:${moduleName}`,
+            fixable: true,
+            confidence: 0.7
+          });
+        }
       }
     }
 
@@ -281,23 +283,25 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     if (refMatch) {
       const variable = refMatch[1];
       
-      results.push({
-        issue: 'undefined-variable',
-        severity: 'error',
-        suggestion: `Declare variable '${variable}' or check imports`,
-        fixable: true,
-        confidence: 0.8
-      });
-
-      // Check if it might be a typo
-      if (this.isPossibleTypo(variable)) {
+      if (variable) {
         results.push({
-          issue: 'possible-typo',
-          severity: 'warning',
-          suggestion: `Check spelling of '${variable}' - might be a typo`,
-          fixable: false,
-          confidence: 0.6
+          issue: 'undefined-variable',
+          severity: 'error',
+          suggestion: `Declare variable '${variable}' or check imports`,
+          fixable: true,
+          confidence: 0.8
         });
+
+        // Check if it might be a typo
+        if (this.isPossibleTypo(variable)) {
+          results.push({
+            issue: 'possible-typo',
+            severity: 'warning',
+            suggestion: `Check spelling of '${variable}' - might be a typo`,
+            fixable: false,
+            confidence: 0.6
+          });
+        }
       }
     }
 
@@ -305,7 +309,6 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     const propMatch = message.match(/Cannot read propert(y|ies) ['"]([^'"]+)['"] of (null|undefined)/);
     if (propMatch) {
       const property = propMatch[2];
-      const nullType = propMatch[3];
       
       results.push({
         issue: 'null-property-access',
@@ -458,7 +461,7 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     if (dependencyIssues.includes(issue)) return 'dependency';
     if (debuggingIssues.includes(issue)) return 'debugging';
     
-    return 'workaround';
+    return 'alternative-approach';
   }
 
   /**
@@ -508,7 +511,7 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
   /**
    * Get actions for issue type
    */
-  private getActionsForIssue(issue: string, context: SuggestionContext) {
+  private getActionsForIssue(issue: string, _context: SuggestionContext) {
     // Return basic action structure - this would be expanded based on issue type
     const actions = [];
 
@@ -532,7 +535,7 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
         break;
       default:
         actions.push({
-          type: 'manual-fix' as const,
+          type: 'code-change' as const,
           description: 'Manual code fix required',
           automated: false,
           riskLevel: 'medium' as const
@@ -550,8 +553,8 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
 
     clues.push(`Static analysis detected: ${result.issue}`);
     
-    if (context.error.location) {
-      clues.push(`Error location: Line ${context.error.location.line}, Column ${context.error.location.column}`);
+    if (context.error.stack) {
+      clues.push(`Error stack available: ${context.error.stack.split('\n')[0]}`);
     }
 
     if (context.codebase.languages.length > 0) {
@@ -619,7 +622,7 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     return '5-15 minutes';
   }
 
-  private getResourcesForIssue(issue: string) {
+  private getResourcesForIssue(_issue: string) {
     // Return relevant documentation links
     return [{
       type: 'documentation' as const,

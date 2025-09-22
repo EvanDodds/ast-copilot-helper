@@ -20,12 +20,18 @@ import {
  * Rollback and recovery management implementation
  */
 export class RollbackManagerImpl implements RollbackManager {
-  private config!: RollbackConfig;
+  private _config!: RollbackConfig;
   private initialized = false;
 
   async initialize(config: RollbackConfig): Promise<void> {
     console.log('🔄 Initializing rollback manager...');
-    this.config = config;
+    this._config = config;
+    
+    // Validate rollback configuration
+    if (!this._config) {
+      throw new Error('RollbackConfig is required for initialization');
+    }
+    
     this.initialized = true;
     console.log('✅ Rollback manager initialized');
   }

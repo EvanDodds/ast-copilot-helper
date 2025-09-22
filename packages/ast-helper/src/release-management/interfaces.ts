@@ -103,6 +103,11 @@ export interface VersionManager {
   validateVersion(version: string, type: ReleaseType): Promise<boolean>;
   
   /**
+   * Validate version progression against current version (throws on invalid progression)
+   */
+  validateVersionProgression(version: string, type: ReleaseType): Promise<void>;
+  
+  /**
    * Get current version from repository
    */
   getCurrentVersion(): Promise<string>;

@@ -107,8 +107,8 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
     this.ensureInitialized();
     
     try {
-      // Validate version format
-      await this.versionManager.validateVersion(version, type);
+      // Validate version format and progression
+      await this.versionManager.validateVersionProgression(version, type);
       
       // Get current version for comparison
       const previousVersion = await this.versionManager.getCurrentVersion();
@@ -524,7 +524,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
   /**
    * Get latest version for a release channel
    */
-  async getLatestVersion(channel: ReleaseChannel): Promise<string> {
+  async getLatestVersion(_channel: ReleaseChannel): Promise<string> {
     this.ensureInitialized();
     
     // Implementation would query version control system or registry
@@ -535,7 +535,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
   /**
    * List releases with optional filtering
    */
-  async listReleases(filter?: ReleaseFilter): Promise<Release[]> {
+  async listReleases(_filter?: ReleaseFilter): Promise<Release[]> {
     this.ensureInitialized();
     
     // Implementation would query release database or version control
@@ -551,22 +551,22 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
     }
   }
 
-  private async planPackageReleases(version: string, type: ReleaseType, changes: ChangelogEntry[]): Promise<PackageRelease[]> {
+  private async planPackageReleases(_version: string, _type: ReleaseType, _changes: ChangelogEntry[]): Promise<PackageRelease[]> {
     // Implementation would analyze monorepo packages and their changes
     return [];
   }
 
-  private async planPlatformReleases(version: string, packages: PackageRelease[]): Promise<PlatformRelease[]> {
+  private async planPlatformReleases(_version: string, _packages: PackageRelease[]): Promise<PlatformRelease[]> {
     // Implementation would prepare platform-specific releases
     return [];
   }
 
-  private async planDependencyUpdates(version: string, packages: PackageRelease[]): Promise<DependencyUpdate[]> {
+  private async planDependencyUpdates(_version: string, _packages: PackageRelease[]): Promise<DependencyUpdate[]> {
     // Implementation would analyze dependency updates needed
     return [];
   }
 
-  private async createValidationSteps(version: string, type: ReleaseType, changes: ChangelogEntry[]): Promise<ValidationStep[]> {
+  private async createValidationSteps(_version: string, _type: ReleaseType, _changes: ChangelogEntry[]): Promise<ValidationStep[]> {
     // Implementation would create validation steps based on changes and configuration
     return [];
   }
@@ -629,7 +629,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
     }
   }
 
-  private async validateDependencies(dependencies: DependencyUpdate[]): Promise<ValidationStepResult> {
+  private async validateDependencies(_dependencies: DependencyUpdate[]): Promise<ValidationStepResult> {
     // Implementation would validate dependency updates
     return {
       stepName: 'dependencies',
@@ -672,12 +672,12 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
     // Implementation would update package.json files
   }
 
-  private async commitChangelog(changelog: Changelog, version: string): Promise<void> {
+  private async commitChangelog(_changelog: Changelog, version: string): Promise<void> {
     console.log(`💾 Committing changelog for ${version}`);
     // Implementation would commit changelog to git
   }
 
-  private async createReleaseTag(version: string, changes: ChangelogEntry[]): Promise<void> {
+  private async createReleaseTag(version: string, _changes: ChangelogEntry[]): Promise<void> {
     console.log(`🏷️  Creating release tag: ${version}`);
     // Implementation would create git tag
   }
@@ -693,7 +693,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
     // Implementation would run final test suite
   }
 
-  private async publishToPlatforms(platforms: PlatformRelease[], artifacts: ReleaseArtifact[]): Promise<PublishResult[]> {
+  private async publishToPlatforms(platforms: PlatformRelease[], _artifacts: ReleaseArtifact[]): Promise<PublishResult[]> {
     console.log(`📦 Publishing to ${platforms.length} platforms`);
     // Implementation would publish to each platform
     return [];
@@ -704,7 +704,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
     // Implementation would publish release notes
   }
 
-  private async sendReleaseNotifications(version: string, releaseNotes: ReleaseNotes, publishResults: PublishResult[]): Promise<void> {
+  private async sendReleaseNotifications(version: string, _releaseNotes: ReleaseNotes, _publishResults: PublishResult[]): Promise<void> {
     console.log(`📢 Sending release notifications for ${version}`);
     // Implementation would send notifications
   }

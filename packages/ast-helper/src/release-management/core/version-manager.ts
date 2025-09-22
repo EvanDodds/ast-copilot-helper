@@ -33,6 +33,19 @@ export class VersionManagerImpl implements VersionManager {
   async initialize(config: VersioningConfig): Promise<void> {
     console.log('🔢 Initializing version manager...');
     
+    // Validate configuration
+    if (config.scheme !== 'semver') {
+      throw new Error(`Unsupported versioning scheme: ${config.scheme}`);
+    }
+    
+    if (config.initialVersion) {
+      try {
+        this.parseVersion(config.initialVersion);
+      } catch (error) {
+        throw new Error(`Invalid initial version format: ${config.initialVersion}`);
+      }
+    }
+    
     this.config = config;
     this.initialized = true;
     
@@ -96,11 +109,60 @@ export class VersionManagerImpl implements VersionManager {
       // Validate against scheme
       if (this.config.scheme === 'semver') {
         if (!this.isValidSemver(version)) {
+          console.log(`❌ Version validation failed: ${version} - invalid semver format`);
+          return false;
+        }
+      }
+
+      // Validate type consistency (format only, not progression)
+      switch (type) {
+        case ReleaseType.PRERELEASE:
+          if (!parsed.prerelease) {
+            console.log(`❌ Version validation failed: ${version} - prerelease type requires prerelease identifier`);
+            return false;
+          }
+          break;
+          
+        case ReleaseType.PATCH:
+        case ReleaseType.MINOR:
+        case ReleaseType.MAJOR:
+          // For stable release types, prerelease identifiers should not be present
+          if (parsed.prerelease) {
+            console.log(`❌ Version validation failed: ${version} - stable release type should not have prerelease identifier`);
+            return false;
+          }
+          break;
+      }
+
+      console.log(`✅ Version validation passed: ${version}`);
+      return true;
+      
+    } catch (error) {
+      console.log(`❌ Version validation failed: ${version} - invalid format`);
+      return false;
+    }
+  }
+
+  /**
+   * Validate version progression against current version
+   */
+  async validateVersionProgression(version: string, type: ReleaseType): Promise<void> {
+    this.ensureInitialized();
+    
+    console.log(`🔍 Validating version progression: ${version} (${type})`);
+    
+    try {
+      // Parse version to validate format first
+      const parsed = this.parseVersion(version);
+      
+      // Validate against scheme
+      if (this.config.scheme === 'semver') {
+        if (!this.isValidSemver(version)) {
           throw new Error(`Invalid semver format: ${version}`);
         }
       }
       
-      // Validate type consistency
+      // Validate type consistency and progression
       const currentVersion = await this.getCurrentVersion();
       const currentParsed = this.parseVersion(currentVersion);
       
@@ -141,11 +203,10 @@ export class VersionManagerImpl implements VersionManager {
         }
       }
       
-      console.log(`✅ Version validation passed: ${version}`);
-      return true;
+      console.log(`✅ Version progression validation passed: ${version}`);
       
     } catch (error) {
-      console.error(`❌ Version validation failed: ${version} - ${error instanceof Error ? error.message : String(error)}`);
+      console.error(`❌ Version progression validation failed: ${version} - ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -267,8 +328,13 @@ export class VersionManagerImpl implements VersionManager {
   isPrerelease(version: string): boolean {
     this.ensureInitialized();
     
-    const parsed = this.parseVersion(version);
-    return Boolean(parsed.prerelease);
+    try {
+      const parsed = this.parseVersion(version);
+      return Boolean(parsed.prerelease);
+    } catch (error) {
+      // Return false for malformed versions
+      return false;
+    }
   }
 
   /**
@@ -297,8 +363,8 @@ export class VersionManagerImpl implements VersionManager {
       return ReleaseChannel.NIGHTLY;
     }
     
-    // Default to beta for unknown prerelease types
-    return ReleaseChannel.BETA;
+    // Default to stable for unknown prerelease types
+    return ReleaseChannel.STABLE;
   }
 
   // Private helper methods

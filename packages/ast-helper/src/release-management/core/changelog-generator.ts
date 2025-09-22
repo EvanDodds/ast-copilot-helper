@@ -78,7 +78,8 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     for (const commit of commits) {
       try {
         const entry = await this.parseCommitMessage(commit);
-        if (entry) {
+        // Filter out excluded types
+        if (entry && !this.config.excludeTypes.includes(entry.type)) {
           entries.push(entry);
         }
       } catch (error) {
@@ -156,8 +157,18 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     
     for (const commit of commits) {
       try {
-        const parsed = this.parseConventionalCommit(commit);
-        if (parsed) {
+        let parsed: ChangelogEntry | null = null;
+        
+        // Check if commit is in pipe-delimited format (from git log)
+        if (commit.includes('|')) {
+          parsed = this.parseConventionalCommit(commit);
+        } else {
+          // Handle simple commit message format (for tests and direct usage)
+          parsed = this.parseSimpleCommitMessage(commit);
+        }
+        
+        // Filter out excluded types
+        if (parsed && !this.config.excludeTypes.includes(parsed.type)) {
           entries.push(parsed);
         }
       } catch (error) {
@@ -247,8 +258,9 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
       return result.trim().split('\n').filter(line => line.trim());
       
     } catch (error) {
-      console.warn(`⚠️ Failed to get git commits, using empty list:`, error);
-      return [];
+      console.warn(`⚠️ Failed to get git commits:`, error);
+      // Re-throw to let calling method handle it
+      throw error;
     }
   }
 
@@ -269,6 +281,36 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
       commit: commit.hash,
       timestamp: commit.date,
       affectedPackages: []
+    };
+  }
+
+  private parseSimpleCommitMessage(message: string): ChangelogEntry | null {
+    if (!message || !message.trim()) return null;
+    
+    // Parse conventional commit format: type(scope): description
+    const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?\!?:\s*(.+)$/;
+    const match = message.trim().match(conventionalRegex);
+    
+    if (!match) {
+      // Not a conventional commit, return null to be filtered out
+      return null;
+    }
+    
+    const [, type, scope, description] = match;
+    if (!type || !description) return null;
+    
+    // Check for breaking change indicators
+    const breaking = message.includes('!:');
+    
+    return {
+      type,
+      scope,
+      description,
+      breaking: Boolean(breaking),
+      author: 'Unknown', // Default for simple messages
+      commit: 'unknown', // Default for simple messages  
+      timestamp: new Date(), // Default to current time
+      affectedPackages: scope ? [scope] : []
     };
   }
 
@@ -359,19 +401,48 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
   }
 
   private formatKeepAChangelog(entries: ChangelogEntry[]): string {
-    const sections = this.groupBySection(entries);
+    const typeMapping: Record<string, string> = {
+      'feat': 'Added',
+      'feature': 'Added',
+      'fix': 'Fixed',
+      'refactor': 'Changed',
+      'perf': 'Changed',
+      'docs': 'Changed',
+      'style': 'Changed',
+      'test': 'Changed',
+      'build': 'Changed',
+      'ci': 'Changed',
+      'chore': 'Changed'
+    };
+    
+    const grouped: Record<string, ChangelogEntry[]> = {};
+    
+    // Group entries by keepachangelog sections
+    for (const entry of entries) {
+      const section = typeMapping[entry.type] || 'Changed';
+      if (!grouped[section]) {
+        grouped[section] = [];
+      }
+      grouped[section].push(entry);
+    }
+    
     let changelog = '';
     
-    for (const section of this.config.sections) {
-      const sectionEntries = sections[section.title] || [];
-      if (sectionEntries.length === 0) continue;
+    // Output in keepachangelog order
+    const sectionOrder = ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security'];
+    
+    for (const sectionName of sectionOrder) {
+      const sectionEntries = grouped[sectionName];
+      if (!sectionEntries || sectionEntries.length === 0) continue;
       
-      changelog += `### ${section.title}\n\n`;
+      changelog += `### ${sectionName}\n\n`;
       
       for (const entry of sectionEntries) {
         const scope = entry.scope ? `**${entry.scope}**: ` : '';
         const breaking = entry.breaking ? '**BREAKING:** ' : '';
-        changelog += `- ${breaking}${scope}${entry.description}\n`;
+        const author = this.config.includeAuthor && entry.author ? ` (by ${entry.author})` : '';
+        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` ([${entry.commit}](commit/${entry.commit}))` : '';
+        changelog += `- ${breaking}${scope}${entry.description}${author}${commit}\n`;
       }
       
       changelog += '\n';
@@ -390,7 +461,9 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     if (breakingChanges.length > 0) {
       changelog += '### BREAKING CHANGES\n\n';
       breakingChanges.forEach(entry => {
-        changelog += `* ${entry.description}\n`;
+        const author = this.config.includeAuthor && entry.author ? ` (by ${entry.author})` : '';
+        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` ([${entry.commit}](commit/${entry.commit}))` : '';
+        changelog += `* ${entry.description}${author}${commit}\n`;
       });
       changelog += '\n';
     }
@@ -399,7 +472,9 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
       changelog += '### Features\n\n';
       features.forEach(entry => {
         const scope = entry.scope ? `**${entry.scope}**: ` : '';
-        changelog += `* ${scope}${entry.description}\n`;
+        const author = this.config.includeAuthor && entry.author ? ` (by ${entry.author})` : '';
+        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` ([${entry.commit}](commit/${entry.commit}))` : '';
+        changelog += `* ${scope}${entry.description}${author}${commit}\n`;
       });
       changelog += '\n';
     }
@@ -408,7 +483,9 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
       changelog += '### Bug Fixes\n\n';
       fixes.forEach(entry => {
         const scope = entry.scope ? `**${entry.scope}**: ` : '';
-        changelog += `* ${scope}${entry.description}\n`;
+        const author = this.config.includeAuthor && entry.author ? ` (by ${entry.author})` : '';
+        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` ([${entry.commit}](commit/${entry.commit}))` : '';
+        changelog += `* ${scope}${entry.description}${author}${commit}\n`;
       });
       changelog += '\n';
     }
@@ -421,23 +498,47 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
       return this.formatConventionalChangelog(entries);
     }
     
-    // Simple template replacement
-    return this.config.customTemplate
-      .replace('{{entries}}', entries.map(e => `- ${e.description}`).join('\n'))
-      .replace('{{count}}', entries.length.toString());
-  }
-
-  private groupBySection(entries: ChangelogEntry[]): Record<string, ChangelogEntry[]> {
+    // Group entries by type
     const grouped: Record<string, ChangelogEntry[]> = {};
-    
-    for (const section of this.config.sections) {
-      grouped[section.title] = entries.filter(entry => {
-        return section.types.includes(entry.type) && 
-               (!section.scope || entry.scope === section.scope);
-      });
+    for (const entry of entries) {
+      if (!grouped[entry.type]) {
+        grouped[entry.type] = [];
+      }
+      grouped[entry.type]!.push(entry);
     }
     
-    return grouped;
+    // Simple template replacement - handle both single braces and double braces
+    let result = this.config.customTemplate;
+    
+    // Replace version placeholder
+    result = result.replace(/\{version\}/g, '{version}'); // Keep as placeholder for now
+    
+    // Replace each type section
+    for (const [type, typeEntries] of Object.entries(grouped)) {
+      const typeSection = typeEntries.map(entry => {
+        const scope = entry.scope ? `(${entry.scope})` : '';
+        const author = this.config.includeAuthor && entry.author ? ` by ${entry.author}` : '';
+        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` [${entry.commit}]` : '';
+        return `${entry.description}${scope}${author}${commit}`;
+      }).join('\n- ');
+      
+      result = result.replace(`{type}`, type);
+      result = result.replace(`{description}`, typeSection);
+    }
+    
+    // Replace any remaining placeholders with first entry data if available
+    if (entries.length > 0) {
+      const firstEntry = entries[0]!;
+      result = result.replace(/\{type\}/g, firstEntry.type);
+      result = result.replace(/\{description\}/g, firstEntry.description);
+    }
+    
+    // Replace count
+    result = result.replace(/\{count\}/g, entries.length.toString());
+    result = result.replace(/\{\{entries\}\}/g, entries.map(e => `- ${e.description}`).join('\n'));
+    result = result.replace(/\{\{count\}\}/g, entries.length.toString());
+    
+    return result;
   }
 
   private generateDescription(_version: string, entries: ChangelogEntry[]): string {

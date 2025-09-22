@@ -2,6 +2,12 @@ import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { VersionManagerImpl } from '../core/version-manager.js';
 import { ReleaseType, ReleaseChannel, VersioningConfig } from '../types.js';
 
+// Mock fs/promises module
+vi.mock('fs/promises', () => ({
+  readFile: vi.fn(),
+  writeFile: vi.fn()
+}));
+
 describe('VersionManagerImpl', () => {
   let versionManager: VersionManagerImpl;
   let mockConfig: VersioningConfig;
@@ -140,9 +146,8 @@ describe('VersionManagerImpl', () => {
   describe('current version retrieval', () => {
     test('should get current version from package.json', async () => {
       // Mock fs operations
-      vi.mock('fs/promises', () => ({
-        readFile: vi.fn().mockResolvedValue('{"version": "1.2.3"}')
-      }));
+      const fs = await import('fs/promises');
+      vi.mocked(fs.readFile).mockResolvedValue('{"version": "1.2.3"}');
 
       const version = await versionManager.getCurrentVersion();
       expect(version).toMatch(/^\d+\.\d+\.\d+/);
@@ -153,11 +158,10 @@ describe('VersionManagerImpl', () => {
     test('should update package versions', async () => {
       const packages = ['./package.json', './packages/core/package.json'];
       
-      // Mock fs operations
-      vi.mock('fs/promises', () => ({
-        writeFile: vi.fn().mockResolvedValue(undefined),
-        readFile: vi.fn().mockResolvedValue('{"version": "1.0.0"}')
-      }));
+      // Mock fs operations dynamically
+      const fs = await import('fs/promises');
+      vi.mocked(fs.readFile).mockResolvedValue('{"version": "1.0.0"}');
+      vi.mocked(fs.writeFile).mockResolvedValue(undefined);
 
       await expect(versionManager.updateVersion('1.0.1', packages))
         .resolves.toBeUndefined();
@@ -166,10 +170,10 @@ describe('VersionManagerImpl', () => {
     test('should handle update failures gracefully', async () => {
       const packages = ['./nonexistent/package.json'];
       
-      // Mock fs to throw error
-      vi.mock('fs/promises', () => ({
-        writeFile: vi.fn().mockRejectedValue(new Error('File not found'))
-      }));
+      // Mock fs to throw error dynamically
+      const fs = await import('fs/promises');
+      vi.mocked(fs.readFile).mockRejectedValue(new Error('File not found'));
+      vi.mocked(fs.writeFile).mockRejectedValue(new Error('File not found'));
 
       await expect(versionManager.updateVersion('1.0.1', packages))
         .rejects.toThrow('File not found');

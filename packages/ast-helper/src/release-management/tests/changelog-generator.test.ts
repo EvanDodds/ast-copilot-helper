@@ -1,10 +1,21 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, vi, beforeAll, afterEach } from 'vitest';
 import { ChangelogGeneratorImpl } from '../core/changelog-generator.js';
 import { ChangelogConfig, ChangelogEntry } from '../types.js';
+
+// Mock child_process at the top level
+vi.mock('child_process', () => ({
+  execSync: vi.fn()
+}));
 
 describe('ChangelogGeneratorImpl', () => {
   let changelogGenerator: ChangelogGeneratorImpl;
   let mockConfig: ChangelogConfig;
+  let mockExecSync: any;
+
+  beforeAll(async () => {
+    const { execSync } = await import('child_process');
+    mockExecSync = execSync as any;
+  });
 
   beforeEach(async () => {
     mockConfig = {
@@ -26,25 +37,15 @@ describe('ChangelogGeneratorImpl', () => {
     await changelogGenerator.initialize(mockConfig);
   });
 
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('change detection', () => {
     test('should detect changes since version', async () => {
-      // Mock git operations
-      vi.mock('child_process', () => ({
-        exec: vi.fn((cmd, callback) => {
-          const mockCommits = `commit abc123
-Author: Test Author <test@example.com>
-Date: 2024-01-01
-
-feat: add new feature
-
-commit def456  
-Author: Another Author <another@example.com>
-Date: 2024-01-02
-
-fix: resolve bug`;
-          callback(null, { stdout: mockCommits });
-        })
-      }));
+      // Setup successful git mock
+      mockExecSync.mockReturnValue(`abc123|Test Author|2024-01-01T00:00:00.000Z|feat: add new feature|
+def456|Another Author|2024-01-02T00:00:00.000Z|fix: resolve bug|`);
 
       const changes = await changelogGenerator.detectChangesSince('1.0.0');
       
@@ -53,14 +54,13 @@ fix: resolve bug`;
     });
 
     test('should handle git command failures', async () => {
-      vi.mock('child_process', () => ({
-        exec: vi.fn((cmd, callback) => {
-          callback(new Error('Git command failed'), null);
-        })
-      }));
+      // Setup failing git mock
+      mockExecSync.mockImplementation(() => {
+        throw new Error('Git command failed');
+      });
 
       await expect(changelogGenerator.detectChangesSince('1.0.0'))
-        .rejects.toThrow('Git command failed');
+        .rejects.toThrow('Failed to detect changes');
     });
   });
 

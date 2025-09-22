@@ -50,7 +50,7 @@ import type { CrashReport as CrashReportType } from './crash/types.js';
 import { ErrorAnalyticsManager } from './analytics/error-analytics.js';
 
 // Import privacy and security systems
-import { PrivacyManager, ConsentLevel } from './privacy/privacy-manager.js';
+import { PrivacyManager } from './privacy/privacy-manager.js';
 import { SecureTransmissionManager } from './privacy/secure-transmission.js';
 import { ComplianceChecker } from './privacy/compliance-checker.js';
 import type { 

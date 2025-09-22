@@ -136,13 +136,18 @@ describe('CompatibilityCheckerImpl', () => {
     });
 
     test('should detect data format breaking changes', async () => {
-      vi.spyOn(compatibilityChecker as any, 'analyzeDataFormatChanges').mockResolvedValue({
+      // Enable data format checking for this test
+      const dataEnabledConfig = { ...mockConfig, checkData: true };
+      const dataEnabledChecker = new CompatibilityCheckerImpl();
+      await dataEnabledChecker.initialize(dataEnabledConfig);
+
+      vi.spyOn(dataEnabledChecker as any, 'analyzeDataFormatChanges').mockResolvedValue({
         schemaChanges: ['removedField'],
         formatVersionBump: true,
         migrationRequired: true
       });
 
-      const result = await compatibilityChecker.checkDataFormatCompatibility('1.0.0', '2.0.0');
+      const result = await dataEnabledChecker.checkDataFormatCompatibility('1.0.0', '2.0.0');
       
       expect(result.compatible).toBe(false);
       expect(result.migrationRequired).toBe(true);
