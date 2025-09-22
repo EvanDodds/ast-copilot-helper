@@ -648,17 +648,53 @@ jobs:
         run: |
           echo "🎉 CI/CD Pipeline completed successfully!"
           echo "✅ All tests passed"
-          echo "✅ Quality gates met"
-          echo "✅ Deployment successful"
-          echo "✅ Staging: ${{ needs.deploy-staging.result }}"
-          echo "✅ Production: ${{ needs.deploy-production.result }}"
+          echo "✅ All quality gates passed"  
+          echo "✅ All deployments successful"
+          npm run ci:build-notifications success
           
       - name: Send failure notification
         if: steps.status.outputs.status == 'failure'
         run: |
           echo "❌ CI/CD Pipeline failed!"
-          echo "Check the workflow logs for details"
-          echo "Staging: ${{ needs.deploy-staging.result }}"
-          echo "Production: ${{ needs.deploy-production.result }}"
-          echo "Rollback: ${{ needs.rollback-on-failure.result }}"
-          echo "Workflow URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          npm run ci:build-notifications failure
+        
+      - name: Run Performance Monitoring
+        if: always()
+        run: |
+          echo "📊 Generating performance monitoring report..."
+          npm run ci:performance-monitor
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+
+      - name: Run Alerting System
+        if: always()  
+        run: |
+          echo "🚨 Evaluating performance alerts..."
+          npm run ci:alerting-system
+
+      - name: Generate Monitoring Dashboard
+        if: always()
+        run: |
+          echo "📈 Generating monitoring dashboard..."
+          npm run ci:monitoring-dashboard
+
+      - name: Upload Monitoring Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-reports-${{ github.run_number }}
+          path: |
+            monitoring-dashboard.html
+            performance-report.html
+            monitoring/
+            performance-history.json
+            active-alerts.json
+          retention-days: 30
+          
+      - name: Send failure notification
+        if: steps.status.outputs.status == 'failure'
+        run: |
+          echo "❌ CI/CD Pipeline failed!"
+          npm run ci:build-notifications failure
