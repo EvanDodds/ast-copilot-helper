@@ -479,18 +479,165 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
-  # Job 12: Notification and Reporting
+  # Job 12: Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [e2e-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-ubuntu-latest
+          path: dist/
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Deploy to staging
+        run: npm run deploy:staging
+        env:
+          CI_COMMIT_SHA: ${{ github.sha }}
+          CI_BUILD_ID: ${{ github.run_id }}
+          STAGING_HEALTH_CHECK_URL: ${{ secrets.STAGING_HEALTH_CHECK_URL }}
+          DEPLOYMENT_TIMEOUT: '10'
+          
+      - name: Upload deployment logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staging-deployment-logs
+          path: |
+            deployment.log
+            staging-deployment-state.json
+          retention-days: 30
+
+  # Job 13: Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    needs: [deploy-staging]
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-ubuntu-latest
+          path: dist/
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Deploy to production
+        run: npm run deploy:production
+        env:
+          CI_COMMIT_SHA: ${{ github.sha }}
+          CI_BUILD_ID: ${{ github.run_id }}
+          PRODUCTION_HEALTH_CHECK_URLS: ${{ secrets.PRODUCTION_HEALTH_CHECK_URLS }}
+          PRODUCTION_ROLLBACK_ENABLED: 'true'
+          DEPLOYMENT_TIMEOUT: '30'
+          REQUIRE_DEPLOYMENT_APPROVAL: 'true'
+          DEPLOYMENT_APPROVAL_TOKEN: ${{ secrets.DEPLOYMENT_APPROVAL_TOKEN }}
+          BLUE_GREEN_DEPLOYMENT: ${{ secrets.BLUE_GREEN_DEPLOYMENT }}
+          
+      - name: Upload deployment logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-deployment-logs
+          path: |
+            production-deployment.log
+            production-deployment-state.json
+          retention-days: 90
+
+  # Job 14: Rollback on Failure
+  rollback-on-failure:
+    name: Automated Rollback
+    needs: [deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Rollback staging on failure
+        if: needs.deploy-staging.result == 'failure'
+        run: |
+          echo "Staging deployment failed, initiating rollback..."
+          npm run rollback:staging "Automated rollback due to deployment failure"
+        env:
+          CI: true
+          
+      - name: Rollback production on failure
+        if: needs.deploy-production.result == 'failure'
+        run: |
+          echo "Production deployment failed, initiating rollback..."
+          npm run rollback:production "Automated rollback due to deployment failure"
+        env:
+          CI: true
+          BLUE_GREEN_DEPLOYMENT: ${{ secrets.BLUE_GREEN_DEPLOYMENT }}
+          
+      - name: Upload rollback logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rollback-logs
+          path: |
+            *-rollback.log
+            *-rollback-history.json
+          retention-days: 90
+
+  # Job 15: Notification and Reporting
   notify-completion:
     name: Notify Completion
     if: always()
-    needs: [deploy-npm, deploy-vscode, e2e-tests]
+    needs: [deploy-npm, deploy-vscode, deploy-staging, deploy-production, rollback-on-failure]
     runs-on: ubuntu-latest
     
     steps:
       - name: Determine workflow status
         id: status
         run: |
-          if [[ "${{ needs.deploy-npm.result }}" == "success" || "${{ needs.deploy-npm.result }}" == "skipped" ]] && [[ "${{ needs.deploy-vscode.result }}" == "success" || "${{ needs.deploy-vscode.result }}" == "skipped" ]] && [[ "${{ needs.e2e-tests.result }}" == "success" ]]; then
+          # Check all deployment jobs
+          STAGING_OK=$([[ "${{ needs.deploy-staging.result }}" == "success" || "${{ needs.deploy-staging.result }}" == "skipped" ]] && echo "true" || echo "false")
+          PRODUCTION_OK=$([[ "${{ needs.deploy-production.result }}" == "success" || "${{ needs.deploy-production.result }}" == "skipped" ]] && echo "true" || echo "false")
+          NPM_OK=$([[ "${{ needs.deploy-npm.result }}" == "success" || "${{ needs.deploy-npm.result }}" == "skipped" ]] && echo "true" || echo "false")
+          VSCODE_OK=$([[ "${{ needs.deploy-vscode.result }}" == "success" || "${{ needs.deploy-vscode.result }}" == "skipped" ]] && echo "true" || echo "false")
+          
+          if [[ "$STAGING_OK" == "true" && "$PRODUCTION_OK" == "true" && "$NPM_OK" == "true" && "$VSCODE_OK" == "true" ]]; then
             echo "status=success" >> $GITHUB_OUTPUT
           else
             echo "status=failure" >> $GITHUB_OUTPUT
@@ -503,10 +650,15 @@ jobs:
           echo "✅ All tests passed"
           echo "✅ Quality gates met"
           echo "✅ Deployment successful"
+          echo "✅ Staging: ${{ needs.deploy-staging.result }}"
+          echo "✅ Production: ${{ needs.deploy-production.result }}"
           
       - name: Send failure notification
         if: steps.status.outputs.status == 'failure'
         run: |
           echo "❌ CI/CD Pipeline failed!"
           echo "Check the workflow logs for details"
+          echo "Staging: ${{ needs.deploy-staging.result }}"
+          echo "Production: ${{ needs.deploy-production.result }}"
+          echo "Rollback: ${{ needs.rollback-on-failure.result }}"
           echo "Workflow URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
