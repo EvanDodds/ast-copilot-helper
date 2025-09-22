@@ -52,11 +52,13 @@
     "release": "yarn run prepack && npm publish --access=public"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.0.0",
     "@types/tmp": "^0.2.6",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "husky": "^8.0.3",
+    "js-yaml": "^4.1.0",
     "tmp": "^0.2.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.0",
