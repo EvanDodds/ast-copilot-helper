@@ -68,6 +68,8 @@
     "ci:workflow-optimizer": "tsx scripts/ci-cd/workflow-optimizer.ts",
     "ci:cache-manager": "tsx scripts/ci-cd/cache-manager.ts",
     "ci:resource-optimizer": "tsx scripts/ci-cd/resource-optimizer.ts",
+    "ci:validate": "tsx scripts/ci-cd/validation-suite.ts",
+    "ci:validate-all": "yarn run ci:validate && echo '✅ All validation completed'",
     "install:all": "yarn install",
     "postinstall": "yarn run build && yarn run prepare:husky",
     "prepare:husky": "husky install",
