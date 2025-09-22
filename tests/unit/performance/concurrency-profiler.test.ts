@@ -225,7 +225,7 @@ describe('ConcurrencyProfiler', () => {
       }));
 
       // Create new profiler instance to use mocked module
-      const { ConcurrencyProfiler } = await import('../../../packages/ast-helper/src/performance/concurrency-profiler.js');
+      const { ConcurrencyProfiler } = await import('../../../packages/ast-helper/src/performance/concurrency-profiler');
       const failingProfiler = new ConcurrencyProfiler();
       
       await expect(failingProfiler.runConcurrencyBenchmarks(mockConfig))

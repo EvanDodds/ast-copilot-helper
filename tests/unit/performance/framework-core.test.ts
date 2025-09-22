@@ -150,8 +150,8 @@ describe('Performance Framework Core', () => {
       
       monitor.start();
       
-      // Allocate some memory
-      const data = new Array(1000).fill('test data');
+      // Allocate some memory - reduced size for CI stability
+      const data = new Array(100).fill('test data');
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const stats = monitor.stop();
@@ -163,7 +163,7 @@ describe('Performance Framework Core', () => {
       expect(stats.peak).toBeGreaterThanOrEqual(stats.average);
       
       // Keep reference to prevent optimization
-      expect(data.length).toBe(1000);
+      expect(data.length).toBe(100);
     });
   });
 

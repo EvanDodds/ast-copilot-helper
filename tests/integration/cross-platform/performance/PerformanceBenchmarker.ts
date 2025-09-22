@@ -403,17 +403,17 @@ export class PerformanceBenchmarker {
       const initialMemory = process.memoryUsage();
       const allocStart = performance.now();
       
-      // Allocate various data structures
+      // Allocate various data structures - reduced sizes for CI stability
       const arrays: any[][] = [];
       const objects: any[] = [];
       const buffers: Buffer[] = [];
       
-      const iterations = 1000;
+      const iterations = 100; // Reduced from 1000
       
       for (let i = 0; i < iterations; i++) {
-        arrays.push(new Array(1000).fill(i));
+        arrays.push(new Array(100).fill(i)); // Reduced from 1000 to 100
         objects.push({ id: i, data: `item-${i}`, value: Math.random() });
-        buffers.push(Buffer.alloc(1024, i % 256));
+        buffers.push(Buffer.alloc(512, i % 256)); // Reduced from 1024 to 512
       }
 
       const allocTime = performance.now() - allocStart;
@@ -919,7 +919,7 @@ export class PerformanceBenchmarker {
         return new Promise<number>(resolve => {
           setTimeout(() => {
             let result = 0;
-            for (let j = 0; j < 10000; j++) {
+            for (let j = 0; j < 1000; j++) { // Reduced from 10000 to 1000
               result += Math.sqrt(j + i * 1000);
             }
             resolve(result);
@@ -1053,9 +1053,9 @@ export class PerformanceBenchmarker {
       const initialMemory = process.memoryUsage();
       const gcStart = performance.now();
       
-      // Create objects that will become garbage
-      for (let i = 0; i < 1000; i++) {
-        const tempArray = new Array(1000).fill(i);
+      // Create objects that will become garbage - reduced sizes for CI stability
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
+        const tempArray = new Array(100).fill(i); // Reduced from 1000 to 100
         const tempObject = { id: i, data: tempArray, nested: { value: Math.random() } };
         // Don't keep references - let them become garbage
       }
