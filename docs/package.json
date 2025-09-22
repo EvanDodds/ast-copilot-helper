@@ -1,0 +1,19 @@
+{
+  "name": "@ast-copilot-helper/docs",
+  "version": "1.0.0",
+  "description": "Documentation site for ast-copilot-helper",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "serve": "vitepress serve"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0",
+    "@vue/theme": "^2.0.0"
+  },
+  "dependencies": {
+    "vue": "^3.3.0"
+  }
+}
