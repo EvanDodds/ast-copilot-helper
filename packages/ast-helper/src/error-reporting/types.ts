@@ -538,3 +538,167 @@ export interface UserFeedback {
   suggestionsUsed: string[];
   timeToResolve?: number;
 }
+
+/**
+ * Error analytics data structure
+ */
+export interface ErrorAnalytics {
+  period: {
+    start: Date;
+    end: Date;
+    duration: number;
+  };
+  summary: {
+    totalErrors: number;
+    resolvedErrors: number;
+    unresolvedErrors: number;
+    criticalErrors: number;
+    errorRate: number;
+    resolutionRate: number;
+    averageResolutionTime: number;
+  };
+  distribution: {
+    severity: Record<string, number>;
+    category: Record<string, number>;
+    byTime: Array<{ timestamp: Date; count: number }>;
+  };
+  trends: ErrorTrend[];
+  patterns: ErrorPattern[];
+  correlations: any[];
+  recommendations: string[];
+}
+
+/**
+ * Error trend analysis
+ */
+export interface ErrorTrend {
+  type: 'frequency' | 'severity' | 'category' | 'temporal';
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  trend: 'increasing' | 'decreasing' | 'stable';
+  confidence: number;
+}
+
+/**
+ * Error pattern detection
+ */
+export interface ErrorPattern {
+  signature: string;
+  frequency: number;
+  firstSeen: Date;
+  lastSeen: Date;
+  avgTimeBetweenOccurrences: number;
+  associatedOperations: string[];
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
+/**
+ * Error correlation analysis
+ */
+export interface ErrorCorrelation {
+  errorType1: string;
+  errorType2: string;
+  correlationStrength: number; // 0-1
+  occurrences: number;
+  timeWindow: string;
+  confidence: number;
+}
+
+/**
+ * Error frequency data point
+ */
+export interface ErrorFrequencyPoint {
+  timestamp: Date;
+  count: number;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  errorTypes: string[];
+  categories: string[];
+}
+
+/**
+ * System health metrics
+ */
+export interface SystemHealthMetrics {
+  overallHealthScore: number; // 0-100
+  errorRate: number; // errors per hour
+  criticalErrorRate: number;
+  averageResolutionTime: number; // minutes
+  mostFrequentErrors: Array<{
+    type: string;
+    count: number;
+    lastOccurrence: Date;
+  }>;
+  improvementSuggestions: string[];
+}
+
+// Privacy and Security Types
+
+/**
+ * User consent data for privacy compliance
+ */
+export interface ConsentData {
+  level: number; // ConsentLevel enum value
+  categories: string[];
+  timestamp: Date;
+  version: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+/**
+ * Privacy settings configuration
+ */
+export interface PrivacySettings {
+  requireConsent: boolean;
+  retentionDays: number;
+  anonymizationLevel: 'none' | 'basic' | 'strict' | 'full';
+  enablePiiScrubbing: boolean;
+  allowedCategories: string[];
+  enableEncryption: boolean;
+  gdprCompliance: boolean;
+  ccpaCompliance: boolean;
+}
+
+/**
+ * Data retention policy configuration
+ */
+export interface DataRetentionPolicy {
+  defaultRetentionDays: number;
+  categorySpecificRetention: Record<string, number>;
+  automaticCleanup: boolean;
+  cleanupInterval: number; // hours
+  archiveBeforeDelete: boolean;
+  complianceRequirements: string[];
+}
+
+/**
+ * Security configuration for error reporting
+ */
+export interface SecurityConfig {
+  enableEncryption: boolean;
+  encryptionAlgorithm: string;
+  keyRotationInterval: number; // days
+  enableTransmissionSecurity: boolean;
+  allowedOrigins: string[];
+  rateLimiting: {
+    enabled: boolean;
+    maxRequestsPerMinute: number;
+    blacklistDuration: number; // minutes
+  };
+  authentication: {
+    required: boolean;
+    method: 'apiKey' | 'oauth' | 'jwt';
+    keyValidationUrl?: string;
+  };
+}
+
+/**
+ * Data filter result
+ */
+export interface FilterResult {
+  blocked: boolean;
+  modified: boolean;
+  data?: any;
+  reason?: string;
+  appliedFilters: string[];
+}
