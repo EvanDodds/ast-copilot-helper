@@ -48,9 +48,9 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
   private features: TelemetryFeatures;
   
   // Component dependencies (will be injected)
-  private consentManager?: ConsentManager;
+  private consentManager?: IConsentManager;
   private dataCollector?: DataCollector;
-  private anonymizer?: DataAnonymizer;
+  private anonymizer?: IDataAnonymizer;
   private sender?: TelemetrySender;
 
   constructor(config?: Partial<TelemetryConfig>) {
@@ -96,9 +96,15 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       // Update features based on privacy level
       this.features = getTelemetryFeatures(this.config.privacyLevel);
 
-      // Initialize consent management (stub for now)
-      this.consentManager = new ConsentManager(this.config);
-      await this.consentManager.initialize();
+      // Initialize consent management with real implementation
+      try {
+        this.consentManager = new PrivacyRespectingConsentManager(this.config, '1.0.0', '1.0.0');
+        await this.consentManager.initialize();
+      } catch (error: any) {
+        console.warn('Failed to initialize PrivacyRespectingConsentManager, using stub:', error.message);
+        this.consentManager = new ConsentManager(this.config);
+        await this.consentManager.initialize();
+      }
 
       // Check if telemetry should be enabled
       if (!this.config.enabled || !isTelemetryEnabled(this.config)) {
@@ -118,9 +124,17 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       this.dataCollector = new DataCollector(this.config, this.features);
       await this.dataCollector.initialize();
 
-      // Initialize data anonymizer (stub for now)
-      this.anonymizer = new DataAnonymizer(this.config.anonymization);
-      await this.anonymizer.initialize();
+      // Initialize data anonymizer with real implementation  
+      try {
+        this.anonymizer = new PrivacyRespectingDataAnonymizer({
+          privacyLevel: this.config.privacyLevel
+        });
+        await this.anonymizer.initialize();
+      } catch (error: any) {
+        console.warn('Failed to initialize PrivacyRespectingDataAnonymizer, using stub:', error.message);
+        this.anonymizer = new DataAnonymizer(this.config.anonymization);
+        await this.anonymizer.initialize();
+      }
 
       // Initialize telemetry sender (stub for now)
       this.sender = new TelemetrySender(this.config);
@@ -718,13 +732,22 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
   }
 }
 
+// Real implementations for Privacy and Consent Management
+import { PrivacyRespectingConsentManager } from './consent/manager.js';
+import { PrivacyRespectingDataAnonymizer } from './anonymization/anonymizer.js';
+
+// Import the interface types
+import type { ConsentManager as IConsentManager, DataAnonymizer as IDataAnonymizer } from './types.js';
+
 // Stub implementations for dependent components
 // These will be implemented in subsequent subtasks
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 class ConsentManager {
-  constructor(private config: TelemetryConfig) {}
+  // @ts-ignore - Stub class, parameter will be used in full implementation
+  constructor(private _config: TelemetryConfig) {}
 
   async initialize(): Promise<void> {
     // Implementation will be added in Privacy and Consent Management subtask
@@ -739,11 +762,11 @@ class ConsentManager {
     };
   }
 
-  async setConsent(enabled: boolean, version: string): Promise<void> {
+  async setConsent(_enabled: boolean, _version: string): Promise<void> {
     // Implementation will be added in Privacy and Consent Management subtask
   }
 
-  async saveSettings(settings: TelemetrySettings): Promise<void> {
+  async saveSettings(_settings: TelemetrySettings): Promise<void> {
     // Implementation will be added in Privacy and Consent Management subtask
   }
 
@@ -753,7 +776,8 @@ class ConsentManager {
 }
 
 class DataCollector {
-  constructor(private config: TelemetryConfig, private features: TelemetryFeatures) {}
+  // @ts-ignore - Stub class, parameters will be used in full implementation
+  constructor(private _config: TelemetryConfig, private _features: TelemetryFeatures) {}
 
   async initialize(): Promise<void> {
     // Implementation will be added in Data Collection and Analytics subtask
@@ -775,15 +799,15 @@ class DataCollector {
     return [];
   }
 
-  setCollectPerformance(enabled: boolean): void {
+  setCollectPerformance(_enabled: boolean): void {
     // Implementation will be added in Data Collection and Analytics subtask
   }
 
-  setCollectErrors(enabled: boolean): void {
+  setCollectErrors(_enabled: boolean): void {
     // Implementation will be added in Data Collection and Analytics subtask
   }
 
-  setCollectUsage(enabled: boolean): void {
+  setCollectUsage(_enabled: boolean): void {
     // Implementation will be added in Data Collection and Analytics subtask
   }
 
@@ -793,7 +817,8 @@ class DataCollector {
 }
 
 class DataAnonymizer {
-  constructor(private config: any) {}
+  // @ts-ignore - Stub class, parameter will be used in full implementation
+  constructor(private _config: any) {}
 
   async initialize(): Promise<void> {
     // Implementation will be added in Privacy and Consent Management subtask
@@ -803,7 +828,7 @@ class DataAnonymizer {
     return metrics;
   }
 
-  async anonymizeData(data: any): Promise<any> {
+  async anonymizeData(_data: any): Promise<any> {
     return {};
   }
 
@@ -811,23 +836,28 @@ class DataAnonymizer {
     return 'anonymous-machine-id';
   }
 
-  async hashUserId(machineId: string): Promise<string> {
+  async hashUserId(_machineId: string): Promise<string> {
     return 'anonymous-user-id';
   }
 
-  async updatePrivacyLevel(level: PrivacyLevel): Promise<void> {
+  async updatePrivacyLevel(_level: PrivacyLevel): Promise<void> {
+    // Implementation will be added in Privacy and Consent Management subtask
+  }
+
+  async shutdown(): Promise<void> {
     // Implementation will be added in Privacy and Consent Management subtask
   }
 }
 
 class TelemetrySender {
-  constructor(private config: TelemetryConfig) {}
+  // @ts-ignore - Stub class, parameter will be used in full implementation
+  constructor(private _config: TelemetryConfig) {}
 
   async initialize(): Promise<void> {
     // Implementation will be added in Data Processing and Transmission subtask
   }
 
-  async sendTelemetry(payload: TelemetryPayload): Promise<{ success: boolean; error?: string }> {
+  async sendTelemetry(_payload: TelemetryPayload): Promise<{ success: boolean; error?: string }> {
     return { success: false, error: 'Not implemented' };
   }
 

@@ -116,6 +116,8 @@ export interface ConsentStatus {
   consentVersion: string;
   consentDate?: Date;
   settings: TelemetrySettings;
+  privacyLevel?: PrivacyLevel;
+  allowedFeatures?: string[];
 }
 
 export interface TelemetrySettings {
@@ -129,6 +131,8 @@ export interface TelemetrySettings {
   endpoint?: string;
   batchSize?: number;
   flushInterval?: number;
+  consentGiven?: boolean;
+  allowedFeatures?: string[];
 }
 
 export interface TelemetryResult {
@@ -220,6 +224,30 @@ export interface SanitizedErrorReport {
 
 // Enums and type unions
 export type PrivacyLevel = 'strict' | 'balanced' | 'permissive';
+
+/**
+ * Consent manager interface for privacy-respecting consent handling
+ */
+export interface ConsentManager {
+  initialize(): Promise<void>;
+  getConsentStatus(): Promise<ConsentStatus>;
+  setConsent(enabled: boolean, version: string): Promise<void>;
+  saveSettings(settings: TelemetrySettings): Promise<void>;
+  shutdown(): Promise<void>;
+}
+
+/**
+ * Data anonymizer interface for privacy-respecting data handling
+ */
+export interface DataAnonymizer {
+  initialize(): Promise<void>;
+  anonymizeUsageMetrics(metrics: any): Promise<any>;
+  anonymizeData(data: any): Promise<any>;
+  generateMachineId(): Promise<string>;
+  hashUserId(machineId: string): Promise<string>;
+  updatePrivacyLevel(level: PrivacyLevel): Promise<void>;
+  shutdown(): Promise<void>;
+}
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
 export type ErrorCategory = 'parser' | 'filesystem' | 'network' | 'configuration' | 'validation' | 'internal' | 'user_error' | 'external_service';
 export type TelemetryEventType = 'feature_usage' | 'performance' | 'error' | 'usage' | 'system' | 'session';
