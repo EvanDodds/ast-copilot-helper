@@ -666,14 +666,14 @@ export class MarketplacePublisher implements Publisher {
           name: `VS Code Marketplace - ${extensionId}`,
           success: true,
           message: `Extension ${extensionId}@${version} verified in VS Code Marketplace`,
-          duration
+        duration
         };
       } else {
         return {
           name: `VS Code Marketplace - ${extensionId}`,
           success: false,
           message: `Extension ${extensionId}@${version} not found or version mismatch in VS Code Marketplace`,
-          duration
+        duration
         };
       }
     } catch (error) {
@@ -707,14 +707,14 @@ export class MarketplacePublisher implements Publisher {
           name: `Open VSX Registry - ${extensionId}`,
           success: true,
           message: `Extension ${extensionId}@${version} verified in Open VSX Registry`,
-          duration
+        duration
         };
       } else {
         return {
           name: `Open VSX Registry - ${extensionId}`,
           success: false,
           message: `Extension ${extensionId}@${version} not found or version mismatch in Open VSX Registry`,
-          duration
+        duration
         };
       }
     } catch (error) {

@@ -46,12 +46,20 @@ export const DEFAULT_CONFIG: Partial<DistributionConfig> = {
       retryAttempts: 3,
       backgroundDownload: true,
       userPrompt: true,
+      updateInterval: 24, // hours
+      channel: 'stable',
+      autoDownload: false,
+      autoInstall: false,
+      notifyUser: true,
     },
     rollback: {
       enabled: true,
       maxVersions: 5,
       autoRollback: false,
       rollbackTriggers: [],
+      backupDir: './backups',
+      maxBackups: 5,
+      maxVersionsToKeep: 3,
     },
   },
   security: {
@@ -138,6 +146,7 @@ export class ConfigLoader {
 
     // Create basic configuration
     const config: DistributionConfig = {
+      name: 'ast-copilot-helper',
       version: '0.1.0', // Will be updated during distribution
       packages,
       registries,
@@ -177,6 +186,7 @@ export class ConfigLoader {
    */
   static createTemplate(): DistributionConfig {
     return {
+      name: 'my-package',
       version: '1.0.0',
       packages: [],
       registries: [
@@ -223,6 +233,7 @@ export class ConfigLoader {
    */
   private static mergeWithDefaults(config: Partial<DistributionConfig>): DistributionConfig {
     return {
+      name: config.name || 'unnamed-package',
       version: config.version || '1.0.0',
       packages: config.packages || [],
       registries: config.registries || [],
@@ -365,5 +376,65 @@ export class EnvironmentConfig {
       valid: missing.length === 0 && hasOptional,
       missing: missing.concat(hasOptional ? [] : ['At least one of: ' + optional.join(', ')]),
     };
+  }
+}
+
+/**
+ * Create distribution config from workspace
+ */
+export async function createFromWorkspace(workspacePath: string): Promise<DistributionConfig> {
+  const packageJsonPath = path.join(workspacePath, 'package.json');
+  
+  try {
+    const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
+    const packageJson = JSON.parse(packageJsonContent);
+    
+    const config: DistributionConfig = {
+      ...DEFAULT_CONFIG,
+      name: packageJson.name || 'ast-copilot-helper',
+      version: packageJson.version || '1.0.0',
+      packages: [
+        {
+          name: packageJson.name || 'ast-copilot-helper',
+          type: 'npm',
+          path: workspacePath,
+          publishConfig: {
+            registry: 'https://registry.npmjs.org',
+            access: 'public',
+            tag: 'latest',
+            prerelease: false,
+            files: ['dist/**/*', 'package.json', 'README.md'],
+            scripts: {}
+          },
+          metadata: {
+            displayName: packageJson.displayName || packageJson.name || 'AST Copilot Helper',
+            description: packageJson.description || 'AST manipulation and analysis tools',
+            keywords: packageJson.keywords || ['ast', 'code-analysis', 'typescript'],
+            license: packageJson.license || 'MIT',
+            author: packageJson.author || 'AST Copilot Helper Team',
+            homepage: packageJson.homepage || 'https://github.com/ast-copilot-helper',
+            repository: packageJson.repository || 'https://github.com/ast-copilot-helper/ast-copilot-helper'
+          }
+        }
+      ],
+      registries: [
+        {
+          type: 'npm',
+          url: 'https://registry.npmjs.org',
+          token: process.env.NPM_TOKEN || ''
+        }
+      ]
+    } as DistributionConfig;
+    
+    return config;
+  } catch (error) {
+    console.warn('Could not read package.json, using defaults');
+    return {
+      ...DEFAULT_CONFIG,
+      name: 'ast-copilot-helper',
+      version: '1.0.0',
+      packages: [],
+      registries: []
+    } as DistributionConfig;
   }
 }

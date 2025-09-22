@@ -26,6 +26,7 @@ export interface DistributionManager {
  * Distribution configuration
  */
 export interface DistributionConfig {
+  name: string;
   version: string;
   packages: PackageConfig[];
   registries: RegistryConfig[];
@@ -36,6 +37,7 @@ export interface DistributionConfig {
   autoUpdate: AutoUpdateConfig;
   github: GitHubConfig;
   security: SecurityConfig;
+  releases?: ReleaseConfig;
 }
 
 /**
@@ -208,6 +210,11 @@ export interface UpdateClientConfig {
   retryAttempts: number;
   backgroundDownload: boolean;
   userPrompt: boolean;
+  updateInterval: number; // hours
+  channel: string;
+  autoDownload: boolean;
+  autoInstall: boolean;
+  notifyUser: boolean;
 }
 
 /**
@@ -227,6 +234,9 @@ export interface RollbackConfig {
   maxVersions: number;
   autoRollback: boolean;
   rollbackTriggers: RollbackTrigger[];
+  backupDir?: string;
+  maxBackups?: number;
+  maxVersionsToKeep?: number;
 }
 
 /**
@@ -246,6 +256,22 @@ export interface GitHubConfig {
   repo: string;
   token: string;
   releaseNotes: ReleaseNotesConfig;
+}
+
+/**
+ * Release configuration
+ */
+export interface ReleaseConfig {
+  draft: boolean;
+  prerelease: boolean;
+  assets?: Array<{
+    path: string;
+    name: string;
+    label?: string;
+    contentType?: string;
+  }>;
+  generateReleaseNotes: boolean;
+  releaseBranch?: string;
 }
 
 /**
@@ -444,14 +470,6 @@ export interface ReleaseAsset {
 /**
  * Binary distribution result
  */
-export interface BinaryDistributionResult {
-  success: boolean;
-  binaries: BinaryBuildResult[];
-  duration: number;
-  platforms: Platform[];
-  error?: string;
-}
-
 /**
  * Binary build result
  */
@@ -535,5 +553,78 @@ export interface VerificationCheck {
   name: string;
   success: boolean;
   message: string;
+  timestamp?: string;
+  duration?: number;
+}
+
+/**
+ * Binary asset
+ */
+export interface BinaryAsset {
+  filename: string;
+  path: string;
+  size: number;
+  platform: Platform;
+  format: string;
+  checksum: string;
+  downloadUrl: string;
+  createdAt: string;
+}
+
+/**
+ * Binary distribution result
+ */
+export interface BinaryDistributionResult {
+  success: boolean;
+  binaries: BinaryBuildResult[];
+  assets: BinaryAsset[];
+  checksums: Map<string, string>;
+  manifest?: any;
+  duration: number;
+  error?: string;
+}
+
+// Update check result
+export interface UpdateCheckResult {
+  success: boolean;
+  error?: string;
+  updateAvailable: boolean;
+  currentVersion: string;
+  latestVersion?: string;
+  updateInfo?: UpdateInfo;
+  duration: number;
+}
+
+// Update information
+export interface UpdateInfo {
+  updateAvailable: boolean;
+  version?: string;
+  latestVersion?: string;
+  downloadUrl?: string;
+  checksum?: string;
+  size?: number;
+  releaseNotes?: string;
+  critical?: boolean;
+  publishedAt?: string;
+  signature?: string;
+}
+
+// Update download result
+export interface UpdateDownloadResult {
+  success: boolean;
+  error?: string;
+  downloadPath?: string;
+  size?: number;
+  checksum?: string;
+}
+
+// Update installation result
+export interface UpdateInstallResult {
+  success: boolean;
+  error?: string;
+  version?: string;
+  previousVersion?: string;
+  backupPath?: string;
+  rollback?: boolean;
   duration: number;
 }

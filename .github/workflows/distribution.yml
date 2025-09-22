@@ -1,0 +1,364 @@
+name: Package Distribution Workflow
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to distribute (e.g., 1.0.0)'
+        required: true
+        type: string
+      channels:
+        description: 'Distribution channels (npm,marketplace,github,binary,all)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - npm
+          - marketplace  
+          - github
+          - binary
+      dry_run:
+        description: 'Perform dry run (validation only)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  DISTRIBUTION_TIMEOUT: '30m'
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      channels: ${{ steps.channels.outputs.channels }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Using version: ${VERSION}"
+          
+      - name: Determine channels
+        id: channels
+        run: |
+          if [ "${{ github.event.inputs.channels }}" = "all" ] || [ -z "${{ github.event.inputs.channels }}" ]; then
+            CHANNELS="npm,marketplace,github,binary"
+          else
+            CHANNELS="${{ github.event.inputs.channels }}"
+          fi
+          echo "channels=${CHANNELS}" >> $GITHUB_OUTPUT
+          echo "Distribution channels: ${CHANNELS}"
+          
+      - name: Create distribution matrix
+        id: matrix
+        run: |
+          CHANNELS="${{ steps.channels.outputs.channels }}"
+          MATRIX_JSON=$(echo "$CHANNELS" | jq -R 'split(",") | map({"channel": .})')
+          echo "matrix={\"include\":$MATRIX_JSON}" >> $GITHUB_OUTPUT
+
+  validate:
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd packages/ast-helper && npm ci
+          cd ../ast-mcp-server && npm ci
+          cd ../vscode-extension && npm ci
+          
+      - name: Build packages
+        run: |
+          npm run build
+          
+      - name: Run tests
+        run: |
+          npm test
+          
+      - name: Validate distribution configuration
+        run: |
+          cd packages/ast-helper
+          npm run dist:validate
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Security audit
+        run: |
+          npm audit --audit-level moderate
+          cd packages/ast-helper && npm audit --audit-level moderate
+          cd ../ast-mcp-server && npm audit --audit-level moderate  
+          cd ../vscode-extension && npm audit --audit-level moderate
+
+  distribute:
+    runs-on: ${{ matrix.os }}
+    needs: [prepare, validate]
+    if: github.event.inputs.dry_run != 'true'
+    timeout-minutes: 30
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - channel: npm
+            os: ubuntu-latest
+          - channel: marketplace
+            os: ubuntu-latest  
+          - channel: github
+            os: ubuntu-latest
+          - channel: binary
+            os: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      # Platform-specific setup for binary distribution
+      - name: Setup binary distribution tools
+        if: matrix.channel == 'binary'
+        run: |
+          # Install cross-compilation tools
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib g++-multilib
+          
+          # Install Windows tools
+          sudo apt-get install -y gcc-mingw-w64
+          
+          # Install packaging tools
+          sudo apt-get install -y rpm dpkg-dev
+          
+      - name: Setup macOS tools
+        if: matrix.channel == 'binary' && runner.os == 'macOS'
+        run: |
+          # Install create-dmg for DMG creation
+          npm install -g create-dmg
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd packages/ast-helper && npm ci
+          cd ../ast-mcp-server && npm ci
+          cd ../vscode-extension && npm ci
+          
+      - name: Build packages
+        run: |
+          npm run build
+          
+      - name: Set up distribution environment
+        run: |
+          echo "DISTRIBUTION_VERSION=${{ needs.prepare.outputs.version }}" >> $GITHUB_ENV
+          echo "DISTRIBUTION_CHANNEL=${{ matrix.channel }}" >> $GITHUB_ENV
+          
+      - name: NPM Distribution
+        if: matrix.channel == 'npm'
+        run: |
+          cd packages/ast-helper
+          npm run dist:npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_REGISTRY: ${{ vars.NPM_REGISTRY || 'https://registry.npmjs.org' }}
+          
+      - name: VS Code Marketplace Distribution  
+        if: matrix.channel == 'marketplace'
+        run: |
+          cd packages/vscode-extension
+          npm run dist:marketplace
+        env:
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+          VSCE_PUBLISHER: ${{ vars.VSCE_PUBLISHER }}
+          
+      - name: GitHub Release Distribution
+        if: matrix.channel == 'github'
+        run: |
+          cd packages/ast-helper
+          npm run dist:github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO: ${{ github.event.repository.name }}
+          
+      - name: Binary Distribution
+        if: matrix.channel == 'binary'
+        run: |
+          cd packages/ast-helper
+          npm run dist:binary
+        env:
+          BINARY_SIGNING_ENABLED: ${{ vars.BINARY_SIGNING_ENABLED || 'false' }}
+          WIN_CERT_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+          
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: distribution-${{ matrix.channel }}-${{ needs.prepare.outputs.version }}
+          path: |
+            packages/*/dist/**/*
+            packages/*/build/**/*
+            *.tgz
+            *.vsix
+          retention-days: 30
+          
+      - name: Generate distribution report
+        if: always()
+        run: |
+          cd packages/ast-helper
+          npm run dist:report -- --channel ${{ matrix.channel }} --version ${{ needs.prepare.outputs.version }}
+          
+      - name: Upload distribution report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: distribution-report-${{ matrix.channel }}
+          path: packages/ast-helper/dist-report.json
+          retention-days: 7
+
+  verify:
+    runs-on: ubuntu-latest
+    needs: [prepare, distribute]
+    if: always() && needs.distribute.result != 'skipped'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd packages/ast-helper && npm ci
+          
+      - name: Download all distribution reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: distribution-report-*
+          path: ./reports
+          merge-multiple: true
+          
+      - name: Verify distributions
+        run: |
+          cd packages/ast-helper
+          npm run dist:verify -- --version ${{ needs.prepare.outputs.version }} --reports ./reports
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Generate verification report
+        if: always()
+        run: |
+          cd packages/ast-helper
+          npm run dist:verify-report
+          
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-report-${{ needs.prepare.outputs.version }}
+          path: packages/ast-helper/verification-report.html
+          retention-days: 30
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [prepare, distribute, verify]
+    if: always()
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [ "${{ needs.distribute.result }}" = "success" ] && [ "${{ needs.verify.result }}" = "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Distribution completed successfully for version ${{ needs.prepare.outputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ Distribution failed for version ${{ needs.prepare.outputs.version }}" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Create GitHub Release
+        if: steps.status.outputs.status == 'success' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ needs.prepare.outputs.version }}
+          body: |
+            ## Release ${{ needs.prepare.outputs.version }}
+            
+            This release was automatically distributed to:
+            ${{ needs.prepare.outputs.channels }}
+            
+            ### Distribution Channels
+            - 📦 **NPM Registry**: `npm install @ast-copilot-helper/ast-helper@${{ needs.prepare.outputs.version }}`
+            - 🛠️ **VS Code Marketplace**: Available in VS Code Extensions
+            - 🚀 **GitHub Releases**: Binary downloads available below
+            - 💾 **Binary Distribution**: Cross-platform binaries attached
+            
+            ### Verification
+            All distribution channels have been verified for availability and integrity.
+            
+            For detailed release notes, see [CHANGELOG.md](./CHANGELOG.md).
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Notify Slack
+        if: vars.SLACK_WEBHOOK_URL
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ steps.status.outputs.status }}
+          text: ${{ steps.status.outputs.message }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+      - name: Notify Teams
+        if: vars.TEAMS_WEBHOOK_URL  
+        uses: skitionek/notify-microsoft-teams@master
+        with:
+          webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          overwrite: "{title: `Distribution ${{ steps.status.outputs.status == 'success' && 'Completed' || 'Failed' }}`, text: `${{ steps.status.outputs.message }}`}"
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [distribute, verify, notify]
+    if: always()
+    steps:
+      - name: Cleanup temporary artifacts
+        run: |
+          echo "Cleaning up temporary distribution artifacts..."
+          # Cleanup logic would go here
+          echo "Cleanup completed"
