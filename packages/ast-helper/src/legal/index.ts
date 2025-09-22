@@ -10,6 +10,7 @@ export { AdvancedLicenseScanner } from './AdvancedLicenseScanner.js';
 export { AttributionGenerator } from './AttributionGenerator.js';
 export { AdvancedAttributionGenerator } from './AdvancedAttributionGenerator.js';
 export { DependencyLicenseAnalyzer } from './DependencyLicenseAnalyzer.js';
+export { LegalDocumentTemplateEngine } from './LegalDocumentTemplateEngine.js';
 export { ComprehensiveLegalComplianceManager } from './ComprehensiveLegalComplianceManager.js';
 
 // Default configuration
