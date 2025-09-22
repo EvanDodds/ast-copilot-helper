@@ -5,6 +5,7 @@ This guide provides detailed installation instructions for ast-copilot-helper ac
 ## System Requirements
 
 ### Minimum Requirements
+
 - **Node.js**: 16.0 or later (18.0+ recommended)
 - **npm**: 7.0 or later (comes with Node.js)
 - **Operating System**: Windows 10+, macOS 10.15+, Linux (Ubuntu 18.04+)
@@ -12,6 +13,7 @@ This guide provides detailed installation instructions for ast-copilot-helper ac
 - **Storage**: 100MB free space + space for your codebase analysis
 
 ### Recommended Requirements
+
 - **Node.js**: 20.0+ (for optimal performance)
 - **npm**: 9.0+ (for improved dependency management)
 - **Memory**: 4GB+ RAM (for processing large codebases)
@@ -37,6 +39,7 @@ ast-helper --version
 #### Troubleshooting NPM Global Installation
 
 **Permission errors on macOS/Linux:**
+
 ```bash
 # Option 1: Use sudo (not recommended)
 sudo npm install -g @ast-copilot-helper/cli
@@ -50,6 +53,7 @@ npm install -g @ast-copilot-helper/cli
 ```
 
 **Permission errors on Windows:**
+
 ```powershell
 # Run PowerShell as Administrator
 npm install -g @ast-copilot-helper/cli
@@ -67,11 +71,12 @@ npx @ast-copilot-helper/cli parse src/
 ```
 
 ::: tip NPX Benefits
+
 - No global installation required
 - Always uses latest version
 - Great for CI/CD environments
 - Perfect for trying before installing
-:::
+  :::
 
 ### Method 3: Local Project Installation
 
@@ -93,6 +98,7 @@ npm run ast-helper -- --version
 #### Option 1: Using PowerShell (Recommended)
 
 1. **Install Node.js:**
+
    ```powershell
    # Using Chocolatey
    choco install nodejs
@@ -102,6 +108,7 @@ npm run ast-helper -- --version
    ```
 
 2. **Install ast-copilot-helper:**
+
    ```powershell
    npm install -g @ast-copilot-helper/cli
    ```
@@ -114,12 +121,14 @@ npm run ast-helper -- --version
 #### Option 2: Using Windows Subsystem for Linux (WSL)
 
 1. **Enable WSL:**
+
    ```powershell
    # Run as Administrator
    wsl --install
    ```
 
 2. **Install Ubuntu:**
+
    ```bash
    wsl --install -d Ubuntu
    ```
@@ -131,11 +140,13 @@ npm run ast-helper -- --version
 #### Option 1: Using Homebrew (Recommended)
 
 1. **Install Homebrew (if not installed):**
+
    ```bash
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
    ```
 
 2. **Install Node.js:**
+
    ```bash
    brew install node
    ```
@@ -148,12 +159,14 @@ npm run ast-helper -- --version
 #### Option 2: Using Node Version Manager (NVM)
 
 1. **Install NVM:**
+
    ```bash
    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
    source ~/.bashrc
    ```
 
 2. **Install and use Node.js:**
+
    ```bash
    nvm install 20
    nvm use 20
@@ -169,11 +182,13 @@ npm run ast-helper -- --version
 #### Ubuntu/Debian
 
 1. **Update package manager:**
+
    ```bash
    sudo apt update
    ```
 
 2. **Install Node.js:**
+
    ```bash
    # Option 1: From NodeSource repository (recommended)
    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -191,6 +206,7 @@ npm run ast-helper -- --version
 #### CentOS/RHEL/Fedora
 
 1. **Install Node.js:**
+
    ```bash
    # Fedora
    sudo dnf install nodejs npm
@@ -219,6 +235,7 @@ npm install -g @ast-copilot-helper/cli
 ### Install from Marketplace
 
 1. **Via VS Code Interface:**
+
    - Open VS Code
    - Go to Extensions (Ctrl/Cmd+Shift+X)
    - Search for "ast-copilot-helper"
@@ -272,7 +289,7 @@ docker run -v $(pwd):/workspace ast-copilot-helper ast-helper --version
 Create `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   ast-helper:
     image: astcopilothelper/cli:latest
@@ -285,6 +302,7 @@ services:
 ```
 
 Run with:
+
 ```bash
 docker-compose up
 ```
@@ -376,6 +394,7 @@ ast-helper query "console logging functions"
 ```
 
 Expected output:
+
 ```
 ✅ Successfully parsed 1 file
 📊 Extracted 1 annotation (1 function)
@@ -428,6 +447,7 @@ rm .ast-helper.json .ast-helper.db
 **Cause**: PATH not configured correctly
 
 **Solution**:
+
 ```bash
 # Check npm global path
 npm config get prefix
@@ -444,6 +464,7 @@ source ~/.bashrc  # or ~/.zshrc
 **Cause**: Insufficient permissions for global installation
 
 **Solutions**:
+
 ```bash
 # Option 1: Configure npm directory (recommended)
 mkdir ~/.npm-global
@@ -462,6 +483,7 @@ sudo npm install -g @ast-copilot-helper/cli
 **Cause**: Old Node.js version
 
 **Solution**:
+
 ```bash
 # Check current version
 node --version
@@ -479,6 +501,7 @@ ast-helper --version
 **Cause**: Corporate firewall or proxy
 
 **Solutions**:
+
 ```bash
 # Configure npm proxy
 npm config set proxy http://proxy.company.com:8080

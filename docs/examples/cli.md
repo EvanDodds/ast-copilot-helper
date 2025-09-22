@@ -140,7 +140,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
       - name: Install ast-helper
         run: npm install -g ast-copilot-helper
       - name: Run analysis
@@ -268,22 +268,28 @@ ast-helper parse huge-file.js --stream
 - [Configuration Guide](../guide/configuration.md) - Configuration options
 - [Troubleshooting](../troubleshooting.md) - Common issues and solutions
 - [Advanced Tutorials](../examples/index.md) - Step-by-step tutorials
+
 # Simple text search
+
 ast-helper query "user authentication"
 
 # Search by type
+
 ast-helper query "config" --type interface
 ast-helper query "helper" --type function  
 ast-helper query "manager" --type class
 
 # Search in specific files/directories
-ast-helper query "validation" --file "src/utils/**"
+
+ast-helper query "validation" --file "src/utils/\*\*"
 ast-helper query "api" --file "src/api/routes.ts"
 
 # Limit and format results
+
 ast-helper query "error" --limit 5 --format table
 ast-helper query "user" --format json --output results.json
-```
+
+````
 
 #### Advanced Queries
 
@@ -305,7 +311,7 @@ ast-helper query "user" --type "function,class,interface"
 # Export queries
 ast-helper query "*" --type function --format csv > functions.csv
 ast-helper query "*" --format json | jq '.[] | select(.type == "class")'
-```
+````
 
 ## Real-World Use Cases
 
@@ -338,7 +344,7 @@ ast-helper query "complex|complicated|refactor" --type function
 
 **Scenario**: Automatically generating API documentation from code.
 
-```bash
+````bash
 # Parse API routes
 ast-helper parse src/api/ src/routes/ src/controllers/
 
@@ -364,7 +370,7 @@ EOF
 
 chmod +x generate-api-docs.sh
 ./generate-api-docs.sh
-```
+````
 
 ### Use Case 3: Legacy Code Analysis
 
@@ -403,7 +409,7 @@ ast-helper stats --format markdown >> legacy-report.md
 echo "## Deprecated Code" >> legacy-report.md
 ast-helper query "deprecated|legacy|fixme" --format markdown >> legacy-report.md
 
-echo "## Database Code" >> legacy-report.md  
+echo "## Database Code" >> legacy-report.md
 ast-helper query "database|sql|query" --format markdown >> legacy-report.md
 
 echo "Report generated: legacy-report.md"
@@ -519,7 +525,7 @@ CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts
 if [ ! -z "$CHANGED_FILES" ]; then
   echo "Analyzing changed files..."
   echo "$CHANGED_FILES" | xargs ast-helper parse
-  
+
   # Check for issues in changed files
   for file in $CHANGED_FILES; do
     issues=$(ast-helper query "TODO|FIXME|HACK" --file "$file" --format json)
@@ -557,7 +563,7 @@ ast-helper stats --format json > reports/project-stats.json
 # Export function list
 ast-helper query "*" --type function --format json > reports/functions.json
 
-# Export class list  
+# Export class list
 ast-helper query "*" --type class --format json > reports/classes.json
 
 # Check for issues
@@ -565,7 +571,7 @@ ast-helper query "TODO|FIXME|HACK|DEPRECATED" --format json > reports/issues.jso
 
 # Generate summary
 FUNCTIONS=$(jq length reports/functions.json)
-CLASSES=$(jq length reports/classes.json) 
+CLASSES=$(jq length reports/classes.json)
 ISSUES=$(jq length reports/issues.json)
 
 echo "Analysis complete:"
@@ -592,22 +598,22 @@ cat > process-projects.sh << 'EOF'
 
 PROJECTS=(
   "project-a"
-  "project-b" 
+  "project-b"
   "project-c"
 )
 
 for project in "${PROJECTS[@]}"; do
   echo "Processing $project..."
   cd "$project"
-  
+
   # Initialize and parse
   ast-helper init --yes
   ast-helper parse src/ --recursive
-  
+
   # Generate project report
   ast-helper stats --format json > "../reports/$project-stats.json"
   ast-helper query "*" --format json > "../reports/$project-all.json"
-  
+
   cd ..
 done
 
@@ -631,14 +637,14 @@ jq -r '.[] | "- **\(.name)** (\(.filePath):\(.lineNumber))\n  \(.description // 
 
 # Function complexity heuristic
 ast-helper query "*" --type function --format json | \
-jq -r '.[] | select(.description | test("complex|large|refactor")) | 
+jq -r '.[] | select(.description | test("complex|large|refactor")) |
   "🔴 \(.name) - \(.filePath) - \(.description)"'
 
 # Generate function index
 ast-helper query "*" --type function --format json | \
-jq -r 'group_by(.filePath) | .[] | 
-  "## \(.[0].filePath)\n\n" + 
-  (map("- \(.name): \(.description // "No description")") | join("\n")) + 
+jq -r 'group_by(.filePath) | .[] |
+  "## \(.[0].filePath)\n\n" +
+  (map("- \(.name): \(.description // "No description")") | join("\n")) +
   "\n"'
 EOF
 
@@ -681,7 +687,7 @@ mkdir -p "$CACHE_DIR"
 query_with_cache() {
   local query_hash=$(echo "$1" | md5sum | cut -d' ' -f1)
   local cache_file="$CACHE_DIR/$query_hash.json"
-  
+
   if [ -f "$cache_file" ] && [ "$cache_file" -nt ".ast-helper.db" ]; then
     cat "$cache_file"
   else
@@ -703,7 +709,7 @@ npm install --save-dev ast-copilot-helper-webpack-plugin
 
 # Add to webpack.config.js:
 # const AstCopilotHelperPlugin = require('ast-copilot-helper-webpack-plugin');
-# 
+#
 # module.exports = {
 #   plugins: [
 #     new AstCopilotHelperPlugin({

@@ -7,11 +7,13 @@ This comprehensive troubleshooting guide helps you diagnose and resolve common i
 ### Node.js and npm Issues
 
 #### Problem: Node.js version compatibility errors
+
 ```
 Error: ast-copilot-helper requires Node.js version 18.x or higher
 ```
 
 **Solution:**
+
 ```bash
 # Check current Node.js version
 node --version
@@ -27,11 +29,13 @@ nvm use 18
 ```
 
 #### Problem: npm installation fails with permission errors
+
 ```
 EACCES: permission denied, mkdir '/usr/local/lib/node_modules'
 ```
 
 **Solutions:**
+
 ```bash
 # Option 1: Use npm's built-in solution (recommended)
 mkdir ~/.npm-global
@@ -48,12 +52,14 @@ sudo npm install -g ast-copilot-helper
 ```
 
 #### Problem: Package installation hangs or fails
+
 ```
 npm ERR! network timeout
 npm ERR! network This is a problem related to network connectivity
 ```
 
 **Solutions:**
+
 ```bash
 # Clear npm cache
 npm cache clean --force
@@ -72,11 +78,13 @@ yarn global add ast-copilot-helper
 ### Python Dependencies (for Python parsing)
 
 #### Problem: Python not found
+
 ```
 Error: Python executable not found
 ```
 
 **Solutions:**
+
 ```bash
 # Install Python (Ubuntu/Debian)
 sudo apt update
@@ -94,11 +102,13 @@ which python3
 ```
 
 #### Problem: Tree-sitter compilation errors
+
 ```
 Error building tree-sitter parsers
 ```
 
 **Solutions:**
+
 ```bash
 # Install build tools (Ubuntu/Debian)
 sudo apt install build-essential
@@ -119,11 +129,13 @@ npm install
 ### Project Initialization Problems
 
 #### Problem: `.ast-helper.json` not created
+
 ```
 Error: Configuration file not found
 ```
 
 **Solution:**
+
 ```bash
 # Initialize configuration manually
 ast-helper init
@@ -149,11 +161,13 @@ EOF
 ```
 
 #### Problem: Invalid configuration format
+
 ```
 Error: Invalid configuration in .ast-helper.json
 ```
 
 **Solution:**
+
 ```bash
 # Validate JSON format
 cat .ast-helper.json | python -m json.tool
@@ -171,11 +185,13 @@ ast-helper init --reset
 ### AI Integration Issues
 
 #### Problem: OpenAI API key not working
+
 ```
 Error: OpenAI API request failed: 401 Unauthorized
 ```
 
 **Solutions:**
+
 ```bash
 # Check API key format (should start with sk-)
 echo $OPENAI_API_KEY
@@ -192,11 +208,13 @@ curl -H "Authorization: Bearer $OPENAI_API_KEY" \
 ```
 
 #### Problem: Rate limiting errors
+
 ```
 Error: OpenAI API rate limit exceeded
 ```
 
 **Solutions:**
+
 ```bash
 # Reduce batch size in configuration
 ast-helper config set ai.batchSize 10
@@ -209,11 +227,13 @@ ast-helper config set ai.model "gpt-3.5-turbo"
 ```
 
 #### Problem: Embedding generation fails
+
 ```
 Error: Failed to generate embeddings
 ```
 
 **Solutions:**
+
 ```bash
 # Check if embeddings are enabled
 ast-helper config get ai.enableEmbeddings
@@ -230,11 +250,13 @@ ast-helper config set ai.embeddingModel "text-embedding-ada-002"
 ### Language Support Problems
 
 #### Problem: TypeScript parsing errors
+
 ```
 Error: Unexpected token in TypeScript file
 ```
 
 **Solutions:**
+
 ```bash
 # Check TypeScript version compatibility
 npm list typescript
@@ -257,11 +279,13 @@ EOF
 ```
 
 #### Problem: Python parsing fails
+
 ```
 Error: Python tree-sitter parser not found
 ```
 
 **Solutions:**
+
 ```bash
 # Reinstall Python parser
 npm uninstall tree-sitter-python
@@ -275,11 +299,13 @@ npx tree-sitter build --wasm
 ```
 
 #### Problem: Large files cause memory issues
+
 ```
 Error: JavaScript heap out of memory
 ```
 
 **Solutions:**
+
 ```bash
 # Increase Node.js memory limit
 export NODE_OPTIONS="--max-old-space-size=8192"
@@ -295,11 +321,13 @@ echo "*.bundle.js" >> .ast-helper-ignore
 ### File Processing Issues
 
 #### Problem: Files not being parsed
+
 ```
 Warning: No files found matching pattern
 ```
 
 **Solutions:**
+
 ```bash
 # Check file patterns
 ast-helper config get parser.includePatterns
@@ -316,11 +344,13 @@ ls -la .gitignore
 ```
 
 #### Problem: Permission denied errors
+
 ```
 Error: EACCES: permission denied, open 'file.ts'
 ```
 
 **Solutions:**
+
 ```bash
 # Check file permissions
 ls -la src/
@@ -338,11 +368,13 @@ sudo chown -R $USER:$USER src/
 ### SQLite Database Problems
 
 #### Problem: Database corruption
+
 ```
 Error: database disk image is malformed
 ```
 
 **Solutions:**
+
 ```bash
 # Backup existing database
 cp .ast-helper.db .ast-helper.db.backup
@@ -359,11 +391,13 @@ sqlite3 .ast-helper.db.backup ".dump" | sqlite3 .ast-helper.db.recovered
 ```
 
 #### Problem: Database locking issues
+
 ```
 Error: database is locked
 ```
 
 **Solutions:**
+
 ```bash
 # Check for running processes
 ps aux | grep ast-helper
@@ -379,11 +413,13 @@ ast-helper db --rebuild
 ```
 
 #### Problem: Disk space issues
+
 ```
 Error: database or disk is full
 ```
 
 **Solutions:**
+
 ```bash
 # Check disk space
 df -h
@@ -403,11 +439,13 @@ ast-helper config set database.retention "30 days"
 ### Search Problems
 
 #### Problem: No search results found
+
 ```
 No results found for query: "function authentication"
 ```
 
 **Solutions:**
+
 ```bash
 # Check if database is populated
 ast-helper stats
@@ -424,11 +462,13 @@ ast-helper query "auth" --mode semantic
 ```
 
 #### Problem: Slow search performance
+
 ```
 Search taking longer than expected
 ```
 
 **Solutions:**
+
 ```bash
 # Check database statistics
 ast-helper stats --verbose
@@ -445,11 +485,13 @@ ast-helper config set ai.enableEmbeddings false
 ```
 
 #### Problem: Semantic search not working
+
 ```
 Error: Semantic search requires embeddings
 ```
 
 **Solutions:**
+
 ```bash
 # Enable embeddings
 ast-helper config set ai.enableEmbeddings true
@@ -469,11 +511,13 @@ ast-helper query "hello" --mode semantic
 ### Server Startup Problems
 
 #### Problem: Server fails to start
+
 ```
 Error: Failed to start MCP server on port 3001
 ```
 
 **Solutions:**
+
 ```bash
 # Check port availability
 lsof -ti:3001
@@ -490,11 +534,13 @@ DEBUG=ast-mcp-server* ast-helper server
 ```
 
 #### Problem: Client connection refused
+
 ```
 Error: Connection refused when connecting to MCP server
 ```
 
 **Solutions:**
+
 ```bash
 # Verify server is running
 ps aux | grep mcp-server
@@ -512,11 +558,13 @@ ast-helper server --restart
 ### Protocol Issues
 
 #### Problem: Invalid MCP messages
+
 ```
 Error: Invalid JSON-RPC message format
 ```
 
 **Solutions:**
+
 ```bash
 # Check MCP client compatibility
 ast-helper server --version
@@ -530,11 +578,13 @@ echo '{"jsonrpc":"2.0","id":1,"method":"ping"}' | \
 ```
 
 #### Problem: Tool execution failures
+
 ```
 Error: Tool 'query_codebase' execution failed
 ```
 
 **Solutions:**
+
 ```bash
 # List available tools
 ast-helper tools list
@@ -554,11 +604,13 @@ ast-helper tools --reset
 ### Extension Installation Problems
 
 #### Problem: Extension not installing
+
 ```
 Error: Extension 'ast-copilot-helper' not found
 ```
 
 **Solutions:**
+
 ```bash
 # Install from VSIX file
 code --install-extension ast-copilot-helper.vsix
@@ -574,11 +626,13 @@ code --version
 ```
 
 #### Problem: Extension not loading
+
 ```
 Extension 'ast-copilot-helper' failed to activate
 ```
 
 **Solutions:**
+
 ```bash
 # Check extension logs
 # View -> Output -> Extensions (Host)
@@ -596,11 +650,13 @@ Extension 'ast-copilot-helper' failed to activate
 ### Functionality Issues
 
 #### Problem: Commands not working
+
 ```
 Command 'ast-copilot-helper.query' not found
 ```
 
 **Solutions:**
+
 ```bash
 # Reload VS Code window
 # Cmd/Ctrl + Shift + P -> "Developer: Reload Window"
@@ -616,11 +672,13 @@ cat .vscode/settings.json
 ```
 
 #### Problem: No IntelliSense suggestions
+
 ```
 Extension not providing code suggestions
 ```
 
 **Solutions:**
+
 ```bash
 # Initialize project for extension
 ast-helper init
@@ -640,11 +698,13 @@ ast-helper init
 ### Memory Usage Problems
 
 #### Problem: High memory consumption
+
 ```
 Process using excessive memory (>2GB)
 ```
 
 **Solutions:**
+
 ```bash
 # Monitor memory usage
 top -p $(pgrep ast-helper)
@@ -661,11 +721,13 @@ export NODE_OPTIONS="--max-old-space-size=4096"
 ```
 
 #### Problem: CPU usage too high
+
 ```
 Process using 100% CPU for extended periods
 ```
 
 **Solutions:**
+
 ```bash
 # Check for infinite loops
 strace -p $(pgrep ast-helper)
@@ -683,11 +745,13 @@ ast-helper parse src/ --watch --debounce 5000
 ### Disk I/O Issues
 
 #### Problem: Slow file operations
+
 ```
 File parsing taking longer than expected
 ```
 
 **Solutions:**
+
 ```bash
 # Check disk usage
 iostat -x 1 5
@@ -708,6 +772,7 @@ ln -s /path/to/ssd/.ast-helper.db .ast-helper.db
 ### Built-in Diagnostics
 
 #### Doctor Command
+
 ```bash
 # Run comprehensive diagnostics
 ast-helper doctor
@@ -720,6 +785,7 @@ ast-helper doctor --mcp
 ```
 
 #### Statistics and Status
+
 ```bash
 # Project statistics
 ast-helper stats
@@ -737,6 +803,7 @@ ast-helper server --status
 ### Debug Modes
 
 #### Verbose Logging
+
 ```bash
 # Enable debug logging
 export DEBUG=ast-helper:*
@@ -749,6 +816,7 @@ export DEBUG=ast-helper:ai
 ```
 
 #### Performance Profiling
+
 ```bash
 # Profile parsing performance
 ast-helper parse src/ --profile
@@ -764,7 +832,9 @@ node --inspect-brk $(which ast-helper) parse src/
 ## Getting Help
 
 ### Log Files
+
 Check these locations for log files:
+
 - `~/.ast-helper/logs/` (main logs)
 - `~/.vscode/logs/` (VS Code extension logs)
 - Project root: `.ast-helper.log`
@@ -774,6 +844,7 @@ Check these locations for log files:
 When reporting issues, include:
 
 1. **System Information:**
+
    ```bash
    uname -a
    node --version
@@ -782,11 +853,13 @@ When reporting issues, include:
    ```
 
 2. **Configuration:**
+
    ```bash
    ast-helper config --export
    ```
 
 3. **Logs:**
+
    ```bash
    tail -n 100 ~/.ast-helper/logs/error.log
    ```

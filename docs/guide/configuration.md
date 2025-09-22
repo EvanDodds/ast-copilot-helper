@@ -17,13 +17,27 @@ The main configuration file `.ast-helper.json` contains these sections:
 
 ```json
 {
-  "parser": { /* Code parsing settings */ },
-  "ai": { /* AI and embedding settings */ },
-  "search": { /* Search behavior settings */ },
-  "server": { /* MCP server settings */ },
-  "output": { /* Output formatting settings */ },
-  "performance": { /* Performance optimization */ },
-  "logging": { /* Logging and debugging */ }
+  "parser": {
+    /* Code parsing settings */
+  },
+  "ai": {
+    /* AI and embedding settings */
+  },
+  "search": {
+    /* Search behavior settings */
+  },
+  "server": {
+    /* MCP server settings */
+  },
+  "output": {
+    /* Output formatting settings */
+  },
+  "performance": {
+    /* Performance optimization */
+  },
+  "logging": {
+    /* Logging and debugging */
+  }
 }
 ```
 
@@ -46,46 +60,48 @@ The main configuration file `.ast-helper.json` contains these sections:
 
 #### Supported Languages
 
-| Language | Extensions | AST Parser |
-|----------|------------|------------|
-| `typescript` | `.ts`, `.tsx` | TypeScript Compiler API |
-| `javascript` | `.js`, `.jsx`, `.mjs` | Babel Parser |
-| `python` | `.py`, `.pyi` | Tree-sitter Python |
-| `java` | `.java` | Tree-sitter Java |
-| `go` | `.go` | Tree-sitter Go |
-| `rust` | `.rs` | Tree-sitter Rust |
-| `cpp` | `.cpp`, `.h`, `.hpp` | Tree-sitter C++ |
+| Language     | Extensions            | AST Parser              |
+| ------------ | --------------------- | ----------------------- |
+| `typescript` | `.ts`, `.tsx`         | TypeScript Compiler API |
+| `javascript` | `.js`, `.jsx`, `.mjs` | Babel Parser            |
+| `python`     | `.py`, `.pyi`         | Tree-sitter Python      |
+| `java`       | `.java`               | Tree-sitter Java        |
+| `go`         | `.go`                 | Tree-sitter Go          |
+| `rust`       | `.rs`                 | Tree-sitter Rust        |
+| `cpp`        | `.cpp`, `.h`, `.hpp`  | Tree-sitter C++         |
 
 #### File Patterns
 
 **Include Patterns:**
+
 ```json
 {
   "parser": {
     "includePatterns": [
-      "src/**/*.{ts,tsx}",           // Source TypeScript files
-      "lib/**/*.js",                 // Library JavaScript files  
-      "**/*.py",                     // All Python files
-      "packages/*/src/**/*.ts"       // Monorepo pattern
+      "src/**/*.{ts,tsx}", // Source TypeScript files
+      "lib/**/*.js", // Library JavaScript files
+      "**/*.py", // All Python files
+      "packages/*/src/**/*.ts" // Monorepo pattern
     ]
   }
 }
 ```
 
 **Exclude Patterns:**
+
 ```json
 {
   "parser": {
     "excludePatterns": [
-      "node_modules/**",             // Dependencies
-      "dist/**",                     // Build output
-      "build/**",                    // Build artifacts
-      "**/*.test.{ts,js}",          // Test files
-      "**/*.spec.{ts,js}",          // Spec files
-      "**/*.min.js",                // Minified files
-      "**/vendor/**",               // Third-party code
-      ".git/**",                    // Git directory
-      "coverage/**"                 // Coverage reports
+      "node_modules/**", // Dependencies
+      "dist/**", // Build output
+      "build/**", // Build artifacts
+      "**/*.test.{ts,js}", // Test files
+      "**/*.spec.{ts,js}", // Spec files
+      "**/*.min.js", // Minified files
+      "**/vendor/**", // Third-party code
+      ".git/**", // Git directory
+      "coverage/**" // Coverage reports
     ]
   }
 }
@@ -162,6 +178,7 @@ The main configuration file `.ast-helper.json` contains these sections:
 #### Supported Providers
 
 **OpenAI:**
+
 ```json
 {
   "ai": {
@@ -173,6 +190,7 @@ The main configuration file `.ast-helper.json` contains these sections:
 ```
 
 **Azure OpenAI:**
+
 ```json
 {
   "ai": {
@@ -186,6 +204,7 @@ The main configuration file `.ast-helper.json` contains these sections:
 ```
 
 **Local/Ollama:**
+
 ```json
 {
   "ai": {
@@ -198,6 +217,7 @@ The main configuration file `.ast-helper.json` contains these sections:
 ```
 
 **Hugging Face:**
+
 ```json
 {
   "ai": {
@@ -215,11 +235,11 @@ The main configuration file `.ast-helper.json` contains these sections:
   "ai": {
     "batchSize": 100,
     "enableCaching": true,
-    "cacheExpiry": 604800,              // 7 days in seconds
+    "cacheExpiry": 604800, // 7 days in seconds
     "chunkSize": 8192,
     "chunkOverlap": 200,
     "normalizeEmbeddings": true,
-    "similarityFunction": "cosine"       // "cosine", "euclidean", "dot-product"
+    "similarityFunction": "cosine" // "cosine", "euclidean", "dot-product"
   }
 }
 ```
@@ -313,7 +333,7 @@ The main configuration file `.ast-helper.json` contains these sections:
     "rateLimit": {
       "enabled": true,
       "requests": 1000,
-      "window": 3600,                 // 1 hour
+      "window": 3600, // 1 hour
       "message": "Rate limit exceeded"
     },
     "timeout": 30000,
@@ -350,8 +370,8 @@ The main configuration file `.ast-helper.json` contains these sections:
 ```json
 {
   "output": {
-    "format": "table",                  // "table", "json", "yaml", "csv"
-    "verbosity": "normal",              // "quiet", "normal", "verbose", "debug"
+    "format": "table", // "table", "json", "yaml", "csv"
+    "verbosity": "normal", // "quiet", "normal", "verbose", "debug"
     "colors": true,
     "unicode": true,
     "timestamps": false,
@@ -369,7 +389,7 @@ The main configuration file `.ast-helper.json` contains these sections:
       "includeMetadata": true,
       "includeEmbeddings": false,
       "prettify": true,
-      "compression": "none",            // "none", "gzip", "brotli"
+      "compression": "none", // "none", "gzip", "brotli"
       "maxFileSize": "50MB",
       "splitLargeFiles": true
     }
@@ -384,8 +404,8 @@ The main configuration file `.ast-helper.json` contains these sections:
 ```json
 {
   "performance": {
-    "maxWorkers": 4,                    // CPU cores for parallel processing
-    "maxMemory": "2GB",                 // Memory limit for operations
+    "maxWorkers": 4, // CPU cores for parallel processing
+    "maxMemory": "2GB", // Memory limit for operations
     "chunkProcessing": true,
     "lazyLoading": true,
     "cacheSize": "100MB",
@@ -401,13 +421,13 @@ The main configuration file `.ast-helper.json` contains these sections:
 {
   "performance": {
     "database": {
-      "engine": "sqlite",               // "sqlite", "postgresql"
+      "engine": "sqlite", // "sqlite", "postgresql"
       "connectionPool": 5,
       "queryTimeout": 10000,
-      "enableWAL": true,                // Write-Ahead Logging
-      "cacheSize": 10000,               // Pages
-      "synchronous": "NORMAL",          // "OFF", "NORMAL", "FULL"
-      "journalMode": "WAL"              // "DELETE", "WAL", "MEMORY"
+      "enableWAL": true, // Write-Ahead Logging
+      "cacheSize": 10000, // Pages
+      "synchronous": "NORMAL", // "OFF", "NORMAL", "FULL"
+      "journalMode": "WAL" // "DELETE", "WAL", "MEMORY"
     }
   }
 }
@@ -420,12 +440,12 @@ The main configuration file `.ast-helper.json` contains these sections:
 ```json
 {
   "logging": {
-    "level": "info",                    // "error", "warn", "info", "debug", "trace"
+    "level": "info", // "error", "warn", "info", "debug", "trace"
     "outputs": ["console", "file"],
     "file": ".ast-helper.log",
     "maxFileSize": "10MB",
     "maxFiles": 5,
-    "format": "json",                   // "text", "json"
+    "format": "json", // "text", "json"
     "includeTimestamp": true,
     "includeLocation": false
   }
@@ -468,7 +488,7 @@ export MCP_HOST="0.0.0.0"
 export AST_HELPER_DB_PATH="/custom/path/ast-helper.db"
 export AST_HELPER_CACHE_DIR="/custom/cache"
 
-# Performance  
+# Performance
 export AST_HELPER_MAX_WORKERS=8
 export AST_HELPER_MAX_MEMORY="4GB"
 
@@ -504,11 +524,7 @@ export AST_HELPER_LOG_FILE="/var/log/ast-helper.log"
 {
   "parser": {
     "languages": ["typescript"],
-    "includePatterns": [
-      "src/**/*.ts",
-      "src/**/*.tsx", 
-      "lib/**/*.ts"
-    ],
+    "includePatterns": ["src/**/*.ts", "src/**/*.tsx", "lib/**/*.ts"],
     "excludePatterns": [
       "**/*.test.ts",
       "**/*.spec.ts",
@@ -544,10 +560,7 @@ export AST_HELPER_LOG_FILE="/var/log/ast-helper.log"
 {
   "parser": {
     "languages": ["python"],
-    "includePatterns": [
-      "**/*.py",
-      "**/*.pyi"
-    ],
+    "includePatterns": ["**/*.py", "**/*.pyi"],
     "excludePatterns": [
       "**/__pycache__/**",
       "**/test_*.py",
@@ -647,12 +660,13 @@ ast-helper config test --section ai
 ### Common Validation Errors
 
 **Invalid file patterns:**
+
 ```json
 {
   "parser": {
     // ❌ Invalid - missing quotes
     "includePatterns": [**/*.ts],
-    
+
     // ✅ Valid
     "includePatterns": ["**/*.ts"]
   }
@@ -660,6 +674,7 @@ ast-helper config test --section ai
 ```
 
 **Missing required fields:**
+
 ```json
 {
   "ai": {
@@ -671,12 +686,13 @@ ast-helper config test --section ai
 ```
 
 **Type mismatches:**
+
 ```json
 {
   "search": {
     // ❌ Should be number, not string
     "maxResults": "20",
-    
+
     // ✅ Correct type
     "maxResults": 20
   }
@@ -772,21 +788,23 @@ project/
 ### Security Considerations
 
 1. **Never commit API keys:**
+
    ```json
    {
      "ai": {
-       "apiKey": "${OPENAI_API_KEY}"  // ✅ Use environment variable
+       "apiKey": "${OPENAI_API_KEY}" // ✅ Use environment variable
      }
    }
    ```
 
 2. **Use authentication in production:**
+
    ```json
    {
      "server": {
        "authentication": {
          "enabled": true,
-         "tokenFile": ".mcp-token"     // ✅ Separate token file
+         "tokenFile": ".mcp-token" // ✅ Separate token file
        }
      }
    }
@@ -797,7 +815,7 @@ project/
    {
      "server": {
        "cors": {
-         "origins": ["https://your-domain.com"]  // ✅ Specific origins
+         "origins": ["https://your-domain.com"] // ✅ Specific origins
        }
      }
    }
@@ -806,6 +824,7 @@ project/
 ### Performance Optimization
 
 1. **Exclude unnecessary files:**
+
    ```json
    {
      "parser": {
@@ -820,6 +839,7 @@ project/
    ```
 
 2. **Optimize for large codebases:**
+
    ```json
    {
      "performance": {
@@ -888,6 +908,7 @@ ast-helper parse --config /path/to/config.json
 ### Common Issues
 
 **Configuration not found:**
+
 ```bash
 # Check current config location
 ast-helper config show --source
@@ -897,6 +918,7 @@ ast-helper parse --config .ast-helper.json
 ```
 
 **Invalid JSON syntax:**
+
 ```bash
 # Validate JSON syntax
 ast-helper config validate
@@ -904,6 +926,7 @@ ast-helper config validate
 ```
 
 **Environment variables not resolved:**
+
 ```bash
 # Check environment variables
 echo $OPENAI_API_KEY
@@ -913,6 +936,7 @@ ast-helper config show | grep apiKey
 ```
 
 **Performance issues:**
+
 ```bash
 # Check current settings
 ast-helper config show --section performance
@@ -963,6 +987,6 @@ export AST_HELPER_LOG_LEVEL="info"
 
 ```bash
 ast-helper config validate    # Check configuration
-ast-helper config show       # Display current config  
+ast-helper config show       # Display current config
 ast-helper config test       # Test specific sections
 ```

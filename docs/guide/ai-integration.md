@@ -11,7 +11,7 @@ ast-copilot-helper implements the Model Context Protocol (MCP) to enable AI agen
 🤖 **AI Code Understanding** - Let AI agents comprehend your entire codebase  
 🔍 **Contextual Assistance** - Get relevant suggestions based on your actual code  
 🚀 **Enhanced Development** - Speed up coding with AI that knows your patterns  
-📊 **Intelligent Analysis** - Leverage AI for code review and optimization  
+📊 **Intelligent Analysis** - Leverage AI for code review and optimization
 
 ## Model Context Protocol (MCP) Basics
 
@@ -20,8 +20,9 @@ ast-copilot-helper implements the Model Context Protocol (MCP) to enable AI agen
 The Model Context Protocol is a standard that allows AI agents to access external data sources and tools. ast-copilot-helper acts as an MCP server, providing your codebase information to AI clients.
 
 **Benefits:**
+
 - **Standardized Interface** - Works with any MCP-compatible AI agent
-- **Real-time Access** - AI agents get up-to-date code information  
+- **Real-time Access** - AI agents get up-to-date code information
 - **Secure Communication** - Controlled access to your codebase
 - **Rich Context** - Semantic understanding beyond simple text
 
@@ -33,7 +34,7 @@ graph LR
     B -->|Queries| C[Code Database]
     B -->|Embeddings| D[Vector Store]
     B -->|File System| E[Source Code]
-    
+
     C --> F[AST Annotations]
     D --> G[Semantic Search]
     E --> H[Live Code Access]
@@ -46,6 +47,7 @@ graph LR
 The MCP server can run in different transport modes depending on your AI client:
 
 **STDIO Transport (Most Common):**
+
 ```bash
 # For desktop AI clients like Claude Desktop
 ast-helper server --transport stdio
@@ -55,6 +57,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | ast-helper s
 ```
 
 **HTTP Transport:**
+
 ```bash
 # For web-based AI agents
 ast-helper server --transport http --port 3001 --cors
@@ -67,6 +70,7 @@ curl http://localhost:3001/health
 ```
 
 **Server-Sent Events (SSE):**
+
 ```bash
 # For real-time streaming applications
 ast-helper server --transport sse --port 3002
@@ -115,6 +119,7 @@ Claude Desktop is one of the most popular MCP clients. Here's how to connect it 
 #### Installation
 
 1. **Download Claude Desktop:**
+
    - Visit [claude.ai/desktop](https://claude.ai/desktop)
    - Install for your platform (Windows, macOS, Linux)
 
@@ -123,18 +128,21 @@ Claude Desktop is one of the most popular MCP clients. Here's how to connect it 
    Create or edit Claude's MCP configuration file:
 
    **macOS:**
+
    ```bash
    # Edit configuration
    nano ~/Library/Application\ Support/Claude/claude_desktop_config.json
    ```
 
    **Windows:**
+
    ```bash
    # Edit configuration (PowerShell)
    notepad $env:APPDATA\Claude\claude_desktop_config.json
    ```
 
    **Linux:**
+
    ```bash
    # Edit configuration
    nano ~/.config/Claude/claude_desktop_config.json
@@ -155,17 +163,24 @@ Claude Desktop is one of the most popular MCP clients. Here's how to connect it 
    ```
 
    **For specific projects:**
+
    ```json
    {
      "mcpServers": {
        "my-typescript-project": {
-         "command": "ast-helper", 
+         "command": "ast-helper",
          "args": ["server", "--transport", "stdio"],
          "cwd": "/home/user/projects/my-app"
        },
        "python-ml-project": {
          "command": "ast-helper",
-         "args": ["server", "--transport", "stdio", "--config", "ml-config.json"],
+         "args": [
+           "server",
+           "--transport",
+           "stdio",
+           "--config",
+           "ml-config.json"
+         ],
          "cwd": "/home/user/ml-project"
        }
      }
@@ -186,7 +201,7 @@ Claude: I can see your codebase through ast-copilot-helper. Let me search for au
 
 Found these authentication functions:
 1. authenticateUser() in src/auth/login.ts
-2. validateToken() in src/auth/middleware.ts  
+2. validateToken() in src/auth/middleware.ts
 3. refreshToken() in src/auth/tokens.ts
 
 Would you like me to analyze any specific aspect?
@@ -227,10 +242,10 @@ export default {
       name: "ast-copilot-helper",
       command: "ast-helper",
       args: ["server", "--transport", "stdio"],
-      cwd: process.cwd()
-    }
-  ]
-}
+      cwd: process.cwd(),
+    },
+  ],
+};
 ```
 
 #### Custom AI Agents
@@ -238,6 +253,7 @@ export default {
 For building your own AI agent with MCP support:
 
 **Python Example:**
+
 ```python
 import asyncio
 from mcp import Client
@@ -246,13 +262,13 @@ async def main():
     # Connect to MCP server
     client = Client()
     await client.connect("stdio", ["ast-helper", "server", "--transport", "stdio"])
-    
+
     # Query codebase
     response = await client.call_tool("query_codebase", {
         "query": "authentication functions",
         "limit": 10
     })
-    
+
     print(f"Found {len(response['results'])} functions")
     for result in response['results']:
         print(f"- {result['name']} in {result['file']}")
@@ -262,23 +278,24 @@ if __name__ == "__main__":
 ```
 
 **Node.js Example:**
+
 ```javascript
-import { Client } from '@modelcontextprotocol/sdk/client';
+import { Client } from "@modelcontextprotocol/sdk/client";
 
 async function queryCodebase() {
   const client = new Client();
-  
+
   await client.connect({
-    command: 'ast-helper',
-    args: ['server', '--transport', 'stdio']
+    command: "ast-helper",
+    args: ["server", "--transport", "stdio"],
   });
-  
-  const response = await client.callTool('query_codebase', {
-    query: 'database operations',
-    type: 'function'
+
+  const response = await client.callTool("query_codebase", {
+    query: "database operations",
+    type: "function",
   });
-  
-  console.log('Database functions:', response.results);
+
+  console.log("Database functions:", response.results);
 }
 
 queryCodebase().catch(console.error);
@@ -307,12 +324,13 @@ Search your codebase using natural language:
 ```
 
 **Response:**
+
 ```json
 {
   "results": [
     {
       "id": "func_authenticateUser_123",
-      "name": "authenticateUser", 
+      "name": "authenticateUser",
       "type": "function",
       "file": "src/auth/middleware.ts",
       "line": 15,
@@ -352,15 +370,16 @@ Get detailed information about specific functions:
 ```
 
 **Response:**
+
 ```json
 {
   "name": "authenticateUser",
   "file": "src/auth/middleware.ts",
   "line": 15,
   "parameters": [
-    {"name": "req", "type": "Request"},
-    {"name": "res", "type": "Response"},
-    {"name": "next", "type": "NextFunction"}
+    { "name": "req", "type": "Request" },
+    { "name": "res", "type": "Response" },
+    { "name": "next", "type": "NextFunction" }
   ],
   "return_type": "Promise<void>",
   "description": "Middleware to authenticate user requests",
@@ -374,7 +393,7 @@ Understand code relationships and dependencies:
 
 ```json
 {
-  "name": "analyze_dependencies", 
+  "name": "analyze_dependencies",
   "arguments": {
     "file_path": "src/auth/middleware.ts"
   }
@@ -491,7 +510,7 @@ Claude: Let me analyze your current user management code...
 
 I found your user management in:
 - src/users/controller.ts: CRUD operations
-- src/users/service.ts: Business logic  
+- src/users/service.ts: Business logic
 - src/users/model.ts: Data model
 
 Current pattern analysis:
@@ -507,14 +526,16 @@ Current pattern analysis:
    - Implement error handling middleware
 
 2. **Improve Structure:**
-   ```
-   src/users/
-   ├── controller.ts    # HTTP handling only
-   ├── service.ts       # Business logic
-   ├── validation.ts    # Input validation
-   ├── model.ts         # Data access
-   └── types.ts         # Type definitions
-   ```
+```
+
+src/users/
+├── controller.ts # HTTP handling only
+├── service.ts # Business logic
+├── validation.ts # Input validation
+├── model.ts # Data access
+└── types.ts # Type definitions
+
+```
 
 Would you like me to show the refactored code for any specific file?
 ```
@@ -523,7 +544,7 @@ Would you like me to show the refactored code for any specific file?
 
 **Workflow: API Documentation**
 
-```
+````
 You: Generate API documentation for my user endpoints
 
 Claude: I'll analyze your user API endpoints and generate documentation...
@@ -538,8 +559,8 @@ Your user API provides CRUD operations for user management with authentication.
 ## Endpoints
 
 ### POST /api/users
-**Purpose:** Create a new user  
-**Authentication:** Admin required  
+**Purpose:** Create a new user
+**Authentication:** Admin required
 **Request Body:**
 ```typescript
 {
@@ -547,9 +568,10 @@ Your user API provides CRUD operations for user management with authentication.
   password: string;
   role?: 'user' | 'admin';
 }
-```
+````
 
 **Response:**
+
 ```typescript
 {
   id: string;
@@ -562,6 +584,7 @@ Your user API provides CRUD operations for user management with authentication.
 [Additional endpoints...]
 
 This documentation was generated by analyzing your actual code structure. Would you like me to add more details or export this in a specific format?
+
 ```
 
 ## Advanced AI Features
@@ -571,6 +594,7 @@ This documentation was generated by analyzing your actual code structure. Would 
 AI agents can perform sophisticated searches using natural language:
 
 ```
+
 Examples of AI-powered queries:
 
 "Find functions that handle file uploads"
@@ -578,6 +602,7 @@ Examples of AI-powered queries:
 "Where do we validate user input?"
 "Functions that interact with the database"
 "Components that manage user authentication state"
+
 ```
 
 ### Code Pattern Recognition
@@ -585,6 +610,7 @@ Examples of AI-powered queries:
 AI can identify and analyze patterns in your codebase:
 
 ```
+
 AI Analysis Examples:
 
 "Analyze error handling patterns across the codebase"
@@ -592,6 +618,7 @@ AI Analysis Examples:
 "Identify functions that might need refactoring"
 "Show me all singleton patterns in the code"
 "Find potential security vulnerabilities"
+
 ```
 
 ### Context-Aware Suggestions
@@ -599,18 +626,21 @@ AI Analysis Examples:
 AI provides suggestions based on actual code context:
 
 ```
+
 Context-Aware Examples:
 
 You: "How should I handle errors in my new payment service?"
 
 Claude: Based on your existing error handling patterns, I see you use:
+
 1. Custom error classes (PaymentError, ValidationError)
 2. Centralized error middleware in src/middleware/error.ts
 3. Structured error responses with error codes
 
 For your payment service, follow the same pattern:
 [Shows specific code examples from your codebase]
-```
+
+````
 
 ## Performance and Optimization
 
@@ -627,7 +657,7 @@ ps aux | grep ast-helper
 
 # Monitor query response times
 curl -w "%{time_total}" http://localhost:3001/health
-```
+````
 
 **Optimize for Large Codebases:**
 
@@ -667,9 +697,9 @@ curl -w "%{time_total}" http://localhost:3001/health
 ```json
 {
   "query": "user management",
-  "type": "function",        // Focus on functions only
-  "file_pattern": "src/user/**",  // Specific directory
-  "limit": 10               // Reasonable limit
+  "type": "function", // Focus on functions only
+  "file_pattern": "src/user/**", // Specific directory
+  "limit": 10 // Reasonable limit
 }
 ```
 
@@ -709,10 +739,7 @@ export MCP_AUTH_TOKEN=$(cat .mcp-token)
 {
   "server": {
     "cors": {
-      "origins": [
-        "https://claude.ai",
-        "https://your-domain.com"
-      ]
+      "origins": ["https://claude.ai", "https://your-domain.com"]
     }
   }
 }
@@ -736,8 +763,8 @@ ast-helper server --transport http --host 127.0.0.1 --port 3001
   "server": {
     "rateLimit": {
       "enabled": true,
-      "requests": 100,          // Requests per window
-      "window": 900,            // 15 minutes
+      "requests": 100, // Requests per window
+      "window": 900, // 15 minutes
       "message": "Rate limit exceeded. Please try again later."
     }
   }
@@ -811,12 +838,14 @@ ast-helper config set ai.maxContextSize 4096
 **AI Not Understanding Codebase:**
 
 1. **Verify MCP Connection:**
+
    ```
    Ask AI: "Can you see my codebase through MCP?"
    Expected: AI should list available tools/resources
    ```
 
 2. **Check Parsing Status:**
+
    ```bash
    ast-helper query "*" --limit 5
    # Should return parsed code elements
@@ -837,14 +866,16 @@ ast-helper config set ai.maxContextSize 4096
 ast-copilot-helper's MCP implementation is designed to work with future AI platforms that support the Model Context Protocol standard.
 
 **Integration Roadmap:**
+
 - GitHub Copilot Workspace integration
-- JetBrains AI Assistant support  
+- JetBrains AI Assistant support
 - Visual Studio IntelliCode integration
 - Custom AI agent frameworks
 
 ### Advanced Features in Development
 
 **Enhanced AI Capabilities:**
+
 - Code generation based on codebase patterns
 - Automated test generation
 - Refactoring suggestions with confidence scoring
@@ -861,7 +892,7 @@ ast-copilot-helper's MCP implementation is designed to work with future AI platf
 4. **Configure rate limiting** to prevent abuse
 5. **Use caching** to improve response times
 
-### AI Agent Configuration  
+### AI Agent Configuration
 
 1. **Test connectivity** before production use
 2. **Provide clear context** in AI queries
@@ -894,7 +925,7 @@ With AI integration configured:
 # Start MCP server for Claude Desktop
 ast-helper server --transport stdio
 
-# Start HTTP server for web clients  
+# Start HTTP server for web clients
 ast-helper server --transport http --port 3001 --cors
 
 # Test server connectivity
@@ -908,7 +939,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | \
 {
   "mcpServers": {
     "ast-copilot-helper": {
-      "command": "ast-helper", 
+      "command": "ast-helper",
       "args": ["server", "--transport", "stdio"],
       "cwd": "/path/to/your/project"
     }

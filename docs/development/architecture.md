@@ -15,56 +15,56 @@ graph TB
         VSCode[VS Code Extension]
         WebUI[Web Interface]
     end
-    
+
     subgraph "Core Layer"
         Parser[AST Parser Engine]
         Embeddings[AI Embeddings Generator]
         Query[Semantic Query Engine]
         MCP[MCP Server]
     end
-    
+
     subgraph "Data Layer"
         DB[(SQLite Database)]
         Cache[(Vector Cache)]
         FS[(File System)]
     end
-    
+
     subgraph "External Services"
         OpenAI[OpenAI API]
         Azure[Azure OpenAI]
         Local[Local Models]
     end
-    
+
     CLI --> Parser
     VSCode --> Parser
     WebUI --> MCP
-    
+
     Parser --> DB
     Parser --> Embeddings
     Embeddings --> OpenAI
     Embeddings --> Azure
     Embeddings --> Local
     Embeddings --> Cache
-    
+
     Query --> DB
     Query --> Cache
     MCP --> Query
     MCP --> DB
-    
+
     Parser --> FS
 ```
 
 ### Component Overview
 
-| Component | Responsibility | Technology Stack |
-|-----------|---------------|------------------|
-| **AST Parser Engine** | Parse source code into semantic annotations | TypeScript Compiler API, Tree-sitter |
-| **AI Embeddings Generator** | Create vector embeddings for semantic search | OpenAI API, Sentence Transformers |
-| **Semantic Query Engine** | Process natural language queries | Vector similarity, SQLite FTS |
-| **MCP Server** | Provide AI agent integration | JSON-RPC, WebSocket, HTTP |
-| **CLI Tool** | Command-line interface | Node.js, Commander.js |
-| **VS Code Extension** | Visual Studio Code integration | VS Code API, Webview |
-| **Database Layer** | Persist annotations and embeddings | SQLite, better-sqlite3 |
+| Component                   | Responsibility                               | Technology Stack                     |
+| --------------------------- | -------------------------------------------- | ------------------------------------ |
+| **AST Parser Engine**       | Parse source code into semantic annotations  | TypeScript Compiler API, Tree-sitter |
+| **AI Embeddings Generator** | Create vector embeddings for semantic search | OpenAI API, Sentence Transformers    |
+| **Semantic Query Engine**   | Process natural language queries             | Vector similarity, SQLite FTS        |
+| **MCP Server**              | Provide AI agent integration                 | JSON-RPC, WebSocket, HTTP            |
+| **CLI Tool**                | Command-line interface                       | Node.js, Commander.js                |
+| **VS Code Extension**       | Visual Studio Code integration               | VS Code API, Webview                 |
+| **Database Layer**          | Persist annotations and embeddings           | SQLite, better-sqlite3               |
 
 ## Package Structure
 
@@ -76,7 +76,7 @@ packages/
 │   ├── src/
 │   │   ├── parser/         # AST parsing logic
 │   │   ├── ai/            # AI and embeddings
-│   │   ├── query/         # Search functionality  
+│   │   ├── query/         # Search functionality
 │   │   ├── database/      # Data persistence
 │   │   ├── cli/           # Command-line interface
 │   │   └── utils/         # Shared utilities
@@ -110,10 +110,10 @@ interface ParserEngine {
   // Core parsing interface
   parseFile(filePath: string): Promise<ParseResult>;
   parseContent(content: string, language: string): Promise<ParseResult>;
-  
+
   // Batch processing
   parseProject(config: ProjectConfig): Promise<ParseResult[]>;
-  
+
   // Language support
   getSupportedLanguages(): Language[];
   registerLanguage(language: Language): void;
@@ -158,12 +158,12 @@ graph LR
     D --> E[Annotation Extraction]
     E --> F[Validation]
     F --> G[Persistence]
-    
+
     subgraph "Error Handling"
         H[Syntax Errors]
         I[Recovery Strategies]
     end
-    
+
     C --> H
     H --> I
     I --> D
@@ -179,30 +179,32 @@ Converts code annotations into vector embeddings for semantic search:
 class EmbeddingGenerator {
   async generateEmbeddings(annotations: ASTAnnotation[]): Promise<Embedding[]> {
     // 1. Text preparation
-    const texts = annotations.map(a => this.prepareText(a));
-    
+    const texts = annotations.map((a) => this.prepareText(a));
+
     // 2. Batch processing
     const batches = this.createBatches(texts, this.config.batchSize);
-    
+
     // 3. API calls with retry logic
     const embeddings = await Promise.all(
-      batches.map(batch => this.callEmbeddingAPI(batch))
+      batches.map((batch) => this.callEmbeddingAPI(batch))
     );
-    
+
     // 4. Caching and persistence
     await this.cacheEmbeddings(embeddings);
-    
+
     return embeddings.flat();
   }
-  
+
   private prepareText(annotation: ASTAnnotation): string {
     // Combine name, description, parameters, etc.
     return [
       annotation.name,
       annotation.description,
-      annotation.parameters?.map(p => p.name).join(' '),
-      annotation.returnType
-    ].filter(Boolean).join(' ');
+      annotation.parameters?.map((p) => p.name).join(" "),
+      annotation.returnType,
+    ]
+      .filter(Boolean)
+      .join(" ");
   }
 }
 ```
@@ -221,18 +223,18 @@ class OpenAIProvider implements EmbeddingProvider {
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
     const response = await this.client.embeddings.create({
       model: this.model,
-      input: texts
+      input: texts,
     });
-    return response.data.map(d => d.embedding);
+    return response.data.map((d) => d.embedding);
   }
 }
 
-// Local Model Implementation  
+// Local Model Implementation
 class OllamaProvider implements EmbeddingProvider {
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
     const response = await fetch(`${this.endpoint}/api/embeddings`, {
-      method: 'POST',
-      body: JSON.stringify({ model: this.model, prompt: texts })
+      method: "POST",
+      body: JSON.stringify({ model: this.model, prompt: texts }),
     });
     return response.json();
   }
@@ -253,13 +255,13 @@ graph TD
     D --> E[Text-based Filtering]
     E --> F[Ranking & Scoring]
     F --> G[Result Formatting]
-    
+
     subgraph "Search Strategies"
         H[Semantic Search]
         I[Fuzzy Text Search]
         J[Exact Match]
     end
-    
+
     D --> H
     E --> I
     E --> J
@@ -270,33 +272,33 @@ graph TD
 ```typescript
 class QueryEngine {
   async query(
-    queryText: string, 
+    queryText: string,
     options: QueryOptions = {}
   ): Promise<QueryResult[]> {
     // 1. Preprocess query
     const processedQuery = this.preprocessQuery(queryText);
-    
+
     // 2. Generate query embedding
     const queryEmbedding = await this.embeddings.generate([processedQuery]);
-    
+
     // 3. Vector similarity search
     const semanticResults = await this.vectorSearch(
       queryEmbedding[0],
       options.similarityThreshold || 0.7
     );
-    
+
     // 4. Text-based filtering
     const textResults = await this.textSearch(processedQuery, options);
-    
+
     // 5. Combine and rank results
     const combinedResults = this.combineResults(semanticResults, textResults);
-    
+
     // 6. Apply filters and limits
     return this.applyFilters(combinedResults, options);
   }
-  
+
   private async vectorSearch(
-    queryVector: number[], 
+    queryVector: number[],
     threshold: number
   ): Promise<SearchResult[]> {
     // SQLite vector similarity using extension
@@ -307,7 +309,7 @@ class QueryEngine {
       WHERE similarity > ?
       ORDER BY similarity DESC
     `;
-    
+
     return this.db.prepare(sql).all(queryVector, threshold);
   }
 }
@@ -323,11 +325,13 @@ Implements the Model Context Protocol for AI agent integration:
 class MCPServer {
   private tools: Map<string, MCPTool> = new Map();
   private resources: Map<string, MCPResource> = new Map();
-  
-  async initialize(capabilities: ClientCapabilities): Promise<ServerCapabilities> {
+
+  async initialize(
+    capabilities: ClientCapabilities
+  ): Promise<ServerCapabilities> {
     this.registerTools();
     this.registerResources();
-    
+
     return {
       capabilities: {
         resources: { subscribe: true, listChanged: true },
@@ -337,35 +341,38 @@ class MCPServer {
       },
     };
   }
-  
+
   private registerTools() {
-    this.tools.set('query_codebase', new QueryCodebaseTool(this.queryEngine));
-    this.tools.set('get_file_content', new GetFileContentTool(this.fs));
-    this.tools.set('get_function_details', new GetFunctionDetailsTool(this.db));
-    this.tools.set('analyze_dependencies', new AnalyzeDependenciesTool(this.parser));
+    this.tools.set("query_codebase", new QueryCodebaseTool(this.queryEngine));
+    this.tools.set("get_file_content", new GetFileContentTool(this.fs));
+    this.tools.set("get_function_details", new GetFunctionDetailsTool(this.db));
+    this.tools.set(
+      "analyze_dependencies",
+      new AnalyzeDependenciesTool(this.parser)
+    );
   }
 }
 
 // Example MCP Tool
 class QueryCodebaseTool implements MCPTool {
   constructor(private queryEngine: QueryEngine) {}
-  
+
   async execute(arguments: any): Promise<ToolResult> {
     const { query, type, limit = 10 } = arguments;
-    
+
     const results = await this.queryEngine.query(query, {
       type,
       limit,
-      format: 'detailed'
+      format: "detailed",
     });
-    
+
     return {
       content: [
         {
-          type: 'text',
-          text: this.formatResults(results)
-        }
-      ]
+          type: "text",
+          text: this.formatResults(results),
+        },
+      ],
     };
   }
 }
@@ -421,17 +428,23 @@ CREATE INDEX idx_annotations_name ON annotations(name);
 interface DatabaseManager {
   // Annotations
   insertAnnotation(annotation: ASTAnnotation): Promise<void>;
-  updateAnnotation(id: string, annotation: Partial<ASTAnnotation>): Promise<void>;
+  updateAnnotation(
+    id: string,
+    annotation: Partial<ASTAnnotation>
+  ): Promise<void>;
   deleteAnnotation(id: string): Promise<void>;
   getAnnotation(id: string): Promise<ASTAnnotation | null>;
-  
+
   // Embeddings
   insertEmbedding(annotationId: string, embedding: Embedding): Promise<void>;
-  searchBySimilarity(vector: number[], threshold: number): Promise<SearchResult[]>;
-  
+  searchBySimilarity(
+    vector: number[],
+    threshold: number
+  ): Promise<SearchResult[]>;
+
   // Full-text search
   searchByText(query: string): Promise<SearchResult[]>;
-  
+
   // Batch operations
   insertBatch(annotations: ASTAnnotation[]): Promise<void>;
   vacuum(): Promise<void>;
@@ -467,11 +480,11 @@ New languages and AI providers can be added without modifying core code:
 // Language plugin system
 class LanguageRegistry {
   private parsers = new Map<string, LanguageParser>();
-  
+
   register(language: string, parser: LanguageParser) {
     this.parsers.set(language, parser);
   }
-  
+
   parse(language: string, source: string): ASTAnnotation[] {
     const parser = this.parsers.get(language);
     if (!parser) throw new Error(`Unsupported language: ${language}`);
@@ -482,7 +495,7 @@ class LanguageRegistry {
 // AI provider plugin system
 class AIProviderRegistry {
   private providers = new Map<string, EmbeddingProvider>();
-  
+
   register(name: string, provider: EmbeddingProvider) {
     this.providers.set(name, provider);
   }
@@ -502,18 +515,16 @@ Optimized for large codebases:
 class PerformanceOptimizer {
   async parseInParallel(files: string[]): Promise<ASTAnnotation[]> {
     const chunks = this.chunkArray(files, this.maxWorkers);
-    const workers = chunks.map(chunk => this.createWorker(chunk));
-    
-    const results = await Promise.all(
-      workers.map(worker => worker.parse())
-    );
-    
+    const workers = chunks.map((chunk) => this.createWorker(chunk));
+
+    const results = await Promise.all(workers.map((worker) => worker.parse()));
+
     return results.flat();
   }
-  
+
   private createWorker(files: string[]): Worker {
-    return new Worker('./parse-worker.js', {
-      workerData: { files, config: this.config }
+    return new Worker("./parse-worker.js", {
+      workerData: { files, config: this.config },
     });
   }
 }
@@ -533,15 +544,18 @@ class ErrorHandler {
         // Try to parse with error recovery
         return this.parseWithErrorRecovery(source, error);
       }
-      
+
       // Log and return partial results
-      this.logger.error('Parse failed', { error, source: source.slice(0, 100) });
+      this.logger.error("Parse failed", {
+        error,
+        source: source.slice(0, 100),
+      });
       return this.createEmptyResult(error);
     }
   }
-  
+
   private async parseWithErrorRecovery(
-    source: string, 
+    source: string,
     error: SyntaxError
   ): Promise<ParseResult> {
     // Implement error recovery strategies
@@ -561,7 +575,7 @@ sequenceDiagram
     participant Parser
     participant Database
     participant AI
-    
+
     CLI->>Parser: parseProject(config)
     Parser->>Parser: discoverFiles()
     Parser->>Parser: parseFiles()
@@ -579,7 +593,7 @@ sequenceDiagram
     participant QueryEngine
     participant Database
     participant AI
-    
+
     User->>QueryEngine: query("auth functions")
     QueryEngine->>AI: generateEmbedding(query)
     AI->>QueryEngine: embedding
@@ -628,23 +642,23 @@ tests/
 
 ```typescript
 // Example unit test
-describe('TypeScriptParser', () => {
-  it('should extract function annotations', async () => {
+describe("TypeScriptParser", () => {
+  it("should extract function annotations", async () => {
     const source = `
       function calculateTax(income: number): number {
         return income * 0.2;
       }
     `;
-    
+
     const parser = new TypeScriptParser();
     const result = await parser.parse(source);
-    
+
     expect(result.annotations).toHaveLength(1);
     expect(result.annotations[0]).toMatchObject({
-      type: 'function',
-      name: 'calculateTax',
-      parameters: [{ name: 'income', type: 'number' }],
-      returnType: 'number'
+      type: "function",
+      name: "calculateTax",
+      parameters: [{ name: "income", type: "number" }],
+      returnType: "number",
     });
   });
 });
@@ -664,19 +678,18 @@ class SecurityManager {
   validateFilePath(filePath: string): boolean {
     // Prevent path traversal attacks
     const normalized = path.normalize(filePath);
-    return !normalized.includes('..') && 
-           this.isWithinWorkspace(normalized);
+    return !normalized.includes("..") && this.isWithinWorkspace(normalized);
   }
-  
+
   sanitizeQuery(query: string): string {
     // Remove potentially harmful characters
-    return query.replace(/[^\w\s\-_.]/g, '');
+    return query.replace(/[^\w\s\-_.]/g, "");
   }
-  
+
   limitResources(operation: () => Promise<any>): Promise<any> {
     return Promise.race([
       operation(),
-      this.createTimeout(30000) // 30s timeout
+      this.createTimeout(30000), // 30s timeout
     ]);
   }
 }
@@ -700,25 +713,25 @@ graph TB
         Git[Git Repository]
         CI[GitHub Actions]
     end
-    
+
     subgraph "Build & Test"
         Build[Build Process]
         Test[Test Suite]
         Package[Package Creation]
     end
-    
+
     subgraph "Distribution"
         NPM[NPM Registry]
         VSCode[VS Code Marketplace]
         GitHub[GitHub Releases]
     end
-    
+
     subgraph "Deployment"
         CLI[CLI Installation]
         Extension[Extension Installation]
         Docker[Docker Images]
     end
-    
+
     Dev --> Git
     Git --> CI
     CI --> Build
@@ -727,7 +740,7 @@ graph TB
     Package --> NPM
     Package --> VSCode
     Package --> GitHub
-    
+
     NPM --> CLI
     VSCode --> Extension
     GitHub --> Docker
@@ -763,13 +776,13 @@ CMD ["node", "dist/server/index.js"]
 
 ### Benchmarks
 
-| Operation | Small Project (< 100 files) | Medium Project (100-1000 files) | Large Project (> 1000 files) |
-|-----------|------------------------------|----------------------------------|-------------------------------|
-| **Initial Parse** | < 5 seconds | 15-30 seconds | 1-3 minutes |
-| **Incremental Parse** | < 1 second | 2-5 seconds | 5-15 seconds |
-| **Query Response** | < 100ms | < 200ms | < 500ms |
-| **Embedding Generation** | 5-10 seconds | 30-60 seconds | 2-5 minutes |
-| **Memory Usage** | < 100MB | 200-500MB | 500MB-2GB |
+| Operation                | Small Project (< 100 files) | Medium Project (100-1000 files) | Large Project (> 1000 files) |
+| ------------------------ | --------------------------- | ------------------------------- | ---------------------------- |
+| **Initial Parse**        | < 5 seconds                 | 15-30 seconds                   | 1-3 minutes                  |
+| **Incremental Parse**    | < 1 second                  | 2-5 seconds                     | 5-15 seconds                 |
+| **Query Response**       | < 100ms                     | < 200ms                         | < 500ms                      |
+| **Embedding Generation** | 5-10 seconds                | 30-60 seconds                   | 2-5 minutes                  |
+| **Memory Usage**         | < 100MB                     | 200-500MB                       | 500MB-2GB                    |
 
 ### Optimization Strategies
 
@@ -797,14 +810,14 @@ graph LR
     B --> C[Phase 2: Distributed Processing]
     C --> D[Phase 3: Cloud Native]
     D --> E[Phase 4: Enterprise Scale]
-    
+
     subgraph "Phase Details"
         F[Worker Pools]
         G[Message Queues]
         H[Kubernetes]
         I[Multi-tenant]
     end
-    
+
     B --> F
     C --> G
     D --> H

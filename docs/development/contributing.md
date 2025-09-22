@@ -22,6 +22,7 @@ We are committed to providing a welcoming and inclusive experience for everyone,
 ### Standards
 
 **Positive behavior includes:**
+
 - Using welcoming and inclusive language
 - Being respectful of differing viewpoints and experiences
 - Gracefully accepting constructive criticism
@@ -29,6 +30,7 @@ We are committed to providing a welcoming and inclusive experience for everyone,
 - Showing empathy towards other community members
 
 **Unacceptable behavior includes:**
+
 - The use of sexualized language or imagery
 - Trolling, insulting/derogatory comments, and personal attacks
 - Public or private harassment
@@ -46,7 +48,7 @@ Project maintainers will remove, edit, or reject contributions that violate this
 Before contributing, ensure you have:
 
 - **Node.js 18+** (20+ recommended)
-- **npm 9+** 
+- **npm 9+**
 - **Git** with proper SSH/HTTPS setup
 - **Python 3.8+** (for Python language support)
 - **VS Code** (recommended for development)
@@ -55,17 +57,20 @@ Before contributing, ensure you have:
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
+
    ```bash
    git clone https://github.com/your-username/ast-copilot-helper.git
    cd ast-copilot-helper
    ```
 
 3. **Add upstream remote:**
+
    ```bash
    git remote add upstream https://github.com/EvanDodds/ast-copilot-helper.git
    ```
 
 4. **Install dependencies:**
+
    ```bash
    npm install
    ```
@@ -95,15 +100,17 @@ ast-copilot-helper/
 ### Environment Setup
 
 1. **Create environment file:**
+
    ```bash
    cp .env.example .env
    ```
 
 2. **Configure environment variables:**
+
    ```bash
    # API Keys (for testing AI features)
    OPENAI_API_KEY=your-openai-key  # Optional but recommended
-   
+
    # Development settings
    NODE_ENV=development
    LOG_LEVEL=debug
@@ -145,6 +152,7 @@ npm run type-check
 ### Package-Specific Development
 
 **Core CLI package:**
+
 ```bash
 cd packages/ast-helper
 
@@ -159,6 +167,7 @@ npm test
 ```
 
 **MCP Server:**
+
 ```bash
 cd packages/ast-mcp-server
 
@@ -170,6 +179,7 @@ npm run test:mcp
 ```
 
 **VS Code Extension:**
+
 ```bash
 cd packages/vscode-extension
 
@@ -210,7 +220,7 @@ git checkout -b fix/issue-number-description
 ### Branch Naming Conventions
 
 - `feature/feature-name` - New features
-- `fix/issue-description` - Bug fixes  
+- `fix/issue-description` - Bug fixes
 - `docs/section-name` - Documentation updates
 - `refactor/component-name` - Code refactoring
 - `test/test-description` - Test improvements
@@ -241,13 +251,13 @@ export async function parseTypeScriptFile(
   filePath: string,
   options: ParseOptions = {}
 ): Promise<ASTAnnotation[]> {
-  const source = await readFile(filePath, 'utf8');
+  const source = await readFile(filePath, "utf8");
   const sourceFile = ts.createSourceFile(
     filePath,
     source,
     ts.ScriptTarget.Latest
   );
-  
+
   const visitor = new TypeScriptASTVisitor(options);
   return visitor.visit(sourceFile);
 }
@@ -268,7 +278,7 @@ Follow [Conventional Commits](https://conventionalcommits.org/) format:
 
 # Examples:
 feat(parser): add support for Python decorators
-fix(cli): handle file not found errors gracefully  
+fix(cli): handle file not found errors gracefully
 docs(api): update MCP server documentation
 test(query): add integration tests for semantic search
 refactor(database): optimize query performance
@@ -276,6 +286,7 @@ chore(deps): update TypeScript to 5.0
 ```
 
 **Commit Types:**
+
 - `feat` - New features
 - `fix` - Bug fixes
 - `docs` - Documentation changes
@@ -339,6 +350,7 @@ Keep documentation up to date:
 ### 6. Submit Pull Request
 
 1. **Push your branch:**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -354,26 +366,32 @@ Keep documentation up to date:
 
 ```markdown
 ## Description
+
 Brief description of changes made.
 
 ## Changes Made
+
 - [ ] Added new feature X
 - [ ] Fixed bug in component Y
 - [ ] Updated documentation for Z
 
 ## Testing
+
 - [ ] Unit tests pass
 - [ ] Integration tests pass
 - [ ] Manual testing completed
 - [ ] Added new tests for changes
 
 ## Breaking Changes
+
 - None / Describe any breaking changes
 
 ## Screenshots
+
 <!-- Add screenshots for UI changes -->
 
 ## Related Issues
+
 Fixes #123
 Related to #456
 ```
@@ -381,18 +399,21 @@ Related to #456
 ### 7. Code Review Process
 
 1. **Automated checks** must pass:
+
    - All tests
    - Code linting
    - Type checking
    - Security scans
 
 2. **Maintainer review**:
+
    - Code quality and style
    - Test coverage
    - Documentation completeness
    - Breaking change assessment
 
 3. **Address feedback**:
+
    - Make requested changes
    - Push updates to your branch
    - Respond to review comments
@@ -415,7 +436,7 @@ interface UserConfig {
 
 class ConfigManager {
   constructor(private readonly config: UserConfig) {}
-  
+
   async validateConfig(): Promise<boolean> {
     return this.config.apiKey.length > 0;
   }
@@ -424,7 +445,7 @@ class ConfigManager {
 // ❌ Avoid: Any types and unclear interfaces
 class BadConfigManager {
   private config: any;
-  
+
   validate() {
     return this.config.apiKey ? true : false;
   }
@@ -442,13 +463,13 @@ class ParseError extends Error {
     public readonly line?: number
   ) {
     super(message);
-    this.name = 'ParseError';
+    this.name = "ParseError";
   }
 }
 
 async function parseFile(filePath: string): Promise<ASTAnnotation[]> {
   try {
-    const content = await readFile(filePath, 'utf8');
+    const content = await readFile(filePath, "utf8");
     return await this.parser.parse(content);
   } catch (error) {
     if (error instanceof SyntaxError) {
@@ -464,7 +485,7 @@ async function parseFile(filePath: string): Promise<ASTAnnotation[]> {
 // ❌ Avoid: Generic error handling
 async function badParseFile(filePath: string) {
   try {
-    return await this.parser.parse(await readFile(filePath, 'utf8'));
+    return await this.parser.parse(await readFile(filePath, "utf8"));
   } catch (error) {
     console.error(error);
     return null;
@@ -476,52 +497,50 @@ async function badParseFile(filePath: string) {
 
 ```typescript
 // ✅ Good: Descriptive tests with proper setup/teardown
-describe('TypeScriptParser', () => {
+describe("TypeScriptParser", () => {
   let parser: TypeScriptParser;
   let tempDir: string;
-  
+
   beforeEach(async () => {
     parser = new TypeScriptParser();
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ast-test-'));
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "ast-test-"));
   });
-  
+
   afterEach(async () => {
     await fs.rm(tempDir, { recursive: true });
   });
-  
-  describe('parseFunction', () => {
-    it('should extract function name and parameters', async () => {
+
+  describe("parseFunction", () => {
+    it("should extract function name and parameters", async () => {
       // Arrange
       const source = `
         function calculateTax(income: number, rate: number): number {
           return income * rate;
         }
       `;
-      
+
       // Act
       const result = await parser.parse(source);
-      
+
       // Assert
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
-        type: 'function',
-        name: 'calculateTax',
+        type: "function",
+        name: "calculateTax",
         parameters: [
-          { name: 'income', type: 'number' },
-          { name: 'rate', type: 'number' }
+          { name: "income", type: "number" },
+          { name: "rate", type: "number" },
         ],
-        returnType: 'number'
+        returnType: "number",
       });
     });
-    
-    it('should handle syntax errors gracefully', async () => {
+
+    it("should handle syntax errors gracefully", async () => {
       // Arrange
-      const invalidSource = 'function invalid() { return';
-      
+      const invalidSource = "function invalid() { return";
+
       // Act & Assert
-      await expect(parser.parse(invalidSource))
-        .rejects
-        .toThrow(ParseError);
+      await expect(parser.parse(invalidSource)).rejects.toThrow(ParseError);
     });
   });
 });
@@ -532,6 +551,7 @@ describe('TypeScriptParser', () => {
 ### Test Coverage
 
 Maintain high test coverage:
+
 - **Unit tests**: >90% line coverage
 - **Integration tests**: Cover critical workflows
 - **End-to-end tests**: Cover user scenarios
@@ -569,6 +589,7 @@ open coverage/index.html
 ### Writing Tests
 
 **Test File Structure:**
+
 ```
 src/
 ├── parser/
@@ -580,6 +601,7 @@ src/
 ```
 
 **Test Naming:**
+
 - Files: `*.test.ts` for unit tests, `*.integration.test.ts` for integration
 - Describe blocks: Component or function name
 - Test cases: "should [expected behavior] when [condition]"
@@ -596,14 +618,15 @@ src/
 ### Writing Documentation
 
 **JSDoc Style:**
-```typescript
+
+````typescript
 /**
  * Queries the codebase using natural language
- * 
+ *
  * @param query - Natural language query string
  * @param options - Query configuration options
  * @returns Promise resolving to search results
- * 
+ *
  * @example
  * ```typescript
  * const results = await queryEngine.query('authentication functions', {
@@ -613,9 +636,10 @@ src/
  * ```
  */
 async query(query: string, options?: QueryOptions): Promise<QueryResult[]>
-```
+````
 
 **Markdown Guidelines:**
+
 - Use clear headings and structure
 - Include code examples for features
 - Add screenshots for UI components
@@ -662,8 +686,9 @@ npm run docs:deploy
 ### Versioning
 
 We follow [Semantic Versioning](https://semver.org/):
+
 - **MAJOR**: Breaking changes
-- **MINOR**: New features (backward compatible)  
+- **MINOR**: New features (backward compatible)
 - **PATCH**: Bug fixes (backward compatible)
 
 ### Release Workflow
@@ -679,6 +704,7 @@ We follow [Semantic Versioning](https://semver.org/):
 ### Hotfixes
 
 For critical bugs in production:
+
 1. Create hotfix branch from latest release tag
 2. Fix issue and add tests
 3. Release as patch version
@@ -687,6 +713,7 @@ For critical bugs in production:
 ## Recognition
 
 Contributors are recognized in:
+
 - **CONTRIBUTORS.md** file
 - **Release notes** for significant contributions
 - **GitHub contributor graphs**

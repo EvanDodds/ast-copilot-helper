@@ -64,6 +64,7 @@ ast-helper parse src/index.ts src/utils.ts
 ```
 
 You'll see output like:
+
 ```
 ✅ Successfully parsed 42 files
 📊 Extracted 156 annotations (89 functions, 23 classes, 44 interfaces)
@@ -79,7 +80,7 @@ Now you can search your codebase using natural language:
 # Find authentication-related code
 ast-helper query "functions that handle user authentication"
 
-# Find error handling patterns  
+# Find error handling patterns
 ast-helper query "error handling and exception management"
 
 # Find API endpoints
@@ -87,11 +88,12 @@ ast-helper query "HTTP request handlers and API routes"
 ```
 
 Example output:
+
 ```
 🔍 Found 3 results for "functions that handle user authentication":
 
 1. loginUser (src/auth.ts:23) - Authenticates user with email/password [Score: 0.89]
-2. validateToken (src/auth.ts:45) - Validates JWT authentication token [Score: 0.85] 
+2. validateToken (src/auth.ts:45) - Validates JWT authentication token [Score: 0.85]
 3. refreshToken (src/auth.ts:67) - Refreshes expired authentication token [Score: 0.82]
 ```
 
@@ -125,7 +127,7 @@ function getUserById(id: string): Promise<User> {
 // Extracted annotation
 {
   "id": "func_getUserById_123",
-  "type": "function", 
+  "type": "function",
   "name": "getUserById",
   "description": "Retrieves user by ID from database",
   "parameters": [{"name": "id", "type": "string"}],
@@ -146,6 +148,7 @@ The tool creates embeddings that enable natural language queries:
 ### Model Context Protocol (MCP)
 
 MCP allows AI agents to:
+
 - Understand your code structure
 - Query specific functionality
 - Get context-aware suggestions
@@ -184,15 +187,19 @@ The `.ast-helper.json` file controls behavior:
 ## Common Use Cases
 
 ### 1. Code Discovery
+
 Find specific functionality in large codebases:
+
 ```bash
 ast-helper query "password validation logic"
-ast-helper query "file upload handlers" 
+ast-helper query "file upload handlers"
 ast-helper query "caching mechanisms"
 ```
 
 ### 2. AI-Assisted Development
+
 Enable AI agents to understand your codebase:
+
 ```bash
 # Start MCP server for Claude Desktop
 ast-helper server --transport stdio
@@ -202,7 +209,9 @@ ast-helper server --transport stdio
 ```
 
 ### 3. Documentation Generation
+
 Extract information for documentation:
+
 ```bash
 # Query for API endpoints
 ast-helper query "public API methods" --format json > api-endpoints.json
@@ -212,7 +221,9 @@ ast-helper query "type definitions and interfaces" --type interface
 ```
 
 ### 4. Code Analysis
+
 Understand code patterns and structure:
+
 ```bash
 # Find complex functions
 ast-helper query "functions with many parameters"
@@ -229,13 +240,14 @@ Now that you're up and running, explore these guides:
 🚀 **[CLI Usage Guide](cli-usage)** - Master the command-line interface  
 🎨 **[VS Code Extension](vscode-extension)** - Visual Studio Code integration  
 ⚙️ **[Configuration Guide](configuration)** - Customize for your needs  
-🤖 **[AI Integration](ai-integration)** - Connect with AI agents  
+🤖 **[AI Integration](ai-integration)** - Connect with AI agents
 
 ## Troubleshooting
 
 ### Common Issues
 
 **Command not found:**
+
 ```bash
 # Reinstall globally
 npm install -g @ast-copilot-helper/cli
@@ -245,6 +257,7 @@ npx @ast-copilot-helper/cli --version
 ```
 
 **Parse errors:**
+
 ```bash
 # Check configuration
 ast-helper config validate
@@ -254,6 +267,7 @@ ast-helper parse src/ --verbose
 ```
 
 **No query results:**
+
 ```bash
 # Lower similarity threshold
 ast-helper query "your query" --similarity 0.5

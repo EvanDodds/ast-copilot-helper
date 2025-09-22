@@ -38,6 +38,7 @@ The MCP server advertises the following capabilities:
 Initialize the MCP server with client information.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -60,6 +61,7 @@ Initialize the MCP server with client information.
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -91,6 +93,7 @@ Initialize the MCP server with client information.
 Notification sent by client after successful initialization.
 
 **Notification:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -106,6 +109,7 @@ Notification sent by client after successful initialization.
 List all available resources (parsed code files and annotations).
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -116,6 +120,7 @@ List all available resources (parsed code files and annotations).
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -129,7 +134,7 @@ List all available resources (parsed code files and annotations).
         "mimeType": "application/json"
       },
       {
-        "uri": "ast://project/src/auth.ts", 
+        "uri": "ast://project/src/auth.ts",
         "name": "auth.ts",
         "description": "Authentication and authorization logic",
         "mimeType": "application/json"
@@ -144,6 +149,7 @@ List all available resources (parsed code files and annotations).
 Read the content of a specific resource.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -156,6 +162,7 @@ Read the content of a specific resource.
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -177,6 +184,7 @@ Read the content of a specific resource.
 Subscribe to resource changes.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -189,6 +197,7 @@ Subscribe to resource changes.
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -204,6 +213,7 @@ Subscribe to resource changes.
 List all available tools for code analysis and querying.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -214,6 +224,7 @@ List all available tools for code analysis and querying.
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -228,15 +239,15 @@ List all available tools for code analysis and querying.
           "properties": {
             "files": {
               "type": "array",
-              "items": {"type": "string"},
+              "items": { "type": "string" },
               "description": "List of file paths to parse"
             },
             "options": {
               "type": "object",
               "properties": {
-                "recursive": {"type": "boolean"},
-                "includeComments": {"type": "boolean"},
-                "language": {"type": "string"}
+                "recursive": { "type": "boolean" },
+                "includeComments": { "type": "boolean" },
+                "language": { "type": "string" }
               }
             }
           },
@@ -256,9 +267,9 @@ List all available tools for code analysis and querying.
             "options": {
               "type": "object",
               "properties": {
-                "limit": {"type": "number", "default": 10},
-                "threshold": {"type": "number", "default": 0.7},
-                "type": {"type": "string"}
+                "limit": { "type": "number", "default": 10 },
+                "threshold": { "type": "number", "default": 0.7 },
+                "type": { "type": "string" }
               }
             }
           },
@@ -294,6 +305,7 @@ List all available tools for code analysis and querying.
 Call a specific tool with arguments.
 
 **Parse Files Example:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -313,6 +325,7 @@ Call a specific tool with arguments.
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -338,6 +351,7 @@ Call a specific tool with arguments.
 ```
 
 **Query Annotations Example:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -357,6 +371,7 @@ Call a specific tool with arguments.
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -388,6 +403,7 @@ Call a specific tool with arguments.
 Notification sent when resources change.
 
 **Notification:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -419,17 +435,17 @@ The server returns standard JSON-RPC 2.0 error responses:
 
 ### Error Codes
 
-| Code | Name | Description |
-|------|------|-------------|
-| `-32700` | Parse Error | Invalid JSON was received |
-| `-32600` | Invalid Request | The JSON sent is not a valid Request object |
+| Code     | Name             | Description                                  |
+| -------- | ---------------- | -------------------------------------------- |
+| `-32700` | Parse Error      | Invalid JSON was received                    |
+| `-32600` | Invalid Request  | The JSON sent is not a valid Request object  |
 | `-32601` | Method Not Found | The method does not exist / is not available |
-| `-32602` | Invalid Params | Invalid method parameter(s) |
-| `-32603` | Internal Error | Internal JSON-RPC error |
-| `-32000` | Server Error | Server-specific error |
-| `-32001` | Parse Failed | File parsing failed |
-| `-32002` | Database Error | Database operation failed |
-| `-32003` | File Not Found | Requested file does not exist |
+| `-32602` | Invalid Params   | Invalid method parameter(s)                  |
+| `-32603` | Internal Error   | Internal JSON-RPC error                      |
+| `-32000` | Server Error     | Server-specific error                        |
+| `-32001` | Parse Failed     | File parsing failed                          |
+| `-32002` | Database Error   | Database operation failed                    |
+| `-32003` | File Not Found   | Requested file does not exist                |
 
 ## Transport Types
 
@@ -452,6 +468,7 @@ ast-helper server --transport sse --port 3001
 ```
 
 **Client Connection:**
+
 ```http
 GET /sse HTTP/1.1
 Host: localhost:3001
@@ -459,6 +476,7 @@ Accept: text/event-stream
 ```
 
 **Send Request:**
+
 ```http
 POST /message HTTP/1.1
 Host: localhost:3001
@@ -481,6 +499,7 @@ ast-helper server --transport websocket --port 8080
 ```
 
 **Client Connection:**
+
 ```javascript
 const ws = new WebSocket('ws://localhost:8080');
 
@@ -501,6 +520,7 @@ ast-helper server --auth mySecretToken
 ```
 
 **Request with Authentication:**
+
 ```json
 {
   "jsonrpc": "2.0",
