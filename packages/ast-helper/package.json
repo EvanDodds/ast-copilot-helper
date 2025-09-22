@@ -97,6 +97,9 @@
     "README.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "ast",
     "cli",

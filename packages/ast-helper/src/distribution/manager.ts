@@ -109,8 +109,29 @@ export class DistributionManager implements IDistributionManager {
   async publishToNPM(): Promise<NPMPublishResult> {
     this.ensureInitialized();
     
-    // This will be implemented in the NPM Publisher subtask
-    throw new Error('NPM publishing not yet implemented - will be done in Subtask 2');
+    this.logger.log('Starting NPM package publication...');
+    
+    try {
+      const { NPMPublisher } = await import('./npm-publisher');
+      const npmPublisher = new NPMPublisher();
+      
+      await npmPublisher.initialize(this.config);
+      const result = await npmPublisher.publish();
+      await npmPublisher.cleanup();
+      
+      return result;
+    } catch (error) {
+      this.logger.error('NPM publishing failed:', error);
+      
+      return {
+        success: false,
+        packages: [],
+        duration: 0,
+        registry: this.config.registries.find(r => r.type === 'npm')?.url || 'https://registry.npmjs.org',
+        version: this.config.version,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
 
   /**

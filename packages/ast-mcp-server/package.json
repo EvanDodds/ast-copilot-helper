@@ -35,6 +35,15 @@
     "typescript": "^5.5.0",
     "vitest": "^3.2.4"
   },
+  "files": [
+    "dist/",
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "mcp",
     "server",
