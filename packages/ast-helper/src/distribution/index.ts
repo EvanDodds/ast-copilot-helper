@@ -5,6 +5,7 @@
 
 export { DistributionManager } from './manager';
 export { NPMPublisher } from './npm-publisher';
+export { MarketplacePublisher } from './marketplace-publisher';
 export { ConfigLoader, EnvironmentConfig, DEFAULT_CONFIG } from './config';
 export * from './types';
 

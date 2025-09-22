@@ -5,6 +5,7 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { MarketplacePublisher } from './marketplace-publisher';
 import {
   DistributionManager as IDistributionManager,
   DistributionConfig,
@@ -140,8 +141,61 @@ export class DistributionManager implements IDistributionManager {
   async publishToVSCodeMarketplace(): Promise<MarketplacePublishResult> {
     this.ensureInitialized();
     
-    // This will be implemented in the Marketplace Publisher subtask
-    throw new Error('Marketplace publishing not yet implemented - will be done in Subtask 3');
+    const startTime = Date.now();
+    this.logger.log('Starting VS Code Marketplace publishing...');
+
+    try {
+      // Initialize marketplace publisher
+      const publisher = new MarketplacePublisher();
+      await publisher.initialize(this.config);
+
+      // Publish to marketplace
+      const result = await publisher.publish();
+      
+      // Clean up
+      await publisher.cleanup();
+
+      const duration = Date.now() - startTime;
+      const successful = result.filter(r => r.success);
+      const failed = result.filter(r => !r.success);
+      
+      if (successful.length > 0) {
+        this.logger.log(`✅ VS Code Marketplace publishing completed: ${successful.length} successful, ${failed.length} failed in ${duration}ms`);
+      } else {
+        this.logger.error(`❌ VS Code Marketplace publishing failed: All ${result.length} publications failed`);
+      }
+
+      // Convert to MarketplacePublishResult format
+      return {
+        success: successful.length > 0,
+        extensions: result.map((res) => ({
+          success: res.success,
+          extensionName: res.extensionId || '',
+          version: res.version || this.config.version,
+          marketplace: res.marketplace,
+          duration: res.duration || 0,
+          error: res.error,
+        })),
+        duration,
+        marketplace: 'vscode-marketplace',
+        version: this.config.version,
+        error: failed.length > 0 ? `Failed: ${failed.map(f => f.error).join(', ')}` : undefined,
+      };
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      const errorMessage = `VS Code Marketplace publishing failed: ${error}`;
+      this.logger.error(errorMessage);
+      
+      return {
+        success: false,
+        extensions: [],
+        duration,
+        marketplace: 'vscode-marketplace',
+        version: this.config?.version || '0.0.0',
+        error: errorMessage,
+      };
+    }
   }
 
   /**

@@ -94,11 +94,12 @@ export interface RegistryConfig {
  * Marketplace configuration
  */
 export interface MarketplaceConfig {
-  type: 'vscode-marketplace';
-  publisherId: string;
+  type: 'vscode-marketplace' | 'openvsx';
+  publisherId?: string; // Required for VS Code Marketplace
   token: string;
-  categories: string[];
+  categories?: string[];
   badges?: string[];
+  url?: string; // Optional URL override
 }
 
 /**
