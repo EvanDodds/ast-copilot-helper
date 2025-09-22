@@ -1,11 +1,15 @@
 /**
- * @fileoverview Legal compliance module exports
+ * @fileoverview Main exports for the legal compliance module
  */
 
+// Core exports
 export * from './types.js';
 export { LicenseDatabase } from './LicenseDatabase.js';
 export { DependencyScanner } from './DependencyScanner.js';
+export { AdvancedLicenseScanner } from './AdvancedLicenseScanner.js';
 export { AttributionGenerator } from './AttributionGenerator.js';
+export { AdvancedAttributionGenerator } from './AdvancedAttributionGenerator.js';
+export { DependencyLicenseAnalyzer } from './DependencyLicenseAnalyzer.js';
 export { ComprehensiveLegalComplianceManager } from './ComprehensiveLegalComplianceManager.js';
 
 // Default configuration

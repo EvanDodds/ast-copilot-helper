@@ -301,6 +301,186 @@ SOFTWARE.`,
         copyleftScope: null
       }
     });
+
+    // GPL-2.0
+    this.licenses.set('GPL-2.0', {
+      name: 'GNU General Public License v2.0',
+      spdxId: 'GPL-2.0',
+      url: 'https://www.gnu.org/licenses/old-licenses/gpl-2.0.html',
+      text: 'GNU GENERAL PUBLIC LICENSE Version 2...',
+      permissions: ['commercial-use', 'modifications', 'distribution', 'private-use'],
+      conditions: ['include-copyright', 'document-changes', 'disclose-source', 'same-license'],
+      limitations: ['liability', 'warranty'],
+      compatibility: {
+        compatibleWith: ['LGPL-2.1'],
+        incompatibleWith: ['Apache-2.0', 'GPL-3.0'],
+        requiresNotice: true,
+        requiresSourceDisclosure: true,
+        allowsLinking: false,
+        isCopeyleft: true,
+        copyleftScope: 'project'
+      }
+    });
+
+    // LGPL-2.1
+    this.licenses.set('LGPL-2.1', {
+      name: 'GNU Lesser General Public License v2.1',
+      spdxId: 'LGPL-2.1',
+      url: 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html',
+      text: 'GNU LESSER GENERAL PUBLIC LICENSE Version 2.1...',
+      permissions: ['commercial-use', 'modifications', 'distribution', 'private-use'],
+      conditions: ['include-copyright', 'document-changes', 'disclose-source', 'same-license--library'],
+      limitations: ['liability', 'warranty'],
+      compatibility: {
+        compatibleWith: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'ISC', 'GPL-2.0'],
+        incompatibleWith: [],
+        requiresNotice: true,
+        requiresSourceDisclosure: true,
+        allowsLinking: true,
+        isCopeyleft: true,
+        copyleftScope: 'library'
+      }
+    });
+
+    // MPL-2.0
+    this.licenses.set('MPL-2.0', {
+      name: 'Mozilla Public License 2.0',
+      spdxId: 'MPL-2.0',
+      url: 'https://www.mozilla.org/en-US/MPL/2.0/',
+      text: 'Mozilla Public License Version 2.0...',
+      permissions: ['commercial-use', 'modifications', 'distribution', 'private-use', 'patent-use'],
+      conditions: ['include-copyright', 'document-changes', 'disclose-source'],
+      limitations: ['liability', 'warranty', 'trademark-use'],
+      compatibility: {
+        compatibleWith: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'ISC'],
+        incompatibleWith: ['GPL-2.0'],
+        requiresNotice: true,
+        requiresSourceDisclosure: true,
+        allowsLinking: true,
+        isCopeyleft: true,
+        copyleftScope: 'file'
+      }
+    });
+
+    // CC0-1.0
+    this.licenses.set('CC0-1.0', {
+      name: 'Creative Commons Zero v1.0 Universal',
+      spdxId: 'CC0-1.0',
+      url: 'https://creativecommons.org/publicdomain/zero/1.0/',
+      text: 'Creative Commons Legal Code CC0 1.0 Universal...',
+      permissions: ['commercial-use', 'modifications', 'distribution', 'private-use'],
+      conditions: [],
+      limitations: ['patent-use', 'trademark-use', 'warranty'],
+      compatibility: {
+        compatibleWith: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'BSD-2-Clause', 'ISC', 'GPL-3.0', 'LGPL-3.0', 'MPL-2.0', 'Unlicense', '0BSD'],
+        incompatibleWith: [],
+        requiresNotice: false,
+        requiresSourceDisclosure: false,
+        allowsLinking: true,
+        isCopeyleft: false,
+        copyleftScope: null
+      }
+    });
+
+    // Unlicense
+    this.licenses.set('Unlicense', {
+      name: 'The Unlicense',
+      spdxId: 'Unlicense',
+      url: 'https://unlicense.org/',
+      text: 'This is free and unencumbered software released into the public domain...',
+      permissions: ['commercial-use', 'modifications', 'distribution', 'private-use'],
+      conditions: [],
+      limitations: ['liability', 'warranty'],
+      compatibility: {
+        compatibleWith: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'BSD-2-Clause', 'ISC', 'GPL-3.0', 'LGPL-3.0', 'MPL-2.0', 'CC0-1.0', '0BSD'],
+        incompatibleWith: [],
+        requiresNotice: false,
+        requiresSourceDisclosure: false,
+        allowsLinking: true,
+        isCopeyleft: false,
+        copyleftScope: null
+      }
+    });
+
+    // AGPL-3.0
+    this.licenses.set('AGPL-3.0', {
+      name: 'GNU Affero General Public License v3.0',
+      spdxId: 'AGPL-3.0',
+      url: 'https://www.gnu.org/licenses/agpl-3.0.html',
+      text: 'GNU AFFERO GENERAL PUBLIC LICENSE Version 3...',
+      permissions: ['commercial-use', 'modifications', 'distribution', 'private-use', 'patent-use'],
+      conditions: ['include-copyright', 'document-changes', 'disclose-source', 'same-license', 'network-use-disclose'],
+      limitations: ['liability', 'warranty'],
+      compatibility: {
+        compatibleWith: ['GPL-3.0'],
+        incompatibleWith: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'ISC', 'MPL-2.0'],
+        requiresNotice: true,
+        requiresSourceDisclosure: true,
+        allowsLinking: false,
+        isCopeyleft: true,
+        copyleftScope: 'network'
+      }
+    });
+
+    // EPL-2.0
+    this.licenses.set('EPL-2.0', {
+      name: 'Eclipse Public License 2.0',
+      spdxId: 'EPL-2.0',
+      url: 'https://www.eclipse.org/legal/epl-2.0/',
+      text: 'Eclipse Public License - v 2.0...',
+      permissions: ['commercial-use', 'modifications', 'distribution', 'private-use', 'patent-use'],
+      conditions: ['include-copyright', 'document-changes', 'disclose-source'],
+      limitations: ['liability', 'warranty'],
+      compatibility: {
+        compatibleWith: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'ISC'],
+        incompatibleWith: ['GPL-2.0', 'GPL-3.0', 'AGPL-3.0'],
+        requiresNotice: true,
+        requiresSourceDisclosure: true,
+        allowsLinking: true,
+        isCopeyleft: true,
+        copyleftScope: 'file'
+      }
+    });
+
+    // CDDL-1.0
+    this.licenses.set('CDDL-1.0', {
+      name: 'Common Development and Distribution License 1.0',
+      spdxId: 'CDDL-1.0',
+      url: 'https://opensource.org/licenses/CDDL-1.0',
+      text: 'COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0...',
+      permissions: ['commercial-use', 'modifications', 'distribution', 'private-use', 'patent-use'],
+      conditions: ['include-copyright', 'document-changes', 'disclose-source'],
+      limitations: ['liability', 'warranty', 'trademark-use'],
+      compatibility: {
+        compatibleWith: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'ISC'],
+        incompatibleWith: ['GPL-2.0', 'GPL-3.0', 'AGPL-3.0'],
+        requiresNotice: true,
+        requiresSourceDisclosure: true,
+        allowsLinking: true,
+        isCopeyleft: true,
+        copyleftScope: 'file'
+      }
+    });
+
+    // 0BSD
+    this.licenses.set('0BSD', {
+      name: 'BSD Zero Clause License',
+      spdxId: '0BSD',
+      url: 'https://opensource.org/licenses/0BSD',
+      text: 'BSD Zero Clause License...',
+      permissions: ['commercial-use', 'modifications', 'distribution', 'private-use'],
+      conditions: [],
+      limitations: ['liability', 'warranty'],
+      compatibility: {
+        compatibleWith: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'BSD-2-Clause', 'ISC', 'GPL-3.0', 'LGPL-3.0', 'MPL-2.0', 'CC0-1.0', 'Unlicense'],
+        incompatibleWith: [],
+        requiresNotice: false,
+        requiresSourceDisclosure: false,
+        allowsLinking: true,
+        isCopeyleft: false,
+        copyleftScope: null
+      }
+    });
   }
 
   private buildCompatibilityMatrix(): void {
