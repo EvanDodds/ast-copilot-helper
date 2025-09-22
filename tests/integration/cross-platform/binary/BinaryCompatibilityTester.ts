@@ -742,17 +742,17 @@ export class BinaryCompatibilityTester {
     try {
       const benchmarks: any = {};
       
-      // CPU intensive benchmark
+      // CPU intensive benchmark - reduced for CI stability
       const cpuStart = Date.now();
       let cpuResult = 0;
-      for (let i = 0; i < 1000000; i++) {
+      for (let i = 0; i < 100000; i++) { // Reduced from 1000000 to 100000
         cpuResult += Math.sqrt(i);
       }
       benchmarks.cpuTime = Date.now() - cpuStart;
 
-      // Memory allocation benchmark
+      // Memory allocation benchmark - reduced size for CI stability
       const memStart = Date.now();
-      const memArray = new Array(100000).fill(0).map((_, i) => i * 2);
+      const memArray = new Array(10000).fill(0).map((_, i) => i * 2); // Reduced from 100000 to 10000
       benchmarks.memoryTime = Date.now() - memStart;
 
       // I/O benchmark

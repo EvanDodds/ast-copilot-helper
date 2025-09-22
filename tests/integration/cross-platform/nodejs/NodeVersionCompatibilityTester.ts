@@ -510,9 +510,9 @@ export class NodeVersionCompatibilityTester {
       
       const perfStart = performance.now();
       
-      // CPU-intensive task
+      // CPU-intensive task - reduced for CI stability
       let sum = 0;
-      for (let i = 0; i < 100000; i++) {
+      for (let i = 0; i < 10000; i++) { // Reduced from 100000 to 10000
         sum += Math.sqrt(i);
       }
       

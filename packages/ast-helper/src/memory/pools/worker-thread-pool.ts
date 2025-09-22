@@ -138,11 +138,26 @@ class WorkerThreadFactoryImpl implements WorkerThreadFactory {
   async destroy(resource: WorkerThread): Promise<void> {
     try {
       if (resource.worker) {
-        // Terminate worker gracefully
-        await resource.worker.terminate();
+        // Set longer timeout for clean shutdown
+        const terminatePromise = resource.worker.terminate();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Worker termination timeout')), 5000);
+        });
+        
+        // Race between termination and timeout
+        await Promise.race([terminatePromise, timeoutPromise]);
       }
     } catch (error) {
-      console.warn(`Error destroying worker thread ${resource.id}:`, error);
+      // Force termination if graceful shutdown fails
+      try {
+        if (resource.worker) {
+          // Force terminate without waiting
+          resource.worker.terminate().catch(() => {});
+        }
+      } catch (forceError) {
+        // Ignore force termination errors
+      }
+      console.debug(`Worker thread ${resource.id} cleanup completed with error:`, error);
     }
   }
 

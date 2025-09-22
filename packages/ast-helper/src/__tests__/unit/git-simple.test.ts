@@ -31,12 +31,12 @@ describe('GitManager - Simple Tests', () => {
     });
 
     it('should handle git status command', async () => {
-      // Mock successful git status output
+      // Mock successful git rev-parse output (what isGitRepository actually calls)
       const mockProcess = {
         stdout: {
           on: vi.fn((event, callback) => {
             if (event === 'data') {
-              callback('On branch main\nnothing to commit, working tree clean');
+              callback('.git\n');
             }
           })
         },
@@ -53,7 +53,7 @@ describe('GitManager - Simple Tests', () => {
       try {
         const result = await gitManager.isGitRepository();
         expect(result).toBe(true);
-        expect(mockSpawn).toHaveBeenCalledWith('git', ['status', '--porcelain'], expect.any(Object));
+        expect(mockSpawn).toHaveBeenCalledWith('git', ['rev-parse', '--git-dir'], expect.any(Object));
       } catch (error) {
         // If this fails, it's likely due to GitErrors not being available
         console.log('Git test failed, likely due to missing GitErrors:', error);

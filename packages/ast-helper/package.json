@@ -52,7 +52,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run --reporter=basic",
+    "test:ci": "node --max-old-space-size=2048 ./node_modules/.bin/vitest run --reporter=basic",
     "lint": "echo 'Linting not configured yet'",
     "typecheck": "tsc --noEmit"
   },

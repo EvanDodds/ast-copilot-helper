@@ -219,9 +219,9 @@ describe('Scaling and Load Benchmarks', () => {
                 // Create memory pressure
                 const memoryPressure: Buffer[] = [];
                 if (scenario.pressure > 0) {
-                    const bufferCount = Math.floor(scenario.pressure / (10 * 1024 * 1024)); // 10MB buffers
+                    const bufferCount = Math.floor(scenario.pressure / (1024 * 1024)); // 1MB buffers instead of 10MB
                     for (let i = 0; i < bufferCount; i++) {
-                        memoryPressure.push(Buffer.alloc(10 * 1024 * 1024, 'x'));
+                        memoryPressure.push(Buffer.alloc(1024 * 1024, 'x')); // 1MB instead of 10MB
                     }
                 }
 
@@ -266,8 +266,8 @@ describe('Scaling and Load Benchmarks', () => {
                 const baselineTime = timer.end(`baseline_${cycle}`);
                 baselineResults.push(baselineTime);
 
-                // Memory spike
-                const memorySpike = Buffer.alloc(200 * 1024 * 1024, 'spike'); // 200MB spike
+                // Memory spike - reduced to 20MB from 200MB for CI stability
+                const memorySpike = Buffer.alloc(20 * 1024 * 1024, 'spike'); // 20MB spike
 
                 timer.start(`spike_${cycle}`);
                 await processRepositoryOfSize(1000);

@@ -215,21 +215,38 @@ describe('ConcurrencyProfiler', () => {
     });
 
     it('should handle worker creation failures', async () => {
-      // Mock worker_threads module to throw on Worker creation
-      vi.doMock('worker_threads', () => ({
-        Worker: vi.fn().mockImplementation(() => {
-          throw new Error('Worker creation failed');
-        }),
-        isMainThread: true,
-        parentPort: null
-      }));
-
-      // Create new profiler instance to use mocked module
-      const { ConcurrencyProfiler } = await import('../../../packages/ast-helper/src/performance/concurrency-profiler.js');
-      const failingProfiler = new ConcurrencyProfiler();
+      // Temporarily disable test mode to test actual worker creation failure
+      const originalNodeEnv = process.env.NODE_ENV;
+      const originalVitest = process.env.VITEST;
       
-      await expect(failingProfiler.runConcurrencyBenchmarks(mockConfig))
-        .rejects.toThrow();
+      process.env.NODE_ENV = 'production';
+      delete process.env.VITEST;
+      
+      try {
+        // Mock worker_threads module to throw on Worker creation
+        vi.doMock('worker_threads', () => ({
+          Worker: vi.fn().mockImplementation(() => {
+            throw new Error('Worker creation failed');
+          }),
+          isMainThread: true,
+          parentPort: null
+        }));
+
+        // Create new profiler instance to use mocked module
+        const { ConcurrencyProfiler } = await import('../../../packages/ast-helper/src/performance/concurrency-profiler');
+        const failingProfiler = new ConcurrencyProfiler();
+        
+        await expect(failingProfiler.runConcurrencyBenchmarks(mockConfig))
+          .rejects.toThrow();
+      } finally {
+        // Restore original environment
+        if (originalNodeEnv !== undefined) {
+          process.env.NODE_ENV = originalNodeEnv;
+        }
+        if (originalVitest !== undefined) {
+          process.env.VITEST = originalVitest;
+        }
+      }
     }, 45000);
   });
 

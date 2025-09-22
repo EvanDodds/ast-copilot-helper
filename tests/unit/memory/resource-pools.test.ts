@@ -394,14 +394,23 @@ describe('Resource Pool System', () => {
     });
 
     afterEach(async () => {
-      await pool.cleanup();
+      // First cleanup the pool properly
+      if (pool) {
+        await pool.cleanup();
+      }
+      
+      // Wait a bit for all workers to fully terminate
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Clean up worker script
       try {
-        await fs.unlink(workerScript);
-        await fs.rmdir(path.dirname(workerScript));
+        if (workerScript) {
+          await fs.unlink(workerScript);
+          await fs.rmdir(path.dirname(workerScript));
+        }
       } catch (error) {
-        // Ignore cleanup errors
+        // Ignore cleanup errors - file might already be deleted
+        console.debug('Worker cleanup error (expected):', error);
       }
     });
 
