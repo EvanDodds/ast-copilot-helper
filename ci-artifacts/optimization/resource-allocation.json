@@ -1,0 +1,28 @@
+{
+  "runners": {
+    "validate-code": {
+      "runner": "ubuntu-latest",
+      "reason": "Lightweight validation tasks"
+    },
+    "build-and-test": {
+      "runner": "ubuntu-latest-4-cores",
+      "reason": "CPU-intensive builds and tests"
+    },
+    "performance-benchmarks": {
+      "runner": "ubuntu-latest-2-cores",
+      "reason": "Moderate resource requirements"
+    },
+    "deploy-production": {
+      "runner": "ubuntu-latest",
+      "reason": "Network-focused deployment tasks"
+    }
+  },
+  "timeouts": {
+    "validate-code": 5,
+    "build-and-test": 15,
+    "performance-benchmarks": 10,
+    "quality-gate-check": 8,
+    "deploy-staging": 12,
+    "deploy-production": 15
+  }
+}

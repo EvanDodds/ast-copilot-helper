@@ -1,0 +1,107 @@
+{
+  "version": "1.0",
+  "strategies": [
+    {
+      "name": "Node.js Dependencies",
+      "enabled": true,
+      "cache": {
+        "path": "~/.npm\nnode_modules\n**/node_modules",
+        "key": "${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}",
+        "restore-keys": "${{ runner.os }}-node-\n${{ runner.os }}-",
+        "compression-level": 6
+      },
+      "optimization": {
+        "ttl": 168,
+        "priority": "high",
+        "max-size": "2GB",
+        "cleanup-threshold": 0.8
+      }
+    },
+    {
+      "name": "Build Artifacts",
+      "enabled": true,
+      "cache": {
+        "path": "dist\nbuild\npackages/*/dist\npackages/*/build",
+        "key": "${{ runner.os }}-build-${{ github.sha }}",
+        "restore-keys": "${{ runner.os }}-build-${{ github.ref_name }}-\n${{ runner.os }}-build-",
+        "compression-level": 6
+      },
+      "optimization": {
+        "ttl": 24,
+        "priority": "high",
+        "max-size": "2GB",
+        "cleanup-threshold": 0.8
+      }
+    },
+    {
+      "name": "Test Results",
+      "enabled": true,
+      "cache": {
+        "path": "coverage\ntest-results\n.nyc_output",
+        "key": "${{ runner.os }}-test-${{ hashFiles('**/*.test.ts', '**/*.test.js') }}-${{ github.sha }}",
+        "restore-keys": "${{ runner.os }}-test-${{ hashFiles('**/*.test.ts', '**/*.test.js') }}-\n${{ runner.os }}-test-",
+        "compression-level": 6
+      },
+      "optimization": {
+        "ttl": 24,
+        "priority": "medium",
+        "max-size": "1GB",
+        "cleanup-threshold": 0.8
+      }
+    },
+    {
+      "name": "TypeScript Compilation",
+      "enabled": true,
+      "cache": {
+        "path": "**/*.tsbuildinfo\n.tscache",
+        "key": "${{ runner.os }}-tsc-${{ hashFiles('**/tsconfig*.json', '**/*.ts') }}",
+        "restore-keys": "${{ runner.os }}-tsc-",
+        "compression-level": 0
+      },
+      "optimization": {
+        "ttl": 12,
+        "priority": "high",
+        "max-size": "2GB",
+        "cleanup-threshold": 0.8
+      }
+    },
+    {
+      "name": "Package Manager Cache",
+      "enabled": true,
+      "cache": {
+        "path": "~/.yarn/cache\n~/.pnpm-store\n~/.cache/pip",
+        "key": "${{ runner.os }}-pkg-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}",
+        "restore-keys": "${{ runner.os }}-pkg-",
+        "compression-level": 6
+      },
+      "optimization": {
+        "ttl": 168,
+        "priority": "medium",
+        "max-size": "1GB",
+        "cleanup-threshold": 0.8
+      }
+    },
+    {
+      "name": "Tool Binaries",
+      "enabled": true,
+      "cache": {
+        "path": "~/.local/bin\n/usr/local/bin/tools",
+        "key": "${{ runner.os }}-tools-${{ hashFiles('.tool-versions', '**/tool-config.json') }}",
+        "restore-keys": "${{ runner.os }}-tools-",
+        "compression-level": 6
+      },
+      "optimization": {
+        "ttl": 720,
+        "priority": "low",
+        "max-size": "500MB",
+        "cleanup-threshold": 0.8
+      }
+    }
+  ],
+  "global": {
+    "max-cache-size": "5 GB",
+    "retention-days": 30,
+    "compression": true,
+    "metrics": true
+  }
+}

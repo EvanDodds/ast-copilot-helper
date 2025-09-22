@@ -1,0 +1,75 @@
+{
+  "title": "Resource Allocation Guide",
+  "version": "1.0",
+  "guidelines": {
+    "CPU Allocation": {
+      "Light tasks": "2 cores (validation, linting, basic tests)",
+      "Medium tasks": "4 cores (compilation, integration tests)",
+      "Heavy tasks": "8+ cores (performance tests, large builds)"
+    },
+    "Memory Allocation": {
+      "Light tasks": "4-8 GB (validation, basic operations)",
+      "Medium tasks": "8-16 GB (builds, testing)",
+      "Heavy tasks": "16+ GB (performance testing, large projects)"
+    },
+    "Storage Considerations": {
+      "Caching": "Use appropriate cache sizes based on project dependencies",
+      "Artifacts": "Clean up build artifacts to optimize storage usage",
+      "Temporary files": "Ensure proper cleanup of temporary build files"
+    }
+  },
+  "job_recommendations": [
+    {
+      "job": "validate-code",
+      "current": "ubuntu-latest",
+      "recommended": "ubuntu-latest-4-cores",
+      "savings": {
+        "time": 55.00000000000001,
+        "cost": -100,
+        "efficiency": 95
+      },
+      "reason": "Memory over-provisioned, Better resource allocation match"
+    },
+    {
+      "job": "build-and-test",
+      "current": "ubuntu-latest",
+      "recommended": "ubuntu-latest-4-cores",
+      "savings": {
+        "time": 55.00000000000001,
+        "cost": -100,
+        "efficiency": 95
+      },
+      "reason": "Better resource allocation match"
+    },
+    {
+      "job": "performance-benchmarks",
+      "current": "ubuntu-latest",
+      "recommended": "ubuntu-latest-4-cores",
+      "savings": {
+        "time": 55.00000000000001,
+        "cost": -100,
+        "efficiency": 95
+      },
+      "reason": "Better resource allocation match"
+    },
+    {
+      "job": "deploy-staging",
+      "current": "ubuntu-latest",
+      "recommended": "ubuntu-latest-4-cores",
+      "savings": {
+        "time": 55.00000000000001,
+        "cost": -100,
+        "efficiency": 88.88888888888889
+      },
+      "reason": "CPU under-utilized, Memory over-provisioned, Better resource allocation match"
+    }
+  ],
+  "best_practices": [
+    "Match runner resources to actual job requirements",
+    "Use smaller runners for validation and larger ones for builds",
+    "Implement proper timeout values based on actual execution times",
+    "Monitor resource usage regularly and adjust allocations",
+    "Consider cost vs performance trade-offs for different job types",
+    "Use matrix strategies efficiently to maximize parallelization"
+  ]
+}
