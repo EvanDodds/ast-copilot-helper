@@ -3,7 +3,7 @@
  */
 
 import { promises as fs } from 'fs';
-import { DependencyLicense, AttributionDocument, AttributionConfig } from './types.js';
+import type { DependencyLicense, AttributionDocument, AttributionConfig } from './types.js';
 
 /**
  * Generates legal attribution files (NOTICE, LICENSE-THIRD-PARTY, CREDITS, metadata)

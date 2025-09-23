@@ -6,11 +6,13 @@
  */
 
 import { BaseHandler } from './handlers.js';
-import { 
+import type { 
   JSONRPCRequest, 
-  JSONRPCResponse, 
-  MCPErrorCode,
+  JSONRPCResponse,
   MCPResourceDefinition
+} from './protocol.js';
+import { 
+  MCPErrorCode
 } from './protocol.js';
 
 import type { DatabaseReader } from '../types.js';

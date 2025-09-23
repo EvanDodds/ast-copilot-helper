@@ -528,7 +528,7 @@ export class TestEnvironmentManager {
 
   async cleanupEnvironment(name: string): Promise<void> {
     const environment = this.environments.get(name);
-    if (!environment) return;
+    if (!environment) {return;}
 
     // Cleanup logic here
     await fs.rm(environment.tempDirectory, { recursive: true, force: true });

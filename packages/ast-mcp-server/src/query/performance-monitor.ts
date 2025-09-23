@@ -437,7 +437,9 @@ export class PerformanceMonitor {
    * Update performance metrics
    */
   private updatePerformanceMetrics(): void {
-    if (this.queryTimes.length === 0) return;
+    if (this.queryTimes.length === 0) {
+return;
+}
     
     const sortedTimes = [...this.queryTimes].sort((a, b) => a - b);
     const count = sortedTimes.length;

@@ -3,7 +3,7 @@
  * Handles command-line arguments and converts them to partial configuration
  */
 
-import { PartialConfig, CliArgs } from '../types.js';
+import type { PartialConfig, CliArgs } from '../types.js';
 
 /**
  * Parse CLI arguments into partial configuration

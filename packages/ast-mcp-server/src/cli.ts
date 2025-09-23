@@ -7,11 +7,13 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { spawn, ChildProcess } from 'child_process';
-import { ASTMCPServer, ServerConfig } from './server';
+import type { ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
+import type { ServerConfig } from './server';
+import { ASTMCPServer } from './server';
 import { StdioTransport } from './mcp/stdio-transport';
 import { TCPTransport } from './mcp/tcp-transport';
-import { MCPTransport } from './mcp/transport';
+import type { MCPTransport } from './mcp/transport';
 import { MockDatabaseReader } from './database/mock-reader';
 
 /**
@@ -123,7 +125,7 @@ class ProcessManager {
   /**
    * Wait for process to stop
    */
-  async waitForProcessStop(pid: number, timeoutMs: number = 10000): Promise<boolean> {
+  async waitForProcessStop(pid: number, timeoutMs = 10000): Promise<boolean> {
     const startTime = Date.now();
     
     while (Date.now() - startTime < timeoutMs) {
@@ -572,7 +574,7 @@ export async function main(): Promise<void> {
 }
 
 // Only execute if this file is run directly
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const isMainModule = require.main === module;
 if (isMainModule) {
   main().catch(error => {

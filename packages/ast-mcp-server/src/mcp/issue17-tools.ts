@@ -10,12 +10,14 @@
  */
 
 import { BaseHandler } from './handlers.js';
-import { 
+import type { 
   JSONRPCRequest, 
-  JSONRPCResponse, 
-  MCPErrorCode,
+  JSONRPCResponse,
   MCPToolResult,
   MCPToolDefinition
+} from './protocol.js';
+import { 
+  MCPErrorCode
 } from './protocol.js';
 
 import type { 

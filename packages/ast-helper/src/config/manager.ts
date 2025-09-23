@@ -3,7 +3,7 @@
  * Handles loading and merging configuration from multiple sources
  */
 
-import { Config, PartialConfig, CliArgs } from '../types.js';
+import type { Config, PartialConfig, CliArgs } from '../types.js';
 import { validateConfig } from './defaults.js';
 import { parseEnvironmentConfig } from './environment.js';
 import { parseCliArgs } from './cli.js';
@@ -64,14 +64,30 @@ export class ConfigManager {
     
     for (const source of sources) {
       // Merge simple properties
-      if (source.parseGlob !== undefined) result.parseGlob = source.parseGlob;
-      if (source.watchGlob !== undefined) result.watchGlob = source.watchGlob;
-      if (source.topK !== undefined) result.topK = source.topK;
-      if (source.snippetLines !== undefined) result.snippetLines = source.snippetLines;
-      if (source.modelHost !== undefined) result.modelHost = source.modelHost;
-      if (source.enableTelemetry !== undefined) result.enableTelemetry = source.enableTelemetry;
-      if (source.concurrency !== undefined) result.concurrency = source.concurrency;
-      if (source.batchSize !== undefined) result.batchSize = source.batchSize;
+      if (source.parseGlob !== undefined) {
+result.parseGlob = source.parseGlob;
+}
+      if (source.watchGlob !== undefined) {
+result.watchGlob = source.watchGlob;
+}
+      if (source.topK !== undefined) {
+result.topK = source.topK;
+}
+      if (source.snippetLines !== undefined) {
+result.snippetLines = source.snippetLines;
+}
+      if (source.modelHost !== undefined) {
+result.modelHost = source.modelHost;
+}
+      if (source.enableTelemetry !== undefined) {
+result.enableTelemetry = source.enableTelemetry;
+}
+      if (source.concurrency !== undefined) {
+result.concurrency = source.concurrency;
+}
+      if (source.batchSize !== undefined) {
+result.batchSize = source.batchSize;
+}
       
       // Merge nested indexParams object
       if (source.indexParams) {

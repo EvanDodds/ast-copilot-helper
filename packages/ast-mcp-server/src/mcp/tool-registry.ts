@@ -235,7 +235,9 @@ export class MCPToolRegistry extends EventEmitter {
       candidateTools = new Set(
         Array.from(candidateTools).filter(name => {
           const tool = this.tools.get(name);
-          if (!(tool as any)?.capabilities) return false;
+          if (!(tool as any)?.capabilities) {
+return false;
+}
           return options.capabilities!.every(cap => (tool as any).capabilities!.includes(cap));
         })
       );

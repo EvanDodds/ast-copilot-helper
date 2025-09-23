@@ -3,7 +3,7 @@
  * Provides sensible defaults for all configuration options
  */
 
-import { MCPServerConfig, TransportConfig, PerformanceConfig, LoggingConfig, SecurityConfig, FeatureConfig, EnvironmentConfig } from './types.js';
+import type { MCPServerConfig, TransportConfig, PerformanceConfig, LoggingConfig, SecurityConfig, FeatureConfig, EnvironmentConfig } from './types.js';
 
 /**
  * Default transport configuration

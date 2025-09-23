@@ -709,7 +709,9 @@ export class AstHelperCli {
    * Set up logging based on configuration
    */
   private setupLogging(): void {
-    if (!this.config) return;
+    if (!this.config) {
+return;
+}
 
     const logLevel = parseLogLevel(this.config.debug ? 'debug' : this.config.verbose ? 'info' : 'warn');
 
@@ -856,7 +858,9 @@ class InitCommandHandler implements CommandHandler<InitOptions> {
       } = await import('./database/index.js');
 
       // Step 1: Detect and validate workspace
-      if (verbose) console.log('📂 Detecting workspace...');
+      if (verbose) {
+console.log('📂 Detecting workspace...');
+}
 
       const workspaceDetector = new WorkspaceDetector();
       const workspaceInfo = await workspaceDetector.detectWorkspace({
@@ -883,7 +887,9 @@ class InitCommandHandler implements CommandHandler<InitOptions> {
       }
 
       // Step 2: Validate workspace for database creation
-      if (verbose) console.log('🔍 Validating workspace...');
+      if (verbose) {
+console.log('🔍 Validating workspace...');
+}
 
       const databaseInitOptions = {
         force,
@@ -899,7 +905,9 @@ class InitCommandHandler implements CommandHandler<InitOptions> {
       }
 
       // Step 3: Create database directory structure
-      if (verbose) console.log('🏗️  Creating database structure...');
+      if (verbose) {
+console.log('🏗️  Creating database structure...');
+}
 
       const dbManager = new ASTDatabaseManager(workspaceInfo.root);
       await dbManager.createDirectoryStructure(databaseInitOptions);
@@ -910,7 +918,9 @@ class InitCommandHandler implements CommandHandler<InitOptions> {
       }
 
       // Step 4: Generate configuration file
-      if (verbose) console.log('⚙️  Generating configuration...');
+      if (verbose) {
+console.log('⚙️  Generating configuration...');
+}
 
       const configManager = new DatabaseConfigurationManager();
       await configManager.createConfigurationFile(astdbPath, databaseInitOptions);
@@ -921,7 +931,9 @@ class InitCommandHandler implements CommandHandler<InitOptions> {
       }
 
       // Step 5: Create version file
-      if (verbose) console.log('📋 Creating version file...');
+      if (verbose) {
+console.log('📋 Creating version file...');
+}
 
       const versionManager = new DatabaseVersionManager();
       await versionManager.createVersionFile(astdbPath, databaseInitOptions);
@@ -932,7 +944,9 @@ class InitCommandHandler implements CommandHandler<InitOptions> {
       }
 
       // Step 6: Final validation
-      if (verbose) console.log('🔎 Validating database structure...');
+      if (verbose) {
+console.log('🔎 Validating database structure...');
+}
 
       await dbManager.validateDatabaseStructure();
 

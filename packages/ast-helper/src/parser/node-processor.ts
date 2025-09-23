@@ -7,12 +7,17 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { ASTNode, NodeType, SignificanceLevel, ProcessingContext } from './ast-schema';
+import type { ASTNode, ProcessingContext } from './ast-schema';
+import { NodeType, SignificanceLevel } from './ast-schema';
 import { NodeIDGenerator } from './node-id-generator';
-import { NodeClassifier, RawNodeData } from './node-classifier';
-import { SignificanceCalculator, SignificanceContext } from './significance-calculator';
-import { MetadataExtractor, RawASTNode, ExtractionContext } from './metadata-extractor';
-import { NodeSerializer, SerializationConfig } from './node-serializer';
+import type { RawNodeData } from './node-classifier';
+import { NodeClassifier } from './node-classifier';
+import type { SignificanceContext } from './significance-calculator';
+import { SignificanceCalculator } from './significance-calculator';
+import type { RawASTNode, ExtractionContext } from './metadata-extractor';
+import { MetadataExtractor } from './metadata-extractor';
+import type { SerializationConfig } from './node-serializer';
+import { NodeSerializer } from './node-serializer';
 
 /**
  * Processing configuration for the pipeline
@@ -389,13 +394,27 @@ export class NodeProcessor {
 
     for (const node of nodes) {
       // Check required fields
-      if (!node.id) errors.push(`Node missing ID: ${JSON.stringify(node)}`);
-      if (!node.type) errors.push(`Node missing type: ${node.id}`);
-      if (!node.filePath) errors.push(`Node missing filePath: ${node.id}`);
-      if (!node.start) errors.push(`Node missing start position: ${node.id}`);
-      if (!node.end) errors.push(`Node missing end position: ${node.id}`);
-      if (!node.metadata) errors.push(`Node missing metadata: ${node.id}`);
-      if (node.significance === undefined) errors.push(`Node missing significance: ${node.id}`);
+      if (!node.id) {
+errors.push(`Node missing ID: ${JSON.stringify(node)}`);
+}
+      if (!node.type) {
+errors.push(`Node missing type: ${node.id}`);
+}
+      if (!node.filePath) {
+errors.push(`Node missing filePath: ${node.id}`);
+}
+      if (!node.start) {
+errors.push(`Node missing start position: ${node.id}`);
+}
+      if (!node.end) {
+errors.push(`Node missing end position: ${node.id}`);
+}
+      if (!node.metadata) {
+errors.push(`Node missing metadata: ${node.id}`);
+}
+      if (node.significance === undefined) {
+errors.push(`Node missing significance: ${node.id}`);
+}
 
       // Check position validity
       if (node.start && node.end) {
@@ -725,14 +744,18 @@ export class NodeProcessor {
   ): string[] {
     const files: string[] = [];
 
-    const traverse = (currentPath: string, depth: number = 0) => {
-      if (files.length >= maxFiles) return;
+    const traverse = (currentPath: string, depth = 0) => {
+      if (files.length >= maxFiles) {
+return;
+}
 
       try {
         const items = fs.readdirSync(currentPath);
         
         for (const item of items) {
-          if (files.length >= maxFiles) break;
+          if (files.length >= maxFiles) {
+break;
+}
           
           const fullPath = path.join(currentPath, item);
           const stat = fs.statSync(fullPath);

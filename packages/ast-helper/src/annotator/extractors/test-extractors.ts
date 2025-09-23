@@ -3,7 +3,7 @@
  */
 
 import { TypeScriptExtractor, JavaScriptExtractor } from './index';
-import { ASTNode } from '../../parser/types';
+import type { ASTNode } from '../../parser/types';
 
 // Create a mock AST node for testing
 const mockNode: ASTNode = {

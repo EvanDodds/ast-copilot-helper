@@ -6,8 +6,8 @@
 import { join } from 'node:path';
 import { readFile, writeFile, mkdir, access, readdir } from 'node:fs/promises';
 import { constants } from 'node:fs';
-import { EmbeddingResult } from '../embedder/types.js';
-import { ASTDatabaseManager } from './manager.js';
+import type { EmbeddingResult } from '../embedder/types.js';
+import type { ASTDatabaseManager } from './manager.js';
 import { DatabaseErrors, DatabaseError } from '../errors/index.js';
 import { createLogger } from '../logging/index.js';
 
@@ -254,7 +254,7 @@ export class EmbeddingDatabaseManager {
   /**
    * Clean up old embedding files
    */
-  async cleanup(keepLatest: number = 10): Promise<void> {
+  async cleanup(keepLatest = 10): Promise<void> {
     await this.initialize();
 
     try {

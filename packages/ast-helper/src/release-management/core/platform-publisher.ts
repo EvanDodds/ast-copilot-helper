@@ -8,8 +8,8 @@
  * @version 1.0.0
  */
 
-import { PlatformPublisher } from '../interfaces.js';
-import {
+import type { PlatformPublisher } from '../interfaces.js';
+import type {
   PlatformConfig,
   PublishResult,
   ReleaseArtifact

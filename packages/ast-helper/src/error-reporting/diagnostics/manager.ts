@@ -2,14 +2,14 @@
  * Diagnostic manager for coordinating diagnostic data collection
  */
 
-import { 
+import type { 
   DiagnosticCollector, 
   DiagnosticCollectorConfig, 
   DiagnosticCacheEntry, 
   DiagnosticCollectionContext,
   DiagnosticScope 
 } from './types.js';
-import { DiagnosticData } from '../types.js';
+import type { DiagnosticData } from '../types.js';
 import { SystemDiagnosticCollector } from './system-collector.js';
 import { RuntimeDiagnosticCollector } from './runtime-collector.js';
 import { CodebaseDiagnosticCollector } from './codebase-collector.js';

@@ -5,7 +5,7 @@
 
 import { promises as fs } from 'fs';
 import { createModuleLogger } from '../logging/index.js';
-import { ModelConfig } from './types.js';
+import type { ModelConfig } from './types.js';
 
 const logger = createModuleLogger('ErrorHandler');
 
@@ -327,7 +327,7 @@ export class ErrorHandler {
    * Validate disk space availability
    * Addresses acceptance criteria: ✅ Disk space validation
    */
-  async validateDiskSpace(path: string = '.astdb/models', requiredBytes: number = 1024 * 1024 * 1024): Promise<DiskSpaceInfo> {
+  async validateDiskSpace(path = '.astdb/models', requiredBytes: number = 1024 * 1024 * 1024): Promise<DiskSpaceInfo> {
     // Return cached result if still valid
     if (this.diskSpaceCache && Date.now() - this.diskSpaceCache.required < this.DISK_SPACE_CACHE_TTL) {
       return this.diskSpaceCache;
@@ -768,7 +768,9 @@ export class ErrorHandler {
 
   private formatBytes(bytes: number): string {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) {
+return '0 B';
+}
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
   }

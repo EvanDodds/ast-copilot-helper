@@ -55,7 +55,7 @@ function validateRequiredFields(config, errors) {
  */
 function validateTransportConfig(transport, errors, warnings) {
     if (!transport)
-        return;
+        {return;}
     if (!transport.type) {
         errors.push('Transport type is required');
         return;
@@ -112,7 +112,7 @@ function validateTransportConfig(transport, errors, warnings) {
  */
 function validatePerformanceConfig(performance, errors, warnings) {
     if (!performance)
-        return;
+        {return;}
     if (performance.maxConcurrentRequests !== undefined) {
         if (performance.maxConcurrentRequests < 1) {
             errors.push('maxConcurrentRequests must be at least 1');
@@ -153,7 +153,7 @@ function validatePerformanceConfig(performance, errors, warnings) {
  */
 function validateLoggingConfig(logging, errors, warnings) {
     if (!logging)
-        return;
+        {return;}
     const validLevels = ['error', 'warn', 'info', 'debug', 'trace'];
     if (logging.level && !validLevels.includes(logging.level)) {
         errors.push(`Invalid log level: ${logging.level}. Must be one of: ${validLevels.join(', ')}`);
@@ -183,7 +183,7 @@ function validateLoggingConfig(logging, errors, warnings) {
  */
 function validateSecurityConfig(security, errors, warnings) {
     if (!security)
-        return;
+        {return;}
     if (security.rateLimitRequests !== undefined && security.rateLimitRequests < 1) {
         errors.push('rateLimitRequests must be at least 1');
     }

@@ -3,12 +3,12 @@
  */
 
 import * as os from 'os';
-import { 
+import type { 
   DiagnosticCollector, 
   DiagnosticScope, 
   RuntimeDiagnostics 
 } from './types.js';
-import { DiagnosticData } from '../types.js';
+import type { DiagnosticData } from '../types.js';
 
 /**
  * Collects runtime diagnostic data including Node.js environment,

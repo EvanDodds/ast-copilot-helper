@@ -1,6 +1,6 @@
 import { readFile, access, constants } from 'fs/promises';
 import { join } from 'path';
-import { LicenseDatabase } from './LicenseDatabase';
+import type { LicenseDatabase } from './LicenseDatabase';
 
 export interface DependencyInfo {
   name: string;
@@ -387,7 +387,9 @@ export class DependencyLicenseAnalyzer {
       
       // Check for conflicts with other dependencies
       for (const otherDep of dependencies) {
-        if (dep === otherDep) continue;
+        if (dep === otherDep) {
+continue;
+}
         
         if (!this.isLicenseCompatible(dep.license, otherDep.license, mode)) {
           const existingConflict = conflicts.find(c => 
@@ -551,7 +553,7 @@ export class DependencyLicenseAnalyzer {
   private isLicenseCompatible(
     fromLicense: string,
     toLicense: string,
-    mode: string = 'strict'
+    mode = 'strict'
   ): boolean {
     if (fromLicense === toLicense) {
       return true;

@@ -70,13 +70,17 @@ export class CPUMonitor {
   }
 
   startMonitoring(_interval = 100): void {
-    if (this.monitoring) return;
+    if (this.monitoring) {
+return;
+}
     this.start();
     this.monitoring = true;
   }
 
   stopMonitoring(): void {
-    if (!this.monitoring) return;
+    if (!this.monitoring) {
+return;
+}
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;

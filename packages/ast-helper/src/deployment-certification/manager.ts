@@ -25,7 +25,7 @@ import { DeploymentCertificationConfigManager } from './config.js';
  */
 export class DeploymentCertificationManager extends EventEmitter {
   private config: DeploymentCertificationConfigManager;
-  private certificationStartTime: number = 0;
+  private certificationStartTime = 0;
 
   constructor(config?: Partial<DeploymentCertificationConfig>) {
     super();

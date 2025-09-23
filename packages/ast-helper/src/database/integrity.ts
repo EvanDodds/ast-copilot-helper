@@ -14,7 +14,7 @@
  */
 
 import { createHash } from 'crypto';
-import { ASTDatabaseManager } from './manager';
+import type { ASTDatabaseManager } from './manager';
 import { AstLogger, LogLevel } from '../logging';
 import { performance } from 'perf_hooks';
 import { readFile, readdir, writeFile, access } from 'fs/promises';

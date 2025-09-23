@@ -6,7 +6,7 @@ import { NativeTreeSitterParser } from './native-parser.js';
 import { WASMTreeSitterParser } from './wasm-parser.js';
 import { RuntimeDetector } from '../runtime-detector.js';
 import { TreeSitterGrammarManager } from '../grammar-manager.js';
-import { ASTParser, ParserRuntime } from '../types.js';
+import type { ASTParser, ParserRuntime } from '../types.js';
 
 /**
  * Simple runtime implementations for factory use

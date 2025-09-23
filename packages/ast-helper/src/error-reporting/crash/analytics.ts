@@ -208,10 +208,15 @@ export class CrashAnalyticsEngine {
     const combinedScore = (resourceScore + patternScore) / 2;
     
     let likelihood: 'low' | 'medium' | 'high' | 'critical';
-    if (combinedScore > 0.8) likelihood = 'critical';
-    else if (combinedScore > 0.6) likelihood = 'high';
-    else if (combinedScore > 0.4) likelihood = 'medium';
-    else likelihood = 'low';
+    if (combinedScore > 0.8) {
+likelihood = 'critical';
+} else if (combinedScore > 0.6) {
+likelihood = 'high';
+} else if (combinedScore > 0.4) {
+likelihood = 'medium';
+} else {
+likelihood = 'low';
+}
     
     // Estimate time to next crash based on historical patterns
     const timeToNextCrash = this.estimateTimeToNextCrash(recentCrashes);
@@ -503,7 +508,9 @@ export class CrashAnalyticsEngine {
    * Calculate recovery success rate
    */
   private calculateRecoverySuccessRate(crashes: CrashReport[]): number {
-    if (crashes.length === 0) return 0;
+    if (crashes.length === 0) {
+return 0;
+}
     
     const successfulRecoveries = crashes.filter(crash => 
       crash.recovery.finalState === 'recovered'
@@ -516,7 +523,9 @@ export class CrashAnalyticsEngine {
    * Calculate time between failures
    */
   private calculateTimeBetweenFailures(crashes: CrashReport[]): number[] {
-    if (crashes.length < 2) return [];
+    if (crashes.length < 2) {
+return [];
+}
     
     const sortedCrashes = crashes.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     const intervals = [];
@@ -538,7 +547,9 @@ export class CrashAnalyticsEngine {
    * Calculate mean of numeric array
    */
   private calculateMean(values: number[]): number {
-    if (values.length === 0) return 0;
+    if (values.length === 0) {
+return 0;
+}
     return values.reduce((sum, value) => sum + value, 0) / values.length;
   }
   
@@ -572,9 +583,15 @@ export class CrashAnalyticsEngine {
    * Map numeric weight to severity
    */
   private mapWeightToSeverity(weight: number): CrashSeverity {
-    if (weight >= 3.5) return 'critical';
-    if (weight >= 2.5) return 'high';
-    if (weight >= 1.5) return 'medium';
+    if (weight >= 3.5) {
+return 'critical';
+}
+    if (weight >= 2.5) {
+return 'high';
+}
+    if (weight >= 1.5) {
+return 'medium';
+}
     return 'low';
   }
   
@@ -624,7 +641,9 @@ export class CrashAnalyticsEngine {
    * Analyze pattern risk
    */
   private analyzePatternRisk(recentCrashes: CrashReport[]): number {
-    if (recentCrashes.length === 0) return 0;
+    if (recentCrashes.length === 0) {
+return 0;
+}
     
     const recentCrashRate = recentCrashes.length / 24; // crashes per hour in last day
     return Math.min(recentCrashRate / 5, 1.0); // Normalize assuming 5 crashes/hour is max
@@ -634,7 +653,9 @@ export class CrashAnalyticsEngine {
    * Estimate time to next crash
    */
   private estimateTimeToNextCrash(recentCrashes: CrashReport[]): number | undefined {
-    if (recentCrashes.length < 2) return undefined;
+    if (recentCrashes.length < 2) {
+return undefined;
+}
     
     const intervals = this.calculateTimeBetweenFailures(recentCrashes);
     const avgInterval = this.calculateMean(intervals);
@@ -649,7 +670,9 @@ export class CrashAnalyticsEngine {
     recentCrashes: CrashReport[],
     _systemState: SystemStateSnapshot
   ): CrashType {
-    if (recentCrashes.length === 0) return 'unknown';
+    if (recentCrashes.length === 0) {
+return 'unknown';
+}
     
     const typeDistribution = this.calculateTypeDistribution(recentCrashes);
     let mostCommonType: CrashType = 'unknown';

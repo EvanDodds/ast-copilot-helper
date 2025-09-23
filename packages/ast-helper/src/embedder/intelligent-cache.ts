@@ -4,7 +4,7 @@
  */
 
 import crypto from 'crypto';
-import { EmbeddingResult, Annotation } from './types.js';
+import type { EmbeddingResult, Annotation } from './types.js';
 import { createLogger } from '../logging/index.js';
 
 export interface CacheEntry {
@@ -331,13 +331,17 @@ export class IntelligentEmbeddingCache {
     // Check size limits
     while (this.stats.currentSizeBytes + newEntrySize > this.config.maxSizeBytes) {
       const evicted = this.evictLeastValuable();
-      if (!evicted) break; // No more entries to evict
+      if (!evicted) {
+break;
+} // No more entries to evict
     }
 
     // Check entry count limits
     while (this.cache.size >= this.config.maxEntries) {
       const evicted = this.evictLeastValuable();
-      if (!evicted) break; // No more entries to evict
+      if (!evicted) {
+break;
+} // No more entries to evict
     }
   }
 
@@ -345,7 +349,9 @@ export class IntelligentEmbeddingCache {
    * Evict least valuable cache entry using LRU + access frequency
    */
   private evictLeastValuable(): boolean {
-    if (this.cache.size === 0) return false;
+    if (this.cache.size === 0) {
+return false;
+}
 
     let leastValuableKey: string | null = null;
     let lowestScore = Infinity;

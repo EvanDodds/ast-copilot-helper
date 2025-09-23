@@ -519,7 +519,9 @@ export class ComplianceChecker {
    * Calculate overall compliance score
    */
   private calculateComplianceScore(): number {
-    if (this.violations.length === 0) return 100;
+    if (this.violations.length === 0) {
+return 100;
+}
 
     let score = 100;
     

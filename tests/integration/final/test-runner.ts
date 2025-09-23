@@ -45,7 +45,7 @@ export class FinalTestRunner {
 
     let passed = 0;
     let failed = 0;
-    let skipped = 0;
+    const skipped = 0;
 
     try {
       for (const testName of suiteConfig.tests) {

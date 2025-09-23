@@ -8,11 +8,12 @@
  * @version 1.0.0
  */
 
-import { RollbackManager } from '../interfaces.js';
-import {
+import type { RollbackManager } from '../interfaces.js';
+import type {
   RollbackConfig,
   RollbackPlan,
-  RollbackStepResult,
+  RollbackStepResult} from '../types.js';
+import {
   RiskLevel
 } from '../types.js';
 

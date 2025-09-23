@@ -5,7 +5,7 @@
 
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
-import { ModelConfig, ModelMetadata } from './types.js';
+import type { ModelConfig, ModelMetadata } from './types.js';
 import { createModuleLogger } from '../logging/index.js';
 import { fileVerifier } from './verification.js';
 import { validateModelConfig } from './validation.js';
@@ -319,7 +319,9 @@ export class ModelCache {
   async updateUsageStats(modelConfig: ModelConfig): Promise<void> {
     try {
       const metadata = await this.loadModelMetadata(modelConfig);
-      if (!metadata) return;
+      if (!metadata) {
+return;
+}
 
       // Initialize usage stats if not present or create full stats object
       if (!metadata.usageStats) {

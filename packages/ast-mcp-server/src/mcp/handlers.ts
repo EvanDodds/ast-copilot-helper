@@ -3,7 +3,7 @@
  * Provides base functionality for MCP request handlers
  */
 
-import { JSONRPCRequest, JSONRPCResponse, MCPHandler } from './protocol';
+import type { JSONRPCRequest, JSONRPCResponse, MCPHandler } from './protocol';
 
 /**
  * Abstract base handler with common functionality

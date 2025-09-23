@@ -1,10 +1,12 @@
-import { ASTNode } from '../parser/types.js';
-import { 
-  SemanticTag, 
-  PurposeCategory, 
+import type { ASTNode } from '../parser/types.js';
+import type { 
   SummaryGenerationConfig,
   SummaryTemplate,
   SummaryPattern
+} from './types.js';
+import { 
+  SemanticTag, 
+  PurposeCategory
 } from './types.js';
 import { DependencyAnalyzer } from './dependency-analyzer.js';
 import { ComplexityAnalyzer } from './complexity-analyzer.js';
@@ -538,8 +540,12 @@ export class SummaryGenerator {
     const nodeAny = node as any;
     const modifiers = nodeAny.modifiers || [];
     
-    if (modifiers.includes('private')) return 'private';
-    if (modifiers.includes('protected')) return 'protected';
+    if (modifiers.includes('private')) {
+return 'private';
+}
+    if (modifiers.includes('protected')) {
+return 'protected';
+}
     return 'public';
   }
 
@@ -552,12 +558,24 @@ export class SummaryGenerator {
   private inferPurpose(node: ASTNode, _sourceText?: string): string {
     const name = node.name?.toLowerCase() || '';
     
-    if (name.includes('handle')) return 'that handles events';
-    if (name.includes('process')) return 'that processes data';
-    if (name.includes('validate')) return 'that validates input';
-    if (name.includes('create')) return 'that creates objects';
-    if (name.includes('update')) return 'that updates state';
-    if (name.includes('delete')) return 'that removes data';
+    if (name.includes('handle')) {
+return 'that handles events';
+}
+    if (name.includes('process')) {
+return 'that processes data';
+}
+    if (name.includes('validate')) {
+return 'that validates input';
+}
+    if (name.includes('create')) {
+return 'that creates objects';
+}
+    if (name.includes('update')) {
+return 'that updates state';
+}
+    if (name.includes('delete')) {
+return 'that removes data';
+}
     
     return 'that performs operations';
   }
@@ -566,11 +584,21 @@ export class SummaryGenerator {
     const type = node.type?.toLowerCase() || '';
     const tags: SemanticTag[] = [];
     
-    if (type.includes('function')) tags.push(SemanticTag.FUNCTION);
-    if (type.includes('class')) tags.push(SemanticTag.CLASS);
-    if (type.includes('interface')) tags.push(SemanticTag.INTERFACE);
-    if (type.includes('method')) tags.push(SemanticTag.METHOD);
-    if (type.includes('variable')) tags.push(SemanticTag.VARIABLE);
+    if (type.includes('function')) {
+tags.push(SemanticTag.FUNCTION);
+}
+    if (type.includes('class')) {
+tags.push(SemanticTag.CLASS);
+}
+    if (type.includes('interface')) {
+tags.push(SemanticTag.INTERFACE);
+}
+    if (type.includes('method')) {
+tags.push(SemanticTag.METHOD);
+}
+    if (type.includes('variable')) {
+tags.push(SemanticTag.VARIABLE);
+}
     
     return tags;
   }

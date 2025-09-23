@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
+import type * as vscode from 'vscode';
 import { EventEmitter } from 'events';
-import { ServerProcessManager } from './ServerProcessManager';
+import type { ServerProcessManager } from './ServerProcessManager';
 
 // Mock MCP Client interfaces until full SDK is available
 interface MCPClient {
@@ -477,7 +477,9 @@ export class MCPClientManager extends EventEmitter {
    * Set up client event handlers
    */
   private setupClientHandlers(): void {
-    if (!this.client) return;
+    if (!this.client) {
+return;
+}
 
     // Handle client errors
     this.client.onError = (error: any) => {

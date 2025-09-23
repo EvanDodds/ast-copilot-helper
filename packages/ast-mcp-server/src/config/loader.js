@@ -3,40 +3,40 @@
  * Configuration Loader
  * Loads and merges configuration from multiple sources
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
+const __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) {k2 = k;}
+    let desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
       desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
+    if (k2 === undefined) {k2 = k;}
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+const __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
+const __importStar = (this && this.__importStar) || (function () {
+    let ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            const ar = [];
+            for (const k in o) {if (Object.prototype.hasOwnProperty.call(o, k)) {ar[ar.length] = k;}}
             return ar;
         };
         return ownKeys(o);
     };
     return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        if (mod && mod.__esModule) {return mod;}
+        const result = {};
+        if (mod != null) {for (let k = ownKeys(mod), i = 0; i < k.length; i++) {if (k[i] !== "default") {__createBinding(result, mod, k[i]);}}}
         __setModuleDefault(result, mod);
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
+const __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -255,91 +255,91 @@ class ConfigManager extends events_1.EventEmitter {
         const config = {};
         // Server identity
         if (process.env.MCP_SERVER_NAME)
-            config.name = process.env.MCP_SERVER_NAME;
+            {config.name = process.env.MCP_SERVER_NAME;}
         if (process.env.MCP_SERVER_VERSION)
-            config.version = process.env.MCP_SERVER_VERSION;
+            {config.version = process.env.MCP_SERVER_VERSION;}
         if (process.env.MCP_SERVER_DESCRIPTION)
-            config.description = process.env.MCP_SERVER_DESCRIPTION;
+            {config.description = process.env.MCP_SERVER_DESCRIPTION;}
         // Transport overrides
         const transport = {};
         if (process.env.MCP_SERVER_TRANSPORT_TYPE)
-            transport.type = process.env.MCP_SERVER_TRANSPORT_TYPE;
+            {transport.type = process.env.MCP_SERVER_TRANSPORT_TYPE;}
         if (process.env.MCP_SERVER_PORT)
-            transport.port = parseInt(process.env.MCP_SERVER_PORT, 10);
+            {transport.port = parseInt(process.env.MCP_SERVER_PORT, 10);}
         if (process.env.MCP_SERVER_HOST)
-            transport.host = process.env.MCP_SERVER_HOST;
+            {transport.host = process.env.MCP_SERVER_HOST;}
         if (process.env.MCP_SERVER_MAX_CONNECTIONS)
-            transport.maxConnections = parseInt(process.env.MCP_SERVER_MAX_CONNECTIONS, 10);
+            {transport.maxConnections = parseInt(process.env.MCP_SERVER_MAX_CONNECTIONS, 10);}
         if (Object.keys(transport).length > 0)
-            config.transport = transport;
+            {config.transport = transport;}
         // Performance configuration
         const performance = {};
         if (process.env.MCP_SERVER_MAX_CONCURRENT_REQUESTS)
-            performance.maxConcurrentRequests = parseInt(process.env.MCP_SERVER_MAX_CONCURRENT_REQUESTS, 10);
+            {performance.maxConcurrentRequests = parseInt(process.env.MCP_SERVER_MAX_CONCURRENT_REQUESTS, 10);}
         if (process.env.MCP_REQUEST_TIMEOUT)
-            performance.requestTimeout = parseInt(process.env.MCP_REQUEST_TIMEOUT, 10);
+            {performance.requestTimeout = parseInt(process.env.MCP_REQUEST_TIMEOUT, 10);}
         if (process.env.MCP_MAX_QUERY_RESULTS)
-            performance.maxQueryResults = parseInt(process.env.MCP_MAX_QUERY_RESULTS, 10);
+            {performance.maxQueryResults = parseInt(process.env.MCP_MAX_QUERY_RESULTS, 10);}
         if (process.env.MCP_SERVER_CACHE_SIZE)
-            performance.cacheSize = parseInt(process.env.MCP_SERVER_CACHE_SIZE, 10);
+            {performance.cacheSize = parseInt(process.env.MCP_SERVER_CACHE_SIZE, 10);}
         if (process.env.MCP_SERVER_CACHE_ENABLED)
-            performance.cacheEnabled = process.env.MCP_SERVER_CACHE_ENABLED === 'true';
+            {performance.cacheEnabled = process.env.MCP_SERVER_CACHE_ENABLED === 'true';}
         if (process.env.MCP_SERVER_GC_THRESHOLD)
-            performance.gcThreshold = parseFloat(process.env.MCP_SERVER_GC_THRESHOLD);
+            {performance.gcThreshold = parseFloat(process.env.MCP_SERVER_GC_THRESHOLD);}
         if (Object.keys(performance).length > 0)
-            config.performance = performance;
+            {config.performance = performance;}
         // Logging configuration
         const logging = {};
         if (process.env.MCP_SERVER_LOG_LEVEL)
-            logging.level = process.env.MCP_SERVER_LOG_LEVEL;
+            {logging.level = process.env.MCP_SERVER_LOG_LEVEL;}
         if (process.env.MCP_LOG_FILE) {
             logging.enableFile = true;
             logging.filePath = process.env.MCP_LOG_FILE;
         }
         if (process.env.MCP_ENABLE_REQUEST_LOGGING)
-            logging.enableRequestLogging = process.env.MCP_ENABLE_REQUEST_LOGGING === 'true';
+            {logging.enableRequestLogging = process.env.MCP_ENABLE_REQUEST_LOGGING === 'true';}
         if (process.env.MCP_SERVER_LOG_REQUEST_BODY)
-            logging.logRequestBody = process.env.MCP_SERVER_LOG_REQUEST_BODY === 'true' || process.env.MCP_SERVER_LOG_REQUEST_BODY === '1';
+            {logging.logRequestBody = process.env.MCP_SERVER_LOG_REQUEST_BODY === 'true' || process.env.MCP_SERVER_LOG_REQUEST_BODY === '1';}
         if (Object.keys(logging).length > 0)
-            config.logging = logging;
+            {config.logging = logging;}
         // Security configuration
         const security = {};
         if (process.env.MCP_ENABLE_AUTH)
-            security.enableAuthentication = process.env.MCP_ENABLE_AUTH === 'true';
+            {security.enableAuthentication = process.env.MCP_ENABLE_AUTH === 'true';}
         if (process.env.MCP_ENABLE_RATE_LIMIT)
-            security.enableRateLimit = process.env.MCP_ENABLE_RATE_LIMIT === 'true';
+            {security.enableRateLimit = process.env.MCP_ENABLE_RATE_LIMIT === 'true';}
         if (process.env.MCP_SERVER_RATE_LIMIT_REQUESTS)
-            security.rateLimitRequests = parseInt(process.env.MCP_SERVER_RATE_LIMIT_REQUESTS, 10);
+            {security.rateLimitRequests = parseInt(process.env.MCP_SERVER_RATE_LIMIT_REQUESTS, 10);}
         if (process.env.MCP_SERVER_ENABLE_CORS)
-            security.enableCors = process.env.MCP_SERVER_ENABLE_CORS === 'true';
+            {security.enableCors = process.env.MCP_SERVER_ENABLE_CORS === 'true';}
         if (process.env.MCP_SERVER_ENABLE_TLS)
-            security.enableTls = process.env.MCP_SERVER_ENABLE_TLS === 'true' || process.env.MCP_SERVER_ENABLE_TLS === '1';
+            {security.enableTls = process.env.MCP_SERVER_ENABLE_TLS === 'true' || process.env.MCP_SERVER_ENABLE_TLS === '1';}
         if (Object.keys(security).length > 0)
-            config.security = security;
+            {config.security = security;}
         // Feature configuration
         const features = {};
         if (process.env.MCP_ENABLE_TOOLS)
-            features.enableTools = process.env.MCP_ENABLE_TOOLS === 'true';
+            {features.enableTools = process.env.MCP_ENABLE_TOOLS === 'true';}
         if (process.env.MCP_ENABLE_RESOURCES)
-            features.enableResources = process.env.MCP_ENABLE_RESOURCES === 'true';
+            {features.enableResources = process.env.MCP_ENABLE_RESOURCES === 'true';}
         if (process.env.MCP_ENABLE_HOT_RELOAD)
-            features.enableHotReload = process.env.MCP_ENABLE_HOT_RELOAD === 'true';
+            {features.enableHotReload = process.env.MCP_ENABLE_HOT_RELOAD === 'true';}
         if (Object.keys(features).length > 0)
-            config.features = features;
+            {config.features = features;}
         // Database configuration
         const database = {};
         if (process.env.MCP_SERVER_DATABASE_PATH)
-            database.path = process.env.MCP_SERVER_DATABASE_PATH;
+            {database.path = process.env.MCP_SERVER_DATABASE_PATH;}
         if (process.env.MCP_DATABASE_HOT_RELOAD)
-            database.hotReload = process.env.MCP_DATABASE_HOT_RELOAD === 'true';
+            {database.hotReload = process.env.MCP_DATABASE_HOT_RELOAD === 'true';}
         if (Object.keys(database).length > 0)
-            config.database = database;
+            {config.database = database;}
         // Environment configuration
         const environment = {};
         if (process.env.NODE_ENV)
-            environment.nodeEnv = process.env.NODE_ENV;
+            {environment.nodeEnv = process.env.NODE_ENV;}
         if (Object.keys(environment).length > 0)
-            config.environment = environment;
+            {config.environment = environment;}
         return config;
     }
     /**

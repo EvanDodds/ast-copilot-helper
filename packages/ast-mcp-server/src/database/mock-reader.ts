@@ -3,7 +3,7 @@
  * Temporary implementation for testing CLI functionality without full database integration
  */
 
-import { DatabaseReader, ASTNode, ASTNodeMatch, QueryOptions } from '../types';
+import type { DatabaseReader, ASTNode, ASTNodeMatch, QueryOptions } from '../types';
 
 /**
  * Mock implementation of DatabaseReader for CLI testing

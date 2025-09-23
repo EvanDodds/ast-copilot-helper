@@ -3,9 +3,9 @@
  * @description SQLite-based event queue for telemetry transmission management
  */
 
-import { EventQueue, QueuedEvent, QueueStats, QueueConfig } from './types.js';
-import { TelemetryEvent } from '../collection/types.js';
-import { SqliteTelemetryStorage } from './database.js';
+import type { EventQueue, QueuedEvent, QueueStats, QueueConfig } from './types.js';
+import type { TelemetryEvent } from '../collection/types.js';
+import type { SqliteTelemetryStorage } from './database.js';
 
 /**
  * SQLite-based event queue implementation
@@ -167,7 +167,9 @@ export class SqliteEventQueue implements EventQueue {
     const failedEvents = stats.eventsByStatus.failed || 0;
     const rejectedEvents = stats.eventsByStatus.rejected || 0;
     
-    if (totalEvents === 0) return 0;
+    if (totalEvents === 0) {
+return 0;
+}
     
     return (failedEvents + rejectedEvents) / totalEvents;
   }

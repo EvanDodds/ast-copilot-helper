@@ -5,7 +5,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createWriteStream } from 'fs';
-import { ModelConfig, DownloadProgress } from './types.js';
+import type { ModelConfig, DownloadProgress } from './types.js';
 
 /**
  * Progress callback function type
@@ -96,7 +96,7 @@ export class ProgressTracker {
 
   constructor(
     private totalBytes: number,
-    private bytesDownloaded: number = 0
+    private bytesDownloaded = 0
   ) {
     this.startTime = Date.now();
     this.lastUpdate = this.startTime;
@@ -163,7 +163,9 @@ export class ProgressTracker {
    * Calculate estimated time remaining
    */
   private calculateETA(speed: number): number {
-    if (speed <= 0) return Infinity;
+    if (speed <= 0) {
+return Infinity;
+}
     const remaining = this.totalBytes - this.bytesDownloaded;
     return remaining / speed;
   }
@@ -173,7 +175,7 @@ export class ProgressTracker {
  * Rate limiting utility class
  */
 export class RateLimiter {
-  private lastChunkTime: number = 0;
+  private lastChunkTime = 0;
   private readonly config: Required<RateLimitConfig>;
 
   constructor(config: RateLimitConfig = {}) {
@@ -427,7 +429,9 @@ export class ModelDownloader {
         while (true) {
           const { done, value } = await reader.read();
           
-          if (done) break;
+          if (done) {
+break;
+}
 
           // Apply rate limiting if configured
           if (this.rateLimiter) {
@@ -437,8 +441,11 @@ export class ModelDownloader {
           // Write chunk to file
           await new Promise<void>((resolve, reject) => {
             fileStream.write(value, (error) => {
-              if (error) reject(error);
-              else resolve();
+              if (error) {
+reject(error);
+} else {
+resolve();
+}
             });
           });
 

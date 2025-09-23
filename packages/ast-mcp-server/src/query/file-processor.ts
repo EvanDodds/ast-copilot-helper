@@ -13,7 +13,7 @@ import { EventEmitter } from 'events';
 import { minimatch } from 'minimatch';
 import path from 'path';
 import { createLogger, LogLevel } from '../../../ast-helper/src/logging/index.js';
-import { 
+import type { 
   FileQuery,
   ASTNodeMatch,
   AnnotationMatch,
@@ -21,7 +21,7 @@ import {
   FileMatchCriteria,
   Annotation
 } from './types.js';
-import { ASTDatabaseReader } from '../database/reader.js';
+import type { ASTDatabaseReader } from '../database/reader.js';
 
 const logger = createLogger({ 
   level: LogLevel.INFO,
@@ -352,8 +352,12 @@ export class FileQueryProcessor extends EventEmitter {
    * Calculate fuzzy similarity score using Levenshtein distance
    */
   private calculateFuzzyScore(str1: string, str2: string): number {
-    if (str1.length === 0) return str2.length === 0 ? 1 : 0;
-    if (str2.length === 0) return 0;
+    if (str1.length === 0) {
+return str2.length === 0 ? 1 : 0;
+}
+    if (str2.length === 0) {
+return 0;
+}
 
     const matrix: number[][] = [];
     

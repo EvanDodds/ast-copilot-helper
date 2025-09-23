@@ -40,7 +40,7 @@ let XenovaEmbeddingGenerator: any = null;
 let hasEmbeddingSupport = false;
 
 async function loadEmbeddingGenerator() {
-  if (hasEmbeddingSupport) return;
+  if (hasEmbeddingSupport) {return;}
   
   try {
     const embeddingModule = await import('../../packages/ast-helper/src/embedder/index.js');

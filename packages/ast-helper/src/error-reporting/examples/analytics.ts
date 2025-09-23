@@ -10,7 +10,7 @@
  */
 
 import { ComprehensiveErrorReportingManager } from '../manager';
-import { ErrorReportingConfig } from '../types';
+import type { ErrorReportingConfig } from '../types';
 
 async function analyticsIntegrationExample() {
   console.log('📊 Starting Analytics Integration Example\n');

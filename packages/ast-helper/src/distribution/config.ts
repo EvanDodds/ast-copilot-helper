@@ -5,7 +5,7 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { DistributionConfig, PackageConfig, RegistryConfig } from './types';
+import type { DistributionConfig, PackageConfig, RegistryConfig } from './types';
 
 /**
  * Default distribution configuration

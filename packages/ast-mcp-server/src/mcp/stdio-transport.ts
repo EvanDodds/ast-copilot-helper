@@ -3,7 +3,7 @@
  * Handles MCP communication via standard input/output streams
  */
 
-import { JSONRPCResponse, JSONRPCNotification } from './protocol';
+import type { JSONRPCResponse, JSONRPCNotification } from './protocol';
 import { MCPTransport, BaseTransportStats } from './transport';
 
 /**
@@ -38,7 +38,7 @@ class StdioTransportStats extends BaseTransportStats {
  */
 export class StdioTransport extends MCPTransport {
   private stats: StdioTransportStats;
-  private inputBuffer: string = '';
+  private inputBuffer = '';
 
   constructor() {
     super();

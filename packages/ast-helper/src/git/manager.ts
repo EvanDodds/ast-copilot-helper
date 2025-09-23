@@ -142,7 +142,9 @@ export class GitManager implements GitUtils {
         const result = await this.execGitCommand(args, cwd);
         if (result.stdout) {
           result.stdout.split('\n').forEach(file => {
-            if (file.trim()) files.add(file.trim());
+            if (file.trim()) {
+files.add(file.trim());
+}
           });
         }
       }
@@ -152,7 +154,9 @@ export class GitManager implements GitUtils {
         const result = await this.execGitCommand(['ls-files', '--others', '--exclude-standard'], cwd);
         if (result.stdout) {
           result.stdout.split('\n').forEach(file => {
-            if (file.trim()) files.add(file.trim());
+            if (file.trim()) {
+files.add(file.trim());
+}
           });
         }
       }
@@ -169,7 +173,9 @@ export class GitManager implements GitUtils {
   async getStagedFiles(cwd: string = this.defaultCwd): Promise<string[]> {
     try {
       const result = await this.execGitCommand(['diff', '--name-only', '--cached', '--relative'], cwd);
-      if (!result.stdout) return [];
+      if (!result.stdout) {
+return [];
+}
       
       return result.stdout.split('\n').filter(file => file.trim()).map(file => file.trim());
     } catch (error) {

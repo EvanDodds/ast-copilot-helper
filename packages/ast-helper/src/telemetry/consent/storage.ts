@@ -6,7 +6,7 @@
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
-import { ConsentStorage, ConsentRecord } from './types.js';
+import type { ConsentStorage, ConsentRecord } from './types.js';
 
 /**
  * File-based consent storage implementation
@@ -16,7 +16,7 @@ export class FileConsentStorage implements ConsentStorage {
   private readonly consentFile: string;
   private readonly historyFile: string;
 
-  constructor(appName: string = 'ast-copilot-helper') {
+  constructor(appName = 'ast-copilot-helper') {
     this.storageDir = join(homedir(), `.${appName}`, 'telemetry');
     this.consentFile = join(this.storageDir, 'consent.json');
     this.historyFile = join(this.storageDir, 'consent-history.json');

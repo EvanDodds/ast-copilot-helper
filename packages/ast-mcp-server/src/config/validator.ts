@@ -3,7 +3,7 @@
  * Provides comprehensive validation for MCP server configuration
  */
 
-import { MCPServerConfig, ConfigValidationResult, TransportConfig, PerformanceConfig, LoggingConfig, SecurityConfig } from './types.js';
+import type { MCPServerConfig, ConfigValidationResult, TransportConfig, PerformanceConfig, LoggingConfig, SecurityConfig } from './types.js';
 
 /**
  * Validate complete MCP server configuration
@@ -65,7 +65,9 @@ function validateRequiredFields(config: MCPServerConfig, errors: string[]): void
  * Validate transport configuration
  */
 function validateTransportConfig(transport: TransportConfig | undefined, errors: string[], warnings: string[]): void {
-  if (!transport) return;
+  if (!transport) {
+return;
+}
   
   if (!transport.type) {
     errors.push('Transport type is required');
@@ -129,7 +131,9 @@ function validateTransportConfig(transport: TransportConfig | undefined, errors:
  * Validate performance configuration
  */
 function validatePerformanceConfig(performance: PerformanceConfig | undefined, errors: string[], warnings: string[]): void {
-  if (!performance) return;
+  if (!performance) {
+return;
+}
   
   if (performance.maxConcurrentRequests !== undefined) {
     if (performance.maxConcurrentRequests < 1) {
@@ -175,7 +179,9 @@ function validatePerformanceConfig(performance: PerformanceConfig | undefined, e
  * Validate logging configuration
  */
 function validateLoggingConfig(logging: LoggingConfig | undefined, errors: string[], warnings: string[]): void {
-  if (!logging) return;
+  if (!logging) {
+return;
+}
   
   const validLevels = ['error', 'warn', 'info', 'debug', 'trace'];
   if (logging.level && !validLevels.includes(logging.level)) {
@@ -212,7 +218,9 @@ function validateLoggingConfig(logging: LoggingConfig | undefined, errors: strin
  * Validate security configuration
  */
 function validateSecurityConfig(security: SecurityConfig | undefined, errors: string[], warnings: string[]): void {
-  if (!security) return;
+  if (!security) {
+return;
+}
   
   if (security.rateLimitRequests !== undefined && security.rateLimitRequests < 1) {
     errors.push('rateLimitRequests must be at least 1');

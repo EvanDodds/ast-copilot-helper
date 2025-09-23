@@ -3,7 +3,7 @@
  * Calculates cyclomatic complexity and other code metrics from AST nodes
  */
 
-import { ASTNode } from '../parser/types';
+import type { ASTNode } from '../parser/types';
 import { COMPLEXITY_THRESHOLDS } from './types';
 
 /**
@@ -184,7 +184,9 @@ export class ComplexityAnalyzer {
     
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
-      if (!token) continue; // Skip undefined tokens
+      if (!token) {
+continue;
+} // Skip undefined tokens
       
       const lowerToken = token.toLowerCase();
       

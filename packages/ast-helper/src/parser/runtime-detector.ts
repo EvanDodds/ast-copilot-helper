@@ -3,7 +3,7 @@
  * Handles detection of native vs WASM runtime availability
  */
 
-import { ParserRuntime } from './types.js';
+import type { ParserRuntime } from './types.js';
 
 export class RuntimeDetector {
   private static _nativeRuntime: NativeRuntime | null = null;
@@ -101,7 +101,7 @@ export class RuntimeDetector {
  */
 class NativeRuntime implements ParserRuntime {
   type: 'native' = 'native';
-  available: boolean = false;
+  available = false;
   private TreeSitter: any = null;
   private parsers: Map<string, any> = new Map();
 
@@ -186,7 +186,7 @@ class NativeRuntime implements ParserRuntime {
  */
 class WasmRuntime implements ParserRuntime {
   type: 'wasm' = 'wasm';
-  available: boolean = false;
+  available = false;
   private TreeSitter: any = null;
   private parsers: Map<string, any> = new Map();
 

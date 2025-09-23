@@ -3,8 +3,8 @@
  * Handles TypeScript-specific syntax including generics, decorators, and type annotations
  */
 
-import { ASTNode } from '../../parser/types';
-import { SignatureExtractor, Parameter } from '../types';
+import type { ASTNode } from '../../parser/types';
+import type { SignatureExtractor, Parameter } from '../types';
 import { ExtractionUtils } from './extraction-utils';
 
 export class TypeScriptExtractor implements SignatureExtractor {

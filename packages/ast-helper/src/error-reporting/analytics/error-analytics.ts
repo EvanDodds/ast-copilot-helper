@@ -222,7 +222,7 @@ export class ErrorAnalyticsManager {
    */
   async getErrorFrequencyTrends(
     timeWindow: 'hour' | 'day' | 'week' | 'month' = 'day',
-    limit: number = 30
+    limit = 30
   ): Promise<ErrorFrequencyPoint[]> {
     console.log(`📈 Generating error frequency trends (${timeWindow})`);
 
@@ -423,10 +423,18 @@ export class ErrorAnalyticsManager {
 
     if (filters) {
       filtered = filtered.filter(historyEntry => {
-        if (filters.types && !filters.types.includes(historyEntry.error.type)) return false;
-        if (filters.severities && !filters.severities.includes(historyEntry.error.severity)) return false;
-        if (filters.categories && !filters.categories.includes(historyEntry.error.category)) return false;
-        if (filters.resolved !== undefined && historyEntry.resolved !== filters.resolved) return false;
+        if (filters.types && !filters.types.includes(historyEntry.error.type)) {
+return false;
+}
+        if (filters.severities && !filters.severities.includes(historyEntry.error.severity)) {
+return false;
+}
+        if (filters.categories && !filters.categories.includes(historyEntry.error.category)) {
+return false;
+}
+        if (filters.resolved !== undefined && historyEntry.resolved !== filters.resolved) {
+return false;
+}
         return true;
       });
     }
@@ -461,9 +469,15 @@ export class ErrorAnalyticsManager {
     options?: { categories?: string[]; severities?: string[]; }
   ): ErrorHistoryEntry[] {
     return this.errorHistory.filter(historyEntry => {
-      if (historyEntry.timestamp < startDate || historyEntry.timestamp > endDate) return false;
-      if (options?.categories && !options.categories.includes(historyEntry.error.category)) return false;
-      if (options?.severities && !options.severities.includes(historyEntry.error.severity)) return false;
+      if (historyEntry.timestamp < startDate || historyEntry.timestamp > endDate) {
+return false;
+}
+      if (options?.categories && !options.categories.includes(historyEntry.error.category)) {
+return false;
+}
+      if (options?.severities && !options.severities.includes(historyEntry.error.severity)) {
+return false;
+}
       return true;
     });
   }
@@ -491,7 +505,9 @@ export class ErrorAnalyticsManager {
   private calculateAverageResolutionTime(errors: ErrorHistoryEntry[]): number {
     const resolvedErrors = errors.filter(e => e.resolved && e.resolvedAt);
     
-    if (resolvedErrors.length === 0) return 0;
+    if (resolvedErrors.length === 0) {
+return 0;
+}
     
     const totalResolutionTime = resolvedErrors.reduce((sum, historyEntry) => {
       const resolutionTime = (historyEntry.resolvedAt!.getTime() - historyEntry.timestamp.getTime()) / (1000 * 60);
@@ -646,7 +662,9 @@ export class ErrorAnalyticsManager {
       const hasType2Nearby = type2Errors.some(error2 => 
         Math.abs(error1.timestamp.getTime() - error2.timestamp.getTime()) < timeWindow
       );
-      if (hasType2Nearby) coOccurrences++;
+      if (hasType2Nearby) {
+coOccurrences++;
+}
     });
     
     const correlationStrength = Math.min(coOccurrences / Math.max(type1Errors.length, 1), 1.0);
@@ -683,7 +701,9 @@ export class ErrorAnalyticsManager {
   }
 
   private calculateAvgTimeBetween(errors: ErrorHistoryEntry[]): number {
-    if (errors.length < 2) return 0;
+    if (errors.length < 2) {
+return 0;
+}
     
     const sortedErrors = errors.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     const intervals: number[] = [];
@@ -707,9 +727,15 @@ export class ErrorAnalyticsManager {
       severityCounts[historyEntry.error.severity]++;
     });
     
-    if (severityCounts.critical > 0) return 'critical';
-    if (severityCounts.high > severityCounts.medium + severityCounts.low) return 'high';
-    if (severityCounts.medium > severityCounts.low) return 'medium';
+    if (severityCounts.critical > 0) {
+return 'critical';
+}
+    if (severityCounts.high > severityCounts.medium + severityCounts.low) {
+return 'high';
+}
+    if (severityCounts.medium > severityCounts.low) {
+return 'medium';
+}
     return 'low';
   }
 }

@@ -3,7 +3,7 @@
  * Provides type definitions for cross-platform file system operations
  */
 
-import { Stats } from 'node:fs';
+import type { Stats } from 'node:fs';
 
 /**
  * Options for listing files in a directory

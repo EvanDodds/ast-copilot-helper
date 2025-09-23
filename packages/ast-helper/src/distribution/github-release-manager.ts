@@ -27,7 +27,7 @@
 import { promises as fs } from 'fs';
 import { execSync } from 'child_process';
 import * as path from 'path';
-import {
+import type {
   DistributionConfig,
   ValidationResult,
   VerificationResult,
@@ -431,7 +431,9 @@ export class GitHubReleaseManager implements Publisher {
       const versionPattern = new RegExp(`## \\[?${version}\\]?.*?(?=## |$)`, 'gs');
       const match = content.match(versionPattern);
       
-      if (!match) return null;
+      if (!match) {
+return null;
+}
 
       const sectionContent = match[0];
       

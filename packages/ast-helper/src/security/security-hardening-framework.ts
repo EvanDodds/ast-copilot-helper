@@ -1,5 +1,5 @@
 import { AstLogger } from '../logging/logger';
-import { SecurityConfig } from './types';
+import type { SecurityConfig } from './types';
 import { LogLevel } from '../logging/types';
 
 /**
@@ -828,12 +828,24 @@ export class SecurityHardeningFramework {
   private checkPasswordCompliance(password: string, _parameters: Record<string, any>): boolean {
     const policy = this.accessControl.passwordPolicy;
     
-    if (password.length < policy.minLength) return false;
-    if (password.length > policy.maxLength) return false;
-    if (policy.requireUppercase && !/[A-Z]/.test(password)) return false;
-    if (policy.requireLowercase && !/[a-z]/.test(password)) return false;
-    if (policy.requireNumbers && !/\d/.test(password)) return false;
-    if (policy.requireSpecialChars && !/[!@#$%^&*]/.test(password)) return false;
+    if (password.length < policy.minLength) {
+return false;
+}
+    if (password.length > policy.maxLength) {
+return false;
+}
+    if (policy.requireUppercase && !/[A-Z]/.test(password)) {
+return false;
+}
+    if (policy.requireLowercase && !/[a-z]/.test(password)) {
+return false;
+}
+    if (policy.requireNumbers && !/\d/.test(password)) {
+return false;
+}
+    if (policy.requireSpecialChars && !/[!@#$%^&*]/.test(password)) {
+return false;
+}
     
     return true;
   }
@@ -893,7 +905,9 @@ export class SecurityHardeningFramework {
   }
 
   private calculateRiskScore(violations: PolicyViolation[]): number {
-    if (violations.length === 0) return 0;
+    if (violations.length === 0) {
+return 0;
+}
     
     const severityScores = { critical: 10, high: 7, medium: 4, low: 2 };
     const totalScore = violations.reduce((sum, v) => sum + severityScores[v.severity], 0);
@@ -902,7 +916,9 @@ export class SecurityHardeningFramework {
   }
 
   private calculateOverallRiskScore(events: SecurityAuditEvent[]): number {
-    if (events.length === 0) return 0;
+    if (events.length === 0) {
+return 0;
+}
     
     const avgRiskScore = events.reduce((sum, e) => sum + e.riskScore, 0) / events.length;
     return Math.round(avgRiskScore * 10) / 10;

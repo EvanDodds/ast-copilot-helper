@@ -7,7 +7,7 @@ import { promises as fs } from 'fs';
 import { createWriteStream } from 'fs';
 import { join } from 'path';
 import { createModuleLogger } from '../logging/index.js';
-import { ModelConfig } from './types.js';
+import type { ModelConfig } from './types.js';
 
 const logger = createModuleLogger('Performance');
 
@@ -602,7 +602,9 @@ export class PerformanceOptimizer {
    * Get average download speed from recent metrics
    */
   private getAverageDownloadSpeed(): number {
-    if (this.metricsHistory.length === 0) return 0;
+    if (this.metricsHistory.length === 0) {
+return 0;
+}
     
     const recentMetrics = this.metricsHistory.slice(-10); // Last 10 samples
     const totalSpeed = recentMetrics.reduce((sum, metric) => sum + metric.downloadSpeed, 0);
@@ -635,7 +637,9 @@ export class PerformanceOptimizer {
    */
   private formatBytes(bytes: number): string {
     const sizes = ['B', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) {
+return '0 B';
+}
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
   }

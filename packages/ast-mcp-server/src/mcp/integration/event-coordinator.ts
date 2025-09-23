@@ -367,7 +367,9 @@ export class EventCoordinator extends EventEmitter {
   }
 
   private calculateAverageHandleTime(metrics: EventMetrics[]): number {
-    if (metrics.length === 0) return 0;
+    if (metrics.length === 0) {
+return 0;
+}
     
     const totalTime = metrics.reduce((sum, m) => sum + m.averageHandleTime, 0);
     return totalTime / metrics.length;

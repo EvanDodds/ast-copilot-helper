@@ -2,7 +2,7 @@
  * Model configuration validation and utility functions
  */
 
-import { ModelConfig, ValidationResult, ModelRequirements } from './types.js';
+import type { ModelConfig, ValidationResult, ModelRequirements } from './types.js';
 import { parse as parseUrl } from 'url';
 import * as os from 'os';
 
@@ -194,8 +194,12 @@ function isVersionCompatible(current: string, required: string): boolean {
     const currentPart = currentParts[i] || 0;
     const requiredPart = requiredParts[i] || 0;
 
-    if (currentPart > requiredPart) return true;
-    if (currentPart < requiredPart) return false;
+    if (currentPart > requiredPart) {
+return true;
+}
+    if (currentPart < requiredPart) {
+return false;
+}
   }
 
   return true; // Equal versions are compatible

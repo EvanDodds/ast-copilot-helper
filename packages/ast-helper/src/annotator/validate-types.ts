@@ -3,10 +3,11 @@
  * This ensures the types compile correctly and can be used
  */
 
-import {
+import type {
   Annotation,
   Parameter,
-  AnnotationConfig,
+  AnnotationConfig} from './types';
+import {
   SemanticTag,
   DEFAULT_ANNOTATION_CONFIG
 } from './types';

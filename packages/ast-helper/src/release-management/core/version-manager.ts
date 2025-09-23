@@ -8,12 +8,14 @@
  * @version 1.0.0
  */
 
-import { VersionManager } from '../interfaces.js';
-import {
+import type { VersionManager } from '../interfaces.js';
+import type {
   VersioningConfig,
-  ReleaseType,
-  ReleaseChannel,
   ChangelogEntry
+} from '../types.js';
+import {
+  ReleaseType,
+  ReleaseChannel
 } from '../types.js';
 
 import { readFile, writeFile } from 'fs/promises';

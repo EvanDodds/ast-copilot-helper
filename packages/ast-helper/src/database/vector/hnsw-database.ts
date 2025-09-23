@@ -269,7 +269,7 @@ export class HNSWVectorDatabase implements VectorDatabase {
   /**
    * Search for similar vectors using HNSW index
    */
-  async searchSimilar(vector: number[], k: number = 10, ef?: number): Promise<SearchResult[]> {
+  async searchSimilar(vector: number[], k = 10, ef?: number): Promise<SearchResult[]> {
     this.ensureInitialized();
 
     if (!this.index) {

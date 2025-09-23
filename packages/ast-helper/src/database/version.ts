@@ -379,7 +379,9 @@ export class DatabaseVersionManager {
     private compareVersions(v1: string, v2: string): number {
         const parseVersion = (v: string) => {
             const versionPart = v.split('-')[0];
-            if (!versionPart) return { major: 0, minor: 0, patch: 0 };
+            if (!versionPart) {
+return { major: 0, minor: 0, patch: 0 };
+}
 
             const parts = versionPart.split('.').map(Number);
             return { major: parts[0] || 0, minor: parts[1] || 0, patch: parts[2] || 0 };

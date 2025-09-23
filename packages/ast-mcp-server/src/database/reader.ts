@@ -366,7 +366,9 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
       const files = await readdir(astsDir);
       
       for (const file of files) {
-        if (!file.endsWith('.json')) continue;
+        if (!file.endsWith('.json')) {
+continue;
+}
         
         const filePath = join(astsDir, file);
         const stats = await stat(filePath);
@@ -408,11 +410,15 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
     
     try {
       const structure = this.dbManager.getDatabaseStructure();
-      if (!structure) return false;
+      if (!structure) {
+return false;
+}
 
       // Check if AST files exist
       const astsExists = await this.fs.exists(structure.asts);
-      if (!astsExists) return false;
+      if (!astsExists) {
+return false;
+}
 
       // Check if there are any AST files
       const files = await readdir(structure.asts);
@@ -444,7 +450,9 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
         // Count nodes by reading AST files
         for (const file of files) {
-          if (!file.endsWith('.json')) continue;
+          if (!file.endsWith('.json')) {
+continue;
+}
           
           const filePath = join(structure.asts, file);
           const stats = await stat(filePath);
@@ -489,7 +497,9 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
   private async setupHotReloadDetection(): Promise<void> {
     const structure = this.dbManager.getDatabaseStructure();
-    if (!structure || !this.hotReloadConfig.enabled) return;
+    if (!structure || !this.hotReloadConfig.enabled) {
+return;
+}
 
     try {
       const watchPaths = [
@@ -560,10 +570,14 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
   private async getLastIndexUpdate(): Promise<Date | null> {
     try {
       const structure = this.dbManager.getDatabaseStructure();
-      if (!structure) return null;
+      if (!structure) {
+return null;
+}
 
       const astsDir = structure.asts;
-      if (!(await this.fs.exists(astsDir))) return null;
+      if (!(await this.fs.exists(astsDir))) {
+return null;
+}
 
       const files = await readdir(astsDir);
       let latest: Date | null = null;
@@ -588,13 +602,19 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
     try {
       // Node IDs typically contain file path information
       const parts = nodeId.split(':');
-      if (parts.length < 2) return null;
+      if (parts.length < 2) {
+return null;
+}
 
       const filePath = parts[0];
-      if (!filePath) return null;
+      if (!filePath) {
+return null;
+}
 
       const structure = this.dbManager.getDatabaseStructure();
-      if (!structure) return null;
+      if (!structure) {
+return null;
+}
 
       const astPath = join(structure.asts, filePath.replace(/\//g, '_') + '.json');
 
@@ -625,7 +645,9 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
       if (node.children && Array.isArray(node.children)) {
         for (let i = 0; i < node.children.length; i++) {
           const result = search(node.children[i], [...path, 'children', i.toString()]);
-          if (result) return result;
+          if (result) {
+return result;
+}
         }
       }
 
@@ -640,13 +662,17 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
     try {
       const structure = this.dbManager.getDatabaseStructure();
-      if (!structure) return children;
+      if (!structure) {
+return children;
+}
 
       const astsDir = structure.asts;
       const files = await readdir(astsDir);
 
       for (const file of files) {
-        if (!file.endsWith('.json')) continue;
+        if (!file.endsWith('.json')) {
+continue;
+}
 
         const filePath = join(astsDir, file);
         const originalPath = file.replace('.json', '').replace(/_/g, '/');
@@ -707,7 +733,9 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
   }
 
   private astNodeToASTNode(node: any, filePath: string, path: string[], parentId?: string): ASTNode | null {
-    if (!node || !node.type) return null;
+    if (!node || !node.type) {
+return null;
+}
 
     const nodeId = `${filePath}:${path.join('.')}`;
     const now = new Date();
@@ -764,14 +792,18 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
     try {
       const structure = this.dbManager.getDatabaseStructure();
-      if (!structure) return matches;
+      if (!structure) {
+return matches;
+}
 
       const astsDir = structure.asts;
       const files = await readdir(astsDir);
       const queryLower = query.toLowerCase();
 
       for (const file of files) {
-        if (!file.endsWith('.json')) continue;
+        if (!file.endsWith('.json')) {
+continue;
+}
 
         const filePath = join(astsDir, file);
         const originalPath = file.replace('.json', '').replace(/_/g, '/');
@@ -841,13 +873,21 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
     let score = 0;
     
     // Exact matches get higher scores
-    if (signature === queryLower) score += 1.0;
-    else if (signature.includes(queryLower)) score += 0.7;
+    if (signature === queryLower) {
+score += 1.0;
+} else if (signature.includes(queryLower)) {
+score += 0.7;
+}
     
-    if (nodeType === queryLower) score += 0.8;
-    else if (nodeType.includes(queryLower)) score += 0.5;
+    if (nodeType === queryLower) {
+score += 0.8;
+} else if (nodeType.includes(queryLower)) {
+score += 0.5;
+}
 
-    if (summary.includes(queryLower)) score += 0.3;
+    if (summary.includes(queryLower)) {
+score += 0.3;
+}
 
     // Bonus for important node types
     if (['function', 'class', 'method', 'variable'].includes(nodeType)) {
@@ -886,7 +926,9 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
   private getCachedResult(key: string): any | null {
     const cached = this.queryCache.get(key);
-    if (!cached) return null;
+    if (!cached) {
+return null;
+}
 
     if (Date.now() - cached.timestamp > this.CACHE_TTL) {
       this.queryCache.delete(key);

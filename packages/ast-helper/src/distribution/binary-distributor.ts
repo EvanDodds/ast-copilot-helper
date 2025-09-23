@@ -2,7 +2,7 @@ import { readFile, writeFile, stat } from 'fs/promises';
 import { join, dirname, basename, extname } from 'path';
 import { execSync } from 'child_process';
 import { createHash } from 'crypto';
-import {
+import type {
   DistributionConfig,
   ValidationResult,
   ValidationMessage,

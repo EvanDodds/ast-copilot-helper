@@ -9,7 +9,7 @@
  */
 
 import { ComprehensiveErrorReportingManager } from '../manager';
-import { ErrorReportingConfig } from '../types';
+import type { ErrorReportingConfig } from '../types';
 
 async function advancedConfigurationExample() {
   console.log('🚀 Starting Advanced Configuration Example\n');

@@ -89,7 +89,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --fix --max-warnings 50"
+      "eslint --fix --quiet"
     ]
   },
   "devDependencies": {

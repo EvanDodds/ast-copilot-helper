@@ -3,7 +3,7 @@
  * @module @ast-copilot-helper/ast-helper/error-reporting/diagnostics/types
  */
 
-import { 
+import type { 
   DiagnosticData, 
   SystemDiagnostics as BaseSystemDiagnostics,
   RuntimeDiagnostics as BaseRuntimeDiagnostics,

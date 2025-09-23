@@ -2,7 +2,7 @@
  * Text preprocessing for code-specific embedding generation
  */
 
-import { Annotation } from './types.js';
+import type { Annotation } from './types.js';
 
 /**
  * Configuration for text processing

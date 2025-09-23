@@ -3,16 +3,17 @@
  * Handles MCP communication via TCP sockets for remote connections
  */
 
-import { createServer, Server, Socket } from 'net';
-import { JSONRPCResponse, JSONRPCNotification } from './protocol';
+import type { Server, Socket } from 'net';
+import { createServer } from 'net';
+import type { JSONRPCResponse, JSONRPCNotification } from './protocol';
 import { MCPTransport, BaseTransportStats } from './transport';
 
 /**
  * Statistics for TCP transport
  */
 class TCPTransportStats extends BaseTransportStats {
-  public activeConnections: number = 0;
-  public totalConnections: number = 0;
+  public activeConnections = 0;
+  public totalConnections = 0;
 
   constructor() {
     super();
@@ -56,7 +57,7 @@ export class TCPTransport extends MCPTransport {
   private host: string;
   private clientBuffers: Map<string, string> = new Map();
 
-  constructor(port: number = 3000, host: string = 'localhost') {
+  constructor(port = 3000, host = 'localhost') {
     super();
     this.port = port;
     this.host = host;

@@ -3,8 +3,9 @@
  * Provides pooling for file system handles with path management and concurrent access control
  */
 
-import { BaseResourcePool, BasePoolConfig } from './base-pool.js';
-import { 
+import type { BasePoolConfig } from './base-pool.js';
+import { BaseResourcePool } from './base-pool.js';
+import type { 
   FileHandle, 
   FileHandleFactory
 } from '../types.js';
@@ -29,7 +30,7 @@ export class FileHandlePool extends BaseResourcePool<FileHandle> {
     this.poolConfig = config;
   }
 
-  async acquireFileHandle(filePath: string, mode: string = 'r'): Promise<FileHandle> {
+  async acquireFileHandle(filePath: string, mode = 'r'): Promise<FileHandle> {
     // Create a specific file handle outside of the generic pool system
     // This is a specialized method that bypasses the generic pool for specific file access
     const tempFactory = new SpecificFileHandleFactory(this.poolConfig, filePath, mode);

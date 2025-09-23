@@ -174,11 +174,11 @@ export interface PerformanceRecommendation {
  */
 export class PerformanceMetricsCollector extends EventEmitter {
   private config: MetricsConfig;
-  private isRunning: boolean = false;
+  private isRunning = false;
   private collectionTimer: NodeJS.Timeout | null = null;
   private metricsHistory: SystemMetrics[] = [];
   private aggregatedMetrics: MetricsAggregation[] = [];
-  private lastEventLoopTimestamp: number = 0;
+  private lastEventLoopTimestamp = 0;
   private eventLoopSamples: number[] = [];
 
   constructor(config: Partial<MetricsConfig> = {}) {
@@ -591,10 +591,15 @@ export class PerformanceMetricsCollector extends EventEmitter {
     const performanceScore = this.calculateOverallPerformanceScore(metrics);
     
     let systemHealth: MetricsSummary['systemHealth'] = 'excellent';
-    if (performanceScore < 0.6) systemHealth = 'critical';
-    else if (performanceScore < 0.7) systemHealth = 'poor';
-    else if (performanceScore < 0.8) systemHealth = 'fair';
-    else if (performanceScore < 0.9) systemHealth = 'good';
+    if (performanceScore < 0.6) {
+systemHealth = 'critical';
+} else if (performanceScore < 0.7) {
+systemHealth = 'poor';
+} else if (performanceScore < 0.8) {
+systemHealth = 'fair';
+} else if (performanceScore < 0.9) {
+systemHealth = 'good';
+}
 
     return {
       memoryUtilization,
@@ -719,7 +724,9 @@ export class PerformanceMetricsCollector extends EventEmitter {
   }
 
   private calculateMedian(sortedData: number[]): number {
-    if (sortedData.length === 0) return 0;
+    if (sortedData.length === 0) {
+return 0;
+}
     
     const mid = Math.floor(sortedData.length / 2);
     return sortedData.length % 2 === 0
@@ -728,14 +735,18 @@ export class PerformanceMetricsCollector extends EventEmitter {
   }
 
   private calculatePercentile(sortedData: number[], percentile: number): number {
-    if (sortedData.length === 0) return 0;
+    if (sortedData.length === 0) {
+return 0;
+}
     
     const index = Math.ceil((percentile / 100) * sortedData.length) - 1;
     return sortedData[Math.max(0, Math.min(index, sortedData.length - 1))] ?? 0;
   }
 
   private calculateCorrelation(x: number[], y: number[]): number {
-    if (x.length !== y.length || x.length === 0) return 0;
+    if (x.length !== y.length || x.length === 0) {
+return 0;
+}
     
     const n = x.length;
     const meanX = x.reduce((sum, val) => sum + val, 0) / n;
@@ -759,7 +770,9 @@ export class PerformanceMetricsCollector extends EventEmitter {
 
   private calculateMemoryEfficiency(memoryData: MemorySnapshot[]): number {
     // Simplified efficiency calculation
-    if (memoryData.length === 0) return 1.0;
+    if (memoryData.length === 0) {
+return 1.0;
+}
     
     const avgUtilization = memoryData.reduce((sum, m) => sum + m.heapUtilization, 0) / memoryData.length;
     return Math.max(0, Math.min(1, 1 - avgUtilization + 0.3)); // Prefer moderate utilization
@@ -772,7 +785,9 @@ export class PerformanceMetricsCollector extends EventEmitter {
 
   private calculateLeakProbability(metrics: SystemMetrics[]): number {
     // Simplified leak probability calculation
-    if (metrics.length < 2) return 0;
+    if (metrics.length < 2) {
+return 0;
+}
     
     const memoryGrowth: number[] = [];
     for (let i = 1; i < metrics.length; i++) {
@@ -790,7 +805,9 @@ export class PerformanceMetricsCollector extends EventEmitter {
   private calculatePerformanceScore(metrics: SystemMetrics[]): number {
     // Simplified performance score calculation
     const avgMetrics = metrics[metrics.length - 1] || metrics[0];
-    if (!avgMetrics) return 1.0;
+    if (!avgMetrics) {
+return 1.0;
+}
     
     const memoryScore = Math.max(0, 1 - avgMetrics.memory.heapUtilization);
     const lagScore = Math.max(0, 1 - avgMetrics.performance.eventLoopLag / 100);

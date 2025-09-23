@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { performance } from 'perf_hooks';
-import {
+import type {
   ResourcePool as IResourcePool,
   PoolConfig,
   PoolStats,
@@ -436,7 +436,9 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
   private async processWaitingQueue(): Promise<void> {
     while (this.waitingQueue.length > 0 && this.availableResources.size > 0) {
       const request = this.waitingQueue.shift();
-      if (!request) break;
+      if (!request) {
+break;
+}
 
       try {
         const availableId = Array.from(this.availableResources)[0];
@@ -452,7 +454,9 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
     // Try to create new resources if queue is not empty and under max size
     while (this.waitingQueue.length > 0 && this.resources.size < this.config.maxSize) {
       const request = this.waitingQueue.shift();
-      if (!request) break;
+      if (!request) {
+break;
+}
 
       try {
         const resource = await this.createNewResource();

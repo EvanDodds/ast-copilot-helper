@@ -48,9 +48,9 @@ export interface GCSchedule {
 export class GCScheduler extends EventEmitter {
   private config: GCSchedulerConfig;
   private gcStats: GCStats;
-  private isRunning: boolean = false;
+  private isRunning = false;
   private schedulerTimer: NodeJS.Timeout | null = null;
-  private lastGCTime: number = 0;
+  private lastGCTime = 0;
   private memoryHistory: MemorySnapshot[] = [];
   private readonly maxHistorySize = 100;
   private pressureHistory: MemoryPressure[] = [];
@@ -102,7 +102,7 @@ export class GCScheduler extends EventEmitter {
   /**
    * Force immediate garbage collection
    */
-  async forceGC(reason: string = 'manual'): Promise<GCResult> {
+  async forceGC(reason = 'manual'): Promise<GCResult> {
     if (!global.gc) {
       throw new Error('Garbage collection is not exposed. Run with --expose-gc flag.');
     }
@@ -393,7 +393,9 @@ export class GCScheduler extends EventEmitter {
     const avgCleaned = this.gcStats.averageMemoryCleaned / (1024 * 1024); // MB
     const avgTime = this.gcStats.averageGCTime; // ms
     
-    if (avgTime === 0) return 1.0;
+    if (avgTime === 0) {
+return 1.0;
+}
     
     // Effectiveness = MB cleaned per ms (normalized)
     const efficiency = avgCleaned / avgTime;

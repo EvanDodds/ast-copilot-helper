@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { ASTNode, NormalizedASTNode, NodePosition } from './types.js';
+import type { ASTNode, NormalizedASTNode, NodePosition } from './types.js';
 
 /**
  * Configuration for AST normalization rules per language
@@ -442,11 +442,21 @@ export class ASTNormalizer {
   }
 
   private categorizeNode(nodeType: string, config: NormalizationConfig): NormalizedASTNode['metadata']['category'] {
-    if (config.declarationTypes.has(nodeType)) return 'declaration';
-    if (config.statementTypes.has(nodeType)) return 'statement';
-    if (config.expressionTypes.has(nodeType)) return 'expression';
-    if (config.literalTypes.has(nodeType)) return 'literal';
-    if (config.identifierTypes.has(nodeType)) return 'identifier';
+    if (config.declarationTypes.has(nodeType)) {
+return 'declaration';
+}
+    if (config.statementTypes.has(nodeType)) {
+return 'statement';
+}
+    if (config.expressionTypes.has(nodeType)) {
+return 'expression';
+}
+    if (config.literalTypes.has(nodeType)) {
+return 'literal';
+}
+    if (config.identifierTypes.has(nodeType)) {
+return 'identifier';
+}
     return 'other';
   }
 

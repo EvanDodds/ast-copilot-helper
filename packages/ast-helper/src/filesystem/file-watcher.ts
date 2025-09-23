@@ -8,12 +8,12 @@
  */
 
 import { EventEmitter } from 'node:events';
-import { Stats } from 'node:fs';
+import type { Stats } from 'node:fs';
 import { resolve, relative } from 'node:path';
 import * as chokidar from 'chokidar';
 import { minimatch } from 'minimatch';
 import { createModuleLogger } from '../logging';
-import {
+import type {
   FileWatcher,
   FileWatchConfig,
   FileChangeEvent,

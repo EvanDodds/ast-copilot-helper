@@ -3,7 +3,7 @@
  * @description Type definitions for comprehensive telemetry data collection
  */
 
-import { PrivacyLevel, ErrorSeverity } from '../types.js';
+import type { PrivacyLevel, ErrorSeverity } from '../types.js';
 
 // ============================================================================
 // Core Collection Interfaces

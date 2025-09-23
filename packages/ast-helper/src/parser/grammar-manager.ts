@@ -6,7 +6,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createHash } from 'crypto';
-import { LanguageConfig, GrammarManager } from './types.js';
+import type { LanguageConfig, GrammarManager } from './types.js';
 
 interface GrammarMetadata {
   version: string;

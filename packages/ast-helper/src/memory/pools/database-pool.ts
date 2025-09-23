@@ -3,8 +3,9 @@
  * Provides pooling for database connections with connection string management and health checks
  */
 
-import { BaseResourcePool, BasePoolConfig } from './base-pool.js';
-import { 
+import type { BasePoolConfig } from './base-pool.js';
+import { BaseResourcePool } from './base-pool.js';
+import type { 
   DatabaseConnection, 
   DatabaseConnectionFactory
 } from '../types.js';

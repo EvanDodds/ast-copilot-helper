@@ -19,7 +19,7 @@ let serverProcessManager: ServerProcessManager | null = null;
 let mcpClientManager: MCPClientManager | null = null;
 let commandHandlers: CommandHandlers | null = null;
 let uiManager: UIManager | null = null;
-let disposables: vscode.Disposable[] = [];
+const disposables: vscode.Disposable[] = [];
 
 /**
  * Extension activation entry point

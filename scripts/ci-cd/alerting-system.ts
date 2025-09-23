@@ -697,7 +697,7 @@ ${alert.message}
       }
 
       let shouldAlert = false;
-      let context: any = {};
+      const context: any = {};
 
       try {
         switch (rule.type) {

@@ -287,7 +287,7 @@ describe('Input Validation System', () => {
         expect(result.isValid).toBe(true);
 
         // Create deeply nested object
-        let deepObject: any = {};
+        const deepObject: any = {};
         let current = deepObject;
         for (let i = 0; i < 15; i++) { // Exceeds default max depth of 10
           current.next = {};

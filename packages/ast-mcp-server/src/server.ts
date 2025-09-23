@@ -4,17 +4,18 @@
  */
 
 import { EventEmitter } from 'events';
-import {
+import type {
   JSONRPCRequest,
   JSONRPCResponse,
   MCPHandler,
-  MCPServerCapabilities,
+  MCPServerCapabilities} from './mcp/protocol';
+import {
   MCPErrorCode,
   createErrorResponse,
   isValidMCPRequest
 } from './mcp/protocol';
-import { MCPTransport } from './mcp/transport';
-import { DatabaseReader, ServerStats } from './types';
+import type { MCPTransport } from './mcp/transport';
+import type { DatabaseReader, ServerStats } from './types';
 import { StandardHandlerFactory } from './mcp/standard-handlers.js';
 
 /**
@@ -50,8 +51,8 @@ export class ASTMCPServer extends EventEmitter {
   private config: ServerConfig;
   private requestHandlers: Map<string, MCPHandler> = new Map();
   private handlerFactory: StandardHandlerFactory;
-  private isRunning: boolean = false;
-  private isInitialized: boolean = false;
+  private isRunning = false;
+  private isInitialized = false;
   private stats: ServerStats;
   private activeRequests: Map<string | number, Promise<JSONRPCResponse>> = new Map();
 

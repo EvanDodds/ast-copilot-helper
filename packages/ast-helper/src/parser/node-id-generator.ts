@@ -6,7 +6,8 @@
  */
 
 import { createHash } from 'crypto';
-import { Position, NodeType, AST_CONFIG } from './ast-schema';
+import type { Position, NodeType} from './ast-schema';
+import { AST_CONFIG } from './ast-schema';
 
 /**
  * Interface for the minimal node data required for ID generation
@@ -384,7 +385,7 @@ export class NodeIDUtils {
    * @param length - Number of characters to include (default: 8)
    * @returns Shortened ID for display
    */
-  static shortId(id: string, length: number = 8): string {
+  static shortId(id: string, length = 8): string {
     if (!NodeIDGenerator.validateId(id)) {
       throw new Error('Invalid node ID format');
     }

@@ -2,12 +2,13 @@
  * Telemetry configuration management
  */
 
-import { 
+import type { 
   TelemetryConfig, 
   AnonymizationConfig, 
   RetentionConfig,
   TelemetryFeatures,
-  PrivacyLevel,
+  PrivacyLevel} from './types.js';
+import {
   DEFAULT_BATCH_SIZE,
   DEFAULT_FLUSH_INTERVAL,
   DEFAULT_RETRY_ATTEMPTS,

@@ -467,7 +467,7 @@ class PerformanceTestSuite {
   }
 
   private calculateScalingFactor(results: Array<{ size: number; metrics: PerformanceMetrics }>): number {
-    if (results.length < 2) return 1.0;
+    if (results.length < 2) {return 1.0;}
     
     const first = results[0];
     const last = results[results.length - 1];
@@ -479,7 +479,7 @@ class PerformanceTestSuite {
   }
 
   private calculateMemoryScalingFactor(results: Array<{ size: number; metrics: PerformanceMetrics }>): number {
-    if (results.length < 2) return 1.0;
+    if (results.length < 2) {return 1.0;}
     
     const first = results[0];
     const last = results[results.length - 1];
@@ -491,7 +491,7 @@ class PerformanceTestSuite {
   }
 
   private calculateConcurrencyScalingFactor(results: Array<{ concurrency: number; metrics: PerformanceMetrics }>): number {
-    if (results.length < 2) return 1.0;
+    if (results.length < 2) {return 1.0;}
     
     const first = results[0];
     const last = results[results.length - 1];
@@ -534,7 +534,7 @@ class PerformanceTestSuite {
 
   private averageMetrics(metrics: PerformanceMetrics[]): PerformanceMetrics {
     const count = metrics.length;
-    if (count === 0) return this.createEmptyMetrics();
+    if (count === 0) {return this.createEmptyMetrics();}
 
     return {
       executionTime: metrics.reduce((sum, m) => sum + m.executionTime, 0) / count,

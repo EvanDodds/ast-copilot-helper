@@ -256,7 +256,7 @@ class ErrorHandlingTestSuite {
       const startTime = Date.now();
       let success = false;
       let errorCount = 0;
-      let recoveryStrategy = 'input_validation';
+      const recoveryStrategy = 'input_validation';
 
       try {
         // Create circular reference for specific test
@@ -628,9 +628,9 @@ class ErrorHandlingTestSuite {
     await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 500ms
     
     // Check each system component
-    if (!this.systemState.networkConnected) errorCount++;
-    if (!this.systemState.databaseOperational) errorCount++;
-    if (this.systemState.memoryUsage > 500000000) errorCount++;
+    if (!this.systemState.networkConnected) {errorCount++;}
+    if (!this.systemState.databaseOperational) {errorCount++;}
+    if (this.systemState.memoryUsage > 500000000) {errorCount++;}
     
     return { errorCount };
   }

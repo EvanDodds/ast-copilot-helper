@@ -358,8 +358,8 @@ export class PerformanceBenchmarks {
   }
 
   private static evaluateMetric(value: number, thresholds: { excellent: number; good: number; poor: number }): 'excellent' | 'good' | 'poor' {
-    if (value <= thresholds.excellent) return 'excellent';
-    if (value <= thresholds.good) return 'good';
+    if (value <= thresholds.excellent) {return 'excellent';}
+    if (value <= thresholds.good) {return 'good';}
     return 'poor';
   }
 

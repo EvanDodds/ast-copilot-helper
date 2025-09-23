@@ -1,5 +1,6 @@
-import { ASTNode } from '../parser/types.js';
-import { DependencyInfo, DependencyType, DependencyAnalysisConfig } from './types.js';
+import type { ASTNode } from '../parser/types.js';
+import type { DependencyInfo, DependencyAnalysisConfig } from './types.js';
+import { DependencyType } from './types.js';
 
 /**
  * Analyzes dependencies, imports, exports, and function calls in AST nodes
@@ -80,19 +81,25 @@ export class DependencyAnalyzer {
       // ES6 imports
       if (type === 'importdeclaration') {
         const importInfo = await this.parseImportDeclaration(currentNode, filePath);
-        if (importInfo) imports.push(importInfo);
+        if (importInfo) {
+imports.push(importInfo);
+}
       }
       
       // Dynamic imports
       if (this.config.includeDynamicImports && type === 'import' && nodeAny.arguments) {
         const dynamicImport = await this.parseDynamicImport(currentNode, filePath);
-        if (dynamicImport) imports.push(dynamicImport);
+        if (dynamicImport) {
+imports.push(dynamicImport);
+}
       }
       
       // TypeScript type imports
       if (this.config.includeTypeImports && type === 'importtype') {
         const typeImport = await this.parseBasicImport(currentNode, filePath, true);
-        if (typeImport) imports.push(typeImport);
+        if (typeImport) {
+imports.push(typeImport);
+}
       }
     });
     
@@ -111,7 +118,9 @@ export class DependencyAnalyzer {
       if (type === 'exportdeclaration' || type === 'exportdefaultdeclaration' || 
           type === 'exportnameddeclaration' || type === 'exportalldeclaration') {
         const exportInfo = await this.parseExportDeclaration(currentNode, filePath);
-        if (exportInfo) exports.push(exportInfo);
+        if (exportInfo) {
+exports.push(exportInfo);
+}
       }
     });
     
@@ -129,12 +138,16 @@ export class DependencyAnalyzer {
       
       if (type === 'callexpression' || type === 'newexpression') {
         const callInfo = await this.parseCallExpression(currentNode);
-        if (callInfo) calls.push(callInfo);
+        if (callInfo) {
+calls.push(callInfo);
+}
       }
       
       if (type === 'memberexpression') {
         const memberCall = await this.parseMemberExpression(currentNode);
-        if (memberCall) calls.push(memberCall);
+        if (memberCall) {
+calls.push(memberCall);
+}
       }
     });
     
@@ -150,7 +163,9 @@ export class DependencyAnalyzer {
     await this.traverseNode(node, async (currentNode) => {
       if (this.isRequireCall(currentNode)) {
         const requireInfo = await this.parseRequireCall(currentNode, filePath);
-        if (requireInfo) requires.push(requireInfo);
+        if (requireInfo) {
+requires.push(requireInfo);
+}
       }
     });
     
@@ -164,7 +179,9 @@ export class DependencyAnalyzer {
     try {
       const nodeAny = node as any;
       const source = this.extractStringLiteral(nodeAny.source);
-      if (!source) return null;
+      if (!source) {
+return null;
+}
       
       const specifiers = this.extractImportSpecifiers(nodeAny);
       
@@ -191,10 +208,14 @@ export class DependencyAnalyzer {
     try {
       const nodeAny = node as any;
       const args = nodeAny.arguments || [];
-      if (args.length === 0) return null;
+      if (args.length === 0) {
+return null;
+}
       
       const source = this.extractStringLiteral(args[0]);
-      if (!source) return null;
+      if (!source) {
+return null;
+}
       
       return {
         type: DependencyType.IMPORT,
@@ -215,11 +236,13 @@ export class DependencyAnalyzer {
   /**
    * Parses basic import (fallback for type imports)
    */
-  private async parseBasicImport(node: ASTNode, filePath?: string, isTypeOnly: boolean = false): Promise<DependencyInfo | null> {
+  private async parseBasicImport(node: ASTNode, filePath?: string, isTypeOnly = false): Promise<DependencyInfo | null> {
     try {
       const nodeAny = node as any;
       const source = this.extractStringLiteral(nodeAny.source);
-      if (!source) return null;
+      if (!source) {
+return null;
+}
       
       return {
         type: DependencyType.IMPORT,
@@ -269,7 +292,9 @@ export class DependencyAnalyzer {
     try {
       const nodeAny = node as any;
       const functionName = this.extractCalleeIdentifier(nodeAny.callee);
-      if (!functionName) return null;
+      if (!functionName) {
+return null;
+}
       
       return {
         type: DependencyType.CALL,
@@ -297,7 +322,9 @@ export class DependencyAnalyzer {
       const objectName = this.extractIdentifierName(nodeAny.object);
       const propertyName = this.extractIdentifierName(nodeAny.property);
       
-      if (!objectName || !propertyName) return null;
+      if (!objectName || !propertyName) {
+return null;
+}
       
       const fullName = `${objectName}.${propertyName}`;
       
@@ -324,10 +351,14 @@ export class DependencyAnalyzer {
     try {
       const nodeAny = node as any;
       const args = nodeAny.arguments || [];
-      if (args.length === 0) return null;
+      if (args.length === 0) {
+return null;
+}
       
       const source = this.extractStringLiteral(args[0]);
-      if (!source) return null;
+      if (!source) {
+return null;
+}
       
       return {
         type: DependencyType.REQUIRE,
@@ -427,9 +458,15 @@ export class DependencyAnalyzer {
   }
 
   private extractStringLiteral(node: any): string | null {
-    if (!node) return null;
-    if (typeof node === 'string') return node;
-    if (node.value && typeof node.value === 'string') return node.value;
+    if (!node) {
+return null;
+}
+    if (typeof node === 'string') {
+return node;
+}
+    if (node.value && typeof node.value === 'string') {
+return node.value;
+}
     if (node.raw && typeof node.raw === 'string') {
       // Remove quotes from string literals
       return node.raw.replace(/^['"`]|['"`]$/g, '');
@@ -443,7 +480,9 @@ export class DependencyAnalyzer {
     if (nodeAny.specifiers) {
       for (const spec of nodeAny.specifiers) {
         const name = this.extractIdentifierName(spec.imported || spec.local);
-        if (name) specifiers.push(name);
+        if (name) {
+specifiers.push(name);
+}
       }
     }
     
@@ -456,20 +495,26 @@ export class DependencyAnalyzer {
     if (nodeAny.specifiers) {
       for (const spec of nodeAny.specifiers) {
         const name = this.extractIdentifierName(spec.exported || spec.local);
-        if (name) names.push(name);
+        if (name) {
+names.push(name);
+}
       }
     }
     
     if (nodeAny.declaration) {
       const declName = this.extractIdentifierName(nodeAny.declaration);
-      if (declName) names.push(declName);
+      if (declName) {
+names.push(declName);
+}
     }
     
     return names;
   }
 
   private extractCalleeIdentifier(callee: any): string | null {
-    if (!callee) return null;
+    if (!callee) {
+return null;
+}
     
     if (callee.type === 'Identifier') {
       return callee.name || null;
@@ -485,10 +530,18 @@ export class DependencyAnalyzer {
   }
 
   private extractIdentifierName(node: any): string | null {
-    if (!node) return null;
-    if (typeof node === 'string') return node;
-    if (node.name && typeof node.name === 'string') return node.name;
-    if (node.id && node.id.name) return node.id.name;
+    if (!node) {
+return null;
+}
+    if (typeof node === 'string') {
+return node;
+}
+    if (node.name && typeof node.name === 'string') {
+return node.name;
+}
+    if (node.id && node.id.name) {
+return node.id.name;
+}
     return null;
   }
 
@@ -501,7 +554,9 @@ export class DependencyAnalyzer {
   }
 
   private isExternalModule(source: string): boolean {
-    if (this.config.ignoreNodeModules) return false;
+    if (this.config.ignoreNodeModules) {
+return false;
+}
     return !source.startsWith('./') && !source.startsWith('../') && !source.startsWith('/');
   }
 

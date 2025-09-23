@@ -86,12 +86,14 @@ export class PythonExtractor implements SignatureExtractor {
         // Look for docstrings (first string literal in function/class body)
         for (let i = 1; i < sourceLines.length; i++) {
             const line = sourceLines[i]?.trim();
-            if (!line) continue;
+            if (!line) {
+continue;
+}
 
             // Triple quoted strings
             if (line.startsWith('"""') || line.startsWith("'''")) {
                 const quoteType = line.startsWith('"""') ? '"""' : "'''";
-                let docstring = line.substring(3);
+                const docstring = line.substring(3);
 
                 // Single line docstring
                 if (line.endsWith(quoteType) && line.length > 6) {
@@ -184,19 +186,25 @@ export class PythonExtractor implements SignatureExtractor {
 
         for (const param of params) {
             const cleaned = param.trim();
-            if (!cleaned || cleaned.startsWith('*')) continue;
+            if (!cleaned || cleaned.startsWith('*')) {
+continue;
+}
 
             // Parse parameter with type annotation and default value
             const parts = cleaned.split('=');
             const nameTypePart = parts[0]?.trim();
-            if (!nameTypePart) continue;
+            if (!nameTypePart) {
+continue;
+}
 
             const defaultValue = parts[1]?.trim();
 
             // Split name and type annotation
             const typeParts = nameTypePart.split(':');
             const name = typeParts[0]?.trim();
-            if (!name) continue;
+            if (!name) {
+continue;
+}
 
             const type = typeParts[1]?.trim();
 

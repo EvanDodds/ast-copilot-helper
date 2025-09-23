@@ -762,7 +762,9 @@ export class ComprehensiveInputValidator implements InputValidator {
   }
 
   private log(level: string, message: string, meta?: any): void {
-    if (!this.config.general.enableLogging) return;
+    if (!this.config.general.enableLogging) {
+return;
+}
 
     const logLevels = ['error', 'warn', 'info', 'debug'];
     const configLevel = this.config.general.logLevel;

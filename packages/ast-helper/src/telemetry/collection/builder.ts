@@ -3,7 +3,7 @@
  * @description Utility classes for constructing telemetry events
  */
 
-import { PrivacyLevel } from '../types.js';
+import type { PrivacyLevel } from '../types.js';
 import type { 
   TelemetryEvent,
   FeatureUsageEvent,

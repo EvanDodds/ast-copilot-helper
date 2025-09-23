@@ -3,8 +3,9 @@
  * Provides pooling for worker threads with task distribution and resource monitoring
  */
 
-import { BaseResourcePool, BasePoolConfig } from './base-pool.js';
-import { 
+import type { BasePoolConfig } from './base-pool.js';
+import { BaseResourcePool } from './base-pool.js';
+import type { 
   WorkerThread, 
   WorkerThreadFactory,
   WorkerType

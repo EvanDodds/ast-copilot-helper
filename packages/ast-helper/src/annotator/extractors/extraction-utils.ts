@@ -2,8 +2,8 @@
  * Base utilities and shared functionality for signature extractors
  */
 
-import { ASTNode } from '../../parser/types';
-import { Parameter } from '../types';
+import type { ASTNode } from '../../parser/types';
+import type { Parameter } from '../types';
 
 /**
  * Utility functions for extracting common elements from source text

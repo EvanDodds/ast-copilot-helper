@@ -3,8 +3,9 @@
  * Handles embedding generation for annotations
  */
 
-import { XenovaEmbeddingGenerator, Annotation, EmbeddingResult, EmbeddingConfig } from '../embedder/index.js';
-import { Logger } from '../logging/index.js';
+import type { Annotation, EmbeddingResult, EmbeddingConfig } from '../embedder/index.js';
+import { XenovaEmbeddingGenerator } from '../embedder/index.js';
+import type { Logger } from '../logging/index.js';
 import { ASTDatabaseManager, EmbeddingDatabaseManager } from '../database/index.js';
 import type { Config } from '../types.js';
 import path from 'path';
@@ -368,7 +369,9 @@ export class EmbedCommand {
    * Report embedding statistics
    */
   private reportStatistics(results: EmbeddingResult[]): void {
-    if (results.length === 0) return;
+    if (results.length === 0) {
+return;
+}
     
     const totalTime = results.reduce((sum, r) => sum + r.processingTime, 0);
     const avgTime = totalTime / results.length;

@@ -323,8 +323,12 @@ export class ParseBatchOrchestrator extends EventEmitter<ParseBatchOrchestratorE
 
         // Determine memory pressure
         let memoryPressure: ParseBatchProgress['memoryPressure'] = 'low';
-        if (memoryUsageMB > 256) memoryPressure = 'medium';
-        if (memoryUsageMB > 512) memoryPressure = 'high';
+        if (memoryUsageMB > 256) {
+memoryPressure = 'medium';
+}
+        if (memoryUsageMB > 512) {
+memoryPressure = 'high';
+}
 
         return {
             completed: this.performanceMetrics.totalFilesProcessed,

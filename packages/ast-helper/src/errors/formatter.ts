@@ -184,18 +184,28 @@ export class ErrorFormatter {
   /**
    * Format context values for display
    */
-  private formatContextValue(value: any, maxDepth: number, currentDepth: number = 0): string {
+  private formatContextValue(value: any, maxDepth: number, currentDepth = 0): string {
     if (currentDepth >= maxDepth) {
       return '[object]';
     }
 
-    if (value === null) return 'null';
-    if (value === undefined) return 'undefined';
-    if (typeof value === 'string') return `"${value}"`;
-    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (value === null) {
+return 'null';
+}
+    if (value === undefined) {
+return 'undefined';
+}
+    if (typeof value === 'string') {
+return `"${value}"`;
+}
+    if (typeof value === 'number' || typeof value === 'boolean') {
+return String(value);
+}
     
     if (Array.isArray(value)) {
-      if (value.length === 0) return '[]';
+      if (value.length === 0) {
+return '[]';
+}
       if (value.length === 1) {
         return `[${this.formatContextValue(value[0], maxDepth, currentDepth + 1)}]`;
       }
@@ -204,7 +214,9 @@ export class ErrorFormatter {
 
     if (typeof value === 'object') {
       const keys = Object.keys(value);
-      if (keys.length === 0) return '{}';
+      if (keys.length === 0) {
+return '{}';
+}
       if (keys.length === 1) {
         const key = keys[0];
         if (key !== undefined) {

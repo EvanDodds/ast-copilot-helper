@@ -25,7 +25,7 @@ import { E2EConfig } from './config.js';
  */
 export class E2ETestRunner extends EventEmitter {
   private config: E2EConfig;
-  private testStartTime: number = 0;
+  private testStartTime = 0;
 
   constructor(config?: Partial<E2ETestingConfig>) {
     super();

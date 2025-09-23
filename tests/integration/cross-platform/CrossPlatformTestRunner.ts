@@ -689,8 +689,8 @@ export class CrossPlatformTestRunner implements PlatformTester {
       const part1 = parts1[i] || 0;
       const part2 = parts2[i] || 0;
       
-      if (part1 > part2) return 1;
-      if (part1 < part2) return -1;
+      if (part1 > part2) {return 1;}
+      if (part1 < part2) {return -1;}
     }
     
     return 0;

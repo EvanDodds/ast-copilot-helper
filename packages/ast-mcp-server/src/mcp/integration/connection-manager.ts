@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
-import { Transport, ConnectionInfo, TransportMessage } from '../transport/base.js';
-import { ASTMCPServer } from '../server-core.js';
-import { MCPRequest, MCPResponse, MCPNotification } from '../protocol/types.js';
+import type { Transport, ConnectionInfo, TransportMessage } from '../transport/base.js';
+import type { ASTMCPServer } from '../server-core.js';
+import type { MCPRequest, MCPResponse, MCPNotification } from '../protocol/types.js';
 import { logger } from '../../logging/logger.js';
 
 export interface ConnectionManagerConfig {

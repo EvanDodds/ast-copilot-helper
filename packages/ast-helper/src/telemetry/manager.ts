@@ -2,28 +2,11 @@
  * Privacy-respecting telemetry manager implementation
  */
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 
 import crypto from 'crypto';
 import os from 'os';
 import {
-  TelemetryManager,
-  TelemetryConfig,
-  UsageMetrics,
-  PerformanceMetrics,
-  ErrorReport,
-  TelemetryResult,
-  ConsentStatus,
-  TelemetrySettings,
-  TelemetryEvent,
-  TelemetryPayload,
-  FeatureUsageEvent,
-  PerformanceEvent,
-  ErrorEvent,
-  SanitizedErrorReport,
-  ErrorCategory,
-  PrivacyLevel,
-  TelemetryFeatures,
   MAX_BUFFER_SIZE,
 } from './types.js';
 import {
@@ -637,26 +620,50 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
   }
 
   private quantifyFileCount(count?: number): string {
-    if (!count) return 'unknown';
+    if (!count) {
+return 'unknown';
+}
 
-    if (count < 10) return '1-9';
-    if (count < 50) return '10-49';
-    if (count < 100) return '50-99';
-    if (count < 500) return '100-499';
-    if (count < 1000) return '500-999';
+    if (count < 10) {
+return '1-9';
+}
+    if (count < 50) {
+return '10-49';
+}
+    if (count < 100) {
+return '50-99';
+}
+    if (count < 500) {
+return '100-499';
+}
+    if (count < 1000) {
+return '500-999';
+}
     return '1000+';
   }
 
   private quantifyCodebaseSize(size?: number): string {
-    if (!size) return 'unknown';
+    if (!size) {
+return 'unknown';
+}
 
     const mb = size / 1024 / 1024;
 
-    if (mb < 1) return '<1MB';
-    if (mb < 10) return '1-10MB';
-    if (mb < 50) return '10-50MB';
-    if (mb < 100) return '50-100MB';
-    if (mb < 500) return '100-500MB';
+    if (mb < 1) {
+return '<1MB';
+}
+    if (mb < 10) {
+return '1-10MB';
+}
+    if (mb < 50) {
+return '10-50MB';
+}
+    if (mb < 100) {
+return '50-100MB';
+}
+    if (mb < 500) {
+return '100-500MB';
+}
     return '>500MB';
   }
 
@@ -737,7 +744,24 @@ import { PrivacyRespectingConsentManager } from './consent/manager.js';
 import { PrivacyRespectingDataAnonymizer } from './anonymization/anonymizer.js';
 
 // Import the interface types
-import type { ConsentManager as IConsentManager, DataAnonymizer as IDataAnonymizer } from './types.js';
+import type { ConsentManager as IConsentManager, DataAnonymizer as IDataAnonymizer ,
+  TelemetryManager,
+  TelemetryConfig,
+  UsageMetrics,
+  PerformanceMetrics,
+  ErrorReport,
+  TelemetryResult,
+  ConsentStatus,
+  TelemetrySettings,
+  TelemetryEvent,
+  TelemetryPayload,
+  FeatureUsageEvent,
+  PerformanceEvent,
+  ErrorEvent,
+  SanitizedErrorReport,
+  ErrorCategory,
+  PrivacyLevel,
+  TelemetryFeatures} from './types.js';
 
 // Stub implementations for dependent components
 // These will be implemented in subsequent subtasks

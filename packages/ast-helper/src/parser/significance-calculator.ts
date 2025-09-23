@@ -5,7 +5,8 @@
  * based on node type, complexity, scope, and contextual factors.
  */
 
-import { ASTNode, NodeType, SignificanceLevel } from './ast-schema';
+import type { ASTNode} from './ast-schema';
+import { NodeType, SignificanceLevel } from './ast-schema';
 
 /**
  * Context information for significance calculation
@@ -363,22 +364,33 @@ export class SignificanceCalculator {
 
     // Child count contributes to complexity
     const childCount = context.children.length;
-    if (childCount > 20) complexityFactor += 2;
-    else if (childCount > 10) complexityFactor += 1;
-    else if (childCount > 5) complexityFactor += 0.5;
+    if (childCount > 20) {
+complexityFactor += 2;
+} else if (childCount > 10) {
+complexityFactor += 1;
+} else if (childCount > 5) {
+complexityFactor += 0.5;
+}
 
     // Cyclomatic complexity if available
     if (node.complexity !== undefined) {
-      if (node.complexity > 10) complexityFactor += 2;
-      else if (node.complexity > 5) complexityFactor += 1;
-      else if (node.complexity > 2) complexityFactor += 0.5;
+      if (node.complexity > 10) {
+complexityFactor += 2;
+} else if (node.complexity > 5) {
+complexityFactor += 1;
+} else if (node.complexity > 2) {
+complexityFactor += 0.5;
+}
     }
 
     // Source text length indicates complexity
     if (node.sourceText) {
       const lines = node.sourceText.split('\n').length;
-      if (lines > 50) complexityFactor += 1;
-      else if (lines > 20) complexityFactor += 0.5;
+      if (lines > 50) {
+complexityFactor += 1;
+} else if (lines > 20) {
+complexityFactor += 0.5;
+}
     }
 
     // Functions/methods with many parameters are more complex
@@ -387,8 +399,11 @@ export class SignificanceCalculator {
         child.type === NodeType.PARAMETER
       ).length;
       
-      if (parameterCount > 5) complexityFactor += 1;
-      else if (parameterCount > 3) complexityFactor += 0.5;
+      if (parameterCount > 5) {
+complexityFactor += 1;
+} else if (parameterCount > 3) {
+complexityFactor += 0.5;
+}
     }
 
     // Classes with many members are more complex
@@ -397,8 +412,11 @@ export class SignificanceCalculator {
         [NodeType.METHOD, NodeType.PROPERTY, NodeType.FIELD].includes(child.type)
       ).length;
       
-      if (memberCount > 10) complexityFactor += 1.5;
-      else if (memberCount > 5) complexityFactor += 0.5;
+      if (memberCount > 10) {
+complexityFactor += 1.5;
+} else if (memberCount > 5) {
+complexityFactor += 0.5;
+}
     }
 
     return Math.min(complexityFactor, 2); // Cap at +2
@@ -411,13 +429,23 @@ export class SignificanceCalculator {
     const scopeDepth = node.metadata?.scope?.length ?? 0;
     
     // Deeply nested items are less significant
-    if (scopeDepth > 6) return -1;
-    if (scopeDepth > 4) return -0.5;
-    if (scopeDepth > 2) return -0.2;
+    if (scopeDepth > 6) {
+return -1;
+}
+    if (scopeDepth > 4) {
+return -0.5;
+}
+    if (scopeDepth > 2) {
+return -0.2;
+}
     
     // Top-level items are more significant
-    if (scopeDepth === 0) return 0.5;
-    if (scopeDepth === 1) return 0.2;
+    if (scopeDepth === 0) {
+return 0.5;
+}
+    if (scopeDepth === 1) {
+return 0.2;
+}
     
     return 0;
   }
@@ -426,17 +454,27 @@ export class SignificanceCalculator {
    * Calculate size factor based on source text
    */
   private calculateSizeFactor(node: ASTNode): number {
-    if (!node.sourceText) return 0;
+    if (!node.sourceText) {
+return 0;
+}
     
     const length = node.sourceText.length;
     
     // Very large nodes are more significant
-    if (length > 1000) return 1;
-    if (length > 500) return 0.5;
+    if (length > 1000) {
+return 1;
+}
+    if (length > 500) {
+return 0.5;
+}
     
     // Very small nodes are less significant
-    if (length < 10) return -0.5;
-    if (length < 50) return -0.2;
+    if (length < 10) {
+return -0.5;
+}
+    if (length < 50) {
+return -0.2;
+}
     
     return 0;
   }

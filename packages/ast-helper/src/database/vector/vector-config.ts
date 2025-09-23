@@ -6,8 +6,9 @@
 
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
+import type { 
+  VectorDBConfig} from './types.js';
 import { 
-  VectorDBConfig, 
   createVectorDBConfig, 
   validateVectorDBConfig,
   DEFAULT_VECTOR_DB_CONFIG 
@@ -217,7 +218,7 @@ export class VectorConfigManager {
   /**
    * Reset configuration to defaults
    */
-  resetToDefaults(dataDir: string = './data/vectors'): VectorDBConfig {
+  resetToDefaults(dataDir = './data/vectors'): VectorDBConfig {
     const config = createVectorDBConfig({
       storageFile: join(dataDir, 'ast-copilot.sqlite'),
       indexFile: join(dataDir, 'ast-copilot.hnsw'),

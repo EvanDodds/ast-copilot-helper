@@ -15,9 +15,11 @@ export { WebSocketTransport } from './websocket';
 export type { WebSocketTransportConfig } from './websocket';
 
 // Import all needed classes for factory
-import { Transport, TransportConfig } from './base';
-import { StdioTransport, StdioTransportConfig } from './stdio';
-import { WebSocketTransport, WebSocketTransportConfig } from './websocket';
+import type { Transport, TransportConfig } from './base';
+import type { StdioTransportConfig } from './stdio';
+import { StdioTransport } from './stdio';
+import type { WebSocketTransportConfig } from './websocket';
+import { WebSocketTransport } from './websocket';
 
 /**
  * Transport factory for creating appropriate transport instances

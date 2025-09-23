@@ -187,7 +187,7 @@ export class EnhancedLogger {
   endPerformanceTracking(
     context: PerformanceContext,
     operation: string,
-    success: boolean = true,
+    success = true,
     error?: Error
   ): void {
     const endTime = Date.now();

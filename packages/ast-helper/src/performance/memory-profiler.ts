@@ -1,5 +1,5 @@
 import { MemoryMonitor, PerformanceTimer, CPUMonitor } from './utils';
-import { NodeCount, MemoryProfile, PhaseMemoryProfile, MemoryLeak, GCMetrics } from './types';
+import type { NodeCount, MemoryProfile, PhaseMemoryProfile, MemoryLeak, GCMetrics } from './types';
 
 /**
  * Memory profiling and analysis for performance testing.
@@ -294,7 +294,9 @@ export class MemoryProfiler {
     
     for (let i = 0; i < phases.length; i++) {
       const phase = phases[i];
-      if (!phase) continue;
+      if (!phase) {
+continue;
+}
       
       const retentionRate = (phase.endMemory - phase.startMemory) / (phase.peakMemory - phase.startMemory || 1);
       
@@ -318,7 +320,9 @@ export class MemoryProfiler {
    * Convert NodeCount to number
    */
   private getNodeCountAsNumber(nodeCount: NodeCount): number {
-    if (typeof nodeCount === 'number') return nodeCount;
+    if (typeof nodeCount === 'number') {
+return nodeCount;
+}
     
     const mapping = {
       'small': 1000,

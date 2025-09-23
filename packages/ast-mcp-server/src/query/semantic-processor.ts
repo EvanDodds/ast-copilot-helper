@@ -6,8 +6,8 @@
  */
 
 import { createLogger } from '../../../ast-helper/src/logging/index.js';
-import { XenovaEmbeddingGenerator } from '../../../ast-helper/src/embedder/index.js';
-import { HNSWVectorDatabase } from '../../../ast-helper/src/database/vector/index.js';
+import type { XenovaEmbeddingGenerator } from '../../../ast-helper/src/embedder/index.js';
+import type { HNSWVectorDatabase } from '../../../ast-helper/src/database/vector/index.js';
 import type { ASTDatabaseReader } from '../database/reader.js';
 
 import type {
@@ -238,7 +238,7 @@ export class SemanticQueryProcessor {
       const vectorSearchStartTime = Date.now();
       
       // Build options object based on query type and properties
-      let vectorSearchOptions: any = {
+      const vectorSearchOptions: any = {
         maxResults: Math.min(
           queryMaxResults || this.rankingConfig.maxResults,
           1000 // hard-coded candidate limit
@@ -519,7 +519,9 @@ export class SemanticQueryProcessor {
     const longer = text1.length > text2.length ? text1 : text2;
     const shorter = text1.length > text2.length ? text2 : text1;
     
-    if (longer.length === 0) return true;
+    if (longer.length === 0) {
+return true;
+}
     
     const editDistance = this.levenshteinDistance(longer, shorter);
     return (longer.length - editDistance) / longer.length >= threshold;
@@ -604,11 +606,21 @@ export class SemanticQueryProcessor {
   private getAppliedFilters(options: SemanticQueryOptions): string[] {
     const filters: string[] = [];
     
-    if (options.fileFilter) filters.push('file_filter');
-    if (options.languageFilter) filters.push('language_filter');
-    if (options.confidenceThreshold) filters.push('confidence_threshold');
-    if (options.useContextBoosting) filters.push('context_boosting');
-    if (options.includeSimilarResults) filters.push('similar_results');
+    if (options.fileFilter) {
+filters.push('file_filter');
+}
+    if (options.languageFilter) {
+filters.push('language_filter');
+}
+    if (options.confidenceThreshold) {
+filters.push('confidence_threshold');
+}
+    if (options.useContextBoosting) {
+filters.push('context_boosting');
+}
+    if (options.includeSimilarResults) {
+filters.push('similar_results');
+}
     
     return filters;
   }

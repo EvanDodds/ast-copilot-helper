@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { ServerProcessManager } from './ServerProcessManager';
-import { MCPClientManager } from './MCPClientManager';
+import type { ServerProcessManager } from './ServerProcessManager';
+import type { MCPClientManager } from './MCPClientManager';
 
 /**
  * Command Handlers for AST Copilot Helper Extension

@@ -15,7 +15,7 @@ import {
   writeFile,
   constants
 } from 'node:fs/promises';
-import { Stats } from 'node:fs';
+import type { Stats } from 'node:fs';
 import { 
   basename,
   dirname,
@@ -138,7 +138,7 @@ export class FileSystemManager implements FileSystemUtils {
   /**
    * Ensure directory exists, creating parent directories as needed
    */
-  async ensureDirectory(dirPath: string, mode: number = 0o755): Promise<void> {
+  async ensureDirectory(dirPath: string, mode = 0o755): Promise<void> {
     try {
       await mkdir(this.resolvePath(dirPath), { recursive: true, mode });
     } catch (error: any) {
@@ -267,7 +267,9 @@ export class FileSystemManager implements FileSystemUtils {
     filter: ((path: string, stats: Stats) => boolean) | undefined,
     results: string[]
   ): Promise<void> {
-    if (depth > maxDepth) return;
+    if (depth > maxDepth) {
+return;
+}
     
     try {
       const entries = await readdir(currentPath, { withFileTypes: true });
@@ -279,7 +281,9 @@ export class FileSystemManager implements FileSystemUtils {
         // Handle symbolic links
         let stats: Stats;
         if (entry.isSymbolicLink()) {
-          if (!followSymlinks) continue;
+          if (!followSymlinks) {
+continue;
+}
           try {
             stats = await stat(fullPath); // Follow symlink
           } catch {
@@ -338,7 +342,7 @@ export class FileSystemManager implements FileSystemUtils {
   /**
    * Remove directory and optionally its contents
    */
-  async removeDirectory(dirPath: string, recursive: boolean = false): Promise<void> {
+  async removeDirectory(dirPath: string, recursive = false): Promise<void> {
     const resolvedPath = this.resolvePath(dirPath);
     
     try {
@@ -419,8 +423,8 @@ export class FileSystemManager implements FileSystemUtils {
    * Create unique temporary file path
    */
   async createTempFilePath(
-    prefix: string = 'tmp',
-    suffix: string = '',
+    prefix = 'tmp',
+    suffix = '',
     dir: string = this.getTempDir()
   ): Promise<string> {
     const randomSuffix = randomBytes(6).toString('hex');

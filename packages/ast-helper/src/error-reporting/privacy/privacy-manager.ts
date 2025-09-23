@@ -146,10 +146,14 @@ export class PrivacyManager {
    * Check if user has given consent for specific data collection
    */
   hasConsent(userId: string, category: string, level: ConsentLevel): boolean {
-    if (!this.config.requireConsent) return true;
+    if (!this.config.requireConsent) {
+return true;
+}
 
     const consent = this.getUserConsent(userId);
-    if (!consent) return false;
+    if (!consent) {
+return false;
+}
 
     return (
       consent.level >= level &&
@@ -299,7 +303,9 @@ export class PrivacyManager {
     data: ErrorReport,
     level: PrivacyConfig['anonymizationLevel']
   ): Promise<ErrorReport> {
-    if (level === 'none') return data;
+    if (level === 'none') {
+return data;
+}
 
     const anonymized = { ...data };
 
@@ -575,7 +581,9 @@ export class PrivacyManager {
     console.log(`📤 Exporting data for user ${userId}`);
 
     const consent = this.getUserConsent(userId);
-    if (!consent) return null;
+    if (!consent) {
+return null;
+}
 
     const userAuditEntries = this.auditLog.filter(entry => entry.userId === userId);
 
@@ -592,7 +600,9 @@ export class PrivacyManager {
    * Log audit event for compliance tracking
    */
   private async logAuditEvent(entry: AuditLogEntry): Promise<void> {
-    if (!this.config.enableAuditLog) return;
+    if (!this.config.enableAuditLog) {
+return;
+}
 
     this.auditLog.push(entry);
 

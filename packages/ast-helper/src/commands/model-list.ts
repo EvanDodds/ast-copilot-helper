@@ -85,7 +85,9 @@ export class ModelListCommandHandler {
         // Check which models are cached
         for (const modelName of ModelRegistry.listModels()) {
             const model = ModelRegistry.getModel(modelName);
-            if (!model) continue;
+            if (!model) {
+continue;
+}
 
             const cacheResult = await cache.checkCache(model);
             if (cacheResult.hit) {

@@ -10,7 +10,7 @@ import * as path from 'path';
 import { performance } from 'perf_hooks';
 
 import { AstError } from '../errors/types.js';
-import {
+import type {
   ErrorReportingManager,
   ErrorReportingConfig,
   ErrorReport,
@@ -69,7 +69,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
   private config?: ErrorReportingConfig;
   // private initialized: boolean = false;
   private sessionId: string;
-  private currentOperation: string = 'unknown';
+  private currentOperation = 'unknown';
   private operationHistory: string[] = [];
   private errorHistory: ErrorHistoryEntry[] = [];
   // private reportQueue: ErrorReport[] = [];
@@ -536,12 +536,24 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       const packageJson = diagnostics.codebase?.packages?.packageJson;
       if (packageJson) {
         const dependencies = JSON.stringify(packageJson);
-        if (dependencies.includes('react')) frameworks.push('React');
-        if (dependencies.includes('vue')) frameworks.push('Vue');
-        if (dependencies.includes('angular')) frameworks.push('Angular');
-        if (dependencies.includes('express')) frameworks.push('Express');
-        if (dependencies.includes('nestjs')) frameworks.push('NestJS');
-        if (dependencies.includes('next')) frameworks.push('Next.js');
+        if (dependencies.includes('react')) {
+frameworks.push('React');
+}
+        if (dependencies.includes('vue')) {
+frameworks.push('Vue');
+}
+        if (dependencies.includes('angular')) {
+frameworks.push('Angular');
+}
+        if (dependencies.includes('express')) {
+frameworks.push('Express');
+}
+        if (dependencies.includes('nestjs')) {
+frameworks.push('NestJS');
+}
+        if (dependencies.includes('next')) {
+frameworks.push('Next.js');
+}
       }
     }
     
@@ -1075,7 +1087,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
    */
   async getErrorFrequencyTrends(
     timeWindow: 'hour' | 'day' | 'week' | 'month' = 'day',
-    limit: number = 30
+    limit = 30
   ): Promise<ErrorFrequencyPoint[]> {
     console.log(`📊 Retrieving error frequency trends (${timeWindow})`);
     return await this.analyticsManager.getErrorFrequencyTrends(timeWindow, limit);

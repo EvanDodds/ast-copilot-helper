@@ -16,7 +16,7 @@
 import { promises as fs } from 'fs';
 import { execSync } from 'child_process';
 import * as path from 'path';
-import {
+import type {
   DistributionConfig,
   PackageConfig,
   ValidationResult,
@@ -138,14 +138,18 @@ export class MarketplacePublisher implements Publisher {
   }
 
   private findMarketplaceToken(marketplace: 'vscode-marketplace' | 'openvsx'): string | undefined {
-    if (!this.config) return undefined;
+    if (!this.config) {
+return undefined;
+}
     
     const marketplaceConfig = this.config.marketplaces.find(m => m.type === marketplace);
     return marketplaceConfig?.token;
   }
 
   private findPublisher(): string | undefined {
-    if (!this.config) return undefined;
+    if (!this.config) {
+return undefined;
+}
     
     const vsCodeMarketplace = this.config.marketplaces.find(m => m.type === 'vscode-marketplace');
     if (vsCodeMarketplace?.publisherId) {
@@ -714,7 +718,9 @@ export class MarketplacePublisher implements Publisher {
 
     // Verify each successful publication
     for (const pkg of packages) {
-      if (!pkg.success) continue;
+      if (!pkg.success) {
+continue;
+}
 
       if (pkg.marketplace === 'vscode' || pkg.registry === 'vscode') {
         const check = await this.verifyVSCodeMarketplace(pkg.extensionId || '', pkg.version || '');

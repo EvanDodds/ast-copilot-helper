@@ -86,7 +86,7 @@ describe('CI/CD Quality Gates', () => {
       const vulnCount = Object.keys(mockAuditResult.vulnerabilities).length;
       expect(vulnCount).toBe(0);
       
-      let score = 10;
+      const score = 10;
       expect(score).toBe(10);
     });
     
@@ -185,10 +185,10 @@ describe('CI/CD Quality Gates', () => {
       
       testCases.forEach(({ score, expectedGrade }) => {
         let grade = 'F';
-        if (score >= 90) grade = 'A';
-        else if (score >= 80) grade = 'B';
-        else if (score >= 70) grade = 'C';
-        else if (score >= 60) grade = 'D';
+        if (score >= 90) {grade = 'A';}
+        else if (score >= 80) {grade = 'B';}
+        else if (score >= 70) {grade = 'C';}
+        else if (score >= 60) {grade = 'D';}
         
         expect(grade).toBe(expectedGrade);
       });

@@ -92,7 +92,9 @@ export class ConsoleOutput implements LogOutput {
   }
 
   private colorize(text: string, color: string): string {
-    if (!this.useColors) return text;
+    if (!this.useColors) {
+return text;
+}
 
     const colors: Record<string, string> = {
       red: '\x1b[31m',

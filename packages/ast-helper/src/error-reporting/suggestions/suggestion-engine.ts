@@ -2,7 +2,7 @@
  * Main suggestion engine that orchestrates different suggestion generators
  */
 
-import {
+import type {
   SuggestionGenerator,
   SuggestionContext,
   ResolutionSuggestion,
@@ -314,7 +314,9 @@ export class SuggestionEngine {
     // Placeholder for ML integration
     // In a real implementation, this would call ML models to predict suggestion effectiveness
     
-    if (suggestions.length === 0) return [];
+    if (suggestions.length === 0) {
+return [];
+}
 
     const prediction: MLPrediction = {
       suggestionIds: suggestions.map(s => s.id),
@@ -356,7 +358,9 @@ export class SuggestionEngine {
     suggestions: ResolutionSuggestion[], 
     predictions: MLPrediction[]
   ): ResolutionSuggestion[] {
-    if (predictions.length === 0) return suggestions;
+    if (predictions.length === 0) {
+return suggestions;
+}
     
     const prediction = predictions[0]!; // Use the first (and likely only) prediction
     const suggestionIds = new Set(prediction.suggestionIds);
@@ -436,8 +440,12 @@ export class SuggestionEngine {
     score += (suggestion.priority / 100) * 0.2;
 
     // Type preference (prefer automated fixes)
-    if (suggestion.type === 'code-fix') score += 0.05;
-    if (suggestion.type === 'dependency') score += 0.03;
+    if (suggestion.type === 'code-fix') {
+score += 0.05;
+}
+    if (suggestion.type === 'dependency') {
+score += 0.03;
+}
 
     // User experience adjustment
     if (context.user.experienceLevel === 'beginner' && suggestion.difficulty === 'beginner') {
@@ -468,17 +476,23 @@ export class SuggestionEngine {
 
       // Skip if we already have too many of this type
       const typeCount = diverse.filter(s => `${s.type}_${s.source}` === typeKey).length;
-      if (typeCount >= 3) continue;
+      if (typeCount >= 3) {
+continue;
+}
 
       // Skip if we have a very similar title
-      if (seenTitles.has(titleKey)) continue;
+      if (seenTitles.has(titleKey)) {
+continue;
+}
 
       diverse.push(suggestion);
       seenTypes.add(typeKey);
       seenTitles.add(titleKey);
 
       // Stop if we have enough diverse suggestions
-      if (diverse.length >= this.config.maxSuggestions * 2) break;
+      if (diverse.length >= this.config.maxSuggestions * 2) {
+break;
+}
     }
 
     return diverse;
@@ -555,7 +569,9 @@ export class SuggestionEngine {
     processingTime: number
   ): void {
     const metrics = this.metrics.get(generatorName);
-    if (!metrics) return;
+    if (!metrics) {
+return;
+}
 
     metrics.totalCalls++;
     metrics.successfulSuggestions += suggestions.length;

@@ -342,7 +342,7 @@ export class PerformanceBenchmarker {
 
       while (true) {
         const result = await readStream.read(buffer, 0, chunkSize, position);
-        if (result.bytesRead === 0) break;
+        if (result.bytesRead === 0) {break;}
         
         totalBytesRead += result.bytesRead;
         position += result.bytesRead;
@@ -643,8 +643,8 @@ export class PerformanceBenchmarker {
       
       for (let i = 1; i <= iterations; i++) {
         sum += i;
-        if (i <= 100) product *= i; // Prevent overflow
-        if (i % 1000 === 0) divisions += Math.floor(sum / i);
+        if (i <= 100) {product *= i;} // Prevent overflow
+        if (i % 1000 === 0) {divisions += Math.floor(sum / i);}
       }
 
       const mathTime = performance.now() - mathStart;
@@ -1335,15 +1335,15 @@ export class PerformanceBenchmarker {
   private gradePerformance(time: number, thresholds: number[]): string {
     const [excellent, good, acceptable, poor] = thresholds;
     
-    if (time <= excellent) return 'A';
-    if (time <= good) return 'B';
-    if (time <= acceptable) return 'C';
-    if (time <= poor) return 'D';
+    if (time <= excellent) {return 'A';}
+    if (time <= good) {return 'B';}
+    if (time <= acceptable) {return 'C';}
+    if (time <= poor) {return 'D';}
     return 'F';
   }
 
   private checkLinearScaling(sizes: number[], times: number[]): boolean {
-    if (sizes.length !== times.length || sizes.length < 2) return false;
+    if (sizes.length !== times.length || sizes.length < 2) {return false;}
     
     // Check if time increase is roughly proportional to size increase
     for (let i = 1; i < sizes.length; i++) {

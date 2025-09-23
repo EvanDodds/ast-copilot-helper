@@ -7,7 +7,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { ASTNode, Position, NodeMetadata, NodeType, SignificanceLevel } from './ast-schema';
+import type { ASTNode, Position, NodeMetadata, NodeType} from './ast-schema';
+import { SignificanceLevel } from './ast-schema';
 
 /**
  * Serialization configuration
@@ -339,29 +340,57 @@ export class NodeSerializer {
    */
   validateRoundTrip(original: ASTNode, _serialized: SerializedASTNode, deserialized: ASTNode): boolean {
     // Check core properties
-    if (original.id !== deserialized.id) return false;
-    if (original.type !== deserialized.type) return false;
-    if (original.filePath !== deserialized.filePath) return false;
-    if (original.significance !== deserialized.significance) return false;
+    if (original.id !== deserialized.id) {
+return false;
+}
+    if (original.type !== deserialized.type) {
+return false;
+}
+    if (original.filePath !== deserialized.filePath) {
+return false;
+}
+    if (original.significance !== deserialized.significance) {
+return false;
+}
 
     // Check optional properties
-    if (original.name !== deserialized.name) return false;
-    if (original.parent !== deserialized.parent) return false;
-    if (original.sourceText !== deserialized.sourceText) return false;
-    if (original.signature !== deserialized.signature) return false;
-    if (original.complexity !== deserialized.complexity) return false;
+    if (original.name !== deserialized.name) {
+return false;
+}
+    if (original.parent !== deserialized.parent) {
+return false;
+}
+    if (original.sourceText !== deserialized.sourceText) {
+return false;
+}
+    if (original.signature !== deserialized.signature) {
+return false;
+}
+    if (original.complexity !== deserialized.complexity) {
+return false;
+}
 
     // Check positions
-    if (!this.deepEqual(original.start, deserialized.start)) return false;
-    if (!this.deepEqual(original.end, deserialized.end)) return false;
+    if (!this.deepEqual(original.start, deserialized.start)) {
+return false;
+}
+    if (!this.deepEqual(original.end, deserialized.end)) {
+return false;
+}
 
     // Check metadata
-    if (!this.deepEqual(original.metadata, deserialized.metadata)) return false;
+    if (!this.deepEqual(original.metadata, deserialized.metadata)) {
+return false;
+}
 
     // Check children arrays
-    if (original.children.length !== deserialized.children.length) return false;
+    if (original.children.length !== deserialized.children.length) {
+return false;
+}
     for (let i = 0; i < original.children.length; i++) {
-      if (original.children[i] !== deserialized.children[i]) return false;
+      if (original.children[i] !== deserialized.children[i]) {
+return false;
+}
     }
 
     return true;
@@ -400,7 +429,7 @@ export class NodeSerializer {
 
     // Note: This is a mock implementation since we don't have a node lookup mechanism
     // In a real implementation, you'd need a way to resolve child IDs to actual nodes
-    const collectStats = (node: ASTNode, depth: number = 0) => {
+    const collectStats = (node: ASTNode, depth = 0) => {
       totalNodes++;
       totalDepth += depth;
       maxDepth = Math.max(maxDepth, depth);
@@ -458,7 +487,7 @@ export class NodeSerializer {
   /**
    * Validate ASTNode structure
    */
-  private validateASTNode(node: ASTNode, path: string = 'root'): void {
+  private validateASTNode(node: ASTNode, path = 'root'): void {
     if (!node.id || typeof node.id !== 'string') {
       throw new SerializationValidationError('Missing or invalid id', path, node.id, 'string');
     }
@@ -495,7 +524,7 @@ export class NodeSerializer {
   /**
    * Validate SerializedASTNode structure
    */
-  private validateSerializedNode(data: SerializedASTNode, path: string = 'root'): void {
+  private validateSerializedNode(data: SerializedASTNode, path = 'root'): void {
     if (!data.$schema || typeof data.$schema !== 'string') {
       throw new SerializationValidationError('Missing or invalid $schema', path, data.$schema, 'string');
     }
@@ -621,24 +650,40 @@ export class NodeSerializer {
    * Deep equality check
    */
   private deepEqual(obj1: any, obj2: any): boolean {
-    if (obj1 === obj2) return true;
+    if (obj1 === obj2) {
+return true;
+}
     
-    if (obj1 == null || obj2 == null) return obj1 === obj2;
+    if (obj1 == null || obj2 == null) {
+return obj1 === obj2;
+}
     
-    if (typeof obj1 !== typeof obj2) return false;
+    if (typeof obj1 !== typeof obj2) {
+return false;
+}
     
-    if (typeof obj1 !== 'object') return obj1 === obj2;
+    if (typeof obj1 !== 'object') {
+return obj1 === obj2;
+}
     
-    if (Array.isArray(obj1) !== Array.isArray(obj2)) return false;
+    if (Array.isArray(obj1) !== Array.isArray(obj2)) {
+return false;
+}
     
     const keys1 = Object.keys(obj1);
     const keys2 = Object.keys(obj2);
     
-    if (keys1.length !== keys2.length) return false;
+    if (keys1.length !== keys2.length) {
+return false;
+}
     
     for (const key of keys1) {
-      if (!keys2.includes(key)) return false;
-      if (!this.deepEqual(obj1[key], obj2[key])) return false;
+      if (!keys2.includes(key)) {
+return false;
+}
+      if (!this.deepEqual(obj1[key], obj2[key])) {
+return false;
+}
     }
     
     return true;
@@ -707,9 +752,15 @@ export class SerializationUtils {
       nodeSize += 200; // JSON overhead + positions + other fields
       
       // Optional text fields
-      if (node.name) nodeSize += node.name.length;
-      if (node.sourceText) nodeSize += node.sourceText.length;
-      if (node.signature) nodeSize += node.signature.length;
+      if (node.name) {
+nodeSize += node.name.length;
+}
+      if (node.sourceText) {
+nodeSize += node.sourceText.length;
+}
+      if (node.signature) {
+nodeSize += node.signature.length;
+}
       
       // Metadata
       nodeSize += JSON.stringify(node.metadata).length;

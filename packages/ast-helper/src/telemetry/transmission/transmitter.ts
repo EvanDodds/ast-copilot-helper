@@ -5,17 +5,18 @@
 
 import { gzip } from 'zlib';
 import { promisify } from 'util';
-import {
+import type {
   TelemetryTransmitter,
   TransmissionResult,
   ConnectionStatus,
   TransmissionStats,
   TransmissionConfig,
   TransmissionFailure,
-  TransmissionMetadata,
+  TransmissionMetadata} from './types.js';
+import {
   DEFAULT_TRANSMISSION_CONFIG
 } from './types.js';
-import { StoredEvent } from '../storage/types.js';
+import type { StoredEvent } from '../storage/types.js';
 import { HttpRetryManager } from './retry.js';
 import { DiskOfflineQueue } from './offline-queue.js';
 import { RateLimiter } from './rate-limiter.js';
@@ -572,12 +573,24 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
   private categorizeError(error: string): string {
     const lowerError = error.toLowerCase();
     
-    if (lowerError.includes('timeout')) return 'timeout';
-    if (lowerError.includes('network') || lowerError.includes('connection')) return 'network';
-    if (lowerError.includes('401') || lowerError.includes('unauthorized')) return 'auth';
-    if (lowerError.includes('429') || lowerError.includes('rate limit')) return 'rate_limit';
-    if (lowerError.includes('500') || lowerError.includes('internal server')) return 'server_error';
-    if (lowerError.includes('400') || lowerError.includes('bad request')) return 'client_error';
+    if (lowerError.includes('timeout')) {
+return 'timeout';
+}
+    if (lowerError.includes('network') || lowerError.includes('connection')) {
+return 'network';
+}
+    if (lowerError.includes('401') || lowerError.includes('unauthorized')) {
+return 'auth';
+}
+    if (lowerError.includes('429') || lowerError.includes('rate limit')) {
+return 'rate_limit';
+}
+    if (lowerError.includes('500') || lowerError.includes('internal server')) {
+return 'server_error';
+}
+    if (lowerError.includes('400') || lowerError.includes('bad request')) {
+return 'client_error';
+}
     
     return 'unknown';
   }

@@ -4,8 +4,8 @@
 
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
-import { LicenseInfo, DependencyLicense } from './types.js';
-import { LicenseDatabase } from './LicenseDatabase.js';
+import type { LicenseInfo, DependencyLicense } from './types.js';
+import type { LicenseDatabase } from './LicenseDatabase.js';
 
 /**
  * License header pattern matching for custom license detection
@@ -245,7 +245,9 @@ export class AdvancedLicenseScanner {
       for (const pattern of this.licensePatterns) {
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
-          if (!line) continue;
+          if (!line) {
+continue;
+}
           
           for (const regex of pattern.patterns) {
             const match = regex.exec(line);

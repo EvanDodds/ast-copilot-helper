@@ -4,12 +4,12 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { 
+import type { 
   DiagnosticCollector, 
   DiagnosticScope, 
   CodebaseDiagnostics 
 } from './types.js';
-import { DiagnosticData, FileInfo } from '../types.js';
+import type { DiagnosticData, FileInfo } from '../types.js';
 
 /**
  * Collects codebase diagnostic data including project structure,

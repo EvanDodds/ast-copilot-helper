@@ -22,7 +22,8 @@ export {
 export { StorageManager, StorageManagerFactory } from './manager';
 
 // Import for internal function implementations
-import { StorageManager, StorageManagerFactory } from './manager';
+import type { StorageManager} from './manager';
+import { StorageManagerFactory } from './manager';
 
 /**
  * Create a development storage manager

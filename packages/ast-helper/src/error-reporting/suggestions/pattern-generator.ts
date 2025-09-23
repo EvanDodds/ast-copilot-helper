@@ -2,7 +2,7 @@
  * Pattern-based suggestion generator for common error patterns
  */
 
-import {
+import type {
   SuggestionGenerator,
   SuggestionSource,
   SuggestionContext,
@@ -393,7 +393,9 @@ export class PatternBasedSuggestionGenerator implements SuggestionGenerator {
    */
   async getConfidenceScore(context: SuggestionContext): Promise<number> {
     const matchedPatterns = await this.findMatchingPatterns(context);
-    if (matchedPatterns.length === 0) return 0;
+    if (matchedPatterns.length === 0) {
+return 0;
+}
 
     const maxWeight = Math.max(...matchedPatterns.map(m => m.pattern.weight));
     return maxWeight;
@@ -534,7 +536,9 @@ export class PatternBasedSuggestionGenerator implements SuggestionGenerator {
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
     
-    if (longer.length === 0) return 1.0;
+    if (longer.length === 0) {
+return 1.0;
+}
     
     const editDistance = this.levenshteinDistance(longer, shorter);
     return (longer.length - editDistance) / longer.length;

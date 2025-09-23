@@ -6,7 +6,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
-import { PartialConfig } from '../types.js';
+import type { PartialConfig } from '../types.js';
 
 /**
  * Load configuration from a JSON file

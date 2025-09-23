@@ -9,8 +9,8 @@ import type {
   FileWatcher,
   ConsistencyReport
 } from './types.js';
-import { ASTDatabaseManager } from '../database/manager.js';
-import { EmbeddingDatabaseManager } from '../database/embedding-manager.js';
+import type { ASTDatabaseManager } from '../database/manager.js';
+import type { EmbeddingDatabaseManager } from '../database/embedding-manager.js';
 import { createModuleLogger } from '../logging/index.js';
 import type { Config } from '../types.js';
 
@@ -172,7 +172,9 @@ export class IncementalUpdateManagerImpl extends EventEmitter implements Increme
    * Optimize a batch of changes for processing by deduplicating and resolving conflicts
    */
   optimizeUpdateBatch(changes: FileChangeEvent[]): FileChangeEvent[] {
-    if (changes.length === 0) return [];
+    if (changes.length === 0) {
+return [];
+}
 
     this.logger.debug('Optimizing update batch', {
       originalCount: changes.length

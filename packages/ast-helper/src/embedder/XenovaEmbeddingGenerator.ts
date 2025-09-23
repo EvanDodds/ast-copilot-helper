@@ -4,12 +4,13 @@
 
 import { pipeline, env } from '@xenova/transformers';
 import path from 'path';
-import {
+import type {
   EmbeddingGenerator,
   EmbeddingResult,
   BatchProcessOptions,
   Annotation,
-  MemoryUsage,
+  MemoryUsage} from './types.js';
+import {
   ModelInitializationError,
   EmbeddingGenerationError,
 } from './types.js';
@@ -31,9 +32,9 @@ const DEFAULT_CONFIG = {
  */
 export class XenovaEmbeddingGenerator implements EmbeddingGenerator {
   private model: any = null;
-  private isInitialized: boolean = false;
-  private modelName: string = '';
-  private initializationTime: number = 0;
+  private isInitialized = false;
+  private modelName = '';
+  private initializationTime = 0;
   private textProcessor: CodeTextProcessor;
 
   constructor() {

@@ -4,13 +4,14 @@
  */
 
 import { createHash, randomBytes } from 'crypto';
-import { DataAnonymizer as IDataAnonymizer, PrivacyLevel } from '../types.js';
-import { 
+import type { DataAnonymizer as IDataAnonymizer, PrivacyLevel } from '../types.js';
+import type { 
   AnonymizationConfig, 
   AnonymizationResult, 
-  AnonymizationStrategy, 
   AnonymizationRule, 
-  AnonymizationOptions, 
+  AnonymizationOptions} from './types.js';
+import { 
+  AnonymizationStrategy, 
   DataCategory
 } from './types.js';
 
@@ -361,7 +362,9 @@ export class PrivacyRespectingDataAnonymizer implements IDataAnonymizer {
    * Anonymize generic strings
    */
   private anonymizeGenericString(value: string, privacyLevel: PrivacyLevel): string {
-    if (value.length === 0) return value;
+    if (value.length === 0) {
+return value;
+}
 
     switch (privacyLevel) {
       case 'strict':
@@ -452,7 +455,9 @@ export class PrivacyRespectingDataAnonymizer implements IDataAnonymizer {
    * Check if object key should be anonymized
    */
   private shouldAnonymizeKey(key: string, privacyLevel: PrivacyLevel): boolean {
-    if (privacyLevel === 'permissive') return false;
+    if (privacyLevel === 'permissive') {
+return false;
+}
     
     const sensitiveKeys = ['id', 'userId', 'sessionId', 'email', 'name', 'username'];
     return sensitiveKeys.includes(key.toLowerCase());
@@ -477,7 +482,9 @@ export class PrivacyRespectingDataAnonymizer implements IDataAnonymizer {
    * Calculate reduction ratio
    */
   private calculateReduction(original: number, anonymized: number): number {
-    if (original === 0) return 0;
+    if (original === 0) {
+return 0;
+}
     return (original - anonymized) / original;
   }
 

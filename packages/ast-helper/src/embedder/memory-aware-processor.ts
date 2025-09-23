@@ -203,7 +203,9 @@ export class MemoryAwareProcessor {
       
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
-        if (!batch) continue; // Skip undefined batches
+        if (!batch) {
+continue;
+} // Skip undefined batches
         
         const memoryBefore = this.getCurrentMemoryMetrics();
         
@@ -459,7 +461,9 @@ export class MemoryAwareProcessor {
     
     for (let i = 0; i < batch.length; i++) {
       const item = batch[i];
-      if (item === undefined) continue; // Skip undefined items
+      if (item === undefined) {
+continue;
+} // Skip undefined items
       
       const singleItem = [item];
       const singleResult = await processor(singleItem);

@@ -3,10 +3,11 @@
  */
 
 import { XenovaEmbeddingGenerator } from './XenovaEmbeddingGenerator.js';
-import { IntelligentEmbeddingCache, getEmbeddingCache } from './intelligent-cache.js';
+import type { IntelligentEmbeddingCache} from './intelligent-cache.js';
+import { getEmbeddingCache } from './intelligent-cache.js';
 import { DynamicBatchOptimizer } from './dynamic-batch-optimizer.js';
 import { MemoryAwareProcessor } from './memory-aware-processor.js';
-import { EmbeddingResult, Annotation, BatchProcessOptions } from './types.js';
+import type { EmbeddingResult, Annotation, BatchProcessOptions } from './types.js';
 import { createLogger } from '../logging/index.js';
 
 export interface PerformanceOptimizationConfig {
@@ -232,7 +233,7 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
       overallScore: 0,
     };
 
-    let scoreComponents: number[] = [];
+    const scoreComponents: number[] = [];
 
     // Cache metrics
     if (this.cache) {
@@ -350,7 +351,9 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
    * Cache new results
    */
   private async cacheResults(annotations: Annotation[], results: EmbeddingResult[]): Promise<void> {
-    if (!this.cache) return;
+    if (!this.cache) {
+return;
+}
 
     for (let i = 0; i < Math.min(annotations.length, results.length); i++) {
       const annotation = annotations[i];

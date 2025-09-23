@@ -2,7 +2,7 @@
  * Static analysis-based suggestion generator
  */
 
-import {
+import type {
   SuggestionGenerator,
   SuggestionSource,
   SuggestionContext,
@@ -83,9 +83,15 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     // Higher confidence if we have more code context
     let confidence = 0.5;
     
-    if (context.error.stack) confidence += 0.2;
-    if (context.environment.dependencies) confidence += 0.1;
-    if (context.codebase.recentChanges?.length) confidence += 0.1;
+    if (context.error.stack) {
+confidence += 0.2;
+}
+    if (context.environment.dependencies) {
+confidence += 0.1;
+}
+    if (context.codebase.recentChanges?.length) {
+confidence += 0.1;
+}
 
     return Math.min(confidence, 0.9);
   }
@@ -457,9 +463,15 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     const dependencyIssues = ['missing-module', 'builtin-module-import'];
     const debuggingIssues = ['possible-typo', 'wrong-argument-count'];
 
-    if (codeFixIssues.includes(issue)) return 'code-fix';
-    if (dependencyIssues.includes(issue)) return 'dependency';
-    if (debuggingIssues.includes(issue)) return 'debugging';
+    if (codeFixIssues.includes(issue)) {
+return 'code-fix';
+}
+    if (dependencyIssues.includes(issue)) {
+return 'dependency';
+}
+    if (debuggingIssues.includes(issue)) {
+return 'debugging';
+}
     
     return 'alternative-approach';
   }
@@ -468,9 +480,15 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
    * Get confidence level for analysis result
    */
   private getConfidenceForResult(result: AnalysisResult): 'low' | 'medium' | 'high' | 'critical' {
-    if (result.confidence >= 0.9) return 'critical';
-    if (result.confidence >= 0.7) return 'high';
-    if (result.confidence >= 0.5) return 'medium';
+    if (result.confidence >= 0.9) {
+return 'critical';
+}
+    if (result.confidence >= 0.7) {
+return 'high';
+}
+    if (result.confidence >= 0.5) {
+return 'medium';
+}
     return 'low';
   }
 
@@ -496,9 +514,15 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     factors.push(`Issue type: ${result.issue}`);
     factors.push(`Severity: ${result.severity}`);
 
-    if (result.line) factors.push(`Line: ${result.line}`);
-    if (result.column) factors.push(`Column: ${result.column}`);
-    if (result.fixable) factors.push('Automatically fixable');
+    if (result.line) {
+factors.push(`Line: ${result.line}`);
+}
+    if (result.column) {
+factors.push(`Column: ${result.column}`);
+}
+    if (result.fixable) {
+factors.push('Automatically fixable');
+}
 
     // Add context from error context
     if (context.codebase.currentFile) {
@@ -608,8 +632,12 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     const beginnerIssues = ['missing-module', 'missing-semicolon', 'null-property-access'];
     const advancedIssues = ['type-assignment-error', 'async-function-issue'];
 
-    if (beginnerIssues.includes(issue)) return 'beginner';
-    if (advancedIssues.includes(issue)) return 'advanced';
+    if (beginnerIssues.includes(issue)) {
+return 'beginner';
+}
+    if (advancedIssues.includes(issue)) {
+return 'advanced';
+}
     return 'intermediate';
   }
 
@@ -617,8 +645,12 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     const quickFixes = ['missing-semicolon', 'missing-closing-brace'];
     const mediumFixes = ['missing-module', 'null-property-access'];
     
-    if (quickFixes.includes(issue)) return '1-2 minutes';
-    if (mediumFixes.includes(issue)) return '2-5 minutes';
+    if (quickFixes.includes(issue)) {
+return '1-2 minutes';
+}
+    if (mediumFixes.includes(issue)) {
+return '2-5 minutes';
+}
     return '5-15 minutes';
   }
 
@@ -654,7 +686,9 @@ export class StaticAnalysisGenerator implements SuggestionGenerator {
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
     
-    if (longer.length === 0) return 1.0;
+    if (longer.length === 0) {
+return 1.0;
+}
     
     const editDistance = this.levenshteinDistance(longer, shorter);
     return (longer.length - editDistance) / longer.length;

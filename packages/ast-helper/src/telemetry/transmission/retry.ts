@@ -3,7 +3,7 @@
  * @description Retry logic implementation for HTTP transmission
  */
 
-import {
+import type {
   RetryManager,
   RetryContext,
   RetryStats,
@@ -170,11 +170,21 @@ export class HttpRetryManager implements RetryManager {
   private categorizeError(error: Error): string {
     const message = error.message.toLowerCase();
     
-    if (message.includes('timeout')) return 'timeout';
-    if (message.includes('network') || message.includes('connection')) return 'network';
-    if (message.includes('429') || message.includes('rate limit')) return 'rate_limit';
-    if (message.includes('500')) return 'server_error';
-    if (message.includes('502') || message.includes('503') || message.includes('504')) return 'service_unavailable';
+    if (message.includes('timeout')) {
+return 'timeout';
+}
+    if (message.includes('network') || message.includes('connection')) {
+return 'network';
+}
+    if (message.includes('429') || message.includes('rate limit')) {
+return 'rate_limit';
+}
+    if (message.includes('500')) {
+return 'server_error';
+}
+    if (message.includes('502') || message.includes('503') || message.includes('504')) {
+return 'service_unavailable';
+}
     
     return 'unknown';
   }

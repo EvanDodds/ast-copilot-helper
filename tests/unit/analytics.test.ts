@@ -60,14 +60,14 @@ class MockCommunityAnalytics {
   }
 
   formatDuration(ms: number | null | undefined): string {
-    if (!ms || ms === 0) return '0h';
+    if (!ms || ms === 0) {return '0h';}
     
     const days = Math.floor(ms / (24 * 60 * 60 * 1000));
     const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
     const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
     
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (days > 0) {return `${days}d ${hours}h`;}
+    if (hours > 0) {return `${hours}h ${minutes}m`;}
     return `${minutes}m`;
   }
 }
@@ -123,10 +123,10 @@ class MockAnalyticsScheduler {
   }
 
   calculateTrend(previous: number, current: number): 'up' | 'down' | 'stable' {
-    if (previous === 0) return current > 0 ? 'up' : 'stable';
+    if (previous === 0) {return current > 0 ? 'up' : 'stable';}
     
     const change = ((current - previous) / previous) * 100;
-    if (Math.abs(change) < 1) return 'stable';
+    if (Math.abs(change) < 1) {return 'stable';}
     return change > 0 ? 'up' : 'down';
   }
 

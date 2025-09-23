@@ -243,19 +243,19 @@ if __name__ == "__main__":
 
   validateASTNode(node: ASTNode): boolean {
     // Validate required AST node properties
-    if (!node.id || typeof node.id !== 'string') return false;
-    if (!node.type || typeof node.type !== 'string') return false;
-    if (!node.start || typeof node.start !== 'object') return false;
-    if (!node.end || typeof node.end !== 'object') return false;
-    if (typeof node.start.line !== 'number') return false;
-    if (typeof node.start.column !== 'number') return false;
-    if (typeof node.end.line !== 'number') return false;
-    if (typeof node.end.column !== 'number') return false;
+    if (!node.id || typeof node.id !== 'string') {return false;}
+    if (!node.type || typeof node.type !== 'string') {return false;}
+    if (!node.start || typeof node.start !== 'object') {return false;}
+    if (!node.end || typeof node.end !== 'object') {return false;}
+    if (typeof node.start.line !== 'number') {return false;}
+    if (typeof node.start.column !== 'number') {return false;}
+    if (typeof node.end.line !== 'number') {return false;}
+    if (typeof node.end.column !== 'number') {return false;}
 
     // Validate position consistency
-    if (node.start.line > node.end.line) return false;
+    if (node.start.line > node.end.line) {return false;}
     if (node.start.line === node.end.line && 
-        node.start.column > node.end.column) return false;
+        node.start.column > node.end.column) {return false;}
 
     return true;
   }

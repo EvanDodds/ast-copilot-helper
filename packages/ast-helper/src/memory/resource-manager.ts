@@ -1,4 +1,4 @@
-import {
+import type {
   ResourceManager,
   ResourceConfig,
   OptimizationResult,
@@ -7,7 +7,8 @@ import {
   PoolStatus,
   ResourceMonitor,
   MemorySnapshot,
-  MemoryAlert,
+  MemoryAlert} from './types.js';
+import {
   DEFAULT_RESOURCE_CONFIG,
 } from './types.js';
 
@@ -619,7 +620,9 @@ export class AdvancedResourceManager implements ResourceManager {
   }
 
   private formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) {
+return '0 B';
+}
     
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];

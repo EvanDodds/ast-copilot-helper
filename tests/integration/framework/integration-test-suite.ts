@@ -242,7 +242,7 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
   }
 
   async cleanupTestEnvironment(): Promise<void> {
-    if (!this.testEnv) return;
+    if (!this.testEnv) {return;}
 
     console.log('Cleaning up test environment...');
 

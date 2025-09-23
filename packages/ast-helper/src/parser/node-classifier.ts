@@ -328,7 +328,7 @@ export class NodeClassifier {
       };
 
       const mapping = this.getLanguageMapping(rawNode.language);
-      let result = this.performClassification(rawNode, mapping, fullContext);
+      const result = this.performClassification(rawNode, mapping, fullContext);
 
       // Update statistics
       this.updateStats(result, rawNode.language);

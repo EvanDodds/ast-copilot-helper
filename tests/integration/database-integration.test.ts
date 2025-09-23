@@ -823,8 +823,8 @@ class AdvancedDatabaseIntegrationTestSuite {
     private async validateDataConstraints(data: any): Promise<any> {
         const errors = [];
         
-        if (!data.id) errors.push('ID_REQUIRED');
-        if (data.name === '') errors.push('NAME_EMPTY');
+        if (!data.id) {errors.push('ID_REQUIRED');}
+        if (data.name === '') {errors.push('NAME_EMPTY');}
         if (!['class', 'interface', 'function', 'variable'].includes(data.type)) {
             errors.push('INVALID_TYPE');
         }

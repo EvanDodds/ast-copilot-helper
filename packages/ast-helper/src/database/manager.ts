@@ -65,7 +65,9 @@ export class ASTDatabaseManager {
         try {
             // Check if root directory exists
             const rootExists = await this.fs.exists(structure.root);
-            if (!rootExists) return false;
+            if (!rootExists) {
+return false;
+}
 
             // Check if essential files exist
             const configExists = await this.fs.exists(structure.config);

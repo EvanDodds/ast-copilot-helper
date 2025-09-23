@@ -5,7 +5,7 @@
  * modifiers, imports/exports, documentation, and language-specific annotations.
  */
 
-import { NodeMetadata, Position } from './ast-schema';
+import type { NodeMetadata, Position } from './ast-schema';
 
 /**
  * Raw tree-sitter node interface (minimal definition for metadata extraction)
@@ -317,7 +317,9 @@ export class MetadataExtractor {
 
     // Check if this node is exported
     const nodeName = this.extractNodeName(rawNode);
-    if (!nodeName) return exports;
+    if (!nodeName) {
+return exports;
+}
 
     // Check file exports for this name
     const exportsArray = Array.from(context.fileExports);
@@ -342,7 +344,9 @@ export class MetadataExtractor {
   private extractDocumentation(rawNode: RawASTNode, context: ExtractionContext): string | undefined {
     const docComment = this.findDocumentationComment(rawNode, context);
     
-    if (!docComment) return undefined;
+    if (!docComment) {
+return undefined;
+}
 
     let docText = this.cleanDocumentationText(docComment, context.language);
     
@@ -573,7 +577,7 @@ export class MetadataExtractor {
     const nodeStart = rawNode.startPosition;
     const lines = context.sourceText.split('\n');
     
-    let commentLines: string[] = [];
+    const commentLines: string[] = [];
     let currentLine = nodeStart.row - 1;
     
     // Look backwards for comments
@@ -974,7 +978,9 @@ export class MetadataUtils {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]?.trim();
-      if (!line) continue;
+      if (!line) {
+continue;
+}
       
       const importInfos = MetadataUtils.parseImportLine(line, language, i + 1);
       
@@ -995,7 +1001,9 @@ export class MetadataUtils {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]?.trim();
-      if (!line) continue;
+      if (!line) {
+continue;
+}
       
       const exportInfo = MetadataUtils.parseExportLine(line, language, i + 1);
       

@@ -486,11 +486,21 @@ export class DeploymentCertificationConfigManager {
     const merged = { ...defaultConfig };
 
     // Merge top-level properties
-    if (customConfig.environment !== undefined) merged.environment = customConfig.environment;
-    if (customConfig.priority !== undefined) merged.priority = customConfig.priority;
-    if (customConfig.certificationLevel !== undefined) merged.certificationLevel = customConfig.certificationLevel;
-    if (customConfig.timeout !== undefined) merged.timeout = customConfig.timeout;
-    if (customConfig.parallel !== undefined) merged.parallel = customConfig.parallel;
+    if (customConfig.environment !== undefined) {
+merged.environment = customConfig.environment;
+}
+    if (customConfig.priority !== undefined) {
+merged.priority = customConfig.priority;
+}
+    if (customConfig.certificationLevel !== undefined) {
+merged.certificationLevel = customConfig.certificationLevel;
+}
+    if (customConfig.timeout !== undefined) {
+merged.timeout = customConfig.timeout;
+}
+    if (customConfig.parallel !== undefined) {
+merged.parallel = customConfig.parallel;
+}
 
     // Deep merge nested configurations
     if (customConfig.buildVerification) {

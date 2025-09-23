@@ -437,22 +437,34 @@ export class PerformanceBenchmarkRunner extends EventEmitter {
   private evaluateScalabilityStep(_test: ScalabilityTest, measurements: Record<string, number>): boolean {
     // Simple evaluation - in practice this would be more sophisticated
     for (const [metric, value] of Object.entries(measurements)) {
-      if (metric === 'error-rate' && value > 0.05) return false;
-      if (metric.includes('time') && value > 10000) return false; // 10s max
-      if (metric === 'memory-usage' && value > 2048) return false; // 2GB max
+      if (metric === 'error-rate' && value > 0.05) {
+return false;
+}
+      if (metric.includes('time') && value > 10000) {
+return false;
+} // 10s max
+      if (metric === 'memory-usage' && value > 2048) {
+return false;
+} // 2GB max
     }
     return true;
   }
 
   private analyzeScalingBehavior(workloadPoints: any[], test: ScalabilityTest): 'linear' | 'logarithmic' | 'constant' | 'degraded-graceful' | 'failure' {
-    if (workloadPoints.length === 0) return 'failure';
+    if (workloadPoints.length === 0) {
+return 'failure';
+}
     
     const successfulPoints = workloadPoints.filter(p => p.success);
-    if (successfulPoints.length < 2) return 'failure';
+    if (successfulPoints.length < 2) {
+return 'failure';
+}
     
     // Simple heuristic analysis
     const firstMetric = test.metrics[0];
-    if (!firstMetric) return 'failure';
+    if (!firstMetric) {
+return 'failure';
+}
     
     const values = successfulPoints.map(p => p.measurements[firstMetric] || 0);
     const workloads = successfulPoints.map(p => p.workload);
@@ -460,15 +472,23 @@ export class PerformanceBenchmarkRunner extends EventEmitter {
     // Calculate simple correlation
     const correlation = this.calculateCorrelation(workloads, values);
     
-    if (correlation > 0.8) return 'linear';
-    if (correlation > 0.6) return 'degraded-graceful';
-    if (Math.abs(correlation) < 0.3) return 'constant';
+    if (correlation > 0.8) {
+return 'linear';
+}
+    if (correlation > 0.6) {
+return 'degraded-graceful';
+}
+    if (Math.abs(correlation) < 0.3) {
+return 'constant';
+}
     
     return test.expectedBehavior;
   }
 
   private calculateCorrelation(x: number[], y: number[]): number {
-    if (x.length !== y.length || x.length === 0) return 0;
+    if (x.length !== y.length || x.length === 0) {
+return 0;
+}
     
     const n = x.length;
     const sumX = x.reduce((a, b) => a + b, 0);
@@ -502,24 +522,32 @@ export class PerformanceBenchmarkRunner extends EventEmitter {
   }
 
   private calculateMemoryGrowth(): number {
-    if (this.memorySnapshots.length < 2) return 0;
+    if (this.memorySnapshots.length < 2) {
+return 0;
+}
     
     const first = this.memorySnapshots[0];
     const last = this.memorySnapshots[this.memorySnapshots.length - 1];
     
-    if (!first || !last) return 0;
+    if (!first || !last) {
+return 0;
+}
     
     return (last.heapUsed - first.heapUsed) / this.memorySnapshots.length;
   }
 
   private detectMemoryLeaks(): boolean {
-    if (this.memorySnapshots.length < 10) return false;
+    if (this.memorySnapshots.length < 10) {
+return false;
+}
     
     const recent = this.memorySnapshots.slice(-10);
     const firstSnapshot = recent[0];
     const lastSnapshot = recent[recent.length - 1];
     
-    if (!firstSnapshot || !lastSnapshot) return false;
+    if (!firstSnapshot || !lastSnapshot) {
+return false;
+}
     
     const trend = lastSnapshot.heapUsed - firstSnapshot.heapUsed;
     

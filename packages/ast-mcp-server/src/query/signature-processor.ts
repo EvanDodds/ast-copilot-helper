@@ -6,14 +6,14 @@
  */
 
 import { createLogger } from '../../../ast-helper/src/logging/index.js';
-import { ASTDatabaseReader } from '../database/reader.js';
-import { 
+import type { ASTDatabaseReader } from '../database/reader.js';
+import type { 
   SignatureQueryOptions, 
   QueryResponse, 
   QuerySystemConfig,
   AnnotationMatch
 } from './types.js';
-import { ASTNodeMatch } from '../types.js';
+import type { ASTNodeMatch } from '../types.js';
 
 /**
  * Signature analysis result
@@ -240,7 +240,9 @@ export class SignatureQueryProcessor {
     
     for (const param of params) {
       const trimmed = param.trim();
-      if (!trimmed) continue;
+      if (!trimmed) {
+continue;
+}
       
       // Parse parameter: name, type, optional, default value
       const match = trimmed.match(/(\w+)(\?)?\s*(?::\s*([^=]+))?\s*(?:=\s*(.+))?/);
@@ -444,13 +446,21 @@ export class SignatureQueryProcessor {
    * Calculate Levenshtein distance between two strings
    */
   private levenshteinDistance(a: string, b: string): number {
-    if (a.length === 0) return b.length;
-    if (b.length === 0) return a.length;
+    if (a.length === 0) {
+return b.length;
+}
+    if (b.length === 0) {
+return a.length;
+}
     
     const matrix: number[][] = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(0));
     
-    for (let i = 0; i <= a.length; i++) matrix[0]![i] = i;
-    for (let j = 0; j <= b.length; j++) matrix[j]![0] = j;
+    for (let i = 0; i <= a.length; i++) {
+matrix[0]![i] = i;
+}
+    for (let j = 0; j <= b.length; j++) {
+matrix[j]![0] = j;
+}
     
     for (let j = 1; j <= b.length; j++) {
       for (let i = 1; i <= a.length; i++) {

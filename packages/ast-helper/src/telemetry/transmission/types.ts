@@ -3,7 +3,7 @@
  * @description Type definitions for secure telemetry data transmission
  */
 
-import { StoredEvent } from '../storage/types.js';
+import type { StoredEvent } from '../storage/types.js';
 
 // ============================================================================
 // Transmission Interfaces

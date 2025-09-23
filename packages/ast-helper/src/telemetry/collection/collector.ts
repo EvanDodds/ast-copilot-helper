@@ -4,7 +4,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { PrivacyLevel } from '../types.js';
+import type { PrivacyLevel } from '../types.js';
 import type { 
   TelemetryEvent, 
   DataCollector as IDataCollector,
@@ -29,7 +29,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
   private stats: CollectionStats;
   private currentSession?: CollectionSession;
   private readonly eventBuffer: TelemetryEvent[] = [];
-  private isInitialized: boolean = false;
+  private isInitialized = false;
   private flushTimer?: NodeJS.Timeout;
 
   constructor(config?: Partial<CollectionConfig>) {

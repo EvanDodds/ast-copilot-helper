@@ -157,7 +157,7 @@ export class LegalDocumentTemplateEngine {
    */
   private initializeCustomFunctions(): void {
     // Date formatting function
-    this.customFunctions.set('formatDate', (date: Date | string, _format: string = 'MMMM dd, yyyy') => {
+    this.customFunctions.set('formatDate', (date: Date | string, _format = 'MMMM dd, yyyy') => {
       const d = typeof date === 'string' ? new Date(date) : date;
       return d.toLocaleDateString('en-US', {
         year: 'numeric',
@@ -176,12 +176,12 @@ export class LegalDocumentTemplateEngine {
     });
 
     // Conditional inclusion function
-    this.customFunctions.set('ifDefined', (value: any, trueText: string, falseText: string = '') => {
+    this.customFunctions.set('ifDefined', (value: any, trueText: string, falseText = '') => {
       return value !== undefined && value !== null && value !== '' ? trueText : falseText;
     });
 
     // Word count estimator
-    this.customFunctions.set('estimateReadingTime', (text: string, wordsPerMinute: number = 200) => {
+    this.customFunctions.set('estimateReadingTime', (text: string, wordsPerMinute = 200) => {
       const wordCount = text.split(/\s+/).length;
       return Math.ceil(wordCount / wordsPerMinute);
     });
@@ -318,7 +318,9 @@ export class LegalDocumentTemplateEngine {
     // Simple variable substitution {{variable}}
     processed = processed.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
       const value = variables[varName];
-      if (value === undefined) return match;
+      if (value === undefined) {
+return match;
+}
       if (Array.isArray(value)) {
         return value.join(', ');
       }
@@ -331,15 +333,25 @@ export class LegalDocumentTemplateEngine {
     // Advanced function calls {{function:arg1:arg2}}
     processed = processed.replace(/\{\{(\w+):([^}]+)\}\}/g, (match, funcName, args) => {
       const func = this.customFunctions.get(funcName);
-      if (!func) return match;
+      if (!func) {
+return match;
+}
       
       const argList = args.split(':').map((arg: string) => {
         // Try to resolve variable reference
-        if (variables[arg] !== undefined) return variables[arg];
+        if (variables[arg] !== undefined) {
+return variables[arg];
+}
         // Parse as literal
-        if (arg === 'true') return true;
-        if (arg === 'false') return false;
-        if (/^\d+$/.test(arg)) return parseInt(arg);
+        if (arg === 'true') {
+return true;
+}
+        if (arg === 'false') {
+return false;
+}
+        if (/^\d+$/.test(arg)) {
+return parseInt(arg);
+}
         return arg;
       });
       
@@ -361,7 +373,9 @@ export class LegalDocumentTemplateEngine {
     // Loop blocks {{#each array}}...{{/each}}
     processed = processed.replace(/\{\{#each\s+(\w+)\}\}(.*?)\{\{\/each\}\}/gs, (_match, arrayName, itemTemplate) => {
       const array = variables[arrayName];
-      if (!Array.isArray(array)) return '';
+      if (!Array.isArray(array)) {
+return '';
+}
       
       return array.map((item, index) => {
         let itemContent = itemTemplate;

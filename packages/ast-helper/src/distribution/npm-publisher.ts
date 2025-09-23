@@ -6,7 +6,7 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { 
+import type { 
   BasePublisher, 
   DistributionConfig,
   NPMPublishResult,

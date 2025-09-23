@@ -4,7 +4,8 @@
  */
 
 import type { PartialConfig } from '../types.js';
-import { CONFIG_VALIDATION_SCHEMA, ValidationRule, ValidationSchema } from './validation-schema.js';
+import type { ValidationRule, ValidationSchema } from './validation-schema.js';
+import { CONFIG_VALIDATION_SCHEMA } from './validation-schema.js';
 
 /**
  * Validation error with context and suggestions
@@ -164,14 +165,20 @@ export class EnhancedConfigValidator {
       // Convert string booleans to actual booleans for boolean fields
       if (this.isBooleanField(path)) {
         const lower = trimmed.toLowerCase();
-        if (['true', '1', 'yes'].includes(lower)) return true;
-        if (['false', '0', 'no'].includes(lower)) return false;
+        if (['true', '1', 'yes'].includes(lower)) {
+return true;
+}
+        if (['false', '0', 'no'].includes(lower)) {
+return false;
+}
       }
       
       // Convert numeric strings to numbers for numeric fields
       if (this.isNumericField(path)) {
         const num = Number(trimmed);
-        if (!isNaN(num)) return num;
+        if (!isNaN(num)) {
+return num;
+}
       }
       
       return trimmed;

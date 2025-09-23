@@ -1,4 +1,5 @@
-import { Transport, TransportConfig, TransportMessage, TransportError, ConnectionInfo } from './base';
+import type { TransportConfig, TransportMessage, ConnectionInfo } from './base';
+import { Transport, TransportError } from './base';
 import { logger } from '../../logging/logger';
 
 /**
@@ -263,7 +264,7 @@ export class WebSocketTransport extends Transport {
   /**
    * Simulate a new connection (for testing purposes)
    */
-  simulateConnection(remoteAddress: string = 'simulated', userAgent: string = 'test-client'): string {
+  simulateConnection(remoteAddress = 'simulated', userAgent = 'test-client'): string {
     const connectionId = `ws-sim-${Date.now()}`;
     
     const connection = this.registerConnection(connectionId, {

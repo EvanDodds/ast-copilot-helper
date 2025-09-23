@@ -4,7 +4,7 @@
  */
 
 import * as path from 'path';
-import { LanguageConfig } from './types.js';
+import type { LanguageConfig } from './types.js';
 
 /**
  * Supported languages configuration

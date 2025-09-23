@@ -5,8 +5,8 @@
 
 import * as os from 'os';
 import * as fs from 'fs';
-import { DiagnosticCollector, DiagnosticScope, SystemDiagnostics } from './types.js';
-import { DiagnosticData } from '../types.js';
+import type { DiagnosticCollector, DiagnosticScope, SystemDiagnostics } from './types.js';
+import type { DiagnosticData } from '../types.js';
 
 /**
  * Collects system-level diagnostic information
@@ -149,12 +149,16 @@ export class SystemDiagnosticCollector implements DiagnosticCollector {
       const endCore = end[index];
       
       // Guard against missing end core data
-      if (!endCore) return 0;
+      if (!endCore) {
+return 0;
+}
       
       const idleDiff = endCore.idle - startCore.idle;
       const totalDiff = endCore.total - startCore.total;
       
-      if (totalDiff === 0) return 0;
+      if (totalDiff === 0) {
+return 0;
+}
       
       const usage = ((totalDiff - idleDiff) / totalDiff) * 100;
       return Math.max(0, Math.min(100, usage));
@@ -318,7 +322,9 @@ export class SystemDiagnosticCollector implements DiagnosticCollector {
     let activeConnections = 0;
     
     for (const [name, addresses] of Object.entries(interfaces)) {
-      if (!addresses) continue;
+      if (!addresses) {
+continue;
+}
       
       for (const addr of addresses) {
         networkInterfaces.push({

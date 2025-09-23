@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { ServerProcessManager } from './ServerProcessManager';
-import { MCPClientManager } from './MCPClientManager';
+import type { ServerProcessManager } from './ServerProcessManager';
+import type { MCPClientManager } from './MCPClientManager';
 
 /**
  * User Interface Manager for AST Copilot Helper Extension
@@ -106,7 +106,9 @@ export class UIManager {
    * Update the status bar based on server state
    */
   public updateStatusBar(state?: string): void {
-    if (!this.statusBarItem) return;
+    if (!this.statusBarItem) {
+return;
+}
     
     try {
       const serverState = state || this.serverProcessManager?.getState() || 'unknown';
@@ -259,7 +261,7 @@ export class UIManager {
    */
   public showProgressNotification(
     title: string, 
-    cancellable: boolean = false,
+    cancellable = false,
     location: vscode.ProgressLocation = vscode.ProgressLocation.Notification
   ): vscode.Progress<{ message?: string; increment?: number }> | null {
     // Cancel any existing progress
@@ -438,7 +440,9 @@ export class UIManager {
    * Handle retry action based on current context
    */
   private handleRetryAction(): void {
-    if (!this.serverProcessManager) return;
+    if (!this.serverProcessManager) {
+return;
+}
 
     const state = this.serverProcessManager.getState();
     switch (state) {

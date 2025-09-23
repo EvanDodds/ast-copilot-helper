@@ -374,7 +374,7 @@ export class NodeVersionCompatibilityTester {
     
     try {
       // Test static initialization blocks
-      let staticBlockExecuted = false;
+      const staticBlockExecuted = false;
       
       const testClass = eval(`
         class TestClass {
@@ -450,7 +450,7 @@ export class NodeVersionCompatibilityTester {
       
       // Test specific API features based on the module
       let specificTest = true;
-      let specificDetails: any = {};
+      const specificDetails: any = {};
 
       switch (apiName) {
         case 'crypto':

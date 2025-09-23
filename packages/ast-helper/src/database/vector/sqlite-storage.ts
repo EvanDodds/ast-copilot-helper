@@ -8,7 +8,7 @@
 import Database from 'better-sqlite3';
 import { promises as fs } from 'fs';
 import { dirname } from 'path';
-import { 
+import type { 
   VectorMetadata, 
   VectorInsert, 
   VectorDBConfig, 
@@ -71,7 +71,7 @@ const VECTOR_INDEXES = {
 export class SQLiteVectorStorage {
   private db: Database.Database;
   private config: VectorDBConfig;
-  private isInitialized: boolean = false;
+  private isInitialized = false;
 
   // Prepared statements for performance
   private insertVectorStmt?: Database.Statement;

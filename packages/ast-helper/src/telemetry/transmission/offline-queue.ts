@@ -5,12 +5,12 @@
 
 import { promises as fs } from 'fs';
 import { resolve, dirname } from 'path';
-import {
+import type {
   OfflineQueue,
   QueueInfo,
   OfflineQueueConfig
 } from './types.js';
-import { StoredEvent } from '../storage/types.js';
+import type { StoredEvent } from '../storage/types.js';
 
 /**
  * Disk-based offline queue implementation

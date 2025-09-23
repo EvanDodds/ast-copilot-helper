@@ -164,7 +164,7 @@ export class IntegrationTestOrchestrator {
     duration: number
   ): Promise<void> {
     const targets = INTEGRATION_TEST_PERFORMANCE_TARGETS[suiteName as keyof typeof INTEGRATION_TEST_PERFORMANCE_TARGETS];
-    if (!targets) return;
+    if (!targets) {return;}
     
     const issues: string[] = [];
     
@@ -412,7 +412,7 @@ export class IntegrationTestOrchestrator {
       result.name.includes('MCP Server')
     );
     
-    if (infraTests.length === 0) return 100;
+    if (infraTests.length === 0) {return 100;}
     
     const totalTests = infraTests.reduce((sum, result) => sum + result.totalTests, 0);
     const passedTests = infraTests.reduce((sum, result) => sum + result.passed, 0);

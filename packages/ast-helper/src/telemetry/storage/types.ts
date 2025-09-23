@@ -3,8 +3,8 @@
  * @description Type definitions for telemetry data storage and queuing
  */
 
-import { TelemetryEvent, CollectionStats } from '../collection/types.js';
-import { PrivacyLevel } from '../types.js';
+import type { TelemetryEvent, CollectionStats } from '../collection/types.js';
+import type { PrivacyLevel } from '../types.js';
 
 // ============================================================================
 // Storage Interfaces

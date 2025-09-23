@@ -153,7 +153,9 @@ export class ValidationUtils {
     return {
       validate: (value: any) => {
         // Accept boolean values and common string representations
-        if (typeof value === 'boolean') return true;
+        if (typeof value === 'boolean') {
+return true;
+}
         if (typeof value === 'string') {
           const lower = value.toLowerCase();
           if (['true', 'false', '1', '0', 'yes', 'no'].includes(lower)) {

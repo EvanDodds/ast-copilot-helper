@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { PerformanceBenchmarkRunner } from '../performance/benchmark-runner.js';
-import { PerformanceReport } from '../performance/types.js';
+import type { PerformanceReport } from '../performance/types.js';
 import { createLogger } from '../logging/index.js';
 import type { Config } from '../types.js';
 

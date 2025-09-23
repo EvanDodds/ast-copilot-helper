@@ -7,15 +7,18 @@
 
 import { createHash } from 'node:crypto';
 import { createLogger } from '../logging/index.js';
-import { ASTNode, NodeType } from './ast-schema.js';
-import { 
+import type { ASTNode} from './ast-schema.js';
+import { NodeType } from './ast-schema.js';
+import type { 
   Annotation, 
   AnnotationConfig, 
-  AnnotationMetadata,
-  DEFAULT_ANNOTATION_CONFIG,
-  ExportType, 
+  AnnotationMetadata, 
   LanguageFeatures,
   QualityMetrics
+} from './annotation-types.js';
+import {
+  DEFAULT_ANNOTATION_CONFIG,
+  ExportType
 } from './annotation-types.js';
 
 /**
@@ -654,20 +657,40 @@ export class AnnotationGenerator {
    * Infer the purpose of a node from its name and context
    */
   private inferPurpose(node: ASTNode, _context: AnnotationContext): string {
-    if (!node.name) return 'performs some operation';
+    if (!node.name) {
+return 'performs some operation';
+}
 
     const name = node.name.toLowerCase();
 
     // Common purpose patterns
-    if (name.startsWith('get') || name.startsWith('fetch')) return 'retrieves data';
-    if (name.startsWith('set') || name.startsWith('update')) return 'modifies data';
-    if (name.startsWith('create') || name.startsWith('make')) return 'creates something';
-    if (name.startsWith('delete') || name.startsWith('remove')) return 'removes something';
-    if (name.startsWith('validate') || name.startsWith('check')) return 'validates data';
-    if (name.startsWith('handle') || name.startsWith('process')) return 'processes input';
-    if (name.startsWith('calculate') || name.startsWith('compute')) return 'computes values';
-    if (name.startsWith('render') || name.startsWith('draw')) return 'renders output';
-    if (name.includes('test') || name.includes('spec')) return 'tests functionality';
+    if (name.startsWith('get') || name.startsWith('fetch')) {
+return 'retrieves data';
+}
+    if (name.startsWith('set') || name.startsWith('update')) {
+return 'modifies data';
+}
+    if (name.startsWith('create') || name.startsWith('make')) {
+return 'creates something';
+}
+    if (name.startsWith('delete') || name.startsWith('remove')) {
+return 'removes something';
+}
+    if (name.startsWith('validate') || name.startsWith('check')) {
+return 'validates data';
+}
+    if (name.startsWith('handle') || name.startsWith('process')) {
+return 'processes input';
+}
+    if (name.startsWith('calculate') || name.startsWith('compute')) {
+return 'computes values';
+}
+    if (name.startsWith('render') || name.startsWith('draw')) {
+return 'renders output';
+}
+    if (name.includes('test') || name.includes('spec')) {
+return 'tests functionality';
+}
 
     // Default based on node type
     switch (node.type) {

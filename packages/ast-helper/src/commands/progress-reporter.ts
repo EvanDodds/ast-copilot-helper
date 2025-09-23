@@ -7,7 +7,7 @@
 
 import { EventEmitter } from 'events';
 import { relative } from 'path';
-import { Logger } from '../logging/index.js';
+import type { Logger } from '../logging/index.js';
 
 /**
  * Progress statistics for current operation
@@ -99,8 +99,8 @@ export class ProgressReporter extends EventEmitter<ProgressReporterEvents> {
 
     private stats: ProgressStats;
     private displayTimer?: NodeJS.Timeout;
-    private isActive: boolean = false;
-    private shouldClearLine: boolean = true;
+    private isActive = false;
+    private shouldClearLine = true;
 
     constructor(
         logger: Logger,
@@ -156,7 +156,9 @@ export class ProgressReporter extends EventEmitter<ProgressReporterEvents> {
      * Update progress with new data from batch orchestrator
      */
     update(update: ParseProgressUpdate): void {
-        if (!this.isActive) return;
+        if (!this.isActive) {
+return;
+}
 
         const now = Date.now();
         const elapsedMs = now - this.stats.startTime;
@@ -207,8 +209,10 @@ export class ProgressReporter extends EventEmitter<ProgressReporterEvents> {
     /**
      * Mark a file as failed
      */
-    incrementFailures(count: number = 1): void {
-        if (!this.isActive) return;
+    incrementFailures(count = 1): void {
+        if (!this.isActive) {
+return;
+}
         this.stats.failedFiles += count;
     }
 
@@ -216,7 +220,9 @@ export class ProgressReporter extends EventEmitter<ProgressReporterEvents> {
      * Complete progress reporting
      */
     complete(): void {
-        if (!this.isActive) return;
+        if (!this.isActive) {
+return;
+}
 
         this.isActive = false;
 
@@ -288,7 +294,9 @@ export class ProgressReporter extends EventEmitter<ProgressReporterEvents> {
      * Calculate processing rate
      */
     private calculateRate(completed: number, elapsedMs: number): number {
-        if (elapsedMs === 0) return 0;
+        if (elapsedMs === 0) {
+return 0;
+}
         return (completed / elapsedMs) * 1000; // files per second
     }
 
@@ -296,7 +304,9 @@ export class ProgressReporter extends EventEmitter<ProgressReporterEvents> {
      * Calculate estimated time to completion
      */
     private calculateETA(completed: number, total: number, elapsedMs: number): number {
-        if (completed === 0 || elapsedMs === 0) return 0;
+        if (completed === 0 || elapsedMs === 0) {
+return 0;
+}
 
         const remaining = total - completed;
         const rate = completed / elapsedMs;
@@ -307,8 +317,12 @@ export class ProgressReporter extends EventEmitter<ProgressReporterEvents> {
      * Determine memory pressure level
      */
     private calculateMemoryPressure(memoryMB: number): 'low' | 'medium' | 'high' {
-        if (memoryMB > 1024) return 'high';   // > 1GB
-        if (memoryMB > 512) return 'medium';  // > 512MB
+        if (memoryMB > 1024) {
+return 'high';
+}   // > 1GB
+        if (memoryMB > 512) {
+return 'medium';
+}  // > 512MB
         return 'low';
     }
 
@@ -339,7 +353,9 @@ export class ProgressReporter extends EventEmitter<ProgressReporterEvents> {
      * Update the real-time display
      */
     private updateDisplay(): void {
-        if (!this.isActive) return;
+        if (!this.isActive) {
+return;
+}
 
         // Clear previous line if needed
         if (this.shouldClearLine) {
@@ -455,7 +471,9 @@ export class ProgressReporter extends EventEmitter<ProgressReporterEvents> {
      * Format duration in human-readable format
      */
     private formatDuration(seconds: number): string {
-        if (seconds < 60) return `${seconds}s`;
+        if (seconds < 60) {
+return `${seconds}s`;
+}
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         return `${minutes}m ${remainingSeconds}s`;

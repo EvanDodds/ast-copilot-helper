@@ -6,8 +6,8 @@
  */
 
 import { createLogger } from '../../../ast-helper/src/logging/index.js';
-import { XenovaEmbeddingGenerator } from '../../../ast-helper/src/embedder/index.js';
-import { HNSWVectorDatabase } from '../../../ast-helper/src/database/vector/index.js';
+import type { XenovaEmbeddingGenerator } from '../../../ast-helper/src/embedder/index.js';
+import type { HNSWVectorDatabase } from '../../../ast-helper/src/database/vector/index.js';
 import path from 'path';
 import type { ASTDatabaseReader } from '../database/reader.js';
 import { SemanticQueryProcessor } from './semantic-processor.js';
@@ -114,7 +114,9 @@ class QueryPreprocessor {
    * Enhance query with context information
    */
   static enhanceWithContext(text: string, context?: QueryContext): string {
-    if (!context) return text;
+    if (!context) {
+return text;
+}
     
     let enhanced = text;
     
@@ -223,7 +225,9 @@ export class MCPQueryProcessor implements QueryProcessor {
    * Initialize the query processor
    */
   async initialize(): Promise<void> {
-    if (this.isInitialized) return;
+    if (this.isInitialized) {
+return;
+}
     
     this.logger.info('Initializing query processor', {
       hasEmbeddingGenerator: !!this.embeddingGenerator,
@@ -578,10 +582,18 @@ export class MCPQueryProcessor implements QueryProcessor {
   private getAppliedFilters(options: any): string[] {
     const filters: string[] = [];
     
-    if (options.fileFilter) filters.push('file_filter');
-    if (options.languageFilter) filters.push('language_filter');
-    if (options.confidenceThreshold) filters.push('confidence_threshold');
-    if (options.minScore) filters.push('min_score');
+    if (options.fileFilter) {
+filters.push('file_filter');
+}
+    if (options.languageFilter) {
+filters.push('language_filter');
+}
+    if (options.confidenceThreshold) {
+filters.push('confidence_threshold');
+}
+    if (options.minScore) {
+filters.push('min_score');
+}
     
     return filters;
   }

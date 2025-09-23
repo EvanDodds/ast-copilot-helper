@@ -91,12 +91,12 @@ export class DynamicBatchOptimizer {
   private config: OptimizationConfig;
   private performanceHistory: PerformanceHistory[] = [];
   private currentBatchSize: number;
-  private lastOptimization: number = 0;
+  private lastOptimization = 0;
   private cpuMonitoring: Map<string, number[]> = new Map();
   private logger = createLogger({ operation: 'DynamicBatchOptimizer' });
 
   constructor(
-    initialBatchSize: number = 32,
+    initialBatchSize = 32,
     config: Partial<OptimizationConfig> = {}
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -125,7 +125,7 @@ export class DynamicBatchOptimizer {
     batchSize: number,
     processingTime: number,
     itemCount: number,
-    success: boolean = true
+    success = true
   ): void {
     const throughput = itemCount / (processingTime / 1000); // items per second
     const systemMetrics = this.getCurrentSystemMetrics();

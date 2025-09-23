@@ -4,7 +4,7 @@
  * Now includes enhanced validation with detailed error reporting
  */
 
-import { Config, PartialConfig } from '../types.js';
+import type { Config, PartialConfig } from '../types.js';
 import { validateConfigStrict, type ValidationResult, defaultValidator } from './enhanced-validator.js';
 
 export const DEFAULT_CONFIG: Config = {

@@ -4,7 +4,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { 
+import type { 
   MCPRequest, 
   MCPResponse,
   MCPNotification,
@@ -30,9 +30,9 @@ export interface MCPServer {
 
 export class ASTMCPServer extends EventEmitter implements MCPServer {
   private config?: MCPServerConfig;
-  public isInitialized: boolean = false;
-  public isRunning: boolean = false;
-  private requestCount: number = 0;
+  public isInitialized = false;
+  public isRunning = false;
+  private requestCount = 0;
   
   // Plugin registries - will be injected via dependency injection
   private toolRegistry?: any; // Will be MCPToolRegistry

@@ -283,7 +283,7 @@ describe('Scaling and Load Benchmarks', () => {
                 recoveryResults.push(recoveryTime);
 
                 // Force cleanup
-                if (global.gc) global.gc();
+                if (global.gc) {global.gc();}
             }
 
             const avgBaseline = baselineResults.reduce((a, b) => a + b, 0) / baselineResults.length;

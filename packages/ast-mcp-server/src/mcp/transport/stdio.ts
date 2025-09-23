@@ -1,5 +1,6 @@
 import { createInterface } from 'readline';
-import { Transport, TransportConfig, TransportMessage, TransportError, ConnectionInfo } from './base';
+import type { TransportConfig, TransportMessage, ConnectionInfo } from './base';
+import { Transport, TransportError } from './base';
 import { logger } from '../../logging/logger';
 
 /**

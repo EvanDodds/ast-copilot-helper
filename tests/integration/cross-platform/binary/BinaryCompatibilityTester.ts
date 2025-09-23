@@ -579,7 +579,7 @@ export class BinaryCompatibilityTester {
       const platform = process.platform;
       
       // Check if binaries match expected architecture
-      let architectureMatch = true;
+      const architectureMatch = true;
       const details: any = {
         processArchitecture: arch,
         processPlatform: platform,

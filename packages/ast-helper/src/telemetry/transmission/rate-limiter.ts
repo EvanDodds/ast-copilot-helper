@@ -3,7 +3,7 @@
  * @description Rate limiting implementation for transmission requests
  */
 
-import { RateLimitConfig } from './types.js';
+import type { RateLimitConfig } from './types.js';
 
 /**
  * Token bucket rate limiter implementation
@@ -26,7 +26,7 @@ export class RateLimiter {
   /**
    * Check if request is within rate limits
    */
-  async checkLimit(eventCount: number, payloadSize: number = 0): Promise<void> {
+  async checkLimit(eventCount: number, payloadSize = 0): Promise<void> {
     if (!this.config.enabled) {
       return;
     }

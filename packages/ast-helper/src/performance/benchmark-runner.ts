@@ -1,7 +1,8 @@
 import { cpus, platform, arch, totalmem, freemem } from 'os';
 import { ConcurrencyProfiler } from './concurrency-profiler';
-import { MemoryProfiler, MemoryProfilingConfig } from './memory-profiler';
-import {
+import type { MemoryProfilingConfig } from './memory-profiler';
+import { MemoryProfiler } from './memory-profiler';
+import type {
   PerformanceTester,
   BenchmarkResults,
   ParsingBenchmark,

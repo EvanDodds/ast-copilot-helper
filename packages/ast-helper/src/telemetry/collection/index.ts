@@ -22,7 +22,8 @@ export {
 } from './collector';
 
 // Import for internal function implementations
-import { TelemetryDataCollector, DataCollectorFactory } from './collector';
+import type { TelemetryDataCollector} from './collector';
+import { DataCollectorFactory } from './collector';
 
 /**
  * Create a development telemetry collector

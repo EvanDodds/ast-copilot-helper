@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import * as v8 from 'v8';
-import {
+import type {
   MemoryLeakDetector as IMemoryLeakDetector,
   LeakDetectionResult,
   DetectedLeak,
@@ -373,7 +373,9 @@ export class AdvancedMemoryLeakDetector extends EventEmitter implements IMemoryL
   }
 
   private calculateOverallConfidence(leaks: DetectedLeak[]): number {
-    if (leaks.length === 0) return 1.0;
+    if (leaks.length === 0) {
+return 1.0;
+}
     
     const avgConfidence = leaks.reduce((sum, leak) => sum + leak.confidence, 0) / leaks.length;
     return Math.min(avgConfidence, 1.0);
@@ -382,9 +384,15 @@ export class AdvancedMemoryLeakDetector extends EventEmitter implements IMemoryL
   private determineSeverity(analysis: LeakAnalysis): LeakSeverity {
     const memoryMB = analysis.totalLeakedMemory / (1024 * 1024);
     
-    if (memoryMB > 500) return 'critical';
-    if (memoryMB > 100) return 'high';
-    if (memoryMB > 10) return 'medium';
+    if (memoryMB > 500) {
+return 'critical';
+}
+    if (memoryMB > 100) {
+return 'high';
+}
+    if (memoryMB > 10) {
+return 'medium';
+}
     return 'low';
   }
 
@@ -475,9 +483,15 @@ export class AdvancedMemoryLeakDetector extends EventEmitter implements IMemoryL
     // Higher confidence for known problematic patterns
     let confidence = 0.5;
     
-    if (objType.count > 50000) confidence += 0.2;
-    if (objType.size > 100 * 1024 * 1024) confidence += 0.2; // 100MB
-    if (objType.percentage > 30) confidence += 0.1;
+    if (objType.count > 50000) {
+confidence += 0.2;
+}
+    if (objType.size > 100 * 1024 * 1024) {
+confidence += 0.2;
+} // 100MB
+    if (objType.percentage > 30) {
+confidence += 0.1;
+}
     
     return Math.min(confidence, 1.0);
   }
@@ -550,7 +564,9 @@ export class AdvancedMemoryLeakDetector extends EventEmitter implements IMemoryL
 
   private formatBytes(bytes: number): string {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+return '0 Bytes';
+}
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   }
@@ -566,7 +582,9 @@ class InternalAllocationTracker implements AllocationTracker {
   private startTime = 0;
 
   start(): void {
-    if (this.isTracking) return;
+    if (this.isTracking) {
+return;
+}
     
     this.isTracking = true;
     this.startTime = Date.now();

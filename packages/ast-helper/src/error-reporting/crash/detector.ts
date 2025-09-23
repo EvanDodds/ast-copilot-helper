@@ -61,7 +61,7 @@ const DEFAULT_CONFIG: CrashDetectorConfig = {
  */
 export class CrashDetector {
   private config: CrashDetectorConfig;
-  private monitoring: boolean = false;
+  private monitoring = false;
   private monitoringInterval?: NodeJS.Timeout;
   private analyticsInterval?: NodeJS.Timeout;
   private recoveryActions: Map<string, RecoveryAction> = new Map();

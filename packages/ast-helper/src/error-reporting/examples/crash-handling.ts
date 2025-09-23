@@ -10,7 +10,7 @@
  */
 
 import { ComprehensiveErrorReportingManager } from '../manager';
-import { ErrorReportingConfig } from '../types';
+import type { ErrorReportingConfig } from '../types';
 
 async function customCrashHandlingExample() {
   console.log('💥 Starting Custom Crash Handling Example\n');

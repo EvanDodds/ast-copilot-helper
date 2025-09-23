@@ -9,7 +9,7 @@
  */
 
 import { EventEmitter } from 'node:events';
-import { 
+import type { 
     MemoryMonitor, 
     MemorySnapshot, 
     MemoryAlert, 

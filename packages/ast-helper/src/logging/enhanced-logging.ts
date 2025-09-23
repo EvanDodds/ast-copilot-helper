@@ -64,7 +64,9 @@ export class CorrelationContext {
    * Get current operation context
    */
   static getCurrentContext(): EnhancedLogContext | null {
-    if (!this.currentOperationId) return null;
+    if (!this.currentOperationId) {
+return null;
+}
     return this.context.get(this.currentOperationId) || null;
   }
   
@@ -72,7 +74,9 @@ export class CorrelationContext {
    * Update current operation context
    */
   static updateContext(updates: Partial<EnhancedLogContext>): void {
-    if (!this.currentOperationId) return;
+    if (!this.currentOperationId) {
+return;
+}
     
     const current = this.context.get(this.currentOperationId);
     if (current) {
@@ -84,7 +88,9 @@ export class CorrelationContext {
    * End current operation and cleanup context
    */
   static endOperation(): EnhancedLogContext | null {
-    if (!this.currentOperationId) return null;
+    if (!this.currentOperationId) {
+return null;
+}
     
     const context = this.context.get(this.currentOperationId);
     if (context && context.performance) {

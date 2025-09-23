@@ -8,7 +8,7 @@
  */
 
 import { ComprehensiveErrorReportingManager } from '../manager';
-import { ErrorReportingConfig } from '../types';
+import type { ErrorReportingConfig } from '../types';
 
 async function basicUsageExample() {
   console.log('🚀 Starting Basic Error Reporting Example\n');

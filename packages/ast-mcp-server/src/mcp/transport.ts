@@ -4,7 +4,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { JSONRPCRequest, JSONRPCResponse, JSONRPCNotification, MCPMessage } from './protocol';
+import type { JSONRPCRequest, JSONRPCResponse, JSONRPCNotification, MCPMessage } from './protocol';
 
 /**
  * Message handler function type
@@ -26,7 +26,7 @@ export interface TransportEvents {
  * Abstract transport interface for MCP communication
  */
 export abstract class MCPTransport extends EventEmitter {
-  protected isRunning: boolean = false;
+  protected isRunning = false;
   protected messageHandler?: MessageHandler;
 
   /**
@@ -131,9 +131,9 @@ export interface TransportConfig {
  * Base transport statistics implementation
  */
 export abstract class BaseTransportStats implements TransportStats {
-  public messagesReceived: number = 0;
-  public messagesSent: number = 0;
-  public errors: number = 0;
+  public messagesReceived = 0;
+  public messagesSent = 0;
+  public errors = 0;
   public connectionTime?: Date;
   public lastMessageTime?: Date;
 

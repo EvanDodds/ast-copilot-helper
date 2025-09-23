@@ -1,4 +1,5 @@
-import { ChildProcess, spawn } from 'child_process';
+import type { ChildProcess} from 'child_process';
+import { spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import * as vscode from 'vscode';
 import * as path from 'path';
@@ -363,7 +364,9 @@ export class ServerProcessManager extends EventEmitter {
    * Set up process event handlers
    */
   private setupProcessHandlers(): void {
-    if (!this.process) return;
+    if (!this.process) {
+return;
+}
 
     this.process.on('exit', (code, signal) => {
       this.handleProcessExit(code, signal);

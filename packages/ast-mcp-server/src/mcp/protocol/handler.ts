@@ -3,11 +3,12 @@
  * Handles JSON-RPC 2.0 protocol parsing, validation, and error formatting
  */
 
-import { 
+import type { 
   MCPRequest, 
   MCPResponse, 
   MCPError, 
-  MCPNotification,
+  MCPNotification} from './types';
+import {
   MCPErrorCode 
 } from './types';
 

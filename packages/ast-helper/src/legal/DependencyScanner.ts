@@ -4,7 +4,7 @@
 
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { LicenseInfo, ComplianceConfig } from './types.js';
+import type { LicenseInfo, ComplianceConfig } from './types.js';
 import { LicenseDatabase } from './LicenseDatabase.js';
 
 export interface PackageInfo {

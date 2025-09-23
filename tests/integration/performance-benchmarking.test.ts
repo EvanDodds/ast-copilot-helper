@@ -271,9 +271,9 @@ class PerformanceBenchmarkingTestSuite {
     expect(metrics.responseTime).toBeLessThan(200); // Average under 200ms
 
     const bottlenecks = [];
-    if (metrics.p95ResponseTime > 300) bottlenecks.push('slow-p95-response');
-    if (metrics.responseTime > 150) bottlenecks.push('high-average-response');
-    if (metrics.memoryPeak > 100000000) bottlenecks.push('high-memory-usage');
+    if (metrics.p95ResponseTime > 300) {bottlenecks.push('slow-p95-response');}
+    if (metrics.responseTime > 150) {bottlenecks.push('high-average-response');}
+    if (metrics.memoryPeak > 100000000) {bottlenecks.push('high-memory-usage');}
 
     console.log(`✅ Query response benchmarks completed: avg=${metrics.responseTime.toFixed(1)}ms, p95=${metrics.p95ResponseTime.toFixed(1)}ms`);
 
@@ -328,8 +328,8 @@ class PerformanceBenchmarkingTestSuite {
 
     // Analyze memory pattern
     const bottlenecks = [];
-    if (memoryGrowthMB > 50) bottlenecks.push('excessive-memory-growth');
-    if (endMemory.heapUsed > 200000000) bottlenecks.push('high-absolute-memory');
+    if (memoryGrowthMB > 50) {bottlenecks.push('excessive-memory-growth');}
+    if (endMemory.heapUsed > 200000000) {bottlenecks.push('high-absolute-memory');}
 
     const metrics: PerformanceMetrics = {
       executionTime: memorySnapshots.length > 0 ? memorySnapshots[memorySnapshots.length - 1].time - memorySnapshots[0].time : 0,
@@ -427,8 +427,8 @@ class PerformanceBenchmarkingTestSuite {
     finalMetrics.memoryUsage = endMemory.heapUsed;
 
     const bottlenecks = [];
-    if (finalMetrics.responseTime > 300) bottlenecks.push('concurrent-slowdown');
-    if (finalMetrics.throughput < 5) bottlenecks.push('low-throughput');
+    if (finalMetrics.responseTime > 300) {bottlenecks.push('concurrent-slowdown');}
+    if (finalMetrics.throughput < 5) {bottlenecks.push('low-throughput');}
 
     console.log(`✅ Concurrent scalability testing completed with max concurrency ${Math.max(...concurrencyLevels)}`);
 

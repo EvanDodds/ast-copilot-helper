@@ -3,7 +3,7 @@
  * Handles security audit configuration validation and defaults
  */
 
-import { SecurityConfig, AuditLevel, SecurityRule } from './types.js';
+import type { SecurityConfig, AuditLevel, SecurityRule } from './types.js';
 
 /**
  * Default security configuration

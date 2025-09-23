@@ -5,7 +5,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { ParseResult, ParseError, ASTNode, LanguageConfig, ParserRuntime } from '../types.js';
+import type { ParseResult, ParseError, ASTNode, LanguageConfig, ParserRuntime } from '../types.js';
 import { detectLanguage, getLanguageConfig, isFileSupported } from '../languages.js';
 
 /**

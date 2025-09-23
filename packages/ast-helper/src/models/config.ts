@@ -3,7 +3,7 @@
  * This defines the authoritative list of models available for download
  */
 
-import { ModelConfig } from './types.js';
+import type { ModelConfig } from './types.js';
 
 /**
  * Supported embedding models with their configurations

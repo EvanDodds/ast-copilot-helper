@@ -3,7 +3,7 @@
  * Generates metadata, signatures, and complexity metrics from parsed AST nodes
  */
 
-import { ASTNode } from '../parser/types';
+import type { ASTNode } from '../parser/types';
 
 /**
  * Complete annotation data for an AST node

@@ -4,7 +4,7 @@
 
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { DependencyLicense, AttributionDocument, AttributionConfig } from './types.js';
+import type { DependencyLicense, AttributionDocument, AttributionConfig } from './types.js';
 
 export interface AttributionTemplate {
   name: string;

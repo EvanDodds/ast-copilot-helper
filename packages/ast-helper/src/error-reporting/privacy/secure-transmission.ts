@@ -351,7 +351,9 @@ export class SecureTransmissionManager {
       const origin = `${url.protocol}//${url.host}`;
       
       return this.config.allowedOrigins.some(allowed => {
-        if (allowed === '*') return true;
+        if (allowed === '*') {
+return true;
+}
         if (allowed.startsWith('*.')) {
           const domain = allowed.substring(2);
           return url.hostname.endsWith(domain);

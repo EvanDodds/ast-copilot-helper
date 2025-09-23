@@ -94,7 +94,9 @@ export class ModelVerifyCommandHandler {
 
         for (const modelName of ModelRegistry.listModels()) {
             const model = ModelRegistry.getModel(modelName);
-            if (!model) continue;
+            if (!model) {
+continue;
+}
 
             try {
                 const cacheResult = await cache.checkCache(model);

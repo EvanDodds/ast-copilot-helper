@@ -8,12 +8,13 @@
  * @version 1.0.0
  */
 
-import { CompatibilityChecker } from '../interfaces.js';
-import {
+import type { CompatibilityChecker } from '../interfaces.js';
+import type {
   CompatibilityConfig,
   CompatibilityCheck,
   BreakingChange,
-  MigrationGuide,
+  MigrationGuide} from '../types.js';
+import {
   RiskLevel,
   SuggestionActionType
 } from '../types.js';
@@ -330,8 +331,12 @@ export class CompatibilityCheckerImpl implements CompatibilityChecker {
     if (breakingChanges && breakingChanges.length > 0) {
       // Sort breaking changes to put automated ones first
       breakingChanges.sort((a, b) => {
-        if (a.automatedMigration && !b.automatedMigration) return -1;
-        if (!a.automatedMigration && b.automatedMigration) return 1;
+        if (a.automatedMigration && !b.automatedMigration) {
+return -1;
+}
+        if (!a.automatedMigration && b.automatedMigration) {
+return 1;
+}
         return 0;
       });
       

@@ -1,8 +1,9 @@
-import { ASTNode } from '../parser/types.js';
-import {
+import type { ASTNode } from '../parser/types.js';
+import type {
     Annotation,
     Parameter,
-    AnnotationConfig,
+    AnnotationConfig} from './types.js';
+import {
     DEFAULT_ANNOTATION_CONFIG,
     SemanticTag,
     PurposeCategory
@@ -11,7 +12,7 @@ import { TypeScriptExtractor, JavaScriptExtractor, PythonExtractor } from './ext
 import { ComplexityAnalyzer } from './complexity-analyzer.js';
 import { DependencyAnalyzer } from './dependency-analyzer.js';
 import { SummaryGenerator } from './summary-generator.js';
-import { SignatureExtractor } from './types.js';
+import type { SignatureExtractor } from './types.js';
 
 /**
  * Main annotation engine that orchestrates all annotation components
@@ -214,7 +215,9 @@ export class AnnotationEngine {
 
     private async analyzeComplexity(node: ASTNode, sourceText?: string, _filePath?: string): Promise<number> {
         try {
-            if (!sourceText) return 1;
+            if (!sourceText) {
+return 1;
+}
             return await this.complexityAnalyzer.calculateCyclomaticComplexity(node, sourceText);
         } catch (error) {
             this.logError(error as Error, 'analyzeComplexity');
@@ -263,7 +266,9 @@ export class AnnotationEngine {
      */
 
     private calculateLineCount(node: ASTNode, sourceText?: string): number {
-        if (!sourceText || !node.start || !node.end) return 0;
+        if (!sourceText || !node.start || !node.end) {
+return 0;
+}
 
         const startLine = node.start.line || 0;
         const endLine = node.end.line || 0;
@@ -271,7 +276,9 @@ export class AnnotationEngine {
     }
 
     private calculateCharacterCount(node: ASTNode, sourceText?: string): number {
-        if (!sourceText || !node.start || !node.end) return 0;
+        if (!sourceText || !node.start || !node.end) {
+return 0;
+}
 
         const startPos = node.start.column || 0;
         const endPos = node.end.column || 0;
@@ -365,12 +372,24 @@ export class AnnotationEngine {
         let confidence = 0.5; // Base confidence
 
         // Boost confidence based on available information
-        if (node.name) confidence += 0.1;
-        if (node.type) confidence += 0.1;
-        if (signature && signature.length > 0) confidence += 0.1;
-        if (summary && summary.length > 10) confidence += 0.1;
-        if (node.start && node.end) confidence += 0.1;
-        if (node.metadata?.language) confidence += 0.1;
+        if (node.name) {
+confidence += 0.1;
+}
+        if (node.type) {
+confidence += 0.1;
+}
+        if (signature && signature.length > 0) {
+confidence += 0.1;
+}
+        if (summary && summary.length > 10) {
+confidence += 0.1;
+}
+        if (node.start && node.end) {
+confidence += 0.1;
+}
+        if (node.metadata?.language) {
+confidence += 0.1;
+}
 
         return Math.min(1.0, confidence);
     }
@@ -380,12 +399,24 @@ export class AnnotationEngine {
         const totalAspects = 6;
 
         // Check completeness of different aspects
-        if (node.name) completeness += 1 / totalAspects;
-        if (node.type) completeness += 1 / totalAspects;
-        if (signature && signature.length > 0) completeness += 1 / totalAspects;
-        if (parameters && parameters.length > 0) completeness += 1 / totalAspects;
-        if (summary && summary.length > 10) completeness += 1 / totalAspects;
-        if (node.start && node.end) completeness += 1 / totalAspects;
+        if (node.name) {
+completeness += 1 / totalAspects;
+}
+        if (node.type) {
+completeness += 1 / totalAspects;
+}
+        if (signature && signature.length > 0) {
+completeness += 1 / totalAspects;
+}
+        if (parameters && parameters.length > 0) {
+completeness += 1 / totalAspects;
+}
+        if (summary && summary.length > 10) {
+completeness += 1 / totalAspects;
+}
+        if (node.start && node.end) {
+completeness += 1 / totalAspects;
+}
 
         return Math.min(1.0, completeness);
     }

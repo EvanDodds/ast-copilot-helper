@@ -3,7 +3,7 @@
  * Main security auditing and vulnerability assessment system
  */
 
-import { 
+import type { 
   SecurityAuditor, 
   SecurityConfig, 
   SecurityAuditReport, 
@@ -790,14 +790,22 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
     const criticalCount = report.findingsBySeverity?.critical?.length || 0;
     const highCount = report.findingsBySeverity?.high?.length || 0;
 
-    if (criticalCount > 0) return 'critical';
-    if (highCount > 0) return 'high';
-    if (report.totalFindings > 0) return 'medium';
+    if (criticalCount > 0) {
+return 'critical';
+}
+    if (highCount > 0) {
+return 'high';
+}
+    if (report.totalFindings > 0) {
+return 'medium';
+}
     return 'low';
   }
 
   private calculateSecurityScore(auditResults: SecurityAuditSection[]): number {
-    if (auditResults.length === 0) return 0;
+    if (auditResults.length === 0) {
+return 0;
+}
     
     const totalScore = auditResults.reduce((sum, section) => sum + (section.score || 0), 0);
     return Math.round(totalScore / auditResults.length);
@@ -806,9 +814,15 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
   private determineOverallSeverity(auditResults: SecurityAuditSection[]): SecuritySeverity {
     const severities = auditResults.map(r => r.severity);
     
-    if (severities.includes('critical')) return 'critical';
-    if (severities.includes('high')) return 'high';
-    if (severities.includes('medium')) return 'medium';
+    if (severities.includes('critical')) {
+return 'critical';
+}
+    if (severities.includes('high')) {
+return 'high';
+}
+    if (severities.includes('medium')) {
+return 'medium';
+}
     return 'low';
   }
 

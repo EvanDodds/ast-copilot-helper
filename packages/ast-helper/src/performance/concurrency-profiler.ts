@@ -350,9 +350,15 @@ export class ConcurrencyProfiler extends EventEmitter {
   private getSharedResources(_config: ConcurrencyBenchmarkConfig): string[] {
     const resources = [];
     
-    if (Math.random() > 0.7) resources.push('database');
-    if (Math.random() > 0.8) resources.push('file_system');
-    if (Math.random() > 0.9) resources.push('memory_cache');
+    if (Math.random() > 0.7) {
+resources.push('database');
+}
+    if (Math.random() > 0.8) {
+resources.push('file_system');
+}
+    if (Math.random() > 0.9) {
+resources.push('memory_cache');
+}
     
     return resources;
   }

@@ -5,7 +5,7 @@
 
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { ModelConfig, ModelMetadata, ModelUsageStats, ModelUsageAnalytics, SystemUsageAnalytics } from './types.js';
+import type { ModelConfig, ModelMetadata, ModelUsageStats, ModelUsageAnalytics, SystemUsageAnalytics } from './types.js';
 import { createModuleLogger } from '../logging/index.js';
 
 const logger = createModuleLogger('ModelMetadata');
@@ -41,7 +41,7 @@ export class MetadataManager {
   private metadataDir: string;
   private indexFile: string;
 
-  constructor(baseDir: string = '.astdb/models') {
+  constructor(baseDir = '.astdb/models') {
     this.baseDir = baseDir;
     this.metadataDir = join(baseDir, 'metadata');
     this.indexFile = join(this.metadataDir, 'index.json');
@@ -142,9 +142,15 @@ export class MetadataManager {
 
       for (const modelInfo of index.models) {
         // Apply filters
-        if (query.name && !modelInfo.name.includes(query.name)) continue;
-        if (query.version && modelInfo.version !== query.version) continue;
-        if (query.format && modelInfo.format !== query.format) continue;
+        if (query.name && !modelInfo.name.includes(query.name)) {
+continue;
+}
+        if (query.version && modelInfo.version !== query.version) {
+continue;
+}
+        if (query.format && modelInfo.format !== query.format) {
+continue;
+}
 
         // Load full metadata
         const mockConfig: ModelConfig = {
@@ -158,14 +164,22 @@ export class MetadataManager {
         };
 
         const metadata = await this.getMetadata(mockConfig);
-        if (!metadata) continue;
+        if (!metadata) {
+continue;
+}
 
         // Apply additional filters
-        if (query.verifiedOnly && !metadata.verified) continue;
-        if (query.minUsage && (!metadata.usageStats || metadata.usageStats.loadCount < query.minUsage)) continue;
+        if (query.verifiedOnly && !metadata.verified) {
+continue;
+}
+        if (query.minUsage && (!metadata.usageStats || metadata.usageStats.loadCount < query.minUsage)) {
+continue;
+}
         if (query.maxAge) {
           const ageInDays = (Date.now() - new Date(metadata.downloadedAt).getTime()) / (1000 * 60 * 60 * 24);
-          if (ageInDays > query.maxAge) continue;
+          if (ageInDays > query.maxAge) {
+continue;
+}
         }
 
         results.push(metadata);
@@ -304,18 +318,26 @@ export class MetadataManager {
       try {
         const files = await fs.readdir(modelsDir);
         for (const file of files) {
-          if (!file.endsWith('.onnx') && !file.endsWith('.json')) continue;
+          if (!file.endsWith('.onnx') && !file.endsWith('.json')) {
+continue;
+}
           
           // Parse filename to extract model info
           const parts = file.split('-');
-          if (parts.length < 2) continue;
+          if (parts.length < 2) {
+continue;
+}
           
           const name = parts.slice(0, -1).join('-');
           const versionAndFormat = parts[parts.length - 1];
-          if (!versionAndFormat) continue;
+          if (!versionAndFormat) {
+continue;
+}
           
           const lastDotIndex = versionAndFormat.lastIndexOf('.');
-          if (lastDotIndex === -1) continue;
+          if (lastDotIndex === -1) {
+continue;
+}
           
           const version = versionAndFormat.substring(0, lastDotIndex);
           const format = versionAndFormat.substring(lastDotIndex + 1);
@@ -449,7 +471,9 @@ export class MetadataManager {
       // Update basic usage counters
       stats.loadCount += 1;
       stats.lastUsed = now;
-      if (!stats.firstUsed) stats.firstUsed = now;
+      if (!stats.firstUsed) {
+stats.firstUsed = now;
+}
 
       // Update processing statistics
       stats.totalProcessingTime += usageData.processingTime;

@@ -6,9 +6,9 @@
 import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { BaseParser } from './parsers/base-parser.js';
+import type { BaseParser } from './parsers/base-parser.js';
 import { parseErrorHandler } from './parse-errors.js';
-import { ParseResult, ASTNode } from './types.js';
+import type { ParseResult, ASTNode } from './types.js';
 import { isFileSupported, detectLanguage } from './languages.js';
 
 export interface BatchProcessingOptions {
@@ -269,7 +269,9 @@ export class BatchProcessor extends EventEmitter {
     // Process results
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!file) continue; // Skip undefined files
+      if (!file) {
+continue;
+} // Skip undefined files
       
       const absolutePath = path.resolve(file);
       
@@ -438,7 +440,9 @@ export class BatchProcessor extends EventEmitter {
    * Check if processing should be throttled due to memory constraints
    */
   private async shouldThrottleForMemory(maxMemoryMB?: number): Promise<boolean> {
-    if (!maxMemoryMB) return false;
+    if (!maxMemoryMB) {
+return false;
+}
     
     const memUsage = process.memoryUsage();
     const currentMB = memUsage.heapUsed / (1024 * 1024);
@@ -451,7 +455,9 @@ export class BatchProcessor extends EventEmitter {
   private async waitForMemoryRelief(): Promise<void> {
     return new Promise((resolve) => {
       const checkMemory = () => {
-        if (global.gc) global.gc();
+        if (global.gc) {
+global.gc();
+}
         
         setTimeout(() => {
           resolve();
@@ -506,10 +512,14 @@ export class BatchProcessor extends EventEmitter {
     includeContentHashes?: boolean
   ): Promise<ParseResult | null> {
     const cached = this.cache.get(filePath);
-    if (!cached) return null;
+    if (!cached) {
+return null;
+}
 
     // If content hashes are not included, return cached result
-    if (!includeContentHashes) return cached.result;
+    if (!includeContentHashes) {
+return cached.result;
+}
 
     // Validate content hasn't changed
     try {
@@ -720,7 +730,9 @@ export class BatchProcessor extends EventEmitter {
    * Estimate line count from AST nodes
    */
   private estimateLineCount(nodes: ASTNode[]): number {
-    if (nodes.length === 0) return 0;
+    if (nodes.length === 0) {
+return 0;
+}
     
     let maxLine = 0;
     const countLines = (node: ASTNode) => {
@@ -738,7 +750,9 @@ export class BatchProcessor extends EventEmitter {
    * Calculate memory usage statistics
    */
   private calculateMemoryStats(summary: BatchProcessingSummary): void {
-    if (this.performanceMetrics.memoryHistory.length === 0) return;
+    if (this.performanceMetrics.memoryHistory.length === 0) {
+return;
+}
 
     const usages = this.performanceMetrics.memoryHistory.map(h => h.usage);
     summary.memoryStats.peakUsageMB = Math.max(...usages);

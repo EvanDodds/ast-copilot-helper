@@ -253,7 +253,7 @@ export class ResponseAssembler {
     let contentType: 'code' | 'text' | 'resource' = 'code';
     let formattedText = '';
     let codeContent = '';
-    let language = this.detectLanguage(annotation.filePath);
+    const language = this.detectLanguage(annotation.filePath);
     
     // Format main content
     if (this.formattingOptions.includeSnippets && match.contextSnippet) {
@@ -391,7 +391,9 @@ export class ResponseAssembler {
    * Truncate text snippet to maximum length
    */
   private truncateSnippet(text: string, maxLength: number): string {
-    if (text.length <= maxLength) return text;
+    if (text.length <= maxLength) {
+return text;
+}
     
     // Try to break at word boundary
     const truncated = text.substring(0, maxLength);

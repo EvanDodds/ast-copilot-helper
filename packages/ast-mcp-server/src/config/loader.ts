@@ -7,7 +7,7 @@ import { promises as fs } from 'fs';
 import * as fsSync from 'fs';
 import path from 'path';
 import { EventEmitter } from 'events';
-import { MCPServerConfig, ConfigLoadOptions, ConfigSource } from './types.js';
+import type { MCPServerConfig, ConfigLoadOptions, ConfigSource } from './types.js';
 import { DEFAULT_MCP_SERVER_CONFIG, getEnvironmentConfig } from './defaults.js';
 import { validateConfig } from './validator.js';
 
@@ -234,65 +234,133 @@ export class ConfigManager extends EventEmitter {
     const config: any = {};
 
     // Server identity
-    if (process.env.MCP_SERVER_NAME) config.name = process.env.MCP_SERVER_NAME;
-    if (process.env.MCP_SERVER_VERSION) config.version = process.env.MCP_SERVER_VERSION;
-    if (process.env.MCP_SERVER_DESCRIPTION) config.description = process.env.MCP_SERVER_DESCRIPTION;
+    if (process.env.MCP_SERVER_NAME) {
+config.name = process.env.MCP_SERVER_NAME;
+}
+    if (process.env.MCP_SERVER_VERSION) {
+config.version = process.env.MCP_SERVER_VERSION;
+}
+    if (process.env.MCP_SERVER_DESCRIPTION) {
+config.description = process.env.MCP_SERVER_DESCRIPTION;
+}
 
     // Transport overrides
     const transport: any = {};
-    if (process.env.MCP_SERVER_TRANSPORT_TYPE) transport.type = process.env.MCP_SERVER_TRANSPORT_TYPE;
-    if (process.env.MCP_SERVER_PORT) transport.port = parseInt(process.env.MCP_SERVER_PORT, 10);
-    if (process.env.MCP_SERVER_HOST) transport.host = process.env.MCP_SERVER_HOST;
-    if (process.env.MCP_SERVER_MAX_CONNECTIONS) transport.maxConnections = parseInt(process.env.MCP_SERVER_MAX_CONNECTIONS, 10);
-    if (Object.keys(transport).length > 0) config.transport = transport;
+    if (process.env.MCP_SERVER_TRANSPORT_TYPE) {
+transport.type = process.env.MCP_SERVER_TRANSPORT_TYPE;
+}
+    if (process.env.MCP_SERVER_PORT) {
+transport.port = parseInt(process.env.MCP_SERVER_PORT, 10);
+}
+    if (process.env.MCP_SERVER_HOST) {
+transport.host = process.env.MCP_SERVER_HOST;
+}
+    if (process.env.MCP_SERVER_MAX_CONNECTIONS) {
+transport.maxConnections = parseInt(process.env.MCP_SERVER_MAX_CONNECTIONS, 10);
+}
+    if (Object.keys(transport).length > 0) {
+config.transport = transport;
+}
 
     // Performance configuration
     const performance: any = {};
-    if (process.env.MCP_SERVER_MAX_CONCURRENT_REQUESTS) performance.maxConcurrentRequests = parseInt(process.env.MCP_SERVER_MAX_CONCURRENT_REQUESTS, 10);
-    if (process.env.MCP_REQUEST_TIMEOUT) performance.requestTimeout = parseInt(process.env.MCP_REQUEST_TIMEOUT, 10);
-    if (process.env.MCP_MAX_QUERY_RESULTS) performance.maxQueryResults = parseInt(process.env.MCP_MAX_QUERY_RESULTS, 10);
-    if (process.env.MCP_SERVER_CACHE_SIZE) performance.cacheSize = parseInt(process.env.MCP_SERVER_CACHE_SIZE, 10);
-    if (process.env.MCP_SERVER_CACHE_ENABLED) performance.cacheEnabled = process.env.MCP_SERVER_CACHE_ENABLED === 'true';
-    if (process.env.MCP_SERVER_GC_THRESHOLD) performance.gcThreshold = parseFloat(process.env.MCP_SERVER_GC_THRESHOLD);
-    if (Object.keys(performance).length > 0) config.performance = performance;
+    if (process.env.MCP_SERVER_MAX_CONCURRENT_REQUESTS) {
+performance.maxConcurrentRequests = parseInt(process.env.MCP_SERVER_MAX_CONCURRENT_REQUESTS, 10);
+}
+    if (process.env.MCP_REQUEST_TIMEOUT) {
+performance.requestTimeout = parseInt(process.env.MCP_REQUEST_TIMEOUT, 10);
+}
+    if (process.env.MCP_MAX_QUERY_RESULTS) {
+performance.maxQueryResults = parseInt(process.env.MCP_MAX_QUERY_RESULTS, 10);
+}
+    if (process.env.MCP_SERVER_CACHE_SIZE) {
+performance.cacheSize = parseInt(process.env.MCP_SERVER_CACHE_SIZE, 10);
+}
+    if (process.env.MCP_SERVER_CACHE_ENABLED) {
+performance.cacheEnabled = process.env.MCP_SERVER_CACHE_ENABLED === 'true';
+}
+    if (process.env.MCP_SERVER_GC_THRESHOLD) {
+performance.gcThreshold = parseFloat(process.env.MCP_SERVER_GC_THRESHOLD);
+}
+    if (Object.keys(performance).length > 0) {
+config.performance = performance;
+}
 
     // Logging configuration
     const logging: any = {};
-    if (process.env.MCP_SERVER_LOG_LEVEL) logging.level = process.env.MCP_SERVER_LOG_LEVEL;
+    if (process.env.MCP_SERVER_LOG_LEVEL) {
+logging.level = process.env.MCP_SERVER_LOG_LEVEL;
+}
     if (process.env.MCP_LOG_FILE) {
       logging.enableFile = true;
       logging.filePath = process.env.MCP_LOG_FILE;
     }
-    if (process.env.MCP_ENABLE_REQUEST_LOGGING) logging.enableRequestLogging = process.env.MCP_ENABLE_REQUEST_LOGGING === 'true';
-    if (process.env.MCP_SERVER_LOG_REQUEST_BODY) logging.logRequestBody = process.env.MCP_SERVER_LOG_REQUEST_BODY === 'true' || process.env.MCP_SERVER_LOG_REQUEST_BODY === '1';
-    if (Object.keys(logging).length > 0) config.logging = logging;
+    if (process.env.MCP_ENABLE_REQUEST_LOGGING) {
+logging.enableRequestLogging = process.env.MCP_ENABLE_REQUEST_LOGGING === 'true';
+}
+    if (process.env.MCP_SERVER_LOG_REQUEST_BODY) {
+logging.logRequestBody = process.env.MCP_SERVER_LOG_REQUEST_BODY === 'true' || process.env.MCP_SERVER_LOG_REQUEST_BODY === '1';
+}
+    if (Object.keys(logging).length > 0) {
+config.logging = logging;
+}
 
     // Security configuration
     const security: any = {};
-    if (process.env.MCP_ENABLE_AUTH) security.enableAuthentication = process.env.MCP_ENABLE_AUTH === 'true';
-    if (process.env.MCP_ENABLE_RATE_LIMIT) security.enableRateLimit = process.env.MCP_ENABLE_RATE_LIMIT === 'true';
-    if (process.env.MCP_SERVER_RATE_LIMIT_REQUESTS) security.rateLimitRequests = parseInt(process.env.MCP_SERVER_RATE_LIMIT_REQUESTS, 10);
-    if (process.env.MCP_SERVER_ENABLE_CORS) security.enableCors = process.env.MCP_SERVER_ENABLE_CORS === 'true';
-    if (process.env.MCP_SERVER_ENABLE_TLS) security.enableTls = process.env.MCP_SERVER_ENABLE_TLS === 'true' || process.env.MCP_SERVER_ENABLE_TLS === '1';
-    if (Object.keys(security).length > 0) config.security = security;
+    if (process.env.MCP_ENABLE_AUTH) {
+security.enableAuthentication = process.env.MCP_ENABLE_AUTH === 'true';
+}
+    if (process.env.MCP_ENABLE_RATE_LIMIT) {
+security.enableRateLimit = process.env.MCP_ENABLE_RATE_LIMIT === 'true';
+}
+    if (process.env.MCP_SERVER_RATE_LIMIT_REQUESTS) {
+security.rateLimitRequests = parseInt(process.env.MCP_SERVER_RATE_LIMIT_REQUESTS, 10);
+}
+    if (process.env.MCP_SERVER_ENABLE_CORS) {
+security.enableCors = process.env.MCP_SERVER_ENABLE_CORS === 'true';
+}
+    if (process.env.MCP_SERVER_ENABLE_TLS) {
+security.enableTls = process.env.MCP_SERVER_ENABLE_TLS === 'true' || process.env.MCP_SERVER_ENABLE_TLS === '1';
+}
+    if (Object.keys(security).length > 0) {
+config.security = security;
+}
 
     // Feature configuration
     const features: any = {};
-    if (process.env.MCP_ENABLE_TOOLS) features.enableTools = process.env.MCP_ENABLE_TOOLS === 'true';
-    if (process.env.MCP_ENABLE_RESOURCES) features.enableResources = process.env.MCP_ENABLE_RESOURCES === 'true';
-    if (process.env.MCP_ENABLE_HOT_RELOAD) features.enableHotReload = process.env.MCP_ENABLE_HOT_RELOAD === 'true';
-    if (Object.keys(features).length > 0) config.features = features;
+    if (process.env.MCP_ENABLE_TOOLS) {
+features.enableTools = process.env.MCP_ENABLE_TOOLS === 'true';
+}
+    if (process.env.MCP_ENABLE_RESOURCES) {
+features.enableResources = process.env.MCP_ENABLE_RESOURCES === 'true';
+}
+    if (process.env.MCP_ENABLE_HOT_RELOAD) {
+features.enableHotReload = process.env.MCP_ENABLE_HOT_RELOAD === 'true';
+}
+    if (Object.keys(features).length > 0) {
+config.features = features;
+}
 
     // Database configuration
     const database: any = {};
-    if (process.env.MCP_SERVER_DATABASE_PATH) database.path = process.env.MCP_SERVER_DATABASE_PATH;
-    if (process.env.MCP_DATABASE_HOT_RELOAD) database.hotReload = process.env.MCP_DATABASE_HOT_RELOAD === 'true';
-    if (Object.keys(database).length > 0) config.database = database;
+    if (process.env.MCP_SERVER_DATABASE_PATH) {
+database.path = process.env.MCP_SERVER_DATABASE_PATH;
+}
+    if (process.env.MCP_DATABASE_HOT_RELOAD) {
+database.hotReload = process.env.MCP_DATABASE_HOT_RELOAD === 'true';
+}
+    if (Object.keys(database).length > 0) {
+config.database = database;
+}
 
     // Environment configuration
     const environment: any = {};
-    if (process.env.NODE_ENV) environment.nodeEnv = process.env.NODE_ENV;
-    if (Object.keys(environment).length > 0) config.environment = environment;
+    if (process.env.NODE_ENV) {
+environment.nodeEnv = process.env.NODE_ENV;
+}
+    if (Object.keys(environment).length > 0) {
+config.environment = environment;
+}
 
     return config;
   }

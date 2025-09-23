@@ -257,10 +257,10 @@ describe('Maintenance Scripts', () => {
 
     it('should calculate overall health score correctly', () => {
       mockHealthChecker.determineOverallStatus.mockImplementation((percentage: number) => {
-        if (percentage >= 90) return 'excellent';
-        if (percentage >= 75) return 'good';
-        if (percentage >= 60) return 'fair';
-        if (percentage >= 40) return 'poor';
+        if (percentage >= 90) {return 'excellent';}
+        if (percentage >= 75) {return 'good';}
+        if (percentage >= 60) {return 'fair';}
+        if (percentage >= 40) {return 'poor';}
         return 'critical';
       });
 
@@ -367,8 +367,8 @@ describe('Maintenance Scripts', () => {
       vi.mocked(statSync).mockReturnValue(mockStats);
 
       mockCleanup.isFileOld.mockImplementation((path: string, days: number) => {
-        if (path.includes('old.log') && days === 7) return true;
-        if (path.includes('recent.log') && days === 30) return false;
+        if (path.includes('old.log') && days === 7) {return true;}
+        if (path.includes('recent.log') && days === 30) {return false;}
         return false;
       });
 
@@ -396,10 +396,10 @@ describe('Maintenance Scripts', () => {
 
     it('should format bytes correctly', () => {
       mockCleanup.formatBytes.mockImplementation((bytes: number) => {
-        if (bytes === 0) return '0 B';
-        if (bytes === 1024) return '1 KB';
-        if (bytes === 1048576) return '1 MB';
-        if (bytes === 1073741824) return '1 GB';
+        if (bytes === 0) {return '0 B';}
+        if (bytes === 1024) {return '1 KB';}
+        if (bytes === 1048576) {return '1 MB';}
+        if (bytes === 1073741824) {return '1 GB';}
         return `${bytes} B`;
       });
 
@@ -411,7 +411,7 @@ describe('Maintenance Scripts', () => {
 
     it('should respect dry-run mode', () => {
       mockCleanup.shouldDelete.mockImplementation((item: string, type: string, dryRun?: boolean) => {
-        if (dryRun) return false;
+        if (dryRun) {return false;}
         return true;
       });
 

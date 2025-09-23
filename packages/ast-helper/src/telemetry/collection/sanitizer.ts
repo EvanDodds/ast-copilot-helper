@@ -3,7 +3,7 @@
  * @description Privacy-respecting event sanitization and filtering
  */
 
-import { PrivacyLevel } from '../types.js';
+import type { PrivacyLevel } from '../types.js';
 import type { 
   TelemetryEvent, 
   EventSanitizer as IEventSanitizer,
@@ -69,19 +69,29 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
     // Check event type filters
     switch (event.eventType) {
       case 'usage':
-        if (!config.collectUsage) return false;
+        if (!config.collectUsage) {
+return false;
+}
         break;
       case 'performance':
-        if (!config.collectPerformance) return false;
+        if (!config.collectPerformance) {
+return false;
+}
         break;
       case 'error':
-        if (!config.collectErrors) return false;
+        if (!config.collectErrors) {
+return false;
+}
         break;
       case 'system':
-        if (!config.collectSystem) return false;
+        if (!config.collectSystem) {
+return false;
+}
         break;
       case 'custom':
-        if (!config.collectCustom) return false;
+        if (!config.collectCustom) {
+return false;
+}
         break;
     }
 

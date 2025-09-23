@@ -3,7 +3,7 @@
  * Maps AST_COPILOT_* environment variables to configuration options
  */
 
-import { PartialConfig, EnvConfig } from '../types.js';
+import type { PartialConfig, EnvConfig } from '../types.js';
 
 /**
  * Parse environment variables into partial configuration

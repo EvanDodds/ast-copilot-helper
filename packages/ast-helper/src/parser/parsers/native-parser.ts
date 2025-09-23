@@ -4,9 +4,9 @@
  */
 
 import { BaseParser } from './base-parser.js';
-import { ASTNode, LanguageConfig, ParserRuntime } from '../types.js';
+import type { ASTNode, LanguageConfig, ParserRuntime } from '../types.js';
 import { generateNodeId } from '../types.js';
-import { TreeSitterGrammarManager } from '../grammar-manager.js';
+import type { TreeSitterGrammarManager } from '../grammar-manager.js';
 
 /**
  * Native Tree-sitter parser implementation

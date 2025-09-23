@@ -2,7 +2,7 @@
  * @fileoverview License database with SPDX license information and compatibility rules
  */
 
-import { LicenseInfo, LicenseType } from './types.js';
+import type { LicenseInfo, LicenseType } from './types.js';
 
 /**
  * Database of license information with SPDX identifiers and compatibility rules

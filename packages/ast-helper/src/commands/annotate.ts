@@ -11,9 +11,10 @@ import { performance } from 'node:perf_hooks';
 import { createLogger } from '../logging/index.js';
 import { ASTDatabaseManager } from '../database/manager.js';
 import { FileSystemManager } from '../filesystem/manager.js';
-import { ASTNode } from '../parser/ast-schema.js';
-import { AnnotationGenerator, AnnotationContext } from '../parser/annotation-generator.js';
-import { Annotation, AnnotationConfig } from '../parser/annotation-types.js';
+import type { ASTNode } from '../parser/ast-schema.js';
+import type { AnnotationContext } from '../parser/annotation-generator.js';
+import { AnnotationGenerator } from '../parser/annotation-generator.js';
+import type { Annotation, AnnotationConfig } from '../parser/annotation-types.js';
 import type { Config } from '../types.js';
 
 /**

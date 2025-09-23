@@ -4,15 +4,16 @@
  */
 
 import { randomUUID } from 'crypto';
-import { ConsentManager as IConsentManager, ConsentStatus, TelemetryConfig, TelemetrySettings } from '../types.js';
-import { 
+import type { ConsentManager as IConsentManager, ConsentStatus, TelemetryConfig, TelemetrySettings } from '../types.js';
+import type { 
   ConsentRecord, 
   ConsentStorage, 
   ConsentValidationResult, 
-  ConsentFeature, 
-  ConsentRenewalReason, 
   ConsentMigrationResult, 
-  ConsentCollectionOptions,
+  ConsentCollectionOptions} from './types.js';
+import { 
+  ConsentFeature, 
+  ConsentRenewalReason,
   PRIVACY_LEVELS
 } from './types.js';
 import { FileConsentStorage } from './storage.js';
@@ -21,15 +22,15 @@ import { FileConsentStorage } from './storage.js';
  * Privacy-respecting consent manager implementation
  */
 export class PrivacyRespectingConsentManager implements IConsentManager {
-  private isInitialized: boolean = false;
+  private isInitialized = false;
   private currentConsent: ConsentRecord | null = null;
   private readonly consentVersion: string;
   private readonly appVersion: string;
 
   constructor(
     _config: TelemetryConfig,
-    consentVersion: string = '1.0.0',
-    _minVersion: string = '1.0.0',
+    consentVersion = '1.0.0',
+    _minVersion = '1.0.0',
     private storage: ConsentStorage = new FileConsentStorage()
   ) {
     this.consentVersion = consentVersion;
@@ -254,9 +255,15 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
     }
 
     // Validate required fields
-    if (!consent.id) errors.push('Missing consent ID');
-    if (!consent.consentVersion) errors.push('Missing consent version');
-    if (!consent.appVersion) errors.push('Missing app version');
+    if (!consent.id) {
+errors.push('Missing consent ID');
+}
+    if (!consent.consentVersion) {
+errors.push('Missing consent version');
+}
+    if (!consent.appVersion) {
+errors.push('Missing app version');
+}
 
     return {
       isValid: errors.length === 0,
@@ -272,7 +279,7 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
    */
   private async migrateConsent(consent: ConsentRecord): Promise<ConsentMigrationResult> {
     const warnings: string[] = [];
-    let requiresReConsent = false;
+    const requiresReConsent = false;
 
     try {
       // If same version, no migration needed

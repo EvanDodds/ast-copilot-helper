@@ -38,7 +38,9 @@ async function runAllExamples() {
 
   for (let i = 0; i < examples.length; i++) {
     const example = examples[i];
-    if (!example) continue;
+    if (!example) {
+continue;
+}
     
     try {
       console.log(`\n📋 Running Example ${i + 1}/${examples.length}: ${example.name}`);

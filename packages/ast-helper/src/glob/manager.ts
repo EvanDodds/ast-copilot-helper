@@ -218,7 +218,7 @@ export class GlobManager implements GlobMatcher {
   /**
    * Recursively scan directory for files
    */
-  private async scanDirectory(dirPath: string, stats: GlobResult, depth: number = 0): Promise<string[]> {
+  private async scanDirectory(dirPath: string, stats: GlobResult, depth = 0): Promise<string[]> {
     const files: string[] = [];
     
     if (depth > (this.options.maxDepth || Infinity)) {

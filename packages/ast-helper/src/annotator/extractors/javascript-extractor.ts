@@ -3,8 +3,8 @@
  * Handles JavaScript-specific syntax including ES6+ features, arrow functions, and classes
  */
 
-import { ASTNode } from '../../parser/types';
-import { SignatureExtractor, Parameter } from '../types';
+import type { ASTNode } from '../../parser/types';
+import type { SignatureExtractor, Parameter } from '../types';
 import { ExtractionUtils } from './extraction-utils';
 
 export class JavaScriptExtractor implements SignatureExtractor {

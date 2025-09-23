@@ -4,7 +4,7 @@
 
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import {
+import type {
   LegalComplianceManager,
   ComplianceConfig,
   LicenseScanResult,

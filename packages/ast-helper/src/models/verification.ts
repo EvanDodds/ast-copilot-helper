@@ -6,7 +6,7 @@
 import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { ValidationResult, ModelConfig } from './types.js';
+import type { ValidationResult, ModelConfig } from './types.js';
 import { createModuleLogger } from '../logging/index.js';
 
 const logger = createModuleLogger('ModelVerification');
@@ -63,7 +63,7 @@ export class FileVerifier {
   private quarantineDir: string;
   private quarantineEntries: Map<string, QuarantineEntry> = new Map();
 
-  constructor(baseDir: string = '.astdb/models') {
+  constructor(baseDir = '.astdb/models') {
     this.quarantineDir = join(baseDir, 'quarantine');
   }
 
@@ -242,7 +242,9 @@ export class FileVerifier {
       
       while (offset < buffer.length - 1 && fieldCount < 5) {
         const byte = buffer[offset];
-        if (byte === undefined) break;
+        if (byte === undefined) {
+break;
+}
         
         // Protobuf field tag format: (field_number << 3) | wire_type
         const wireType = byte & 0x07;
@@ -358,7 +360,7 @@ export class FileVerifier {
    * Addresses acceptance criteria:
    * - ✅ Quarantine management
    */
-  async cleanupQuarantine(maxAgeDays: number = 7): Promise<number> {
+  async cleanupQuarantine(maxAgeDays = 7): Promise<number> {
     try {
       const entries = await this.listQuarantinedFiles();
       const cutoffDate = new Date(Date.now() - maxAgeDays * 24 * 60 * 60 * 1000);

@@ -10,7 +10,7 @@
  */
 
 import { ComprehensiveErrorReportingManager } from '../manager';
-import { ErrorReportingConfig } from '../types';
+import type { ErrorReportingConfig } from '../types';
 
 async function privacyFocusedExample() {
   console.log('🔒 Starting Privacy-Focused Error Reporting Example\n');

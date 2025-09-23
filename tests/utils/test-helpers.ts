@@ -75,8 +75,8 @@ export class ASTTestHelpers {
   static async generateSyntheticRepository(nodeCount: number): Promise<string> {
     const tmpDir = await new Promise<string>((resolve, reject) => {
       tmp.dir({ unsafeCleanup: true }, (err: any, path: string) => {
-        if (err) reject(err);
-        else resolve(path);
+        if (err) {reject(err);}
+        else {resolve(path);}
       });
     });
 

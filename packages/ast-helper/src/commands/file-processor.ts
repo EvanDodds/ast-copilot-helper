@@ -17,7 +17,8 @@ import type { Config } from '../types.js';
 import type { ParseBatchProgress } from './parse-batch-orchestrator.js';
 import { ParseBatchOrchestrator } from './parse-batch-orchestrator.js';
 import type { ParseOptions } from './parse.js';
-import { ParseProgressUpdate, ProgressDisplayOptions, ProgressReporter } from './progress-reporter.js';
+import type { ParseProgressUpdate, ProgressDisplayOptions} from './progress-reporter.js';
+import { ProgressReporter } from './progress-reporter.js';
 
 /**
  * File metadata with processing information
@@ -595,8 +596,12 @@ export class ASTOutputManager {
                 const stats = await stat(filePath);
 
                 totalSize += stats.size;
-                if (stats.mtime < oldestFile) oldestFile = stats.mtime;
-                if (stats.mtime > newestFile) newestFile = stats.mtime;
+                if (stats.mtime < oldestFile) {
+oldestFile = stats.mtime;
+}
+                if (stats.mtime > newestFile) {
+newestFile = stats.mtime;
+}
             }));
 
             return {

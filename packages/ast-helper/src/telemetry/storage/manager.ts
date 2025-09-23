@@ -3,7 +3,7 @@
  * @description High-level manager for coordinating storage and queue operations
  */
 
-import { 
+import type { 
   TelemetryStorage,
   EventQueue,
   StorageConfig,
@@ -12,9 +12,11 @@ import {
   QueueStats,
   CleanupResult
 } from './types.js';
-import { TelemetryEvent } from '../collection/types.js';
-import { SqliteTelemetryStorage, StorageFactory } from './database.js';
-import { SqliteEventQueue, QueueFactory } from './queue.js';
+import type { TelemetryEvent } from '../collection/types.js';
+import type { SqliteTelemetryStorage} from './database.js';
+import { StorageFactory } from './database.js';
+import type { SqliteEventQueue} from './queue.js';
+import { QueueFactory } from './queue.js';
 
 /**
  * Options for storage manager initialization

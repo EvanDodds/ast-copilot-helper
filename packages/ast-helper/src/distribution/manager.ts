@@ -6,7 +6,7 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { MarketplacePublisher } from './marketplace-publisher';
-import {
+import type {
   DistributionManager as IDistributionManager,
   DistributionConfig,
   PackagePreparation,
@@ -23,7 +23,7 @@ import {
 
 export class DistributionManager implements IDistributionManager {
   private config!: DistributionConfig;
-  private initialized: boolean = false;
+  private initialized = false;
   private logger: Console = console;
 
   /**

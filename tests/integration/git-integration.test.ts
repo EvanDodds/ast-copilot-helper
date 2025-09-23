@@ -205,7 +205,7 @@ class ComprehensiveGitIntegrationTestSuite {
    * Test basic repository operations
    */
   async testBasicRepositoryOperations(): Promise<void> {
-    if (!this.gitManager) throw new Error('GitManager not initialized');
+    if (!this.gitManager) {throw new Error('GitManager not initialized');}
 
     // Test repository detection
     const isRepo = await this.gitManager.isGitRepository(this.testRepoDir);
@@ -230,7 +230,7 @@ class ComprehensiveGitIntegrationTestSuite {
    * Test git status and change detection
    */
   async testStatusAndChangeDetection(): Promise<void> {
-    if (!this.gitManager) throw new Error('GitManager not initialized');
+    if (!this.gitManager) {throw new Error('GitManager not initialized');}
 
     // Get initial status
     const initialStatus = await this.gitManager.getStatus(this.testRepoDir);
@@ -260,7 +260,7 @@ class ComprehensiveGitIntegrationTestSuite {
    * Test changed files retrieval with various options
    */
   async testChangedFilesRetrieval(): Promise<void> {
-    if (!this.gitManager) throw new Error('GitManager not initialized');
+    if (!this.gitManager) {throw new Error('GitManager not initialized');}
 
     // Create some changes
     await this.gitTestUtils.createFile(join(this.testRepoDir, 'new-file.ts'), 'export const newFile = true;');
@@ -306,7 +306,7 @@ class ComprehensiveGitIntegrationTestSuite {
    * Test git reference validation
    */
   async testGitReferenceValidation(): Promise<void> {
-    if (!this.gitManager) throw new Error('GitManager not initialized');
+    if (!this.gitManager) {throw new Error('GitManager not initialized');}
 
     // Test valid references
     const headValid = await this.gitManager.validateGitReference('HEAD', this.testRepoDir);
@@ -341,7 +341,7 @@ class ComprehensiveGitIntegrationTestSuite {
    * Test branch operations and workflow
    */
   async testBranchOperationsWorkflow(): Promise<void> {
-    if (!this.gitManager) throw new Error('GitManager not initialized');
+    if (!this.gitManager) {throw new Error('GitManager not initialized');}
 
     // Get current branch name
     const initialStatus = await this.gitManager.getStatus(this.testRepoDir);
@@ -385,7 +385,7 @@ class ComprehensiveGitIntegrationTestSuite {
    * Test error handling and edge cases
    */
   async testErrorHandlingEdgeCases(): Promise<void> {
-    if (!this.gitManager) throw new Error('GitManager not initialized');
+    if (!this.gitManager) {throw new Error('GitManager not initialized');}
 
     // Test operations on non-repository directory
     await expect(this.gitManager.getRepositoryRoot(this.nonRepoDir)).rejects.toThrow();
@@ -422,7 +422,7 @@ class ComprehensiveGitIntegrationTestSuite {
    * Test cross-platform compatibility
    */
   async testCrossPlatformCompatibility(): Promise<void> {
-    if (!this.gitManager) throw new Error('GitManager not initialized');
+    if (!this.gitManager) {throw new Error('GitManager not initialized');}
 
     // Test path resolution across platforms
     const repoRoot = await this.gitManager.getRepositoryRoot(this.testRepoDir);
@@ -450,7 +450,7 @@ class ComprehensiveGitIntegrationTestSuite {
    * Test performance and scalability
    */
   async testPerformanceScalability(): Promise<void> {
-    if (!this.gitManager) throw new Error('GitManager not initialized');
+    if (!this.gitManager) {throw new Error('GitManager not initialized');}
 
     // Create many files to test performance
     const startTime = Date.now();
@@ -490,7 +490,7 @@ class ComprehensiveGitIntegrationTestSuite {
    * Test Git workflow integration scenarios
    */
   async testGitWorkflowIntegration(): Promise<void> {
-    if (!this.gitManager) throw new Error('GitManager not initialized');
+    if (!this.gitManager) {throw new Error('GitManager not initialized');}
 
     // Simulate a typical development workflow
     

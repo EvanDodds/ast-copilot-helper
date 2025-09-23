@@ -8,8 +8,8 @@
  * @version 1.0.0
  */
 
-import { ChangelogGenerator } from '../interfaces.js';
-import {
+import type { ChangelogGenerator } from '../interfaces.js';
+import type {
   ChangelogConfig,
   ChangelogEntry,
   ReleaseNotes
@@ -103,19 +103,29 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     // Sort changes by type and scope
     const sortedChanges = changes.sort((a, b) => {
       // Breaking changes first
-      if (a.breaking && !b.breaking) return -1;
-      if (!a.breaking && b.breaking) return 1;
+      if (a.breaking && !b.breaking) {
+return -1;
+}
+      if (!a.breaking && b.breaking) {
+return 1;
+}
       
       // Then by type priority
       const typePriority = this.getTypePriority(a.type) - this.getTypePriority(b.type);
-      if (typePriority !== 0) return typePriority;
+      if (typePriority !== 0) {
+return typePriority;
+}
       
       // Then by scope
       if (a.scope && b.scope) {
         return a.scope.localeCompare(b.scope);
       }
-      if (a.scope && !b.scope) return -1;
-      if (!a.scope && b.scope) return 1;
+      if (a.scope && !b.scope) {
+return -1;
+}
+      if (!a.scope && b.scope) {
+return 1;
+}
       
       // Finally by timestamp
       return a.timestamp.getTime() - b.timestamp.getTime();
@@ -285,7 +295,9 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
   }
 
   private parseSimpleCommitMessage(message: string): ChangelogEntry | null {
-    if (!message || !message.trim()) return null;
+    if (!message || !message.trim()) {
+return null;
+}
     
     // Parse conventional commit format: type(scope): description
     const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?\!?:\s*(.+)$/;
@@ -297,7 +309,9 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     }
     
     const [, type, scope, description] = match;
-    if (!type || !description) return null;
+    if (!type || !description) {
+return null;
+}
     
     // Check for breaking change indicators
     const breaking = message.includes('!:');
@@ -316,10 +330,14 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
 
   private parseConventionalCommit(commitLine: string): ChangelogEntry | null {
     const parts = commitLine.split('|');
-    if (parts.length < 4) return null;
+    if (parts.length < 4) {
+return null;
+}
     
     const [hash, author, dateStr, message, body] = parts;
-    if (!hash || !author || !dateStr || !message) return null;
+    if (!hash || !author || !dateStr || !message) {
+return null;
+}
     
     const date = new Date(dateStr);
     
@@ -341,7 +359,9 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     }
     
     const [, type, scope, description] = match;
-    if (!type || !description) return null;
+    if (!type || !description) {
+return null;
+}
     
     // Check for breaking change indicators
     const breaking = message.includes('!:') || 
@@ -433,7 +453,9 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     
     for (const sectionName of sectionOrder) {
       const sectionEntries = grouped[sectionName];
-      if (!sectionEntries || sectionEntries.length === 0) continue;
+      if (!sectionEntries || sectionEntries.length === 0) {
+continue;
+}
       
       changelog += `### ${sectionName}\n\n`;
       
@@ -550,9 +572,15 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     let description = `This release includes ${totalChanges} changes`;
     
     const parts: string[] = [];
-    if (features > 0) parts.push(`${features} new feature${features === 1 ? '' : 's'}`);
-    if (fixes > 0) parts.push(`${fixes} bug fix${fixes === 1 ? '' : 'es'}`);
-    if (breakingChanges > 0) parts.push(`${breakingChanges} breaking change${breakingChanges === 1 ? '' : 's'}`);
+    if (features > 0) {
+parts.push(`${features} new feature${features === 1 ? '' : 's'}`);
+}
+    if (fixes > 0) {
+parts.push(`${fixes} bug fix${fixes === 1 ? '' : 'es'}`);
+}
+    if (breakingChanges > 0) {
+parts.push(`${breakingChanges} breaking change${breakingChanges === 1 ? '' : 's'}`);
+}
     
     if (parts.length > 0) {
       description += ` including ${parts.join(', ')}`;

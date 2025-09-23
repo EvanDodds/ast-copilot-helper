@@ -3,23 +3,24 @@
  * @description SQLite-based implementation of telemetry data storage
  */
 
-import { Database } from 'better-sqlite3';
+import type { Database } from 'better-sqlite3';
 import { promises as fs } from 'fs';
 import { dirname, resolve } from 'path';
 import { gzip, gunzip } from 'zlib';
 import { promisify } from 'util';
-import {
+import type {
   TelemetryStorage,
   StoredEvent,
   QueryCriteria,
   StorageStats,
   CleanupResult,
   StorageConfig,
-  TransmissionStatus,
+  TransmissionStatus} from './types.js';
+import {
   DEFAULT_STORAGE_CONFIG
 } from './types.js';
-import { TelemetryEvent } from '../collection/types.js';
-import { PrivacyLevel } from '../types.js';
+import type { TelemetryEvent } from '../collection/types.js';
+import type { PrivacyLevel } from '../types.js';
 
 const gzipAsync = promisify(gzip);
 const gunzipAsync = promisify(gunzip);
@@ -76,7 +77,9 @@ export class SqliteTelemetryStorage implements TelemetryStorage {
    * Setup database configuration
    */
   private setupDatabase(): void {
-    if (!this.db) return;
+    if (!this.db) {
+return;
+}
 
     // Enable WAL mode for better concurrency
     if (this.config.enableWalMode) {
@@ -94,7 +97,9 @@ export class SqliteTelemetryStorage implements TelemetryStorage {
    * Create database tables
    */
   private createTables(): void {
-    if (!this.db) return;
+    if (!this.db) {
+return;
+}
 
     // Main events table
     this.db.exec(`
@@ -217,7 +222,9 @@ export class SqliteTelemetryStorage implements TelemetryStorage {
       throw new Error('Storage not initialized');
     }
 
-    if (events.length === 0) return;
+    if (events.length === 0) {
+return;
+}
 
     const stmt = this.db.prepare(`
       INSERT INTO telemetry_events (
@@ -553,7 +560,9 @@ export class SqliteTelemetryStorage implements TelemetryStorage {
    * Get cleanup statistics
    */
   private async getCleanupStats(cutoffDate: Date): Promise<any> {
-    if (!this.db) return { removedByStatus: {}, removedByAge: {} };
+    if (!this.db) {
+return { removedByStatus: {}, removedByAge: {} };
+}
 
     const statusQuery = this.db.prepare(`
       SELECT transmission_status, COUNT(*) as count 

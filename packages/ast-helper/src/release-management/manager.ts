@@ -9,7 +9,7 @@
  * @version 1.0.0
  */
 
-import {
+import type {
   ReleaseManager,
   VersionManager,
   ChangelogGenerator,
@@ -18,11 +18,9 @@ import {
   RollbackManager
 } from './interfaces.js';
 
-import {
+import type {
   ReleaseConfig,
   ReleasePlan,
-  ReleaseType,
-  ReleaseChannel,
   ValidationResult,
   ReleaseResult,
   Changelog,
@@ -33,7 +31,6 @@ import {
   ChangelogEntry,
   ValidationStep,
   ValidationStepResult,
-  ValidationSeverity,
   PackageRelease,
   DependencyUpdate,
   PlatformRelease,
@@ -41,6 +38,11 @@ import {
   ReleaseNotes,
   PublishResult,
   ReleaseArtifact
+} from './types.js';
+import {
+  ReleaseType,
+  ReleaseChannel,
+  ValidationSeverity
 } from './types.js';
 
 /**
@@ -216,7 +218,9 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
       // Version format validation
       const versionValidation = await this.validateVersionFormat(plan.version, plan.type);
       results.push(versionValidation);
-      if (!versionValidation.success) overallSuccess = false;
+      if (!versionValidation.success) {
+overallSuccess = false;
+}
       
       // Breaking changes validation
       if (plan.type !== ReleaseType.MAJOR && plan.breakingChanges.length > 0) {
@@ -234,13 +238,17 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
       // Dependency validation
       const dependencyValidation = await this.validateDependencies(plan.dependencies);
       results.push(dependencyValidation);
-      if (!dependencyValidation.success) overallSuccess = false;
+      if (!dependencyValidation.success) {
+overallSuccess = false;
+}
       
       // Platform compatibility validation
       for (const platformRelease of plan.platforms) {
         const platformValidation = await this.validatePlatformRelease(platformRelease);
         results.push(platformValidation);
-        if (!platformValidation.success) overallSuccess = false;
+        if (!platformValidation.success) {
+overallSuccess = false;
+}
       }
       
       const duration = Date.now() - startTime;

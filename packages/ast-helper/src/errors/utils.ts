@@ -3,7 +3,8 @@
  * Provides helper functions for error handling, recovery, and retry logic
  */
 
-import { ErrorRecoveryInfo, ErrorRecoveryStrategy } from './types.js';
+import type { ErrorRecoveryInfo} from './types.js';
+import { ErrorRecoveryStrategy } from './types.js';
 
 /**
  * Retry configuration
