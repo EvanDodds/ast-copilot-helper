@@ -576,6 +576,31 @@ export class SqliteTelemetryStorage implements TelemetryStorage {
   }
 
   /**
+   * Clear the transmission queue
+   */
+  async clearQueue(): Promise<void> {
+    if (!this.initialized || !this.db) {
+      throw new Error('Storage not initialized');
+    }
+
+    try {
+      // Clear all queued events
+      const clearStmt = this.db.prepare('DELETE FROM transmission_queue');
+      const result = clearStmt.run();
+      
+      console.log(`✅ Cleared ${result.changes} queued events from transmission queue`);
+
+      // Update metadata
+      const updateMetaStmt = this.db.prepare(
+        'INSERT OR REPLACE INTO storage_metadata (key, value, updated_at) VALUES (?, ?, datetime(\'now\'))'
+      );
+      updateMetaStmt.run('last_queue_clear', new Date().toISOString());
+    } catch (error) {
+      throw new Error(`Failed to clear queue: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Get storage statistics
    */
   async getStats(): Promise<StorageStats> {
