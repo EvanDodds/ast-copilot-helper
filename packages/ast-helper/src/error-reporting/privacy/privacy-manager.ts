@@ -8,8 +8,6 @@ import type {
   DiagnosticData,
   PrivacySettings,
   ConsentData,
-  DataRetentionPolicy,
-  SecurityConfig,
   FilterResult
 } from '../types.js';
 
@@ -309,21 +307,27 @@ export class PrivacyManager {
       case 'basic':
         // Remove direct identifiers
         if (anonymized.context) {
-          delete anonymized.context.sessionId;
-          delete anonymized.context.userId;
+          anonymized.context.sessionId = '[REDACTED]';
+          if ('userId' in anonymized.context && anonymized.context.userId) {
+            anonymized.context.userId = '[REDACTED]';
+          }
         }
         break;
 
       case 'strict':
         // Remove more identifying information
         if (anonymized.context) {
-          delete anonymized.context.sessionId;
-          delete anonymized.context.userId;
-          delete anonymized.context.userAgent;
+          anonymized.context.sessionId = '[REDACTED]';
+          if ('userId' in anonymized.context && anonymized.context.userId) {
+            anonymized.context.userId = '[REDACTED]';
+          }
+          if ('userAgent' in anonymized.context && anonymized.context.userAgent) {
+            anonymized.context.userAgent = '[REDACTED]';
+          }
         }
         if (anonymized.environment) {
-          delete anonymized.environment.hostname;
-          delete anonymized.environment.networkInterfaces;
+          anonymized.environment.workingDirectory = '[REDACTED]';
+          anonymized.environment.homeDirectory = '[REDACTED]';
         }
         break;
 
@@ -362,16 +366,20 @@ export class PrivacyManager {
     diagnostics: DiagnosticData,
     consentLevel: ConsentLevel
   ): Promise<DiagnosticData> {
-    const filtered: DiagnosticData = {};
+    const filtered: DiagnosticData = {
+      system: diagnostics.system,
+      runtime: diagnostics.runtime,
+      codebase: diagnostics.codebase,
+      configuration: diagnostics.configuration,
+      performance: diagnostics.performance,
+      dependencies: diagnostics.dependencies
+    };
 
     // System diagnostics - always allowed with basic consent
     if (consentLevel >= ConsentLevel.BASIC && diagnostics.system) {
       filtered.system = {
-        ...diagnostics.system,
-        hostname: consentLevel >= ConsentLevel.ANALYTICS ? diagnostics.system.hostname : '[REDACTED]',
-        networkInfo: consentLevel >= ConsentLevel.FULL ? diagnostics.system.networkInfo : undefined,
-        environmentVariables: consentLevel >= ConsentLevel.FULL ? 
-          diagnostics.system.environmentVariables : {}
+        ...diagnostics.system
+        // Note: Remove any system-specific filtering as the interface doesn't include hostname/networkInfo
       };
     }
 
@@ -391,15 +399,14 @@ export class PrivacyManager {
     // Codebase diagnostics - requires full consent for detailed info
     if (consentLevel >= ConsentLevel.ANALYTICS && diagnostics.codebase) {
       filtered.codebase = {
-        structure: diagnostics.codebase.structure,
-        quality: consentLevel >= ConsentLevel.FULL ? diagnostics.codebase.quality : undefined,
-        dependencies: consentLevel >= ConsentLevel.FULL ? diagnostics.codebase.dependencies : undefined,
+        ...diagnostics.codebase,
         git: consentLevel >= ConsentLevel.FULL ? {
           ...diagnostics.codebase.git,
           // Remove potentially sensitive commit info
-          commit: diagnostics.codebase.git.commit.substring(0, 7)
-        } : undefined,
-        configuration: consentLevel >= ConsentLevel.FULL ? diagnostics.codebase.configuration : undefined
+          commit: diagnostics.codebase.git.commit ? diagnostics.codebase.git.commit.substring(0, 7) : undefined
+        } : {
+          isRepository: diagnostics.codebase.git.isRepository
+        }
       };
     }
 

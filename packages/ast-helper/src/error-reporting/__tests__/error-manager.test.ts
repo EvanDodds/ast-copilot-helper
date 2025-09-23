@@ -2,7 +2,7 @@
  * Tests for Core Error Reporting Infrastructure
  */
 
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ComprehensiveErrorReportingManager } from '../manager.js';
 import type { ErrorReportingConfig, ErrorReport } from '../types.js';
 
@@ -11,6 +11,9 @@ describe('ComprehensiveErrorReportingManager', () => {
   let config: ErrorReportingConfig;
 
   beforeEach(() => {
+    // Increase max listeners to prevent EventEmitter warnings during tests
+    process.setMaxListeners(50);
+    
     errorManager = new ComprehensiveErrorReportingManager();
     config = {
       enabled: true,
@@ -34,6 +37,14 @@ describe('ComprehensiveErrorReportingManager', () => {
         includeProcessInfo: true
       }
     };
+  });
+
+  afterEach(async () => {
+    if (errorManager) {
+      await errorManager.cleanup();
+    }
+    // Reset max listeners to default
+    process.setMaxListeners(10);
   });
 
   describe('initialization', () => {
@@ -283,9 +294,11 @@ describe('ComprehensiveErrorReportingManager', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       
-      // Mock getBasicSuggestions to throw an error to force fallback
-      const originalMethod = errorManager['getBasicSuggestions'];
-      errorManager['getBasicSuggestions'] = vi.fn().mockRejectedValue(new Error('Test error'));
+      // Mock the suggestion engine's generateSuggestions to throw an error to force fallback
+      const originalEngine = (errorManager as any).suggestionEngine;
+      (errorManager as any).suggestionEngine = {
+        generateSuggestions: vi.fn().mockRejectedValue(new Error('Test error'))
+      };
       
       const suggestions = await errorManager.provideSuggestions(mockErrorReport);
       
@@ -298,8 +311,8 @@ describe('ComprehensiveErrorReportingManager', () => {
         confidence: 0.5
       });
       
-      // Restore the original method
-      errorManager['getBasicSuggestions'] = originalMethod;
+      // Restore the original suggestion engine
+      (errorManager as any).suggestionEngine = originalEngine;
       
       consoleSpy.mockRestore();
       errorSpy.mockRestore();

@@ -98,8 +98,10 @@ async function basicUsageExample() {
     
     if (errorHistory.length > 0) {
       const recentError = errorHistory[errorHistory.length - 1];
-      console.log(`📊 Most recent error: ${recentError.error.message}`);
-      console.log(`⏰ Timestamp: ${recentError.error.timestamp.toISOString()}\n`);
+      if (recentError && recentError.error) {
+        console.log(`📊 Most recent error: ${recentError.error.message}`);
+        console.log(`⏰ Timestamp: ${recentError.error.timestamp.toISOString()}\n`);
+      }
     }
 
     console.log('✅ Basic usage example completed successfully!');

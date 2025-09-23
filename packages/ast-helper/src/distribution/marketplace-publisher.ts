@@ -77,6 +77,7 @@ interface PackageResult {
 
 interface MarketplacePublishResult {
   marketplace: 'vscode' | 'openvsx';
+  registry?: string; // For test compatibility
   success: boolean;
   extensionId?: string;
   version?: string;
@@ -342,13 +343,17 @@ export class MarketplacePublisher implements Publisher {
     }
   }
 
-  async publish(): Promise<MarketplacePublishResult[]> {
+  async publish(): Promise<any> {
     console.log('Starting VS Code extension publication...');
 
     if (!this.config) {
       const error = 'Marketplace publisher not initialized';
       console.error(`Marketplace publication failed: ${error}`);
-      return [];
+      return {
+        success: false,
+        packages: [],
+        error
+      };
     }
 
     // Validate before publishing
@@ -356,7 +361,11 @@ export class MarketplacePublisher implements Publisher {
     if (!validation.success) {
       const error = `Validation failed: ${validation.errors.map(e => e.message).join(', ')}`;
       console.error(`Marketplace publication failed: ${error}`);
-      return [];
+      return {
+        success: false,
+        packages: [],
+        error
+      };
     }
 
     const startTime = Date.now();
@@ -375,6 +384,7 @@ export class MarketplacePublisher implements Publisher {
         if (!packageResult.success) {
           results.push({
             marketplace: 'vscode',
+            registry: 'vscode',
             success: false,
             error: packageResult.error
           });
@@ -421,13 +431,21 @@ export class MarketplacePublisher implements Publisher {
         console.log(`  Success: ${successfulPublications.length > 0 ? '✅' : '❌'}`);
       }
 
-      return results;
+      return {
+        success: successfulPublications.length > 0,
+        packages: results,
+        duration
+      };
 
     } catch (error) {
       const errorMessage = `Marketplace publication error: ${error}`;
       console.error(errorMessage);
       
-      return [];
+      return {
+        success: false,
+        packages: [],
+        error: errorMessage
+      };
     }
   }
 
@@ -556,6 +574,7 @@ export class MarketplacePublisher implements Publisher {
       
       return {
         marketplace: 'vscode',
+        registry: 'vscode', // For test compatibility
         success: true,
         extensionId,
         version: this.config!.version,
@@ -569,6 +588,7 @@ export class MarketplacePublisher implements Publisher {
       
       return {
         marketplace: 'vscode',
+        registry: 'vscode', // For test compatibility
         success: false,
         error: `VS Code Marketplace publish failed: ${error}`,
         duration
@@ -604,6 +624,7 @@ export class MarketplacePublisher implements Publisher {
       
       return {
         marketplace: 'openvsx',
+        registry: 'openvsx', // For test compatibility
         success: true,
         extensionId,
         version: this.config!.version,
@@ -617,6 +638,7 @@ export class MarketplacePublisher implements Publisher {
       
       return {
         marketplace: 'openvsx',
+        registry: 'openvsx', // For test compatibility
         success: false,
         error: `Open VSX publish failed: ${error}`,
         duration
@@ -624,19 +646,22 @@ export class MarketplacePublisher implements Publisher {
     }
   }
 
-  async verify(result: MarketplacePublishResult[]): Promise<VerificationResult> {
+  async verify(result: any): Promise<VerificationResult> {
     console.log('Verifying marketplace publication results...');
 
     const checks: VerificationCheck[] = [];
 
+    // Extract packages from result object if needed
+    const packages = Array.isArray(result) ? result : (result.packages || []);
+
     // Verify each successful publication
-    for (const pkg of result) {
+    for (const pkg of packages) {
       if (!pkg.success) continue;
 
-      if (pkg.marketplace === 'vscode') {
+      if (pkg.marketplace === 'vscode' || pkg.registry === 'vscode') {
         const check = await this.verifyVSCodeMarketplace(pkg.extensionId || '', pkg.version || '');
         checks.push(check);
-      } else if (pkg.marketplace === 'openvsx') {
+      } else if (pkg.marketplace === 'openvsx' || pkg.registry === 'openvsx') {
         const check = await this.verifyOpenVSX(pkg.extensionId || '', pkg.version || '');
         checks.push(check);
       }

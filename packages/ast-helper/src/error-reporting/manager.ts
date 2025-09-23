@@ -50,7 +50,7 @@ import type { CrashReport as CrashReportType } from './crash/types.js';
 import { ErrorAnalyticsManager } from './analytics/error-analytics.js';
 
 // Import privacy and security systems
-import { PrivacyManager, ConsentLevel } from './privacy/privacy-manager.js';
+import { PrivacyManager } from './privacy/privacy-manager.js';
 import { SecureTransmissionManager } from './privacy/secure-transmission.js';
 import { ComplianceChecker } from './privacy/compliance-checker.js';
 import type { 
@@ -66,19 +66,35 @@ import type { ErrorAnalytics, SystemHealthMetrics, ErrorFrequencyPoint, ErrorCor
  * Main implementation of the error reporting system
  */
 export class ComprehensiveErrorReportingManager implements ErrorReportingManager {
-  private config!: ErrorReportingConfig;
-  private errorHistory: ErrorHistoryEntry[] = [];
-  private currentOperation = 'unknown';
+  private config?: ErrorReportingConfig;
+  // private initialized: boolean = false;
   private sessionId: string;
+  private currentOperation: string = 'unknown';
   private operationHistory: string[] = [];
+  private errorHistory: ErrorHistoryEntry[] = [];
+  // private reportQueue: ErrorReport[] = [];
   private suggestionEngine: SuggestionEngine;
+  
+  // Advanced analytics
+  private analyticsManager: ErrorAnalyticsManager;
+  
+  // Crash reporting components
   private crashDetector?: CrashDetector;
   private crashAnalytics?: CrashAnalyticsEngine;
-  private crashReports: CrashReportType[] = [];
-  private analyticsManager: ErrorAnalyticsManager;
+  private crashReports: CrashReport[] = [];
+  
+  // Privacy components
   private privacyManager?: PrivacyManager;
-  private secureTransmission?: SecureTransmissionManager;
-  private complianceChecker?: ComplianceChecker;
+  // private telemetryManager?: TelemetryManager;
+  
+  // Additional components for compliance and secure transmission
+  private secureTransmission?: any;
+  private complianceChecker?: any;
+  
+  // Event handler references for cleanup
+  private uncaughtExceptionHandler?: (error: Error) => void;
+  private unhandledRejectionHandler?: (reason: any, promise: Promise<any>) => void;
+  private warningHandler?: (warning: Error) => void;
   
   constructor() {
     this.sessionId = randomUUID();
@@ -276,7 +292,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       };
 
       // Apply privacy filters if enabled
-      if (this.config.privacyMode) {
+      if (this.config?.privacyMode) {
         return await this.applyPrivacyFilters(diagnostics);
       }
 
@@ -315,9 +331,9 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
         operation: this.currentOperation,
         context,
         timestamp,
-        includeSystemInfo: this.config.collectSystemInfo,
+        includeSystemInfo: this.config?.collectSystemInfo || false,
         includeRuntimeInfo: true,
-        includeCodebaseInfo: this.config.collectCodebaseInfo
+        includeCodebaseInfo: this.config?.collectCodebaseInfo || false
       };
       const diagnostics = await this.collectDiagnostics(diagnosticContext);
       
@@ -384,7 +400,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       return [
         {
           id: 'fallback-1',
-          title: 'Review Error Details',
+          title: 'Check Error Details',
           description: 'Carefully examine the error message and stack trace for specific clues',
           severity: 'low',
           category: 'information',
@@ -670,7 +686,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
 
   private async setupGlobalErrorHandlers(): Promise<void> {
     // Handle uncaught exceptions
-    process.on('uncaughtException', async (error) => {
+    this.uncaughtExceptionHandler = async (error) => {
       console.error('🚨 Uncaught Exception:', error);
       
       const crashReport = await this.createCrashReportFromError(error, 'uncaughtException');
@@ -680,10 +696,11 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       setTimeout(() => {
         process.exit(1);
       }, 5000);
-    });
+    };
+    process.on('uncaughtException', this.uncaughtExceptionHandler);
     
     // Handle unhandled promise rejections
-    process.on('unhandledRejection', async (reason, promise) => {
+    this.unhandledRejectionHandler = async (reason, promise) => {
       console.error('🚨 Unhandled Promise Rejection at:', promise, 'reason:', reason);
       
       const error = reason instanceof Error ? reason : new Error(String(reason));
@@ -693,10 +710,11 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       });
       
       await this.reportError(errorReport);
-    });
+    };
+    process.on('unhandledRejection', this.unhandledRejectionHandler);
     
     // Handle memory warnings
-    process.on('warning', async (warning) => {
+    this.warningHandler = async (warning) => {
       if (warning.name === 'MaxListenersExceededWarning' || 
           warning.name === 'DeprecationWarning' ||
           warning.message.includes('memory')) {
@@ -710,7 +728,8 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
         errorReport.severity = 'medium';
         await this.reportError(errorReport);
       }
-    });
+    };
+    process.on('warning', this.warningHandler);
   }
 
   private async createCrashReportFromError(error: Error, type: CrashReport['type']): Promise<CrashReport> {
@@ -774,7 +793,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       homeDirectory: os.homedir(),
       tempDirectory: os.tmpdir(),
       pathSeparator: path.sep,
-      environmentVars: this.config.privacyMode ? {} : Object.fromEntries(
+      environmentVars: this.config?.privacyMode ? {} : Object.fromEntries(
         Object.entries(process.env).map(([key, value]) => [key, value || ''])
       ),
       processArgs: process.argv,
@@ -974,8 +993,8 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
     this.errorHistory.unshift(historyEntry);
 
     // Keep only the configured number of entries
-    if (this.errorHistory.length > this.config.maxHistoryEntries) {
-      this.errorHistory = this.errorHistory.slice(0, this.config.maxHistoryEntries);
+    if (this.errorHistory.length > (this.config?.maxHistoryEntries || 1000)) {
+      this.errorHistory = this.errorHistory.slice(0, this.config?.maxHistoryEntries || 1000);
     }
   }
 
@@ -1146,11 +1165,11 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
 
     try {
       // Add to crash history
-      this.crashReports.push(crash);
+      this.crashReports.push(crash as any);
 
       // Update analytics
       if (this.crashAnalytics) {
-        this.crashAnalytics.addAnalyticsDataPoint(this.crashReports);
+        this.crashAnalytics.addAnalyticsDataPoint(this.crashReports as any);
       }
 
       // Create a simplified error report for logging
@@ -1186,7 +1205,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       return null;
     }
 
-    return await this.crashAnalytics.generateAnalytics(this.crashReports, {
+    return await this.crashAnalytics.generateAnalytics(this.crashReports as any, {
       startDate: options?.startDate,
       endDate: options?.endDate,
       crashTypes: options?.crashTypes,
@@ -1229,7 +1248,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
     this.privacyManager = new PrivacyManager({
       requireConsent: true,
       retentionDays: 30,
-      anonymizationLevel: this.config.privacyMode ? 'strict' : 'basic',
+      anonymizationLevel: this.config?.privacyMode ? 'strict' : 'basic',
       enablePiiScrubbing: true,
       allowedCategories: [
         'error', 'crash', 'performance', 'warning',
@@ -1245,7 +1264,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
     });
 
     // Initialize Secure Transmission Manager
-    if (this.config.endpoint) {
+    if (this.config?.endpoint) {
       const securityConfig: SecurityConfig = {
         enableEncryption: true,
         encryptionAlgorithm: 'AES-256-GCM',
@@ -1258,7 +1277,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
           blacklistDuration: 15
         },
         authentication: {
-          required: !!this.config.apiKey,
+          required: !!this.config?.apiKey,
           method: 'apiKey'
         }
       };
@@ -1353,7 +1372,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
    * Send error report securely if transmission is configured
    */
   async sendSecureErrorReport(errorReport: ErrorReport, userId?: string): Promise<TransmissionResult | null> {
-    if (!this.secureTransmission || !this.config.endpoint) {
+    if (!this.secureTransmission || !this.config?.endpoint) {
       return null;
     }
 
@@ -1365,7 +1384,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
 
     return this.secureTransmission.sendErrorReport(
       filteredReport,
-      this.config.endpoint,
+      this.config?.endpoint,
       {
         encrypt: true,
         compress: true,
@@ -1378,6 +1397,9 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
    * Cleanup all systems including privacy controls
    */
   async cleanup(): Promise<void> {
+    // Remove global event handlers
+    this.cleanupGlobalErrorHandlers();
+    
     await this.cleanupCrashReporting();
     
     if (this.privacyManager) {
@@ -1385,6 +1407,26 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
     }
     
     console.log('🧹 Error reporting system cleaned up');
+  }
+
+  /**
+   * Remove global error handlers to prevent memory leaks
+   */
+  private cleanupGlobalErrorHandlers(): void {
+    if (this.uncaughtExceptionHandler) {
+      process.removeListener('uncaughtException', this.uncaughtExceptionHandler);
+      this.uncaughtExceptionHandler = undefined;
+    }
+    
+    if (this.unhandledRejectionHandler) {
+      process.removeListener('unhandledRejection', this.unhandledRejectionHandler);
+      this.unhandledRejectionHandler = undefined;
+    }
+    
+    if (this.warningHandler) {
+      process.removeListener('warning', this.warningHandler);
+      this.warningHandler = undefined;
+    }
   }
 
   private async finalizeCrashCleanup(): Promise<void> {

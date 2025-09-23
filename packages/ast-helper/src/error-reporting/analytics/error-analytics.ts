@@ -362,7 +362,7 @@ export class ErrorAnalyticsManager {
     console.log('🔗 Finding error correlations...');
 
     const correlations: ErrorCorrelation[] = [];
-    const errorTypes = [...new Set(this.errorHistory.map(e => e.error.type))];
+    const errorTypes = [...new Set(this.errorHistory.map(e => e.error.type).filter(type => type !== undefined))];
 
     // Analyze pairs of error types
     for (let i = 0; i < errorTypes.length; i++) {
@@ -370,9 +370,11 @@ export class ErrorAnalyticsManager {
         const type1 = errorTypes[i];
         const type2 = errorTypes[j];
 
-        const correlation = await this.calculateErrorCorrelation(type1, type2);
-        if (correlation.correlationStrength > 0.3) { // Only significant correlations
-          correlations.push(correlation);
+        if (type1 && type2) {
+          const correlation = await this.calculateErrorCorrelation(type1, type2);
+          if (correlation.correlationStrength > 0.3) { // Only significant correlations
+            correlations.push(correlation);
+          }
         }
       }
     }

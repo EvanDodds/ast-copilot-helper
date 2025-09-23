@@ -356,12 +356,18 @@ export class BinaryCompatibilityTester {
         functionality = false;
       }
 
+      const testPassed = loadSuccess && (functionality || !module.required);
+      const failureReason = !loadSuccess ? 'Module failed to load' : 
+                            !functionality && module.required ? 'Required module functionality test failed' : 
+                            null;
+      
       return {
         name: `native_module_${module.name}`,
         category: 'binary',
-        passed: loadSuccess && (functionality || !module.required),
+        passed: testPassed,
         platform: this.platform,
         duration: Date.now() - startTime,
+        ...(failureReason ? { error: failureReason } : {}),
         details: {
           moduleName: module.name,
           moduleType: module.type,
@@ -370,7 +376,8 @@ export class BinaryCompatibilityTester {
           functionalityTested: functionality,
           version,
           supportedArchitectures: module.architectures,
-          supportedNodeVersions: module.nodeVersions
+          supportedNodeVersions: module.nodeVersions,
+          ...(failureReason ? {} : { expectedFailure: !module.required })
         }
       };
 
@@ -456,19 +463,26 @@ export class BinaryCompatibilityTester {
         parseSuccess = false;
       }
 
+      const testPassed = loadSuccess && (parseSuccess || !module.required);
+      const failureReason = !loadSuccess ? 'Grammar failed to load' : 
+                            !parseSuccess && module.required ? 'Required grammar functionality test failed' : 
+                            null;
+
       return {
         name: `tree_sitter_${module.name.replace('tree-sitter-', '')}`,
         category: 'binary',
-        passed: loadSuccess && (parseSuccess || !module.required),
+        passed: testPassed,
         platform: this.platform,
         duration: Date.now() - startTime,
+        ...(failureReason ? { error: failureReason } : {}),
         details: {
           grammarName: module.name,
           required: module.required,
           loadSuccessful: loadSuccess,
           parseSuccessful: parseSuccess,
           supportedArchitectures: module.architectures,
-          supportedNodeVersions: module.nodeVersions
+          supportedNodeVersions: module.nodeVersions,
+          ...(failureReason ? {} : { expectedFailure: !module.required })
         }
       };
 
