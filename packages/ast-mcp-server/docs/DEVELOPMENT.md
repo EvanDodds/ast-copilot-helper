@@ -45,7 +45,7 @@ yarn install
 yarn run build
 
 # Run tests
-npm test
+yarn test
 
 # Start development server
 yarn run dev
@@ -409,7 +409,7 @@ Fixes #456
    yarn run lint          # ESLint checks
    yarn run format        # Prettier formatting
    yarn run type-check    # TypeScript type checking
-   npm test              # Run all tests
+   yarn test              # Run all tests
    yarn run coverage      # Generate coverage report
    ```
 
@@ -686,13 +686,13 @@ export default defineConfig({
 
 ```bash
 # Run all tests
-npm test
+yarn test
 
 # Run tests in watch mode
 yarn run test:watch
 
 # Run specific test file
-npm test -- src/config/__tests__/validator.test.ts
+yarn test -- src/config/__tests__/validator.test.ts
 
 # Run tests with coverage
 yarn run test:coverage
@@ -1101,7 +1101,7 @@ class PerformanceMonitor {
    yarn install
    yarn run build
    cd packages/ast-mcp-server
-   npm test
+   yarn test
    ```
 
 3. **Create Feature Branch**

@@ -17,16 +17,16 @@ Thank you for your interest in contributing to ast-copilot-helper! This document
 
 ### Prerequisites
 - Node.js 18.0.0 or higher
-- npm 9.0.0 or higher
+- Yarn 4.9.4 or higher (modern Yarn v4)
 - Git 2.40.0 or higher
 - VS Code (recommended for the best development experience)
 
 ### Quick Start
 1. Fork and clone the repository
-2. Install dependencies: `npm install`
-3. Build the project: `npm run build`
-4. Run tests: `npm test`
-5. Start development: `npm run dev`
+2. Install dependencies: `yarn install`
+3. Build the project: `yarn run build`
+4. Run tests: `yarn test`
+5. Start development: `yarn run dev`
 
 ### Development Setup
 
@@ -39,22 +39,22 @@ cd ast-copilot-helper
 
 #### 2. Install Dependencies
 ```bash
-npm install
+yarn install
 ```
 
 This will install dependencies for all packages in the monorepo.
 
 #### 3. Build the Project
 ```bash
-npm run build
+yarn run build
 ```
 
 Build all packages to ensure everything compiles correctly.
 
 #### 4. Verify Installation
 ```bash
-npm test
-npm run lint
+yarn test
+yarn run lint
 ```
 
 ### Project Structure
@@ -136,13 +136,13 @@ We use automated tools for consistent formatting:
 
 ```bash
 # Check code style
-npm run lint
+yarn run lint
 
 # Fix style issues automatically
-npm run lint:fix
+yarn run lint:fix
 
 # Format code with Prettier
-npm run format
+yarn run format
 ```
 
 #### Key Style Rules
@@ -207,21 +207,21 @@ We maintain high test coverage through:
 
 ```bash
 # Run all tests
-npm test
+yarn test
 
 # Run tests for specific packages
-npm run test:cli
-npm run test:mcp
-npm run test:vscode
+yarn run test:cli
+yarn run test:mcp
+yarn run test:vscode
 
 # Run with coverage
-npm run test:coverage
+yarn run test:coverage
 
 # Run integration tests
-npm run test:integration
+yarn run test:integration
 
 # Run performance benchmarks
-npm run benchmark
+yarn run benchmark
 ```
 
 ### Writing Tests
@@ -279,13 +279,13 @@ describe('ComponentName', () => {
 
 ```bash
 # Generate API documentation
-npm run docs:generate
+yarn run docs:generate
 
 # Serve documentation locally
-npm run docs:serve
+yarn run docs:serve
 
 # Build documentation for production
-npm run docs:build
+yarn run docs:build
 ```
 
 ## Pull Request Process
@@ -294,14 +294,14 @@ npm run docs:build
 
 1. **Ensure tests pass**
    ```bash
-   npm test
-   npm run test:integration
+   yarn test
+   yarn run test:integration
    ```
 
 2. **Check code quality**
    ```bash
-   npm run lint
-   npm run type-check
+   yarn run lint
+   yarn run type-check
    ```
 
 3. **Update documentation**
@@ -416,7 +416,7 @@ Contributors are recognized in:
 #### CLI Tool
 ```bash
 # Debug CLI with specific file
-npm run debug:cli -- parse --file example.ts --verbose
+yarn run debug:cli -- parse --file example.ts --verbose
 
 # Use Node.js debugging
 node --inspect-brk packages/ast-helper/bin/ast-helper.js parse --file example.ts
@@ -425,10 +425,10 @@ node --inspect-brk packages/ast-helper/bin/ast-helper.js parse --file example.ts
 #### MCP Server
 ```bash
 # Debug MCP server
-npm run debug:mcp
+yarn run debug:mcp
 
 # With verbose logging
-DEBUG=ast-mcp:* npm run start:mcp
+DEBUG=ast-mcp:* yarn run start:mcp
 ```
 
 #### VS Code Extension
@@ -440,29 +440,29 @@ DEBUG=ast-mcp:* npm run start:mcp
 
 ```bash
 # Run performance benchmarks
-npm run benchmark
+yarn run benchmark
 
 # Profile memory usage
-npm run profile:memory
+yarn run profile:memory
 
 # Profile CPU usage
-npm run profile:cpu
+yarn run profile:cpu
 
 # Generate performance reports
-npm run perf:report
+yarn run perf:report
 ```
 
 ### Common Development Tasks
 
 ```bash
 # Clean build artifacts
-npm run clean
+yarn run clean
 
 # Rebuild everything from scratch
-npm run rebuild
+yarn run rebuild
 
 # Update dependencies
-npm run deps:update
+yarn run deps:update
 
 # Check for security vulnerabilities
 npm audit
@@ -471,10 +471,10 @@ npm audit
 npm audit fix
 
 # Run specific test suites
-npm run test -- --grep "parser"
+yarn run test -- --grep "parser"
 
 # Watch mode for development
-npm run test:watch
+yarn run test:watch
 ```
 
 ### Environment Setup
@@ -514,7 +514,7 @@ Releases are handled by maintainers following these principles:
 #### Build Failures
 ```bash
 # Clean and rebuild
-npm run clean && npm run build
+yarn run clean && yarn run build
 
 # Check Node.js version
 node --version  # Should be 18.0.0+
@@ -526,19 +526,19 @@ npm cache clean --force
 #### Test Failures
 ```bash
 # Run tests in isolation
-npm test -- --reporter=verbose
+yarn test -- --reporter=verbose
 
 # Check for timing issues
-npm test -- --timeout=10000
+yarn test -- --timeout=10000
 
 # Update test snapshots
-npm test -- --updateSnapshot
+yarn test -- --updateSnapshot
 ```
 
 #### VS Code Extension Issues
 ```bash
 # Rebuild extension
-cd packages/vscode-extension && npm run compile
+cd packages/vscode-extension && yarn run compile
 
 # Check extension logs
 # View > Output > ast-copilot-helper
