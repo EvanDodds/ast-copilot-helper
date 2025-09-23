@@ -412,56 +412,90 @@ export class NPMPublisher implements BasePublisher<DistributionConfig, NPMPublis
    */
   private async publishSinglePackage(packageConfig: PackageConfig): Promise<PackagePublishResult> {
     const startTime = Date.now();
-    try {
-      // Configure NPM registry and auth
-      await this.configureNPMAuth();
+    const maxRetries = 3;
+    const baseDelay = 2000; // 2 seconds base delay
 
-      // Build npm publish command
-      const publishArgs = ['publish'];
-      
-      if (packageConfig.publishConfig.access) {
-        publishArgs.push('--access', packageConfig.publishConfig.access);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Configure NPM registry and auth
+        await this.configureNPMAuth();
+
+        // Build npm publish command
+        const publishArgs = ['publish'];
+        
+        if (packageConfig.publishConfig.access) {
+          publishArgs.push('--access', packageConfig.publishConfig.access);
+        }
+        
+        if (packageConfig.publishConfig.tag) {
+          publishArgs.push('--tag', packageConfig.publishConfig.tag);
+        }
+
+        if (packageConfig.publishConfig.registry) {
+          publishArgs.push('--registry', packageConfig.publishConfig.registry);
+        }
+
+        // Execute npm publish
+        this.logger.log(`Executing: npm ${publishArgs.join(' ')} (attempt ${attempt}/${maxRetries})`);
+        const publishOutput = execSync(`npm ${publishArgs.join(' ')}`, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: packageConfig.path
+        });
+
+        // Verify publication
+        const verification = await this.verifyPackagePublication(packageConfig);
+
+        this.logger.log(`✅ Successfully published ${packageConfig.name} (attempt ${attempt})`);
+
+        return {
+          success: true,
+          packageName: packageConfig.name,
+          version: this.config.version,
+          registry: packageConfig.publishConfig.registry || this.npmRegistry.url,
+          duration: Date.now() - startTime,
+          publishOutput,
+          verification,
+        };
+
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        
+        // Check if this is a retryable error
+        const isRetryable = this.isRetryableError(errorMessage);
+        
+        if (attempt === maxRetries || !isRetryable) {
+          this.logger.error(`❌ Failed to publish ${packageConfig.name} after ${attempt} attempts: ${error}`);
+          
+          return {
+            success: false,
+            packageName: packageConfig.name,
+            version: this.config.version,
+            registry: packageConfig.publishConfig.registry || this.npmRegistry.url,
+            duration: Date.now() - startTime,
+            error: `NPM publish failed after ${attempt} attempts: ${errorMessage}`,
+          };
+        }
+        
+        // Calculate exponential backoff delay
+        const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000; // Add jitter
+        
+        this.logger.warn(`⚠️ NPM publish attempt ${attempt} failed for ${packageConfig.name}: ${error}`);
+        this.logger.log(`⏳ Retrying in ${Math.round(delay)}ms...`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-      
-      if (packageConfig.publishConfig.tag) {
-        publishArgs.push('--tag', packageConfig.publishConfig.tag);
-      }
-
-      if (packageConfig.publishConfig.registry) {
-        publishArgs.push('--registry', packageConfig.publishConfig.registry);
-      }
-
-      // Execute npm publish
-      this.logger.log(`Executing: npm ${publishArgs.join(' ')}`);
-      const publishOutput = execSync(`npm ${publishArgs.join(' ')}`, { 
-        encoding: 'utf8',
-        stdio: 'pipe',
-        cwd: packageConfig.path
-      });
-
-      // Verify publication
-      const verification = await this.verifyPackagePublication(packageConfig);
-
-      return {
-        success: true,
-        packageName: packageConfig.name,
-        version: this.config.version,
-        registry: packageConfig.publishConfig.registry || this.npmRegistry.url,
-        duration: Date.now() - startTime,
-        publishOutput,
-        verification,
-      };
-
-    } catch (error) {
-      return {
-        success: false,
-        packageName: packageConfig.name,
-        version: this.config.version,
-        registry: packageConfig.publishConfig.registry || this.npmRegistry.url,
-        duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : String(error),
-      };
     }
+
+    // This should never be reached, but TypeScript needs it
+    return {
+      success: false,
+      packageName: packageConfig.name,
+      version: this.config.version,
+      registry: packageConfig.publishConfig.registry || this.npmRegistry.url,
+      duration: Date.now() - startTime,
+      error: 'Unexpected error in retry logic',
+    };
   }
 
   /**
@@ -587,5 +621,32 @@ export class NPMPublisher implements BasePublisher<DistributionConfig, NPMPublis
     this.logger.log(`  Packages: ${result.packages.map(p => p.packageName).join(', ')}`);
     this.logger.log(`  Duration: ${result.duration}ms`);
     this.logger.log(`  Success: ${result.success ? '✅' : '❌'}`);
+  }
+
+  /**
+   * Determines if an error is retryable based on error message patterns
+   */
+  private isRetryableError(errorMessage: string): boolean {
+    const retryablePatterns = [
+      /network error/i,
+      /timeout/i,
+      /connection refused/i,
+      /connection reset/i,
+      /temporary failure/i,
+      /service unavailable/i,
+      /internal server error/i,
+      /502 bad gateway/i,
+      /503 service unavailable/i,
+      /504 gateway timeout/i,
+      /rate limit/i,
+      /throttled/i,
+      /temporary/i,
+      /try again/i,
+      /econnreset/i,
+      /enotfound/i,
+      /registry error/i
+    ];
+
+    return retryablePatterns.some(pattern => pattern.test(errorMessage));
   }
 }

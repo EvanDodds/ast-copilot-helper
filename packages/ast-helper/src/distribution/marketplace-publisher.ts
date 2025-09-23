@@ -546,104 +546,162 @@ export class MarketplacePublisher implements Publisher {
 
   private async publishToVSCodeMarketplace(pkg: PackageConfig, packagePath: string): Promise<MarketplacePublishResult> {
     const startTime = Date.now();
+    const maxRetries = 3;
+    const baseDelay = 2000; // 2 seconds base delay
     
-    try {
-      const publishCommand = [
-        'vsce publish',
-        '--packagePath', `"${packagePath}"`,
-        '--pat', this.credentials.vscode!.token,
-        '--no-git-tag-version',
-        '--no-update-package-json'
-      ].join(' ');
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const publishCommand = [
+          'vsce publish',
+          '--packagePath', `"${packagePath}"`,
+          '--pat', this.credentials.vscode!.token,
+          '--no-git-tag-version',
+          '--no-update-package-json'
+        ].join(' ');
 
-      console.log(`Publishing to VS Code Marketplace...`);
-      
-      execSync(publishCommand, {
-        cwd: pkg.path,
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'pipe']
-      });
+        console.log(`Publishing to VS Code Marketplace (attempt ${attempt}/${maxRetries})...`);
+        
+        execSync(publishCommand, {
+          cwd: pkg.path,
+          encoding: 'utf-8',
+          stdio: ['ignore', 'pipe', 'pipe']
+        });
 
-      const duration = Date.now() - startTime;
-      
-      // Extract extension ID and URL from output
-      const extensionId = `${this.credentials.vscode!.publisher}.${pkg.name}`;
-      const url = `https://marketplace.visualstudio.com/items?itemName=${extensionId}`;
+        const duration = Date.now() - startTime;
+        
+        // Extract extension ID and URL from output
+        const extensionId = `${this.credentials.vscode!.publisher}.${pkg.name}`;
+        const url = `https://marketplace.visualstudio.com/items?itemName=${extensionId}`;
 
-      console.log(`✅ Successfully published ${extensionId} to VS Code Marketplace`);
-      
-      return {
-        marketplace: 'vscode',
-        registry: 'vscode', // For test compatibility
-        success: true,
-        extensionId,
-        version: this.config!.version,
-        url,
-        duration
-      };
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      
-      console.error(`❌ Failed to publish to VS Code Marketplace: ${error}`);
-      
-      return {
-        marketplace: 'vscode',
-        registry: 'vscode', // For test compatibility
-        success: false,
-        error: `VS Code Marketplace publish failed: ${error}`,
-        duration
-      };
+        console.log(`✅ Successfully published ${extensionId} to VS Code Marketplace (attempt ${attempt})`);
+        
+        return {
+          marketplace: 'vscode',
+          registry: 'vscode', // For test compatibility
+          success: true,
+          extensionId,
+          version: this.config!.version,
+          url,
+          duration
+        };
+      } catch (error) {
+        const errorMessage = error?.toString() || 'Unknown error';
+        
+        // Check if this is a retryable error
+        const isRetryable = this.isRetryableError(errorMessage);
+        
+        if (attempt === maxRetries || !isRetryable) {
+          const duration = Date.now() - startTime;
+          
+          console.error(`❌ Failed to publish to VS Code Marketplace after ${attempt} attempts: ${error}`);
+          
+          return {
+            marketplace: 'vscode',
+            registry: 'vscode', // For test compatibility
+            success: false,
+            error: `VS Code Marketplace publish failed after ${attempt} attempts: ${error}`,
+            duration
+          };
+        }
+        
+        // Calculate exponential backoff delay
+        const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000; // Add jitter
+        
+        console.warn(`⚠️ VS Code Marketplace publish attempt ${attempt} failed: ${error}`);
+        console.log(`⏳ Retrying in ${Math.round(delay)}ms...`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
+
+    // This should never be reached, but TypeScript needs it
+    const duration = Date.now() - startTime;
+    return {
+      marketplace: 'vscode',
+      registry: 'vscode',
+      success: false,
+      error: 'Unexpected error in retry logic',
+      duration
+    };
   }
 
   private async publishToOpenVSX(pkg: PackageConfig, packagePath: string): Promise<MarketplacePublishResult> {
     const startTime = Date.now();
+    const maxRetries = 3;
+    const baseDelay = 2000; // 2 seconds base delay
     
-    try {
-      const publishCommand = [
-        'ovsx publish',
-        `"${packagePath}"`,
-        '--pat', this.credentials.openvsx!.token
-      ].join(' ');
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const publishCommand = [
+          'ovsx publish',
+          `"${packagePath}"`,
+          '--pat', this.credentials.openvsx!.token
+        ].join(' ');
 
-      console.log(`Publishing to Open VSX Registry...`);
-      
-      execSync(publishCommand, {
-        cwd: pkg.path,
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'pipe']
-      });
+        console.log(`Publishing to Open VSX Registry (attempt ${attempt}/${maxRetries})...`);
+        
+        execSync(publishCommand, {
+          cwd: pkg.path,
+          encoding: 'utf-8',
+          stdio: ['ignore', 'pipe', 'pipe']
+        });
 
-      const duration = Date.now() - startTime;
-      
-      // Extract extension information
-      const extensionId = `${this.credentials.vscode!.publisher}.${pkg.name}`;
-      const url = `https://open-vsx.org/extension/${this.credentials.vscode!.publisher}/${pkg.name}`;
+        const duration = Date.now() - startTime;
+        
+        // Extract extension information
+        const extensionId = `${this.credentials.vscode!.publisher}.${pkg.name}`;
+        const url = `https://open-vsx.org/extension/${this.credentials.vscode!.publisher}/${pkg.name}`;
 
-      console.log(`✅ Successfully published ${extensionId} to Open VSX Registry`);
-      
-      return {
-        marketplace: 'openvsx',
-        registry: 'openvsx', // For test compatibility
-        success: true,
-        extensionId,
-        version: this.config!.version,
-        url,
-        duration
-      };
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      
-      console.error(`❌ Failed to publish to Open VSX Registry: ${error}`);
-      
-      return {
-        marketplace: 'openvsx',
-        registry: 'openvsx', // For test compatibility
-        success: false,
-        error: `Open VSX publish failed: ${error}`,
-        duration
-      };
+        console.log(`✅ Successfully published ${extensionId} to Open VSX Registry (attempt ${attempt})`);
+        
+        return {
+          marketplace: 'openvsx',
+          registry: 'openvsx', // For test compatibility
+          success: true,
+          extensionId,
+          version: this.config!.version,
+          url,
+          duration
+        };
+      } catch (error) {
+        const errorMessage = error?.toString() || 'Unknown error';
+        
+        // Check if this is a retryable error
+        const isRetryable = this.isRetryableError(errorMessage);
+        
+        if (attempt === maxRetries || !isRetryable) {
+          const duration = Date.now() - startTime;
+          
+          console.error(`❌ Failed to publish to Open VSX Registry after ${attempt} attempts: ${error}`);
+          
+          return {
+            marketplace: 'openvsx',
+            registry: 'openvsx', // For test compatibility
+            success: false,
+            error: `Open VSX publish failed after ${attempt} attempts: ${error}`,
+            duration
+          };
+        }
+        
+        // Calculate exponential backoff delay
+        const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000; // Add jitter
+        
+        console.warn(`⚠️ Open VSX publish attempt ${attempt} failed: ${error}`);
+        console.log(`⏳ Retrying in ${Math.round(delay)}ms...`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
+
+    // This should never be reached, but TypeScript needs it
+    const duration = Date.now() - startTime;
+    return {
+      marketplace: 'openvsx',
+      registry: 'openvsx',
+      success: false,
+      error: 'Unexpected error in retry logic',
+      duration
+    };
   }
 
   async verify(result: any): Promise<VerificationResult> {
@@ -773,5 +831,29 @@ export class MarketplacePublisher implements Publisher {
     }
     
     console.log('Marketplace publisher cleanup completed');
+  }
+
+  /**
+   * Determines if an error is retryable based on error message patterns
+   */
+  private isRetryableError(errorMessage: string): boolean {
+    const retryablePatterns = [
+      /network error/i,
+      /timeout/i,
+      /connection refused/i,
+      /connection reset/i,
+      /temporary failure/i,
+      /service unavailable/i,
+      /internal server error/i,
+      /502 bad gateway/i,
+      /503 service unavailable/i,
+      /504 gateway timeout/i,
+      /rate limit/i,
+      /throttled/i,
+      /temporary/i,
+      /try again/i
+    ];
+
+    return retryablePatterns.some(pattern => pattern.test(errorMessage));
   }
 }
