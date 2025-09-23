@@ -156,8 +156,8 @@ export class DistributionManager implements IDistributionManager {
       await publisher.cleanup();
 
       const duration = Date.now() - startTime;
-      const successful = result.filter(r => r.success);
-      const failed = result.filter(r => !r.success);
+      const successful = result.filter((r: any) => r.success);
+      const failed = result.filter((r: any) => !r.success);
       
       if (successful.length > 0) {
         this.logger.log(`✅ VS Code Marketplace publishing completed: ${successful.length} successful, ${failed.length} failed in ${duration}ms`);
@@ -168,7 +168,7 @@ export class DistributionManager implements IDistributionManager {
       // Convert to MarketplacePublishResult format
       return {
         success: successful.length > 0,
-        extensions: result.map((res) => ({
+        extensions: result.map((res: any) => ({
           success: res.success,
           extensionName: res.extensionId || '',
           version: res.version || this.config.version,
@@ -179,7 +179,7 @@ export class DistributionManager implements IDistributionManager {
         duration,
         marketplace: 'vscode-marketplace',
         version: this.config.version,
-        error: failed.length > 0 ? `Failed: ${failed.map(f => f.error).join(', ')}` : undefined,
+        error: failed.length > 0 ? `Failed: ${failed.map((f: any) => f.error).join(', ')}` : undefined,
       };
 
     } catch (error) {

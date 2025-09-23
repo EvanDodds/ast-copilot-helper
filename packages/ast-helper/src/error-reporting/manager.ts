@@ -67,12 +67,12 @@ import type { ErrorAnalytics, SystemHealthMetrics, ErrorFrequencyPoint, ErrorCor
  */
 export class ComprehensiveErrorReportingManager implements ErrorReportingManager {
   private config?: ErrorReportingConfig;
-  private initialized: boolean = false;
+  // private initialized: boolean = false;
   private sessionId: string;
   private currentOperation: string = 'unknown';
   private operationHistory: string[] = [];
   private errorHistory: ErrorHistoryEntry[] = [];
-  private reportQueue: ErrorReport[] = [];
+  // private reportQueue: ErrorReport[] = [];
   private suggestionEngine: SuggestionEngine;
   
   // Advanced analytics
@@ -85,7 +85,11 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
   
   // Privacy components
   private privacyManager?: PrivacyManager;
-  private telemetryManager?: TelemetryManager;
+  // private telemetryManager?: TelemetryManager;
+  
+  // Additional components for compliance and secure transmission
+  private secureTransmission?: any;
+  private complianceChecker?: any;
   
   // Event handler references for cleanup
   private uncaughtExceptionHandler?: (error: Error) => void;
@@ -288,7 +292,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       };
 
       // Apply privacy filters if enabled
-      if (this.config.privacyMode) {
+      if (this.config?.privacyMode) {
         return await this.applyPrivacyFilters(diagnostics);
       }
 
@@ -327,9 +331,9 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
         operation: this.currentOperation,
         context,
         timestamp,
-        includeSystemInfo: this.config.collectSystemInfo,
+        includeSystemInfo: this.config?.collectSystemInfo || false,
         includeRuntimeInfo: true,
-        includeCodebaseInfo: this.config.collectCodebaseInfo
+        includeCodebaseInfo: this.config?.collectCodebaseInfo || false
       };
       const diagnostics = await this.collectDiagnostics(diagnosticContext);
       
@@ -789,7 +793,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       homeDirectory: os.homedir(),
       tempDirectory: os.tmpdir(),
       pathSeparator: path.sep,
-      environmentVars: this.config.privacyMode ? {} : Object.fromEntries(
+      environmentVars: this.config?.privacyMode ? {} : Object.fromEntries(
         Object.entries(process.env).map(([key, value]) => [key, value || ''])
       ),
       processArgs: process.argv,
@@ -989,8 +993,8 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
     this.errorHistory.unshift(historyEntry);
 
     // Keep only the configured number of entries
-    if (this.errorHistory.length > this.config.maxHistoryEntries) {
-      this.errorHistory = this.errorHistory.slice(0, this.config.maxHistoryEntries);
+    if (this.errorHistory.length > (this.config?.maxHistoryEntries || 1000)) {
+      this.errorHistory = this.errorHistory.slice(0, this.config?.maxHistoryEntries || 1000);
     }
   }
 
@@ -1161,11 +1165,11 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
 
     try {
       // Add to crash history
-      this.crashReports.push(crash);
+      this.crashReports.push(crash as any);
 
       // Update analytics
       if (this.crashAnalytics) {
-        this.crashAnalytics.addAnalyticsDataPoint(this.crashReports);
+        this.crashAnalytics.addAnalyticsDataPoint(this.crashReports as any);
       }
 
       // Create a simplified error report for logging
@@ -1201,7 +1205,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       return null;
     }
 
-    return await this.crashAnalytics.generateAnalytics(this.crashReports, {
+    return await this.crashAnalytics.generateAnalytics(this.crashReports as any, {
       startDate: options?.startDate,
       endDate: options?.endDate,
       crashTypes: options?.crashTypes,
@@ -1244,7 +1248,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
     this.privacyManager = new PrivacyManager({
       requireConsent: true,
       retentionDays: 30,
-      anonymizationLevel: this.config.privacyMode ? 'strict' : 'basic',
+      anonymizationLevel: this.config?.privacyMode ? 'strict' : 'basic',
       enablePiiScrubbing: true,
       allowedCategories: [
         'error', 'crash', 'performance', 'warning',
@@ -1260,7 +1264,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
     });
 
     // Initialize Secure Transmission Manager
-    if (this.config.endpoint) {
+    if (this.config?.endpoint) {
       const securityConfig: SecurityConfig = {
         enableEncryption: true,
         encryptionAlgorithm: 'AES-256-GCM',
@@ -1273,7 +1277,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
           blacklistDuration: 15
         },
         authentication: {
-          required: !!this.config.apiKey,
+          required: !!this.config?.apiKey,
           method: 'apiKey'
         }
       };
@@ -1368,7 +1372,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
    * Send error report securely if transmission is configured
    */
   async sendSecureErrorReport(errorReport: ErrorReport, userId?: string): Promise<TransmissionResult | null> {
-    if (!this.secureTransmission || !this.config.endpoint) {
+    if (!this.secureTransmission || !this.config?.endpoint) {
       return null;
     }
 
@@ -1380,7 +1384,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
 
     return this.secureTransmission.sendErrorReport(
       filteredReport,
-      this.config.endpoint,
+      this.config?.endpoint,
       {
         encrypt: true,
         compress: true,
