@@ -5,7 +5,7 @@
  * Demonstrates comprehensive deployment validation and release certification
  */
 
-import { DeploymentCertificationManager } from './packages/ast-helper/src/deployment-certification/manager.js';
+import { DeploymentCertificationManager } from './packages/ast-helper/dist/deployment-certification/manager.js';
 
 /**
  * Comprehensive deployment certification demonstration

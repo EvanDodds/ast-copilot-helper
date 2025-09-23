@@ -119,5 +119,7 @@ temp/
 .temp/
 
 # Package manager lock files (will be generated)
-# package-lock.json (keep this one)
+# We use yarn exclusively, so ignore npm lockfiles
+package-lock.json
+npm-shrinkwrap.json
 # yarn.lock
