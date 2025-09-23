@@ -21,7 +21,7 @@ export abstract class AstError extends Error {
   readonly errorCause?: Error;
   
   /** Marker property to identify AST errors */
-  readonly isAstError: true = true;
+  readonly isAstError = true as const;
   
   constructor(
     message: string,

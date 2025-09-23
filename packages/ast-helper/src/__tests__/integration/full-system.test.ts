@@ -7,7 +7,7 @@ import { tmpdir } from 'os';
 import { GitManager } from '../../../dist/git/manager.js';
 import { FileSystemManager } from '../../../dist/filesystem/manager.js';
 import { GlobManager } from '../../../dist/glob/manager.js';
-import { ConfigurationError, GitError } from '../../../dist/errors/types.js';
+import { ConfigurationError } from '../../../dist/errors/types.js';
 import { withRetry } from '../../../dist/errors/utils.js';
 
 // Mock process.cwd for tests

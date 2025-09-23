@@ -690,7 +690,7 @@ export class CommandHandlers {
       }
       
       // Check if server executable exists
-      const fs = require('fs');
+      const fs = await import('fs');
       if (!fs.existsSync(serverPath)) {
         vscode.window.showErrorMessage(
           `Server executable not found at: ${serverPath}`,

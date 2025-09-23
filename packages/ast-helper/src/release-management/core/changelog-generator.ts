@@ -300,7 +300,7 @@ return null;
 }
     
     // Parse conventional commit format: type(scope): description
-    const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?\!?:\s*(.+)$/;
+    const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/;
     const match = message.trim().match(conventionalRegex);
     
     if (!match) {
@@ -342,7 +342,7 @@ return null;
     const date = new Date(dateStr);
     
     // Parse conventional commit format: type(scope): description
-    const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?\!?:\s*(.+)$/;
+    const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/;
     const match = message.match(conventionalRegex);
     
     if (!match) {

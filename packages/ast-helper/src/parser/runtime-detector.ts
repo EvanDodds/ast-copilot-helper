@@ -100,7 +100,7 @@ export class RuntimeDetector {
  * Native Tree-sitter runtime implementation
  */
 class NativeRuntime implements ParserRuntime {
-  type: 'native' = 'native';
+  type = 'native' as const;
   available = false;
   private TreeSitter: any = null;
   private parsers: Map<string, any> = new Map();
@@ -185,7 +185,7 @@ class NativeRuntime implements ParserRuntime {
  * WASM Tree-sitter runtime implementation
  */
 class WasmRuntime implements ParserRuntime {
-  type: 'wasm' = 'wasm';
+  type = 'wasm' as const;
   available = false;
   private TreeSitter: any = null;
   private parsers: Map<string, any> = new Map();

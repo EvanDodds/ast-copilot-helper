@@ -5,6 +5,8 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { MarketplacePublisher } from './marketplace-publisher';
 import type {
   DistributionManager as IDistributionManager,
@@ -364,10 +366,9 @@ export class DistributionManager implements IDistributionManager {
 
     // Verify npm is available
     try {
-      const { execSync } = require('child_process');
       const npmVersion = execSync('npm --version', { encoding: 'utf8' }).trim();
       this.logger.log(`npm version: ${npmVersion}`);
-    } catch (error) {
+    } catch (_error) {
       throw new Error('npm is not available in the environment');
     }
 
@@ -446,11 +447,10 @@ export class DistributionManager implements IDistributionManager {
    */
   private async calculatePackageSize(packagePath: string): Promise<number> {
     // Simple implementation - get directory size
-    const { execSync } = require('child_process');
     try {
       const sizeOutput = execSync(`du -sb "${packagePath}"`, { encoding: 'utf8' });
       return parseInt(sizeOutput.split('\t')[0]);
-    } catch (error) {
+    } catch (_error) {
       // Fallback to a basic estimate
       return 1024; // Default size estimate
     }
@@ -460,13 +460,12 @@ export class DistributionManager implements IDistributionManager {
    * Generate package checksum
    */
   private async generatePackageChecksum(packagePath: string): Promise<string> {
-    const crypto = require('crypto');
     
     // For now, generate a simple hash based on package.json content
     const packageJsonPath = path.join(packagePath, 'package.json');
     const content = await fs.readFile(packageJsonPath, 'utf8');
     
-    return crypto.createHash('sha256').update(content).digest('hex').substring(0, 16);
+    return createHash('sha256').update(content).digest('hex').substring(0, 16);
   }
 
   /**

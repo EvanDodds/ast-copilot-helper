@@ -277,6 +277,7 @@ export class CodeTextProcessor {
    */
   private sanitizeText(text: string): string {
     // Remove control characters except common ones (newline, tab)
+    // eslint-disable-next-line no-control-regex
     let sanitized = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
     
     // Ensure valid UTF-8 encoding
@@ -284,6 +285,7 @@ export class CodeTextProcessor {
       sanitized = decodeURIComponent(encodeURIComponent(sanitized));
     } catch {
       // If encoding fails, remove non-ASCII characters as fallback
+      // eslint-disable-next-line no-control-regex
       sanitized = sanitized.replace(/[^\x00-\x7F]/g, '');
     }
     

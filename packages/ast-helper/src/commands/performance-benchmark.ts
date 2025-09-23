@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import { cpus, totalmem, freemem } from 'node:os';
 import { PerformanceBenchmarkRunner } from '../performance/benchmark-runner.js';
 import type { PerformanceReport } from '../performance/types.js';
 import { createLogger } from '../logging/index.js';
@@ -109,9 +110,9 @@ export class PerformanceBenchmarkCommandHandler implements CommandHandler<Perfor
       platform: process.platform,
       arch: process.arch,
       nodeVersion: process.version,
-      cpuCount: require('os').cpus().length,
-      totalMemory: Math.round(require('os').totalmem() / 1024 / 1024),
-      freeMemory: Math.round(require('os').freemem() / 1024 / 1024),
+      cpuCount: cpus().length,
+      totalMemory: Math.round(totalmem() / 1024 / 1024),
+      freeMemory: Math.round(freemem() / 1024 / 1024),
     };
     
     const benchmarkResults = {

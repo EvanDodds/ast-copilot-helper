@@ -461,13 +461,14 @@ return 0;
         }
         break;
         
-      case 'fuzzy':
+      case 'fuzzy': {
         const similarity = this.calculateSimilarity(targetText, pattern.pattern.toString());
         if (similarity > 0.7) {
           matches = [targetText] as RegExpMatchArray;
           score = similarity;
         }
         break;
+      }
     }
 
     if (matches) {

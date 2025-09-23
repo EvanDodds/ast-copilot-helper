@@ -1,13 +1,12 @@
 // Very large file for testing memory usage and performance
 // This file contains repetitive structures to simulate large codebases
 
-export namespace LargeTestNamespace {
-  // Generate 1000+ interfaces for testing
-  export interface TestInterface001 { id: number; name: string; value001: boolean; }
-  export interface TestInterface002 { id: number; name: string; value002: boolean; }
-  export interface TestInterface003 { id: number; name: string; value003: boolean; }
-  export interface TestInterface004 { id: number; name: string; value004: boolean; }
-  export interface TestInterface005 { id: number; name: string; value005: boolean; }
+// Convert namespace to module exports
+export interface TestInterface001 { id: number; name: string; value001: boolean; }
+export interface TestInterface002 { id: number; name: string; value002: boolean; }
+export interface TestInterface003 { id: number; name: string; value003: boolean; }
+export interface TestInterface004 { id: number; name: string; value004: boolean; }
+export interface TestInterface005 { id: number; name: string; value005: boolean; }
   export interface TestInterface006 { id: number; name: string; value006: boolean; }
   export interface TestInterface007 { id: number; name: string; value007: boolean; }
   export interface TestInterface008 { id: number; name: string; value008: boolean; }
@@ -169,4 +168,3 @@ export namespace LargeTestNamespace {
       diffDays: (date1: Date, date2: Date): number => Math.ceil((date1.getTime() - date2.getTime()) / (1000 * 60 * 60 * 24)),
     },
   };
-}

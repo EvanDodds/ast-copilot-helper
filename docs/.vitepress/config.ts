@@ -178,7 +178,7 @@ export default defineConfig({
       dark: 'github-dark'
     },
     lineNumbers: true,
-    config: (md) => {
+    config: () => {
       // Add custom markdown extensions if needed
     }
   },

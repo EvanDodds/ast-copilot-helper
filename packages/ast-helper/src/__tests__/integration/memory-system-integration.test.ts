@@ -8,23 +8,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   UnifiedMemoryManager,
-  AdvancedResourceManager,
-  GCScheduler,
-  PerformanceMetricsCollector,
   type MemoryManagerConfig,
-  type MemorySystemStatus
 } from '../../memory/index.js';
 
 describe('Memory Management System Integration', () => {
   let memoryManager: UnifiedMemoryManager;
-  let startingMemoryUsage: number;
+  let _startingMemoryUsage: number;
 
   beforeEach(async () => {
     // Mock global.gc for testing
     vi.stubGlobal('gc', vi.fn());
     
     // Record starting memory usage
-    startingMemoryUsage = process.memoryUsage().rss / (1024 * 1024 * 1024);
+    _startingMemoryUsage = process.memoryUsage().rss / (1024 * 1024 * 1024);
 
     // Create memory manager with conservative settings for testing
     const config: MemoryManagerConfig = {
@@ -58,7 +54,7 @@ describe('Memory Management System Integration', () => {
       if (memoryManager) {
         await memoryManager.stop();
       }
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
     vi.restoreAllMocks();
@@ -272,7 +268,7 @@ describe('Memory Management System Integration', () => {
       // Emergency cleanup may fail but should handle the error gracefully
       try {
         await memoryManager.emergencyCleanup();
-      } catch (error) {
+      } catch (_error) {
         // Expected due to mocked failure, but system should remain functional
       }
 

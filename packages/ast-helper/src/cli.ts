@@ -572,6 +572,7 @@ export class AstHelperCli {
   private getVersion(): string {
     try {
       const packagePath = path.join(__dirname, '..', 'package.json');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const packageJson = JSON.parse(require('fs').readFileSync(packagePath, 'utf8'));
       return packageJson.version || '0.1.0';
     } catch {
@@ -588,42 +589,55 @@ export class AstHelperCli {
         return new InitCommandHandler();
       case 'parse':
         return new ParseCommandHandler();
-      case 'annotate':
+      case 'annotate': {
         const { AnnotateCommandHandler } = await import('./commands/annotate.js');
         return new AnnotateCommandHandler();
-      case 'embed':
+      }
+      case 'embed': {
         return new EmbedCommandHandler();
-      case 'query':
+      }
+      case 'query': {
         return new QueryCommandHandler();
-      case 'watch':
+      }
+      case 'watch': {
         return new WatchCommandHandler();
-      case 'model:download':
+      }
+      case 'model:download': {
         const { ModelDownloadCommandHandler } = await import('./commands/model-download.js');
         return new ModelDownloadCommandHandler();
-      case 'model:cache':
+      }
+      case 'model:cache': {
         const { ModelCacheCommandHandler } = await import('./commands/model-cache.js');
         return new ModelCacheCommandHandler();
-      case 'model:verify':
+      }
+      case 'model:verify': {
         const { ModelVerifyCommandHandler } = await import('./commands/model-verify.js');
         return new ModelVerifyCommandHandler();
-      case 'model:list':
+      }
+      case 'model:list': {
         const { ModelListCommandHandler } = await import('./commands/model-list.js');
         return new ModelListCommandHandler();
-      case 'model:status':
+      }
+      case 'model:status': {
         const { ModelStatusCommandHandler } = await import('./commands/model-status.js');
         return new ModelStatusCommandHandler();
-      case 'performance:benchmark':
+      }
+      case 'performance:benchmark': {
         const { PerformanceBenchmarkCommandHandler } = await import('./commands/performance-benchmark.js');
         return new PerformanceBenchmarkCommandHandler();
-      case 'performance:validate':
+      }
+      case 'performance:validate': {
         const { PerformanceValidateCommandHandler } = await import('./commands/performance-validate.js');
         return new PerformanceValidateCommandHandler();
-      case 'performance:report':
+      }
+      case 'performance:report': {
         const { PerformanceReportCommandHandler } = await import('./commands/performance-report.js');
         return new PerformanceReportCommandHandler();
-      case 'performance:monitor':
+      }
+      case 'performance:monitor': {
         const { PerformanceMonitorCommandHandler } = await import('./commands/performance-monitor.js');
         return new PerformanceMonitorCommandHandler();
+      }
       default:
         throw ValidationErrors.invalidValue('command', commandName, 'Unknown command');
     }
@@ -635,6 +649,7 @@ export class AstHelperCli {
   private isGitRepository(workspacePath: string): boolean {
     try {
       const gitPath = path.join(workspacePath, '.git');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require('fs').existsSync(gitPath);
     } catch {
       return false;
@@ -652,7 +667,7 @@ export class AstHelperCli {
     }
 
     // Disallow invalid characters for Git refs
-    const invalidChars = /[~^:\s\\\[\]]/;
+    const invalidChars = /[~^:\s\\[\]]/;
     if (invalidChars.test(ref)) {
       return false;
     }

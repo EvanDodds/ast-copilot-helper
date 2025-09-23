@@ -6,15 +6,12 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { spawn } from 'child_process';
-import { promisify } from 'util';
 import {
   PlatformTester,
   PlatformTestResults,
   PlatformResult,
   TestResult,
   BinaryValidation,
-  BinaryTestResult,
   BinaryComponentResult,
   FileSystemTests,
   FileSystemTestResult,
@@ -308,7 +305,7 @@ export class CrossPlatformTestRunner implements PlatformTester {
         platform: this.currentPlatform,
         architecture: this.currentArchitecture,
         success: true,
-        version: require('tree-sitter/package.json').version,
+        version: await import('tree-sitter/package.json').then(m => m.version),
         loadTime: Date.now() - startTime
       };
       
@@ -481,55 +478,49 @@ export class CrossPlatformTestRunner implements PlatformTester {
     try {
       const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'case-test-'));
       
+      // Create files with different cases
+      const lowerCaseFile = path.join(tempDir, 'testfile.ts');
+      const upperCaseFile = path.join(tempDir, 'TESTFILE.ts');
+      
+      await fs.writeFile(lowerCaseFile, 'lowercase content');
+      
+      let isCaseSensitive: boolean = false;
+      
       try {
-        // Create files with different cases
-        const lowerCaseFile = path.join(tempDir, 'testfile.ts');
-        const upperCaseFile = path.join(tempDir, 'TESTFILE.ts');
+        await fs.writeFile(upperCaseFile, 'uppercase content');
         
-        await fs.writeFile(lowerCaseFile, 'lowercase content');
+        // Check if both files exist (case-sensitive) or only one (case-insensitive)
+        const lowerStats = await fs.stat(lowerCaseFile).catch(() => null);
+        const upperStats = await fs.stat(upperCaseFile).catch(() => null);
         
-        let isCaseSensitive: boolean = false;
-        
-        try {
-          await fs.writeFile(upperCaseFile, 'uppercase content');
-          
-          // Check if both files exist (case-sensitive) or only one (case-insensitive)
-          const lowerStats = await fs.stat(lowerCaseFile).catch(() => null);
-          const upperStats = await fs.stat(upperCaseFile).catch(() => null);
-          
-          if (lowerStats && upperStats) {
-            // Both exist - file system is case-sensitive
-            const lowerContent = await fs.readFile(lowerCaseFile, 'utf8');
-            const upperContent = await fs.readFile(upperCaseFile, 'utf8');
-            isCaseSensitive = lowerContent !== upperContent;
-          } else {
-            // Only one exists - file system is case-insensitive
-            isCaseSensitive = false;
-          }
-          
-          console.log(`File system case sensitivity: ${isCaseSensitive ? 'sensitive' : 'insensitive'}`);
-          
-        } finally {
-          // Cleanup
-          await fs.rm(tempDir, { recursive: true, force: true });
+        if (lowerStats && upperStats) {
+          // Both exist - file system is case-sensitive
+          const lowerContent = await fs.readFile(lowerCaseFile, 'utf8');
+          const upperContent = await fs.readFile(upperCaseFile, 'utf8');
+          isCaseSensitive = lowerContent !== upperContent;
+        } else {
+          // Only one exists - file system is case-insensitive
+          isCaseSensitive = false;
         }
         
-        return {
-          name: 'case_sensitivity',
-          category: 'filesystem',
-          passed: true,
-          platform: process.platform,
-          duration: Date.now() - startTime,
-          details: {
-            platformSpecific: true,
-            caseSensitive: isCaseSensitive
-          }
-        };
+        console.log(`File system case sensitivity: ${isCaseSensitive ? 'sensitive' : 'insensitive'}`);
         
-      } catch (cleanupError) {
-        // Cleanup failed, but test might have passed
-        throw cleanupError;
+      } finally {
+        // Cleanup
+        await fs.rm(tempDir, { recursive: true, force: true });
       }
+      
+      return {
+        name: 'case_sensitivity',
+        category: 'filesystem',
+        passed: true,
+        platform: process.platform,
+        duration: Date.now() - startTime,
+        details: {
+          platformSpecific: true,
+          caseSensitive: isCaseSensitive
+        }
+      };
       
     } catch (error: any) {
       return {

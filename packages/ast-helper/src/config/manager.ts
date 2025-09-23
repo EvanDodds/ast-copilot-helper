@@ -7,7 +7,7 @@ import type { Config, PartialConfig, CliArgs } from '../types.js';
 import { validateConfig } from './defaults.js';
 import { parseEnvironmentConfig } from './environment.js';
 import { parseCliArgs } from './cli.js';
-import { loadConfigFiles } from './files.js';
+import { loadConfigFiles, resolveConfigPaths } from './files.js';
 
 /**
  * Configuration Manager class
@@ -110,7 +110,6 @@ result.batchSize = source.batchSize;
    * Get configuration file paths for the given workspace
    */
   getConfigPaths(workspacePath: string): string[] {
-    const { resolveConfigPaths } = require('./files.js');
     return resolveConfigPaths(workspacePath);
   }
 }

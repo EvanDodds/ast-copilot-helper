@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // Import from compiled JS files in dist
-import { AstError, ConfigurationError, GitError } from '../../../dist/errors/types.js';
+import { ConfigurationError, GitError } from '../../../dist/errors/types.js';
 import { GitErrors } from '../../../dist/errors/factories.js';
 import { withRetry } from '../../../dist/errors/utils.js';
 

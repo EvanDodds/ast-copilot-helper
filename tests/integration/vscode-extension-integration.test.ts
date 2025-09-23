@@ -131,7 +131,7 @@ vi.mock('vscode', () => ({
 class VSCodeExtensionIntegrationTestSuite {
   private extension: any;
   private mockVSCode: any;
-  private registeredCommands: Map<string, Function>;
+  private registeredCommands: Map<string, (...args: any[]) => any>;
   private registeredDisposables: vscode.Disposable[];
 
   constructor() {
@@ -147,7 +147,7 @@ class VSCodeExtensionIntegrationTestSuite {
     (this.mockVSCode.commands.registerCommand as MockedFunction<any>).mockImplementation(
       (...args: any[]) => {
         const [command, handler] = args;
-        this.registeredCommands.set(command as string, handler as Function);
+        this.registeredCommands.set(command as string, handler as (...args: any[]) => any);
         const disposable = { dispose: vi.fn() };
         this.registeredDisposables.push(disposable);
         return disposable;

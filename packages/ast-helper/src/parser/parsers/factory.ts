@@ -1,5 +1,6 @@
 /**
- * Parser Factory - Creates appropriate parser instances based on runtime detection
+ * Parser Factory - Createsclass SimpleWASMRuntime implements ParserRuntime {
+  type = 'wasm' as const;ppropriate parser instances based on runtime detection
  */
 
 import { NativeTreeSitterParser } from './native-parser.js';
@@ -12,7 +13,7 @@ import type { ASTParser, ParserRuntime } from '../types.js';
  * Simple runtime implementations for factory use
  */
 class SimpleNativeRuntime implements ParserRuntime {
-  type: 'native' = 'native';
+  type = 'native' as const;
   available = false;
 
   async initialize(): Promise<void> {
@@ -31,7 +32,7 @@ class SimpleNativeRuntime implements ParserRuntime {
 }
 
 class SimpleWasmRuntime implements ParserRuntime {
-  type: 'wasm' = 'wasm';
+  type = 'wasm' as const;
   available = false;
 
   async initialize(): Promise<void> {

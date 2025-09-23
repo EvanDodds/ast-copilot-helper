@@ -259,15 +259,15 @@ export class BinaryCompatibilityTester {
     
     try {
       // Test loading a known Node.js addon (fs module uses native code)
-      const fs = require('fs');
-      const path = require('path');
-      const os = require('os');
+      const _fs = await import('fs');
+      const _path = await import('path');
+      const _os = await import('os');
       
       // Test basic addon functionality
       const tempFile = path.join(this.testDir, 'addon-test.txt');
-      await require('fs').promises.writeFile(tempFile, 'test content');
-      const content = await require('fs').promises.readFile(tempFile, 'utf8');
-      await require('fs').promises.unlink(tempFile);
+      await _fs.promises.writeFile(tempFile, 'test content');
+      const content = await _fs.promises.readFile(tempFile, 'utf8');
+      await _fs.promises.unlink(tempFile);
 
       const success = content === 'test content';
 
@@ -312,6 +312,7 @@ export class BinaryCompatibilityTester {
 
       // Attempt to load the module
       try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         moduleInstance = require(module.name);
         loadSuccess = true;
         
@@ -411,6 +412,7 @@ export class BinaryCompatibilityTester {
 
       // Attempt to load the grammar
       try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         grammar = require(module.name);
         loadSuccess = true;
       } catch (loadError) {
@@ -434,6 +436,7 @@ export class BinaryCompatibilityTester {
       try {
         if (loadSuccess) {
           // Try to load tree-sitter parser
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           const Parser = require('tree-sitter');
           const parser = new Parser();
           
@@ -459,7 +462,7 @@ export class BinaryCompatibilityTester {
           const tree = parser.parse(testContent);
           parseSuccess = tree && tree.rootNode && tree.rootNode.childCount >= 0;
         }
-      } catch (parseError) {
+      } catch (_parseError) {
         parseSuccess = false;
       }
 
@@ -647,6 +650,7 @@ export class BinaryCompatibilityTester {
       
       for (const moduleName of testModules) {
         try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           require(moduleName);
           loadedModules.push(moduleName);
         } catch (error) {
@@ -824,6 +828,7 @@ export class BinaryCompatibilityTester {
 
       // Test 1: Invalid module loading
       try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('nonexistent-module-12345');
         errorHandlingWorks = false; // Should have thrown an error
       } catch (error) {
@@ -832,6 +837,7 @@ export class BinaryCompatibilityTester {
 
       // Test 2: Invalid function calls
       try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const fs = require('fs');
         (fs as any).nonexistentFunction();
         errorHandlingWorks = false; // Should have thrown an error

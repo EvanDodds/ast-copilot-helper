@@ -3,35 +3,62 @@ import { EventEmitter } from 'events';
 import type { ServerProcessManager } from './ServerProcessManager';
 
 // Mock MCP Client interfaces until full SDK is available
+
+interface MCPCapabilities {
+  experimental?: Record<string, unknown>;
+  logging?: { level?: 'error' | 'warn' | 'info' | 'debug' };
+  prompts?: { listChanged?: boolean };
+  resources?: { subscribe?: boolean; listChanged?: boolean };
+  tools?: { listChanged?: boolean };
+}
+
+interface MCPTool {
+  name: string;
+  description?: string;
+  inputSchema: Record<string, unknown>;
+}
+
+interface MCPResource {
+  uri: string;
+  name?: string;
+  description?: string;
+  mimeType?: string;
+}
+
 interface MCPClient {
   connect(transport: MCPTransport): Promise<void>;
-  initialize(): Promise<{ capabilities: any }>;
+  initialize(): Promise<{ capabilities: MCPCapabilities }>;
   close(): Promise<void>;
   ping(): Promise<void>;
-  listTools(): Promise<{ tools: any[] }>;
-  callTool(request: { name: string; arguments: any }): Promise<any>;
-  listResources(): Promise<{ resources: any[] }>;
-  readResource(request: { uri: string }): Promise<any>;
-  onError?: (error: any) => void;
+  listTools(): Promise<{ tools: MCPTool[] }>;
+  callTool(request: { name: string; arguments: Record<string, unknown> }): Promise<unknown>;
+  listResources(): Promise<{ resources: MCPResource[] }>;
+  readResource(request: { uri: string }): Promise<unknown>;
+  onError?: (error: Error) => void;
   onClose?: () => void;
-  onNotification?: (method: any, params: any) => void;
+  onNotification?: (method: string, params: unknown) => void;
 }
 
 interface MCPTransport {
+  send(data: unknown): Promise<void>;
   close(): Promise<void>;
+  onMessage?: (data: unknown) => void;
+  onError?: (error: Error) => void;
+  onClose?: () => void;
+  onNotification?: (method: string, params: unknown) => void;
 }
 
 // Mock implementations
 class MockClient implements MCPClient {
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
   onClose?: () => void;
-  onNotification?: (method: any, params: any) => void;
+  onNotification?: (method: string, params: unknown) => void;
 
   async connect(_transport: MCPTransport): Promise<void> {
     // Mock connection
   }
 
-  async initialize(): Promise<{ capabilities: any }> {
+  async initialize(): Promise<{ capabilities: MCPCapabilities }> {
     return { capabilities: {} };
   }
 
@@ -43,24 +70,27 @@ class MockClient implements MCPClient {
     // Mock ping
   }
 
-  async listTools(): Promise<{ tools: any[] }> {
+  async listTools(): Promise<{ tools: MCPTool[] }> {
     return { tools: [] };
   }
 
-  async callTool(_request: { name: string; arguments: any }): Promise<any> {
+  async callTool(_request: { name: string; arguments: Record<string, unknown> }): Promise<unknown> {
     return {};
   }
 
-  async listResources(): Promise<{ resources: any[] }> {
+  async listResources(): Promise<{ resources: MCPResource[] }> {
     return { resources: [] };
   }
 
-  async readResource(_request: { uri: string }): Promise<any> {
+  async readResource(_request: { uri: string }): Promise<unknown> {
     return {};
   }
 }
 
 class MockTransport implements MCPTransport {
+  async send(_data: unknown): Promise<void> {
+    // Mock send
+  }
   async close(): Promise<void> {
     // Mock close
   }
@@ -79,8 +109,8 @@ export interface ClientConnectionInfo {
   connectTime?: Date;
   lastError?: string;
   reconnectAttempts: number;
-  serverCapabilities?: any;
-  clientInfo?: any;
+  serverCapabilities?: MCPCapabilities;
+  clientInfo?: { name: string; version: string };
 }
 
 /**
@@ -104,8 +134,8 @@ export interface MCPClientEvents {
   'disconnected': (info: ClientConnectionInfo) => void;
   'error': (error: Error, info: ClientConnectionInfo) => void;
   'reconnecting': (attempt: number, maxAttempts: number) => void;
-  'serverCapabilities': (capabilities: any) => void;
-  'notification': (method: string, params: any) => void;
+  'serverCapabilities': (capabilities: MCPCapabilities) => void;
+  'notification': (method: string, params: unknown) => void;
 }
 
 /**
@@ -245,7 +275,7 @@ export class MCPClientManager extends EventEmitter {
       this.emit('serverCapabilities', initResult.capabilities);
 
     } catch (error) {
-      this.handleConnectionError(error);
+      this.handleConnectionError(error instanceof Error ? error : new Error(String(error)));
       throw error;
     } finally {
       this.clearConnectionTimeout();
@@ -344,7 +374,7 @@ export class MCPClientManager extends EventEmitter {
   /**
    * List available tools from the server
    */
-  public async listTools(): Promise<any[]> {
+  public async listTools(): Promise<MCPTool[]> {
     if (!this.client || !this.isConnected()) {
       throw new Error('MCP client is not connected');
     }
@@ -361,7 +391,7 @@ export class MCPClientManager extends EventEmitter {
   /**
    * Call a tool on the server
    */
-  public async callTool(name: string, arguments_: any = {}): Promise<any> {
+  public async callTool(name: string, arguments_: Record<string, unknown> = {}): Promise<unknown> {
     if (!this.client || !this.isConnected()) {
       throw new Error('MCP client is not connected');
     }
@@ -380,7 +410,7 @@ export class MCPClientManager extends EventEmitter {
   /**
    * List available resources from the server
    */
-  public async listResources(): Promise<any[]> {
+  public async listResources(): Promise<MCPResource[]> {
     if (!this.client || !this.isConnected()) {
       throw new Error('MCP client is not connected');
     }
@@ -397,7 +427,7 @@ export class MCPClientManager extends EventEmitter {
   /**
    * Read a resource from the server
    */
-  public async readResource(uri: string): Promise<any> {
+  public async readResource(uri: string): Promise<unknown> {
     if (!this.client || !this.isConnected()) {
       throw new Error('MCP client is not connected');
     }
@@ -482,7 +512,7 @@ return;
 }
 
     // Handle client errors
-    this.client.onError = (error: any) => {
+    this.client.onError = (error: Error) => {
       this.handleClientError(error);
     };
 
@@ -492,7 +522,7 @@ return;
     };
 
     // Handle notifications from server
-    this.client.onNotification = (method: any, params: any) => {
+    this.client.onNotification = (method: string, params: unknown) => {
       this.outputChannel.appendLine(`Received notification: ${method}`);
       this.emit('notification', method, params);
     };
@@ -514,7 +544,7 @@ return;
   /**
    * Handle connection error
    */
-  private handleConnectionError(error: any): void {
+  private handleConnectionError(error: Error): void {
     this.outputChannel.appendLine(`MCP client connection error: ${error.message}`);
     this.setState('error');
     this.lastError = error.message;
@@ -527,7 +557,7 @@ return;
   /**
    * Handle client error
    */
-  private handleClientError(error: any): void {
+  private handleClientError(error: Error): void {
     this.outputChannel.appendLine(`MCP client error: ${error.message}`);
     this.setState('error');
     this.lastError = error.message;
@@ -614,7 +644,7 @@ return;
         await this.client.ping();
       } catch (error) {
         this.outputChannel.appendLine('Heartbeat failed, connection may be lost');
-        this.handleClientError(error);
+        this.handleClientError(error instanceof Error ? error : new Error(String(error)));
       }
     }, this.config.heartbeatInterval);
   }
@@ -628,7 +658,7 @@ return;
     if (this.client) {
       try {
         this.client.close();
-      } catch (error) {
+      } catch (_error) {
         // Ignore cleanup errors
       }
       this.client = null;
@@ -637,7 +667,7 @@ return;
     if (this.transport) {
       try {
         this.transport.close();
-      } catch (error) {
+      } catch (_error) {
         // Ignore cleanup errors
       }
       this.transport = null;
@@ -677,7 +707,7 @@ return;
 /**
  * MCP client manager events interface (for TypeScript typing)
  */
-export declare interface MCPClientManager {
+export declare interface MCPClientManagerEvents {
   on<K extends keyof MCPClientEvents>(event: K, listener: MCPClientEvents[K]): this;
   emit<K extends keyof MCPClientEvents>(event: K, ...args: Parameters<MCPClientEvents[K]>): boolean;
 }

@@ -185,7 +185,7 @@ describe('VS Code Extension', () => {
       expect(showLogsCall).toBeDefined();
       
       if (showLogsCall) {
-        const handler = showLogsCall[1] as Function;
+        const handler = showLogsCall[1] as () => void;
         expect(() => handler()).not.toThrow();
       }
     });
@@ -202,7 +202,7 @@ describe('VS Code Extension', () => {
       expect(openSettingsCall).toBeDefined();
       
       if (openSettingsCall) {
-        const handler = openSettingsCall[1] as Function;
+        const handler = openSettingsCall[1] as () => Promise<void>;
         await handler();
         
         // Verify settings command was executed
@@ -226,7 +226,7 @@ describe('VS Code Extension', () => {
         expect(commandCall).toBeDefined();
         
         if (commandCall) {
-          const handler = commandCall[1] as Function;
+          const handler = commandCall[1] as () => Promise<void>;
           await handler();
           
           // Should show server error messages
@@ -280,7 +280,7 @@ describe('VS Code Extension', () => {
       expect(startServerCall).toBeDefined();
       
       if (startServerCall) {
-        const wrappedHandler = startServerCall[1] as Function;
+        const wrappedHandler = startServerCall[1] as () => void;
         
         // The wrapped handler should catch errors and not throw
         expect(() => wrappedHandler()).not.toThrow();

@@ -43,7 +43,10 @@ export default tseslint.config(
 
   // Configuration for TypeScript source files in packages (with project references)
   {
+    // This applies only to package source files (not tests). Tests under packages/**/src/**
+    // are excluded from project-based parsing via the dedicated test config below.
     files: ['packages/**/src/**/*.{ts,tsx,mts,cts}'],
+    ignores: ['packages/**/src/**/?(*.)test.{ts,tsx,mts,cts}', 'packages/**/src/**/?(*.)spec.{ts,tsx,mts,cts}'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -86,7 +89,10 @@ export default tseslint.config(
 
   // Configuration for TypeScript config/test files in packages (without project references)
   {
+    // This covers package-level test/config files and any TS files not in src/ (including tests)
     files: ['packages/**/*.{ts,tsx,mts,cts}'],
+    // Exclude source files (they have typed parsing above). Tests in src/ were also excluded there,
+    // but we keep this ignore to ensure typed parser isn't used for test and config files.
     ignores: ['packages/**/src/**/*.{ts,tsx,mts,cts}'],
     languageOptions: {
       parser: tseslint.parser,
@@ -126,9 +132,9 @@ export default tseslint.config(
   },
 
   // Configuration for JavaScript files
-  // Root and general JavaScript files
+  // Root and general JavaScript files (including .mjs/.cjs in scripts)
   {
-    files: ["*.js", "*.mjs", "*.cjs", "scripts/**/*.js", "scripts/**/*.mjs"],
+    files: ["*.js", "*.mjs", "*.cjs", "scripts/**/*.{js,mjs,cjs}", "packages/**/*.{js,mjs,cjs}"],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: "module",
@@ -195,13 +201,46 @@ export default tseslint.config(
 
   // Relaxed rules for test files
   {
-    files: ['**/*.test.{ts,js,mts}', '**/*.spec.{ts,js,mts}', '**/tests/**/*'],
+    files: ['**/*.test.{ts,js,mts,cts}', '**/*.spec.{ts,js,mts,cts}', '**/tests/**/*'],
+    // Ensure tests are linted, but do NOT enable project-based (typed) parsing here.
+    // Tests can be noisy for strict TypeScript rules; keep them linted with test globals
+    // and relaxed TypeScript-specific checks.
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaVersion: 2024,
+        sourceType: 'module',
+        // intentionally do not set `project` here to avoid "file not found in project(s)" errors
+      },
+      globals: {
+        ...globals.node,
+        // Vitest/Jest globals
+        vi: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        expect: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
     rules: {
       'no-console': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
+      // Keep unused-vars warnings so tests remain cleanable, but be lenient in tests.
+      '@typescript-eslint/no-unused-vars': ['warn', { 
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_'
+      }],
     },
   },
 

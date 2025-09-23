@@ -543,7 +543,7 @@ return;
 /**
  * Server process manager events interface (for TypeScript typing)
  */
-export declare interface ServerProcessManager {
+export declare interface ServerProcessManagerEvents {
   on<K extends keyof ServerProcessEvents>(event: K, listener: ServerProcessEvents[K]): this;
   emit<K extends keyof ServerProcessEvents>(event: K, ...args: Parameters<ServerProcessEvents[K]>): boolean;
 }

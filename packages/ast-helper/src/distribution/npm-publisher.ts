@@ -379,31 +379,26 @@ export class NPMPublisher implements BasePublisher<DistributionConfig, NPMPublis
   private async preparePackageForPublishing(packageConfig: PackageConfig): Promise<void> {
     this.logger.log(`Preparing ${packageConfig.name} for NPM publishing...`);
 
-    try {
-      // 1. Update package version
-      const packageJsonPath = path.join(packageConfig.path, 'package.json');
-      const packageJsonContent = await fs.readFile(packageJsonPath, 'utf8');
-      const packageJson = JSON.parse(packageJsonContent);
-      
-      packageJson.version = this.config.version;
-      
-      await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
-      this.logger.log(`Updated ${packageConfig.name} version to ${this.config.version}`);
+    // 1. Update package version
+    const packageJsonPath = path.join(packageConfig.path, 'package.json');
+    const packageJsonContent = await fs.readFile(packageJsonPath, 'utf8');
+    const packageJson = JSON.parse(packageJsonContent);
+    
+    packageJson.version = this.config.version;
+    
+    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    this.logger.log(`Updated ${packageConfig.name} version to ${this.config.version}`);
 
-      // 2. Run build script if it exists
-      if (packageConfig.publishConfig.scripts.build) {
-        this.logger.log(`Running build script for ${packageConfig.name}...`);
-        execSync('npm run build', { stdio: 'inherit', cwd: packageConfig.path });
-      }
+    // 2. Run build script if it exists
+    if (packageConfig.publishConfig.scripts.build) {
+      this.logger.log(`Running build script for ${packageConfig.name}...`);
+      execSync('npm run build', { stdio: 'inherit', cwd: packageConfig.path });
+    }
 
-      // 3. Run tests if they exist
-      if (packageConfig.publishConfig.scripts.test) {
-        this.logger.log(`Running tests for ${packageConfig.name}...`);
-        execSync('npm test', { stdio: 'inherit', cwd: packageConfig.path });
-      }
-
-    } catch (error) {
-      throw error;
+    // 3. Run tests if they exist
+    if (packageConfig.publishConfig.scripts.test) {
+      this.logger.log(`Running tests for ${packageConfig.name}...`);
+      execSync('npm test', { stdio: 'inherit', cwd: packageConfig.path });
     }
   }
 

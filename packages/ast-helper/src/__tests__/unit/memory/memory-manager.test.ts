@@ -43,7 +43,7 @@ describe('UnifiedMemoryManager', () => {
       if (manager) {
         await manager.stop();
       }
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors in tests
     }
     vi.restoreAllMocks();
@@ -210,9 +210,9 @@ describe('UnifiedMemoryManager', () => {
     it('should handle emergency cleanup errors gracefully', async () => {
       // Don't start the manager to simulate error conditions
       
-      let errorEmitted = false;
+      let _errorEmitted = false;
       manager.on('error', () => {
-        errorEmitted = true;
+        _errorEmitted = true;
       });
 
       // Emergency cleanup shouldn't throw even if not started

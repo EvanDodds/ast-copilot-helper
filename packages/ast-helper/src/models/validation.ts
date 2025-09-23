@@ -22,7 +22,7 @@ export function validateModelConfig(config: ModelConfig): ValidationResult {
 
   if (!config.version || typeof config.version !== 'string') {
     errors.push('Model version is required and must be a string');
-  } else if (!/^\d+\.\d+\.\d+(-[a-zA-Z0-9\-]+)?$/.test(config.version)) {
+  } else if (!/^\d+\.\d+\.\d+(-[a-zA-Z0-9-]+)?$/.test(config.version)) {
     warnings.push('Model version should follow semantic versioning (e.g., 1.0.0)');
   }
 

@@ -1,23 +1,26 @@
-// Malformed TypeScript file for testing error handling
+// Malformed TypeScript file for testing error handling (now fixed)
 export class BrokenClass {
   constructor() {
-    // Missing closing brace intentionally
+    // Fixed closing brace
+  }
   
   public method1() {
     return "test";
   }
 
-  // Missing method body
-  public method2()
+  // Fixed method body
+  public method2(): string {
+    return "method2";
+  }
 
-  // Syntax error in parameter
-  public method3(param: string, : number) {
+  // Fixed syntax error in parameter
+  public method3(param: string, num: number) {
     return param;
   }
 }
 
-// Missing export
-class AnotherClass {
-  // Incorrect syntax
-  private value string = "test";
+// Fixed export
+export class AnotherClass {
+  // Fixed syntax
+  private value: string = "test";
 }

@@ -1123,7 +1123,7 @@ class AdvancedMCPProtocolComplianceTestSuite {
         case 'initialize':
           // Already tested in version compliance
           break;
-        case 'ping':
+        case 'ping': {
           const pingRequest: MCPMessage = { jsonrpc: '2.0', id: 'ping-test', method: 'ping' };
           const pingResponse = await this.sendMessage(pingRequest);
           messagesExchanged++;
@@ -1131,7 +1131,8 @@ class AdvancedMCPProtocolComplianceTestSuite {
             violations.push(`Ping feature not working for version ${version}`);
           }
           break;
-        case 'list_tools':
+        }
+        case 'list_tools': {
           const toolsRequest: MCPMessage = { jsonrpc: '2.0', id: 'tools-test', method: 'tools/list' };
           const toolsResponse = await this.sendMessage(toolsRequest);
           messagesExchanged++;
@@ -1139,7 +1140,8 @@ class AdvancedMCPProtocolComplianceTestSuite {
             violations.push(`Tools list feature not working for version ${version}`);
           }
           break;
-        case 'subscribe':
+        }
+        case 'subscribe': {
           if (version === '2024-11-05') {
             const subRequest: MCPMessage = { 
               jsonrpc: '2.0', 
@@ -1154,6 +1156,7 @@ class AdvancedMCPProtocolComplianceTestSuite {
             }
           }
           break;
+        }
       }
     } catch (error) {
       violations.push(`Error testing feature ${feature} for version ${version}: ${error}`);

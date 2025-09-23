@@ -121,7 +121,7 @@ describe('EventCoordinator', () => {
       console.error = () => {};
       
       // Handle unhandled rejections during test
-      let silentHandler = () => {};
+      const silentHandler = () => {};
       process.on('unhandledRejection', silentHandler);
       
       coordinator.onEvent('bad-event', () => {
@@ -215,7 +215,7 @@ describe('EventCoordinator', () => {
       console.error = () => {};
       
       // Handle unhandled rejections during test
-      let silentHandler = () => {};
+      const silentHandler = () => {};
       process.on('unhandledRejection', silentHandler);
       
       try {

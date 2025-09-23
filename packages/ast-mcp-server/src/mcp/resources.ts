@@ -223,7 +223,7 @@ export class ResourcesReadHandler extends BaseHandler {
    */
   private async handleStatsResource(statsType: string): Promise<any> {
     switch (statsType) {
-      case 'server':
+      case 'server': {
         return {
           type: 'server',
           uptime: process.uptime(),
@@ -236,8 +236,9 @@ export class ResourcesReadHandler extends BaseHandler {
           },
           timestamp: new Date().toISOString()
         };
-      
-      case 'index':
+      }
+
+      case 'index': {
         const indexStats = await this.db.getIndexStats();
         const isReady = await this.db.isIndexReady();
         return {
@@ -248,9 +249,11 @@ export class ResourcesReadHandler extends BaseHandler {
           lastUpdated: indexStats.lastUpdated.toISOString(),
           timestamp: new Date().toISOString()
         };
-      
-      default:
+      }
+
+      default: {
         throw new Error(`Unknown stats type: ${statsType}`);
+      }
     }
   }
 }

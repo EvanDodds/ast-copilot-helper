@@ -39,6 +39,7 @@ vi.mock('../logging/index.js', () => ({
 
 const mockReadFile = readFile as MockedFunction<typeof readFile>;
 const mockWriteFile = writeFile as MockedFunction<typeof writeFile>;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockFs = vi.mocked(require('fs'));
 
 describe('DatabaseVersionManager', () => {

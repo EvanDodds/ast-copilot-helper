@@ -96,10 +96,11 @@ export class HttpRetryManager implements RetryManager {
       case 'fixed':
         return baseDelay;
 
-      case 'jittered':
+      case 'jittered': {
         const exponentialDelay = baseDelay * Math.pow(2, attempt - 1);
         const jitter = exponentialDelay * this.config.jitter * Math.random();
         return exponentialDelay + jitter;
+      }
 
       default:
         return baseDelay;

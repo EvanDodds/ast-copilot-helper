@@ -4,7 +4,8 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, parse, dirname } from 'node:path';
 import { ConfigurationErrors, DatabaseErrors } from '../errors/factories.js';
 import { FileSystemManager } from '../filesystem/manager.js';
 import { createLogger } from '../logging/index.js';
@@ -40,10 +41,9 @@ export class DatabaseVersionManager {
         try {
             // Try to read from package.json
             const packagePath = join(process.cwd(), 'package.json');
-            const fs = require('fs');
 
-            if (fs.existsSync(packagePath)) {
-                const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+            if (existsSync(packagePath)) {
+                const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
                 return packageJson.version || '0.1.0';
             }
 
@@ -406,22 +406,21 @@ return { major: 0, minor: 0, patch: 0 };
      */
     private findVersionFromParentDirs(): string | null {
         let currentDir = process.cwd();
-        const root = require('path').parse(currentDir).root;
+        const root = parse(currentDir).root;
 
         while (currentDir !== root) {
             try {
                 const packagePath = join(currentDir, 'package.json');
-                const fs = require('fs');
 
-                if (fs.existsSync(packagePath)) {
-                    const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+                if (existsSync(packagePath)) {
+                    const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
                     if (packageJson.version) {
                         return packageJson.version;
                     }
                 }
 
-                currentDir = require('path').dirname(currentDir);
-            } catch (error) {
+                currentDir = dirname(currentDir);
+            } catch (_error) {
                 // Continue searching in parent directories
             }
         }

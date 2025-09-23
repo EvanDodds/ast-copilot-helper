@@ -11,6 +11,7 @@ import { parseErrorHandler } from './parse-errors.js';
 import type { ParseResult, ASTNode } from './types.js';
 import { isFileSupported, detectLanguage } from './languages.js';
 import crypto from 'crypto';
+import os from 'os';
 
 export interface BatchProcessingOptions {
   /** Maximum number of concurrent parsing operations */
@@ -796,7 +797,7 @@ return;
    */
   private mergeOptions(options: BatchProcessingOptions): Required<BatchProcessingOptions> {
     return {
-      concurrency: options.concurrency ?? Math.min(8, Math.max(1, require('os').cpus().length)),
+      concurrency: options.concurrency ?? Math.min(8, Math.max(1, os.cpus().length)),
       maxMemoryMB: options.maxMemoryMB ?? 1024, // 1GB default
       continueOnError: options.continueOnError ?? true,
       includeNormalization: options.includeNormalization ?? false,

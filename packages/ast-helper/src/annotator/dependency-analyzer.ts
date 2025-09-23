@@ -1,3 +1,4 @@
+import { resolve, dirname } from 'node:path';
 import type { ASTNode } from '../parser/types.js';
 import type { DependencyInfo, DependencyAnalysisConfig } from './types.js';
 import { DependencyType } from './types.js';
@@ -588,9 +589,8 @@ return false;
     
     if (basePath && typeof require !== 'undefined') {
       try {
-        const path = require('path');
-        return path.resolve(path.dirname(basePath), source);
-      } catch (error) {
+        return resolve(dirname(basePath), source);
+      } catch (_error) {
         // Fall back to simple path resolution if require is not available
       }
     }
