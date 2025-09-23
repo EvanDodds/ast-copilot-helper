@@ -1,0 +1,88 @@
+title: "💡 Ideas and Feature Requests"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for improving ast-copilot-helper? We'd love to hear it!
+        
+        This is the place to discuss new features, enhancements, and creative ideas.
+        Before posting, please check if your idea has already been discussed.
+        
+  - type: input
+    id: title
+    attributes:
+      label: Idea Title
+      description: A brief, descriptive title for your idea
+      placeholder: e.g., "Add support for Python AST analysis"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe your idea in detail
+      placeholder: |
+        What problem does this solve?
+        How would it work?
+        What are the benefits?
+    validations:
+      required: true
+      
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Provide specific examples of how this would be used
+      placeholder: |
+        Example 1: ...
+        Example 2: ...
+        
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: What area of the project does this affect?
+      options:
+        - AST Helper Library
+        - MCP Server
+        - VS Code Extension
+        - CLI Tools
+        - Documentation
+        - Infrastructure
+        - Multiple components
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you think this feature would be to implement?
+      options:
+        - Simple (few hours)
+        - Moderate (few days)
+        - Complex (few weeks)
+        - Major (months)
+        - Unknown
+    validations:
+      required: false
+      
+  - type: checkboxes
+    id: implementation
+    attributes:
+      label: Implementation
+      description: Are you interested in helping implement this idea?
+      options:
+        - label: I'm willing to help implement this feature
+        - label: I need guidance on how to get started
+        - label: I prefer to just suggest the idea
+        
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this idea, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

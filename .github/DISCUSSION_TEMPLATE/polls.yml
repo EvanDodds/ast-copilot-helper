@@ -1,0 +1,134 @@
+title: "📊 Community Poll"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for community polls and decisions that benefit from broader input.
+        
+        Polls are great for:
+        - Feature prioritization
+        - Design decisions
+        - Community preferences
+        - Roadmap input
+        
+  - type: input
+    id: poll-title
+    attributes:
+      label: Poll Question
+      description: What decision are you seeking community input on?
+      placeholder: e.g., "Which language support should we prioritize next?"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: context
+    attributes:
+      label: Background & Context
+      description: Provide context to help the community make an informed decision
+      placeholder: |
+        Why is this decision needed?
+        What's the current situation?
+        What factors should be considered?
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: poll-type
+    attributes:
+      label: Poll Type
+      description: What type of decision is this?
+      options:
+        - Feature Priority
+        - Design Choice
+        - Technical Direction
+        - Community Process
+        - Documentation
+        - Tool/Integration
+        - Other
+    validations:
+      required: true
+      
+  - type: textarea
+    id: options
+    attributes:
+      label: Poll Options
+      description: List the options you'd like the community to vote on
+      placeholder: |
+        1. **Option A**: Description and pros/cons
+        2. **Option B**: Description and pros/cons  
+        3. **Option C**: Description and pros/cons
+        
+        Or describe how people should indicate their preference...
+      render: markdown
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Impact Scope
+      description: How significant is this decision?
+      options:
+        - Low (minor feature/change)
+        - Medium (affects some users)
+        - High (major feature/direction)
+        - Critical (affects all users)
+        
+  - type: dropdown
+    id: timeline
+    attributes:
+      label: Decision Timeline
+      description: When do you need to make this decision?
+      options:
+        - No rush (2+ weeks)
+        - Soon (1-2 weeks)
+        - Urgent (within 1 week)
+        - ASAP (few days)
+        
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other details that might help with the decision?
+      placeholder: |
+        Links to related issues/discussions
+        Technical constraints
+        User feedback received
+        Research or analysis done
+        
+  - type: checkboxes
+    id: poll-format
+    attributes:
+      label: How should people vote?
+      description: Choose voting method(s)
+      options:
+        - label: 👍/👎 reactions on options in this discussion
+        - label: Comment with preference and reasoning
+        - label: Separate poll tool/service (specify in additional info)
+        
+  - type: input
+    id: closing-date
+    attributes:
+      label: Poll Closing Date
+      description: When should voting close? (optional)
+      placeholder: e.g., "January 15, 2024" or "2 weeks from now"
+      
+  - type: checkboxes
+    id: poll-commitment
+    attributes:
+      label: Poll Commitment
+      description: How will poll results be used?
+      options:
+        - label: Results will strongly influence the decision
+        - label: Results are advisory input for maintainers
+        - label: Community consensus will determine outcome
+        - label: Will document decision rationale after voting
+        
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By creating this poll, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

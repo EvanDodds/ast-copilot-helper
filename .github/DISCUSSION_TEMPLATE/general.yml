@@ -1,0 +1,39 @@
+title: "General Discussion"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for starting a discussion! This is a place for general conversations about the ast-copilot-helper project.
+        
+        Please be respectful and follow our [Code of Conduct](https://github.com/EvanDodds/ast-copilot-helper/blob/main/CODE_OF_CONDUCT.md).
+        
+  - type: textarea
+    id: topic
+    attributes:
+      label: Discussion Topic
+      description: What would you like to discuss?
+      placeholder: Share your thoughts, ideas, or questions about the project...
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What type of discussion is this?
+      options:
+        - General
+        - Ideas
+        - Show and tell
+        - Q&A
+    validations:
+      required: true
+      
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this discussion, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

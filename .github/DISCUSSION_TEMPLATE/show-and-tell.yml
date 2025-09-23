@@ -1,0 +1,129 @@
+title: "🎉 Show and Tell"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Built something cool with ast-copilot-helper? Share it with the community!
+        
+        This is the place to showcase your projects, share examples, tutorials, or demonstrations of how you're using ast-copilot-helper.
+        
+  - type: input
+    id: title
+    attributes:
+      label: Project Title
+      description: What's the name or title of what you built?
+      placeholder: e.g., "Custom AST Analyzer for React Components"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Tell us about your project
+      placeholder: |
+        What does your project do?
+        How does it use ast-copilot-helper?
+        What makes it interesting or unique?
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: type
+    attributes:
+      label: Project Type
+      description: What type of project is this?
+      options:
+        - Application/Tool
+        - Library/Package
+        - VS Code Extension
+        - Tutorial/Guide
+        - Example/Demo
+        - Integration
+        - Research/Analysis
+        - Other
+    validations:
+      required: true
+      
+  - type: textarea
+    id: technologies
+    attributes:
+      label: Technologies Used
+      description: What technologies and tools did you use?
+      placeholder: |
+        - ast-copilot-helper v1.x
+        - TypeScript
+        - Node.js
+        - Other libraries...
+      render: markdown
+      
+  - type: input
+    id: repository
+    attributes:
+      label: Repository/Link
+      description: Link to your project repository or demo (if public)
+      placeholder: https://github.com/yourusername/your-project
+      
+  - type: textarea
+    id: code-example
+    attributes:
+      label: Code Example
+      description: Share a key code snippet or example
+      placeholder: |
+        ```typescript
+        // Your interesting code here
+        ```
+      render: markdown
+      
+  - type: textarea
+    id: results
+    attributes:
+      label: Results/Screenshots
+      description: Share results, screenshots, or output from your project
+      placeholder: |
+        ![Screenshot](url-to-image)
+        
+        Or describe the results you achieved...
+      render: markdown
+      
+  - type: textarea
+    id: challenges
+    attributes:
+      label: Challenges and Solutions
+      description: What challenges did you face and how did you solve them?
+      placeholder: |
+        Challenge 1: ...
+        Solution: ...
+        
+        Challenge 2: ...
+        Solution: ...
+        
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback on ast-copilot-helper
+      description: Any feedback on the project based on your experience?
+      placeholder: |
+        What worked well?
+        What could be improved?
+        Any feature requests?
+        
+  - type: checkboxes
+    id: sharing
+    attributes:
+      label: Sharing Permissions
+      description: How can the community use your work?
+      options:
+        - label: This project is open source
+        - label: Feel free to reference this in documentation
+        - label: OK to share in project showcases
+        - label: Available for collaboration
+        
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this showcase, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

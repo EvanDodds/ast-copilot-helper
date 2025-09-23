@@ -327,15 +327,66 @@ node packages/ast-mcp-server/bin/ast-mcp-server
 
 This project is currently in the foundational setup phase. The monorepo structure and build system are complete, with basic CLI entry points created for each package. Future development will implement the actual AST processing, MCP server functionality, and VS Code extension features.
 
+## Community & Support
+
+We welcome contributions and feedback from the community! This project includes comprehensive community support infrastructure:
+
+### 📋 Issue Templates
+Use our structured issue templates when reporting:
+- **🐛 Bug Reports** - Report issues with detailed reproduction steps
+- **✨ Feature Requests** - Suggest new features with use cases
+- **⚡ Performance Issues** - Report performance problems with profiling data  
+- **📚 Documentation** - Improvements to documentation
+- **❓ Questions** - Get help with usage or development
+
+### 💬 GitHub Discussions
+Join our community discussions:
+- **💡 Ideas & Features** - Brainstorm new capabilities
+- **❓ Q&A** - Get help from maintainers and community
+- **📣 Show & Tell** - Share your projects using AST Copilot Helper
+- **🗳️ Polls** - Participate in project decisions
+
+### 📖 Community Guidelines
+- **[Contributing Guide](CONTRIBUTING.md)** - Comprehensive development setup and workflow
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community standards and expectations
+- **[Community Guidelines](COMMUNITY.md)** - Interaction guidelines and resources
+- **[Support Guide](.github/SUPPORT.md)** - Getting help and reporting issues
+
+### 🤖 Automated Maintenance
+This project includes comprehensive automation for health and maintenance:
+- **Dependency Updates** - Automated security and compatibility updates
+- **Repository Health Checks** - Regular codebase health monitoring  
+- **Community Analytics** - Track project growth and engagement
+- **Cleanup Automation** - Automated cleanup of build artifacts and stale files
+
+### 📊 Community Analytics
+We track community health and growth:
+- **Contributor Metrics** - Track new and returning contributors
+- **Issue & PR Analytics** - Monitor resolution times and patterns
+- **Engagement Tracking** - Measure community participation
+- **Automated Reports** - Daily analytics with trend analysis
+
+All analytics are automated and help us understand project health while respecting contributor privacy.
+
 ## Contributing
 
+We welcome contributions from the community! Please see our **[Contributing Guide](CONTRIBUTING.md)** for detailed information on:
+
+- 🛠️ **Development Setup** - Environment configuration and tooling
+- 🔄 **Development Workflow** - Git flow, branching, and PR process  
+- ✅ **Testing Requirements** - Unit, integration, and performance testing
+- 📋 **Code Standards** - TypeScript configuration and style guidelines
+- 🚀 **Release Process** - How releases are managed and published
+
+### Quick Start for Contributors:
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes and ensure tests pass: `npm test`
-4. Build and verify: `yarn run build`
-5. Commit your changes: `git commit -am 'Add some feature'`
-6. Push to the branch: `git push origin feature/your-feature`
-7. Submit a pull request
+3. Follow the [development workflow](CONTRIBUTING.md#development-workflow)
+4. Ensure all tests pass: `npm test`
+5. Build and verify: `yarn run build`
+6. Submit a pull request using our [PR template](.github/pull_request_template.md)
+
+For questions about contributing, start a [discussion](https://github.com/EvanDodds/ast-copilot-helper/discussions) or check our [support guide](.github/SUPPORT.md).
 
 ## License
 
