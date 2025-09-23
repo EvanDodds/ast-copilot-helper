@@ -556,9 +556,29 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
     return [];
   }
 
-  private async planPlatformReleases(_version: string, _packages: PackageRelease[]): Promise<PlatformRelease[]> {
-    // Implementation would prepare platform-specific releases
-    return [];
+  private async planPlatformReleases(version: string, _packages: PackageRelease[]): Promise<PlatformRelease[]> {
+    // Create platform releases based on config
+    const platformReleases: PlatformRelease[] = [];
+    
+    for (const platformConfig of this.config.platforms) {
+      if (platformConfig.enabled) {
+        platformReleases.push({
+          platform: platformConfig.name,
+          version,
+          artifacts: [], // Would be populated with actual build artifacts
+          metadata: platformConfig.config || {},
+          requirements: platformConfig.requirements.map(req => ({
+            name: req,
+            description: `${req} validation for ${platformConfig.name}`,
+            required: true,
+            timeout: 300, // 5 minutes default
+            dependencies: []
+          }))
+        });
+      }
+    }
+    
+    return platformReleases;
   }
 
   private async planDependencyUpdates(_version: string, _packages: PackageRelease[]): Promise<DependencyUpdate[]> {
@@ -566,9 +586,65 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
     return [];
   }
 
-  private async createValidationSteps(_version: string, _type: ReleaseType, _changes: ChangelogEntry[]): Promise<ValidationStep[]> {
-    // Implementation would create validation steps based on changes and configuration
-    return [];
+  private async createValidationSteps(_version: string, type: ReleaseType, changes: ChangelogEntry[]): Promise<ValidationStep[]> {
+    // Create validation steps based on changes and configuration
+    const validations: ValidationStep[] = [];
+    
+    // Always include basic validations
+    validations.push({
+      name: 'version-format',
+      description: 'Validate version format',
+      required: true,
+      timeout: 30,
+      dependencies: []
+    });
+    
+    validations.push({
+      name: 'build-validation',
+      description: 'Validate build process',
+      required: true,
+      timeout: 600, // 10 minutes
+      dependencies: []
+    });
+    
+    // Add tests if any platform requires them
+    const hasTestRequirement = this.config.platforms.some(p => 
+      p.enabled && p.requirements.includes('test')
+    );
+    
+    if (hasTestRequirement) {
+      validations.push({
+        name: 'test-suite',
+        description: 'Run test suite',
+        required: true,
+        timeout: 1200, // 20 minutes
+        dependencies: ['build-validation']
+      });
+    }
+    
+    // Add breaking change validation for major releases
+    if (type === ReleaseType.MAJOR) {
+      validations.push({
+        name: 'breaking-changes',
+        description: 'Validate breaking changes documentation',
+        required: true,
+        timeout: 180, // 3 minutes
+        dependencies: []
+      });
+    }
+    
+    // Add changelog validation if we have changes
+    if (changes.length > 0) {
+      validations.push({
+        name: 'changelog',
+        description: 'Validate changelog generation',
+        required: false,
+        timeout: 60,
+        dependencies: []
+      });
+    }
+    
+    return validations;
   }
 
   private async createRollbackPlan(version: string, previousVersion: string): Promise<RollbackPlan> {

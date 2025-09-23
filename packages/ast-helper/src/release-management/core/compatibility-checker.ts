@@ -65,21 +65,21 @@ export class CompatibilityCheckerImpl implements CompatibilityChecker {
       // Handle both test mocked structure and real implementation structure
       const mockBreakingChanges = [];
       if (apiChanges.removedMethods?.length > 0) {
-        mockBreakingChanges.push(...apiChanges.removedMethods.map(method => ({
+        mockBreakingChanges.push(...apiChanges.removedMethods.map((method: string) => ({
           description: `API method removed: ${method}`,
           methods: [method],
           severity: 'major'
         })));
       }
       if (apiChanges.changedSignatures?.length > 0) {
-        mockBreakingChanges.push(...apiChanges.changedSignatures.map(method => ({
+        mockBreakingChanges.push(...apiChanges.changedSignatures.map((method: string) => ({
           description: `API method signature changed: ${method}`,
           methods: [method],
           severity: 'major'
         })));
       }
       if (apiChanges.removedProperties?.length > 0) {
-        mockBreakingChanges.push(...apiChanges.removedProperties.map(prop => ({
+        mockBreakingChanges.push(...apiChanges.removedProperties.map((prop: string) => ({
           description: `API property removed: ${prop}`,
           methods: [prop],
           severity: 'major'
@@ -382,21 +382,13 @@ export class CompatibilityCheckerImpl implements CompatibilityChecker {
     };
   }
 
-  private async identifyBreakingChanges(changes: any[]): Promise<any[]> {
-    // Filter changes by severity level
-    return changes.filter(change => 
-      change.severity === 'critical' || 
-      change.severity === 'major'
-    );
-  }
-
   private ensureInitialized(): void {
     if (!this.initialized) {
       throw new Error('CompatibilityChecker not initialized. Call initialize() first.');
     }
   }
 
-  private async analyzeApiChanges(baseVersion: string, newVersion: string): Promise<any> {
+  private async analyzeApiChanges(_baseVersion: string, newVersion: string): Promise<any> {
     // In a real implementation, this would:
     // 1. Load API definitions for both versions
     // 2. Compare methods, parameters, return types
@@ -424,7 +416,7 @@ export class CompatibilityCheckerImpl implements CompatibilityChecker {
     };
   }
 
-  private async analyzeConfigChanges(baseVersion: string, newVersion: string): Promise<any> {
+  private async analyzeConfigChanges(_baseVersion: string, newVersion: string): Promise<any> {
     // In a real implementation, this would:
     // 1. Load configuration schemas for both versions
     // 2. Compare required fields, types, default values
@@ -484,7 +476,7 @@ export class CompatibilityCheckerImpl implements CompatibilityChecker {
     };
   }
 
-  private async analyzeDataFormatChanges(baseVersion: string, newVersion: string): Promise<any> {
+  private async analyzeDataFormatChanges(_baseVersion: string, newVersion: string): Promise<any> {
     // In a real implementation, this would:
     // 1. Load data format definitions for both versions
     // 2. Compare schemas, required fields, types
@@ -518,7 +510,7 @@ export class CompatibilityCheckerImpl implements CompatibilityChecker {
     return semverRegex.test(version);
   }
 
-  private calculateConfidence(checkType: string, analysisResult: any): number {
+  private calculateConfidence(_checkType: string, analysisResult: any): number {
     // Calculate confidence based on analysis depth and data quality
     let confidence = 0.5; // Base confidence
     
@@ -533,7 +525,7 @@ export class CompatibilityCheckerImpl implements CompatibilityChecker {
     return Math.min(confidence, 1.0);
   }
 
-  private async getVersionArtifacts(version: string): Promise<any[]> {
+  private async getVersionArtifacts(_version: string): Promise<any[]> {
     // In a real implementation, this would:
     // 1. Download or load artifacts for the specified version
     // 2. Parse and structure the artifacts
@@ -541,30 +533,11 @@ export class CompatibilityCheckerImpl implements CompatibilityChecker {
     return [];
   }
 
-  private async loadConfigSchema(version: string): Promise<any> {
-    // In a real implementation, this would:
-    // 1. Load the configuration schema for the version
-    // 2. Parse and validate the schema
-    // 3. Return structured schema data
-    return {};
-  }
-
-  private async parseCliDefinition(version: string): Promise<any> {
+  private async parseCliDefinition(_version: string): Promise<any> {
     // In a real implementation, this would:
     // 1. Load CLI command definitions
     // 2. Parse command structure, options, arguments
     // 3. Return structured CLI data
     return {};
-  }
-
-  private analyzeChangeSeverity(changes: any[]): string {
-    // Analyze the severity of changes
-    if (changes.some(c => c.type === 'removed' || c.type === 'breaking')) {
-      return 'major';
-    }
-    if (changes.some(c => c.type === 'modified' || c.type === 'deprecated')) {
-      return 'minor';
-    }
-    return 'patch';
   }
 }

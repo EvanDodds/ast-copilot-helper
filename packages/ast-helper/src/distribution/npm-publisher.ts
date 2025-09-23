@@ -379,12 +379,9 @@ export class NPMPublisher implements BasePublisher<DistributionConfig, NPMPublis
   private async preparePackageForPublishing(packageConfig: PackageConfig): Promise<void> {
     this.logger.log(`Preparing ${packageConfig.name} for NPM publishing...`);
 
-    const originalCwd = process.cwd();
-    process.chdir(packageConfig.path);
-
     try {
       // 1. Update package version
-      const packageJsonPath = 'package.json';
+      const packageJsonPath = path.join(packageConfig.path, 'package.json');
       const packageJsonContent = await fs.readFile(packageJsonPath, 'utf8');
       const packageJson = JSON.parse(packageJsonContent);
       
@@ -396,17 +393,17 @@ export class NPMPublisher implements BasePublisher<DistributionConfig, NPMPublis
       // 2. Run build script if it exists
       if (packageConfig.publishConfig.scripts.build) {
         this.logger.log(`Running build script for ${packageConfig.name}...`);
-        execSync('npm run build', { stdio: 'inherit' });
+        execSync('npm run build', { stdio: 'inherit', cwd: packageConfig.path });
       }
 
       // 3. Run tests if they exist
       if (packageConfig.publishConfig.scripts.test) {
         this.logger.log(`Running tests for ${packageConfig.name}...`);
-        execSync('npm test', { stdio: 'inherit' });
+        execSync('npm test', { stdio: 'inherit', cwd: packageConfig.path });
       }
 
-    } finally {
-      process.chdir(originalCwd);
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -415,11 +412,7 @@ export class NPMPublisher implements BasePublisher<DistributionConfig, NPMPublis
    */
   private async publishSinglePackage(packageConfig: PackageConfig): Promise<PackagePublishResult> {
     const startTime = Date.now();
-    const originalCwd = process.cwd();
-
     try {
-      process.chdir(packageConfig.path);
-
       // Configure NPM registry and auth
       await this.configureNPMAuth();
 
@@ -443,6 +436,7 @@ export class NPMPublisher implements BasePublisher<DistributionConfig, NPMPublis
       const publishOutput = execSync(`npm ${publishArgs.join(' ')}`, { 
         encoding: 'utf8',
         stdio: 'pipe',
+        cwd: packageConfig.path
       });
 
       // Verify publication
@@ -467,8 +461,6 @@ export class NPMPublisher implements BasePublisher<DistributionConfig, NPMPublis
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
       };
-    } finally {
-      process.chdir(originalCwd);
     }
   }
 
@@ -564,19 +556,15 @@ export class NPMPublisher implements BasePublisher<DistributionConfig, NPMPublis
       const tempDir = path.join('/tmp', `npm-verify-${Date.now()}`);
       await fs.mkdir(tempDir, { recursive: true });
 
-      const originalCwd = process.cwd();
-      process.chdir(tempDir);
-
       try {
         // Initialize empty package.json
-        await fs.writeFile('package.json', JSON.stringify({ name: 'test', version: '1.0.0' }, null, 2));
+        await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test', version: '1.0.0' }, null, 2));
 
         // Try to install the package
-        execSync(`npm install ${packageName}@${version}`, { stdio: 'ignore' });
+        execSync(`npm install ${packageName}@${version}`, { stdio: 'ignore', cwd: tempDir });
         
         return true;
       } finally {
-        process.chdir(originalCwd);
         // Clean up temp directory
         await fs.rm(tempDir, { recursive: true, force: true });
       }

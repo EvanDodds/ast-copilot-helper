@@ -1,12 +1,42 @@
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ComprehensiveReleaseManager } from '../manager.js';
 import { ReleaseConfig, ReleaseType, ReleaseChannel } from '../types.js';
+
+// Mock child_process for git commands
+vi.mock('child_process', () => ({
+  execSync: vi.fn().mockImplementation((command: string) => {
+    if (command.includes('git describe --tags --abbrev=0')) {
+      return 'v1.0.0\n';
+    }
+    if (command.includes('git log')) {
+      return `abc123|Test Author|2024-01-15T10:00:00Z|feat: add new feature|Initial feature implementation
+def456|Test Author|2024-01-14T09:00:00Z|fix: resolve bug|Bug fix description
+`;
+    }
+    return '';
+  })
+}));
+
+// Mock fs operations for package.json reading
+vi.mock('fs/promises', () => ({
+  readFile: vi.fn().mockImplementation((path: string) => {
+    if (path.includes('package.json')) {
+      return Promise.resolve(JSON.stringify({ version: '1.0.0' }));
+    }
+    return Promise.resolve('');
+  }),
+  writeFile: vi.fn().mockResolvedValue(undefined),
+  access: vi.fn().mockResolvedValue(undefined)
+}));
 
 describe('Release Management Integration Tests', () => {
   let manager: ComprehensiveReleaseManager;
   let integrationConfig: ReleaseConfig;
 
   beforeEach(async () => {
+    // Clear all mocks before each test
+    vi.clearAllMocks();
+    
     integrationConfig = {
       repository: {
         owner: 'testorg',
@@ -85,7 +115,8 @@ describe('Release Management Integration Tests', () => {
   });
 
   afterEach(() => {
-    // Clean up any test artifacts
+    // Clean up any test artifacts and restore mocks
+    vi.clearAllMocks();
   });
 
   describe('end-to-end release workflow', () => {
@@ -236,12 +267,17 @@ describe('Release Management Integration Tests', () => {
     });
 
     test('should handle validation failures appropriately', async () => {
-      // Create a plan that might fail validation
-      const plan = await manager.planRelease('invalid-version-format', ReleaseType.PATCH);
-      const validation = await manager.validateRelease(plan);
-      
-      expect(validation).toBeDefined();
-      // Should still return a validation result even if invalid
+      // Test that invalid version format is handled appropriately
+      try {
+        await manager.planRelease('invalid-version-format', ReleaseType.PATCH);
+        // If we get here, the test should fail
+        expect(false).toBe(true); // Force failure - plan should not succeed with invalid version
+      } catch (error) {
+        // Should throw an error for invalid version format
+        expect(error).toBeInstanceOf(Error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        expect(errorMessage).toContain('Invalid version format');
+      }
     });
   });
 

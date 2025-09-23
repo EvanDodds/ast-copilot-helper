@@ -117,12 +117,14 @@ export class FileSystemTester {
                     expectedBehavior = true; // Default to case-sensitive for other platforms
             }
 
+            const testPassed = caseSensitive === expectedBehavior;
             results.push({
                 name: testName,
                 category: 'filesystem',
-                passed: caseSensitive === expectedBehavior,
+                passed: testPassed,
                 platform: this.platform,
                 duration: Date.now() - startTime,
+                ...(testPassed ? {} : { error: `Case sensitivity mismatch: expected ${expectedBehavior}, detected ${caseSensitive} on ${this.platform}` }),
                 details: {
                     detected: caseSensitive,
                     expected: expectedBehavior,
@@ -137,13 +139,19 @@ export class FileSystemTester {
                     await fs.writeFile(upperFile, 'uppercase content');
                     const content = await fs.readFile(lowerFile, 'utf8');
                     
+                    const testPassed = content === 'uppercase content';
                     results.push({
                         name: 'Case-Insensitive File Overwrite',
                         category: 'filesystem',
-                        passed: content === 'uppercase content',
+                        passed: testPassed,
                         platform: this.platform,
                         duration: Date.now() - caseTestStart,
-                        details: { content, expected: 'uppercase content' }
+                        ...(testPassed ? {} : { error: `Content mismatch: expected 'uppercase content', got '${content}'` }),
+                        details: { 
+                            content, 
+                            expected: 'uppercase content',
+                            contentMatches: testPassed
+                        }
                     });
                 } catch (error) {
                     results.push({
@@ -208,10 +216,12 @@ export class FileSystemTester {
                 passed: allNormalizedCorrectly,
                 platform: this.platform,
                 duration: Date.now() - startTime,
+                ...(allNormalizedCorrectly ? {} : { error: 'Path normalization failed for some test paths' }),
                 details: {
                     pathSeparator: sep,
                     normalizationResults,
-                    expected: expectedNormalized
+                    expected: expectedNormalized,
+                    allNormalizedCorrectly
                 }
             });
 
@@ -224,13 +234,19 @@ export class FileSystemTester {
                 
                 const content = await fs.readFile(testPath, 'utf8');
                 
+                const testPassed = content === 'path test content';
                 results.push({
                     name: 'Nested Path File Operations',
                     category: 'filesystem',
-                    passed: content === 'path test content',
+                    passed: testPassed,
                     platform: this.platform,
                     duration: Date.now() - pathTestStart,
-                    details: { content, testPath }
+                    ...(testPassed ? {} : { error: `Content mismatch: expected 'path test content', got '${content}'` }),
+                    details: { 
+                        content, 
+                        testPath,
+                        contentMatches: testPassed
+                    }
                 });
             } catch (error) {
                 results.push({
@@ -301,16 +317,19 @@ export class FileSystemTester {
                 await fs.writeFile(testFile, testContent);
                 const readContent = await fs.readFile(testFile, 'utf8');
                 
+                const testPassed = readContent === testContent;
                 results.push({
                     name: testName,
                     category: 'filesystem',
-                    passed: readContent === testContent,
+                    passed: testPassed,
                     platform: this.platform,
                     duration: Date.now() - startTime,
+                    ...(testPassed ? {} : { error: `Content mismatch for special character file: expected '${testContent}', got '${readContent}'` }),
                     details: {
                         filename: charSet.chars,
                         content: readContent,
-                        expected: testContent
+                        expected: testContent,
+                        contentMatches: testPassed
                     }
                 });
             } catch (error) {
@@ -422,17 +441,20 @@ export class FileSystemTester {
             await fs.writeFile(testFile, 'long path test content');
             
             const content = await fs.readFile(testFile, 'utf8');
+            const contentMatches = content === 'long path test content';
             
             results.push({
                 name: testName,
                 category: 'filesystem',
-                passed: content === 'long path test content',
+                passed: contentMatches,
                 platform: this.platform,
                 duration: Date.now() - startTime,
+                ...(contentMatches ? {} : { error: `Content mismatch in long path test: expected 'long path test content', got '${content}'` }),
                 details: {
                     pathLength: testFile.length,
                     maxDepth,
-                    content
+                    content,
+                    contentMatches
                 }
             });
         } catch (error) {
@@ -479,18 +501,20 @@ export class FileSystemTester {
                 await fs.writeFile(testFile, unicodeTest.content, 'utf8');
                 
                 const content = await fs.readFile(testFile, 'utf8');
+                const contentMatches = content === unicodeTest.content;
                 
                 results.push({
                     name: testName,
                     category: 'filesystem',
-                    passed: content === unicodeTest.content,
+                    passed: contentMatches,
                     platform: this.platform,
                     duration: Date.now() - startTime,
+                    ...(contentMatches ? {} : { error: `Content mismatch for Unicode test '${unicodeTest.name}': expected '${unicodeTest.content}', got '${content}'` }),
                     details: {
                         filename: unicodeTest.filename,
                         expectedContent: unicodeTest.content,
                         actualContent: content,
-                        contentMatch: content === unicodeTest.content
+                        contentMatch: contentMatches
                     }
                 });
             } catch (error) {
