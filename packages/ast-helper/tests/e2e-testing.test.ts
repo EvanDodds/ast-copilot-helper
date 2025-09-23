@@ -12,31 +12,20 @@ describe('E2E Testing Framework', () => {
 
   beforeEach(() => {
     const config: Partial<E2ETestingConfig> = {
-      scenarios: {
-        'test-scenario': {
+      scenarios: [
+        {
+          name: 'test-scenario',
+          description: 'Test scenario for unit testing',
           enabled: true,
-          priority: 'high',
+          category: 'codebase-analysis',
           timeout: 10000,
           retries: 1,
-          tags: ['test']
+          prerequisites: [],
+          cleanup: true,
+          parallel: false,
+          environment: ['cli']
         }
-      },
-      environment: {
-        parallel: false,
-        maxConcurrency: 1,
-        isolated: true,
-        cleanup: true
-      },
-      monitoring: {
-        enabled: true,
-        interval: 1000,
-        thresholds: {
-          memory: 512,
-          cpu: 80,
-          disk: 1024,
-          network: 100
-        }
-      }
+      ]
     };
 
     runner = new E2ETestRunner(config);
@@ -89,22 +78,32 @@ describe('E2E Testing Framework', () => {
 
     it('should handle scenarios with different categories', async () => {
       const config: Partial<E2ETestingConfig> = {
-        scenarios: {
-          'codebase-scenario': {
+        scenarios: [
+          {
+            name: 'codebase-scenario',
+            description: 'Codebase analysis scenario',
             enabled: true,
-            priority: 'high',
+            category: 'codebase-analysis',
             timeout: 5000,
             retries: 1,
-            tags: ['codebase']
+            prerequisites: [],
+            cleanup: true,
+            parallel: false,
+            environment: ['cli']
           },
-          'collaboration-scenario': {
+          {
+            name: 'collaboration-scenario',
+            description: 'Collaboration testing scenario',
             enabled: true,
-            priority: 'medium',
+            category: 'collaboration',
             timeout: 5000,
             retries: 1,
-            tags: ['collaboration']
+            prerequisites: [],
+            cleanup: true,
+            parallel: false,
+            environment: ['mcp-server']
           }
-        }
+        ]
       };
 
       const testRunner = new E2ETestRunner(config);
@@ -165,15 +164,20 @@ describe('E2E Testing Framework', () => {
     it('should generate recommendations for failed tests', async () => {
       // Create a config that will likely fail some tests
       const failingConfig: Partial<E2ETestingConfig> = {
-        scenarios: {
-          'failing-scenario': {
+        scenarios: [
+          {
+            name: 'failing-scenario',
+            description: 'Scenario designed to fail',
             enabled: true,
-            priority: 'high',
+            category: 'codebase-analysis',
             timeout: 1, // Very short timeout to force failure
             retries: 0,
-            tags: ['failing']
+            prerequisites: [],
+            cleanup: true,
+            parallel: false,
+            environment: ['cli']
           }
-        }
+        ]
       };
 
       const failingRunner = new E2ETestRunner(failingConfig);
