@@ -2,6 +2,7 @@
   "name": "ast-copilot-helper",
   "version": "0.1.0",
   "description": "Monorepo for AST-based code analysis tools and MCP server",
+  "type": "module",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
@@ -35,8 +36,11 @@
     "start:cli": "yarn workspace ast-helper run start",
     "clean": "yarn workspaces foreach --all --parallel --verbose run clean && rm -rf coverage test-output test-tmp *.log",
     "clean:all": "yarn run clean && rm -rf node_modules packages/*/node_modules",
-    "lint": "yarn workspaces foreach --all --parallel --verbose run lint",
-    "lint:fix": "yarn workspaces foreach --all --parallel --verbose run lint:fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint-staged": "lint-staged",
+    "lint:workspaces": "yarn workspaces foreach --all --parallel --verbose run lint",
+    "lint:fix:workspaces": "yarn workspaces foreach --all --parallel --verbose run lint:fix",
     "type-check": "tsc --build --verbose",
     "typecheck": "yarn run type-check",
     "security:audit": "yarn npm audit --severity moderate",
@@ -83,18 +87,30 @@
     "release:dry": "echo 'Dry run - would publish to npm'",
     "release": "yarn run prepack && npm publish --access=public"
   },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix --max-warnings 50"
+    ]
+  },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.0.0",
     "@types/tmp": "^0.2.6",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
+    "eslint": "^9.0.0",
+    "globals": "^16.4.0",
     "husky": "^8.0.3",
     "js-yaml": "^4.1.0",
+    "lint-staged": "^16.2.0",
     "tmp": "^0.2.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
     "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.0",
     "vitest": "^3.2.4"
   },
   "repository": {
