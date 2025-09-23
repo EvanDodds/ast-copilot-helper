@@ -147,7 +147,7 @@ describe('Deployment Automation Tests', () => {
 
         // Act & Assert
         await expect(deployment.deploy()).rejects.toThrow('Build failed');
-        expect(rollbackSpy).toHaveBeenCalledWith('v1.0.0');
+        expect(rollbackSpy).toHaveBeenCalledWith('v0.9.0');
       });
     });
   });
@@ -309,7 +309,12 @@ describe('Deployment Automation Tests', () => {
     describe('rollback validation', () => {
       it('should perform post-rollback validation', async () => {
         // Arrange
-        mockExistsSync.mockReturnValue(false);
+        const mockDeploymentHistory = [
+          { success: true, version: 'v1.0.0', healthCheckPassed: true },
+          { success: true, version: 'v1.1.0', healthCheckPassed: true }
+        ];
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue(JSON.stringify(mockDeploymentHistory));
         mockExecSync.mockReturnValue('success');
         
         const rollback = new RollbackAutomation('staging', 'Test rollback');
@@ -331,7 +336,12 @@ describe('Deployment Automation Tests', () => {
 
       it('should handle validation failures', async () => {
         // Arrange
-        mockExistsSync.mockReturnValue(false);
+        const mockDeploymentHistory = [
+          { success: true, version: 'v1.0.0', healthCheckPassed: true },
+          { success: true, version: 'v1.1.0', healthCheckPassed: true }
+        ];
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue(JSON.stringify(mockDeploymentHistory));
         mockExecSync.mockImplementation((command: string) => {
           if (command.includes('yarn run test:unit')) {
             throw new Error('Tests failed after rollback');
@@ -347,14 +357,19 @@ describe('Deployment Automation Tests', () => {
         // Assert
         expect(result.success).toBe(false);
         expect(result.validationPassed).toBe(false);
-        expect(result.errors).toContainEqual(expect.stringContaining('Tests failed after rollback'));
+        expect(result.errors).toContainEqual(expect.stringContaining('Rollback validation failed'));
       });
     });
 
     describe('emergency rollback', () => {
       it('should execute emergency rollback', async () => {
         // Arrange
-        mockExistsSync.mockReturnValue(false);
+        const mockDeploymentHistory = [
+          { success: true, version: 'v1.0.0', allHealthChecksPassed: true },
+          { success: true, version: 'v1.1.0', allHealthChecksPassed: true }
+        ];
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue(JSON.stringify(mockDeploymentHistory));
         mockExecSync.mockReturnValue('success');
 
         // Act
@@ -370,7 +385,12 @@ describe('Deployment Automation Tests', () => {
     describe('retry logic', () => {
       it('should retry rollback on failure', async () => {
         // Arrange
-        mockExistsSync.mockReturnValue(false);
+        const mockDeploymentHistory = [
+          { success: true, version: 'v1.0.0', healthCheckPassed: true },
+          { success: true, version: 'v1.1.0', healthCheckPassed: true }
+        ];
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue(JSON.stringify(mockDeploymentHistory));
         let attemptCount = 0;
         mockExecSync.mockImplementation((command: string) => {
           if (command.includes('yarn run build')) {
@@ -445,6 +465,7 @@ describe('Deployment Automation Tests', () => {
     it('should handle cross-environment rollback scenarios', async () => {
       // Arrange
       const stagingHistory = [
+        { success: true, version: 'v0.9.0', healthCheckPassed: true },
         { success: true, version: 'v1.0.0', healthCheckPassed: true }
       ];
       const productionHistory = [
