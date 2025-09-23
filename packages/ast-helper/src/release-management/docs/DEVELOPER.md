@@ -45,12 +45,14 @@ The release management system follows a modular architecture with clear separati
 The main orchestrator that coordinates all release activities.
 
 **Key Responsibilities:**
+
 - Initialize and configure all components
 - Orchestrate the release workflow
 - Handle error propagation and rollback coordination
 - Manage the release state machine
 
 **Internal Architecture:**
+
 ```typescript
 class ComprehensiveReleaseManager implements ReleaseManager {
   private versionManager: VersionManager;
@@ -59,7 +61,7 @@ class ComprehensiveReleaseManager implements ReleaseManager {
   private platformPublisher: PlatformPublisher;
   private rollbackManager: RollbackManager;
   private eventEmitter: EventEmitter;
-  
+
   // Workflow state management
   private currentRelease?: ReleaseContext;
   private releaseState: ReleaseState = ReleaseState.IDLE;
@@ -67,6 +69,7 @@ class ComprehensiveReleaseManager implements ReleaseManager {
 ```
 
 **State Machine:**
+
 ```
 IDLE → PLANNING → VALIDATING → EXECUTING → PUBLISHING → COMPLETED
   ↓       ↓           ↓           ↓           ↓
@@ -80,6 +83,7 @@ ROLLING_BACK → ROLLED_BACK
 Handles semantic versioning logic and version calculations.
 
 **Implementation Details:**
+
 ```typescript
 class VersionManagerImpl implements VersionManager {
   private config: VersioningConfig;
@@ -87,19 +91,19 @@ class VersionManagerImpl implements VersionManager {
   private customRules: VersionRule[];
 
   async calculateNextVersion(
-    current: string, 
-    type: ReleaseType, 
+    current: string,
+    type: ReleaseType,
     changes?: ChangelogEntry[]
   ): Promise<string> {
     // 1. Parse current version
     const parsed = this.semver.parse(current);
-    
+
     // 2. Apply release type rules
     const base = this.applyReleaseType(parsed, type);
-    
+
     // 3. Apply custom rules based on changes
     const adjusted = this.applyCustomRules(base, changes);
-    
+
     // 4. Format and validate
     return this.semver.format(adjusted);
   }
@@ -107,6 +111,7 @@ class VersionManagerImpl implements VersionManager {
 ```
 
 **Custom Version Rules:**
+
 ```typescript
 interface VersionRule {
   name: string;
@@ -116,15 +121,14 @@ interface VersionRule {
 
 // Example: Auto-bump minor for feature flags
 const featureFlagRule: VersionRule = {
-  name: 'feature-flag-bump',
-  condition: (changes) => changes.some(c => 
-    c.type === 'feat' && c.scope === 'feature-flags'
-  ),
+  name: "feature-flag-bump",
+  condition: (changes) =>
+    changes.some((c) => c.type === "feat" && c.scope === "feature-flags"),
   adjustment: (version) => ({
     ...version,
     minor: version.minor + 1,
-    patch: 0
-  })
+    patch: 0,
+  }),
 };
 ```
 
@@ -133,18 +137,19 @@ const featureFlagRule: VersionRule = {
 Generates structured changelogs from commit history and conventional commits.
 
 **Parsing Pipeline:**
+
 ```typescript
 class ChangelogGeneratorImpl implements ChangelogGenerator {
   private parsers: CommitParser[] = [
     new ConventionalCommitParser(),
     new JiraCommitParser(),
-    new CustomCommitParser()
+    new CustomCommitParser(),
   ];
 
   async detectChangesSince(version: string): Promise<ChangelogEntry[]> {
     // 1. Get commits since version
     const commits = await this.gitProvider.getCommitsSince(version);
-    
+
     // 2. Parse commits through pipeline
     const entries = [];
     for (const commit of commits) {
@@ -156,7 +161,7 @@ class ChangelogGeneratorImpl implements ChangelogGenerator {
         }
       }
     }
-    
+
     // 3. Group and categorize
     return this.categorizeEntries(entries);
   }
@@ -164,23 +169,24 @@ class ChangelogGeneratorImpl implements ChangelogGenerator {
 ```
 
 **Custom Parsers:**
+
 ```typescript
 class CustomCommitParser implements CommitParser {
   async canParse(commit: GitCommit): boolean {
-    return commit.message.includes('[TICKET-');
+    return commit.message.includes("[TICKET-");
   }
 
   async parse(commit: GitCommit): Promise<ChangelogEntry> {
     const match = commit.message.match(/\[TICKET-(\d+)\] (.+)/);
     return {
       id: commit.sha,
-      type: 'feat', // Default type
+      type: "feat", // Default type
       scope: null,
       description: match?.[2] || commit.message,
-      breaking: commit.message.includes('BREAKING:'),
+      breaking: commit.message.includes("BREAKING:"),
       author: commit.author,
       timestamp: commit.timestamp,
-      references: [`TICKET-${match?.[1]}`]
+      references: [`TICKET-${match?.[1]}`],
     };
   }
 }
@@ -191,55 +197,60 @@ class CustomCommitParser implements CommitParser {
 Analyzes backward compatibility between versions.
 
 **Checking Strategy:**
+
 ```typescript
 class CompatibilityCheckerImpl implements CompatibilityChecker {
   private checkers: CompatibilityStrategy[] = [
     new ApiCompatibilityStrategy(),
     new ConfigCompatibilityStrategy(),
     new DatabaseCompatibilityStrategy(),
-    new DependencyCompatibilityStrategy()
+    new DependencyCompatibilityStrategy(),
   ];
 
   async checkCompatibility(
-    baseVersion: string, 
+    baseVersion: string,
     newVersion: string
   ): Promise<CompatibilityReport> {
     const results: CompatibilityCheck[] = [];
-    
+
     for (const checker of this.checkers) {
       if (await checker.isApplicable(baseVersion, newVersion)) {
         const result = await checker.check(baseVersion, newVersion);
         results.push(result);
       }
     }
-    
+
     return this.aggregateResults(results);
   }
 }
 ```
 
 **API Compatibility Strategy:**
+
 ```typescript
 class ApiCompatibilityStrategy implements CompatibilityStrategy {
-  async check(baseVersion: string, newVersion: string): Promise<CompatibilityCheck> {
+  async check(
+    baseVersion: string,
+    newVersion: string
+  ): Promise<CompatibilityCheck> {
     // 1. Extract API definitions
     const baseApi = await this.extractApiDefinition(baseVersion);
     const newApi = await this.extractApiDefinition(newVersion);
-    
+
     // 2. Compare APIs
     const changes = this.compareApis(baseApi, newApi);
-    
+
     // 3. Classify changes
-    const breakingChanges = changes.filter(c => c.isBreaking);
-    const deprecations = changes.filter(c => c.isDeprecation);
-    
+    const breakingChanges = changes.filter((c) => c.isBreaking);
+    const deprecations = changes.filter((c) => c.isDeprecation);
+
     return {
-      name: 'API Compatibility',
+      name: "API Compatibility",
       compatible: breakingChanges.length === 0,
       changes,
       breakingChanges,
       migrationRequired: breakingChanges.length > 0,
-      confidence: this.calculateConfidence(changes)
+      confidence: this.calculateConfidence(changes),
     };
   }
 }
@@ -252,15 +263,15 @@ class ApiCompatibilityStrategy implements CompatibilityStrategy {
 ```typescript
 // 1. Extend the ReleaseType enum
 export enum CustomReleaseType {
-  HOTFIX = 'hotfix',
-  SECURITY = 'security',
-  EXPERIMENTAL = 'experimental'
+  HOTFIX = "hotfix",
+  SECURITY = "security",
+  EXPERIMENTAL = "experimental",
 }
 
 // 2. Create custom version calculation logic
 class CustomVersionManager extends VersionManagerImpl {
   protected applyReleaseType(
-    version: SemanticVersion, 
+    version: SemanticVersion,
     type: ReleaseType | CustomReleaseType
   ): SemanticVersion {
     switch (type) {
@@ -268,22 +279,22 @@ class CustomVersionManager extends VersionManagerImpl {
         return {
           ...version,
           patch: version.patch + 1,
-          prerelease: `hotfix.${Date.now()}`
+          prerelease: `hotfix.${Date.now()}`,
         };
-        
+
       case CustomReleaseType.SECURITY:
         return {
           ...version,
           patch: version.patch + 1,
-          prerelease: `security.${Date.now()}`
+          prerelease: `security.${Date.now()}`,
         };
-        
+
       case CustomReleaseType.EXPERIMENTAL:
         return {
           ...version,
-          prerelease: `experimental.${Date.now()}`
+          prerelease: `experimental.${Date.now()}`,
         };
-        
+
       default:
         return super.applyReleaseType(version, type as ReleaseType);
     }
@@ -294,8 +305,8 @@ class CustomVersionManager extends VersionManagerImpl {
 const config: ReleaseConfig = {
   // ... other config
   customImplementations: {
-    versionManager: CustomVersionManager
-  }
+    versionManager: CustomVersionManager,
+  },
 };
 ```
 
@@ -305,7 +316,7 @@ const config: ReleaseConfig = {
 // 1. Implement the Platform interface
 class DockerHubPlatform implements Platform {
   async initialize(config: PlatformConfig): Promise<void> {
-    this.registry = config.registry || 'docker.io';
+    this.registry = config.registry || "docker.io";
     this.namespace = config.namespace;
     this.auth = await this.setupAuthentication(config);
   }
@@ -315,30 +326,29 @@ class DockerHubPlatform implements Platform {
       // 1. Build Docker image
       const imageName = `${this.namespace}/${artifact.name}:${artifact.version}`;
       await this.buildImage(artifact.path, imageName);
-      
+
       // 2. Push to registry
       await this.pushImage(imageName);
-      
+
       // 3. Tag additional versions
       const tags = this.generateTags(artifact.version);
       for (const tag of tags) {
         await this.tagAndPush(imageName, tag);
       }
-      
+
       return {
         success: true,
-        platform: 'dockerhub',
+        platform: "dockerhub",
         version: artifact.version,
         url: `https://hub.docker.com/r/${this.namespace}/${artifact.name}`,
-        metadata: { imageName, tags }
+        metadata: { imageName, tags },
       };
-      
     } catch (error) {
       return {
         success: false,
-        platform: 'dockerhub',
+        platform: "dockerhub",
         version: artifact.version,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -346,49 +356,54 @@ class DockerHubPlatform implements Platform {
   async rollback(version: string): Promise<RollbackResult> {
     // Implementation for rolling back Docker images
     const previousVersion = await this.getPreviousVersion(version);
-    await this.promoteTag(previousVersion, 'latest');
-    
+    await this.promoteTag(previousVersion, "latest");
+
     return {
       success: true,
       rolledBackVersion: previousVersion,
-      platform: 'dockerhub'
+      platform: "dockerhub",
     };
   }
 }
 
 // 2. Register the platform
 const platformPublisher = new PlatformPublisherImpl();
-platformPublisher.registerPlatform('dockerhub', DockerHubPlatform);
+platformPublisher.registerPlatform("dockerhub", DockerHubPlatform);
 ```
 
 ### Custom Validation Rules
 
 ```typescript
 class CustomValidationRule implements ValidationRule {
-  name = 'security-scan';
-  
+  name = "security-scan";
+
   async validate(plan: ReleasePlan): Promise<ValidationResult> {
     const securityResults = await this.runSecurityScan(plan);
-    
-    const criticalVulns = securityResults.filter(v => v.severity === 'CRITICAL');
-    const highVulns = securityResults.filter(v => v.severity === 'HIGH');
-    
+
+    const criticalVulns = securityResults.filter(
+      (v) => v.severity === "CRITICAL"
+    );
+    const highVulns = securityResults.filter((v) => v.severity === "HIGH");
+
     if (criticalVulns.length > 0) {
       return {
         success: false,
-        errors: [`${criticalVulns.length} critical security vulnerabilities found`],
-        details: criticalVulns
+        errors: [
+          `${criticalVulns.length} critical security vulnerabilities found`,
+        ],
+        details: criticalVulns,
       };
     }
-    
-    const warnings = highVulns.length > 0 
-      ? [`${highVulns.length} high severity vulnerabilities found`]
-      : [];
-    
+
+    const warnings =
+      highVulns.length > 0
+        ? [`${highVulns.length} high severity vulnerabilities found`]
+        : [];
+
     return {
       success: true,
       warnings,
-      details: securityResults
+      details: securityResults,
     };
   }
 }
@@ -407,7 +422,7 @@ interface ReleasePlugin {
   name: string;
   version: string;
   dependencies?: string[];
-  
+
   initialize(context: PluginContext): Promise<void>;
   beforeRelease?(plan: ReleasePlan): Promise<void>;
   afterRelease?(result: ReleaseResult): Promise<void>;
@@ -420,16 +435,16 @@ class PluginContext {
     public config: ReleaseConfig,
     public logger: Logger
   ) {}
-  
+
   // Plugin utilities
   async executeCommand(command: string): Promise<string> {
     return this.manager.executeCommand(command);
   }
-  
+
   async readFile(path: string): Promise<string> {
     return this.manager.readFile(path);
   }
-  
+
   async writeFile(path: string, content: string): Promise<void> {
     return this.manager.writeFile(path, content);
   }
@@ -440,60 +455,80 @@ class PluginContext {
 
 ```typescript
 class SlackNotificationPlugin implements ReleasePlugin {
-  name = 'slack-notifications';
-  version = '1.0.0';
-  
+  name = "slack-notifications";
+  version = "1.0.0";
+
   private webhook?: string;
   private channel?: string;
-  
+
   async initialize(context: PluginContext): Promise<void> {
     this.webhook = context.config.notifications?.slack?.webhook;
-    this.channel = context.config.notifications?.slack?.channel || '#releases';
-    
+    this.channel = context.config.notifications?.slack?.channel || "#releases";
+
     if (!this.webhook) {
-      throw new Error('Slack webhook URL is required');
+      throw new Error("Slack webhook URL is required");
     }
   }
-  
+
   async beforeRelease(plan: ReleasePlan): Promise<void> {
     await this.sendSlackMessage({
       text: `🚀 Starting release ${plan.version}`,
-      attachments: [{
-        color: 'warning',
-        fields: [
-          { title: 'Version', value: plan.version, short: true },
-          { title: 'Type', value: plan.type, short: true },
-          { title: 'Changes', value: `${plan.changes.length} commits`, short: true },
-          { title: 'Platforms', value: plan.platforms.map(p => p.name).join(', '), short: true }
-        ]
-      }]
+      attachments: [
+        {
+          color: "warning",
+          fields: [
+            { title: "Version", value: plan.version, short: true },
+            { title: "Type", value: plan.type, short: true },
+            {
+              title: "Changes",
+              value: `${plan.changes.length} commits`,
+              short: true,
+            },
+            {
+              title: "Platforms",
+              value: plan.platforms.map((p) => p.name).join(", "),
+              short: true,
+            },
+          ],
+        },
+      ],
     });
   }
-  
+
   async afterRelease(result: ReleaseResult): Promise<void> {
-    const color = result.success ? 'good' : 'danger';
-    const emoji = result.success ? '✅' : '❌';
-    
+    const color = result.success ? "good" : "danger";
+    const emoji = result.success ? "✅" : "❌";
+
     await this.sendSlackMessage({
-      text: `${emoji} Release ${result.version} ${result.success ? 'completed' : 'failed'}`,
-      attachments: [{
-        color,
-        fields: [
-          { title: 'Duration', value: `${result.duration}ms`, short: true },
-          { title: 'Platforms', value: `${result.publishResults?.length || 0}`, short: true },
-          ...(result.error ? [{ title: 'Error', value: result.error, short: false }] : [])
-        ]
-      }]
+      text: `${emoji} Release ${result.version} ${
+        result.success ? "completed" : "failed"
+      }`,
+      attachments: [
+        {
+          color,
+          fields: [
+            { title: "Duration", value: `${result.duration}ms`, short: true },
+            {
+              title: "Platforms",
+              value: `${result.publishResults?.length || 0}`,
+              short: true,
+            },
+            ...(result.error
+              ? [{ title: "Error", value: result.error, short: false }]
+              : []),
+          ],
+        },
+      ],
     });
   }
-  
+
   private async sendSlackMessage(message: any): Promise<void> {
     const response = await fetch(this.webhook!, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ channel: this.channel, ...message })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ channel: this.channel, ...message }),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Slack notification failed: ${response.statusText}`);
     }
@@ -523,73 +558,73 @@ await manager.initialize(config);
 ### Unit Testing Components
 
 ```typescript
-describe('VersionManagerImpl', () => {
+describe("VersionManagerImpl", () => {
   let versionManager: VersionManagerImpl;
-  
+
   beforeEach(async () => {
     versionManager = new VersionManagerImpl();
     await versionManager.initialize({
-      scheme: 'semver',
-      initialVersion: '1.0.0',
+      scheme: "semver",
+      initialVersion: "1.0.0",
       channels: [],
       allowPrereleasePromotion: true,
-      strictMode: true
+      strictMode: true,
     });
   });
 
-  describe('calculateNextVersion', () => {
-    it('should increment patch version for patch releases', async () => {
+  describe("calculateNextVersion", () => {
+    it("should increment patch version for patch releases", async () => {
       const result = await versionManager.calculateNextVersion(
-        '1.2.3', 
+        "1.2.3",
         ReleaseType.PATCH
       );
-      expect(result).toBe('1.2.4');
+      expect(result).toBe("1.2.4");
     });
 
-    it('should increment minor version and reset patch for minor releases', async () => {
+    it("should increment minor version and reset patch for minor releases", async () => {
       const result = await versionManager.calculateNextVersion(
-        '1.2.3', 
+        "1.2.3",
         ReleaseType.MINOR
       );
-      expect(result).toBe('1.3.0');
+      expect(result).toBe("1.3.0");
     });
 
-    it('should increment major version and reset minor/patch for major releases', async () => {
+    it("should increment major version and reset minor/patch for major releases", async () => {
       const result = await versionManager.calculateNextVersion(
-        '1.2.3', 
+        "1.2.3",
         ReleaseType.MAJOR
       );
-      expect(result).toBe('2.0.0');
+      expect(result).toBe("2.0.0");
     });
 
-    it('should handle prerelease versions', async () => {
+    it("should handle prerelease versions", async () => {
       const result = await versionManager.calculateNextVersion(
-        '1.2.3', 
+        "1.2.3",
         ReleaseType.PRERELEASE
       );
       expect(result).toMatch(/^1\.3\.0-(alpha|beta|rc)\.1$/);
     });
 
-    it('should consider breaking changes from changelog entries', async () => {
+    it("should consider breaking changes from changelog entries", async () => {
       const changes = [
         {
-          id: '123',
-          type: 'feat',
-          description: 'New API endpoint',
+          id: "123",
+          type: "feat",
+          description: "New API endpoint",
           breaking: true,
-          author: 'dev@example.com',
-          timestamp: new Date()
-        }
+          author: "dev@example.com",
+          timestamp: new Date(),
+        },
       ];
 
       const result = await versionManager.calculateNextVersion(
-        '1.2.3',
+        "1.2.3",
         ReleaseType.MINOR,
         changes
       );
-      
+
       // Should upgrade to major due to breaking change
-      expect(result).toBe('2.0.0');
+      expect(result).toBe("2.0.0");
     });
   });
 });
@@ -598,7 +633,7 @@ describe('VersionManagerImpl', () => {
 ### Integration Testing
 
 ```typescript
-describe('Release Integration Tests', () => {
+describe("Release Integration Tests", () => {
   let manager: ComprehensiveReleaseManager;
   let mockGitProvider: jest.Mocked<GitProvider>;
   let mockNpmPlatform: jest.Mocked<Platform>;
@@ -610,88 +645,90 @@ describe('Release Integration Tests', () => {
 
     // Create manager with test configuration
     manager = new ComprehensiveReleaseManager();
-    
+
     const testConfig: ReleaseConfig = {
       repository: {
-        owner: 'test-owner',
-        name: 'test-repo',
-        defaultBranch: 'main',
-        releaseBranches: ['main'],
+        owner: "test-owner",
+        name: "test-repo",
+        defaultBranch: "main",
+        releaseBranches: ["main"],
         protectedBranches: [],
-        monorepo: false
+        monorepo: false,
       },
       versioning: {
-        scheme: 'semver',
-        initialVersion: '1.0.0',
+        scheme: "semver",
+        initialVersion: "1.0.0",
         channels: [],
         allowPrereleasePromotion: true,
-        strictMode: false
+        strictMode: false,
       },
-      platforms: [{
-        name: 'npm',
-        enabled: true,
-        config: { registry: 'http://localhost:4873' },
-        requirements: [],
-        artifacts: ['dist/**']
-      }]
+      platforms: [
+        {
+          name: "npm",
+          enabled: true,
+          config: { registry: "http://localhost:4873" },
+          requirements: [],
+          artifacts: ["dist/**"],
+        },
+      ],
     };
 
     // Inject mocks
     manager.setGitProvider(mockGitProvider);
-    manager.setPlatform('npm', mockNpmPlatform);
+    manager.setPlatform("npm", mockNpmPlatform);
 
     await manager.initialize(testConfig);
   });
 
-  it('should complete a full release workflow', async () => {
+  it("should complete a full release workflow", async () => {
     // Set up mock responses
     mockGitProvider.getCommitsSince.mockResolvedValue([
       {
-        sha: 'abc123',
-        message: 'feat: add new feature',
-        author: 'dev@example.com',
-        timestamp: new Date()
-      }
+        sha: "abc123",
+        message: "feat: add new feature",
+        author: "dev@example.com",
+        timestamp: new Date(),
+      },
     ]);
 
     mockNpmPlatform.publish.mockResolvedValue({
       success: true,
-      platform: 'npm',
-      version: '1.1.0',
-      url: 'https://npmjs.com/package/test'
+      platform: "npm",
+      version: "1.1.0",
+      url: "https://npmjs.com/package/test",
     });
 
     // Execute release workflow
-    const plan = await manager.planRelease('1.1.0', ReleaseType.MINOR);
+    const plan = await manager.planRelease("1.1.0", ReleaseType.MINOR);
     const validation = await manager.validateRelease(plan);
     expect(validation.success).toBe(true);
 
     const result = await manager.executeRelease(plan);
-    
+
     // Verify results
     expect(result.success).toBe(true);
-    expect(result.version).toBe('1.1.0');
+    expect(result.version).toBe("1.1.0");
     expect(mockNpmPlatform.publish).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: 'test-repo',
-        version: '1.1.0'
+        name: "test-repo",
+        version: "1.1.0",
       })
     );
   });
 
-  it('should handle platform failures gracefully', async () => {
+  it("should handle platform failures gracefully", async () => {
     mockNpmPlatform.publish.mockResolvedValue({
       success: false,
-      platform: 'npm',
-      version: '1.1.0',
-      error: 'Network timeout'
+      platform: "npm",
+      version: "1.1.0",
+      error: "Network timeout",
     });
 
-    const plan = await manager.planRelease('1.1.0', ReleaseType.MINOR);
+    const plan = await manager.planRelease("1.1.0", ReleaseType.MINOR);
     const result = await manager.executeRelease(plan);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('npm platform failed');
+    expect(result.error).toContain("npm platform failed");
   });
 });
 ```
@@ -699,9 +736,9 @@ describe('Release Integration Tests', () => {
 ### End-to-End Testing
 
 ```typescript
-describe('E2E Release Tests', () => {
-  const testRepo = path.join(__dirname, '../test-fixtures/sample-repo');
-  
+describe("E2E Release Tests", () => {
+  const testRepo = path.join(__dirname, "../test-fixtures/sample-repo");
+
   beforeAll(async () => {
     await setupTestRepository(testRepo);
   });
@@ -710,29 +747,31 @@ describe('E2E Release Tests', () => {
     await cleanupTestRepository(testRepo);
   });
 
-  it('should perform a complete release in a real repository', async () => {
+  it("should perform a complete release in a real repository", async () => {
     const manager = new ComprehensiveReleaseManager();
-    
+
     const config = await loadTestConfig();
     await manager.initialize(config);
 
     // Create some commits
-    await execAsync('git add .', { cwd: testRepo });
-    await execAsync('git commit -m "feat: add new functionality"', { cwd: testRepo });
+    await execAsync("git add .", { cwd: testRepo });
+    await execAsync('git commit -m "feat: add new functionality"', {
+      cwd: testRepo,
+    });
 
     // Execute release
-    const plan = await manager.planRelease('0.1.0', ReleaseType.MINOR);
+    const plan = await manager.planRelease("0.1.0", ReleaseType.MINOR);
     const result = await manager.executeRelease(plan);
 
     // Verify git tags
-    const tags = await execAsync('git tag', { cwd: testRepo });
-    expect(tags.stdout).toContain('v0.1.0');
+    const tags = await execAsync("git tag", { cwd: testRepo });
+    expect(tags.stdout).toContain("v0.1.0");
 
     // Verify package.json updated
     const packageJson = JSON.parse(
-      await fs.readFile(path.join(testRepo, 'package.json'), 'utf-8')
+      await fs.readFile(path.join(testRepo, "package.json"), "utf-8")
     );
-    expect(packageJson.version).toBe('0.1.0');
+    expect(packageJson.version).toBe("0.1.0");
   });
 });
 ```
@@ -752,24 +791,28 @@ class CachedVersionManager extends VersionManagerImpl {
     changes?: ChangelogEntry[]
   ): Promise<string> {
     const cacheKey = `${current}-${type}-${this.hashChanges(changes)}`;
-    
+
     if (this.versionCache.has(cacheKey)) {
       return this.versionCache.get(cacheKey)!;
     }
 
     const result = await super.calculateNextVersion(current, type, changes);
     this.versionCache.set(cacheKey, result);
-    
+
     return result;
   }
 
   private hashChanges(changes?: ChangelogEntry[]): string {
-    if (!changes) return 'no-changes';
-    
+    if (!changes) return "no-changes";
+
     return crypto
-      .createHash('sha256')
-      .update(JSON.stringify(changes.map(c => ({ type: c.type, breaking: c.breaking }))))
-      .digest('hex')
+      .createHash("sha256")
+      .update(
+        JSON.stringify(
+          changes.map((c) => ({ type: c.type, breaking: c.breaking }))
+        )
+      )
+      .digest("hex")
       .substring(0, 8);
   }
 }
@@ -785,17 +828,17 @@ class OptimizedReleaseManager extends ComprehensiveReleaseManager {
       this.validateVersionFormat(plan),
       this.validateChangelog(plan),
       this.validateCompatibility(plan),
-      this.validatePlatformRequirements(plan)
+      this.validatePlatformRequirements(plan),
     ];
 
     const results = await Promise.allSettled(validationPromises);
-    
+
     return this.aggregateValidationResults(results);
   }
 
   async executeRelease(plan: ReleasePlan): Promise<ReleaseResult> {
     // Parallel artifact preparation
-    const artifactPromises = plan.platforms.map(platform =>
+    const artifactPromises = plan.platforms.map((platform) =>
       this.prepareArtifacts(plan, platform)
     );
 
@@ -830,7 +873,7 @@ class MemoryEfficientChangelogGenerator extends ChangelogGeneratorImpl {
       if (entry) {
         entries.push(entry);
       }
-      
+
       // Process in batches to avoid memory issues
       if (entries.length >= 1000) {
         await this.processBatch(entries);
@@ -852,24 +895,26 @@ class MemoryEfficientChangelogGenerator extends ChangelogGeneratorImpl {
 **Problem**: Incorrect version calculation or unexpected version bumps.
 
 **Debugging:**
+
 ```typescript
 // Enable debug logging
 const debugVersionManager = new VersionManagerImpl();
-debugVersionManager.setLogLevel('debug');
+debugVersionManager.setLogLevel("debug");
 
 // Inspect version calculation steps
 const result = await debugVersionManager.calculateNextVersion(
-  '1.2.3',
+  "1.2.3",
   ReleaseType.MINOR,
   changes
 );
 
 // Check intermediate steps
-console.log('Parsed version:', debugVersionManager.getLastParsedVersion());
-console.log('Applied rules:', debugVersionManager.getLastAppliedRules());
+console.log("Parsed version:", debugVersionManager.getLastParsedVersion());
+console.log("Applied rules:", debugVersionManager.getLastAppliedRules());
 ```
 
 **Solutions:**
+
 - Verify configuration schema and version format
 - Check custom version rules for conflicts
 - Ensure conventional commit format consistency
@@ -879,6 +924,7 @@ console.log('Applied rules:', debugVersionManager.getLastAppliedRules());
 **Problem**: Releases fail during platform publishing phase.
 
 **Debugging:**
+
 ```typescript
 // Test platform connectivity
 const platform = new NpmPlatform();
@@ -886,22 +932,23 @@ await platform.initialize(config);
 
 try {
   await platform.testConnection();
-  console.log('Platform connection successful');
+  console.log("Platform connection successful");
 } catch (error) {
-  console.error('Platform connection failed:', error);
+  console.error("Platform connection failed:", error);
 }
 
 // Dry-run publishing
 const testArtifact = {
-  name: 'test-package',
-  version: '1.0.0-test',
-  path: './dist'
+  name: "test-package",
+  version: "1.0.0-test",
+  path: "./dist",
 };
 
 const result = await platform.publish(testArtifact, { dryRun: true });
 ```
 
 **Solutions:**
+
 - Verify authentication credentials
 - Check network connectivity and proxy settings
 - Validate artifact paths and permissions
@@ -912,18 +959,19 @@ const result = await platform.publish(testArtifact, { dryRun: true });
 **Problem**: Compatibility checker reports false breaking changes.
 
 **Debugging:**
+
 ```typescript
 // Run individual compatibility checks
 const checker = new CompatibilityCheckerImpl();
-const apiCheck = await checker.checkApiCompatibility('1.0.0', '1.1.0');
-const configCheck = await checker.checkConfigCompatibility('1.0.0', '1.1.0');
+const apiCheck = await checker.checkApiCompatibility("1.0.0", "1.1.0");
+const configCheck = await checker.checkConfigCompatibility("1.0.0", "1.1.0");
 
-console.log('API compatibility:', apiCheck);
-console.log('Config compatibility:', configCheck);
+console.log("API compatibility:", apiCheck);
+console.log("Config compatibility:", configCheck);
 
 // Inspect detected changes
-const changes = await checker.findBreakingChanges('1.0.0', '1.1.0');
-changes.forEach(change => {
+const changes = await checker.findBreakingChanges("1.0.0", "1.1.0");
+changes.forEach((change) => {
   console.log(`Change: ${change.description}`);
   console.log(`Confidence: ${change.confidence}`);
   console.log(`Detection method: ${change.detectionMethod}`);
@@ -931,6 +979,7 @@ changes.forEach(change => {
 ```
 
 **Solutions:**
+
 - Fine-tune compatibility thresholds
 - Add exclusion rules for known non-breaking changes
 - Implement custom compatibility strategies
@@ -946,7 +995,7 @@ class ReleaseDebugger {
 
   async inspectCurrentState(): Promise<ReleaseDebugInfo> {
     const state = await this.manager.getCurrentState();
-    
+
     return {
       releaseState: state.phase,
       currentVersion: await this.manager.getLatestVersion('stable'),
@@ -959,7 +1008,7 @@ class ReleaseDebugger {
 
   async generateDebugReport(): Promise<string> {
     const info = await this.inspectCurrentState();
-    
+
     return `
 # Release Debug Report
 Generated: ${new Date().toISOString()}
@@ -1007,23 +1056,23 @@ class ReleaseProfiler {
   }
 
   async profileRelease(plan: ReleasePlan): Promise<PerformanceReport> {
-    this.startTiming('total-release');
-    
-    this.startTiming('validation');
+    this.startTiming("total-release");
+
+    this.startTiming("validation");
     await this.manager.validateRelease(plan);
-    this.endTiming('validation');
-    
-    this.startTiming('execution');
+    this.endTiming("validation");
+
+    this.startTiming("execution");
     await this.manager.executeRelease(plan);
-    this.endTiming('execution');
-    
-    this.endTiming('total-release');
-    
+    this.endTiming("execution");
+
+    this.endTiming("total-release");
+
     return {
-      totalDuration: this.metrics.get('total-release')!,
-      validationDuration: this.metrics.get('validation')!,
-      executionDuration: this.metrics.get('execution')!,
-      breakdown: Object.fromEntries(this.metrics)
+      totalDuration: this.metrics.get("total-release")!,
+      validationDuration: this.metrics.get("validation")!,
+      executionDuration: this.metrics.get("execution")!,
+      breakdown: Object.fromEntries(this.metrics),
     };
   }
 }

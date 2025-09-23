@@ -18,27 +18,29 @@ The new error reporting system (v2.0+) introduces significant improvements:
 ### 1. Constructor and Initialization
 
 **Before (v1.x):**
+
 ```typescript
-import { ErrorReportingManager } from './error-reporting';
+import { ErrorReportingManager } from "./error-reporting";
 
 const errorManager = new ErrorReportingManager({
   enabled: true,
-  endpoint: 'https://api.example.com/errors'
+  endpoint: "https://api.example.com/errors",
 });
 
 // Ready to use immediately
 ```
 
 **After (v2.0+):**
+
 ```typescript
-import { ComprehensiveErrorReportingManager } from './error-reporting/manager';
+import { ComprehensiveErrorReportingManager } from "./error-reporting/manager";
 
 const errorManager = new ComprehensiveErrorReportingManager();
 
 // Must initialize before use
 await errorManager.initialize({
   enabled: true,
-  endpoint: 'https://api.example.com/errors',
+  endpoint: "https://api.example.com/errors",
   enableCrashReporting: true,
   collectSystemInfo: true,
   collectCodebaseInfo: true,
@@ -56,33 +58,35 @@ await errorManager.initialize({
     dependencies: true,
     maxCollectionTimeMs: 10000,
     includeEnvironmentVars: false,
-    includeProcessInfo: true
-  }
+    includeProcessInfo: true,
+  },
 });
 ```
 
 ### 2. Error Reporting API
 
 **Before (v1.x):**
+
 ```typescript
 // Simple error reporting
 const errorId = await errorManager.reportError({
-  message: 'Something went wrong',
-  type: 'error',
-  severity: 'high'
+  message: "Something went wrong",
+  type: "error",
+  severity: "high",
 });
 
 console.log(`Error reported: ${errorId}`);
 ```
 
 **After (v2.0+):**
+
 ```typescript
 // Two-step process: generate report + report error
-const error = new Error('Something went wrong');
+const error = new Error("Something went wrong");
 const report = await errorManager.generateErrorReport(error, {
-  operation: 'user-action',
-  component: 'MyComponent',
-  customContext: 'additional-info'
+  operation: "user-action",
+  component: "MyComponent",
+  customContext: "additional-info",
 });
 
 const result = await errorManager.reportError(report);
@@ -93,6 +97,7 @@ console.log(`Suggestions: ${result.suggestions?.length || 0}`);
 ### 3. Configuration Structure
 
 **Before (v1.x):**
+
 ```typescript
 interface OldConfig {
   enabled: boolean;
@@ -104,6 +109,7 @@ interface OldConfig {
 ```
 
 **After (v2.0+):**
+
 ```typescript
 interface ErrorReportingConfig {
   enabled: boolean;
@@ -134,12 +140,14 @@ interface ErrorReportingConfig {
 ### 4. Return Values
 
 **Before (v1.x):**
+
 ```typescript
 // Simple string return
 const errorId: string = await errorManager.reportError(error);
 ```
 
 **After (v2.0+):**
+
 ```typescript
 // Rich result object
 const result: ReportResult = await errorManager.reportError(report);
@@ -169,15 +177,17 @@ Update your package.json to use the new error reporting system:
 ### Step 2: Update Imports
 
 **Before:**
+
 ```typescript
-import { ErrorReportingManager } from './error-reporting';
+import { ErrorReportingManager } from "./error-reporting";
 ```
 
 **After:**
+
 ```typescript
-import { ComprehensiveErrorReportingManager } from '@ast-copilot-helper/ast-helper';
+import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-helper";
 // or if using local files:
-import { ComprehensiveErrorReportingManager } from './error-reporting/manager';
+import { ComprehensiveErrorReportingManager } from "./error-reporting/manager";
 ```
 
 ### Step 3: Update Configuration
@@ -191,7 +201,7 @@ function migrateConfig(oldConfig: OldConfig): ErrorReportingConfig {
     enabled: oldConfig.enabled,
     endpoint: oldConfig.endpoint,
     apiKey: oldConfig.apiKey,
-    
+
     // New required fields with sensible defaults
     enableCrashReporting: oldConfig.enableCrashReporting ?? true,
     enableAutomaticReporting: false, // Conservative default
@@ -201,7 +211,7 @@ function migrateConfig(oldConfig: OldConfig): ErrorReportingConfig {
     maxHistoryEntries: 1000,
     privacyMode: false, // Review and set based on your needs
     userReportingEnabled: true,
-    
+
     diagnosticDataCollection: {
       system: oldConfig.collectDiagnostics ?? true,
       runtime: true,
@@ -211,8 +221,8 @@ function migrateConfig(oldConfig: OldConfig): ErrorReportingConfig {
       dependencies: true,
       maxCollectionTimeMs: 10000,
       includeEnvironmentVars: false, // Conservative default
-      includeProcessInfo: true
-    }
+      includeProcessInfo: true,
+    },
   };
 }
 ```
@@ -220,11 +230,13 @@ function migrateConfig(oldConfig: OldConfig): ErrorReportingConfig {
 ### Step 4: Update Initialization
 
 **Before:**
+
 ```typescript
 const errorManager = new ErrorReportingManager(oldConfig);
 ```
 
 **After:**
+
 ```typescript
 const errorManager = new ComprehensiveErrorReportingManager();
 const newConfig = migrateConfig(oldConfig);
@@ -249,9 +261,9 @@ async function migrateErrorReporting(
 
   // Generate comprehensive report
   const report = await errorManager.generateErrorReport(error, {
-    operation: oldErrorData.operation || 'unknown',
-    component: oldErrorData.component || 'unknown',
-    ...oldErrorData.context // Spread any additional context
+    operation: oldErrorData.operation || "unknown",
+    component: oldErrorData.component || "unknown",
+    ...oldErrorData.context, // Spread any additional context
   });
 
   // Report and return new format
@@ -259,26 +271,26 @@ async function migrateErrorReporting(
   return {
     errorId: result.errorId,
     suggestions: result.suggestions,
-    success: result.success
+    success: result.success,
   };
 }
 
 // Usage example
 try {
   // Your code that might throw errors
-  throw new Error('Database connection failed');
+  throw new Error("Database connection failed");
 } catch (error) {
   const result = await migrateErrorReporting(errorManager, {
     message: error.message,
-    type: 'DatabaseError',
-    operation: 'database-connection',
-    context: { connectionString: 'postgresql://...' }
+    type: "DatabaseError",
+    operation: "database-connection",
+    context: { connectionString: "postgresql://..." },
   });
-  
+
   console.log(`Error reported: ${result.errorId}`);
   if (result.suggestions?.length > 0) {
-    console.log('Suggestions:');
-    result.suggestions.forEach(suggestion => {
+    console.log("Suggestions:");
+    result.suggestions.forEach((suggestion) => {
       console.log(`- ${suggestion.title}: ${suggestion.description}`);
     });
   }
@@ -291,14 +303,14 @@ Add proper cleanup to prevent resource leaks:
 
 ```typescript
 // Add cleanup on application shutdown
-process.on('SIGINT', async () => {
-  console.log('Shutting down...');
+process.on("SIGINT", async () => {
+  console.log("Shutting down...");
   await errorManager.cleanup();
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
-  console.log('Terminating...');
+process.on("SIGTERM", async () => {
+  console.log("Terminating...");
   await errorManager.cleanup();
   process.exit(0);
 });
@@ -310,20 +322,20 @@ process.on('SIGTERM', async () => {
 
 ```typescript
 const suggestions = await errorManager.provideSuggestions(errorReport);
-suggestions.forEach(suggestion => {
+suggestions.forEach((suggestion) => {
   console.log(`💡 ${suggestion.title}`);
   console.log(`   Confidence: ${(suggestion.confidence * 100).toFixed(1)}%`);
-  console.log(`   Steps: ${suggestion.steps.join(', ')}`);
+  console.log(`   Steps: ${suggestion.steps.join(", ")}`);
 });
 ```
 
 ### 2. Comprehensive System Diagnostics
 
 ```typescript
-const diagnostics = await errorManager.exportDiagnostics('json');
+const diagnostics = await errorManager.exportDiagnostics("json");
 const data = JSON.parse(diagnostics);
-console.log('System Health:', data.environment);
-console.log('Performance:', data.diagnostics.performance);
+console.log("System Health:", data.environment);
+console.log("Performance:", data.diagnostics.performance);
 ```
 
 ### 3. Error History and Analytics
@@ -338,7 +350,7 @@ const patterns = history.reduce((acc, entry) => {
   return acc;
 }, {});
 
-console.log('Error patterns:', patterns);
+console.log("Error patterns:", patterns);
 ```
 
 ### 4. Privacy Controls
@@ -351,8 +363,8 @@ await errorManager.initialize({
   diagnosticDataCollection: {
     // ... minimal collection settings
     includeEnvironmentVars: false,
-    includeProcessInfo: false
-  }
+    includeProcessInfo: false,
+  },
 });
 ```
 
@@ -364,7 +376,7 @@ The system now automatically detects crashes and attempts recovery:
 // Crash detection is automatic once enabled
 await errorManager.initialize({
   // ... other config
-  enableCrashReporting: true
+  enableCrashReporting: true,
 });
 
 // System will automatically detect:
@@ -409,15 +421,15 @@ class LegacyErrorReportingWrapper {
 
   async reportError(errorData: any): Promise<string> {
     await this.ensureInitialized();
-    
+
     const error = new Error(errorData.message);
-    error.name = errorData.type || 'Error';
-    
+    error.name = errorData.type || "Error";
+
     const report = await this.manager.generateErrorReport(error, {
-      operation: errorData.operation || 'legacy',
-      ...errorData.context
+      operation: errorData.operation || "legacy",
+      ...errorData.context,
     });
-    
+
     const result = await this.manager.reportError(report);
     return result.errorId;
   }
@@ -436,6 +448,7 @@ const errorManager = new LegacyErrorReportingWrapper(oldConfig);
 ### 1. Async Initialization
 
 **Problem**: Forgetting to await initialization
+
 ```typescript
 // ❌ Wrong
 const errorManager = new ComprehensiveErrorReportingManager();
@@ -444,6 +457,7 @@ await errorManager.reportError(report); // Will fail
 ```
 
 **Solution**: Always await initialization
+
 ```typescript
 // ✅ Correct
 const errorManager = new ComprehensiveErrorReportingManager();
@@ -454,15 +468,17 @@ await errorManager.reportError(report);
 ### 2. Configuration Completeness
 
 **Problem**: Missing required configuration fields
+
 ```typescript
 // ❌ Incomplete config
 await errorManager.initialize({
-  enabled: true
+  enabled: true,
   // Missing required fields
 });
 ```
 
 **Solution**: Provide complete configuration
+
 ```typescript
 // ✅ Complete config
 await errorManager.initialize({
@@ -476,20 +492,22 @@ await errorManager.initialize({
 ### 3. Error Context
 
 **Problem**: Not providing sufficient context
+
 ```typescript
 // ❌ Limited context
 const report = await errorManager.generateErrorReport(error);
 ```
 
 **Solution**: Provide rich context
+
 ```typescript
 // ✅ Rich context
 const report = await errorManager.generateErrorReport(error, {
-  operation: 'user-authentication',
-  component: 'LoginService',
+  operation: "user-authentication",
+  component: "LoginService",
   userId: user.id,
   attemptNumber: 3,
-  ipAddress: request.ip
+  ipAddress: request.ip,
 });
 ```
 

@@ -23,14 +23,17 @@ npm install @ast-copilot-helper/release-management
 ## Quick Start
 
 ```typescript
-import { ComprehensiveReleaseManager, ReleaseType } from '@ast-copilot-helper/release-management';
+import {
+  ComprehensiveReleaseManager,
+  ReleaseType,
+} from "@ast-copilot-helper/release-management";
 
 // Initialize the release manager
 const manager = new ComprehensiveReleaseManager();
 await manager.initialize(config);
 
 // Plan a release
-const plan = await manager.planRelease('1.1.0', ReleaseType.MINOR);
+const plan = await manager.planRelease("1.1.0", ReleaseType.MINOR);
 
 // Validate the plan
 const validation = await manager.validateRelease(plan);
@@ -55,9 +58,11 @@ The main orchestrator class that coordinates all release management activities.
 Initializes the release manager with configuration.
 
 **Parameters:**
+
 - `config` - Complete release configuration object
 
 **Throws:**
+
 - Error if configuration is invalid or initialization fails
 
 ##### `planRelease(version: string, type: ReleaseType): Promise<ReleasePlan>`
@@ -65,16 +70,21 @@ Initializes the release manager with configuration.
 Creates a comprehensive release plan for the specified version and type.
 
 **Parameters:**
+
 - `version` - Target version string (e.g., '1.2.3')
 - `type` - Release type (MAJOR, MINOR, PATCH, PRERELEASE, HOTFIX)
 
 **Returns:**
+
 - `ReleasePlan` - Detailed release plan with packages, changes, and validations
 
 **Example:**
+
 ```typescript
-const plan = await manager.planRelease('1.2.0', ReleaseType.MINOR);
-console.log(`Planning release ${plan.version} with ${plan.changes.length} changes`);
+const plan = await manager.planRelease("1.2.0", ReleaseType.MINOR);
+console.log(
+  `Planning release ${plan.version} with ${plan.changes.length} changes`
+);
 ```
 
 ##### `validateRelease(plan: ReleasePlan): Promise<ValidationResult>`
@@ -82,16 +92,19 @@ console.log(`Planning release ${plan.version} with ${plan.changes.length} change
 Validates a release plan before execution.
 
 **Parameters:**
+
 - `plan` - Release plan to validate
 
 **Returns:**
+
 - `ValidationResult` - Validation status with errors, warnings, and step results
 
 **Example:**
+
 ```typescript
 const validation = await manager.validateRelease(plan);
 if (!validation.success) {
-  console.log('Validation failed:', validation.errors);
+  console.log("Validation failed:", validation.errors);
 }
 ```
 
@@ -100,12 +113,15 @@ if (!validation.success) {
 Executes a validated release plan.
 
 **Parameters:**
+
 - `plan` - Validated release plan
 
 **Returns:**
+
 - `ReleaseResult` - Execution result with success status and artifacts
 
 **Example:**
+
 ```typescript
 const result = await manager.executeRelease(plan);
 if (result.success) {
@@ -119,15 +135,18 @@ if (result.success) {
 Generates changelog between two versions.
 
 **Parameters:**
+
 - `fromVersion` - Starting version for changelog
 - `toVersion` - Ending version for changelog
 
 **Returns:**
+
 - `Changelog` - Structured changelog with categorized entries
 
 **Example:**
+
 ```typescript
-const changelog = await manager.generateChangelog('1.0.0', '1.1.0');
+const changelog = await manager.generateChangelog("1.0.0", "1.1.0");
 console.log(`Changelog has ${changelog.entries.length} entries`);
 console.log(`Breaking changes: ${changelog.breakingChanges.length}`);
 ```
@@ -137,15 +156,21 @@ console.log(`Breaking changes: ${changelog.breakingChanges.length}`);
 Checks backward compatibility between versions.
 
 **Parameters:**
+
 - `newVersion` - New version to check
 - `baseVersion` - Base version for comparison
 
 **Returns:**
+
 - `CompatibilityReport` - Compatibility analysis with breaking changes
 
 **Example:**
+
 ```typescript
-const compatibility = await manager.checkBackwardCompatibility('2.0.0', '1.5.0');
+const compatibility = await manager.checkBackwardCompatibility(
+  "2.0.0",
+  "1.5.0"
+);
 if (!compatibility.compatible) {
   console.log(`Found ${compatibility.breakingChanges.length} breaking changes`);
 }
@@ -156,17 +181,20 @@ if (!compatibility.compatible) {
 Creates formatted release notes from changelog entries.
 
 **Parameters:**
+
 - `version` - Version for release notes
 - `changes` - Array of changelog entries
 
 **Returns:**
+
 - `ReleaseNotes` - Formatted release notes with highlights
 
 **Example:**
+
 ```typescript
-const notes = await manager.createReleaseNotes('1.2.0', changes);
+const notes = await manager.createReleaseNotes("1.2.0", changes);
 console.log(`Release notes: ${notes.title}`);
-console.log(`Highlights: ${notes.highlights.join(', ')}`);
+console.log(`Highlights: ${notes.highlights.join(", ")}`);
 ```
 
 ##### `rollbackRelease(version: string, reason: string): Promise<RollbackResult>`
@@ -174,15 +202,21 @@ console.log(`Highlights: ${notes.highlights.join(', ')}`);
 Rolls back a release to the previous version.
 
 **Parameters:**
+
 - `version` - Version to rollback
 - `reason` - Reason for rollback
 
 **Returns:**
+
 - `RollbackResult` - Rollback execution result
 
 **Example:**
+
 ```typescript
-const rollback = await manager.rollbackRelease('1.2.0', 'Critical bug detected');
+const rollback = await manager.rollbackRelease(
+  "1.2.0",
+  "Critical bug detected"
+);
 if (rollback.success) {
   console.log(`Rolled back to version ${rollback.rolledBackVersion}`);
 }
@@ -193,12 +227,15 @@ if (rollback.success) {
 Gets the latest version for a specific release channel.
 
 **Parameters:**
+
 - `channel` - Release channel (STABLE, BETA, ALPHA, NIGHTLY)
 
 **Returns:**
+
 - Latest version string for the channel
 
 **Example:**
+
 ```typescript
 const latestStable = await manager.getLatestVersion(ReleaseChannel.STABLE);
 const latestBeta = await manager.getLatestVersion(ReleaseChannel.BETA);
@@ -209,19 +246,22 @@ const latestBeta = await manager.getLatestVersion(ReleaseChannel.BETA);
 Lists releases with optional filtering.
 
 **Parameters:**
+
 - `filter` - Optional filter criteria
 
 **Returns:**
+
 - Array of releases matching the filter
 
 **Example:**
+
 ```typescript
 // List all patch releases
 const patches = await manager.listReleases({ type: ReleaseType.PATCH });
 
 // List releases from last month
 const recent = await manager.listReleases({
-  dateFrom: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  dateFrom: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
 });
 ```
 
@@ -236,11 +276,15 @@ Handles semantic versioning calculations and validations.
 Calculates the next version based on current version and release type.
 
 **Example:**
+
 ```typescript
 const versionManager = new VersionManagerImpl();
 await versionManager.initialize(config.versioning);
 
-const nextVersion = await versionManager.calculateNextVersion('1.0.0', ReleaseType.MINOR);
+const nextVersion = await versionManager.calculateNextVersion(
+  "1.0.0",
+  ReleaseType.MINOR
+);
 console.log(`Next version: ${nextVersion}`); // "1.1.0"
 ```
 
@@ -253,8 +297,9 @@ Validates if a version string matches the expected format for the release type.
 Compares two version strings semantically.
 
 **Returns:**
+
 - `-1` if version1 < version2
-- `0` if version1 === version2  
+- `0` if version1 === version2
 - `1` if version1 > version2
 
 ### ChangelogGeneratorImpl
@@ -272,19 +317,20 @@ Detects changes in the repository since a specific version.
 Parses conventional commit messages into structured changelog entries.
 
 **Example:**
+
 ```typescript
 const generator = new ChangelogGeneratorImpl();
 await generator.initialize(config.changelog);
 
 const commits = [
-  'feat(auth): add OAuth2 support',
-  'fix(api): resolve null pointer exception',
-  'feat!: breaking change in user API'
+  "feat(auth): add OAuth2 support",
+  "fix(api): resolve null pointer exception",
+  "feat!: breaking change in user API",
 ];
 
 const entries = await generator.parseCommits(commits);
 console.log(`Parsed ${entries.length} commits`);
-console.log(`Breaking changes: ${entries.filter(e => e.breaking).length}`);
+console.log(`Breaking changes: ${entries.filter((e) => e.breaking).length}`);
 ```
 
 ##### `formatChangelog(entries: ChangelogEntry[]): Promise<string>`
@@ -310,12 +356,13 @@ Checks configuration compatibility between versions.
 Identifies breaking changes between versions.
 
 **Example:**
+
 ```typescript
 const checker = new CompatibilityCheckerImpl();
 await checker.initialize(config.compatibility);
 
-const breaking = await checker.findBreakingChanges('1.0.0', '2.0.0');
-breaking.forEach(change => {
+const breaking = await checker.findBreakingChanges("1.0.0", "2.0.0");
+breaking.forEach((change) => {
   console.log(`Breaking: ${change.description}`);
   console.log(`Migration: ${change.migration}`);
 });
@@ -344,13 +391,13 @@ interface ReleaseConfig {
 
 ```typescript
 interface RepositoryConfig {
-  owner: string;              // GitHub owner/organization
-  name: string;               // Repository name
-  defaultBranch: string;      // Default branch (usually 'main')
-  releaseBranches: string[];  // Branches allowed for releases
+  owner: string; // GitHub owner/organization
+  name: string; // Repository name
+  defaultBranch: string; // Default branch (usually 'main')
+  releaseBranches: string[]; // Branches allowed for releases
   protectedBranches: string[]; // Protected branches requiring approval
-  monorepo: boolean;          // Whether this is a monorepo
-  workspaces?: string[];      // Workspace patterns for monorepos
+  monorepo: boolean; // Whether this is a monorepo
+  workspaces?: string[]; // Workspace patterns for monorepos
 }
 ```
 
@@ -358,12 +405,12 @@ interface RepositoryConfig {
 
 ```typescript
 interface VersioningConfig {
-  scheme: 'semver' | 'calver' | 'custom';  // Versioning scheme
-  initialVersion: string;                   // Starting version
-  prereleasePattern?: string;              // Pattern for prerelease versions
-  channels: VersionChannel[];              // Release channels configuration
-  allowPrereleasePromotion: boolean;       // Allow promoting prereleases
-  strictMode: boolean;                     // Enforce strict semver
+  scheme: "semver" | "calver" | "custom"; // Versioning scheme
+  initialVersion: string; // Starting version
+  prereleasePattern?: string; // Pattern for prerelease versions
+  channels: VersionChannel[]; // Release channels configuration
+  allowPrereleasePromotion: boolean; // Allow promoting prereleases
+  strictMode: boolean; // Enforce strict semver
 }
 ```
 
@@ -372,49 +419,53 @@ interface VersioningConfig {
 ### Basic Release Workflow
 
 ```typescript
-import { 
+import {
   ComprehensiveReleaseManager,
   ReleaseType,
-  ReleaseChannel 
-} from '@ast-copilot-helper/release-management';
+  ReleaseChannel,
+} from "@ast-copilot-helper/release-management";
 
 async function performRelease() {
   const manager = new ComprehensiveReleaseManager();
-  
+
   // Initialize with configuration
   await manager.initialize({
     repository: {
-      owner: 'myorg',
-      name: 'myproject',
-      defaultBranch: 'main',
-      releaseBranches: ['main'],
-      protectedBranches: ['main'],
-      monorepo: false
+      owner: "myorg",
+      name: "myproject",
+      defaultBranch: "main",
+      releaseBranches: ["main"],
+      protectedBranches: ["main"],
+      monorepo: false,
     },
     versioning: {
-      scheme: 'semver',
-      initialVersion: '1.0.0',
-      channels: [{
-        name: ReleaseChannel.STABLE,
-        pattern: 'stable',
-        autoPublish: true,
-        requiresApproval: false
-      }],
+      scheme: "semver",
+      initialVersion: "1.0.0",
+      channels: [
+        {
+          name: ReleaseChannel.STABLE,
+          pattern: "stable",
+          autoPublish: true,
+          requiresApproval: false,
+        },
+      ],
       allowPrereleasePromotion: true,
-      strictMode: true
+      strictMode: true,
     },
     // ... other configuration
   });
 
   try {
     // Plan the release
-    const plan = await manager.planRelease('1.1.0', ReleaseType.MINOR);
-    console.log(`Planned release ${plan.version} with ${plan.changes.length} changes`);
+    const plan = await manager.planRelease("1.1.0", ReleaseType.MINOR);
+    console.log(
+      `Planned release ${plan.version} with ${plan.changes.length} changes`
+    );
 
     // Validate the plan
     const validation = await manager.validateRelease(plan);
     if (!validation.success) {
-      console.error('Validation failed:', validation.errors);
+      console.error("Validation failed:", validation.errors);
       return;
     }
 
@@ -423,13 +474,14 @@ async function performRelease() {
     if (result.success) {
       console.log(`✅ Release ${result.version} completed successfully!`);
       console.log(`📦 Generated ${result.artifacts?.length || 0} artifacts`);
-      console.log(`🚀 Published to ${result.publishResults?.length || 0} platforms`);
+      console.log(
+        `🚀 Published to ${result.publishResults?.length || 0} platforms`
+      );
     } else {
-      console.error('❌ Release failed:', result.error);
+      console.error("❌ Release failed:", result.error);
     }
-
   } catch (error) {
-    console.error('Release process failed:', error);
+    console.error("Release process failed:", error);
   }
 }
 ```
@@ -442,35 +494,41 @@ async function generateChangelog() {
   await manager.initialize(config);
 
   // Generate changelog between versions
-  const changelog = await manager.generateChangelog('1.0.0', '1.1.0');
-  
-  console.log('# Changelog\n');
-  console.log(`## ${changelog.version} - ${changelog.date.toISOString().split('T')[0]}\n`);
-  
+  const changelog = await manager.generateChangelog("1.0.0", "1.1.0");
+
+  console.log("# Changelog\n");
+  console.log(
+    `## ${changelog.version} - ${changelog.date.toISOString().split("T")[0]}\n`
+  );
+
   // Group by type
   const features = changelog.newFeatures;
   const bugfixes = changelog.bugFixes;
   const breaking = changelog.breakingChanges;
 
   if (features.length > 0) {
-    console.log('### 🚀 New Features\n');
-    features.forEach(entry => {
-      console.log(`- ${entry.description} ${entry.scope ? `(${entry.scope})` : ''}`);
+    console.log("### 🚀 New Features\n");
+    features.forEach((entry) => {
+      console.log(
+        `- ${entry.description} ${entry.scope ? `(${entry.scope})` : ""}`
+      );
     });
     console.log();
   }
 
   if (bugfixes.length > 0) {
-    console.log('### 🐛 Bug Fixes\n');
-    bugfixes.forEach(entry => {
-      console.log(`- ${entry.description} ${entry.scope ? `(${entry.scope})` : ''}`);
+    console.log("### 🐛 Bug Fixes\n");
+    bugfixes.forEach((entry) => {
+      console.log(
+        `- ${entry.description} ${entry.scope ? `(${entry.scope})` : ""}`
+      );
     });
     console.log();
   }
 
   if (breaking.length > 0) {
-    console.log('### ⚠️ BREAKING CHANGES\n');
-    breaking.forEach(entry => {
+    console.log("### ⚠️ BREAKING CHANGES\n");
+    breaking.forEach((entry) => {
       console.log(`- ${entry.description}`);
     });
     console.log();
@@ -485,14 +543,16 @@ async function checkCompatibility() {
   const manager = new ComprehensiveReleaseManager();
   await manager.initialize(config);
 
-  const report = await manager.checkBackwardCompatibility('2.0.0', '1.5.0');
-  
-  console.log(`Compatibility Check: ${report.baseVersion} → ${report.newVersion}`);
-  console.log(`Compatible: ${report.compatible ? '✅' : '❌'}`);
-  
+  const report = await manager.checkBackwardCompatibility("2.0.0", "1.5.0");
+
+  console.log(
+    `Compatibility Check: ${report.baseVersion} → ${report.newVersion}`
+  );
+  console.log(`Compatible: ${report.compatible ? "✅" : "❌"}`);
+
   if (report.breakingChanges.length > 0) {
-    console.log('\n🚨 Breaking Changes Found:');
-    report.breakingChanges.forEach(change => {
+    console.log("\n🚨 Breaking Changes Found:");
+    report.breakingChanges.forEach((change) => {
       console.log(`- ${change.description}`);
       console.log(`  Severity: ${change.severity}`);
       console.log(`  Migration: ${change.migration}`);
@@ -501,7 +561,7 @@ async function checkCompatibility() {
   }
 
   if (report.migrationRequired && report.migrationGuide) {
-    console.log('📋 Migration Guide:');
+    console.log("📋 Migration Guide:");
     console.log(report.migrationGuide.description);
     report.migrationGuide.steps.forEach((step, i) => {
       console.log(`${i + 1}. ${step.description}`);
@@ -517,36 +577,36 @@ const config = {
   // ... other config
   platforms: [
     {
-      name: 'npm',
+      name: "npm",
       enabled: true,
       config: {
-        registry: 'https://registry.npmjs.org/',
-        access: 'public'
+        registry: "https://registry.npmjs.org/",
+        access: "public",
       },
-      requirements: ['build', 'test'],
-      artifacts: ['dist/**', 'package.json']
+      requirements: ["build", "test"],
+      artifacts: ["dist/**", "package.json"],
     },
     {
-      name: 'github-releases',
+      name: "github-releases",
       enabled: true,
       config: {
-        owner: 'myorg',
-        repo: 'myproject',
-        generateNotes: true
+        owner: "myorg",
+        repo: "myproject",
+        generateNotes: true,
       },
-      requirements: ['changelog'],
-      artifacts: ['dist.zip']
+      requirements: ["changelog"],
+      artifacts: ["dist.zip"],
     },
     {
-      name: 'vscode-marketplace',
+      name: "vscode-marketplace",
       enabled: true,
       config: {
-        publisher: 'mypublisher'
+        publisher: "mypublisher",
       },
-      requirements: ['package'],
-      artifacts: ['*.vsix']
-    }
-  ]
+      requirements: ["package"],
+      artifacts: ["*.vsix"],
+    },
+  ],
 };
 ```
 
@@ -603,19 +663,22 @@ try {
   const result = await manager.executeRelease(plan);
   if (!result.success) {
     // Handle execution failure
-    console.error('Release failed:', result.error);
-    
+    console.error("Release failed:", result.error);
+
     // Attempt rollback if enabled
     if (config.rollback.enabled) {
-      const rollback = await manager.rollbackRelease(plan.version, result.error);
+      const rollback = await manager.rollbackRelease(
+        plan.version,
+        result.error
+      );
       if (rollback.success) {
-        console.log('Successfully rolled back release');
+        console.log("Successfully rolled back release");
       }
     }
   }
 } catch (error) {
   // Handle unexpected errors
-  console.error('Unexpected error during release:', error);
+  console.error("Unexpected error during release:", error);
 }
 ```
 

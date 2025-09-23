@@ -25,7 +25,10 @@ interface ReleaseManager {
   validateRelease(plan: ReleasePlan): Promise<ValidationResult>;
   executeRelease(plan: ReleasePlan): Promise<ReleaseResult>;
   generateChangelog(fromVersion: string, toVersion: string): Promise<Changelog>;
-  checkBackwardCompatibility(newVersion: string, baseVersion: string): Promise<CompatibilityReport>;
+  checkBackwardCompatibility(
+    newVersion: string,
+    baseVersion: string
+  ): Promise<CompatibilityReport>;
   rollbackRelease(version: string, reason: string): Promise<RollbackResult>;
 }
 ```

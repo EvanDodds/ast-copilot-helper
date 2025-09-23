@@ -1,0 +1,120 @@
+title: "❓ Questions and Help"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Need help with ast-copilot-helper? Ask your questions here!
+        
+        Before posting, please:
+        - Check the [documentation](https://github.com/EvanDodds/ast-copilot-helper/tree/main/docs)
+        - Search existing discussions and issues
+        - Review the [FAQ](https://github.com/EvanDodds/ast-copilot-helper/blob/main/docs/faq.md)
+        
+  - type: input
+    id: title
+    attributes:
+      label: Question Title
+      description: A clear, specific title for your question
+      placeholder: e.g., "How to use AST Helper with TypeScript decorators?"
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: area
+    attributes:
+      label: Question Area
+      description: What area is your question about?
+      options:
+        - Installation and Setup
+        - AST Helper Usage
+        - MCP Server Configuration
+        - VS Code Extension
+        - CLI Tools
+        - API Integration
+        - Troubleshooting
+        - Best Practices
+        - Other
+    validations:
+      required: true
+      
+  - type: textarea
+    id: question
+    attributes:
+      label: Question Details
+      description: Provide detailed information about your question
+      placeholder: |
+        What are you trying to achieve?
+        What have you tried so far?
+        What specific help do you need?
+    validations:
+      required: true
+      
+  - type: textarea
+    id: context
+    attributes:
+      label: Environment and Context
+      description: Provide relevant context about your setup
+      placeholder: |
+        - Operating System: 
+        - Node.js version: 
+        - Package version: 
+        - VS Code version (if applicable): 
+        - Relevant configuration: 
+      render: markdown
+      
+  - type: textarea
+    id: code-sample
+    attributes:
+      label: Code Sample or Configuration
+      description: If applicable, provide code or configuration files
+      placeholder: |
+        ```typescript
+        // Your code here
+        ```
+      render: markdown
+      
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Messages
+      description: If you're getting errors, paste them here
+      placeholder: |
+        ```
+        Error message here
+        ```
+      render: markdown
+      
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: Urgency
+      description: How urgent is this question?
+      options:
+        - Low - Just curious
+        - Medium - Would like to know
+        - High - Blocking my work
+        - Critical - Production issue
+    validations:
+      required: true
+      
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Research Done
+      description: Please confirm you've done some research first
+      options:
+        - label: I searched existing discussions and issues
+          required: true
+        - label: I checked the documentation
+          required: true
+        - label: I reviewed the FAQ (if available)
+          required: false
+          
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this question, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

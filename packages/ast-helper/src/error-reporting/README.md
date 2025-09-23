@@ -5,6 +5,7 @@ A comprehensive error reporting and diagnostics system for the AST Copilot Helpe
 ## 🚀 Features
 
 ### Core Capabilities
+
 - **Hierarchical Error Reporting** - Structured error categorization and severity management
 - **Intelligent Diagnostics** - Context-aware system information collection
 - **Crash Detection & Recovery** - Automatic crash detection with recovery suggestions
@@ -13,6 +14,7 @@ A comprehensive error reporting and diagnostics system for the AST Copilot Helpe
 - **Secure Transmission** - Encrypted data transmission with rate limiting
 
 ### Key Components
+
 - `ComprehensiveErrorReportingManager` - Central orchestrator for all error reporting
 - `DiagnosticCollector` - System context and diagnostic data collection
 - `SuggestionEngine` - AI-powered error resolution suggestions
@@ -34,7 +36,7 @@ npm install @ast-copilot-helper/ast-helper
 ### Basic Usage
 
 ```typescript
-import { ComprehensiveErrorReportingManager } from '@ast-copilot-helper/ast-helper';
+import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-helper";
 
 // Initialize the error reporting system
 const errorManager = new ComprehensiveErrorReportingManager({
@@ -42,22 +44,22 @@ const errorManager = new ComprehensiveErrorReportingManager({
   enableAnalytics: true,
   privacySettings: {
     collectDiagnostics: true,
-    allowTelemetry: true
-  }
+    allowTelemetry: true,
+  },
 });
 
 // Report an error
 await errorManager.reportError({
-  type: 'error',
-  severity: 'high',
-  message: 'Failed to parse AST',
-  category: 'parse-error',
-  operation: 'ast-parsing',
+  type: "error",
+  severity: "high",
+  message: "Failed to parse AST",
+  category: "parse-error",
+  operation: "ast-parsing",
   context: {
-    fileName: 'example.ts',
+    fileName: "example.ts",
     line: 42,
-    userId: 'user-123'
-  }
+    userId: "user-123",
+  },
 });
 ```
 
@@ -69,30 +71,30 @@ const errorManager = new ComprehensiveErrorReportingManager({
   enableCrashReporting: true,
   enableAnalytics: true,
   maxErrorHistory: 10000,
-  
+
   // Privacy settings
   privacySettings: {
     collectDiagnostics: true,
     allowTelemetry: true,
     retentionDays: 30,
-    allowedCategories: ['error', 'crash', 'performance']
+    allowedCategories: ["error", "crash", "performance"],
   },
-  
+
   // Analytics settings
   analyticsSettings: {
     enableTrendAnalysis: true,
     enablePatternRecognition: true,
     batchSize: 100,
-    flushInterval: 60000
+    flushInterval: 60000,
   },
-  
+
   // Transmission settings
   transmissionSettings: {
-    endpoint: 'https://api.example.com/errors',
-    apiKey: 'your-api-key',
+    endpoint: "https://api.example.com/errors",
+    apiKey: "your-api-key",
     enableEncryption: true,
-    retryAttempts: 3
-  }
+    retryAttempts: 3,
+  },
 });
 ```
 
@@ -138,8 +140,8 @@ async updatePrivacySettings(settings: Partial<PrivacySettings>): Promise<void>
 
 ```typescript
 interface ErrorReport {
-  type: 'error' | 'warning' | 'info';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "error" | "warning" | "info";
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   category: string;
   operation?: string;
@@ -161,9 +163,9 @@ await errorManager.updatePrivacySettings({
   collectDiagnostics: true,
   allowTelemetry: false,
   retentionDays: 7,
-  allowedCategories: ['error', 'crash'],
+  allowedCategories: ["error", "crash"],
   scrubPII: true,
-  anonymizeData: true
+  anonymizeData: true,
 });
 ```
 
@@ -221,8 +223,8 @@ Create an `error-reporting.config.json` file:
 ```typescript
 // Get comprehensive analytics report
 const report = await errorManager.getAnalyticsReport({
-  startDate: new Date('2023-01-01'),
-  endDate: new Date('2023-12-31')
+  startDate: new Date("2023-01-01"),
+  endDate: new Date("2023-12-31"),
 });
 
 console.log(report.errorTrends);
@@ -234,8 +236,8 @@ console.log(report.severityDistribution);
 
 ```typescript
 // Export error data in various formats
-const jsonData = await errorManager.exportDiagnostics('json');
-const csvData = await errorManager.exportDiagnostics('csv');
+const jsonData = await errorManager.exportDiagnostics("json");
+const csvData = await errorManager.exportDiagnostics("csv");
 ```
 
 ## 🚨 Crash Detection
@@ -255,9 +257,9 @@ The system automatically detects various types of crashes:
 ```typescript
 // Register custom crash handler
 errorManager.onCrashDetected((crash) => {
-  console.log('Crash detected:', crash.type);
-  console.log('Recovery attempted:', crash.recoveryAttempted);
-  console.log('Final state:', crash.finalState);
+  console.log("Crash detected:", crash.type);
+  console.log("Recovery attempted:", crash.recoveryAttempted);
+  console.log("Final state:", crash.finalState);
 });
 ```
 
@@ -269,13 +271,13 @@ The system provides intelligent suggestions for error resolution:
 
 ```typescript
 // Get suggestions for a specific error
-const suggestions = await errorManager.getErrorSuggestions('error-id-123');
+const suggestions = await errorManager.getErrorSuggestions("error-id-123");
 
-suggestions.forEach(suggestion => {
-  console.log('Suggestion:', suggestion.title);
-  console.log('Description:', suggestion.description);
-  console.log('Confidence:', suggestion.confidence);
-  console.log('Steps:', suggestion.steps);
+suggestions.forEach((suggestion) => {
+  console.log("Suggestion:", suggestion.title);
+  console.log("Description:", suggestion.description);
+  console.log("Confidence:", suggestion.confidence);
+  console.log("Steps:", suggestion.steps);
 });
 ```
 
@@ -326,9 +328,9 @@ npm test -- packages/ast-helper/src/test/error-reporting/privacy/privacy-manager
 ```typescript
 // Monitor system performance
 const metrics = await errorManager.getPerformanceMetrics();
-console.log('Average response time:', metrics.avgResponseTime);
-console.log('Memory usage:', metrics.memoryUsage);
-console.log('Error processing rate:', metrics.processingRate);
+console.log("Average response time:", metrics.avgResponseTime);
+console.log("Memory usage:", metrics.memoryUsage);
+console.log("Error processing rate:", metrics.processingRate);
 ```
 
 ## 🛠️ Troubleshooting
@@ -351,7 +353,7 @@ Enable debug logging for troubleshooting:
 ```typescript
 const errorManager = new ComprehensiveErrorReportingManager({
   debug: true,
-  logLevel: 'debug'
+  logLevel: "debug",
 });
 ```
 

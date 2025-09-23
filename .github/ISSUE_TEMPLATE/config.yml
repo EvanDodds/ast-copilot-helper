@@ -1,0 +1,14 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Community Discussions
+    url: https://github.com/EvanDodds/ast-copilot-helper/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 📚 Documentation
+    url: https://github.com/EvanDodds/ast-copilot-helper#readme
+    about: Read the documentation and user guides
+  - name: 🚀 Feature Discussions
+    url: https://github.com/EvanDodds/ast-copilot-helper/discussions/categories/ideas
+    about: Discuss and vote on new feature ideas
+  - name: 🔍 Search Existing Issues
+    url: https://github.com/EvanDodds/ast-copilot-helper/issues?q=is%3Aissue
+    about: Search existing issues before creating a new one

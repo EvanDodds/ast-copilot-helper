@@ -19,7 +19,7 @@ Complete API documentation for the comprehensive error reporting and diagnostics
 The main class that orchestrates all error reporting functionality.
 
 ```typescript
-import { ComprehensiveErrorReportingManager } from '@ast-copilot-helper/ast-helper';
+import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-helper";
 
 const errorManager = new ComprehensiveErrorReportingManager();
 ```
@@ -27,7 +27,7 @@ const errorManager = new ComprehensiveErrorReportingManager();
 #### Constructor
 
 ```typescript
-constructor()
+constructor();
 ```
 
 Creates a new instance of the error reporting manager. The manager must be initialized with a configuration before use.
@@ -58,8 +58,8 @@ await errorManager.initialize({
     dependencies: true,
     maxCollectionTimeMs: 10000,
     includeEnvironmentVars: false,
-    includeProcessInfo: true
-  }
+    includeProcessInfo: true,
+  },
 });
 ```
 
@@ -68,10 +68,13 @@ await errorManager.initialize({
 Reports an error to the system and returns the result.
 
 ```typescript
-const report = await errorManager.generateErrorReport(new Error('Something went wrong'), {
-  operation: 'data-processing',
-  component: 'UserService'
-});
+const report = await errorManager.generateErrorReport(
+  new Error("Something went wrong"),
+  {
+    operation: "data-processing",
+    component: "UserService",
+  }
+);
 
 const result = await errorManager.reportError(report);
 console.log(`Error reported: ${result.errorId}`);
@@ -82,14 +85,14 @@ console.log(`Error reported: ${result.errorId}`);
 Generates a comprehensive error report from a JavaScript Error object and optional context.
 
 ```typescript
-const error = new Error('Database connection failed');
-error.name = 'DatabaseError';
+const error = new Error("Database connection failed");
+error.name = "DatabaseError";
 
 const report = await errorManager.generateErrorReport(error, {
-  operation: 'database-connection',
-  connectionString: 'postgresql://***:***@localhost:5432/mydb',
+  operation: "database-connection",
+  connectionString: "postgresql://***:***@localhost:5432/mydb",
   retryAttempts: 3,
-  timeout: 5000
+  timeout: 5000,
 });
 ```
 
@@ -99,7 +102,7 @@ Generates intelligent suggestions for resolving an error.
 
 ```typescript
 const suggestions = await errorManager.provideSuggestions(errorReport);
-suggestions.forEach(suggestion => {
+suggestions.forEach((suggestion) => {
   console.log(`Suggestion: ${suggestion.title}`);
   console.log(`Description: ${suggestion.description}`);
   console.log(`Confidence: ${suggestion.confidence}`);
@@ -112,9 +115,9 @@ Collects comprehensive diagnostic information about the system state.
 
 ```typescript
 const diagnostics = await errorManager.collectDiagnostics({
-  operation: 'system-health-check',
+  operation: "system-health-check",
   includePerformanceMetrics: true,
-  includeSystemInfo: true
+  includeSystemInfo: true,
 });
 ```
 
@@ -123,8 +126,8 @@ const diagnostics = await errorManager.collectDiagnostics({
 Exports diagnostic information in the specified format.
 
 ```typescript
-const jsonDiagnostics = await errorManager.exportDiagnostics('json');
-const textDiagnostics = await errorManager.exportDiagnostics('text');
+const jsonDiagnostics = await errorManager.exportDiagnostics("json");
+const textDiagnostics = await errorManager.exportDiagnostics("text");
 ```
 
 ##### getErrorHistory(): Promise<ErrorHistoryEntry[]>
@@ -201,8 +204,8 @@ Comprehensive error report structure.
 interface ErrorReport {
   id: string;
   timestamp: Date;
-  type: 'error' | 'crash' | 'warning' | 'performance';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "error" | "crash" | "warning" | "performance";
+  severity: "low" | "medium" | "high" | "critical";
   category: string;
   operation: string;
   message: string;
@@ -252,17 +255,17 @@ interface SuggestionResult {
   title: string;
   description: string;
   confidence: number;
-  type: 'code-fix' | 'configuration' | 'documentation' | 'best-practice';
+  type: "code-fix" | "configuration" | "documentation" | "best-practice";
   steps: string[];
   resources: Array<{
-    type: 'documentation' | 'tutorial' | 'example' | 'tool';
+    type: "documentation" | "tutorial" | "example" | "tool";
     title: string;
     url: string;
     description: string;
   }>;
   estimatedTimeToResolve: number;
   category: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: "low" | "medium" | "high" | "critical";
   applicableVersions?: string[];
   prerequisites?: string[];
   metadata?: Record<string, any>;
@@ -309,8 +312,8 @@ const config: ErrorReportingConfig = {
     dependencies: true,
     maxCollectionTimeMs: 10000,
     includeEnvironmentVars: false,
-    includeProcessInfo: true
-  }
+    includeProcessInfo: true,
+  },
 };
 ```
 
@@ -338,8 +341,8 @@ const privacyConfig: ErrorReportingConfig = {
     dependencies: false,
     maxCollectionTimeMs: 2000, // Quick collection
     includeEnvironmentVars: false, // Never include env vars
-    includeProcessInfo: false // No process details
-  }
+    includeProcessInfo: false, // No process details
+  },
 };
 ```
 
@@ -350,7 +353,7 @@ Configuration optimized for production use:
 ```typescript
 const productionConfig: ErrorReportingConfig = {
   enabled: true,
-  endpoint: 'https://errors.example.com/api/v1/reports',
+  endpoint: "https://errors.example.com/api/v1/reports",
   apiKey: process.env.ERROR_REPORTING_API_KEY,
   enableCrashReporting: true,
   enableAutomaticReporting: true, // Auto-report in production
@@ -369,8 +372,8 @@ const productionConfig: ErrorReportingConfig = {
     dependencies: true,
     maxCollectionTimeMs: 15000, // Extended collection time
     includeEnvironmentVars: true, // Include for debugging
-    includeProcessInfo: true
-  }
+    includeProcessInfo: true,
+  },
 };
 ```
 
@@ -414,10 +417,10 @@ The system automatically categorizes errors into common categories:
 
 ```typescript
 // Generate error report from JavaScript Error
-const error = new Error('Something went wrong');
+const error = new Error("Something went wrong");
 const report = await errorManager.generateErrorReport(error, {
-  operation: 'user-action',
-  component: 'UserInterface'
+  operation: "user-action",
+  component: "UserInterface",
 });
 
 // Report the error
@@ -428,15 +431,15 @@ const result = await errorManager.reportError(report);
 
 ```typescript
 const report = await errorManager.generateErrorReport(error, {
-  operation: 'data-processing',
-  component: 'DataProcessor',
-  userId: 'user-123',
-  customField: 'custom-value',
+  operation: "data-processing",
+  component: "DataProcessor",
+  userId: "user-123",
+  customField: "custom-value",
   performanceMetrics: {
     processingTime: 1500,
     memoryUsage: 85.5,
-    cpuUsage: 42.1
-  }
+    cpuUsage: 42.1,
+  },
 });
 ```
 
@@ -446,25 +449,25 @@ const report = await errorManager.generateErrorReport(error, {
 
 ```typescript
 const diagnostics = await errorManager.collectDiagnostics({
-  operation: 'health-check',
+  operation: "health-check",
   includePerformanceMetrics: true,
   includeSystemInfo: true,
-  includeProcessInfo: true
+  includeProcessInfo: true,
 });
 
-console.log('System Health:', diagnostics.system?.cpuUsage);
-console.log('Memory Usage:', diagnostics.system?.memoryUsage);
+console.log("System Health:", diagnostics.system?.cpuUsage);
+console.log("Memory Usage:", diagnostics.system?.memoryUsage);
 ```
 
 #### Export Diagnostics
 
 ```typescript
 // Export as JSON
-const jsonData = await errorManager.exportDiagnostics('json');
+const jsonData = await errorManager.exportDiagnostics("json");
 const diagnosticsObject = JSON.parse(jsonData);
 
 // Export as human-readable text
-const textData = await errorManager.exportDiagnostics('text');
+const textData = await errorManager.exportDiagnostics("text");
 console.log(textData);
 ```
 
@@ -476,13 +479,13 @@ console.log(textData);
 const history = await errorManager.getErrorHistory();
 
 // Filter by severity
-const criticalErrors = history.filter(entry => 
-  entry.error.severity === 'critical'
+const criticalErrors = history.filter(
+  (entry) => entry.error.severity === "critical"
 );
 
 // Filter by time range
-const recentErrors = history.filter(entry =>
-  entry.error.timestamp > new Date(Date.now() - 24 * 60 * 60 * 1000)
+const recentErrors = history.filter(
+  (entry) => entry.error.timestamp > new Date(Date.now() - 24 * 60 * 60 * 1000)
 );
 ```
 
@@ -500,7 +503,7 @@ const errorsByCategory = history.reduce((acc, entry) => {
 
 // Find most frequent errors
 const mostFrequent = Object.entries(errorsByCategory)
-  .sort(([,a], [,b]) => b - a)
+  .sort(([, a], [, b]) => b - a)
   .slice(0, 5);
 ```
 
@@ -509,11 +512,11 @@ const mostFrequent = Object.entries(errorsByCategory)
 ### Basic Usage
 
 ```typescript
-import { ComprehensiveErrorReportingManager } from '@ast-copilot-helper/ast-helper';
+import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-helper";
 
 async function basicExample() {
   const errorManager = new ComprehensiveErrorReportingManager();
-  
+
   await errorManager.initialize({
     enabled: true,
     enableCrashReporting: true,
@@ -523,22 +526,22 @@ async function basicExample() {
 
   try {
     // Your application code
-    throw new Error('Something went wrong');
+    throw new Error("Something went wrong");
   } catch (error) {
     const report = await errorManager.generateErrorReport(error, {
-      operation: 'user-action',
-      component: 'MyComponent'
+      operation: "user-action",
+      component: "MyComponent",
     });
-    
+
     const result = await errorManager.reportError(report);
     console.log(`Error reported: ${result.errorId}`);
-    
+
     // Get suggestions
-    result.suggestions?.forEach(suggestion => {
+    result.suggestions?.forEach((suggestion) => {
       console.log(`💡 ${suggestion.title}: ${suggestion.description}`);
     });
   }
-  
+
   await errorManager.cleanup();
 }
 ```
@@ -548,7 +551,7 @@ async function basicExample() {
 ```typescript
 async function analyticsExample() {
   const errorManager = new ComprehensiveErrorReportingManager();
-  
+
   await errorManager.initialize({
     enabled: true,
     enableCrashReporting: true,
@@ -559,15 +562,15 @@ async function analyticsExample() {
       runtime: true,
       performance: true,
       // ... other options
-    }
+    },
   });
 
   // Generate some sample errors
   for (let i = 0; i < 10; i++) {
     const error = new Error(`Test error ${i}`);
     const report = await errorManager.generateErrorReport(error, {
-      operation: 'test-operation',
-      testId: i
+      operation: "test-operation",
+      testId: i,
     });
     await errorManager.reportError(report);
   }
@@ -575,18 +578,18 @@ async function analyticsExample() {
   // Analyze error patterns
   const history = await errorManager.getErrorHistory();
   const patterns = analyzeErrorPatterns(history);
-  
-  console.log('Error Analysis:', patterns);
-  
+
+  console.log("Error Analysis:", patterns);
+
   await errorManager.cleanup();
 }
 
 function analyzeErrorPatterns(history: ErrorHistoryEntry[]) {
   return {
     totalErrors: history.length,
-    errorsByCategory: groupBy(history, entry => entry.error.category),
-    errorsBySeverity: groupBy(history, entry => entry.error.severity),
-    recentTrend: calculateTrend(history)
+    errorsByCategory: groupBy(history, (entry) => entry.error.category),
+    errorsBySeverity: groupBy(history, (entry) => entry.error.severity),
+    recentTrend: calculateTrend(history),
   };
 }
 ```
@@ -596,7 +599,7 @@ function analyzeErrorPatterns(history: ErrorHistoryEntry[]) {
 ```typescript
 async function privacyExample() {
   const errorManager = new ComprehensiveErrorReportingManager();
-  
+
   await errorManager.initialize({
     enabled: true,
     privacyMode: true,
@@ -611,22 +614,22 @@ async function privacyExample() {
       performance: false,
       dependencies: false,
       includeEnvironmentVars: false,
-      includeProcessInfo: false
-    }
+      includeProcessInfo: false,
+    },
   });
 
   // All error reports will be automatically anonymized
-  const error = new Error('User data validation failed');
+  const error = new Error("User data validation failed");
   const report = await errorManager.generateErrorReport(error, {
-    operation: 'user-validation',
+    operation: "user-validation",
     // PII will be automatically scrubbed
-    userEmail: 'john.doe@example.com',
-    userId: 'user-12345'
+    userEmail: "john.doe@example.com",
+    userId: "user-12345",
   });
-  
+
   const result = await errorManager.reportError(report);
-  console.log('Privacy-compliant error reported:', result.errorId);
-  
+  console.log("Privacy-compliant error reported:", result.errorId);
+
   await errorManager.cleanup();
 }
 ```
@@ -640,11 +643,13 @@ If you're upgrading from an earlier version, here are the key changes:
 #### Constructor Changes
 
 **Old (v1.x):**
+
 ```typescript
 const errorManager = new ErrorReportingManager(config);
 ```
 
 **New (v2.x):**
+
 ```typescript
 const errorManager = new ComprehensiveErrorReportingManager();
 await errorManager.initialize(config);
@@ -653,14 +658,16 @@ await errorManager.initialize(config);
 #### Configuration Changes
 
 **Old (v1.x):**
+
 ```typescript
 const config = {
   enableReporting: true,
-  collectDiagnostics: true
+  collectDiagnostics: true,
 };
 ```
 
 **New (v2.x):**
+
 ```typescript
 const config = {
   enabled: true,
@@ -669,18 +676,20 @@ const config = {
     system: true,
     runtime: true,
     // ... more granular options
-  }
+  },
 };
 ```
 
 #### Method Changes
 
 **Old (v1.x):**
+
 ```typescript
 const errorId = await errorManager.reportError(error);
 ```
 
 **New (v2.x):**
+
 ```typescript
 const report = await errorManager.generateErrorReport(error, context);
 const result = await errorManager.reportError(report);
@@ -698,25 +707,29 @@ const errorId = result.errorId;
 ### Migration Steps
 
 1. **Update Constructor Usage**:
+
    ```typescript
    // Before
    const errorManager = new ErrorReportingManager(config);
-   
+
    // After
    const errorManager = new ComprehensiveErrorReportingManager();
    await errorManager.initialize(config);
    ```
 
 2. **Update Configuration**:
+
    - Review and update configuration object structure
    - Set appropriate privacy settings
    - Configure diagnostic data collection options
 
 3. **Update Error Reporting**:
+
    - Replace direct `reportError()` calls with `generateErrorReport()` + `reportError()`
    - Update code expecting simple error ID return to handle `ReportResult` objects
 
 4. **Add Cleanup**:
+
    - Add `await errorManager.cleanup()` before application shutdown
 
 5. **Test Privacy Features**:
