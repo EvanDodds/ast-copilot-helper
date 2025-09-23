@@ -115,12 +115,23 @@ class RollbackAutomation {
       return d.success && healthCheckPassed;
     });
 
-    if (successfulDeployments.length >= 2) {
-      // Return the second-to-last successful deployment (skip the current broken one)
-      return successfulDeployments[successfulDeployments.length - 2].version;
-    } else if (successfulDeployments.length === 1) {
-      // Only one successful deployment, return it
-      return successfulDeployments[0].version;
+    // Check if the most recent deployment in history was successful
+    const mostRecentDeployment = deploymentHistory[deploymentHistory.length - 1];
+    const mostRecentWasSuccessful = successfulDeployments.includes(mostRecentDeployment);
+
+    if (successfulDeployments.length >= 1) {
+      if (!mostRecentWasSuccessful) {
+        // Most recent deployment failed, rollback to most recent successful
+        return successfulDeployments[successfulDeployments.length - 1].version;
+      } else if (successfulDeployments.length >= 2) {
+        // Most recent deployment was successful but we're rolling back due to issues,
+        // so rollback to second-to-last successful
+        return successfulDeployments[successfulDeployments.length - 2].version;
+      } else {
+        // Only one successful deployment and it's the most recent,
+        // can't rollback further
+        return null;
+      }
     }
 
     return null;

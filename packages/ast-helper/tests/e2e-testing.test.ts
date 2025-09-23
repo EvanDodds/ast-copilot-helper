@@ -196,15 +196,20 @@ describe('E2E Testing Framework', () => {
 
     it('should merge custom configuration', () => {
       const customConfig: Partial<E2ETestingConfig> = {
-        scenarios: {
-          'custom-scenario': {
+        scenarios: [
+          {
+            name: 'custom-scenario',
+            description: 'Custom test scenario',
             enabled: true,
-            priority: 'high',
+            category: 'codebase-analysis',
             timeout: 15000,
             retries: 2,
-            tags: ['custom']
+            prerequisites: [],
+            cleanup: true,
+            parallel: false,
+            environment: []
           }
-        }
+        ]
       };
 
       const config = new E2EConfig(customConfig);
@@ -215,22 +220,32 @@ describe('E2E Testing Framework', () => {
 
     it('should return only enabled scenarios', () => {
       const config = new E2EConfig({
-        scenarios: {
-          'enabled-scenario': {
+        scenarios: [
+          {
+            name: 'enabled-scenario',
+            description: 'Enabled test scenario',
             enabled: true,
-            priority: 'high',
+            category: 'codebase-analysis',
             timeout: 10000,
             retries: 1,
-            tags: ['enabled']
+            prerequisites: [],
+            cleanup: true,
+            parallel: false,
+            environment: []
           },
-          'disabled-scenario': {
+          {
+            name: 'disabled-scenario',
+            description: 'Disabled test scenario',
             enabled: false,
-            priority: 'low',
+            category: 'collaboration',
             timeout: 5000,
             retries: 0,
-            tags: ['disabled']
+            prerequisites: [],
+            cleanup: true,
+            parallel: false,
+            environment: []
           }
-        }
+        ]
       });
 
       const scenarios = config.getEnabledScenarios();
@@ -240,18 +255,17 @@ describe('E2E Testing Framework', () => {
     it('should update scenario configuration', () => {
       const config = new E2EConfig();
       
-      config.updateScenario('test-scenario', {
+      config.updateScenario('basic-codebase-analysis', {
         enabled: true,
-        priority: 'critical',
         timeout: 20000,
         retries: 3,
-        tags: ['updated']
+        parallel: true
       });
 
       const scenarios = config.getEnabledScenarios();
-      const updatedScenario = scenarios.find(s => s.name === 'test-scenario');
+      const updatedScenario = scenarios.find(s => s.name === 'basic-codebase-analysis');
       
-      expect(updatedScenario?.priority).toBe('critical');
+      expect(updatedScenario?.parallel).toBe(true);
       expect(updatedScenario?.timeout).toBe(20000);
       expect(updatedScenario?.retries).toBe(3);
     });
@@ -260,20 +274,28 @@ describe('E2E Testing Framework', () => {
       const config = new E2EConfig({
         monitoring: {
           enabled: true,
-          interval: 2000,
-          thresholds: {
-            memory: 1024,
-            cpu: 90,
-            disk: 2048,
-            network: 200
+          metricsCollection: true,
+          performanceTracking: true,
+          resourceMonitoring: false,
+          errorTracking: true,
+          healthChecks: false,
+          alerting: {
+            enabled: true,
+            thresholds: [],
+            channels: ['log'],
+            escalation: {
+              enabled: false,
+              levels: [],
+              timeout: 30
+            }
           }
         }
       });
 
       const monitoring = config.getMonitoringConfig();
       expect(monitoring.enabled).toBe(true);
-      expect(monitoring.interval).toBe(2000);
-      expect(monitoring.thresholds.memory).toBe(1024);
+      expect(monitoring.metricsCollection).toBe(true);
+      expect(monitoring.performanceTracking).toBe(true);
     });
   });
 });

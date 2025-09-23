@@ -130,6 +130,7 @@ describe('Deployment Automation Tests', () => {
       it('should trigger rollback on deployment failure', async () => {
         // Arrange
         const mockDeploymentState = [
+          { success: true, version: 'v0.9.0', healthCheckPassed: true },
           { success: true, version: 'v1.0.0', healthCheckPassed: true }
         ];
         mockExistsSync.mockReturnValue(true);
