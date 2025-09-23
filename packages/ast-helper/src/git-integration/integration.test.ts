@@ -65,8 +65,8 @@ describe('Git Integration End-to-End', () => {
 
             await parseCommand.execute(optionsInvalidStaged, config);
             expect.fail('Should have thrown validation error');
-        } catch (error) {
-            expect((error as Error).message).toContain('--staged option can only be used with --changed');
+        } catch (_error) {
+            expect((_error as Error).message).toContain('--staged option can only be used with --changed');
         }
     });
 
@@ -89,8 +89,8 @@ describe('Git Integration End-to-End', () => {
 
             await parseCommand.execute(_options, config);
             expect.fail('Should have thrown Git repository validation error');
-        } catch (error) {
-            expect((error as Error).message).toContain('Not a Git repository');
+        } catch (_error) {
+            expect((_error as Error).message).toContain('Not a Git repository');
         }
     });
 });

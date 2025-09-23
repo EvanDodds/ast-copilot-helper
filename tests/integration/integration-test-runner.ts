@@ -42,9 +42,9 @@ export class IntegrationTestRunner extends EventEmitter {
       this.emit('run-completed', results, totalDuration);
 
       return this.results;
-    } catch (error) {
-      this.emit('run-failed', error);
-      throw error;
+    } catch (_error) {
+      this.emit('run-failed', _error);
+      throw _error;
     }
   }
 
@@ -75,10 +75,10 @@ export class IntegrationTestRunner extends EventEmitter {
 
       console.log(`Test suite '${suiteName}' completed successfully`);
       return suiteResults;
-    } catch (error) {
-      console.error(`Test suite '${suiteName}' failed:`, error);
+    } catch (_error) {
+      console.error(`Test suite '${suiteName}' failed:`, _error);
       await suite.cleanupTestEnvironment();
-      throw error;
+      throw _error;
     }
   }
 

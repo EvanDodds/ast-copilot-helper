@@ -52,7 +52,7 @@ describe('Performance Benchmarking - Issue #13 Requirements', () => {
     }
     try {
       await fs.rm(testDir, { recursive: true, force: true });
-    } catch (_error) {
+  } catch (_error) {
       // Ignore cleanup errors
     }
   });
