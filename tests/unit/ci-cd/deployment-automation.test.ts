@@ -33,12 +33,16 @@ describe('Deployment Automation Tests', () => {
     // Mock environment variables
     process.env.CI_COMMIT_SHA = 'abc123';
     process.env.CI_BUILD_ID = 'build-456';
+    process.env.NODE_ENV = 'test'; // Indicate test environment
+    process.env.SKIP_DEPLOYMENT_DELAYS = 'true'; // Skip artificial delays in tests
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
     delete process.env.CI_COMMIT_SHA;
     delete process.env.CI_BUILD_ID;
+    delete process.env.NODE_ENV;
+    delete process.env.SKIP_DEPLOYMENT_DELAYS;
   });
 
   describe('StagingDeployment', () => {

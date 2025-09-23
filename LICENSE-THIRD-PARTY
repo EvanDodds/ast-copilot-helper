@@ -339,7 +339,7 @@ Licensed under the Apache License, Version 2.0...
 
 --------------------------------------------------------------------------------
 Package: better-sqlite3
-Version: ^9.6.0
+Version: ^12.1.0
 License: MIT License
 Copyright: Joshua Wise <joshuathomaswise@gmail.com>, Joshua Wise
 Source: git://github.com/WiseLibs/better-sqlite3.git
@@ -428,6 +428,31 @@ Copyright: Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me), Isaac Z. Schluete
 Source: git://github.com/isaacs/minimatch.git
 
 ISC License...
+
+--------------------------------------------------------------------------------
+Package: onnxruntime-node
+Version: ^1.22.0-rev
+License: MIT License
+Copyright: fs-eire
+Source: https://github.com/Microsoft/onnxruntime.git
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 --------------------------------------------------------------------------------
 Package: @types/better-sqlite3
@@ -879,4 +904,4 @@ License: UNKNOWN
 
 License text not available
 
-Generated on: 2025-09-23T17:52:02.437Z
+Generated on: 2025-09-23T19:35:40.868Z

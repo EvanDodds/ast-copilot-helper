@@ -357,7 +357,14 @@ class PerformanceMonitor {
   private getPerformanceHistory(): PerformanceMetric[] {
     try {
       if (existsSync(this.historyPath)) {
-        return JSON.parse(readFileSync(this.historyPath, 'utf8'));
+        const data = JSON.parse(readFileSync(this.historyPath, 'utf8'));
+        // Ensure we always return an array
+        if (Array.isArray(data)) {
+          return data;
+        } else {
+          this.log(`Warning: Performance history file contains invalid data (not an array)`);
+          return [];
+        }
       }
     } catch (error) {
       this.log(`Warning: Could not load performance history: ${error}`);
@@ -451,7 +458,8 @@ class PerformanceMonitor {
   }
 
   private calculateTrend(history: PerformanceMetric[], metric: string): 'improving' | 'degrading' | 'stable' {
-    if (history.length < 3) return 'stable';
+    // Ensure we have an array
+    if (!Array.isArray(history) || history.length < 3) return 'stable';
 
     const recent = history.slice(-3);
     const values = recent.map(h => {
@@ -473,6 +481,9 @@ class PerformanceMonitor {
   }
 
   private calculateRecentAverage(history: PerformanceMetric[], metric: string): number {
+    // Ensure we have an array
+    if (!Array.isArray(history) || history.length === 0) return 0;
+    
     const values = history.map(h => {
       switch (metric) {
         case 'buildTime': return h.metrics.buildTime;
@@ -537,7 +548,7 @@ class PerformanceMonitor {
     recommendations.push(...alerts.map(alert => alert.recommendation));
 
     // Remove duplicates
-    return [...new Set(recommendations)];
+    return Array.from(new Set(recommendations));
   }
 
   async generateReport(): Promise<PerformanceReport> {
@@ -574,20 +585,23 @@ class PerformanceMonitor {
   private detectTrends(history: PerformanceMetric[]): string[] {
     const trends: string[] = [];
 
-    if (history.length >= 5) {
-      const buildTimeTrend = this.calculateTrend(history, 'buildTime');
-      const testTimeTrend = this.calculateTrend(history, 'testTime');
-      const memoryTrend = this.calculateTrend(history, 'memoryUsage');
-
-      if (buildTimeTrend === 'degrading') trends.push('Build time is trending slower');
-      if (buildTimeTrend === 'improving') trends.push('Build time is improving');
-      
-      if (testTimeTrend === 'degrading') trends.push('Test execution time is increasing');
-      if (testTimeTrend === 'improving') trends.push('Test execution time is decreasing');
-      
-      if (memoryTrend === 'degrading') trends.push('Memory usage is trending higher');
-      if (memoryTrend === 'improving') trends.push('Memory usage is optimizing');
+    // Ensure we have an array
+    if (!Array.isArray(history) || history.length < 5) {
+      return trends;
     }
+
+    const buildTimeTrend = this.calculateTrend(history, 'buildTime');
+    const testTimeTrend = this.calculateTrend(history, 'testTime');
+    const memoryTrend = this.calculateTrend(history, 'memoryUsage');
+
+    if (buildTimeTrend === 'degrading') trends.push('Build time is trending slower');
+    if (buildTimeTrend === 'improving') trends.push('Build time is improving');
+    
+    if (testTimeTrend === 'degrading') trends.push('Test execution time is increasing');
+    if (testTimeTrend === 'improving') trends.push('Test execution time is decreasing');
+    
+    if (memoryTrend === 'degrading') trends.push('Memory usage is trending higher');
+    if (memoryTrend === 'improving') trends.push('Memory usage is optimizing');
 
     return trends;
   }

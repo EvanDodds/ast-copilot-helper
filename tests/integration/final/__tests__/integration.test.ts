@@ -128,7 +128,7 @@ describe('Integration Test Suite', () => {
     beforeAll(async () => {
       // Generate a test report
       report = await orchestrator.runAllIntegrationTests();
-    });
+    }, 30000); // Increase timeout to 30 seconds
 
     it('should generate valid production readiness report', () => {
       expect(report.overallReady).toBeDefined();

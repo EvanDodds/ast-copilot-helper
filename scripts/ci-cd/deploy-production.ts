@@ -79,6 +79,14 @@ class ProductionDeployment {
     }
   }
 
+  private async delay(ms: number): Promise<void> {
+    // Skip delays in test environment
+    if (process.env.NODE_ENV === 'test' || process.env.SKIP_DEPLOYMENT_DELAYS === 'true') {
+      return Promise.resolve();
+    }
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   private async executeCommand(command: string, description: string): Promise<string> {
     this.log(`Executing: ${description}`);
     try {
@@ -146,14 +154,14 @@ class ProductionDeployment {
           this.log(`Health check attempt ${attempts}/${maxAttempts} for ${url}`);
           
           // Simulate HTTP health check
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await this.delay(1000);
           
           // For this implementation, simulate 90% success rate
           success = Math.random() > 0.1;
           
           if (!success && attempts < maxAttempts) {
             this.log(`Health check failed, retrying in 5 seconds...`);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await this.delay(5000);
           }
         }
         
@@ -184,23 +192,23 @@ class ProductionDeployment {
     try {
       // Step 1: Deploy to green environment (inactive)
       this.log('Deploying to green environment...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await this.delay(3000);
       
       // Step 2: Health check green environment
       this.log('Health checking green environment...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.delay(2000);
       
       // Step 3: Switch traffic to green (make it active)
       this.log('Switching traffic to green environment...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.delay(1000);
       
       // Step 4: Monitor for issues
       this.log('Monitoring new deployment for issues...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.delay(2000);
       
       // Step 5: Decommission blue environment (old version)
       this.log('Decommissioning old blue environment...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.delay(1000);
       
       this.log('✅ Blue-Green deployment completed successfully');
     } catch (error: any) {
@@ -217,10 +225,10 @@ class ProductionDeployment {
       
       for (const instance of instances) {
         this.log(`Deploying to ${instance}...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await this.delay(2000);
         
         this.log(`Health checking ${instance}...`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await this.delay(1000);
         
         this.log(`✅ ${instance} updated successfully`);
       }
@@ -315,7 +323,7 @@ class ProductionDeployment {
       
       // Step 3: Security and compliance checks
       this.log('Performing security and compliance validation...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.delay(2000);
       
       // Step 4: Deployment strategy execution
       if (this.config.blueGreenDeployment) {
@@ -337,7 +345,7 @@ class ProductionDeployment {
       
       // Step 6: Post-deployment monitoring
       this.log('Starting post-deployment monitoring...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await this.delay(3000);
       
       result.success = true;
       
@@ -377,24 +385,24 @@ class ProductionDeployment {
     try {
       // Step 1: Validate rollback target
       this.log(`Validating rollback target version: ${targetVersion}`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.delay(1000);
       
       // Step 2: Create rollback point
       this.log('Creating rollback checkpoint...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.delay(1000);
       
       // Step 3: Execute rollback strategy
       if (this.config.blueGreenDeployment) {
         this.log('Executing Blue-Green rollback...');
         // Switch traffic back to blue environment
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await this.delay(2000);
       } else {
         this.log('Executing Rolling rollback...');
         // Roll back instances one by one
         const instances = ['instance-1', 'instance-2', 'instance-3'];
         for (const instance of instances) {
           this.log(`Rolling back ${instance}...`);
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await this.delay(1500);
         }
       }
       

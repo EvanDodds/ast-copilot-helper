@@ -97,7 +97,7 @@ Copyright: Microsoft TypeScript, Alberto Schiabel, Andrew Makarov, Benjamin Toue
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
-### better-sqlite3 v^9.6.0
+### better-sqlite3 v^12.1.0
 Copyright: Joshua Wise <joshuathomaswise@gmail.com>, Joshua Wise
 Source: git://github.com/WiseLibs/better-sqlite3.git
 License: MIT License
@@ -110,6 +110,11 @@ License: MIT License
 ### commander v^14.0.1
 Copyright: TJ Holowaychuk <tj@vision-media.ca>
 Source: git+https://github.com/tj/commander.js.git
+License: MIT License
+
+### onnxruntime-node v^1.22.0-rev
+Copyright: fs-eire
+Source: https://github.com/Microsoft/onnxruntime.git
 License: MIT License
 
 ### @types/better-sqlite3 v^7.6.11
@@ -256,5 +261,5 @@ ISC License...
 ---
 
 
-Generated on: 2025-09-23T17:52:02.437Z
+Generated on: 2025-09-23T19:35:40.868Z
 By: ast-copilot-helper legal compliance system

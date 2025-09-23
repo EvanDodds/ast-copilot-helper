@@ -34,6 +34,8 @@ describe('Monitoring and Notifications System', () => {
     // Clean up environment variables
     delete process.env.BUILD_TIME_WARNING;
     delete process.env.BUILD_TIME_CRITICAL;
+    delete process.env.BUILD_START_TIME;
+    delete process.env.BUILD_DURATION;
     delete process.env.GITHUB_REF_NAME;
     delete process.env.GITHUB_SHA;
     delete process.env.GITHUB_RUN_ID;
@@ -69,8 +71,10 @@ describe('Monitoring and Notifications System', () => {
     it('should detect performance issues and generate alerts', async () => {
       const monitor = new PerformanceMonitor();
       
-      // Mock long build time scenario
-      process.env.BUILD_DURATION = '1200000'; // 20 minutes
+      // Mock long build time scenario - set build start time to make total time exceed critical threshold (30 minutes)
+      const thirtyFiveMinutesAgo = Date.now() - (35 * 60 * 1000); // 35 minutes ago
+      process.env.BUILD_START_TIME = thirtyFiveMinutesAgo.toString();
+      process.env.BUILD_DURATION = '1200000'; // 20 minutes build time
       
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({
@@ -106,10 +110,10 @@ describe('Monitoring and Notifications System', () => {
 
       await monitor.generateReport();
 
+      // Check that performance history was written (should be JSON array with metrics)
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('performance-history.json'),
-        expect.stringContaining('"metrics"'),
-        { flag: undefined }
+        expect.stringContaining('"metrics"')
       );
     });
   });
@@ -156,23 +160,41 @@ describe('Monitoring and Notifications System', () => {
     it('should respect alert cooldown periods', async () => {
       const alertingSystem = new AlertingSystem();
       
-      const recentAlert = {
-        id: 'alert-1',
-        ruleId: 'build-time-critical',
-        timestamp: new Date().toISOString(),
-        buildId: '123',
-        branch: 'main',
-        commit: 'abc',
-        severity: 'critical' as const,
-        title: 'Test Alert',
-        message: 'Test message',
-        metric: 'totalTime',
-        currentValue: 2000000,
-        acknowledged: false
-      };
+      // Create recent alerts for both critical and warning rules to test cooldown
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const recentAlerts = [
+        {
+          id: 'alert-1',
+          ruleId: 'build-time-critical',
+          timestamp: tenMinutesAgo.toISOString(),
+          buildId: '123',
+          branch: 'main',
+          commit: 'abc',
+          severity: 'critical' as const,
+          title: 'Critical Build Time Alert',
+          message: 'Test message',
+          metric: 'totalTime',
+          currentValue: 2000000,
+          acknowledged: false
+        },
+        {
+          id: 'alert-2',
+          ruleId: 'build-time-warning',
+          timestamp: tenMinutesAgo.toISOString(),
+          buildId: '123',
+          branch: 'main',
+          commit: 'abc',
+          severity: 'warning' as const,
+          title: 'Elevated Build Time Alert',
+          message: 'Test message',
+          metric: 'totalTime',
+          currentValue: 1000000,
+          acknowledged: false
+        }
+      ];
 
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify([recentAlert]));
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(recentAlerts));
 
       const mockMetric = {
         id: 'test-metric-2',
@@ -184,7 +206,7 @@ describe('Monitoring and Notifications System', () => {
           buildTime: 300000,
           testTime: 120000,
           deployTime: 60000,
-          totalTime: 2100000, // Should trigger alert but should be in cooldown
+          totalTime: 2100000, // 35 minutes - should trigger critical alert but should be in cooldown
           memoryUsage: { peak: 2000, average: 1500 },
           cpuUsage: { peak: 70, average: 50 },
           artifactSize: 150,

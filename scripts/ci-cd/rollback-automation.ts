@@ -69,6 +69,14 @@ class RollbackAutomation {
     }
   }
 
+  private async delay(ms: number): Promise<void> {
+    // Skip delays in test environment
+    if (process.env.NODE_ENV === 'test' || process.env.SKIP_DEPLOYMENT_DELAYS === 'true') {
+      return Promise.resolve();
+    }
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   private async executeCommand(command: string, description: string): Promise<string> {
     this.log(`Executing: ${description}`);
     try {
@@ -171,7 +179,7 @@ class RollbackAutomation {
         this.log('Performing post-rollback health checks...');
         
         // Simulate health check
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await this.delay(2000);
         
         // For this implementation, simulate 95% success rate for rollbacks
         const healthCheckPassed = Math.random() > 0.05;
@@ -185,7 +193,7 @@ class RollbackAutomation {
       
       // Step 4: Smoke tests
       this.log('Running smoke tests...');
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await this.delay(1500);
       
       this.log('✅ Rollback validation completed successfully');
       return true;
@@ -205,14 +213,14 @@ class RollbackAutomation {
     
     try {
       // Simulate database rollback check
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.delay(1000);
       
       // For this implementation, simulate that 20% of rollbacks need DB changes
       const needsDbRollback = Math.random() < 0.2;
       
       if (needsDbRollback) {
         this.log('Database rollback required, executing...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await this.delay(3000);
         this.log('✅ Database rollback completed');
       } else {
         this.log('No database rollback required');
@@ -291,7 +299,7 @@ class RollbackAutomation {
         // Step 2: Pre-rollback validation
         result.steps.push('Pre-rollback validation');
         this.log('Performing pre-rollback validation...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await this.delay(1000);
 
         // Step 3: Database rollback if needed
         result.steps.push('Database rollback check');
@@ -310,19 +318,19 @@ class RollbackAutomation {
           
           if (useBlueGreen) {
             this.log('Executing Blue-Green rollback...');
-            await new Promise(resolve => setTimeout(resolve, 4000));
+            await this.delay(4000);
           } else {
             this.log('Executing Rolling rollback...');
             const instances = ['instance-1', 'instance-2', 'instance-3'];
             for (const instance of instances) {
               this.log(`Rolling back ${instance} to ${targetVersion}...`);
-              await new Promise(resolve => setTimeout(resolve, 1500));
+              await this.delay(1500);
             }
           }
         } else {
           // Staging rollback strategy
           this.log('Using staging rollback strategy...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await this.delay(2000);
         }
 
         // Step 5: Post-rollback validation
@@ -351,7 +359,7 @@ class RollbackAutomation {
         if (attempt < this.config.maxRollbackAttempts) {
           const retryDelay = Math.min(attempt * 5000, 15000); // Exponential backoff, max 15s
           this.log(`Retrying in ${retryDelay / 1000} seconds...`);
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          await this.delay(retryDelay);
         } else {
           this.log('❌ All rollback attempts failed');
           result.steps.push('All rollback attempts exhausted');
