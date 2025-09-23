@@ -38,7 +38,7 @@ jobs:
 
       - name: Install documentation dependencies
         working-directory: ./docs
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Build documentation with VitePress
         working-directory: ./docs
