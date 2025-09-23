@@ -5,10 +5,10 @@
  * Addresses acceptance criteria 28: Performance alerting system
  */
 
-import { execSync } from 'child_process';
+import { execSync as _execSync } from 'child_process';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import * as path from 'path';
-import { PerformanceMetric, PerformanceAlert } from './performance-monitor';
+import { PerformanceMetric /* PerformanceAlert */ } from './performance-monitor';
 
 interface AlertRule {
   id: string;
@@ -377,10 +377,11 @@ class AlertingSystem {
       case 'cpuUsage': return metric.metrics.cpuUsage.peak;
       case 'artifactSize': return metric.metrics.artifactSize;
       case 'cacheHitRate': return metric.metrics.cacheHitRate;
-      case 'testFailureRate': 
+      case 'testFailureRate': {
         // Calculate failure rate from stages
         const testStage = metric.stages.find(s => s.name.toLowerCase().includes('test'));
         return testStage?.status === 'failure' ? 100 : 0;
+      }
       default: return 0;
     }
   }
@@ -448,7 +449,7 @@ class AlertingSystem {
     return message;
   }
 
-  private generateRecommendations(metric: string, value: number): string[] {
+  private generateRecommendations(metric: string, _value: number): string[] {
     const recommendations: string[] = [];
 
     switch (metric) {
@@ -537,7 +538,7 @@ class AlertingSystem {
     }
 
     const subject = `[${alert.severity.toUpperCase()}] CI/CD Alert: ${alert.title}`;
-    const htmlBody = `
+  const _htmlBody = `
       <html>
         <body style="font-family: Arial, sans-serif;">
           <div style="background: ${alert.severity === 'critical' ? '#fee' : '#fff3cd'}; padding: 20px; border-radius: 5px;">
@@ -595,7 +596,7 @@ class AlertingSystem {
     }
 
     const issueTitle = `[CI/CD Alert] ${alert.title} - ${alert.branch}`;
-    const issueBody = `
+  const _issueBody = `
 ## ${alert.severity.toUpperCase()}: ${alert.title}
 
 **Alert Details:**

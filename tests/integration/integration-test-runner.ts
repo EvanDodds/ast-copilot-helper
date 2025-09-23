@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { BaseIntegrationTestSuite, TestEnvironment, TestConfiguration, WorkflowValidation } from './framework/integration-test-suite';
+import { BaseIntegrationTestSuite, TestEnvironment, TestConfiguration, WorkflowValidation as _WorkflowValidation } from './framework/integration-test-suite';
 
 /**
  * Main test runner for orchestrating integration tests
@@ -158,28 +158,31 @@ export class IntegrationTestRunner extends EventEmitter {
     const filename = `integration-test-report-${timestamp}`;
 
     switch (this.config.reportFormat) {
-      case 'json':
+      case 'json': {
         await fs.writeFile(
           join(process.cwd(), `${filename}.json`),
           JSON.stringify(report, null, 2)
         );
         break;
+      }
 
-      case 'html':
+      case 'html': {
         const htmlContent = this.generateHtmlReport(report);
         await fs.writeFile(
           join(process.cwd(), `${filename}.html`),
           htmlContent
         );
         break;
+      }
 
-      case 'junit':
+      case 'junit': {
         const junitContent = this.generateJunitReport(report);
         await fs.writeFile(
           join(process.cwd(), `${filename}.xml`),
           junitContent
         );
         break;
+      }
     }
 
     console.log(`Test report saved: ${filename}.${this.config.reportFormat}`);

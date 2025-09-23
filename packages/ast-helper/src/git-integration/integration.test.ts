@@ -40,7 +40,7 @@ describe('Git Integration End-to-End', () => {
     });
 
     it('should handle Git precondition validation in ParseCommand', async () => {
-        const options: ParseOptions = {
+        const _options: ParseOptions = {
             changed: true,
             staged: true, // This should trigger an error
             workspace: '/test/workspace'
@@ -71,7 +71,7 @@ describe('Git Integration End-to-End', () => {
     });
 
     it('should validate Git repository preconditions', async () => {
-        const options: ParseOptions = {
+        const _options: ParseOptions = {
             changed: true,
             workspace: '/non-git-directory'
         };
@@ -87,7 +87,7 @@ describe('Git Integration End-to-End', () => {
                 new Error('Not a Git repository')
             );
 
-            await parseCommand.execute(options, config);
+            await parseCommand.execute(_options, config);
             expect.fail('Should have thrown Git repository validation error');
         } catch (error) {
             expect((error as Error).message).toContain('Not a Git repository');
@@ -127,8 +127,8 @@ describe('Git File Selection Logic', () => {
 
     it('should match glob patterns correctly', () => {
         // Test basic glob pattern matching logic
-        const patterns = ['**/*.ts', '**/*.js', 'src/*.py'];
-        const testFiles = [
+        const _patterns = ['**/*.ts', '**/*.js', 'src/*.py'];
+        const _testFiles = [
             'src/component.ts',  // should match **/*.ts
             'lib/utils.js',      // should match **/*.js  
             'src/script.py',     // should match src/*.py
@@ -140,11 +140,11 @@ describe('Git File Selection Logic', () => {
         const matchesPattern = (file: string, pattern: string): boolean => {
             if (pattern.includes('**')) {
                 // Split pattern and handle each part
-                let parts = pattern.split('/');
-                let regexParts = [];
+                const parts = pattern.split('/');
+                const regexParts = [];
                 
                 for (let i = 0; i < parts.length; i++) {
-                    let part = parts[i];
+                    const part = parts[i];
                     if (part === '**') {
                         if (i === parts.length - 1) {
                             regexParts.push('.*'); // ** at end
@@ -154,7 +154,7 @@ describe('Git File Selection Logic', () => {
                         }
                     } else {
                         // Replace * with [^/]* and escape dots in filename parts
-                        let regexPart = part
+                        const regexPart = part
                             .replace(/\*/g, '[^/]*')
                             .replace(/\./g, '\\.');
                         regexParts.push(regexPart);
@@ -166,7 +166,7 @@ describe('Git File Selection Logic', () => {
                     }
                 }
                 
-                let regex = regexParts.join('');
+                const regex = regexParts.join('');
                 return new RegExp(`^${regex}$`).test(file);
             }
             return false;

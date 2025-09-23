@@ -52,7 +52,7 @@ describe('Performance Benchmarking - Issue #13 Requirements', () => {
     }
     try {
       await fs.rm(testDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
   });
@@ -83,10 +83,10 @@ describe('Performance Benchmarking - Issue #13 Requirements', () => {
         batchSize: 32,
         maxConcurrency: 2,
         memoryLimit: 2048,
-        progressCallback: (processed, total) => {
-          if (processed % 200 === 0) {
+        progressCallback: (_processed, _total) => {
+          if (_processed % 200 === 0) {
             const elapsed = (Date.now() - startTime) / 1000;
-            console.log(`📊 Progress: ${processed}/${total} annotations (${elapsed.toFixed(1)}s)`);
+            console.log(`📊 Progress: ${_processed}/${_total} annotations (${elapsed.toFixed(1)}s)`);
           }
         }
       });
@@ -175,13 +175,13 @@ describe('Performance Benchmarking - Issue #13 Requirements', () => {
     await generator.initialize(mockModelPath);
     
     const startTime = Date.now();
-    let memoryPeaks: number[] = [];
+    const memoryPeaks: number[] = [];
     
     const results = await generator.batchProcess(mockAnnotations, {
       batchSize: 64,
       maxConcurrency: 3,
       memoryLimit: 1024, // Lower memory limit to test management
-      progressCallback: (processed, total) => {
+      progressCallback: (_processed, _total) => {
         // Track memory usage during processing
         const memUsage = process.memoryUsage();
         memoryPeaks.push(memUsage.heapUsed / 1024 / 1024); // MB
