@@ -13,18 +13,18 @@ name: Automated Release Management
 on:
   push:
     branches: [main, develop]
-    paths-ignore: ['docs/**', '*.md']
-  
+    paths-ignore: ["docs/**", "*.md"]
+
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
-  
+
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Release type'
+        description: "Release type"
         required: true
-        default: 'patch'
+        default: "patch"
         type: choice
         options:
           - patch
@@ -33,52 +33,52 @@ on:
           - prerelease
           - hotfix
       version:
-        description: 'Specific version (optional)'
+        description: "Specific version (optional)"
         required: false
         type: string
       dry_run:
-        description: 'Dry run (no actual publishing)'
+        description: "Dry run (no actual publishing)"
         required: false
         default: false
         type: boolean
 
 env:
-  NODE_VERSION: '18'
-  REGISTRY_URL: 'https://registry.npmjs.org/'
+  NODE_VERSION: "18"
+  REGISTRY_URL: "https://registry.npmjs.org/"
 
 jobs:
   validate:
     name: Validate Release
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     outputs:
       can_release: ${{ steps.check.outputs.can_release }}
       next_version: ${{ steps.check.outputs.next_version }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
           registry-url: ${{ env.REGISTRY_URL }}
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build project
         run: npm run build
-      
+
       - name: Run tests
         run: npm test
-      
+
       - name: Validate release plan
         id: check
         run: |
@@ -90,46 +90,46 @@ jobs:
     name: Execute Release
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    
+
     permissions:
       contents: write
       packages: write
       pull-requests: write
       issues: write
-    
+
     outputs:
       version: ${{ steps.release.outputs.version }}
       success: ${{ steps.release.outputs.success }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
           registry-url: ${{ env.REGISTRY_URL }}
-      
+
       - name: Configure Git
         run: |
           git config user.name "Release Bot"
           git config user.email "release-bot@users.noreply.github.com"
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run quality checks
         run: |
           npm run lint
           npm run type-check
           npm test
           npm run build
-      
+
       - name: Execute release
         id: release
         run: node scripts/automated-release.js
@@ -141,7 +141,7 @@ jobs:
           RELEASE_TYPE: ${{ github.event.inputs.release_type || 'auto' }}
           RELEASE_VERSION: ${{ github.event.inputs.version || '' }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
-      
+
       - name: Upload release artifacts
         if: steps.release.outputs.success == 'true'
         uses: actions/upload-artifact@v4
@@ -152,7 +152,7 @@ jobs:
             *.tgz
             CHANGELOG.md
             release-notes.md
-      
+
       - name: Create GitHub Release
         if: steps.release.outputs.success == 'true'
         uses: actions/create-release@v1
@@ -170,20 +170,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     if: needs.release.outputs.success == 'true'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -202,7 +202,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [release, docker]
     if: always()
-    
+
     steps:
       - name: Notify team
         run: |
@@ -211,7 +211,7 @@ jobs:
           else
             echo "❌ Release failed"
           fi
-        
+
       - name: Update documentation site
         if: needs.release.outputs.success == 'true'
         run: |
@@ -227,25 +227,28 @@ jobs:
 
 ```javascript
 // scripts/validate-release.js
-const { ComprehensiveReleaseManager, ReleaseType } = require('../packages/ast-helper/src/release-management');
-const { readFileSync } = require('fs');
-const { join } = require('path');
+const {
+  ComprehensiveReleaseManager,
+  ReleaseType,
+} = require("../packages/ast-helper/src/release-management");
+const { readFileSync } = require("fs");
+const { join } = require("path");
 
 async function validateRelease() {
   try {
     const manager = new ComprehensiveReleaseManager();
-    
+
     // Load configuration
-    const config = JSON.parse(readFileSync('.releaserc.json', 'utf-8'));
+    const config = JSON.parse(readFileSync(".releaserc.json", "utf-8"));
     await manager.initialize(config);
 
     // Detect if release is needed
-    const currentVersion = await manager.getLatestVersion('stable');
-    const changes = await manager.generateChangelog(currentVersion, 'HEAD');
-    
+    const currentVersion = await manager.getLatestVersion("stable");
+    const changes = await manager.generateChangelog(currentVersion, "HEAD");
+
     if (changes.entries.length === 0) {
-      console.log('No changes detected - no release needed');
-      setOutput('can_release', 'false');
+      console.log("No changes detected - no release needed");
+      setOutput("can_release", "false");
       return;
     }
 
@@ -265,27 +268,30 @@ async function validateRelease() {
       changes.entries
     );
 
-    console.log(`Validation successful: ${currentVersion} → ${nextVersion} (${releaseType})`);
-    console.log(`Changes: ${changes.entries.length} commits, ${changes.breakingChanges.length} breaking`);
+    console.log(
+      `Validation successful: ${currentVersion} → ${nextVersion} (${releaseType})`
+    );
+    console.log(
+      `Changes: ${changes.entries.length} commits, ${changes.breakingChanges.length} breaking`
+    );
 
     // Create and validate release plan
     const plan = await manager.planRelease(nextVersion, releaseType);
     const validation = await manager.validateRelease(plan);
 
     if (validation.success) {
-      setOutput('can_release', 'true');
-      setOutput('next_version', nextVersion);
-      console.log('✅ Release validation passed');
+      setOutput("can_release", "true");
+      setOutput("next_version", nextVersion);
+      console.log("✅ Release validation passed");
     } else {
-      setOutput('can_release', 'false');
-      console.error('❌ Release validation failed:');
-      validation.errors.forEach(error => console.error(`  - ${error}`));
+      setOutput("can_release", "false");
+      console.error("❌ Release validation failed:");
+      validation.errors.forEach((error) => console.error(`  - ${error}`));
       process.exit(1);
     }
-
   } catch (error) {
-    console.error('💥 Validation failed:', error.message);
-    setOutput('can_release', 'false');
+    console.error("💥 Validation failed:", error.message);
+    setOutput("can_release", "false");
     process.exit(1);
   }
 }
@@ -458,7 +464,7 @@ trigger:
   paths:
     exclude:
       - docs/*
-      - '*.md'
+      - "*.md"
 
 pr:
   branches:
@@ -467,133 +473,133 @@ pr:
   paths:
     exclude:
       - docs/*
-      - '*.md'
+      - "*.md"
 
 variables:
   - group: release-secrets
   - name: nodeVersion
-    value: '18.x'
+    value: "18.x"
   - name: npmRegistry
-    value: 'https://registry.npmjs.org/'
+    value: "https://registry.npmjs.org/"
 
 stages:
   - stage: Validate
-    displayName: 'Validate Release'
+    displayName: "Validate Release"
     condition: eq(variables['Build.Reason'], 'PullRequest')
     jobs:
       - job: ValidateRelease
-        displayName: 'Validate Release Plan'
+        displayName: "Validate Release Plan"
         pool:
-          vmImage: 'ubuntu-latest'
+          vmImage: "ubuntu-latest"
         steps:
           - task: NodeTool@0
             inputs:
               versionSpec: $(nodeVersion)
-            displayName: 'Install Node.js'
-          
+            displayName: "Install Node.js"
+
           - task: Cache@2
             inputs:
               key: 'npm | "$(Agent.OS)" | package-lock.json'
               restoreKeys: |
                 npm | "$(Agent.OS)"
               path: ~/.npm
-            displayName: 'Cache npm'
-          
+            displayName: "Cache npm"
+
           - script: npm ci
-            displayName: 'Install dependencies'
-          
+            displayName: "Install dependencies"
+
           - script: |
               npm run lint
               npm run type-check
               npm test
               npm run build
-            displayName: 'Quality checks'
-          
+            displayName: "Quality checks"
+
           - script: node scripts/validate-release.js
-            displayName: 'Validate release plan'
+            displayName: "Validate release plan"
             env:
               AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
   - stage: Release
-    displayName: 'Execute Release'
+    displayName: "Execute Release"
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     dependsOn: []
     jobs:
       - deployment: ExecuteRelease
-        displayName: 'Execute Release'
-        environment: 'production'
+        displayName: "Execute Release"
+        environment: "production"
         pool:
-          vmImage: 'ubuntu-latest'
+          vmImage: "ubuntu-latest"
         strategy:
           runOnce:
             deploy:
               steps:
                 - checkout: self
                   persistCredentials: true
-                
+
                 - task: NodeTool@0
                   inputs:
                     versionSpec: $(nodeVersion)
-                  displayName: 'Install Node.js'
-                
+                  displayName: "Install Node.js"
+
                 - script: |
                     git config user.name "Release Bot"
                     git config user.email "release-bot@company.com"
-                  displayName: 'Configure Git'
-                
+                  displayName: "Configure Git"
+
                 - script: npm ci
-                  displayName: 'Install dependencies'
-                
+                  displayName: "Install dependencies"
+
                 - script: |
                     npm run lint
                     npm run type-check
                     npm test
                     npm run build
-                  displayName: 'Quality checks'
-                
+                  displayName: "Quality checks"
+
                 - script: node scripts/automated-release.js
-                  displayName: 'Execute release'
+                  displayName: "Execute release"
                   env:
                     AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
                     NPM_TOKEN: $(NPM_TOKEN)
                     SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
-                
+
                 - task: PublishBuildArtifacts@1
                   inputs:
-                    pathToPublish: 'dist'
-                    artifactName: 'release-artifacts'
+                    pathToPublish: "dist"
+                    artifactName: "release-artifacts"
                   condition: succeeded()
-                
+
                 - task: GitHubRelease@1
                   inputs:
-                    gitHubConnection: 'GitHub'
-                    repositoryName: '$(Build.Repository.Name)'
-                    action: 'create'
-                    target: '$(Build.SourceVersion)'
-                    tagSource: 'userSpecifiedTag'
-                    tag: 'v$(RELEASE_VERSION)'
-                    title: 'Release $(RELEASE_VERSION)'
-                    releaseNotesFilePath: 'release-notes.md'
-                    assets: 'dist/*'
+                    gitHubConnection: "GitHub"
+                    repositoryName: "$(Build.Repository.Name)"
+                    action: "create"
+                    target: "$(Build.SourceVersion)"
+                    tagSource: "userSpecifiedTag"
+                    tag: "v$(RELEASE_VERSION)"
+                    title: "Release $(RELEASE_VERSION)"
+                    releaseNotesFilePath: "release-notes.md"
+                    assets: "dist/*"
                   condition: succeeded()
 
   - stage: Deploy
-    displayName: 'Deploy Containers'
+    displayName: "Deploy Containers"
     dependsOn: Release
     condition: succeeded()
     jobs:
       - job: BuildAndPushDocker
-        displayName: 'Build and Push Docker Image'
+        displayName: "Build and Push Docker Image"
         pool:
-          vmImage: 'ubuntu-latest'
+          vmImage: "ubuntu-latest"
         steps:
           - task: Docker@2
-            displayName: 'Build and push Docker image'
+            displayName: "Build and push Docker image"
             inputs:
-              containerRegistry: 'DockerHub'
-              repository: 'myorg/myproject'
-              command: 'buildAndPush'
-              Dockerfile: '**/Dockerfile'
+              containerRegistry: "DockerHub"
+              repository: "myorg/myproject"
+              command: "buildAndPush"
+              Dockerfile: "**/Dockerfile"
               tags: |
                 $(RELEASE_VERSION)
                 latest
@@ -607,24 +613,24 @@ stages:
 // Jenkinsfile
 pipeline {
     agent any
-    
+
     environment {
         NODE_VERSION = '18'
         NPM_REGISTRY = 'https://registry.npmjs.org/'
         DOCKER_REGISTRY = 'docker.io'
     }
-    
+
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timeout(time: 30, unit: 'MINUTES')
         retry(2)
     }
-    
+
     triggers {
         githubPush()
         pollSCM('H/15 * * * *')
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
@@ -637,7 +643,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Setup') {
             steps {
                 nodejs(nodeJSInstallationName: "Node ${NODE_VERSION}") {
@@ -645,7 +651,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Quality Checks') {
             parallel {
                 stage('Lint') {
@@ -655,7 +661,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Type Check') {
                     steps {
                         nodejs(nodeJSInstallationName: "Node ${NODE_VERSION}") {
@@ -663,7 +669,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Security Audit') {
                     steps {
                         nodejs(nodeJSInstallationName: "Node ${NODE_VERSION}") {
@@ -673,7 +679,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Test') {
             steps {
                 nodejs(nodeJSInstallationName: "Node ${NODE_VERSION}") {
@@ -690,7 +696,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Build') {
             steps {
                 nodejs(nodeJSInstallationName: "Node ${NODE_VERSION}") {
@@ -704,7 +710,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Validate Release') {
             when {
                 anyOf {
@@ -719,7 +725,7 @@ pipeline {
                             script: 'node scripts/validate-release.js',
                             returnStatus: true
                         )
-                        
+
                         if (canRelease == 0) {
                             env.CAN_RELEASE = 'true'
                         } else {
@@ -730,7 +736,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Release') {
             when {
                 allOf {
@@ -763,7 +769,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Docker Build') {
             when {
                 allOf {
@@ -774,7 +780,7 @@ pipeline {
             steps {
                 script {
                     def image = docker.build("myorg/myproject:${env.RELEASE_VERSION}")
-                    
+
                     docker.withRegistry("https://${DOCKER_REGISTRY}", 'dockerhub-credentials') {
                         image.push()
                         image.push('latest')
@@ -782,7 +788,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Deploy') {
             when {
                 allOf {
@@ -791,9 +797,9 @@ pipeline {
                 }
             }
             steps {
-                build job: 'deploy-to-staging', 
+                build job: 'deploy-to-staging',
                       parameters: [string(name: 'VERSION', value: env.RELEASE_VERSION)]
-                
+
                 script {
                     def userInput = input(
                         id: 'deployToProd',
@@ -806,7 +812,7 @@ pipeline {
                             )
                         ]
                     )
-                    
+
                     if (userInput == 'Yes') {
                         build job: 'deploy-to-production',
                               parameters: [string(name: 'VERSION', value: env.RELEASE_VERSION)]
@@ -815,12 +821,12 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             cleanWs()
         }
-        
+
         success {
             script {
                 if (env.RELEASE_VERSION) {
@@ -832,7 +838,7 @@ pipeline {
                 }
             }
         }
-        
+
         failure {
             slackSend(
                 channel: '#releases',
@@ -884,14 +890,8 @@ pipeline {
     }
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx}": [
-      "eslint --fix",
-      "git add"
-    ],
-    "**/*.{json,md,yml,yaml}": [
-      "prettier --write",
-      "git add"
-    ]
+    "src/**/*.{ts,tsx}": ["eslint --fix", "git add"],
+    "**/*.{json,md,yml,yaml}": ["prettier --write", "git add"]
   },
   "commitlint": {
     "extends": ["@commitlint/config-conventional"]
@@ -903,71 +903,109 @@ pipeline {
 
 ```javascript
 // scripts/interactive-release.js
-const inquirer = require('inquirer');
-const { ComprehensiveReleaseManager, ReleaseType } = require('../packages/ast-helper/src/release-management');
-const { readFileSync } = require('fs');
-const chalk = require('chalk');
+const inquirer = require("inquirer");
+const {
+  ComprehensiveReleaseManager,
+  ReleaseType,
+} = require("../packages/ast-helper/src/release-management");
+const { readFileSync } = require("fs");
+const chalk = require("chalk");
 
 async function interactiveRelease() {
-  console.log(chalk.blue('🚀 Interactive Release Manager\n'));
+  console.log(chalk.blue("🚀 Interactive Release Manager\n"));
 
   try {
     const manager = new ComprehensiveReleaseManager();
-    const config = JSON.parse(readFileSync('.releaserc.json', 'utf-8'));
+    const config = JSON.parse(readFileSync(".releaserc.json", "utf-8"));
     await manager.initialize(config);
 
     // Get current version and changes
-    const currentVersion = await manager.getLatestVersion('stable');
-    const changes = await manager.generateChangelog(currentVersion, 'HEAD');
+    const currentVersion = await manager.getLatestVersion("stable");
+    const changes = await manager.generateChangelog(currentVersion, "HEAD");
 
     console.log(chalk.gray(`Current version: ${currentVersion}`));
-    console.log(chalk.gray(`Pending changes: ${changes.entries.length} commits\n`));
+    console.log(
+      chalk.gray(`Pending changes: ${changes.entries.length} commits\n`)
+    );
 
     if (changes.entries.length === 0) {
-      console.log(chalk.yellow('No changes detected. No release needed.'));
+      console.log(chalk.yellow("No changes detected. No release needed."));
       return;
     }
 
     // Show change summary
-    console.log(chalk.bold('Change Summary:'));
-    console.log(`  ${chalk.green('✨ Features:')} ${changes.newFeatures.length}`);
-    console.log(`  ${chalk.blue('🐛 Bug fixes:')} ${changes.bugFixes.length}`);
-    console.log(`  ${chalk.red('💥 Breaking:')} ${changes.breakingChanges.length}`);
+    console.log(chalk.bold("Change Summary:"));
+    console.log(
+      `  ${chalk.green("✨ Features:")} ${changes.newFeatures.length}`
+    );
+    console.log(`  ${chalk.blue("🐛 Bug fixes:")} ${changes.bugFixes.length}`);
+    console.log(
+      `  ${chalk.red("💥 Breaking:")} ${changes.breakingChanges.length}`
+    );
     console.log();
 
     // Release type selection
     const releaseTypeChoices = [
       {
-        name: `${chalk.red('Major')} - Breaking changes (${currentVersion} → ${incrementVersion(currentVersion, 'major')})`,
+        name: `${chalk.red(
+          "Major"
+        )} - Breaking changes (${currentVersion} → ${incrementVersion(
+          currentVersion,
+          "major"
+        )})`,
         value: ReleaseType.MAJOR,
-        disabled: changes.breakingChanges.length === 0 ? 'No breaking changes detected' : false
+        disabled:
+          changes.breakingChanges.length === 0
+            ? "No breaking changes detected"
+            : false,
       },
       {
-        name: `${chalk.yellow('Minor')} - New features (${currentVersion} → ${incrementVersion(currentVersion, 'minor')})`,
+        name: `${chalk.yellow(
+          "Minor"
+        )} - New features (${currentVersion} → ${incrementVersion(
+          currentVersion,
+          "minor"
+        )})`,
         value: ReleaseType.MINOR,
-        disabled: changes.newFeatures.length === 0 ? 'No new features detected' : false
+        disabled:
+          changes.newFeatures.length === 0 ? "No new features detected" : false,
       },
       {
-        name: `${chalk.green('Patch')} - Bug fixes (${currentVersion} → ${incrementVersion(currentVersion, 'patch')})`,
-        value: ReleaseType.PATCH
+        name: `${chalk.green(
+          "Patch"
+        )} - Bug fixes (${currentVersion} → ${incrementVersion(
+          currentVersion,
+          "patch"
+        )})`,
+        value: ReleaseType.PATCH,
       },
       {
-        name: `${chalk.blue('Prerelease')} - Alpha/Beta (${currentVersion} → ${incrementVersion(currentVersion, 'prerelease')})`,
-        value: ReleaseType.PRERELEASE
+        name: `${chalk.blue(
+          "Prerelease"
+        )} - Alpha/Beta (${currentVersion} → ${incrementVersion(
+          currentVersion,
+          "prerelease"
+        )})`,
+        value: ReleaseType.PRERELEASE,
       },
       {
-        name: `${chalk.magenta('Hotfix')} - Emergency fix (${currentVersion} → ${incrementVersion(currentVersion, 'hotfix')})`,
-        value: ReleaseType.HOTFIX
-      }
+        name: `${chalk.magenta(
+          "Hotfix"
+        )} - Emergency fix (${currentVersion} → ${incrementVersion(
+          currentVersion,
+          "hotfix"
+        )})`,
+        value: ReleaseType.HOTFIX,
+      },
     ];
 
     const { releaseType } = await inquirer.prompt([
       {
-        type: 'list',
-        name: 'releaseType',
-        message: 'Select release type:',
-        choices: releaseTypeChoices
-      }
+        type: "list",
+        name: "releaseType",
+        message: "Select release type:",
+        choices: releaseTypeChoices,
+      },
     ]);
 
     // Calculate version
@@ -981,86 +1019,92 @@ async function interactiveRelease() {
     // Custom version option
     const { useCustomVersion } = await inquirer.prompt([
       {
-        type: 'confirm',
-        name: 'useCustomVersion',
+        type: "confirm",
+        name: "useCustomVersion",
         message: `Use calculated version ${chalk.bold(nextVersion)}?`,
-        default: true
-      }
+        default: true,
+      },
     ]);
 
     let targetVersion = nextVersion;
     if (!useCustomVersion) {
       const { customVersion } = await inquirer.prompt([
         {
-          type: 'input',
-          name: 'customVersion',
-          message: 'Enter custom version:',
+          type: "input",
+          name: "customVersion",
+          message: "Enter custom version:",
           validate: (input) => {
             if (!input.match(/^\d+\.\d+\.\d+/)) {
-              return 'Please enter a valid semantic version (e.g., 1.2.3)';
+              return "Please enter a valid semantic version (e.g., 1.2.3)";
             }
             return true;
-          }
-        }
+          },
+        },
       ]);
       targetVersion = customVersion;
     }
 
     // Platform selection
-    const availablePlatforms = config.platforms.map(p => p.name);
+    const availablePlatforms = config.platforms.map((p) => p.name);
     const { selectedPlatforms } = await inquirer.prompt([
       {
-        type: 'checkbox',
-        name: 'selectedPlatforms',
-        message: 'Select platforms to publish:',
+        type: "checkbox",
+        name: "selectedPlatforms",
+        message: "Select platforms to publish:",
         choices: availablePlatforms,
-        default: availablePlatforms.filter(p => config.platforms.find(cp => cp.name === p)?.enabled)
-      }
+        default: availablePlatforms.filter(
+          (p) => config.platforms.find((cp) => cp.name === p)?.enabled
+        ),
+      },
     ]);
 
     // Dry run option
     const { dryRun } = await inquirer.prompt([
       {
-        type: 'confirm',
-        name: 'dryRun',
-        message: 'Perform dry run (no actual publishing)?',
-        default: false
-      }
+        type: "confirm",
+        name: "dryRun",
+        message: "Perform dry run (no actual publishing)?",
+        default: false,
+      },
     ]);
 
     // Final confirmation
-    console.log(chalk.bold('\n📋 Release Summary:'));
-    console.log(`  Version: ${chalk.bold(currentVersion)} → ${chalk.bold(targetVersion)}`);
+    console.log(chalk.bold("\n📋 Release Summary:"));
+    console.log(
+      `  Version: ${chalk.bold(currentVersion)} → ${chalk.bold(targetVersion)}`
+    );
     console.log(`  Type: ${chalk.bold(releaseType)}`);
-    console.log(`  Platforms: ${selectedPlatforms.join(', ')}`);
-    console.log(`  Mode: ${dryRun ? chalk.yellow('DRY RUN') : chalk.green('LIVE')}`);
+    console.log(`  Platforms: ${selectedPlatforms.join(", ")}`);
+    console.log(
+      `  Mode: ${dryRun ? chalk.yellow("DRY RUN") : chalk.green("LIVE")}`
+    );
     console.log();
 
     const { confirmed } = await inquirer.prompt([
       {
-        type: 'confirm',
-        name: 'confirmed',
-        message: 'Proceed with release?',
-        default: false
-      }
+        type: "confirm",
+        name: "confirmed",
+        message: "Proceed with release?",
+        default: false,
+      },
     ]);
 
     if (!confirmed) {
-      console.log(chalk.yellow('Release cancelled.'));
+      console.log(chalk.yellow("Release cancelled."));
       return;
     }
 
     // Execute release
-    console.log(chalk.blue('\n🔄 Executing release...\n'));
+    console.log(chalk.blue("\n🔄 Executing release...\n"));
 
     // Update config for selected platforms
     const releaseConfig = {
       ...config,
       dryRun,
-      platforms: config.platforms.map(p => ({
+      platforms: config.platforms.map((p) => ({
         ...p,
-        enabled: selectedPlatforms.includes(p.name)
-      }))
+        enabled: selectedPlatforms.includes(p.name),
+      })),
     };
 
     await manager.initialize(releaseConfig);
@@ -1069,44 +1113,49 @@ async function interactiveRelease() {
     const validation = await manager.validateRelease(plan);
 
     if (!validation.success) {
-      console.error(chalk.red('❌ Release validation failed:'));
-      validation.errors.forEach(error => console.error(`  - ${error}`));
+      console.error(chalk.red("❌ Release validation failed:"));
+      validation.errors.forEach((error) => console.error(`  - ${error}`));
       return;
     }
 
     const result = await manager.executeRelease(plan);
 
     if (result.success) {
-      console.log(chalk.green(`\n✅ Release ${result.version} completed successfully! 🎉`));
+      console.log(
+        chalk.green(`\n✅ Release ${result.version} completed successfully! 🎉`)
+      );
       console.log(`Duration: ${result.duration}ms`);
       if (result.publishResults) {
-        console.log('Published to:');
-        result.publishResults.forEach(pr => {
-          console.log(`  - ${pr.platform}: ${pr.success ? '✅' : '❌'} ${pr.url || pr.error || ''}`);
+        console.log("Published to:");
+        result.publishResults.forEach((pr) => {
+          console.log(
+            `  - ${pr.platform}: ${pr.success ? "✅" : "❌"} ${
+              pr.url || pr.error || ""
+            }`
+          );
         });
       }
     } else {
       console.error(chalk.red(`❌ Release failed: ${result.error}`));
     }
-
   } catch (error) {
-    console.error(chalk.red('💥 Release process failed:'), error.message);
+    console.error(chalk.red("💥 Release process failed:"), error.message);
     process.exit(1);
   }
 }
 
 function incrementVersion(version, type) {
-  const parts = version.split('.').map(Number);
+  const parts = version.split(".").map(Number);
   switch (type) {
-    case 'major':
+    case "major":
       return `${parts[0] + 1}.0.0`;
-    case 'minor':
+    case "minor":
       return `${parts[0]}.${parts[1] + 1}.0`;
-    case 'patch':
+    case "patch":
       return `${parts[0]}.${parts[1]}.${parts[2] + 1}`;
-    case 'prerelease':
+    case "prerelease":
       return `${parts[0]}.${parts[1] + 1}.0-alpha.1`;
-    case 'hotfix':
+    case "hotfix":
       return `${parts[0]}.${parts[1]}.${parts[2] + 1}-hotfix.1`;
     default:
       return version;

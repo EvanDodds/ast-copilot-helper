@@ -5,7 +5,7 @@ This directory contains comprehensive tests for the release management system:
 ## Test Files
 
 - `release-manager.test.ts` - Tests for the main ComprehensiveReleaseManager class
-- `version-manager.test.ts` - Tests for semantic versioning functionality  
+- `version-manager.test.ts` - Tests for semantic versioning functionality
 - `changelog-generator.test.ts` - Tests for automated changelog generation
 - `compatibility-checker.test.ts` - Tests for backward compatibility checking
 - `integration.test.ts` - End-to-end integration tests

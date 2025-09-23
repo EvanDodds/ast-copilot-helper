@@ -58,18 +58,23 @@ npm install @ast-copilot-helper/release-management
 ### Basic Usage
 
 ```typescript
-import { ComprehensiveReleaseManager, ReleaseType } from '@ast-copilot-helper/release-management';
+import {
+  ComprehensiveReleaseManager,
+  ReleaseType,
+} from "@ast-copilot-helper/release-management";
 
 const manager = new ComprehensiveReleaseManager();
 await manager.initialize(config);
 
 // Plan and execute a release
-const plan = await manager.planRelease('1.1.0', ReleaseType.MINOR);
+const plan = await manager.planRelease("1.1.0", ReleaseType.MINOR);
 const validation = await manager.validateRelease(plan);
 
 if (validation.success) {
   const result = await manager.executeRelease(plan);
-  console.log(`Release ${result.version} ${result.success ? 'succeeded' : 'failed'}`);
+  console.log(
+    `Release ${result.version} ${result.success ? "succeeded" : "failed"}`
+  );
 }
 ```
 
@@ -80,27 +85,29 @@ Minimal configuration example:
 ```typescript
 const config = {
   repository: {
-    owner: 'myorg',
-    name: 'myproject',
-    defaultBranch: 'main',
-    releaseBranches: ['main'],
-    protectedBranches: ['main'],
-    monorepo: false
+    owner: "myorg",
+    name: "myproject",
+    defaultBranch: "main",
+    releaseBranches: ["main"],
+    protectedBranches: ["main"],
+    monorepo: false,
   },
   versioning: {
-    scheme: 'semver',
-    initialVersion: '1.0.0',
+    scheme: "semver",
+    initialVersion: "1.0.0",
     channels: [],
     allowPrereleasePromotion: true,
-    strictMode: true
+    strictMode: true,
   },
-  platforms: [{
-    name: 'npm',
-    enabled: true,
-    config: { registry: 'https://registry.npmjs.org/', access: 'public' },
-    requirements: ['build', 'test'],
-    artifacts: ['dist/**', 'package.json']
-  }]
+  platforms: [
+    {
+      name: "npm",
+      enabled: true,
+      config: { registry: "https://registry.npmjs.org/", access: "public" },
+      requirements: ["build", "test"],
+      artifacts: ["dist/**", "package.json"],
+    },
+  ],
 };
 ```
 
@@ -136,8 +143,9 @@ const config = {
 
 ```typescript
 // Detect changes and determine release type
-const changes = await manager.generateChangelog('1.0.0', 'HEAD');
-const releaseType = changes.breakingChanges.length > 0 ? ReleaseType.MAJOR : ReleaseType.MINOR;
+const changes = await manager.generateChangelog("1.0.0", "HEAD");
+const releaseType =
+  changes.breakingChanges.length > 0 ? ReleaseType.MAJOR : ReleaseType.MINOR;
 
 // Execute release
 const plan = await manager.planRelease(null, releaseType); // Auto-calculate version
@@ -148,11 +156,14 @@ const result = await manager.executeRelease(plan);
 
 ```typescript
 // Create alpha
-const alphaPlan = await manager.planRelease('1.1.0-alpha.1', ReleaseType.PRERELEASE);
+const alphaPlan = await manager.planRelease(
+  "1.1.0-alpha.1",
+  ReleaseType.PRERELEASE
+);
 await manager.executeRelease(alphaPlan);
 
 // Promote to stable
-const stablePlan = await manager.planRelease('1.1.0', ReleaseType.MINOR);
+const stablePlan = await manager.planRelease("1.1.0", ReleaseType.MINOR);
 await manager.executeRelease(stablePlan);
 ```
 
@@ -183,7 +194,7 @@ if (!result.success && config.rollback.enabled) {
 
 ```typescript
 // Register commands
-vscode.commands.registerCommand('extension.release', async () => {
+vscode.commands.registerCommand("extension.release", async () => {
   const manager = new ComprehensiveReleaseManager();
   // ... release logic
 });
@@ -210,6 +221,7 @@ vscode.commands.registerCommand('extension.release', async () => {
 ### From Other Tools
 
 The system provides migration utilities for:
+
 - `semantic-release`
 - `standard-version`
 - `np`
