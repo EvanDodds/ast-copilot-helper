@@ -1,0 +1,51 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007ACC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#005A9E;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="url(#gradient)" stroke="#003D6B" stroke-width="2"/>
+  
+  <!-- AST Tree structure -->
+  <!-- Root node -->
+  <circle cx="64" cy="35" r="8" fill="#FFFFFF" stroke="#003D6B" stroke-width="2"/>
+  
+  <!-- Second level nodes -->
+  <circle cx="45" cy="55" r="6" fill="#E3F2FD" stroke="#005A9E" stroke-width="1.5"/>
+  <circle cx="83" cy="55" r="6" fill="#E3F2FD" stroke="#005A9E" stroke-width="1.5"/>
+  
+  <!-- Third level nodes -->
+  <circle cx="30" cy="75" r="5" fill="#BBDEFB" stroke="#007ACC" stroke-width="1"/>
+  <circle cx="50" cy="75" r="5" fill="#BBDEFB" stroke="#007ACC" stroke-width="1"/>
+  <circle cx="78" cy="75" r="5" fill="#BBDEFB" stroke="#007ACC" stroke-width="1"/>
+  <circle cx="98" cy="75" r="5" fill="#BBDEFB" stroke="#007ACC" stroke-width="1"/>
+  
+  <!-- Fourth level nodes -->
+  <circle cx="25" cy="95" r="4" fill="#90CAF9" stroke="#007ACC" stroke-width="1"/>
+  <circle cx="35" cy="95" r="4" fill="#90CAF9" stroke="#007ACC" stroke-width="1"/>
+  <circle cx="93" cy="95" r="4" fill="#90CAF9" stroke="#007ACC" stroke-width="1"/>
+  <circle cx="103" cy="95" r="4" fill="#90CAF9" stroke="#007ACC" stroke-width="1"/>
+  
+  <!-- Connecting lines -->
+  <!-- Root to second level -->
+  <line x1="64" y1="43" x2="45" y2="49" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="64" y1="43" x2="83" y2="49" stroke="#FFFFFF" stroke-width="2"/>
+  
+  <!-- Second to third level -->
+  <line x1="45" y1="61" x2="30" y2="70" stroke="#E3F2FD" stroke-width="1.5"/>
+  <line x1="45" y1="61" x2="50" y2="70" stroke="#E3F2FD" stroke-width="1.5"/>
+  <line x1="83" y1="61" x2="78" y2="70" stroke="#E3F2FD" stroke-width="1.5"/>
+  <line x1="83" y1="61" x2="98" y2="70" stroke="#E3F2FD" stroke-width="1.5"/>
+  
+  <!-- Third to fourth level -->
+  <line x1="30" y1="80" x2="25" y2="91" stroke="#BBDEFB" stroke-width="1"/>
+  <line x1="30" y1="80" x2="35" y2="91" stroke="#BBDEFB" stroke-width="1"/>
+  <line x1="98" y1="80" x2="93" y2="91" stroke="#BBDEFB" stroke-width="1"/>
+  <line x1="98" y1="80" x2="103" y2="91" stroke="#BBDEFB" stroke-width="1"/>
+  
+  <!-- Code brackets in the center -->
+  <text x="64" y="70" text-anchor="middle" font-family="monospace" font-size="16" font-weight="bold" fill="#FFFFFF">{}</text>
+</svg>
