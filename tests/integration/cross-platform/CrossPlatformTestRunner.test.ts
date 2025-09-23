@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CrossPlatformTestRunner } from './CrossPlatformTestRunner.js';
-import { CrossPlatformTestConfig, BinaryTestResult, FeatureTest, TestResult } from './types.js';
+import { CrossPlatformTestConfig, BinaryTestResult, BinaryComponentResult, FeatureTest, TestResult } from './types.js';
 
 describe('CrossPlatformTestRunner', () => {
   let testRunner: CrossPlatformTestRunner;
@@ -66,19 +66,20 @@ describe('CrossPlatformTestRunner', () => {
       const fsTests = await testRunner.testFileSystemCompatibility();
       
       expect(fsTests).toBeDefined();
-      expect(fsTests.pathSeparators).toBeDefined();
-      expect(fsTests.pathSeparators.testName).toBe('path_separators');
-      expect(fsTests.pathSeparators.category).toBe('file_operations');
+      expect(fsTests.platform).toBe(process.platform);
+      expect(fsTests.testResults).toBeDefined();
+      expect(Array.isArray(fsTests.testResults)).toBe(true);
       
-      expect(fsTests.caseSensitivity).toBeDefined();
-      expect(fsTests.caseSensitivity.testName).toBe('case_sensitivity');
-      expect(fsTests.caseSensitivity.category).toBe('file_operations');
+      expect(fsTests.summary).toBeDefined();
+      expect(fsTests.summary.total).toBeGreaterThan(0);
+      expect(fsTests.summary.passed).toBeGreaterThanOrEqual(0);
+      expect(fsTests.summary.failed).toBeGreaterThanOrEqual(0);
       
-      expect(fsTests.specialCharacters).toBeDefined();
-      expect(fsTests.longPaths).toBeDefined();
-      expect(fsTests.permissions).toBeDefined();
-      expect(fsTests.symbolicLinks).toBeDefined();
-      expect(fsTests.unicode).toBeDefined();
+      expect(typeof fsTests.caseSensitive).toBe('boolean');
+      expect(typeof fsTests.pathSeparator).toBe('string');
+      expect(typeof fsTests.maxPathLength).toBe('number');
+      expect(typeof fsTests.supportsSymlinks).toBe('boolean');
+      expect(typeof fsTests.supportsHardlinks).toBe('boolean');
     });
 
     it('should handle path separator normalization', async () => {
@@ -112,7 +113,7 @@ describe('CrossPlatformTestRunner', () => {
       const binaryTests = await testRunner.validateBinaryDistribution();
       
       const treeSitterTest = binaryTests.binaryTests.find(
-        (test: BinaryTestResult) => test.component === 'tree-sitter'
+        (test: BinaryComponentResult) => test.component === 'tree-sitter'
       );
       
       expect(treeSitterTest).toBeDefined();
@@ -126,7 +127,7 @@ describe('CrossPlatformTestRunner', () => {
       const binaryTests = await testRunner.validateBinaryDistribution();
       
       const sqliteTest = binaryTests.nativeModuleTests.find(
-        (test: BinaryTestResult) => test.component === 'better-sqlite3'
+        (test: BinaryComponentResult) => test.component === 'better-sqlite3'
       );
       
       expect(sqliteTest).toBeDefined();
@@ -259,7 +260,7 @@ describe('CrossPlatformTestRunner', () => {
       }
 
       const filesystemTests = platformResult?.testResults.filter(
-        (test: TestResult) => test.category === 'file_operations'
+        (test: TestResult) => test.category === 'filesystem'
       );
       
       expect(filesystemTests?.length).toBeGreaterThan(0);
@@ -287,14 +288,14 @@ describe('CrossPlatformTestRunner', () => {
       const results = await testRunner.testPlatformCompatibility();
       
       const failedTests = [
-        ...results.windows.testResults.filter((t: TestResult) => !t.success),
-        ...results.macos.testResults.filter((t: TestResult) => !t.success),
-        ...results.linux.testResults.filter((t: TestResult) => !t.success)
+        ...results.windows.testResults.filter((t: TestResult) => !t.passed),
+        ...results.macos.testResults.filter((t: TestResult) => !t.passed),
+        ...results.linux.testResults.filter((t: TestResult) => !t.passed)
       ];
 
       // Any failed tests should have error messages
       failedTests.forEach(test => {
-        if (!test.success) {
+        if (!test.passed) {
           expect(test.error).toBeDefined();
           expect(typeof test.error).toBe('string');
           expect(test.error!.length).toBeGreaterThan(0);

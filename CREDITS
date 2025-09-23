@@ -1,0 +1,333 @@
+CREDITS
+=======
+
+This software is made possible by the following open source contributors:
+
+## Contributors (80 total)
+
+- >
+- Alan Plum
+- Alberto Schiabel
+- Aleksey V Zapparov <ixti@member.fsf.org> (http://www.ixti.net/)
+- Alessandro Vergani
+- Andrew Bradley
+- Andrew Kaiser
+- Andrew Makarov
+- Anna Henningsen
+- Anthony Fu <anthonyfu117@hotmail.com>
+- Anthony Fu <https://github.com/antfu>
+- Anthropic, PBC (https://anthropic.com)
+- Anthropic, PBC.
+- Armaan Tobaccowalla
+- Arnout Kazemier and contributors
+- Atsushi Tatsuma
+- Bart van der Schoor
+- Beeno Tung
+- Ben Davies
+- BendingBender
+- Benjamin Toueg
+- Blake Embrey
+- Blake Embrey (hello@blakeembrey.com)
+- Carsten Klein
+- Carsten Klein <trancesilken@gmail.com> (https://github.com/silkentrance)
+- Connor Peet <connor@peet.io>
+- David Junger
+- Dmitry Semigradsky
+- Einar Otto Stangvik <einaros@gmail.com>
+- ExE Boss
+- Florian Stamer
+- Gyusun Yeom
+- Hiroki Osame
+- Ilia Baryshnikov
+- Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)
+- Isaac Z. Schlueter and Contributors
+- Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)
+- Jared Klopper
+- Joshua Wise
+- Joshua Wise <joshuathomaswise@gmail.com>
+- Junxiao Shi
+- KARASZI István
+- KARASZI István <github@spam.raszi.hu>
+- Linus Unnebäck
+- Luigi Pinca and contributors
+- Marcin Kopacz
+- Mark Stewart
+- Martin Grenfell <martin.grenfell@gmail.com> (http://got-ravings.blogspot.com)
+- Mathew Rumsey
+- Matteo Collina
+- Microsoft Corp.
+- Microsoft Corporation
+- Microsoft TypeScript
+- Mohsen Azimi
+- Nikita Galkin
+- NodeJS Contributors
+- Paul Miller (https://paulmillr.com)
+- Paul Miller (https://paulmillr.com), Elan Shanker
+- Piotr Błażejewicz
+- Robert Kieffer
+- Santiago Aguilar
+- Sebastian Clausen
+- Sebastian Silbermann
+- Shant Marouti
+- TJ Holowaychuk <tj@vision-media.ca>
+- Terkel Gjervig Nielsen
+- Trivikram Kamat
+- Typicode <typicode@gmail.com>
+- Victor Perin
+- Visual Studio Code Team
+- Visual Studio Code Team, Microsoft
+- Vitaly Puzrin <vitaly@rcdesign.ru> (https://github.com/puzrin)
+- Vladimir Zapparov <dervus.grim@gmail.com>
+- Wilco Bakker
+- Xenova
+- by Vitaly Puzrin
+- by various contributors (see AUTHORS)
+- typicode
+- vvakame
+- wafuwafu13
+
+## Package Contributors
+
+### @modelcontextprotocol/sdk
+- Anthropic, PBC (https://anthropic.com)
+- Anthropic, PBC.
+
+### @types/better-sqlite3
+- Ben Davies
+- Mathew Rumsey
+- Santiago Aguilar
+- Alessandro Vergani
+- Andrew Kaiser
+- Mark Stewart
+- Florian Stamer
+- Beeno Tung
+
+### @types/js-yaml
+- Bart van der Schoor
+- Sebastian Clausen
+- ExE Boss
+- Armaan Tobaccowalla
+- Linus Unnebäck
+
+### @types/minimatch
+- vvakame
+- Shant Marouti
+- BendingBender
+
+### @types/node
+- Microsoft TypeScript
+- Alberto Schiabel
+- Andrew Makarov
+- Benjamin Toueg
+- David Junger
+- Mohsen Azimi
+- Nikita Galkin
+- Sebastian Silbermann
+- Wilco Bakker
+- Marcin Kopacz
+- Trivikram Kamat
+- Junxiao Shi
+- Ilia Baryshnikov
+- ExE Boss
+- Piotr Błażejewicz
+- Anna Henningsen
+- Victor Perin
+- NodeJS Contributors
+- Linus Unnebäck
+- wafuwafu13
+- Matteo Collina
+- Dmitry Semigradsky
+- Microsoft TypeScript
+- Alberto Schiabel
+- Andrew Makarov
+- Benjamin Toueg
+- David Junger
+- Mohsen Azimi
+- Nikita Galkin
+- Sebastian Silbermann
+- Wilco Bakker
+- Marcin Kopacz
+- Trivikram Kamat
+- Junxiao Shi
+- Ilia Baryshnikov
+- ExE Boss
+- Piotr Błażejewicz
+- Anna Henningsen
+- Victor Perin
+- NodeJS Contributors
+- Linus Unnebäck
+- wafuwafu13
+- Matteo Collina
+- Dmitry Semigradsky
+- Microsoft TypeScript
+- Alberto Schiabel
+- Andrew Makarov
+- Benjamin Toueg
+- David Junger
+- Mohsen Azimi
+- Nikita Galkin
+- Sebastian Silbermann
+- Wilco Bakker
+- Marcin Kopacz
+- Trivikram Kamat
+- Junxiao Shi
+- Ilia Baryshnikov
+- ExE Boss
+- Piotr Błażejewicz
+- Anna Henningsen
+- Victor Perin
+- NodeJS Contributors
+- Linus Unnebäck
+- wafuwafu13
+- Matteo Collina
+- Dmitry Semigradsky
+- Microsoft TypeScript
+- Alberto Schiabel
+- Andrew Makarov
+- Benjamin Toueg
+- David Junger
+- Mohsen Azimi
+- Nikita Galkin
+- Sebastian Silbermann
+- Wilco Bakker
+- Marcin Kopacz
+- Trivikram Kamat
+- Junxiao Shi
+- Ilia Baryshnikov
+- ExE Boss
+- Piotr Błażejewicz
+- Anna Henningsen
+- Victor Perin
+- NodeJS Contributors
+- Linus Unnebäck
+- wafuwafu13
+- Matteo Collina
+- Dmitry Semigradsky
+
+### @types/tmp
+- Jared Klopper
+- Gyusun Yeom
+- Alan Plum
+- Carsten Klein
+- BendingBender
+
+### @types/vscode
+- Visual Studio Code Team, Microsoft
+
+### @vitest/coverage-v8
+- Anthony Fu <anthonyfu117@hotmail.com>
+
+### @vscode/test-cli
+- Connor Peet <connor@peet.io>
+
+### @vscode/test-electron
+- Visual Studio Code Team
+
+### @vscode/vsce
+- Microsoft Corporation
+
+### @xenova/transformers
+- Xenova
+
+### better-sqlite3
+- Joshua Wise <joshuathomaswise@gmail.com>
+- Joshua Wise
+
+### chokidar
+- Paul Miller (https://paulmillr.com)
+- Paul Miller (https://paulmillr.com), Elan Shanker
+
+### commander
+- TJ Holowaychuk <tj@vision-media.ca>
+
+### hnswlib-node
+- Atsushi Tatsuma
+
+### husky
+- Typicode <typicode@gmail.com>
+- typicode
+
+### js-yaml
+- Vladimir Zapparov <dervus.grim@gmail.com>
+- Aleksey V Zapparov <ixti@member.fsf.org> (http://www.ixti.net/)
+- Vitaly Puzrin <vitaly@rcdesign.ru> (https://github.com/puzrin)
+- Martin Grenfell <martin.grenfell@gmail.com> (http://got-ravings.blogspot.com)
+- by Vitaly Puzrin
+
+### minimatch
+- Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)
+- Isaac Z. Schlueter and Contributors
+
+### tmp
+- KARASZI István <github@spam.raszi.hu>
+- Carsten Klein <trancesilken@gmail.com> (https://github.com/silkentrance)
+- KARASZI István
+
+### ts-node
+- Blake Embrey
+- Andrew Bradley
+- Blake Embrey (hello@blakeembrey.com)
+- Blake Embrey
+- Andrew Bradley
+- Blake Embrey (hello@blakeembrey.com)
+- Blake Embrey
+- Andrew Bradley
+- Blake Embrey (hello@blakeembrey.com)
+- Blake Embrey
+- Andrew Bradley
+- Blake Embrey (hello@blakeembrey.com)
+
+### tsx
+- Hiroki Osame
+
+### typescript
+- Microsoft Corp.
+- Microsoft Corp.
+- Microsoft Corp.
+- Microsoft Corp.
+
+### vitest
+- Anthony Fu <anthonyfu117@hotmail.com>
+- Anthony Fu <https://github.com/antfu>
+- by various contributors (see AUTHORS)
+- >
+- Robert Kieffer
+- Terkel Gjervig Nielsen
+- Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)
+- Einar Otto Stangvik <einaros@gmail.com>
+- Arnout Kazemier and contributors
+- Luigi Pinca and contributors
+- Anthony Fu <anthonyfu117@hotmail.com>
+- Anthony Fu <https://github.com/antfu>
+- by various contributors (see AUTHORS)
+- >
+- Robert Kieffer
+- Terkel Gjervig Nielsen
+- Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)
+- Einar Otto Stangvik <einaros@gmail.com>
+- Arnout Kazemier and contributors
+- Luigi Pinca and contributors
+- Anthony Fu <anthonyfu117@hotmail.com>
+- Anthony Fu <https://github.com/antfu>
+- by various contributors (see AUTHORS)
+- >
+- Robert Kieffer
+- Terkel Gjervig Nielsen
+- Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)
+- Einar Otto Stangvik <einaros@gmail.com>
+- Arnout Kazemier and contributors
+- Luigi Pinca and contributors
+- Anthony Fu <anthonyfu117@hotmail.com>
+- Anthony Fu <https://github.com/antfu>
+- by various contributors (see AUTHORS)
+- >
+- Robert Kieffer
+- Terkel Gjervig Nielsen
+- Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)
+- Einar Otto Stangvik <einaros@gmail.com>
+- Arnout Kazemier and contributors
+- Luigi Pinca and contributors
+
+
+Generated on: 2025-09-23T16:05:48.642Z
+By: ast-copilot-helper legal compliance system

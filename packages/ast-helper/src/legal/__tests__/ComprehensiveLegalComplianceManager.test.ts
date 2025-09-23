@@ -139,16 +139,16 @@ describe('ComprehensiveLegalComplianceManager', () => {
       await manager.initialize(config);
     });
 
-    it('should return not implemented error for setupLegalDocumentation', async () => {
+    it('should return success for setupLegalDocumentation', async () => {
       const result = await manager.setupLegalDocumentation();
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Not implemented');
+      expect(result.success).toBe(true);
+      expect(result.documentsGenerated).toBeDefined();
     });
 
-    it('should return not implemented error for monitorLicenseChanges', async () => {
+    it('should return success for monitorLicenseChanges', async () => {
       const result = await manager.monitorLicenseChanges();
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Not implemented');
+      expect(result.success).toBe(true);
+      expect(result.changesDetected).toBeGreaterThanOrEqual(0);
     });
   });
 });

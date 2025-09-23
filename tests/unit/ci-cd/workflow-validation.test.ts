@@ -44,15 +44,19 @@ describe('CI/CD Pipeline Configuration', () => {
     const content = readFileSync(workflowPath, 'utf8');
     const workflow = yaml.load(content) as any;
     
-    expect(workflow.jobs['unit-tests'].strategy.matrix.os).toEqual([
-      'ubuntu-latest',
-      'windows-latest',
-      'macos-latest'
-    ]);
+    // The matrix uses conditional expressions based on event type
+    const osMatrix = workflow.jobs['unit-tests'].strategy.matrix.os;
+    const nodeMatrix = workflow.jobs['unit-tests'].strategy.matrix['node-version'];
     
-    expect(workflow.jobs['unit-tests'].strategy.matrix['node-version']).toEqual([
-      18, 20, 22
-    ]);
+    expect(typeof osMatrix).toBe('string');
+    expect(osMatrix).toContain('ubuntu-latest');
+    expect(osMatrix).toContain('windows-latest');
+    expect(osMatrix).toContain('macos-latest');
+    
+    expect(typeof nodeMatrix).toBe('string');
+    expect(nodeMatrix).toContain('18');
+    expect(nodeMatrix).toContain('20');
+    expect(nodeMatrix).toContain('22');
   });
   
   it('should have proper job dependencies', () => {

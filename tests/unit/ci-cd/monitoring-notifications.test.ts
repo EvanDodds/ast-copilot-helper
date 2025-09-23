@@ -325,8 +325,7 @@ describe('Monitoring and Notifications System', () => {
 
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('monitoring-dashboard.html'),
-        expect.stringContaining('<!DOCTYPE html>'),
-        { flag: undefined }
+        expect.stringContaining('<!DOCTYPE html>')
       );
     });
 
@@ -340,8 +339,7 @@ describe('Monitoring and Notifications System', () => {
 
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('dashboard-data.json'),
-        expect.stringContaining('"title"'),
-        { flag: undefined }
+        expect.stringContaining('"title"')
       );
     });
 

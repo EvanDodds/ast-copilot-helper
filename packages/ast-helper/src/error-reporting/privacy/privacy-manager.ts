@@ -400,12 +400,14 @@ export class PrivacyManager {
     if (consentLevel >= ConsentLevel.ANALYTICS && diagnostics.codebase) {
       filtered.codebase = {
         ...diagnostics.codebase,
-        git: consentLevel >= ConsentLevel.FULL ? {
+        git: diagnostics.codebase.git ? (consentLevel >= ConsentLevel.FULL ? {
           ...diagnostics.codebase.git,
           // Remove potentially sensitive commit info
           commit: diagnostics.codebase.git.commit ? diagnostics.codebase.git.commit.substring(0, 7) : undefined
         } : {
           isRepository: diagnostics.codebase.git.isRepository
+        }) : {
+          isRepository: false
         }
       };
     }

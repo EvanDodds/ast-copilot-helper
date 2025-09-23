@@ -36,9 +36,9 @@ describe('CONTRIBUTING.md', () => {
   it('should include prerequisites and setup instructions', () => {
     expect(content).toContain('### Prerequisites');
     expect(content).toContain('Node.js 18.0.0 or higher');
-    expect(content).toContain('npm install');
-    expect(content).toContain('npm run build');
-    expect(content).toContain('npm test');
+    expect(content).toContain('yarn install');
+    expect(content).toContain('yarn run build');
+    expect(content).toContain('yarn test');
   });
 
   it('should have project structure documentation', () => {
@@ -52,8 +52,8 @@ describe('CONTRIBUTING.md', () => {
     expect(content).toContain('## Code Standards');
     expect(content).toContain('TypeScript Guidelines');
     expect(content).toContain('Use strict mode');
-    expect(content).toContain('npm run lint');
-    expect(content).toContain('npm run format');
+    expect(content).toContain('yarn run lint');
+    expect(content).toContain('yarn run format');
   });
 
   it('should have commit message format guidelines', () => {
@@ -69,8 +69,8 @@ describe('CONTRIBUTING.md', () => {
     expect(content).toContain('## Testing');
     expect(content).toContain('Unit tests');
     expect(content).toContain('Integration tests');
-    expect(content).toContain('npm test');
-    expect(content).toContain('npm run test:coverage');
+    expect(content).toContain('yarn test');
+    expect(content).toContain('yarn run test:coverage');
   });
 
   it('should have pull request process documentation', () => {
@@ -89,20 +89,20 @@ describe('CONTRIBUTING.md', () => {
 
   it('should have debugging and troubleshooting sections', () => {
     expect(content).toContain('### Debugging');
-    expect(content).toContain('npm run debug:cli');
+    expect(content).toContain('yarn run debug:cli');
     expect(content).toContain('## Troubleshooting');
     expect(content).toContain('Common Issues');
   });
 
   it('should include all required script references', () => {
     const requiredScripts = [
-      'npm install',
-      'npm run build',
-      'npm test',
-      'npm run lint',
-      'npm run format',
-      'npm run test:coverage',
-      'npm run docs:generate'
+      'yarn install',
+      'yarn run build',
+      'yarn test',
+      'yarn run lint',
+      'yarn run format',
+      'yarn run test:coverage',
+      'yarn run docs:generate'
     ];
 
     for (const script of requiredScripts) {
