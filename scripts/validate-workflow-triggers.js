@@ -9,9 +9,10 @@
  * (b) post merge on main branch (full suite)
  */
 
-const fs = require('fs');
-const path = require('path');
-const yaml = require('js-yaml');
+import fs from 'fs';
+import path from 'path';
+import yaml from 'js-yaml';
+import { fileURLToPath } from 'url';
 
 const WORKFLOWS_DIR = path.join(process.cwd(), '.github', 'workflows');
 
@@ -64,7 +65,7 @@ function validateWorkflowTriggers() {
     }
 }
 
-function validateSingleWorkflow(workflow, filename) {
+function validateSingleWorkflow(workflow, _filename) {
     const checks = [];
     let passed = true;
     
@@ -101,7 +102,7 @@ function validateSingleWorkflow(workflow, filename) {
     let jobsWithDraftCheck = 0;
     let totalJobs = 0;
     
-    for (const [jobName, job] of Object.entries(jobs)) {
+    for (const [, job] of Object.entries(jobs)) {
         totalJobs++;
         
         if (job.if && job.if.includes('github.event.pull_request.draft == false')) {
@@ -118,10 +119,10 @@ function validateSingleWorkflow(workflow, filename) {
     
     // Check 4: Matrix strategies should differentiate PR vs main branch
     let hasConditionalMatrix = false;
-    for (const [jobName, job] of Object.entries(jobs)) {
+    for (const [, job] of Object.entries(jobs)) {
         if (job.strategy?.matrix) {
             const matrix = job.strategy.matrix;
-            for (const [key, value] of Object.entries(matrix)) {
+            for (const [, value] of Object.entries(matrix)) {
                 if (typeof value === 'string' && 
                     (value.includes('github.event_name') || value.includes('github.ref'))) {
                     hasConditionalMatrix = true;
@@ -147,8 +148,9 @@ function validateSingleWorkflow(workflow, filename) {
     return { passed, checks: checks.length };
 }
 
-// Run validation
-if (require.main === module) {
+// Run validation (ESM equivalent of require.main === module)
+const __filename = fileURLToPath(import.meta.url);
+if (__filename === process.argv[1]) {
     try {
         const success = validateWorkflowTriggers();
         process.exit(success ? 0 : 1);
@@ -158,4 +160,4 @@ if (require.main === module) {
     }
 }
 
-module.exports = { validateWorkflowTriggers };
+export { validateWorkflowTriggers };

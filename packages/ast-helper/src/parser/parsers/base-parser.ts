@@ -5,6 +5,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import os from 'os';
 import type { ParseResult, ParseError, ASTNode, LanguageConfig, ParserRuntime } from '../types.js';
 import { detectLanguage, getLanguageConfig, isFileSupported } from '../languages.js';
 
@@ -197,7 +198,7 @@ export abstract class BaseParser {
     } = {}
   ): Promise<Map<string, ParseResult>> {
     const {
-      concurrency = Math.min(4, Math.max(1, require('os').cpus().length)),
+      concurrency = Math.min(4, Math.max(1, os.cpus().length)),
       onProgress,
       continueOnError = true,
     } = options;

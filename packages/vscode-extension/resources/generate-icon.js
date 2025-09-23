@@ -5,8 +5,9 @@
  * This creates a 128x128 PNG with AST tree visualization
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Create a simple 128x128 PNG manually using basic PNG format
 // This is a minimal approach to create a valid PNG without dependencies
@@ -149,6 +150,10 @@ function calculateCRC(data) {
   result.writeUInt32BE((crc ^ 0xFFFFFFFF) >>> 0, 0);
   return result;
 }
+
+// ESM __dirname shim
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Generate the icon
 const iconPath = path.join(__dirname, 'icon.png');

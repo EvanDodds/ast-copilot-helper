@@ -10,6 +10,7 @@ import type { BaseParser } from './parsers/base-parser.js';
 import { parseErrorHandler } from './parse-errors.js';
 import type { ParseResult, ASTNode } from './types.js';
 import { isFileSupported, detectLanguage } from './languages.js';
+import crypto from 'crypto';
 
 export interface BatchProcessingOptions {
   /** Maximum number of concurrent parsing operations */
@@ -565,7 +566,6 @@ return cached.result;
    * Calculate content hash for cache validation
    */
   private calculateContentHash(content: string): string {
-    const crypto = require('crypto');
     return crypto.createHash('sha256').update(content).digest('hex').substring(0, 16);
   }
 
