@@ -176,9 +176,8 @@ export class SqliteEventQueue implements EventQueue {
    * Clear all queued events
    */
   async clear(): Promise<void> {
-    // This would clear the transmission queue table
-    // Implementation depends on access to the database instance
-    console.warn('Queue clear operation not fully implemented');
+    await this.storage.clearQueue();
+    console.log('✅ Queue cleared successfully');
   }
 }
 

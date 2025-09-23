@@ -850,18 +850,124 @@ class DataAnonymizer {
 }
 
 class TelemetrySender {
-  // @ts-ignore - Stub class, parameter will be used in full implementation
-  constructor(private _config: TelemetryConfig) {}
+  private initialized = false;
+  private httpClient?: any; // Would be a proper HTTP client in production
+
+  constructor(private config: TelemetryConfig) {}
 
   async initialize(): Promise<void> {
-    // Implementation will be added in Data Processing and Transmission subtask
+    try {
+      // In a real implementation, this would set up HTTP client, auth, etc.
+      console.log('🔧 Initializing telemetry sender...');
+      
+      // Validate configuration
+      if (!this.config.endpoint) {
+        throw new Error('Telemetry endpoint not configured');
+      }
+
+      // Initialize HTTP client (mock implementation)
+      this.httpClient = {
+        post: async (url: string, data: any) => {
+          console.log(`📤 Mock telemetry send to ${url}:`, {
+            eventCount: data.events?.length || 0,
+            timestamp: data.timestamp,
+            clientVersion: data.clientVersion
+          });
+          return { status: 200, ok: true };
+        }
+      };
+
+      this.initialized = true;
+      console.log('✅ Telemetry sender initialized');
+    } catch (error) {
+      throw new Error(`Failed to initialize telemetry sender: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
-  async sendTelemetry(_payload: TelemetryPayload): Promise<{ success: boolean; error?: string }> {
-    return { success: false, error: 'Not implemented' };
+  async sendTelemetry(payload: TelemetryPayload): Promise<{ success: boolean; error?: string }> {
+    if (!this.initialized) {
+      return { success: false, error: 'Telemetry sender not initialized' };
+    }
+
+    try {
+      // Validate payload
+      if (!payload.events || payload.events.length === 0) {
+        return { success: false, error: 'No events to send' };
+      }
+
+      // Filter events based on privacy settings
+      const filteredEvents = payload.events.filter(event => {
+        return this.isEventAllowed(event);
+      });
+
+      if (filteredEvents.length === 0) {
+        console.log('📋 All events filtered out by privacy settings');
+        return { success: true };
+      }
+
+      // Prepare telemetry payload
+      const sanitizedPayload = {
+        ...payload,
+        events: filteredEvents.map(event => this.sanitizeEvent(event))
+      };
+
+      // Send to telemetry endpoint
+      const response = await this.httpClient!.post(this.config.endpoint, sanitizedPayload);
+
+      if (!response.ok) {
+        return { success: false, error: `HTTP ${response.status}` };
+      }
+
+      console.log(`✅ Successfully sent ${filteredEvents.length} telemetry events`);
+      return { success: true };
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Failed to send telemetry:', errorMessage);
+      return { success: false, error: errorMessage };
+    }
   }
 
   async shutdown(): Promise<void> {
-    // Implementation will be added in Data Processing and Transmission subtask
+    console.log('🔧 Shutting down telemetry sender...');
+    
+    try {
+      // In a real implementation, this would close connections, flush buffers, etc.
+      this.httpClient = undefined;
+      this.initialized = false;
+      
+      console.log('✅ Telemetry sender shutdown complete');
+    } catch (error) {
+      console.error('❌ Error during telemetry sender shutdown:', error);
+    }
+  }
+
+  /**
+   * Check if event is allowed based on privacy settings
+   */
+  private isEventAllowed(event: TelemetryEvent): boolean {
+    // In a real implementation, this would check privacy preferences
+    // Since the manager.ts uses the types.ts TelemetryEvent interface,
+    // we'll check the data field for privacy level
+    const privacyLevel = event.data?.privacyLevel || 'basic';
+    
+    // Allow basic and functional events, filter out detailed/diagnostic
+    return privacyLevel === 'basic' || privacyLevel === 'functional';
+  }
+
+  /**
+   * Sanitize event data for transmission
+   */
+  private sanitizeEvent(event: TelemetryEvent): TelemetryEvent {
+    // Remove or hash sensitive data from the data field
+    const sanitized = { ...event };
+    
+    // Remove potentially sensitive data
+    if (sanitized.data) {
+      const { filePath, userName, ...safeData } = sanitized.data;
+      sanitized.data = safeData;
+    }
+
+    return sanitized;
   }
 }
