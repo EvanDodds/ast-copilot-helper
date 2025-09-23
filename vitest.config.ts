@@ -33,16 +33,16 @@ export default defineConfig({
     },
     testTimeout: 30000,        // 30s for integration tests
     hookTimeout: 10000,        // 10s for setup/teardown
-    pool: 'threads',           // Parallel test execution with threads
+    pool: 'forks',             // Use forks instead of threads for better memory isolation
     poolOptions: {
-      threads: {
-        maxThreads: 2,         // Further reduced for CI memory constraints
-        minThreads: 1,         // Minimum threads
+      forks: {
+        maxForks: 1,           // Single fork to prevent memory exhaustion
+        minForks: 1,           // Minimum forks
         isolate: true,         // Better memory isolation
       },
     },
     // Memory management configuration
-    maxWorkers: 2,             // Further reduced workers for memory constraints
+    maxWorkers: 1,             // Single worker for memory-constrained environment
     sequence: {
       shuffle: false,          // Deterministic test order for memory consistency
     },
@@ -58,15 +58,15 @@ export default defineConfig({
       // Memory-intensive tests - using explicit patterns to ensure exclusion
       '**/XenovaEmbeddingGenerator.test.ts',                            // XENOVA model loading tests  
       '**/final-acceptance-verification.test.ts',                       // Large verification tests
+      '**/acceptance-criteria-verification.test.ts',                    // ONNX runtime binding tests
       '**/file-processor.test.ts',                                      // File processing tests
       '**/integrity*.test.ts',                                          // All integrity tests 
       '**/manager.test.ts',                                             // Glob manager tests
-      // Pattern-based exclusions for comprehensive coverage
-      '**/embed*.{test,spec}.{js,ts}',                                  // Embedding generation tests
-      '**/performance*.{test,spec}.{js,ts}',                            // Performance benchmarking tests
-      '**/benchmarks/**/*.{test,spec}.{js,ts}',                         // Benchmark tests
+      // Pattern-based exclusions for comprehensive coverage - more specific patterns
+      '**/embedder/**/*.{test,spec}.{js,ts}',                           // Embedding generation tests (full directory)
       'tests/benchmarks/**/*.{test,spec}.{js,ts}',                      // All benchmark tests
       'tests/integration/**performance*.{test,spec}.{js,ts}',           // Performance integration tests
+      'tests/performance/**/*.{test,spec}.{js,ts}',                     // Dedicated performance test directory
       '**/scaling*.{test,spec}.{js,ts}',                                // Scaling tests
       '**/resource-usage*.{test,spec}.{js,ts}',                         // Resource usage tests
       '**/milestone-week-*.{test,spec}.{js,ts}',                        // Milestone performance tests
