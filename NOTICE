@@ -3,44 +3,21 @@ NOTICE
 
 This software includes third-party software subject to the following licenses:
 
-## UNKNOWN
+## MIT
 
 ### vue v^3.3.0
-License: UNKNOWN
-
-### vitepress v^1.0.0
-License: UNKNOWN
+Copyright: Evan You
+Source: git+https://github.com/vuejs/core.git
+License: MIT License
 
 ### @vue/theme v^2.0.0
-License: UNKNOWN
+Copyright: Evan You
+Source: git+https://github.com/vuejs/theme.git
+License: MIT License
 
-### express v^4.18.0
-License: UNKNOWN
-
-### lodash v^4.17.21
-License: UNKNOWN
-
-### moment v^2.29.4
-License: UNKNOWN
-
-### jest v^29.0.0
-License: UNKNOWN
-
-### webpack v^5.74.0
-License: UNKNOWN
-
-### webpack-cli v^4.10.0
-License: UNKNOWN
-
-### webpack-dev-server v^4.11.0
-License: UNKNOWN
-
-License Text:
-License text not available
-
----
-
-## MIT
+### vitepress v^1.0.0
+Copyright: Evan You
+License: MIT License
 
 ### @eslint/js v^9.0.0
 Source: https://github.com/eslint/eslint.git
@@ -287,6 +264,34 @@ ISC License...
 
 ---
 
+## UNKNOWN
 
-Generated on: 2025-09-24T02:55:01.455Z
+### express v^4.18.0
+License: UNKNOWN
+
+### lodash v^4.17.21
+License: UNKNOWN
+
+### moment v^2.29.4
+License: UNKNOWN
+
+### jest v^29.0.0
+License: UNKNOWN
+
+### webpack v^5.74.0
+License: UNKNOWN
+
+### webpack-cli v^4.10.0
+License: UNKNOWN
+
+### webpack-dev-server v^4.11.0
+License: UNKNOWN
+
+License Text:
+License text not available
+
+---
+
+
+Generated on: 2025-09-24T10:40:08.217Z
 By: ast-copilot-helper legal compliance system

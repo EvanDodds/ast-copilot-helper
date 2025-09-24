@@ -1,11 +1,5 @@
 /**
-import { join, resolve, dirname, relative, parse } from 'node:path';
-import { stat, unlink, readdir } from 'node:fs/promises';
-import { FileSystemManager } from '../filesystem/manager.js';
-import { GitManager } from '../git/manager.js';
-import { createLogger } from '../logging/index.js';
-import { FileSystemErrors, ValidationErrors, GitErrors } from '../errors/factories.js';
-import type { InitOptions } from './types.js';space Detection Manager
+ * Workspace Detection Manager
  * Handles automatic workspace root detection and Git repository integration
  */
 
@@ -247,7 +241,7 @@ export class WorkspaceDetector {
       } catch {
         // Ignore cleanup errors
       }
-    } catch (error) {
+    } catch (_error) {
       throw FileSystemErrors.permissionDenied(
         dirname(dbPath),
         "write to workspace directory",
@@ -263,7 +257,7 @@ export class WorkspaceDetector {
       if (!stats) {
         throw new Error("Cannot access workspace directory");
       }
-    } catch (error) {
+    } catch (_error) {
       throw FileSystemErrors.diskSpaceExceeded(
         workspaceInfo.root,
         10 * 1024 * 1024, // 10MB minimum
@@ -465,13 +459,14 @@ export class WorkspaceDetector {
         throw new Error("Cannot read directory");
       }
     } catch (error) {
-      if ((error as any).code === "ENOENT") {
-        throw FileSystemErrors.notFound(dir, "directory access");
-      } else if ((error as any).code === "EACCES") {
-        throw FileSystemErrors.permissionDenied(dir, "read directory");
-      } else {
-        throw error;
+      if (error instanceof Error && "code" in error) {
+        if (error.code === "ENOENT") {
+          throw FileSystemErrors.notFound(dir, "directory access");
+        } else if (error.code === "EACCES") {
+          throw FileSystemErrors.permissionDenied(dir, "read directory");
+        }
       }
+      throw error;
     }
   }
 

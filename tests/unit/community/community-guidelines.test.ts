@@ -202,10 +202,10 @@ describe("Community Guidelines", () => {
 
       it("should have proper markdown tables", () => {
         expect(communityContent).toContain(
-          "| Channel | Expected Response Time |",
+          "| Channel              | Expected Response Time        |",
         );
         expect(communityContent).toContain(
-          "| Severity | Response | Timeline |",
+          "| Severity                  | Response             | Timeline        |",
         );
       });
 
@@ -265,8 +265,8 @@ describe("Community Guidelines", () => {
       expect(communityContent).toMatch(/^## [A-Z]/m);
 
       // Both should use consistent bullet points
-      expect(cocContent).toContain("* ");
-      expect(communityContent).toContain("* ");
+      expect(cocContent).toContain("- ");
+      expect(communityContent).toContain("- ");
     });
   });
 });
