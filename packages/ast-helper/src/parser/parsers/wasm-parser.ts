@@ -4,7 +4,7 @@
  */
 
 import { BaseParser } from './base-parser.js';
-import type { ASTNode, LanguageConfig, ParserRuntime } from '../types.js';
+import type { ASTNode, LanguageConfig, ParserRuntime, ParseResult } from '../types.js';
 import { generateNodeId } from '../types.js';
 import type { TreeSitterGrammarManager } from '../grammar-manager.js';
 
@@ -16,10 +16,24 @@ export class WASMTreeSitterParser extends BaseParser {
   private TreeSitter: any;
   private parsers: Map<string, any> = new Map();
   private languages: Map<string, any> = new Map();
+  private initializedLanguages: Map<string, any> = new Map();
 
   constructor(runtime: ParserRuntime, grammarManager: TreeSitterGrammarManager) {
     super(runtime);
     this.grammarManager = grammarManager;
+  }
+
+  /**
+   * Parse a file into AST nodes
+   */
+  async parseFile(_filePath: string): Promise<ParseResult> {
+    // Stub implementation - TODO: Implement actual file parsing
+    return {
+      nodes: [],
+      errors: [],
+      language: '',
+      parseTime: 0
+    };
   }
 
   /**

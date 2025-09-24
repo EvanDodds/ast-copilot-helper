@@ -6,6 +6,8 @@
  * implementation will be restored when the codebase is stabilized.
  */
 
+import type { ParseResult } from '../types.js';
+
 export abstract class BaseParser {
   // Use 'unknown' to avoid permissive 'any' while keeping the stub safe.
   protected runtime: unknown;
@@ -17,6 +19,9 @@ export abstract class BaseParser {
   getRuntime(): unknown {
     return this.runtime;
   }
+
+  // Abstract method that concrete parsers must implement
+  abstract parseFile(filePath: string): Promise<ParseResult>;
 
   async dispose(): Promise<void> {
     // no-op placeholder
