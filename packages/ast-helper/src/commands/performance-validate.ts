@@ -25,8 +25,7 @@ export interface PerformanceValidateOptions {
  * Handler for performance validate command
  */
 export class PerformanceValidateCommandHandler
-  implements CommandHandler<PerformanceValidateOptions>
-{
+  implements CommandHandler<PerformanceValidateOptions> {
   private logger = createLogger();
 
   async execute(

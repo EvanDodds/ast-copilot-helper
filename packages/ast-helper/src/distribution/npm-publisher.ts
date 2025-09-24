@@ -19,8 +19,7 @@ import type {
 } from "./types";
 
 export class NPMPublisher
-  implements BasePublisher<DistributionConfig, NPMPublishResult>
-{
+  implements BasePublisher<DistributionConfig, NPMPublishResult> {
   private config!: DistributionConfig;
   private npmRegistry!: RegistryConfig;
   private logger: Console = console;

@@ -29,8 +29,7 @@ import { AttributionGenerator } from "./AttributionGenerator.js";
  * Comprehensive legal compliance manager for the ast-copilot-helper project
  */
 export class ComprehensiveLegalComplianceManager
-  implements LegalComplianceManager
-{
+  implements LegalComplianceManager {
   private config!: ComplianceConfig;
   private licenseDatabase!: LicenseDatabase;
   private dependencyScanner!: DependencyScanner;

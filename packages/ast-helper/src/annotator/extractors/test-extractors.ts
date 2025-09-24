@@ -2,6 +2,8 @@
  * Basic test for signature extractors
  */
 
+/* eslint-disable no-console -- Test file with debug output */
+
 import { TypeScriptExtractor, JavaScriptExtractor } from "./index";
 import type { ASTNode } from "../../parser/types";
 
@@ -50,6 +52,10 @@ const jsParameters = jsExtractor.extractParameters(mockNode, mockSourceText);
 console.log("\nJavaScript Extractor Results:");
 console.log("Signature:", jsSignature);
 console.log("Parameters:", jsParameters);
+
+// TODO: Add Python extractor test when implementation is complete
+
+console.log("\nAll extractors loaded successfully!");
 
 // TODO: Add Python extractor test when implementation is complete
 

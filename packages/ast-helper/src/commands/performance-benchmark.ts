@@ -30,8 +30,7 @@ export interface PerformanceBenchmarkOptions {
  * Handler for performance benchmark command
  */
 export class PerformanceBenchmarkCommandHandler
-  implements CommandHandler<PerformanceBenchmarkOptions>
-{
+  implements CommandHandler<PerformanceBenchmarkOptions> {
   private logger = createLogger();
 
   async execute(

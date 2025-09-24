@@ -5,7 +5,7 @@
  * Addresses acceptance criteria 25-26: Build failure notifications
  */
 
-import { execSync } from "child_process";
+// import { execSync } from "child_process"; // Currently unused
 import { writeFileSync, readFileSync, existsSync } from "fs";
 import * as path from "path";
 
@@ -142,7 +142,7 @@ class BuildFailureNotifier {
       try {
         const customConfig = JSON.parse(readFileSync(configPath, "utf8"));
         return { ...defaultConfig, ...customConfig };
-      } catch (error) {
+      } catch (_error) {
         this.log(
           "Warning: Could not load custom notification config, using defaults",
         );
@@ -197,7 +197,7 @@ class BuildFailureNotifier {
       }
 
       const color = this.getSeverityColor(event.severity);
-      const payload = {
+      const _payload = {
         channel: channel.config.channel,
         username: "CI/CD Bot",
         icon_emoji: ":warning:",
@@ -263,8 +263,8 @@ class BuildFailureNotifier {
         throw new Error("No email recipients configured");
       }
 
-      const subject = `🚨 Build Failure: ${event.branch} - ${event.failureType}`;
-      const body = this.generateEmailBody(event);
+      const _subject = `🚨 Build Failure: ${event.branch} - ${event.failureType}`;
+      const _body = this.generateEmailBody(event);
 
       this.log(
         `Sending email notification to ${channel.config.recipients.length} recipients`,

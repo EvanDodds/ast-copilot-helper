@@ -3,6 +3,8 @@
  * Core server class with lifecycle management and request routing
  */
 
+/* eslint-disable no-console -- Server logging is intentional */
+
 import { EventEmitter } from "events";
 import type {
   JSONRPCRequest,
@@ -409,7 +411,7 @@ export class ASTMCPServer extends EventEmitter {
         Promise.all(Array.from(this.activeRequests.values())),
         timeoutMs,
       );
-    } catch (error) {
+    } catch (_error) {
       // Log timeout but don't throw - we still want to shut down
       console.warn("Some requests did not complete during shutdown");
     }

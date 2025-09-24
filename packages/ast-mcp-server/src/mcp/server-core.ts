@@ -3,6 +3,8 @@
  * Handles server lifecycle, capability negotiation, and request routing
  */
 
+/* eslint-disable no-console -- Server logging is intentional */
+
 import { EventEmitter } from "events";
 import type {
   MCPRequest,

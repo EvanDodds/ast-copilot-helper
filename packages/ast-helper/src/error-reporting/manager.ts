@@ -67,8 +67,7 @@ import type {
  * Main implementation of the error reporting system
  */
 export class ComprehensiveErrorReportingManager
-  implements ErrorReportingManager
-{
+  implements ErrorReportingManager {
   private config?: ErrorReportingConfig;
   // private initialized: boolean = false;
   private sessionId: string;

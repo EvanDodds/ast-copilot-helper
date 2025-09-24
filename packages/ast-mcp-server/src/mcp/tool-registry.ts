@@ -513,7 +513,7 @@ export class MCPToolRegistry extends EventEmitter {
         if (typeof tool.inputSchema !== "object" || !tool.inputSchema.type) {
           errors.push("Input schema must be a valid JSON schema object");
         }
-      } catch (error) {
+      } catch (_error) {
         errors.push("Invalid input schema format");
       }
     }

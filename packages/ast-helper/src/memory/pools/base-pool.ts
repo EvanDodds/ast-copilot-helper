@@ -35,8 +35,7 @@ interface InternalLease<T> {
 
 export class BaseResourcePool<T>
   extends EventEmitter
-  implements IResourcePool<T>
-{
+  implements IResourcePool<T> {
   private resources: Map<string, PooledResource> = new Map();
   private availableResources: Set<string> = new Set();
   private inUseResources: Map<string, InternalLease<T>> = new Map();

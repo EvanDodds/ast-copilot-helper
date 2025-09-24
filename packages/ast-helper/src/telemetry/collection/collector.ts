@@ -25,8 +25,7 @@ import { EventBuilderFactory } from "./builder.js";
  */
 export class TelemetryDataCollector
   extends EventEmitter
-  implements IDataCollector
-{
+  implements IDataCollector {
   private readonly sanitizer: PrivacyRespectingEventSanitizer;
   private config: CollectionConfig;
   private stats: CollectionStats;

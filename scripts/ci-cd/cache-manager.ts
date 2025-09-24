@@ -153,7 +153,7 @@ class CacheManager {
         const entries = JSON.parse(data);
         this.cacheEntries = new Map(Object.entries(entries));
         this.updateStatistics();
-      } catch (error) {
+      } catch (_error) {
         console.warn("Failed to load cache entries, starting fresh");
       }
     }

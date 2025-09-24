@@ -27,8 +27,7 @@ export interface PerformanceReportOptions {
  * Handler for performance report command
  */
 export class PerformanceReportCommandHandler
-  implements CommandHandler<PerformanceReportOptions>
-{
+  implements CommandHandler<PerformanceReportOptions> {
   private logger = createLogger();
 
   async execute(
