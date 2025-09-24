@@ -24,14 +24,14 @@ describe("CI/CD Pipeline Configuration", () => {
     const workflow = yaml.load(content) as any;
 
     const expectedJobs = [
-      "lint-and-format",
+      "validate",
       "security-audit",
       "unit-tests",
       "integration-tests",
       "performance-tests",
+      "performance-benchmarks",
       "build",
       "quality-gates",
-      "e2e-tests",
       "prepare-release",
       "deploy-npm",
       "deploy-vscode",
@@ -67,10 +67,10 @@ describe("CI/CD Pipeline Configuration", () => {
     const content = readFileSync(workflowPath, "utf8");
     const workflow = yaml.load(content) as any;
 
-    expect(workflow.jobs["unit-tests"].needs).toContain("lint-and-format");
+    expect(workflow.jobs["unit-tests"].needs).toContain("validate");
     expect(workflow.jobs["integration-tests"].needs).toContain("unit-tests");
     expect(workflow.jobs["quality-gates"].needs).toContain("unit-tests");
-    expect(workflow.jobs["e2e-tests"].needs).toContain("quality-gates");
+    expect(workflow.jobs["build"].needs).toContain("unit-tests");
   });
 
   it("should trigger on correct events", () => {
