@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    types: [ opened, synchronize, reopened, ready_for_review ]
+    types: [ ready_for_review, synchronize ]
   release:
     types: [ published ]
   schedule:
@@ -90,7 +90,23 @@ jobs:
       - name: Check benchmark conditions
         id: check
         run: |
-          if [[ "${{ github.event_name }}" == "schedule" ]] || [[ "${{ contains(github.event.head_commit.message, '[benchmark]') }}" == "true" ]]; then
+          # For scheduled runs, check if there are new commits since last nightly run
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            # Get the timestamp of the last successful nightly run (24 hours ago)
+            LAST_RUN_TIME=$(date -d '24 hours ago' --iso-8601=seconds)
+            
+            # Check if there are any commits since the last run
+            RECENT_COMMITS=$(git log --since="$LAST_RUN_TIME" --oneline | wc -l)
+            
+            if [[ $RECENT_COMMITS -gt 0 ]]; then
+              echo "Found $RECENT_COMMITS new commits since last nightly run"
+              echo "should-run-benchmarks=true" >> $GITHUB_OUTPUT
+            else
+              echo "No new commits since last nightly run, skipping benchmarks"
+              echo "should-run-benchmarks=false" >> $GITHUB_OUTPUT
+            fi
+          elif [[ "${{ contains(github.event.head_commit.message, '[benchmark]') }}" == "true" ]]; then
+            echo "Explicit benchmark request found in commit message"
             echo "should-run-benchmarks=true" >> $GITHUB_OUTPUT
           else
             echo "should-run-benchmarks=false" >> $GITHUB_OUTPUT
