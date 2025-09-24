@@ -14,7 +14,7 @@ export default defineConfig({
     maxWorkers: 4,
 
     // Faster reporting
-    reporters: process.env.VERBOSE_CI ? ["verbose"] : ["basic"],
+    reporters: process.env.VERBOSE_CI ? ["verbose"] : [["default", { summary: false }]],
 
     // Skip expensive tests by default in CI
     exclude: [

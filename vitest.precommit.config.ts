@@ -50,7 +50,7 @@ export default defineConfig({
     ],
 
     // Ultra-fast configuration for pre-commit - minimal tests only
-    reporters: ["basic"],
+    reporters: [["default", { summary: false }]],
     pool: "forks",
     poolOptions: {
       forks: {
