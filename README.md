@@ -1,6 +1,8 @@
 # AST Copilot Helper
 
-A monorepo fo## Prerequisites
+A monorepo fo
+
+## Prerequisites
 
 - **Node.js**: 20.0.0 or higher
 - **Yarn**: 4.9.4 or higher (modern Yarn v4)

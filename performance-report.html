@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD Performance Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .grade { font-size: 3em; font-weight: bold; color: #28a745; }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
+        .metric-card { background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff; }
+        .metric-value { font-size: 1.8em; font-weight: bold; margin: 10px 0; }
+        .alert { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .alert.warning { background: #fff3cd; border: 1px solid #ffeaa7; }
+        .alert.critical { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .stage-chart { margin: 20px 0; }
+        .stage-bar { height: 30px; background: linear-gradient(90deg, #007bff, #28a745); margin: 5px 0; border-radius: 3px; position: relative; }
+        .stage-label { position: absolute; left: 10px; top: 5px; color: white; font-weight: bold; }
+        .recommendations { background: #e7f3ff; padding: 20px; border-radius: 5px; border: 1px solid #b3d4fc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CI/CD Performance Report</h1>
+            <div class="grade">A</div>
+            <p>Generated: 9/23/2025, 10:14:32 PM</p>
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <h3>Total Build Time</h3>
+                <div class="metric-value">300s</div>
+            </div>
+            <div class="metric-card">
+                <h3>Build Time</h3>
+                <div class="metric-value">68s</div>
+            </div>
+            <div class="metric-card">
+                <h3>Test Time</h3>
+                <div class="metric-value">1242s</div>
+            </div>
+            <div class="metric-card">
+                <h3>Memory Usage</h3>
+                <div class="metric-value">1190MB</div>
+            </div>
+            <div class="metric-card">
+                <h3>Cache Hit Rate</h3>
+                <div class="metric-value">85%</div>
+            </div>
+            <div class="metric-card">
+                <h3>Artifact Size</h3>
+                <div class="metric-value">100MB</div>
+            </div>
+        </div>
+
+        
+        <div class="alerts-section">
+            <h2>Performance Alerts</h2>
+            
+                <div class="alert critical">
+                    <strong>CRITICAL: testTime</strong><br>
+                    Current: 1242s, Threshold: 360s<br>
+                    Trend: stable<br>
+                    <em>Optimize test suite by parallelizing tests, removing redundant tests, or using better test strategies.</em>
+                </div>
+            
+        </div>
+        
+
+        <div class="stage-section">
+            <h2>Stage Performance</h2>
+            <div class="stage-chart">
+                
+                    <div class="stage-bar" style="width: 5%">
+                        <span class="stage-label">Checkout: 15s</span>
+                    </div>
+                
+                    <div class="stage-bar" style="width: 10%">
+                        <span class="stage-label">Setup Node.js: 30s</span>
+                    </div>
+                
+                    <div class="stage-bar" style="width: 9.066666666666666%">
+                        <span class="stage-label">Install Dependencies: 27s</span>
+                    </div>
+                
+                    <div class="stage-bar" style="width: 9.066666666666666%">
+                        <span class="stage-label">Build: 27s</span>
+                    </div>
+                
+                    <div class="stage-bar" style="width: 100%">
+                        <span class="stage-label">Test: 1242s</span>
+                    </div>
+                
+            </div>
+        </div>
+
+        
+        <div class="recommendations">
+            <h2>Recommendations</h2>
+            <ul>
+                <li>Consider enabling parallel builds to better utilize available CPU resources</li><li>Optimize test suite by parallelizing tests, removing redundant tests, or using better test strategies.</li>
+            </ul>
+        </div>
+        
+
+        <div class="summary">
+            <h2>Summary</h2>
+            <p><strong>Total Builds:</strong> 1</p>
+            <p><strong>Average Build Time:</strong> 300s</p>
+            <p><strong>Performance Grade:</strong> A</p>
+            
+        </div>
+    </div>
+</body>
+</html>
