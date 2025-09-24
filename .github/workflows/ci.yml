@@ -12,6 +12,14 @@ on:
     # Run nightly performance benchmarks and security scans
     - cron: '0 2 * * *'
 
+# Permissions needed for GitHub Actions
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: write
+  actions: read
+
 # Cancel previous runs when new commits are pushed
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
