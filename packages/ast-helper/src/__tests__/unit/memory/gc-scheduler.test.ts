@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { GCScheduler } from "../../../memory/gc-scheduler.js";
-import type { MemorySnapshot, GCResult } from "../../../memory/types.js";
+import type { MemorySnapshot } from "../../../memory/types.js";
 
 describe("GCScheduler", () => {
   let scheduler: GCScheduler;
@@ -92,11 +92,16 @@ describe("GCScheduler", () => {
     });
 
     it("should throw error when GC is not exposed", async () => {
-      delete (global as any).gc;
+      const originalGC = (global as any).gc;
+      (global as any).gc = undefined;
 
-      await expect(scheduler.forceGC()).rejects.toThrow(
-        "Garbage collection is not exposed. Run with --expose-gc flag.",
-      );
+      try {
+        await expect(scheduler.forceGC()).rejects.toThrow(
+          "Garbage collection is not exposed. Run with --expose-gc flag.",
+        );
+      } finally {
+        (global as any).gc = originalGC;
+      }
     });
 
     it("should emit gc-completed event", async () => {

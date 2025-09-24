@@ -17,7 +17,9 @@ describe("UnifiedMemoryManager", () => {
 
   beforeEach(() => {
     // Mock global.gc to avoid errors in test environment
-    vi.stubGlobal("gc", vi.fn());
+    if (!global.gc) {
+      vi.stubGlobal("gc", vi.fn());
+    }
 
     mockConfig = {
       global: {

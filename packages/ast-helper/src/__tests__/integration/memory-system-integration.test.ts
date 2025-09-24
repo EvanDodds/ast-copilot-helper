@@ -17,7 +17,9 @@ describe("Memory Management System Integration", () => {
 
   beforeEach(async () => {
     // Mock global.gc for testing
-    vi.stubGlobal("gc", vi.fn());
+    if (!global.gc) {
+      vi.stubGlobal("gc", vi.fn());
+    }
 
     // Record starting memory usage
     _startingMemoryUsage = process.memoryUsage().rss / (1024 * 1024 * 1024);

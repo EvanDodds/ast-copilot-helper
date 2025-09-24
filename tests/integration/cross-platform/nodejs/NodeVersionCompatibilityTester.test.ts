@@ -286,10 +286,16 @@ describe("NodeVersionCompatibilityTester", () => {
       const result = await tester.runTests();
       const failedTests = result.testResults.filter((test) => !test.passed);
 
-      failedTests.forEach((test) => {
-        // Failed tests should have error information
-        expect(test.error).toBeDefined();
-      });
+      // If there are failed tests, they should have error information
+      if (failedTests.length > 0) {
+        failedTests.forEach((test) => {
+          // Failed tests should have error information
+          expect(test.error).toBeDefined();
+        });
+      } else {
+        // If no tests failed, that's also acceptable
+        expect(result.summary.failed).toBe(0);
+      }
     });
 
     it("should provide meaningful error information", async () => {

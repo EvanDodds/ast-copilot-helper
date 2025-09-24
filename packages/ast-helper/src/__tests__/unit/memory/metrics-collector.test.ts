@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { PerformanceMetricsCollector } from "../../../memory/metrics-collector.js";
-import type {
-  SystemMetrics,
-  MetricsSnapshot,
-} from "../../../memory/metrics-collector.js";
 
 describe("PerformanceMetricsCollector", () => {
   let collector: PerformanceMetricsCollector;
@@ -385,8 +381,14 @@ describe("PerformanceMetricsCollector", () => {
 
       await collector.start();
 
-      // Allow time for error to occur
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      // Allow time for error to occur and wait for error handler
+      await new Promise((resolve) => {
+        collector.once("error", () => {
+          resolve(undefined);
+        });
+        // Fallback timeout in case error doesn't occur
+        setTimeout(resolve, 200);
+      });
 
       expect(errorSpy).toHaveBeenCalled();
     });
@@ -412,8 +414,22 @@ describe("PerformanceMetricsCollector", () => {
 
       await collector.start();
 
-      // Should recover and collect metrics
-      await new Promise((resolve) => setTimeout(resolve, 250));
+      // Wait for error and recovery
+      await new Promise((resolve) => {
+        let errorReceived = false;
+        collector.once("error", () => {
+          errorReceived = true;
+        });
+        
+        collector.on("metrics-collected", () => {
+          if (errorReceived) {
+            resolve(undefined);
+          }
+        });
+        
+        // Fallback timeout
+        setTimeout(resolve, 300);
+      });
 
       const history = collector.getMetricsHistory();
       expect(errorSpy).toHaveBeenCalled();

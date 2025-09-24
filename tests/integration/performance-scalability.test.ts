@@ -681,7 +681,7 @@ class PerformanceTestSuite {
     count: number,
   ): Promise<{ processedQueries: number }> {
     // Mock query execution
-    await new Promise((resolve) => setTimeout(resolve, Math.random() * 50)); // 0-50ms delay
+    await new Promise((resolve) => setTimeout(resolve, 25)); // Consistent 25ms delay for CI
     return { processedQueries: count };
   }
 
@@ -700,13 +700,13 @@ class PerformanceTestSuite {
     count: number,
   ): Promise<{ processedMessages: number }> {
     // Mock MCP message processing
-    await new Promise((resolve) => setTimeout(resolve, Math.random() * 100)); // 0-100ms delay
+    await new Promise((resolve) => setTimeout(resolve, 50)); // Consistent 50ms delay for CI
     return { processedMessages: count };
   }
 
   private async processLargeRepository(): Promise<{ processedFiles: number }> {
     // Mock large repository processing
-    await new Promise((resolve) => setTimeout(resolve, Math.random() * 5000)); // 0-5s delay
+    await new Promise((resolve) => setTimeout(resolve, 50)); // Fast 50ms delay for CI
     return { processedFiles: 100 };
   }
 

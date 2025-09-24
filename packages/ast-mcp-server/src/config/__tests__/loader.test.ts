@@ -354,7 +354,7 @@ describe("ConfigManager", () => {
 
   describe("Error Handling", () => {
     it("should handle missing file gracefully when allowMissing is true", async () => {
-      const nonExistentPath = path.join(testDir, "missing.json");
+      const _nonExistentPath = path.join(testDir, "missing.json");
 
       // For now, just test that it loads defaults when no config file exists
       const config = await configManager.loadConfig();
@@ -368,7 +368,7 @@ describe("ConfigManager", () => {
       await fs.promises.writeFile(configPath, "{}");
 
       // Mock fs.readFile to simulate permission error
-      const originalReadFile = fs.promises.readFile;
+      const _originalReadFile = fs.promises.readFile;
       vi.spyOn(fs.promises, "readFile").mockRejectedValueOnce(
         Object.assign(new Error("Permission denied"), { code: "EACCES" }),
       );
