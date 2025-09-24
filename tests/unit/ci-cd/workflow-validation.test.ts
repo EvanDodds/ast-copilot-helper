@@ -4,7 +4,7 @@ import { join } from "path";
 import yaml from "js-yaml";
 
 describe("CI/CD Pipeline Configuration", () => {
-  const workflowPath = join(process.cwd(), ".github/workflows/ci-cd.yml");
+  const workflowPath = join(process.cwd(), ".github/workflows/ci.yml");
   const quickValidationPath = join(
     process.cwd(),
     ".github/workflows/quick-validation.yml",
