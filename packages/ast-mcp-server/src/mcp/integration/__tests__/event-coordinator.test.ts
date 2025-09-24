@@ -12,19 +12,10 @@ vi.mock("../../../logging/logger.js", () => ({
 }));
 
 // Suppress unhandled rejection errors during tests
-const originalListeners = process.listeners("unhandledRejection");
-process.removeAllListeners("unhandledRejection");
-process.on("unhandledRejection", () => {}); // Silently handle unhandled rejections
-
-// Restore after tests
-afterEach(() => {
-  if (originalListeners.length > 0) {
-    process.removeAllListeners("unhandledRejection");
-    originalListeners.forEach((listener) =>
-      process.on("unhandledRejection", listener),
-    );
-  }
-});
+if (typeof process !== 'undefined' && typeof process.listeners === 'function') {
+  process.removeAllListeners("unhandledRejection");
+  process.on("unhandledRejection", () => {}); // Silently handle unhandled rejections
+}
 
 describe("EventCoordinator", () => {
   let coordinator: EventCoordinator;

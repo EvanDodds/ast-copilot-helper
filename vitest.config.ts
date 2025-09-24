@@ -7,6 +7,10 @@ export default defineConfig({
     environment: "node",
     // Ensure tests run once and exit in CI/non-interactive environments
     watch: false,
+    // Ensure Node.js globals are available
+    deps: {
+      inline: ["process"],
+    },
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html", "lcov"],
