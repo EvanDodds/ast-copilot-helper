@@ -21,6 +21,13 @@ import type {
 import { DEFAULT_PERFORMANCE_CONFIG, DEFAULT_PERFORMANCE_BENCHMARKS } from './config.js';
 import { performance } from 'perf_hooks';
 
+interface WorkloadPoint {
+  workload: number;
+  measurements: Record<string, unknown>;
+  success: boolean;
+  errors?: string[];
+}
+
 export class PerformanceBenchmarkRunner extends EventEmitter {
   private config: PerformanceConfig;
   private memorySnapshots: Array<{ timestamp: number; heapUsed: number; heapTotal: number }> = [];
@@ -450,7 +457,7 @@ return false;
     return true;
   }
 
-  private analyzeScalingBehavior(workloadPoints: any[], test: ScalabilityTest): 'linear' | 'logarithmic' | 'constant' | 'degraded-graceful' | 'failure' {
+  private analyzeScalingBehavior(workloadPoints: WorkloadPoint[], test: ScalabilityTest): 'linear' | 'logarithmic' | 'constant' | 'degraded-graceful' | 'failure' {
     if (workloadPoints.length === 0) {
 return 'failure';
 }
@@ -466,7 +473,10 @@ return 'failure';
 return 'failure';
 }
     
-    const values = successfulPoints.map(p => p.measurements[firstMetric] || 0);
+    const values = successfulPoints.map(p => {
+      const value = p.measurements[firstMetric];
+      return typeof value === 'number' ? value : 0;
+    });
     const workloads = successfulPoints.map(p => p.workload);
     
     // Calculate simple correlation
@@ -608,7 +618,8 @@ return false;
       data: new Array(100).fill(Math.random()) 
     }));
     await new Promise(resolve => setTimeout(resolve, 100));
-    data.length; // Use data to prevent optimization
+    // Use data to prevent optimization
+    void data.length;
   }
 
   private async simulateCpuWorkload(): Promise<void> {
@@ -617,6 +628,8 @@ return false;
       sum += Math.sqrt(i);
     }
     await new Promise(resolve => setTimeout(resolve, 10));
+    // Use sum to prevent optimization  
+    void sum;
   }
 
   private async simulateCliParsing(projectPath: string): Promise<number> {
@@ -690,7 +703,7 @@ return false;
     return suggestions;
   }
 
-  private generateScalabilityRecommendations(test: ScalabilityTest, workloadPoints: any[]): string[] {
+  private generateScalabilityRecommendations(test: ScalabilityTest, workloadPoints: WorkloadPoint[]): string[] {
     const recommendations: string[] = [];
     const maxSuccessful = workloadPoints.filter(p => p.success).length;
     const maxPossible = workloadPoints.length;

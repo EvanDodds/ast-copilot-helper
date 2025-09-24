@@ -7,6 +7,11 @@ import * as path from 'path';
 export type DocumentType = 'privacy-policy' | 'terms-of-service' | 'cookie-policy' | 'license-agreement' | 'data-processing-agreement' | 'custom';
 
 /**
+ * Template function type definition
+ */
+export type TemplateFunction = (...args: never[]) => string | number;
+
+/**
  * Variable substitution context for templates
  */
 export interface TemplateVariables {
@@ -90,6 +95,7 @@ export interface GeneratedDocument {
 export class LegalDocumentTemplateEngine {
   private templates: Map<string, TemplateMetadata> = new Map();
   private templateContent: Map<string, string> = new Map();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   private customFunctions: Map<string, Function> = new Map();
 
   constructor() {
@@ -149,7 +155,7 @@ export class LegalDocumentTemplateEngine {
       tags: ['gdpr', 'cookies', 'privacy']
     }, this.getCookiePolicyTemplate());
 
-    console.log(`Initialized ${this.templates.size} built-in legal document templates`);
+    // console.log(`Initialized ${this.templates.size} built-in legal document templates`);
   }
 
   /**
@@ -176,7 +182,7 @@ export class LegalDocumentTemplateEngine {
     });
 
     // Conditional inclusion function
-    this.customFunctions.set('ifDefined', (value: any, trueText: string, falseText = '') => {
+    this.customFunctions.set('ifDefined', (value: unknown, trueText: string, falseText = '') => {
       return value !== undefined && value !== null && value !== '' ? trueText : falseText;
     });
 
@@ -193,7 +199,7 @@ export class LegalDocumentTemplateEngine {
   registerTemplate(metadata: TemplateMetadata, content: string): void {
     this.templates.set(metadata.id, metadata);
     this.templateContent.set(metadata.id, content);
-    console.log(`Registered legal document template: ${metadata.name} (${metadata.id})`);
+    // console.log(`Registered legal document template: ${metadata.name} (${metadata.id})`);
   }
 
   /**
@@ -278,7 +284,7 @@ export class LegalDocumentTemplateEngine {
       throw new Error(`Template not found: ${templateId}`);
     }
 
-    console.log(`Generating ${template.type} document from template: ${template.name}`);
+    // console.log(`Generating ${template.type} document from template: ${template.name}`);
 
     // Validate template variables
     const validation = this.validateTemplate(templateId, variables);
@@ -357,8 +363,8 @@ return parseInt(arg);
       
       try {
         return func(...argList);
-      } catch (error) {
-        console.warn(`Error executing template function ${funcName}:`, error);
+      } catch (_error) {
+        // console.warn(`Error executing template function ${funcName}:`, error);
         return match;
       }
     });
@@ -507,37 +513,32 @@ return '';
    * Load template from file
    */
   async loadTemplateFromFile(filePath: string): Promise<void> {
-    try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      const fileName = path.basename(filePath, path.extname(filePath));
-      
-      // Try to parse metadata from file header
-      const metadataMatch = content.match(/^---\n(.*?)\n---\n/s);
-      let metadata: TemplateMetadata;
-      let templateContent = content;
-      
-      if (metadataMatch) {
-        try {
-          const metadataStr = metadataMatch[1];
-          if (metadataStr) {
-            metadata = JSON.parse(metadataStr);
-            templateContent = content.substring(metadataMatch[0].length);
-          } else {
-            metadata = this.createDefaultMetadata(fileName);
-          }
-        } catch (error) {
-          console.warn(`Failed to parse metadata from ${filePath}:`, error);
+    const content = await fs.readFile(filePath, 'utf-8');
+    const fileName = path.basename(filePath, path.extname(filePath));
+    
+    // Try to parse metadata from file header
+    const metadataMatch = content.match(/^---\n(.*?)\n---\n/s);
+    let metadata: TemplateMetadata;
+    let templateContent = content;
+    
+    if (metadataMatch) {
+      try {
+        const metadataStr = metadataMatch[1];
+        if (metadataStr) {
+          metadata = JSON.parse(metadataStr);
+          templateContent = content.substring(metadataMatch[0].length);
+        } else {
           metadata = this.createDefaultMetadata(fileName);
         }
-      } else {
+      } catch (_error) {
+        // console.warn(`Failed to parse metadata from ${filePath}:`, error);
         metadata = this.createDefaultMetadata(fileName);
       }
-
-      this.registerTemplate(metadata, templateContent);
-    } catch (error) {
-      console.error(`Failed to load template from ${filePath}:`, error);
-      throw error;
+    } else {
+      metadata = this.createDefaultMetadata(fileName);
     }
+
+    this.registerTemplate(metadata, templateContent);
   }
 
   /**
@@ -557,7 +558,7 @@ ${JSON.stringify(template, null, 2)}
 ${content}`;
 
     await fs.writeFile(filePath, fileContent, 'utf-8');
-    console.log(`Template saved to: ${filePath}`);
+    // console.log(`Template saved to: ${filePath}`);
   }
 
   /**

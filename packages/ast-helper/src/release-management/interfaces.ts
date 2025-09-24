@@ -20,7 +20,23 @@ import type {
   ReleaseType,
   ReleaseFilter,
   Release,
-  ChangelogEntry
+  ChangelogEntry,
+  ReleaseNotes,
+  Platform,
+  PublishResult,
+  VersioningConfig,
+  ChangelogConfig,
+  Commit,
+  CompatibilityConfig,
+  CompatibilityCheck,
+  BreakingChange,
+  MigrationGuide,
+  PlatformConfig,
+  ReleaseArtifact,
+  RollbackConfig,
+  RollbackPlan,
+  RollbackStepResult,
+  ReleaseStatistics
 } from './types.js';
 
 /**
@@ -60,12 +76,12 @@ export interface ReleaseManager {
   /**
    * Create release notes for a version
    */
-  createReleaseNotes(version: string, changes: ChangelogEntry[]): Promise<import('./types.js').ReleaseNotes>;
+  createReleaseNotes(version: string, changes: ChangelogEntry[]): Promise<ReleaseNotes>;
   
   /**
    * Publish release to configured platforms
    */
-  publishRelease(release: Release, platforms: import('./types.js').Platform[]): Promise<import('./types.js').PublishResult[]>;
+  publishRelease(release: Release, platforms: Platform[]): Promise<PublishResult[]>;
   
   /**
    * Rollback a release with specified reason
@@ -90,7 +106,7 @@ export interface VersionManager {
   /**
    * Initialize version manager with configuration
    */
-  initialize(config: import('./types.js').VersioningConfig): Promise<void>;
+  initialize(config: VersioningConfig): Promise<void>;
   
   /**
    * Calculate next version based on changes
@@ -140,7 +156,7 @@ export interface ChangelogGenerator {
   /**
    * Initialize changelog generator with configuration
    */
-  initialize(config: import('./types.js').ChangelogConfig): Promise<void>;
+  initialize(config: ChangelogConfig): Promise<void>;
   
   /**
    * Detect changes since a specific version
@@ -150,7 +166,7 @@ export interface ChangelogGenerator {
   /**
    * Categorize changes by type and scope
    */
-  categorizeChanges(commits: import('./types.js').Commit[]): Promise<ChangelogEntry[]>;
+  categorizeChanges(commits: Commit[]): Promise<ChangelogEntry[]>;
   
   /**
    * Generate changelog entries from categorized changes
@@ -170,7 +186,7 @@ export interface ChangelogGenerator {
   /**
    * Generate release notes from changelog entries
    */
-  generateReleaseNotes(version: string, entries: ChangelogEntry[]): Promise<import('./types.js').ReleaseNotes>;
+  generateReleaseNotes(version: string, entries: ChangelogEntry[]): Promise<ReleaseNotes>;
 }
 
 /**
@@ -180,37 +196,37 @@ export interface CompatibilityChecker {
   /**
    * Initialize compatibility checker with configuration
    */
-  initialize(config: import('./types.js').CompatibilityConfig): Promise<void>;
+  initialize(config: CompatibilityConfig): Promise<void>;
   
   /**
    * Check API compatibility between versions
    */
-  checkApiCompatibility(baseVersion: string, newVersion: string): Promise<import('./types.js').CompatibilityCheck>;
+  checkApiCompatibility(baseVersion: string, newVersion: string): Promise<CompatibilityCheck>;
   
   /**
    * Check configuration compatibility
    */
-  checkConfigCompatibility(baseVersion: string, newVersion: string): Promise<import('./types.js').CompatibilityCheck>;
+  checkConfigCompatibility(baseVersion: string, newVersion: string): Promise<CompatibilityCheck>;
   
   /**
    * Check CLI compatibility
    */
-  checkCliCompatibility(baseVersion: string, newVersion: string): Promise<import('./types.js').CompatibilityCheck>;
+  checkCliCompatibility(baseVersion: string, newVersion: string): Promise<CompatibilityCheck>;
   
   /**
    * Check data format compatibility
    */
-  checkDataFormatCompatibility(baseVersion: string, newVersion: string): Promise<import('./types.js').CompatibilityCheck>;
+  checkDataFormatCompatibility(baseVersion: string, newVersion: string): Promise<CompatibilityCheck>;
   
   /**
    * Find breaking changes between versions
    */
-  findBreakingChanges(baseVersion: string, newVersion: string): Promise<import('./types.js').BreakingChange[]>;
+  findBreakingChanges(baseVersion: string, newVersion: string): Promise<BreakingChange[]>;
   
   /**
    * Generate migration guide for breaking changes
    */
-  generateMigrationGuide(baseVersion: string, newVersion: string): Promise<import('./types.js').MigrationGuide>;
+  generateMigrationGuide(baseVersion: string, newVersion: string): Promise<MigrationGuide>;
 }
 
 /**
@@ -220,17 +236,17 @@ export interface PlatformPublisher {
   /**
    * Initialize platform publisher with configurations
    */
-  initialize(platforms: import('./types.js').PlatformConfig[]): Promise<void>;
+  initialize(platforms: PlatformConfig[]): Promise<void>;
   
   /**
    * Publish to a specific platform
    */
-  publishToPlatform(platform: string, version: string, artifacts: import('./types.js').ReleaseArtifact[]): Promise<import('./types.js').PublishResult>;
+  publishToPlatform(platform: string, version: string, artifacts: ReleaseArtifact[]): Promise<PublishResult>;
   
   /**
    * Publish to multiple platforms in parallel
    */
-  publishToMultiplePlatforms(platforms: string[], version: string, artifacts: import('./types.js').ReleaseArtifact[]): Promise<import('./types.js').PublishResult[]>;
+  publishToMultiplePlatforms(platforms: string[], version: string, artifacts: ReleaseArtifact[]): Promise<PublishResult[]>;
   
   /**
    * Validate platform requirements
@@ -240,12 +256,12 @@ export interface PlatformPublisher {
   /**
    * Get platform-specific metadata
    */
-  getPlatformMetadata(platform: string, version: string): Promise<Record<string, any>>;
+  getPlatformMetadata(platform: string, version: string): Promise<Record<string, unknown>>;
   
   /**
    * Build platform-specific artifacts
    */
-  buildArtifacts(platform: string, version: string): Promise<import('./types.js').ReleaseArtifact[]>;
+  buildArtifacts(platform: string, version: string): Promise<ReleaseArtifact[]>;
 }
 
 /**
@@ -255,22 +271,22 @@ export interface RollbackManager {
   /**
    * Initialize rollback manager with configuration
    */
-  initialize(config: import('./types.js').RollbackConfig): Promise<void>;
+  initialize(config: RollbackConfig): Promise<void>;
   
   /**
    * Create rollback plan for a version
    */
-  createRollbackPlan(version: string, targetVersion: string): Promise<import('./types.js').RollbackPlan>;
+  createRollbackPlan(version: string, targetVersion: string): Promise<RollbackPlan>;
   
   /**
    * Get existing rollback plan for a version
    */
-  getRollbackPlan(version: string): Promise<import('./types.js').RollbackPlan | null>;
+  getRollbackPlan(version: string): Promise<RollbackPlan | null>;
   
   /**
    * Execute rollback plan
    */
-  executeRollback(plan: import('./types.js').RollbackPlan, reason: string): Promise<import('./types.js').RollbackStepResult[]>;
+  executeRollback(plan: RollbackPlan, reason: string): Promise<RollbackStepResult[]>;
   
   /**
    * Validate rollback feasibility
@@ -295,7 +311,7 @@ export interface ReleaseAnalytics {
   /**
    * Initialize analytics with configuration
    */
-  initialize(config: Record<string, any>): Promise<void>;
+  initialize(config: Record<string, unknown>): Promise<void>;
   
   /**
    * Track release metrics
@@ -305,24 +321,24 @@ export interface ReleaseAnalytics {
   /**
    * Get release statistics
    */
-  getReleaseStatistics(version: string): Promise<import('./types.js').ReleaseStatistics>;
+  getReleaseStatistics(version: string): Promise<ReleaseStatistics>;
   
   /**
    * Get deployment metrics
    */
-  getDeploymentMetrics(dateFrom: Date, dateTo: Date): Promise<Record<string, any>>;
+  getDeploymentMetrics(dateFrom: Date, dateTo: Date): Promise<Record<string, unknown>>;
   
   /**
    * Monitor release health
    */
-  monitorReleaseHealth(version: string): Promise<Record<string, any>>;
+  monitorReleaseHealth(version: string): Promise<Record<string, unknown>>;
 }
 
 // Helper types for interface implementations
 declare module './types.js' {
   interface Platform {
     name: string;
-    config: Record<string, any>;
+    config: Record<string, unknown>;
   }
   
   interface Commit {

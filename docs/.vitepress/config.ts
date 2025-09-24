@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - vitepress is a development dependency that may not be available during linting
 import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config

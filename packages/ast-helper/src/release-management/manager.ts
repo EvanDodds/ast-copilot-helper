@@ -37,7 +37,8 @@ import type {
   RollbackPlan,
   ReleaseNotes,
   PublishResult,
-  ReleaseArtifact
+  ReleaseArtifact,
+  Platform
 } from './types.js';
 import {
   ReleaseType,
@@ -61,7 +62,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
    * Initialize the release management system with configuration
    */
   async initialize(config: ReleaseConfig): Promise<void> {
-    console.log('Initializing comprehensive release management system...');
+    // console.log('Initializing comprehensive release management system...');
     
     this.config = config;
     
@@ -92,10 +93,10 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
       await this.rollbackManager.initialize(config.rollback);
       
       this.initialized = true;
-      console.log('✅ Release management system initialized successfully');
+      // console.log('✅ Release management system initialized successfully');
       
     } catch (error) {
-      console.error('❌ Failed to initialize release management system:', error);
+      // console.error('❌ Failed to initialize release management system:', error);
       throw new Error(`Initialization failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
@@ -104,7 +105,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
    * Plan a release with specified version and type
    */
   async planRelease(version: string, type: ReleaseType): Promise<ReleasePlan> {
-    console.log(`📋 Planning ${type} release: ${version}`);
+    // console.log(`📋 Planning ${type} release: ${version}`);
     
     this.ensureInitialized();
     
@@ -158,11 +159,11 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
         estimatedDuration
       };
       
-      console.log(`✅ Release plan created: ${version} (estimated ${estimatedDuration} minutes)`);
+      // console.log(`✅ Release plan created: ${version} (estimated ${estimatedDuration} minutes)`);
       return plan;
       
     } catch (error) {
-      console.error(`❌ Failed to plan release ${version}:`, error);
+      // console.error(`❌ Failed to plan release ${version}:`, error);
       throw new Error(`Release planning failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
@@ -171,7 +172,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
    * Validate a release plan before execution
    */
   async validateRelease(plan: ReleasePlan): Promise<ValidationResult> {
-    console.log(`🔍 Validating release plan: ${plan.version}`);
+    // console.log(`🔍 Validating release plan: ${plan.version}`);
     
     this.ensureInitialized();
     
@@ -182,7 +183,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
     try {
       // Execute each validation step
       for (const validation of plan.validations) {
-        console.log(`  ⏳ Running validation: ${validation.name}`);
+        // console.log(`  ⏳ Running validation: ${validation.name}`);
         
         try {
           const result = await this.executeValidationStep(validation);
@@ -190,11 +191,11 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
           
           if (!result.success && result.severity === ValidationSeverity.ERROR) {
             overallSuccess = false;
-            console.log(`  ❌ Validation failed: ${validation.name} - ${result.message}`);
+            // console.log(`  ❌ Validation failed: ${validation.name} - ${result.message}`);
           } else if (result.success) {
-            console.log(`  ✅ Validation passed: ${validation.name}`);
+            // console.log(`  ✅ Validation passed: ${validation.name}`);
           } else {
-            console.log(`  ⚠️  Validation warning: ${validation.name} - ${result.message}`);
+            // console.log(`  ⚠️  Validation warning: ${validation.name} - ${result.message}`);
           }
           
         } catch (error) {
@@ -209,7 +210,7 @@ export class ComprehensiveReleaseManager implements ReleaseManager {
           
           results.push(failureResult);
           overallSuccess = false;
-          console.log(`  ❌ Validation error: ${validation.name}`);
+          // console.log(`  ❌ Validation error: ${validation.name}`);
         }
       }
       
@@ -261,12 +262,12 @@ overallSuccess = false;
         canProceed: overallSuccess || this.config.automation.allowWarnings
       };
       
-      const status = overallSuccess ? '✅ passed' : '❌ failed';
-      console.log(`🔍 Release validation ${status}: ${plan.version} (${Math.round(duration / 1000)}s)`);
+      // const _status = overallSuccess ? '✅ passed' : '❌ failed';
+      // console.log(`🔍 Release validation ${status}: ${plan.version} (${Math.round(duration / 1000)}s)`);
       return validationResult;
       
     } catch (error) {
-      console.error(`❌ Release validation failed: ${plan.version}`, error);
+      // console.error(`❌ Release validation failed: ${plan.version}`, error);
       
       const duration = Date.now() - startTime;
       return {
@@ -291,7 +292,7 @@ overallSuccess = false;
    * Execute a validated release plan
    */
   async executeRelease(plan: ReleasePlan): Promise<ReleaseResult> {
-    console.log(`🚀 Executing release: ${plan.version}`);
+    // console.log(`🚀 Executing release: ${plan.version}`);
     
     this.ensureInitialized();
     
@@ -345,20 +346,20 @@ overallSuccess = false;
         message: `Release ${plan.version} completed successfully`
       };
       
-      console.log(`✅ Release completed successfully: ${plan.version} (${Math.round(duration / 1000)}s)`);
+      // console.log(`✅ Release completed successfully: ${plan.version} (${Math.round(duration / 1000)}s)`);
       return result;
       
     } catch (error) {
-      console.error(`❌ Release failed: ${plan.version}`, error);
+      // console.error(`❌ Release failed: ${plan.version}`, error);
       
       // Attempt automatic rollback if configured
       if (this.config.automation.autoRollbackOnFailure) {
-        console.log('🔄 Attempting automatic rollback...');
+        // console.log('🔄 Attempting automatic rollback...');
         try {
           await this.rollbackRelease(plan.version, `Release execution failed: ${error instanceof Error ? error.message : String(error)}`);
-          console.log('✅ Automatic rollback completed');
-        } catch (rollbackError) {
-          console.error('❌ Rollback also failed:', rollbackError);
+          // console.log('✅ Automatic rollback completed');
+        } catch (_rollbackError) {
+          // console.error('❌ Rollback also failed:', rollbackError);
         }
       }
       
@@ -377,8 +378,8 @@ overallSuccess = false;
   /**
    * Generate changelog between two versions
    */
-  async generateChangelog(fromVersion: string, toVersion: string): Promise<Changelog> {
-    console.log(`📝 Generating changelog: ${fromVersion} → ${toVersion}`);
+  async generateChangelog(_fromVersion: string, toVersion: string): Promise<Changelog> {
+    // console.log(`📝 Generating changelog: ${fromVersion} → ${toVersion}`);
     
     this.ensureInitialized();
     
@@ -398,7 +399,7 @@ overallSuccess = false;
    * Check backward compatibility between versions
    */
   async checkBackwardCompatibility(newVersion: string, baseVersion: string): Promise<CompatibilityReport> {
-    console.log(`🔍 Checking compatibility: ${baseVersion} → ${newVersion}`);
+    // console.log(`🔍 Checking compatibility: ${baseVersion} → ${newVersion}`);
     
     this.ensureInitialized();
     
@@ -440,12 +441,12 @@ overallSuccess = false;
           undefined
       };
 
-      const status = compatible ? '✅ compatible' : '⚠️ breaking changes detected';
-      console.log(`🔍 Compatibility check completed: ${status}`);
+      // const _status = compatible ? '✅ compatible' : '⚠️ breaking changes detected';
+      // console.log(`🔍 Compatibility check completed: ${status}`);
       return report;
 
     } catch (error) {
-      console.error('❌ Compatibility check failed:', error);
+      // console.error('❌ Compatibility check failed:', error);
       throw new Error(`Compatibility check failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
@@ -454,7 +455,7 @@ overallSuccess = false;
    * Create release notes for a version
    */
   async createReleaseNotes(version: string, changes: ChangelogEntry[]): Promise<ReleaseNotes> {
-    console.log(`📄 Creating release notes: ${version}`);
+    // console.log(`📄 Creating release notes: ${version}`);
     
     return await this.changelogGenerator.generateReleaseNotes(version, changes);
   }
@@ -462,8 +463,8 @@ overallSuccess = false;
   /**
    * Publish release to specified platforms
    */
-  async publishRelease(release: Release, platforms: import('./types.js').Platform[]): Promise<PublishResult[]> {
-    console.log(`📦 Publishing release: ${release.version} to ${platforms.length} platforms`);
+  async publishRelease(release: Release, platforms: Platform[]): Promise<PublishResult[]> {
+    // console.log(`📦 Publishing release: ${release.version} to ${platforms.length} platforms`);
     
     this.ensureInitialized();
     
@@ -479,13 +480,13 @@ overallSuccess = false;
         results.push(result);
         
         if (result.success) {
-          console.log(`  ✅ Published to ${platform.name}: ${result.url || 'success'}`);
+          // console.log(`  ✅ Published to ${platform.name}: ${result.url || 'success'}`);
         } else {
-          console.log(`  ❌ Failed to publish to ${platform.name}: ${result.error || 'unknown error'}`);
+          // console.log(`  ❌ Failed to publish to ${platform.name}: ${result.error || 'unknown error'}`);
         }
         
       } catch (error) {
-        console.log(`  ❌ Error publishing to ${platform.name}:`, error);
+        // console.log(`  ❌ Error publishing to ${platform.name}:`, error);
         results.push({
           platform: platform.name,
           success: false,
@@ -496,7 +497,7 @@ overallSuccess = false;
       }
     }
     
-    console.log(`📦 Publishing completed: ${results.filter(r => r.success).length}/${results.length} successful`);
+    // console.log(`📦 Publishing completed: ${results.filter(r => r.success).length}/${results.length} successful`);
     return results;
   }
 
@@ -504,7 +505,7 @@ overallSuccess = false;
    * Rollback a release with specified reason
    */
   async rollbackRelease(version: string, reason: string): Promise<RollbackResult> {
-    console.log(`🔄 Rolling back release: ${version} - ${reason}`);
+    // console.log(`🔄 Rolling back release: ${version} - ${reason}`);
     
     this.ensureInitialized();
     
@@ -746,55 +747,55 @@ overallSuccess = false;
   }
 
   // Additional private helper methods for release execution
-  private async createReleaseBranch(branch: string, version: string): Promise<void> {
-    console.log(`🌿 Creating release branch: ${branch} for ${version}`);
+  private async createReleaseBranch(_branch: string, _version: string): Promise<void> {
+    // console.log(`🌿 Creating release branch: ${branch} for ${version}`);
     // Implementation would create git branch
   }
 
-  private async updatePackageVersions(packages: PackageRelease[]): Promise<void> {
-    console.log(`📝 Updating package versions: ${packages.length} packages`);
+  private async updatePackageVersions(_packages: PackageRelease[]): Promise<void> {
+    // console.log(`📝 Updating package versions: ${packages.length} packages`);
     // Implementation would update package.json files
   }
 
-  private async commitChangelog(_changelog: Changelog, version: string): Promise<void> {
-    console.log(`💾 Committing changelog for ${version}`);
+  private async commitChangelog(_changelog: Changelog, _version: string): Promise<void> {
+    // console.log(`💾 Committing changelog for ${version}`);
     // Implementation would commit changelog to git
   }
 
-  private async createReleaseTag(version: string, _changes: ChangelogEntry[]): Promise<void> {
-    console.log(`🏷️  Creating release tag: ${version}`);
+  private async createReleaseTag(_version: string, _changes: ChangelogEntry[]): Promise<void> {
+    // console.log(`🏷️  Creating release tag: ${version}`);
     // Implementation would create git tag
   }
 
-  private async buildReleaseArtifacts(packages: PackageRelease[]): Promise<ReleaseArtifact[]> {
-    console.log(`🔨 Building release artifacts for ${packages.length} packages`);
+  private async buildReleaseArtifacts(_packages: PackageRelease[]): Promise<ReleaseArtifact[]> {
+    // console.log(`🔨 Building release artifacts for ${packages.length} packages`);
     // Implementation would build release artifacts
     return [];
   }
 
-  private async runFinalTests(version: string): Promise<void> {
-    console.log(`🧪 Running final tests for ${version}`);
+  private async runFinalTests(_version: string): Promise<void> {
+    // console.log(`🧪 Running final tests for ${version}`);
     // Implementation would run final test suite
   }
 
-  private async publishToPlatforms(platforms: PlatformRelease[], _artifacts: ReleaseArtifact[]): Promise<PublishResult[]> {
-    console.log(`📦 Publishing to ${platforms.length} platforms`);
+  private async publishToPlatforms(_platforms: PlatformRelease[], _artifacts: ReleaseArtifact[]): Promise<PublishResult[]> {
+    // console.log(`📦 Publishing to ${platforms.length} platforms`);
     // Implementation would publish to each platform
     return [];
   }
 
-  private async publishReleaseNotes(releaseNotes: ReleaseNotes): Promise<void> {
-    console.log(`📄 Publishing release notes: ${releaseNotes.version}`);
+  private async publishReleaseNotes(_releaseNotes: ReleaseNotes): Promise<void> {
+    // console.log(`📄 Publishing release notes: ${releaseNotes.version}`);
     // Implementation would publish release notes
   }
 
-  private async sendReleaseNotifications(version: string, _releaseNotes: ReleaseNotes, _publishResults: PublishResult[]): Promise<void> {
-    console.log(`📢 Sending release notifications for ${version}`);
+  private async sendReleaseNotifications(_version: string, _releaseNotes: ReleaseNotes, _publishResults: PublishResult[]): Promise<void> {
+    // console.log(`📢 Sending release notifications for ${version}`);
     // Implementation would send notifications
   }
 
-  private async updateLatestVersionTracking(version: string, channel: ReleaseChannel): Promise<void> {
-    console.log(`📊 Updating latest version tracking: ${version} on ${channel}`);
+  private async updateLatestVersionTracking(_version: string, _channel: ReleaseChannel): Promise<void> {
+    // console.log(`📊 Updating latest version tracking: ${version} on ${channel}`);
     // Implementation would update version tracking
   }
 }

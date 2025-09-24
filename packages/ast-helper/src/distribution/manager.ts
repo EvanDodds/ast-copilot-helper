@@ -19,6 +19,7 @@ import type {
   AutoUpdateConfig,
   DocumentationResult,
   ValidationResult,
+  ValidationMessage,
   PreparedPackage,
   PackageConfig,
 } from './types';
@@ -158,8 +159,8 @@ export class DistributionManager implements IDistributionManager {
       await publisher.cleanup();
 
       const duration = Date.now() - startTime;
-      const successful = result.filter((r: any) => r.success);
-      const failed = result.filter((r: any) => !r.success);
+      const successful = result.filter((r: unknown) => (r as { success: boolean }).success);
+      const failed = result.filter((r: unknown) => !(r as { success: boolean }).success);
       
       if (successful.length > 0) {
         this.logger.log(`✅ VS Code Marketplace publishing completed: ${successful.length} successful, ${failed.length} failed in ${duration}ms`);
@@ -170,18 +171,21 @@ export class DistributionManager implements IDistributionManager {
       // Convert to MarketplacePublishResult format
       return {
         success: successful.length > 0,
-        extensions: result.map((res: any) => ({
-          success: res.success,
-          extensionName: res.extensionId || '',
-          version: res.version || this.config.version,
-          marketplace: res.marketplace,
-          duration: res.duration || 0,
-          error: res.error,
-        })),
+        extensions: result.map((res: unknown) => {
+          const r = res as { success: boolean; extensionId?: string; version?: string; marketplace: string; duration?: number; error?: string };
+          return {
+            success: r.success,
+            extensionName: r.extensionId || '',
+            version: r.version || this.config.version,
+            marketplace: r.marketplace,
+            duration: r.duration || 0,
+            error: r.error,
+          };
+        }),
         duration,
         marketplace: 'vscode-marketplace',
         version: this.config.version,
-        error: failed.length > 0 ? `Failed: ${failed.map((f: any) => f.error).join(', ')}` : undefined,
+        error: failed.length > 0 ? `Failed: ${failed.map((f: unknown) => (f as { error?: string }).error).join(', ')}` : undefined,
       };
 
     } catch (error) {
@@ -246,8 +250,8 @@ export class DistributionManager implements IDistributionManager {
    * Validate the distribution configuration
    */
   private async validateConfig(config: DistributionConfig): Promise<ValidationResult> {
-    const warnings: any[] = [];
-    const errors: any[] = [];
+    const warnings: ValidationMessage[] = [];
+    const errors: ValidationMessage[] = [];
 
     // 1. Basic required fields
     if (!config.version) {
@@ -300,8 +304,8 @@ export class DistributionManager implements IDistributionManager {
    */
   private async validatePackageConfig(
     pkg: PackageConfig, 
-    errors: any[], 
-    warnings: any[]
+    errors: ValidationMessage[], 
+    warnings: ValidationMessage[]
   ): Promise<void> {
     // Check required fields
     if (!pkg.name) {
@@ -319,7 +323,7 @@ export class DistributionManager implements IDistributionManager {
         if (!stats.isDirectory()) {
           errors.push({ code: 'INVALID_PACKAGE_PATH', message: `Package path is not a directory: ${pkg.path}`, severity: 'error' });
         }
-      } catch (error) {
+      } catch (_error) {
         errors.push({ code: 'PACKAGE_PATH_NOT_FOUND', message: `Package path not found: ${pkg.path}`, severity: 'error' });
       }
     }
@@ -337,10 +341,10 @@ export class DistributionManager implements IDistributionManager {
           if (!packageJson.description) {
             warnings.push({ code: 'MISSING_DESCRIPTION', message: `Package ${pkg.name} has no description`, severity: 'warning' });
           }
-        } catch (error) {
+        } catch (_error) {
           // Ignore JSON parsing errors here - will be caught in main validation
         }
-      } catch (error) {
+      } catch (_error) {
         errors.push({ code: 'PACKAGE_JSON_MISSING', message: `package.json not found at ${packageJsonPath}`, severity: 'error' });
       }
     }
@@ -398,7 +402,7 @@ export class DistributionManager implements IDistributionManager {
     try {
       await fs.mkdir(distDir, { recursive: true });
       this.logger.log(`Distribution directory created: ${distDir}`);
-    } catch (error) {
+    } catch (_error) {
       // Directory might already exist, which is fine
     }
 
@@ -449,7 +453,8 @@ export class DistributionManager implements IDistributionManager {
     // Simple implementation - get directory size
     try {
       const sizeOutput = execSync(`du -sb "${packagePath}"`, { encoding: 'utf8' });
-      return parseInt(sizeOutput.split('\t')[0]);
+      const sizeStr = sizeOutput.split('\t')[0];
+      return parseInt(sizeStr || '1024', 10);
     } catch (_error) {
       // Fallback to a basic estimate
       return 1024; // Default size estimate

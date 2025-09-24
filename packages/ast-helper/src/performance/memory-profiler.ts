@@ -1,4 +1,5 @@
 import { MemoryMonitor, PerformanceTimer, CPUMonitor } from './utils';
+import { PerformanceObserver } from 'perf_hooks';
 import type { NodeCount, MemoryProfile, PhaseMemoryProfile, MemoryLeak, GCMetrics } from './types';
 
 /**
@@ -263,9 +264,7 @@ export class MemoryProfiler {
    */
   private setupGCMonitoring(): void {
     try {
-      const performanceObserver = require('perf_hooks').PerformanceObserver;
-      
-      const obs = new performanceObserver((list: any) => {
+      const obs = new PerformanceObserver((list: any) => {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'gc') {
             this.gcEvents.push({

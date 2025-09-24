@@ -15,6 +15,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { promises as fs } from 'fs';
+import * as crypto from 'crypto';
 import {
   ModelDownloader,
   ModelCache,
@@ -39,7 +40,6 @@ describe('Model Management System Integration', () => {
 
     // Create test content with known checksum
     const testContent = 'A'.repeat(1024); // 1KB of 'A' characters
-    const crypto = require('crypto');
     const actualChecksum = crypto.createHash('sha256').update(testContent).digest('hex');
     
     // Create mock model configuration
@@ -85,7 +85,7 @@ describe('Model Management System Integration', () => {
     // Clean up test directory
     try {
       await fs.rm(testDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
     vi.restoreAllMocks();
@@ -135,7 +135,19 @@ describe('Model Management System Integration', () => {
         verified: true,
         usageStats: {
           loadCount: 0,
-          lastUsed: new Date()
+          lastUsed: new Date(),
+          firstUsed: new Date(),
+          totalProcessingTime: 0,
+          embeddingRequests: 0,
+          averageProcessingTime: 0,
+          peakMemoryUsage: 0,
+          errorCount: 0,
+          successRate: 100,
+          performanceHistory: [],
+          hourlyUsage: {},
+          weeklyUsage: {},
+          cacheHitRate: 100,
+          lastOptimized: new Date()
         }
       };
       
@@ -230,7 +242,6 @@ describe('Model Management System Integration', () => {
       const cache = new ModelCache({ cacheDir: testDir });
       await cache.initialize();
 
-      const crypto = require('crypto');
       const testContent = 'concurrent test content';
       const testChecksum = crypto.createHash('sha256').update(testContent).digest('hex');
 

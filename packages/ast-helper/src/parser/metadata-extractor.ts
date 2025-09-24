@@ -595,8 +595,6 @@ return undefined;
           currentLine--;
         } else if (trimmedLine === '') {
           currentLine--;
-        } else if (trimmedLine === '') {
-          currentLine--;
         } else {
           break; // Non-comment, non-empty line
         }
@@ -752,7 +750,10 @@ return undefined;
     _context: ExtractionContext,
     metadata: NodeMetadata
   ): void {
-    const specific = metadata.languageSpecific!;
+    if (!metadata.languageSpecific) {
+      metadata.languageSpecific = {};
+    }
+    const specific = metadata.languageSpecific;
     
     // Type annotations
     const typeAnnotation = this.findTypeAnnotation(rawNode);
@@ -783,7 +784,10 @@ return undefined;
     _context: ExtractionContext,
     metadata: NodeMetadata
   ): void {
-    const specific = metadata.languageSpecific!;
+    if (!metadata.languageSpecific) {
+      metadata.languageSpecific = {};
+    }
+    const specific = metadata.languageSpecific;
     
     // Type hints
     const typeHint = this.findPythonTypeHint(rawNode);
@@ -808,7 +812,10 @@ return undefined;
     _context: ExtractionContext,
     metadata: NodeMetadata
   ): void {
-    const specific = metadata.languageSpecific!;
+    if (!metadata.languageSpecific) {
+      metadata.languageSpecific = {};
+    }
+    const specific = metadata.languageSpecific;
     
     // Generic parameters
     const generics = this.findJavaGenerics(rawNode);
@@ -1025,9 +1032,10 @@ continue;
       case 'typescript':
       case 'javascript':
         return MetadataUtils.parseTSJSImport(line, position);
-      case 'python':
+      case 'python': {
         const pythonImport = MetadataUtils.parsePythonImport(line, position);
         return pythonImport ? [pythonImport] : [];
+      }
       default:
         return [];
     }

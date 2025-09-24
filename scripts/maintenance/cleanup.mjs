@@ -398,7 +398,7 @@ class RepositoryCleanup {
         }
       }
 
-    } catch (error) {
+    } catch {
       console.log(`  ⚠️  Git cleanup warning: Not in a git repository or git not available`);
     }
 

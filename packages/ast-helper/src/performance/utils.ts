@@ -4,6 +4,8 @@
  * Utilities for timing, measurement, and performance testing operations.
  */
 
+import { totalmem, freemem } from 'os';
+
 export class PerformanceTimer {
   private timers: Map<string, number> = new Map();
   
@@ -125,9 +127,8 @@ export class MemoryMonitor {
   }
 
   getCurrentUsage(): { used: number; total: number; free: number; percentage: number } {
-    const os = require('os');
-    const totalMemory = os.totalmem();
-    const freeMemory = os.freemem();
+    const totalMemory = totalmem();
+    const freeMemory = freemem();
     const usedMemory = totalMemory - freeMemory;
     
     return {

@@ -599,7 +599,7 @@ export class ComprehensiveInputValidator implements InputValidator {
     const inputType = typeof input;
 
     // Check allowed types
-    if (!this.config.dataTypes.allowedTypes.includes(inputType as any)) {
+    if (!this.config.dataTypes.allowedTypes.includes(inputType as string)) {
       violations.push(`Data type '${inputType}' not allowed`);
       return { isValid: false, violations };
     }
@@ -712,15 +712,16 @@ export class ComprehensiveInputValidator implements InputValidator {
     return sanitized;
   }
 
-  private getObjectDepth(obj: any, depth = 0): number {
+  private getObjectDepth(obj: unknown, depth = 0): number {
     if (typeof obj !== 'object' || obj === null) {
       return depth;
     }
 
+    const record = obj as Record<string, unknown>;
     let maxChildDepth = depth;
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        const childDepth = this.getObjectDepth(obj[key], depth + 1);
+    for (const key in record) {
+      if (Object.prototype.hasOwnProperty.call(record, key)) {
+        const childDepth = this.getObjectDepth(record[key], depth + 1);
         maxChildDepth = Math.max(maxChildDepth, childDepth);
       }
     }
@@ -761,7 +762,7 @@ export class ComprehensiveInputValidator implements InputValidator {
     return input.length > maxLength ? `${input.substring(0, maxLength)}...` : input;
   }
 
-  private log(level: string, message: string, meta?: any): void {
+  private log(_level: string, _message: string, _meta?: unknown): void {
     if (!this.config.general.enableLogging) {
 return;
 }
@@ -769,10 +770,10 @@ return;
     const logLevels = ['error', 'warn', 'info', 'debug'];
     const configLevel = this.config.general.logLevel;
     const configLevelIndex = logLevels.indexOf(configLevel);
-    const messageLevel = logLevels.indexOf(level);
+    const messageLevel = logLevels.indexOf(_level);
 
     if (messageLevel <= configLevelIndex) {
-      console.log(`[${level.toUpperCase()}] Input Validator: ${message}`, meta ? meta : '');
+      // console.log(`[${_level.toUpperCase()}] Input Validator: ${_message}`, _meta ? _meta : '');
     }
   }
 }
@@ -838,15 +839,18 @@ export class InputValidationUtils {
    */
   static createValidationMiddleware(validator: InputValidator) {
     return {
-      express: (req: any, res: any, next: any) => {
+      express: (req: unknown, res: unknown, next: unknown) => {
+        const request = req as { body: unknown; query: unknown };
+        const response = res as { status: (code: number) => { json: (obj: unknown) => void }; json: (obj: unknown) => void };
+        const nextFn = next as () => void;
         // Express.js middleware implementation
         const validateData = async () => {
           try {
-            const bodyValidation = await validator.validateInput(req.body);
-            const queryValidation = await validator.validateInput(req.query);
+            const bodyValidation = await validator.validateInput(request.body);
+            const queryValidation = await validator.validateInput(request.query);
             
             if (!bodyValidation.isValid || !queryValidation.isValid) {
-              return res.status(400).json({
+              return response.status(400).json({
                 error: 'Input validation failed',
                 details: {
                   body: bodyValidation,
@@ -855,9 +859,9 @@ export class InputValidationUtils {
               });
             }
             
-            next();
-          } catch (error) {
-            res.status(500).json({ error: 'Validation error' });
+            nextFn();
+          } catch (_error) {
+            response.status(500).json({ error: 'Validation error' });
           }
         };
         

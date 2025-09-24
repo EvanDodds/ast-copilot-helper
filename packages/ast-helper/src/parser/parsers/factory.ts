@@ -20,12 +20,12 @@ class SimpleNativeRuntime implements ParserRuntime {
     try {
       await import('tree-sitter');
       this.available = true;
-    } catch (error) {
+    } catch (_error) {
       this.available = false;
     }
   }
 
-  async createParser(_language: string): Promise<any> {
+  async createParser(_language: string): Promise<unknown> {
     const TreeSitter = (await import('tree-sitter')).default;
     return new TreeSitter();
   }
@@ -40,12 +40,12 @@ class SimpleWasmRuntime implements ParserRuntime {
       const Parser = (await import('web-tree-sitter')).default;
       await Parser.init();
       this.available = true;
-    } catch (error) {
+    } catch (_error) {
       this.available = false;
     }
   }
 
-  async createParser(_language: string): Promise<any> {
+  async createParser(_language: string): Promise<unknown> {
     const Parser = (await import('web-tree-sitter')).default;
     return new Parser();
   }
@@ -70,9 +70,9 @@ export class ParserFactory {
       
       // Create parser based on runtime type
       if (runtime.type === 'native') {
-        return new NativeTreeSitterParser(runtime, this.grammarManager);
+        return new NativeTreeSitterParser(runtime, this.grammarManager) as unknown as ASTParser;
       } else {
-        return new WASMTreeSitterParser(runtime, this.grammarManager);
+        return new WASMTreeSitterParser(runtime, this.grammarManager) as unknown as ASTParser;
       }
     } catch (error) {
       throw new Error(`Failed to create parser: ${error instanceof Error ? error.message : 'Unknown error'}`);

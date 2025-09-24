@@ -785,16 +785,15 @@ break;
       for (let i = 0; i < scaleUpAmount; i++) {
         try {
           await this.createResource();
-        } catch (error) {
+        } catch (_error) {
           break; // Stop scaling up if creation fails
         }
       }
-    }
     
     // Scale down if utilization is low and we have excess resources
-    else if (utilizationRate < (this.config.scaleDownThreshold || 0.2) &&
-             this.availableResources.size > this.config.minSize &&
-             waitingCount === 0) {
+    } else if (utilizationRate < (this.config.scaleDownThreshold || 0.2) &&
+               this.availableResources.size > this.config.minSize &&
+               waitingCount === 0) {
       
       const excessResources = this.availableResources.size - this.config.minSize;
       const scaleDownAmount = Math.min(1, excessResources);
