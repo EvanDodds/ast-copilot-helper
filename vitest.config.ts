@@ -8,8 +8,10 @@ export default defineConfig({
     // Ensure tests run once and exit in CI/non-interactive environments
     watch: false,
     // Ensure Node.js globals are available
-    deps: {
-      inline: ["process"],
+    server: {
+      deps: {
+        inline: ["process"],
+      },
     },
     coverage: {
       provider: "v8",

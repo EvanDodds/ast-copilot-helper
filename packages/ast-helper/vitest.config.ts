@@ -39,7 +39,7 @@ export default defineConfig({
     ui: false,
 
     // Reporters configuration - use basic reporter for CI
-    reporters: process.env.CI ? [["default", { summary: false }]] : ["default"],
+    reporters: process.env.CI ? [["default"]] : ["default"],
 
     // Retry failed tests once in CI
     retry: process.env.CI ? 1 : 0,
