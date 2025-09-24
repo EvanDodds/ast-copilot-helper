@@ -282,7 +282,7 @@ class RepositoryCleanup {
             result.bytesFreed += size;
           }
         }
-      } catch (error) {
+      } catch {
         // Ignore find errors
       }
     }
@@ -439,7 +439,7 @@ class RepositoryCleanup {
             result.bytesFreed += size;
           }
         }
-      } catch (error) {
+      } catch {
         // Ignore find errors
       }
     }
@@ -511,7 +511,7 @@ class RepositoryCleanup {
       return output.trim().split('\n')
         .filter(Boolean)
         .map(file => join(ROOT_DIR, file));
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -532,7 +532,7 @@ class RepositoryCleanup {
           dirs.push(dir);
         }
       }
-    } catch (error) {
+    } catch {
       // Ignore errors
     }
     
@@ -560,7 +560,7 @@ class RepositoryCleanup {
       }
       
       return false;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -570,7 +570,7 @@ class RepositoryCleanup {
       const stats = statSync(filePath);
       const ageInDays = (Date.now() - stats.mtime.getTime()) / (1000 * 60 * 60 * 24);
       return ageInDays > days;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -598,7 +598,7 @@ class RepositoryCleanup {
           fileMap.get(key).push(join(ROOT_DIR, name));
         }
       }
-    } catch (error) {
+    } catch {
       // Ignore errors
     }
     
@@ -616,7 +616,7 @@ class RepositoryCleanup {
       for (const dir of dirs) {
         emptyDirs.push(join(ROOT_DIR, dir));
       }
-    } catch (error) {
+    } catch {
       // Ignore errors
     }
     
@@ -654,7 +654,7 @@ class RepositoryCleanup {
     try {
       const stats = statSync(filePath);
       return stats.size;
-    } catch (error) {
+    } catch {
       return 0;
     }
   }
@@ -664,7 +664,7 @@ class RepositoryCleanup {
       const command = `du -sb "${dirPath}" | cut -f1`;
       const size = execSync(command, { cwd: ROOT_DIR, encoding: 'utf-8' }).trim();
       return parseInt(size) || 0;
-    } catch (error) {
+    } catch {
       return 0;
     }
   }

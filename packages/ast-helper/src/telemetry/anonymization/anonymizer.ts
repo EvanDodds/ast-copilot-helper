@@ -316,16 +316,18 @@ export class PrivacyRespectingDataAnonymizer implements IDataAnonymizer {
    */
   private anonymizeFilePath(path: string, privacyLevel: PrivacyLevel): string {
     switch (privacyLevel) {
-      case 'strict':
+      case 'strict': {
         // Keep only file extension
         const ext = path.split('.').pop();
         return ext ? `[hidden].${ext}` : '[hidden]';
+      }
       
-      case 'balanced':
+      case 'balanced': {
         // Keep filename but hash directory
         const parts = path.split(/[/\\]/);
         const filename = parts.pop() || '';
         return parts.length > 0 ? `[${parts.length} dirs]/${filename}` : filename;
+      }
       
       case 'permissive':
         return path;
@@ -429,9 +431,10 @@ return value;
       case AnonymizationStrategy.REDACT:
         return rule.replacement || '[REDACTED]';
       
-      case AnonymizationStrategy.MASK:
+      case AnonymizationStrategy.MASK: {
         const maskChar = rule.replacement || '*';
         return maskChar.repeat(Math.min(value.length, this.config.maxMaskLength));
+      }
       
       case AnonymizationStrategy.REMOVE:
         return '';

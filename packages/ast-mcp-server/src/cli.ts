@@ -510,7 +510,7 @@ Examples:
           }
           break;
 
-        case 'status':
+        case 'status': {
           const status = await this.serverManager.getStatus();
           if (status.running) {
             console.log(`Server is running (PID: ${status.pid})`);
@@ -526,13 +526,15 @@ Examples:
             console.log('Server is not running');
           }
           break;
+        }
 
-        case 'health':
+        case 'health': {
           const health = await this.serverManager.healthCheck();
           console.log(`Health status: ${health.healthy ? 'HEALTHY' : 'UNHEALTHY'}`);
           console.log(`Message: ${health.message}`);
           process.exit(health.healthy ? 0 : 1);
           break;
+        }
 
         case 'run':
           // Internal command for daemon mode

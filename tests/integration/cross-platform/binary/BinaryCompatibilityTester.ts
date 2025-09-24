@@ -412,7 +412,7 @@ export class BinaryCompatibilityTester {
 
       // Attempt to load the grammar
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         grammar = require(module.name);
         loadSuccess = true;

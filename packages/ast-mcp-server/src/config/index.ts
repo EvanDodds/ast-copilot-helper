@@ -23,10 +23,12 @@ export {
  * Quick configuration factory functions
  */
 
+import type { MCPServerConfig } from './types.js';
+
 /**
  * Create configuration for development environment
  */
-export async function createDevelopmentConfig(): Promise<import('./types.js').MCPServerConfig> {
+export async function createDevelopmentConfig(): Promise<MCPServerConfig> {
   const { ConfigManager } = await import('./loader.js');
   const { DEVELOPMENT_CONFIG } = await import('./defaults.js');
   
@@ -69,7 +71,7 @@ export async function createDevelopmentConfig(): Promise<import('./types.js').MC
 /**
  * Create configuration for production environment
  */
-export async function createProductionConfig(): Promise<import('./types.js').MCPServerConfig> {
+export async function createProductionConfig(): Promise<MCPServerConfig> {
   const { ConfigManager } = await import('./loader.js');
   const { PRODUCTION_CONFIG } = await import('./defaults.js');
   
@@ -90,7 +92,7 @@ export async function createProductionConfig(): Promise<import('./types.js').MCP
 /**
  * Create configuration for test environment
  */
-export async function createTestConfig(): Promise<import('./types.js').MCPServerConfig> {
+export async function createTestConfig(): Promise<MCPServerConfig> {
   const { ConfigManager } = await import('./loader.js');
   const { TEST_CONFIG } = await import('./defaults.js');
   

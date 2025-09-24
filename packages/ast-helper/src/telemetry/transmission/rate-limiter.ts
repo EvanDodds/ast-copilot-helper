@@ -134,7 +134,7 @@ export class RateLimiter {
       case 'reject':
         throw new Error(`Rate limit exceeded: ${type} (required: ${required})`);
 
-      case 'delay':
+      case 'delay': {
         // Calculate delay until tokens are available
         const delayMs = this.calculateDelay();
         if (delayMs > 0) {
@@ -142,8 +142,9 @@ export class RateLimiter {
           await this.refillTokens();
         }
         break;
+      }
 
-      case 'queue':
+      case 'queue': {
         // In a full implementation, this would queue the request
         // For now, we'll just delay
         const queueDelay = this.calculateDelay();
@@ -152,6 +153,7 @@ export class RateLimiter {
           await this.refillTokens();
         }
         break;
+      }
     }
   }
 

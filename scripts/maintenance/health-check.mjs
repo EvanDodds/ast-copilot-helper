@@ -8,7 +8,7 @@
  */
 
 import { execSync } from 'child_process';
-import { readFileSync, existsSync, statSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -160,7 +160,7 @@ class RepositoryHealthChecker {
         } else {
           result.score += 15;
         }
-      } catch (error) {
+      } catch {
         // Ignore error for large file check
       }
 
@@ -346,7 +346,7 @@ class RepositoryHealthChecker {
             encoding: 'utf-8'
           }).trim();
           foundSensitive += parseInt(found);
-        } catch (error) {
+        } catch {
           // Ignore errors for find command
         }
       }
@@ -403,7 +403,7 @@ class RepositoryHealthChecker {
         const dangerousPatterns = ['sudo', 'rm -rf', 'curl | sh', 'wget | sh'];
         let dangerousScripts = 0;
         
-        for (const [scriptName, script] of Object.entries(scripts)) {
+        for (const [_scriptName, script] of Object.entries(scripts)) {
           for (const pattern of dangerousPatterns) {
             if (script.includes(pattern)) {
               dangerousScripts++;
@@ -581,7 +581,7 @@ class RepositoryHealthChecker {
         });
         result.score += 30;
         result.metrics.testsPass = true;
-      } catch (error) {
+      } catch {
         result.issues.push('Tests are failing');
         result.metrics.testsPass = false;
       }
@@ -735,7 +735,7 @@ class RepositoryHealthChecker {
         } else {
           result.issues.push(`Build time is slow (${Math.round(buildTime/1000)}s)`);
         }
-      } catch (error) {
+      } catch {
         result.issues.push('Build failed');
       }
 
@@ -758,7 +758,7 @@ class RepositoryHealthChecker {
           result.issues.push(`Test suite is slow (${Math.round(testTime/1000)}s)`);
           result.score += 5;
         }
-      } catch (error) {
+      } catch {
         // Tests might have failed in earlier check, don't penalize again
       }
 
@@ -781,7 +781,7 @@ class RepositoryHealthChecker {
         } else {
           result.issues.push(`Repository is large (${Math.round(sizeInMB)}MB)`);
         }
-      } catch (error) {
+      } catch {
         // Ignore size check errors
       }
 
@@ -802,7 +802,7 @@ class RepositoryHealthChecker {
           } else if (sizeInMB > 500) {
             result.issues.push(`node_modules is very large (${Math.round(sizeInMB)}MB)`);
           }
-        } catch (error) {
+        } catch {
           // Ignore node_modules size check errors
         }
       }
@@ -895,7 +895,7 @@ class RepositoryHealthChecker {
         } else {
           result.issues.push(`Last commit was ${Math.round(daysSinceLastCommit)} days ago`);
         }
-      } catch (error) {
+      } catch {
         result.issues.push('Could not determine last commit date');
       }
 
@@ -972,7 +972,7 @@ class RepositoryHealthChecker {
       }).trim().split('\n').filter(Boolean);
       
       packages.push(...entries.map(entry => join(ROOT_DIR, entry)));
-    } catch (error) {
+    } catch {
       // Ignore errors
     }
 
@@ -1024,16 +1024,16 @@ class RepositoryHealthChecker {
                     stats.codeLines++;
                   }
                 }
-              } catch (error) {
+              } catch {
                 // Ignore file reading errors
               }
             }
           }
-        } catch (error) {
+        } catch {
           // Ignore find command errors
         }
       }
-    } catch (error) {
+    } catch {
       // Ignore general errors
     }
 
@@ -1085,7 +1085,7 @@ class RepositoryHealthChecker {
         encoding: 'utf-8'
       }).trim();
       return parseInt(files) || 0;
-    } catch (error) {
+    } catch {
       return 0;
     }
   }

@@ -114,7 +114,7 @@ export interface InitializeRequest extends JSONRPCRequest {
       roots?: {
         listChanged?: boolean;
       };
-      sampling?: {};
+      sampling?: object;
     };
     clientInfo: {
       name: string;
@@ -184,7 +184,7 @@ export interface PingRequest extends JSONRPCRequest {
 }
 
 export interface PingResponse extends JSONRPCResponse {
-  result: {};
+  result: object;
 }
 
 // MCP Handler Interface

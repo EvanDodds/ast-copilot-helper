@@ -56,7 +56,7 @@ export interface ServerCapabilities {
   prompts?: {
     listChanged?: boolean;
   };
-  logging?: {};
+  logging?: object;
   experimental?: {
     [key: string]: any;
   };

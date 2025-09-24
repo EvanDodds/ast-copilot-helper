@@ -38,6 +38,8 @@ export default tseslint.config(
       '**/security-compliance-*.mjs',
       '**/*.json',
       '**/tsconfig*.json',
+      // Exclude compiled JavaScript files from TypeScript source
+      'packages/**/src/**/*.js',
     ],
   },
 

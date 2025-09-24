@@ -32,7 +32,7 @@ describe('MessageBroker - Simplified Tests', () => {
       let deliveredMessage: QueuedMessage | undefined;
       
       // Set up delivery handler
-      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: Function) => {
+      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: () => void) => {
         deliveredMessage = message;
         callback(); // Success
       });
@@ -56,7 +56,7 @@ describe('MessageBroker - Simplified Tests', () => {
         deliveredEvent = message;
       });
 
-      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: Function) => {
+      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: () => void) => {
         callback(); // Success
       });
 
@@ -77,7 +77,7 @@ describe('MessageBroker - Simplified Tests', () => {
         failedMessage = message;
       });
 
-      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: Function) => {
+      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: () => void) => {
         callback(new Error('Delivery failed'));
       });
 
@@ -96,7 +96,7 @@ describe('MessageBroker - Simplified Tests', () => {
         timeoutError = error;
       });
 
-      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: Function) => {
+      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: () => void) => {
         // Never call callback - timeout will occur
       });
 
@@ -106,7 +106,7 @@ describe('MessageBroker - Simplified Tests', () => {
         retryAttempts: 1
       });
 
-      shortTimeoutBroker.on('deliverMessage', (message: QueuedMessage, callback: Function) => {
+      shortTimeoutBroker.on('deliverMessage', (message: QueuedMessage, callback: () => void) => {
         // Never call callback
       });
 
@@ -128,9 +128,9 @@ describe('MessageBroker - Simplified Tests', () => {
   describe('Queue Management', () => {
     it('should provide basic queue statistics', () => {
       // Create messages that will start processing but not complete
-      let pausedCallback: Function | undefined;
+      let pausedCallback: (() => void) | undefined;
       
-      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: Function) => {
+      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: () => void) => {
         pausedCallback = callback; // Don't call it yet
       });
 
@@ -149,7 +149,7 @@ describe('MessageBroker - Simplified Tests', () => {
     it('should shutdown gracefully', async () => {
       let deliveryCompleted = false;
 
-      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: Function) => {
+      messageBroker.on('deliverMessage', (message: QueuedMessage, callback: () => void) => {
         setTimeout(() => {
           deliveryCompleted = true;
           callback();

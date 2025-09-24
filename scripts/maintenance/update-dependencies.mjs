@@ -7,8 +7,8 @@
  * across all packages in the monorepo, with safety checks and rollback capabilities.
  */
 
-import { execSync, spawn } from 'child_process';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { execSync } from 'child_process';
+import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -148,7 +148,7 @@ class DependencyUpdater {
         stdio: 'inherit'
       });
       console.log('✅ Pre-update tests passed');
-    } catch (error) {
+    } catch {
       console.error('❌ Pre-update tests failed');
       throw new Error('Tests must pass before updating dependencies');
     }

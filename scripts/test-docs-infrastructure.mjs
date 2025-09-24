@@ -5,7 +5,6 @@
  * Validates that the documentation can be built and deployed successfully
  */
 
-import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
