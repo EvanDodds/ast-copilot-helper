@@ -23,7 +23,8 @@ export interface PerformanceMonitorOptions {
  * Handler for performance monitor command
  */
 export class PerformanceMonitorCommandHandler
-  implements CommandHandler<PerformanceMonitorOptions> {
+  implements CommandHandler<PerformanceMonitorOptions>
+{
   private logger = createLogger();
   private isMonitoring = false;
   private monitoringData: any[] = [];

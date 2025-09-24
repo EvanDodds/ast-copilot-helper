@@ -36,7 +36,8 @@ export interface LeakDetectorConfig {
 
 export class AdvancedMemoryLeakDetector
   extends EventEmitter
-  implements IMemoryLeakDetector {
+  implements IMemoryLeakDetector
+{
   private isRunning = false;
   private detectionTimer?: NodeJS.Timeout;
   private snapshotTimer?: NodeJS.Timeout;

@@ -69,7 +69,8 @@ interface ChangeTracker {
  */
 export class IncementalUpdateManagerImpl
   extends EventEmitter
-  implements IncrementalUpdateManager {
+  implements IncrementalUpdateManager
+{
   private readonly logger = createModuleLogger("incremental-update");
 
   private readonly dbManager: ASTDatabaseManager;

@@ -47,7 +47,8 @@ export interface ProductionReadinessManager {
  * Comprehensive production readiness manager implementation
  */
 export class ComprehensiveProductionReadinessManager
-  implements ProductionReadinessManager {
+  implements ProductionReadinessManager
+{
   private config: ProductionReadinessConfig;
   private initialized = false;
   private workspaceRoot: string;
