@@ -57,15 +57,15 @@ jobs:
             typescript-${{ runner.os }}-
         
       - name: Run ESLint
-        run: npm run lint
+        run: yarn run lint
         continue-on-error: false
         
       - name: Run Prettier format check
-        run: npm run format:check
+        run: yarn run format:check
         continue-on-error: false
         
       - name: Run TypeScript type check
-        run: npm run type-check
+        run: yarn run type-check
         continue-on-error: false
         
       - name: Upload lint results
@@ -103,7 +103,7 @@ jobs:
         continue-on-error: false
         
       - name: Run security scanning
-        run: npm run security:scan
+        run: yarn run security:scan
         continue-on-error: false
         
       - name: Upload security results
@@ -146,12 +146,12 @@ jobs:
         run: yarn install --immutable
         
       - name: Run unit tests
-        run: npm run test:unit
+        run: yarn run test:unit
         env:
           CI: true
           
       - name: Generate coverage report
-        run: npm run test:coverage
+        run: yarn run test:coverage
         
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -196,10 +196,10 @@ jobs:
         run: yarn install --immutable
         
       - name: Build project
-        run: npm run build
+        run: yarn run build
         
       - name: Run integration tests
-        run: npm run test:integration
+        run: yarn run test:integration
         env:
           CI: true
           TEST_TIMEOUT: 120000
@@ -232,13 +232,13 @@ jobs:
         run: yarn install --immutable
         
       - name: Build project
-        run: npm run build
+        run: yarn run build
         
       - name: Run performance tests
-        run: npm run test:performance
+        run: yarn run test:performance
         
       - name: Generate performance report
-        run: npm run perf:report
+        run: yarn run perf:report
         
       - name: Upload performance results
         uses: actions/upload-artifact@v4
@@ -272,16 +272,16 @@ jobs:
         run: yarn install --immutable
         
       - name: Build packages
-        run: npm run build:all
+        run: yarn run build:all
         
       - name: Package CLI application
-        run: npm run package:cli
+        run: yarn run package:cli
         
       - name: Package VS Code extension
-        run: npm run package:vscode
+        run: yarn run package:vscode
         
       - name: Run build validation
-        run: npm run validate:build
+        run: yarn run validate:build
         
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -319,20 +319,20 @@ jobs:
       - name: Check code coverage threshold
         run: |
           echo "Checking code coverage threshold..."
-          npm run coverage:check -- --threshold=80
+          yarn run coverage:check -- --threshold=80
           
       - name: Check security vulnerabilities
         run: |
           echo "Checking security score..."
-          npm run security:score
+          yarn run security:score
           
       - name: Check performance benchmarks
         run: |
           echo "Checking performance benchmarks..."
-          npm run perf:score
+          yarn run perf:score
           
       - name: Generate quality report
-        run: npm run quality:report
+        run: yarn run quality:report
         
       - name: Upload quality report
         uses: actions/upload-artifact@v4
@@ -385,7 +385,7 @@ jobs:
           Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
           
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: yarn run test:e2e
         env:
           CI: true
           DISPLAY: ':99'
@@ -433,13 +433,13 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          CHANGELOG=$(npm run changelog:generate -- --version=${{ steps.version.outputs.version }})
+          CHANGELOG=$(yarn run changelog:generate -- --version=${{ steps.version.outputs.version }})
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           
       - name: Update package versions
-        run: npm run version:update -- ${{ steps.version.outputs.version }}
+        run: yarn run version:update -- ${{ steps.version.outputs.version }}
         
       - name: Commit version updates
         run: |
@@ -605,7 +605,7 @@ jobs:
         run: yarn install --immutable
         
       - name: Deploy to staging
-        run: npm run deploy:staging
+        run: yarn run deploy:staging
         env:
           CI_COMMIT_SHA: ${{ github.sha }}
           CI_BUILD_ID: ${{ github.run_id }}
@@ -650,7 +650,7 @@ jobs:
         run: yarn install --immutable
         
       - name: Deploy to production
-        run: npm run deploy:production
+        run: yarn run deploy:production
         env:
           CI_COMMIT_SHA: ${{ github.sha }}
           CI_BUILD_ID: ${{ github.run_id }}
@@ -695,7 +695,7 @@ jobs:
         if: needs.deploy-staging.result == 'failure'
         run: |
           echo "Staging deployment failed, initiating rollback..."
-          npm run rollback:staging "Automated rollback due to deployment failure"
+          yarn run rollback:staging "Automated rollback due to deployment failure"
         env:
           CI: true
           
@@ -703,7 +703,7 @@ jobs:
         if: needs.deploy-production.result == 'failure'
         run: |
           echo "Production deployment failed, initiating rollback..."
-          npm run rollback:production "Automated rollback due to deployment failure"
+          yarn run rollback:production "Automated rollback due to deployment failure"
         env:
           CI: true
           BLUE_GREEN_DEPLOYMENT: ${{ secrets.BLUE_GREEN_DEPLOYMENT }}
@@ -748,19 +748,19 @@ jobs:
           echo "✅ All tests passed"
           echo "✅ All quality gates passed"  
           echo "✅ All deployments successful"
-          npm run ci:build-notifications success
+          yarn run ci:build-notifications success
           
       - name: Send failure notification
         if: steps.status.outputs.status == 'failure'
         run: |
           echo "❌ CI/CD Pipeline failed!"
-          npm run ci:build-notifications failure
+          yarn run ci:build-notifications failure
         
       - name: Run Performance Monitoring
         if: always()
         run: |
           echo "📊 Generating performance monitoring report..."
-          npm run ci:performance-monitor
+          yarn run ci:performance-monitor
         env:
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_SHA: ${{ github.sha }}
@@ -770,13 +770,13 @@ jobs:
         if: always()  
         run: |
           echo "🚨 Evaluating performance alerts..."
-          npm run ci:alerting-system
+          yarn run ci:alerting-system
 
       - name: Generate Monitoring Dashboard
         if: always()
         run: |
           echo "📈 Generating monitoring dashboard..."
-          npm run ci:monitoring-dashboard
+          yarn run ci:monitoring-dashboard
 
       - name: Upload Monitoring Artifacts
         if: always()
@@ -795,4 +795,4 @@ jobs:
         if: steps.status.outputs.status == 'failure'
         run: |
           echo "❌ CI/CD Pipeline failed!"
-          npm run ci:build-notifications failure
+          yarn run ci:build-notifications failure

@@ -123,3 +123,13 @@ temp/
 package-lock.json
 npm-shrinkwrap.json
 # yarn.lock
+
+# Test output files (temporary test artifacts)
+*_*.json
+batch-test-*.json
+test-*.json
+component_*.json
+valid_*.json
+invalid_*.json
+output-test_*.json
+file[0-9]*_*.json

@@ -53,10 +53,10 @@ jobs:
         run: yarn install --immutable
 
       - name: Lint code
-        run: npm run lint || echo "Lint not configured"
+        run: yarn run lint || echo "Lint not configured"
 
       - name: Type check
-        run: npm run type-check || npx tsc --noEmit
+        run: yarn run type-check || npx tsc --noEmit
 
       - name: Check benchmark conditions
         id: check
@@ -132,7 +132,7 @@ jobs:
 
       - name: Generate coverage report
         if: matrix.os == 'ubuntu-latest' && matrix.node == '20'
-        run: npm run test:coverage || npm test -- --coverage
+        run: yarn run test:coverage || yarn test -- --coverage
         timeout-minutes: 10
 
       - name: Upload coverage to Codecov
@@ -301,11 +301,11 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             # Lightweight integration tests for PRs
             echo "🚀 Running lightweight integration tests for PR..."
-            timeout 5m npm test -- tests/integration/ --config vitest.ci.config.ts --testTimeout=30000 --maxConcurrency=2 || echo "Some integration tests skipped"
+            timeout 5m yarn test -- tests/integration/ --config vitest.ci.config.ts --testTimeout=30000 --maxConcurrency=2 || echo "Some integration tests skipped"
           else
             # Full integration tests for main branch
             echo "🚀 Running full integration test suite for main branch..."
-            npm run test:integration || timeout 15m npm test -- tests/integration/ --config vitest.ci.config.ts
+            yarn run test:integration || timeout 15m yarn test -- tests/integration/ --config vitest.ci.config.ts
           fi
           
       - name: Test CLI functionality  
@@ -313,12 +313,12 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             # Quick CLI validation for PRs
             echo "🔍 Quick CLI validation for PR..."
-            npm run build || echo "Build step completed"
+            yarn run build || echo "Build step completed"
             echo "CLI integration tests completed"
           else
             # Full CLI testing for main branch
             echo "🔍 Full CLI testing for main branch..."
-            npm run build || echo "Build step completed"
+            yarn run build || echo "Build step completed"
             # Add more comprehensive CLI tests here
             echo "Full CLI integration tests completed"
           fi
@@ -352,11 +352,11 @@ jobs:
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
             # Full coverage check for main branch
             echo "Running full coverage analysis for main branch..."
-            npm run test:coverage || npm test -- --coverage --silent
+            yarn run test:coverage || yarn test -- --coverage --silent
           elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
             # Quick coverage check for PRs
             echo "Running quick coverage check for PR..."
-            timeout 5m npm test -- --coverage --silent --testTimeout=10000 || echo "Coverage check completed with warnings"
+            timeout 5m yarn test -- --coverage --silent --testTimeout=10000 || echo "Coverage check completed with warnings"
           else
             echo "Skipping coverage check for this event type"
           fi
