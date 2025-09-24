@@ -654,7 +654,7 @@ Now that you've mastered the CLI:
 - 🎨 **[VS Code Extension Guide](vscode-extension)** - Visual interface for ast-helper
 - ⚙️ **[Configuration Guide](configuration)** - Customize behavior and settings
 - 🤖 **[AI Integration Guide](ai-integration)** - Connect with AI agents via MCP
-- 🔧 **[Developer Guide](../development)** - Contributing and extending functionality
+- 🔧 **[Developer Guide](../development/contributing.md)** - Contributing and extending functionality
 
 ## CLI Reference Quick Card
 

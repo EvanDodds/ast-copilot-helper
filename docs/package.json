@@ -10,8 +10,8 @@
     "serve": "vitepress serve"
   },
   "devDependencies": {
-    "vitepress": "^1.0.0",
-    "@vue/theme": "^2.0.0"
+    "@vue/theme": "^2.0.0",
+    "vitepress": "^1.0.0"
   },
   "dependencies": {
     "vue": "^3.3.0"

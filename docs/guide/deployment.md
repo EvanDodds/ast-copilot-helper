@@ -6,7 +6,7 @@ This guide covers deploying AST Copilot Helper in various environments and platf
 
 For immediate deployment, ensure you have the required secrets configured first:
 
-🔑 **[GitHub Secrets Configuration](deployment/GITHUB_SECRETS.md)** - **Start here!**
+🔑 **[GitHub Secrets Configuration](../deployment/GITHUB_SECRETS.md)** - **Start here!**
 
 Required for any CI/CD deployment. This is the most critical step.
 
@@ -22,7 +22,7 @@ Our automated CI/CD pipeline handles everything once secrets are configured:
 - ✅ **Notifications**: Slack/Teams integration for deployment status
 
 **Prerequisites**: 
-- Configure [GitHub Secrets](deployment/GITHUB_SECRETS.md)
+- Configure [GitHub Secrets](../deployment/GITHUB_SECRETS.md)
 - Fork/clone the repository
 - Push changes to trigger deployment
 
@@ -101,7 +101,7 @@ Post-deployment monitoring includes:
 ### Common Issues
 
 **"Secrets not found" errors**:
-- Review the [GitHub Secrets guide](deployment/GITHUB_SECRETS.md)
+- Review the [GitHub Secrets guide](../deployment/GITHUB_SECRETS.md)
 - Verify all required secrets are configured
 - Check secret names match exactly (case-sensitive)
 
@@ -117,8 +117,8 @@ Post-deployment monitoring includes:
 
 ### Getting Help
 
-- 📚 [Troubleshooting Guide](troubleshooting.md)
-- 🔧 [CI/CD Pipeline Documentation](CI-CD-PIPELINE.md) 
+- 📚 [Troubleshooting Guide](../troubleshooting.md)
+- 🔧 [CI/CD Pipeline Documentation](../CI-CD-PIPELINE.md) 
 - 🐛 [GitHub Issues](https://github.com/yourusername/ast-copilot-helper/issues)
 - 💬 [Discussion Forum](https://github.com/yourusername/ast-copilot-helper/discussions)
 
@@ -145,7 +145,7 @@ The deployment system supports:
 ---
 
 **Next Steps**: 
-1. 🔑 [Configure GitHub Secrets](deployment/GITHUB_SECRETS.md) (Required)
+1. 🔑 [Configure GitHub Secrets](../deployment/GITHUB_SECRETS.md) (Required)
 2. 🚀 Push code changes to trigger deployment
 3. 📊 Monitor deployment status and health checks
 4. 🔄 Set up regular secret rotation schedule

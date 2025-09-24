@@ -912,7 +912,7 @@ ast-copilot-helper's MCP implementation is designed to work with future AI platf
 
 With AI integration configured:
 
-- 🛠️ **[Developer Guide](../development)** - Contribute to AI integration features
+- 🛠️ **[Developer Guide](../development/contributing.md)** - Contribute to AI integration features
 - 📖 **[Troubleshooting Guide](../troubleshooting.md)** - Solve common AI integration issues
 - 🚀 **[CLI Usage Guide](cli-usage)** - Master advanced CLI features for AI workflows
 - ⚙️ **[Configuration Guide](configuration)** - Fine-tune AI and MCP settings

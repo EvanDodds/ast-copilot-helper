@@ -685,7 +685,7 @@ Master the VS Code extension and explore:
 
 - ⚙️ **[Configuration Guide](configuration)** - Advanced customization options
 - 🤖 **[AI Integration Guide](ai-integration)** - Connect with AI agents and workflows
-- 🛠️ **[Developer Guide](../development)** - Contributing and extending functionality
+- 🛠️ **[Developer Guide](../development/contributing.md)** - Contributing and extending functionality
 - 🚀 **[CLI Usage Guide](cli-usage)** - Command-line power user techniques
 
 ## Extension Quick Reference

@@ -952,7 +952,7 @@ With configuration mastered:
 - 🤖 **[AI Integration Guide](ai-integration)** - Connect with AI agents and optimize AI settings
 - 🚀 **[CLI Usage Guide](cli-usage)** - Use advanced CLI features with custom configurations
 - 🎨 **[VS Code Extension](vscode-extension)** - Apply configurations in VS Code environment
-- 🛠️ **[Developer Guide](../development)** - Contributing and extending configuration options
+- 🛠️ **[Developer Guide](../development/contributing.md)** - Contributing and extending configuration options
 
 ## Configuration Quick Reference
 
