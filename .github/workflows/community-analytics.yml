@@ -185,31 +185,45 @@ jobs:
             
             // Create issue body
             const { summary, insights, recommendations } = latestReport;
-            const issueBody = `# 📊 Automated Community Analytics Report
             
-**Generated:** ${new Date(latestReport.metadata.generatedAt).toLocaleString()}
-**Period:** ${latestReport.metadata.timeframe}
-
-## Summary
-
-- **Contributors:** ${summary.communityGrowth.totalContributors} (+${summary.communityGrowth.newContributors} new, ${summary.communityGrowth.growthRate}% growth)
-- **Issues:** ${summary.activity.issuesOpened} opened, ${summary.activity.issuesClosed} closed (${summary.engagement.issueCloseRate}% close rate)
-- **Pull Requests:** ${summary.activity.pullRequestsOpened} opened, ${summary.activity.pullRequestsMerged} merged (${summary.engagement.prMergeRate}% merge rate)
-- **GitHub Stars:** ${summary.engagement.stars} (+${summary.engagement.forks} forks)
-
-## Key Insights
-
-${insights.map(insight => `- ${insight.type === 'positive' ? '✅' : insight.type === 'warning' ? '⚠️' : '❌'} **${insight.category}:** ${insight.message} (${insight.impact} impact)`).join('\n')}
-
-## Recommendations
-
-${recommendations.map(rec => `### ${rec.action} (${rec.priority} priority)
-${rec.details.map(detail => `- ${detail}`).join('\n')}`).join('\n\n')}
-
----
-
-*This is an automated report. Data may take time to reflect recent changes.*
-*View full analytics: [GitHub Actions](https://github.com/${{ github.repository }}/actions)*`;
+            // Format insights
+            const insightsList = insights.map(insight => {
+              const icon = insight.type === 'positive' ? '✅' : insight.type === 'warning' ? '⚠️' : '❌';
+              return "- " + icon + " **" + insight.category + ":** " + insight.message + " (" + insight.impact + " impact)";
+            });
+            
+            // Format recommendations
+            const recommendationsList = recommendations.map(rec => {
+              const details = rec.details.map(detail => "- " + detail).join('\n');
+              return "### " + rec.action + " (" + rec.priority + " priority)\n" + details;
+            });
+            
+            const issueBody = [
+              "# 📊 Automated Community Analytics Report",
+              "",
+              "**Generated:** " + new Date(latestReport.metadata.generatedAt).toLocaleString(),
+              "**Period:** " + latestReport.metadata.timeframe,
+              "",
+              "## Summary",
+              "",
+              "- **Contributors:** " + summary.communityGrowth.totalContributors + " (+" + summary.communityGrowth.newContributors + " new, " + summary.communityGrowth.growthRate + "% growth)",
+              "- **Issues:** " + summary.activity.issuesOpened + " opened, " + summary.activity.issuesClosed + " closed (" + summary.engagement.issueCloseRate + "% close rate)",
+              "- **Pull Requests:** " + summary.activity.pullRequestsOpened + " opened, " + summary.activity.pullRequestsMerged + " merged (" + summary.engagement.prMergeRate + "% merge rate)",
+              "- **GitHub Stars:** " + summary.engagement.stars + " (+" + summary.engagement.forks + " forks)",
+              "",
+              "## Key Insights",
+              "",
+              ...insightsList,
+              "",
+              "## Recommendations",
+              "",
+              ...recommendationsList,
+              "",
+              "---",
+              "",
+              "*This is an automated report. Data may take time to reflect recent changes.*",
+              "*View full analytics: [GitHub Actions](https://github.com/${{ github.repository }}/actions)*"
+            ].join('\n');
 
             // Look for existing analytics issue
             const { data: issues } = await github.rest.issues.listForRepo({
@@ -277,40 +291,42 @@ ${rec.details.map(detail => `- ${detail}`).join('\n')}`).join('\n\n')}
         uses: actions/github-script@v7
         with:
           script: |
-            const issueBody = `# ❌ Community Analytics Generation Failed
-            
-**Workflow:** ${{ github.workflow }}
-**Run:** #${{ github.run_number }}
-**Triggered by:** ${{ github.event_name }}
-**Time:** ${new Date().toLocaleString()}
-
-## Error Details
-
-The automated community analytics generation failed. Please check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
-
-## Next Steps
-
-1. Check the workflow logs for specific error messages
-2. Verify GitHub token permissions
-3. Check if repository structure has changed
-4. Manually run analytics if needed
-
-## Manual Run
-
-You can manually trigger analytics generation:
-
-\`\`\`bash
-# Install dependencies
-npm install @octokit/rest
-
-# Run analytics (requires GITHUB_TOKEN)
-export GITHUB_TOKEN="your_token"
-node scripts/analytics/community-analytics.mjs owner repo 30
-\`\`\`
-
----
-
-*This is an automated error report.*`;
+            const issueBody = [
+              "# ❌ Community Analytics Generation Failed",
+              "",
+              "**Workflow:** ${{ github.workflow }}",
+              "**Run:** #${{ github.run_number }}",
+              "**Triggered by:** ${{ github.event_name }}",
+              "**Time:** " + new Date().toLocaleString(),
+              "",
+              "## Error Details",
+              "",
+              "The automated community analytics generation failed. Please check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.",
+              "",
+              "## Next Steps",
+              "",
+              "1. Check the workflow logs for specific error messages",
+              "2. Verify GitHub token permissions", 
+              "3. Check if repository structure has changed",
+              "4. Manually run analytics if needed",
+              "",
+              "## Manual Run",
+              "",
+              "You can manually trigger analytics generation:",
+              "",
+              "```bash",
+              "# Install dependencies",
+              "npm install @octokit/rest",
+              "",
+              "# Run analytics (requires GITHUB_TOKEN)",
+              'export GITHUB_TOKEN="your_token"',
+              "node scripts/analytics/community-analytics.mjs owner repo 30",
+              "```",
+              "",
+              "---",
+              "",
+              "*This is an automated error report.*"
+            ].join('\n');
 
             await github.rest.issues.create({
               owner: context.repo.owner,

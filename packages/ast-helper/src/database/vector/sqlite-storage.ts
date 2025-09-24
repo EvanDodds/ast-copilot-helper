@@ -224,9 +224,7 @@ export class SQLiteVectorStorage {
   /**
    * Insert multiple vectors in a batch transaction
    */
-  async insertVectors(
-    vectors: VectorInsert[],
-  ): Promise<{
+  async insertVectors(vectors: VectorInsert[]): Promise<{
     successCount: number;
     failureCount: number;
     errors: Array<{ nodeId: string; error: string }>;

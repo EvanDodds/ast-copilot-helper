@@ -257,9 +257,7 @@ export class SystemDiagnosticCollector implements DiagnosticCollector {
   /**
    * Get disk usage for a path
    */
-  private async getDiskUsage(
-    path: string,
-  ): Promise<{
+  private async getDiskUsage(path: string): Promise<{
     total: number;
     free: number;
     used: number;
@@ -275,9 +273,7 @@ export class SystemDiagnosticCollector implements DiagnosticCollector {
   /**
    * Get Windows disk usage using wmic
    */
-  private async getWindowsDiskUsage(
-    path: string,
-  ): Promise<{
+  private async getWindowsDiskUsage(path: string): Promise<{
     total: number;
     free: number;
     used: number;
@@ -314,9 +310,7 @@ export class SystemDiagnosticCollector implements DiagnosticCollector {
   /**
    * Get Unix disk usage using statvfs
    */
-  private async getUnixDiskUsage(
-    path: string,
-  ): Promise<{
+  private async getUnixDiskUsage(path: string): Promise<{
     total: number;
     free: number;
     used: number;

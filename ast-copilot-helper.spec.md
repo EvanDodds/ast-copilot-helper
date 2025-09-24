@@ -264,6 +264,7 @@ ast-mcp-server status [options]
 
   - **Cyclomatic Complexity**: Classical count (1 + decision points): `if`, `for`, `while`, `case`, `catch`, ternary, boolean operators.
   - **Dependencies**: List of imported symbols referenced in node scope.
+
 - **Output**: `.astdb/annots/{nodeId}.json`
 
   ```ts
@@ -1548,6 +1549,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
   3. **Selection-Based**: Enrich prompts based on current text selection and cursor position
   4. **MCP Integration**: Seamless integration with external AI models via standardized MCP protocol
 - **Implementation Details**:
+
   ```typescript
   // Primary implementation approach
   async function enrichAndSend() {
@@ -1578,6 +1580,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
       });
   }
   ```
+
 - **Command Registration**: Implement activation events and contribution points as specified in Section 4.7
 - **Settings Integration**: Wire VS Code configuration system to CLI backend
 - **Progress Reporting**: Use `vscode.window.withProgress` for indexing operations

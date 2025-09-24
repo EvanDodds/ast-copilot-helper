@@ -24,7 +24,7 @@ Where is the documentation issue?
 - [ ] VS Code extension documentation
 - [ ] GitHub wiki
 - [ ] Code comments
-- [ ] Other: ****\_\_\_****
+- [ ] Other: \***\*\_\_\_\*\***
 
 **Specific file/section**: [e.g. docs/guide/getting-started.md, line 42]
 
