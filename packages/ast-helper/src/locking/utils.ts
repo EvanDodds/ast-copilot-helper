@@ -3,7 +3,7 @@
  * Provides file locking functionality that works on Windows, macOS, and Linux
  */
 
-import { readFile, writeFile, mkdir, unlink } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, unlink, rename } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import type { Lock } from './types.js';
@@ -132,7 +132,7 @@ export async function writeLockFile(lockFilePath: string, lock: Omit<Lock, 'id' 
     // Try to rename temp file to lock file
     // This is atomic on most filesystems
     try {
-      await require('fs').promises.rename(tempPath, lockFilePath);
+      await rename(tempPath, lockFilePath);
     } catch (renameError) {
       // Clean up temp file if rename failed
       try {

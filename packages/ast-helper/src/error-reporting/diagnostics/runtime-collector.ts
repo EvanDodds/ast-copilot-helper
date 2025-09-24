@@ -3,6 +3,7 @@
  */
 
 import * as os from 'os';
+import { builtinModules } from 'module';
 import type { 
   DiagnosticCollector, 
   DiagnosticScope, 
@@ -166,8 +167,7 @@ export class RuntimeDiagnosticCollector implements DiagnosticCollector {
     let nativeModules: string[] = [];
     try {
       // Try to access built-in modules
-      const builtins = require('module').builtinModules || [];
-      nativeModules = builtins;
+      nativeModules = [...builtinModules];
     } catch {
       // Fallback to empty array if not available
       nativeModules = [];

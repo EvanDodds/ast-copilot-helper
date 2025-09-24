@@ -275,14 +275,19 @@ export class NodeVersionCompatibilityTester {
     try {
       // Test nullish coalescing - these warnings are expected as we're testing the operator
       // @ts-ignore
+      // eslint-disable-next-line no-constant-binary-expression
       const test1 = null ?? 'default';
       // @ts-ignore  
+      // eslint-disable-next-line no-constant-binary-expression
       const test2 = undefined ?? 'default';
       // @ts-ignore
+      // eslint-disable-next-line no-constant-binary-expression
       const test3 = 0 ?? 'default';
       // @ts-ignore
+      // eslint-disable-next-line no-constant-binary-expression
       const test4 = '' ?? 'default';
       // @ts-ignore
+      // eslint-disable-next-line no-constant-binary-expression
       const test5 = false ?? 'default';
       
       const passed = test1 === 'default' && 

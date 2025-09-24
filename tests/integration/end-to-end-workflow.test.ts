@@ -695,7 +695,7 @@ class ComprehensiveWorkflowTestSuite extends BaseIntegrationTestSuite {
                 {
                     name: 'Pattern Search',
                     queries: [
-                        'regex:/async\s+function\s+\w+/g',
+                        'regex:/async\\s+function\\s+\\w+/g',
                         'pattern:try-catch-finally blocks',
                         'pattern:dependency injection containers',
                         'pattern:factory method implementations',

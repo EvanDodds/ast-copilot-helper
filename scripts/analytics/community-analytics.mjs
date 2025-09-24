@@ -298,7 +298,7 @@ export class CommunityAnalytics {
           metrics.responseTime.total += responseTime;
           metrics.responseTime.count++;
         }
-      } catch (error) {
+      } catch {
         // Skip if unable to get comments
       }
     }
@@ -416,7 +416,7 @@ export class CommunityAnalytics {
           metrics.reviewTime.total += reviewTime;
           metrics.reviewTime.count++;
         }
-      } catch (error) {
+      } catch {
         // Skip if unable to get reviews
       }
     }
@@ -443,7 +443,7 @@ export class CommunityAnalytics {
   /**
    * Get discussion metrics (mock implementation - would need GitHub GraphQL API)
    */
-  async getDiscussionMetrics(startDate, endDate) {
+  async getDiscussionMetrics(_startDate, _endDate) {
     // Note: GitHub Discussions require GraphQL API
     // This is a mock implementation showing the structure
     return {
@@ -531,7 +531,7 @@ export class CommunityAnalytics {
   /**
    * Get engagement metrics across the repository
    */
-  async getEngagementMetrics(startDate, endDate) {
+  async getEngagementMetrics(_startDate, _endDate) {
     const repo = await this.octokit.rest.repos.get({
       owner: this.owner,
       repo: this.repo
@@ -566,7 +566,7 @@ export class CommunityAnalytics {
         repo: this.repo
       });
       metrics.traffic.clones = clones.data;
-    } catch (error) {
+    } catch {
       // Traffic data requires push access, skip if not available
     }
 
@@ -947,7 +947,7 @@ export class CommunityAnalytics {
    * Generate CSV summary
    */
   generateCSVSummary(report) {
-    const { summary, metrics } = report;
+    const { summary } = report;
     
     let csv = 'Metric,Value,Note\n';
     csv += `Total Contributors,${summary.communityGrowth.totalContributors},Active in timeframe\n`;

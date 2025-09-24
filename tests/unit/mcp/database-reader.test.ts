@@ -259,7 +259,7 @@ describe('ASTDatabaseReader', () => {
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const options: QueryOptions = {
         maxResults: 2,
-        filePattern: '.*\.ts'
+        filePattern: '.*\\.ts'
       };
       
       const changes = await reader.getRecentChanges(yesterday, options);

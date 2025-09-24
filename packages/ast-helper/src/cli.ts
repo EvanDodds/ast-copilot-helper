@@ -7,6 +7,7 @@
 
 import { Command, Option } from 'commander';
 import * as fs from 'fs/promises';
+import { readFileSync, existsSync } from 'fs';
 import * as path from 'path';
 import { ConfigManager } from './config/index.js';
 import { ConfigurationErrors, ErrorFormatter, ValidationErrors } from './errors/index.js';
@@ -572,8 +573,7 @@ export class AstHelperCli {
   private getVersion(): string {
     try {
       const packagePath = path.join(__dirname, '..', 'package.json');
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const packageJson = JSON.parse(require('fs').readFileSync(packagePath, 'utf8'));
+      const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
       return packageJson.version || '0.1.0';
     } catch {
       return '0.1.0';
@@ -649,8 +649,7 @@ export class AstHelperCli {
   private isGitRepository(workspacePath: string): boolean {
     try {
       const gitPath = path.join(workspacePath, '.git');
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require('fs').existsSync(gitPath);
+      return existsSync(gitPath);
     } catch {
       return false;
     }

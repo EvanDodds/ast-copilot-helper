@@ -1248,8 +1248,8 @@ Exit Codes:
 
 // Main execution
 async function main() {
+  const options = parseArgs();
   try {
-    const options = parseArgs();
     const checker = new RepositoryHealthChecker(options);
     
     await checker.runHealthChecks();

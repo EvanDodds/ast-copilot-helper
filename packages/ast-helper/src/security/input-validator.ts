@@ -83,11 +83,11 @@ export const DEFAULT_INPUT_VALIDATION_CONFIG: InputValidationConfig = {
     blockedPatterns: [
       /(\bselect\b|\binsert\b|\bupdate\b|\bdelete\b|\bdrop\b|\bunion\b|\balter\b)\s+.*?\bfrom\b/i,
       /'\s*(or|and)\s+.*?=.*?/i, // More flexible OR/AND pattern
-      /(--|\#|\/\*|\*\/|xp_|sp_)/i, // SQL comments (removed space requirement)
+      /(--|#|\/\*|\*\/|xp_|sp_)/i, // SQL comments (removed space requirement)
       /;\s*(drop|delete|insert|update|alter)\b/i,
       /union\s+(all\s+)?select/i
     ],
-    allowedCharacters: /^[a-zA-Z0-9\s\-_\.\@\(\)]+$/,
+    allowedCharacters: /^[a-zA-Z0-9\s\-_.@()]+$/,
     maxLength: 1000
   },
 
@@ -139,7 +139,7 @@ export const DEFAULT_INPUT_VALIDATION_CONFIG: InputValidationConfig = {
       /\$\([^)]*\)/,
       /`[^`]*`/
     ],
-    allowedCharacters: /^[a-zA-Z0-9\s\-_\.\/\'\*]+$/,
+    allowedCharacters: /^[a-zA-Z0-9\s\-_./''*]+$/,
     maxLength: 500
   },
 
@@ -788,7 +788,7 @@ export class InputValidationUtils {
     const patterns = {
       email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
       url: /^https?:\/\/[^\s/$.?#].[^\s]*$/,
-      phone: /^\+?[\d\s\-\(\)]{10,}$/,
+      phone: /^\+?[\d\s\-()]{10,}$/,
       ip: /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
       uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     };

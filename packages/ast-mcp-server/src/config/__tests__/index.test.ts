@@ -64,6 +64,7 @@ describe('Configuration Index', () => {
   describe('Module Exports', () => {
     it('should export all required components', () => {
       // Re-import to check exports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const configIndex = require('../index.js');
       
       // Types
@@ -79,6 +80,7 @@ describe('Configuration Index', () => {
     });
 
     it('should export environment configurations', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const configIndex = require('../index.js');
       
       expect(configIndex.DEVELOPMENT_CONFIG).toBeDefined();

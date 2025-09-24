@@ -114,7 +114,7 @@ class MCPServerTester {
       await fs.promises.writeFile(tempConfigPath, JSON.stringify(testConfig, null, 2));
       
       // Test server with custom config (just validate it doesn't crash immediately)
-      const result = await this.runCommand([
+      await this.runCommand([
         'node', 
         this.serverPath, 
         'run', 
@@ -125,7 +125,7 @@ class MCPServerTester {
       // Clean up
       try {
         await fs.promises.unlink(tempConfigPath);
-      } catch (e) {
+      } catch {
         // Ignore cleanup errors
       }
       

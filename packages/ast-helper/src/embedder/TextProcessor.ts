@@ -105,7 +105,7 @@ export class CodeTextProcessor {
     cleaned = cleaned.replace(/\s*=>\s*/g, ' => ');
     
     // Remove type annotations in TypeScript (keep core structure)
-    cleaned = cleaned.replace(/:\s*[A-Za-z<>\[\]|&\s]+(?=\s*[,)])/g, '');
+    cleaned = cleaned.replace(/:\s*[A-Za-z<>[\]|&\s]+(?=\s*[,)])/g, '');
     
     return cleaned.substring(0, 200); // Limit signature length
   }

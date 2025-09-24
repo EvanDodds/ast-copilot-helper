@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { FileSystemManager } from './manager.js';
 import type { ListOptions } from './types.js';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { mkdtemp, rm, writeFile, mkdir, readFile } from 'node:fs/promises';
 
 describe('FileSystemManager', () => {
@@ -29,7 +29,6 @@ describe('FileSystemManager', () => {
   describe('path operations', () => {
     it('should normalize paths', () => {
       // Use platform-specific path separators
-      const sep = require('path').sep;
       expect(fsManager.normalizePath('path/to/../file.txt')).toBe(`path${sep}file.txt`);
       expect(fsManager.normalizePath('path//double//slash')).toBe(`path${sep}double${sep}slash`);
     });
@@ -210,7 +209,6 @@ describe('FileSystemManager', () => {
     it('should list files recursively', async () => {
       const options: ListOptions = { recursive: true };
       const files = await fsManager.listFiles(tempDir, options);
-      const sep = require('path').sep;
       
       expect(files.length).toBeGreaterThan(2);
       expect(files).toContain('file1.txt');
@@ -246,7 +244,6 @@ describe('FileSystemManager', () => {
         maxDepth: 1
       };
       const files = await fsManager.listFiles(tempDir, options);
-      const sep = require('path').sep;
       
       expect(files).toContain('file1.txt');
       expect(files).toContain(`subdir1${sep}file3.txt`);

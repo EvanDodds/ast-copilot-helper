@@ -216,7 +216,7 @@ export class ConfigManager extends EventEmitter {
     for (const file of configFiles) {
       try {
         const fullPath = path.resolve(file);
-        if (require('fs').existsSync(fullPath)) {
+        if (fsSync.existsSync(fullPath)) {
           return fullPath;
         }
       } catch {

@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { loadavg, freemem } from 'os';
 import type {
   MemorySnapshot,
   GCStats,
@@ -390,7 +391,7 @@ export class PerformanceMetricsCollector extends EventEmitter {
     const performance: PerformanceMetadata = {
       cpuUsage: this.getCpuUsage(),
       uptime: process.uptime(),
-      loadAverage: require('os').loadavg(),
+      loadAverage: loadavg(),
       eventLoopLag: this.calculateEventLoopLag(),
       networkConnections: 0 // Would integrate with actual network monitoring
     };
@@ -709,8 +710,7 @@ systemHealth = 'good';
   }
 
   private getAvailableMemoryGB(): number {
-    const os = require('os');
-    return os.freemem() / (1024 * 1024 * 1024);
+    return freemem() / (1024 * 1024 * 1024);
   }
 
   private getDiskSpaceInfo(): SystemResourceMetrics['diskSpaceGB'] {

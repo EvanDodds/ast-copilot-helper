@@ -26,17 +26,17 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
     /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,                          // IP addresses
     
     // File paths (common user paths)
-    /\/Users\/[^\/\s]+/g,                                     // macOS user paths
-    /\/home\/[^\/\s]+/g,                                      // Linux user paths
+    /\/Users\/[^/\s]+/g,                                     // macOS user paths
+    /\/home\/[^/\s]+/g,                                      // Linux user paths
     /C:\\Users\\[^\\:\s]+/g,                                  // Windows user paths
     
     // API keys and tokens
     /\b[A-Za-z0-9]{20,}\b/g,                                 // Long alphanumeric strings (potential tokens)
-    /\bBEARER\s+[A-Za-z0-9\-._~+\/]+=*/gi,                   // Bearer tokens
-    /\bAPIKEY\s*[=:]\s*[A-Za-z0-9\-._~+\/]+/gi,             // API keys
+    /\bBEARER\s+[A-Za-z0-9\-._~+/]+=*/gi,                   // Bearer tokens
+    /\bAPIKEY\s*[=:]\s*[A-Za-z0-9\-._~+/]+/gi,             // API keys
   ];
 
-  private readonly filePathPattern = /([\/\\]?)([^\/\\]*[\/\\])*([^\/\\]+)$/;
+  private readonly filePathPattern = /([/\\]?)([^/\\]*[/\\])*([^/\\]+)$/;
 
   /**
    * Sanitize an event based on privacy settings

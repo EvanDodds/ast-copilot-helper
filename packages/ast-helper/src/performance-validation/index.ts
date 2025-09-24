@@ -32,7 +32,9 @@ export {
 export { PerformanceBenchmarkRunner } from './runner.js';
 
 // Performance validation main entry point
-export async function validatePerformance(config?: Partial<import('./types.js').PerformanceConfig>): Promise<import('./types.js').PerformanceValidationResult> {
+import type { PerformanceConfig, PerformanceValidationResult, PerformanceTestResult } from './types.js';
+
+export async function validatePerformance(config?: Partial<PerformanceConfig>): Promise<PerformanceValidationResult> {
   const { DEFAULT_PERFORMANCE_CONFIG } = await import('./config.js');
   const { PerformanceBenchmarkRunner } = await import('./runner.js');
   
@@ -45,7 +47,7 @@ export async function validatePerformance(config?: Partial<import('./types.js').
 }
 
 // Quick benchmark utilities
-export async function quickBenchmark(benchmarkName: string): Promise<import('./types.js').PerformanceTestResult> {
+export async function quickBenchmark(benchmarkName: string): Promise<PerformanceTestResult> {
   const { DEFAULT_PERFORMANCE_BENCHMARKS } = await import('./config.js');
   const { PerformanceBenchmarkRunner } = await import('./runner.js');
   
@@ -64,7 +66,7 @@ export async function startPerformanceMonitoring() {
   return new PerformanceBenchmarkRunner();
 }
 
-export async function generatePerformanceReport(results: import('./types.js').PerformanceValidationResult, outputDir: string): Promise<string> {
+export async function generatePerformanceReport(results: PerformanceValidationResult, outputDir: string): Promise<string> {
   const fs = await import('fs/promises');
   const path = await import('path');
   
@@ -85,7 +87,7 @@ export async function generatePerformanceReport(results: import('./types.js').Pe
   return reportPath;
 }
 
-function generateHTMLReport(results: import('./types.js').PerformanceValidationResult): string {
+function generateHTMLReport(results: PerformanceValidationResult): string {
   const statusColor = results.overall.passed ? 'green' : 'red';
   const scoreColor = results.overall.score > 80 ? 'green' : results.overall.score > 60 ? 'orange' : 'red';
   

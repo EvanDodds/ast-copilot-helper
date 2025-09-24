@@ -9,8 +9,8 @@
  */
 
 import { execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync, statSync, readdirSync, unlinkSync, rmSync } from 'fs';
-import { join, dirname, extname, basename } from 'path';
+import { existsSync, statSync, readdirSync, unlinkSync, rmSync } from 'fs';
+import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);

@@ -171,7 +171,7 @@ export class AnalyticsScheduler {
       try {
         const existingData = await fs.readFile(trendingPath, 'utf8');
         trendingData = JSON.parse(existingData);
-      } catch (error) {
+      } catch {
         // File doesn't exist yet, start fresh
       }
 
@@ -258,7 +258,7 @@ export class AnalyticsScheduler {
             }
           }
         }
-      } catch (error) {
+      } catch {
         // Directory might not exist yet
       }
     }
@@ -267,7 +267,7 @@ export class AnalyticsScheduler {
   /**
    * Generate analytics dashboard
    */
-  async generateDashboard(timestamp) {
+  async generateDashboard(_timestamp) {
     const dashboardDir = path.join(this.config.outputDir, 'dashboard');
     await fs.mkdir(dashboardDir, { recursive: true });
 
@@ -290,7 +290,7 @@ export class AnalyticsScheduler {
         const trendingPath = path.join(this.config.outputDir, 'trending', `${timeframe}d.json`);
         const data = await fs.readFile(trendingPath, 'utf8');
         trendingData[`${timeframe}d`] = JSON.parse(data);
-      } catch (error) {
+      } catch {
         trendingData[`${timeframe}d`] = { dataPoints: [], trends: {} };
       }
     }
@@ -511,7 +511,7 @@ export class AnalyticsScheduler {
   /**
    * Copy dashboard assets (CSS, JS, images)
    */
-  async copyDashboardAssets(dashboardDir) {
+  async copyDashboardAssets(_dashboardDir) {
     // This would copy any static assets needed for the dashboard
     // For now, we're using inline styles and scripts
   }

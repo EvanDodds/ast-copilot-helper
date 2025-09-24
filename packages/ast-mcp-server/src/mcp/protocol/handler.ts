@@ -118,7 +118,7 @@ export class MCPProtocolHandler {
     }
     
     // Should contain only alphanumeric, dash, underscore, and slash
-    return /^[a-zA-Z0-9_\-\/]+$/.test(method);
+    return /^[a-zA-Z0-9_\-/]+$/.test(method);
   }
 
   /**
