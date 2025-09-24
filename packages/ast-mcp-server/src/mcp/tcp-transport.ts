@@ -3,10 +3,10 @@
  * Handles MCP communication via TCP sockets for remote connections
  */
 
-import type { Server, Socket } from 'net';
-import { createServer } from 'net';
-import type { JSONRPCResponse, JSONRPCNotification } from './protocol';
-import { MCPTransport, BaseTransportStats } from './transport';
+import type { Server, Socket } from "net";
+import { createServer } from "net";
+import type { JSONRPCResponse, JSONRPCNotification } from "./protocol";
+import { MCPTransport, BaseTransportStats } from "./transport";
 
 /**
  * Statistics for TCP transport
@@ -57,7 +57,7 @@ export class TCPTransport extends MCPTransport {
   private host: string;
   private clientBuffers: Map<string, string> = new Map();
 
-  constructor(port = 3000, host = 'localhost') {
+  constructor(port = 3000, host = "localhost") {
     super();
     this.port = port;
     this.host = host;
@@ -66,16 +66,18 @@ export class TCPTransport extends MCPTransport {
 
   async start(): Promise<void> {
     if (this.isRunning) {
-      throw new Error('TCP transport is already running');
+      throw new Error("TCP transport is already running");
     }
 
     try {
       await this.startServer();
       this.isRunning = true;
-      this.emit('connect');
+      this.emit("connect");
     } catch (error) {
       this.stats.recordErrorEvent();
-      throw new Error(`Failed to start TCP transport: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to start TCP transport: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -107,25 +109,29 @@ export class TCPTransport extends MCPTransport {
 
       this.isRunning = false;
       this.stats.activeConnections = 0;
-      this.emit('close');
+      this.emit("close");
     } catch (error) {
       this.stats.recordErrorEvent();
-      throw new Error(`Failed to stop TCP transport: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to stop TCP transport: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
-  async sendMessage(message: JSONRPCResponse | JSONRPCNotification): Promise<void> {
+  async sendMessage(
+    message: JSONRPCResponse | JSONRPCNotification,
+  ): Promise<void> {
     if (!this.isRunning) {
-      throw new Error('TCP transport is not running');
+      throw new Error("TCP transport is not running");
     }
 
     if (this.clients.size === 0) {
-      throw new Error('No active TCP connections');
+      throw new Error("No active TCP connections");
     }
 
     try {
       const serialized = this.serializeMessage(message);
-      
+
       // Send to all connected clients
       const sendPromises: Promise<void>[] = [];
       for (const socket of this.clients.values()) {
@@ -136,12 +142,14 @@ export class TCPTransport extends MCPTransport {
       this.stats.recordMessageSentEvent();
     } catch (error) {
       this.stats.recordErrorEvent();
-      throw new Error(`Failed to send message: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to send message: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   getType(): string {
-    return 'tcp';
+    return "tcp";
   }
 
   getStats(): TCPTransportStats {
@@ -172,8 +180,8 @@ export class TCPTransport extends MCPTransport {
     return new Promise<void>((resolve, reject) => {
       this.server = createServer();
 
-      this.server.on('connection', this.handleConnection.bind(this));
-      this.server.on('error', this.handleServerError.bind(this));
+      this.server.on("connection", this.handleConnection.bind(this));
+      this.server.on("error", this.handleServerError.bind(this));
 
       this.server.listen(this.port, this.host, () => {
         resolve();
@@ -193,28 +201,31 @@ export class TCPTransport extends MCPTransport {
    */
   private handleConnection(socket: Socket): void {
     const clientId = `${socket.remoteAddress}:${socket.remotePort}`;
-    
+
     this.clients.set(clientId, socket);
-    this.clientBuffers.set(clientId, '');
+    this.clientBuffers.set(clientId, "");
     this.stats.recordConnectionEvent();
 
-    socket.setEncoding('utf8');
-    socket.on('data', (data: string) => this.handleClientData(clientId, data));
-    socket.on('close', () => this.handleClientDisconnect(clientId));
-    socket.on('error', (error) => this.handleClientError(clientId, error));
+    socket.setEncoding("utf8");
+    socket.on("data", (data: string) => this.handleClientData(clientId, data));
+    socket.on("close", () => this.handleClientDisconnect(clientId));
+    socket.on("error", (error) => this.handleClientError(clientId, error));
   }
 
   /**
    * Handle data from TCP client
    */
-  private async handleClientData(clientId: string, data: string): Promise<void> {
+  private async handleClientData(
+    clientId: string,
+    data: string,
+  ): Promise<void> {
     try {
-      let buffer = this.clientBuffers.get(clientId) || '';
+      let buffer = this.clientBuffers.get(clientId) || "";
       buffer += data;
 
       // Process complete lines (messages end with \n)
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // Keep incomplete line in buffer
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || ""; // Keep incomplete line in buffer
       this.clientBuffers.set(clientId, buffer);
 
       for (const line of lines) {
@@ -224,7 +235,12 @@ export class TCPTransport extends MCPTransport {
       }
     } catch (error) {
       this.stats.recordErrorEvent();
-      this.emit('error', error instanceof Error ? error : new Error(`Failed to handle client data: ${String(error)}`));
+      this.emit(
+        "error",
+        error instanceof Error
+          ? error
+          : new Error(`Failed to handle client data: ${String(error)}`),
+      );
     }
   }
 
@@ -242,8 +258,8 @@ export class TCPTransport extends MCPTransport {
    */
   private handleClientError(clientId: string, error: Error): void {
     this.stats.recordErrorEvent();
-    this.emit('error', new Error(`Client ${clientId} error: ${error.message}`));
-    
+    this.emit("error", new Error(`Client ${clientId} error: ${error.message}`));
+
     // Clean up client
     const socket = this.clients.get(clientId);
     if (socket) {
@@ -257,7 +273,7 @@ export class TCPTransport extends MCPTransport {
    */
   private handleServerError(error: Error): void {
     this.stats.recordErrorEvent();
-    this.emit('error', error);
+    this.emit("error", error);
   }
 
   /**
@@ -272,7 +288,12 @@ export class TCPTransport extends MCPTransport {
       }
     } catch (error) {
       this.stats.recordErrorEvent();
-      this.emit('error', error instanceof Error ? error : new Error(`Failed to process line: ${String(error)}`));
+      this.emit(
+        "error",
+        error instanceof Error
+          ? error
+          : new Error(`Failed to process line: ${String(error)}`),
+      );
     }
   }
 

@@ -10,25 +10,25 @@
 export abstract class AstError extends Error {
   /** Error code for programmatic handling */
   readonly code: string;
-  
+
   /** Additional context information */
   readonly context: Record<string, any>;
-  
+
   /** User-friendly suggestions for resolving the error */
   readonly suggestions: string[];
-  
+
   /** Original error that caused this error (if any) */
   readonly errorCause?: Error;
-  
+
   /** Marker property to identify AST errors */
   readonly isAstError = true as const;
-  
+
   constructor(
     message: string,
     code: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -36,13 +36,13 @@ export abstract class AstError extends Error {
     this.context = context;
     this.suggestions = suggestions;
     this.errorCause = cause;
-    
+
     // Maintain proper stack trace
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
   }
-  
+
   /**
    * Convert error to JSON for logging/reporting
    */
@@ -54,11 +54,13 @@ export abstract class AstError extends Error {
       context: this.context,
       suggestions: this.suggestions,
       stack: this.stack,
-      cause: this.errorCause ? {
-        name: this.errorCause.name,
-        message: this.errorCause.message,
-        stack: this.errorCause.stack
-      } : undefined
+      cause: this.errorCause
+        ? {
+            name: this.errorCause.name,
+            message: this.errorCause.message,
+            stack: this.errorCause.stack,
+          }
+        : undefined,
     };
   }
 }
@@ -71,9 +73,9 @@ export class ConfigurationError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'CONFIGURATION_ERROR', context, suggestions, cause);
+    super(message, "CONFIGURATION_ERROR", context, suggestions, cause);
   }
 }
 
@@ -85,9 +87,9 @@ export class FileSystemError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'FILESYSTEM_ERROR', context, suggestions, cause);
+    super(message, "FILESYSTEM_ERROR", context, suggestions, cause);
   }
 }
 
@@ -99,9 +101,9 @@ export class ValidationError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'VALIDATION_ERROR', context, suggestions, cause);
+    super(message, "VALIDATION_ERROR", context, suggestions, cause);
   }
 }
 
@@ -113,9 +115,9 @@ export class ParseError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'PARSE_ERROR', context, suggestions, cause);
+    super(message, "PARSE_ERROR", context, suggestions, cause);
   }
 }
 
@@ -127,9 +129,9 @@ export class DatabaseError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'DATABASE_ERROR', context, suggestions, cause);
+    super(message, "DATABASE_ERROR", context, suggestions, cause);
   }
 }
 
@@ -141,9 +143,9 @@ export class NetworkError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'NETWORK_ERROR', context, suggestions, cause);
+    super(message, "NETWORK_ERROR", context, suggestions, cause);
   }
 }
 
@@ -155,9 +157,9 @@ export class PermissionError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'PERMISSION_ERROR', context, suggestions, cause);
+    super(message, "PERMISSION_ERROR", context, suggestions, cause);
   }
 }
 
@@ -169,9 +171,9 @@ export class TimeoutError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'TIMEOUT_ERROR', context, suggestions, cause);
+    super(message, "TIMEOUT_ERROR", context, suggestions, cause);
   }
 }
 
@@ -183,9 +185,9 @@ export class GitError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'GIT_ERROR', context, suggestions, cause);
+    super(message, "GIT_ERROR", context, suggestions, cause);
   }
 }
 
@@ -197,9 +199,9 @@ export class GlobError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'GLOB_ERROR', context, suggestions, cause);
+    super(message, "GLOB_ERROR", context, suggestions, cause);
   }
 }
 
@@ -211,9 +213,9 @@ export class PathError extends AstError {
     message: string,
     context: Record<string, any> = {},
     suggestions: string[] = [],
-    cause?: Error
+    cause?: Error,
   ) {
-    super(message, 'PATH_ERROR', context, suggestions, cause);
+    super(message, "PATH_ERROR", context, suggestions, cause);
   }
 }
 
@@ -221,7 +223,9 @@ export class PathError extends AstError {
  * Type guard to check if error is an AST error
  */
 export function isAstError(error: unknown): error is AstError {
-  return error instanceof Error && 'isAstError' in error && error.isAstError === true;
+  return (
+    error instanceof Error && "isAstError" in error && error.isAstError === true
+  );
 }
 
 /**
@@ -229,15 +233,15 @@ export function isAstError(error: unknown): error is AstError {
  */
 export enum ErrorRecoveryStrategy {
   /** Retry the operation with exponential backoff */
-  RETRY = 'retry',
+  RETRY = "retry",
   /** Ignore the error and continue */
-  IGNORE = 'ignore',
+  IGNORE = "ignore",
   /** Use fallback logic */
-  FALLBACK = 'fallback',
+  FALLBACK = "fallback",
   /** Fail fast and propagate */
-  FAIL_FAST = 'fail_fast',
+  FAIL_FAST = "fail_fast",
   /** Show user prompt for input */
-  PROMPT_USER = 'prompt_user'
+  PROMPT_USER = "prompt_user",
 }
 
 /**

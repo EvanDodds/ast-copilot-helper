@@ -2,16 +2,16 @@
 
 /**
  * Cache Manager
- * 
+ *
  * Manages intelligent caching strategies for CI/CD pipeline optimization.
  * Implements cache key generation, invalidation logic, and performance tracking.
- * 
+ *
  * Part of the comprehensive CI/CD pipeline addressing acceptance criteria 31-36.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
+import * as fs from "fs";
+import * as path from "path";
+import * as crypto from "crypto";
 
 interface CacheEntry {
   key: string;
@@ -39,7 +39,7 @@ interface CacheStrategy {
   restoreKeys: string[];
   ttl?: number; // Time to live in hours
   compression: boolean;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
 }
 
 class CacheManager {
@@ -50,7 +50,7 @@ class CacheManager {
   private maxCacheSize: number = 5 * 1024 * 1024 * 1024; // 5GB default
 
   constructor() {
-    this.outputDir = path.join(process.cwd(), 'ci-artifacts', 'cache');
+    this.outputDir = path.join(process.cwd(), "ci-artifacts", "cache");
     this.statistics = this.initializeStatistics();
     this.ensureOutputDirectory();
     this.initializeCacheStrategies();
@@ -70,147 +70,143 @@ class CacheManager {
       hitRate: 0,
       missRate: 0,
       averageEntrySize: 0,
-      spaceUtilization: 0
+      spaceUtilization: 0,
     };
   }
 
   private initializeCacheStrategies(): void {
     this.cacheStrategies = [
       {
-        name: 'Node.js Dependencies',
-        pattern: ['~/.npm', 'node_modules', '**/node_modules'],
-        keyPattern: '${{ runner.os }}-node-${{ hashFiles(\'**/package-lock.json\', \'**/yarn.lock\') }}',
-        restoreKeys: [
-          '${{ runner.os }}-node-',
-          '${{ runner.os }}-'
-        ],
+        name: "Node.js Dependencies",
+        pattern: ["~/.npm", "node_modules", "**/node_modules"],
+        keyPattern:
+          "${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}",
+        restoreKeys: ["${{ runner.os }}-node-", "${{ runner.os }}-"],
         ttl: 168, // 1 week
         compression: true,
-        priority: 'high'
+        priority: "high",
       },
       {
-        name: 'Build Artifacts',
-        pattern: ['dist', 'build', 'packages/*/dist', 'packages/*/build'],
-        keyPattern: '${{ runner.os }}-build-${{ github.sha }}',
+        name: "Build Artifacts",
+        pattern: ["dist", "build", "packages/*/dist", "packages/*/build"],
+        keyPattern: "${{ runner.os }}-build-${{ github.sha }}",
         restoreKeys: [
-          '${{ runner.os }}-build-${{ github.ref_name }}-',
-          '${{ runner.os }}-build-'
+          "${{ runner.os }}-build-${{ github.ref_name }}-",
+          "${{ runner.os }}-build-",
         ],
         ttl: 24, // 1 day
         compression: true,
-        priority: 'high'
+        priority: "high",
       },
       {
-        name: 'Test Results',
-        pattern: ['coverage', 'test-results', '.nyc_output'],
-        keyPattern: '${{ runner.os }}-test-${{ hashFiles(\'**/*.test.ts\', \'**/*.test.js\') }}-${{ github.sha }}',
+        name: "Test Results",
+        pattern: ["coverage", "test-results", ".nyc_output"],
+        keyPattern:
+          "${{ runner.os }}-test-${{ hashFiles('**/*.test.ts', '**/*.test.js') }}-${{ github.sha }}",
         restoreKeys: [
-          '${{ runner.os }}-test-${{ hashFiles(\'**/*.test.ts\', \'**/*.test.js\') }}-',
-          '${{ runner.os }}-test-'
+          "${{ runner.os }}-test-${{ hashFiles('**/*.test.ts', '**/*.test.js') }}-",
+          "${{ runner.os }}-test-",
         ],
         ttl: 24, // 1 day
         compression: true,
-        priority: 'medium'
+        priority: "medium",
       },
       {
-        name: 'TypeScript Compilation',
-        pattern: ['**/*.tsbuildinfo', '.tscache'],
-        keyPattern: '${{ runner.os }}-tsc-${{ hashFiles(\'**/tsconfig*.json\', \'**/*.ts\') }}',
-        restoreKeys: [
-          '${{ runner.os }}-tsc-',
-        ],
+        name: "TypeScript Compilation",
+        pattern: ["**/*.tsbuildinfo", ".tscache"],
+        keyPattern:
+          "${{ runner.os }}-tsc-${{ hashFiles('**/tsconfig*.json', '**/*.ts') }}",
+        restoreKeys: ["${{ runner.os }}-tsc-"],
         ttl: 12, // 12 hours
         compression: false,
-        priority: 'high'
+        priority: "high",
       },
       {
-        name: 'Package Manager Cache',
-        pattern: ['~/.yarn/cache', '~/.pnpm-store', '~/.cache/pip'],
-        keyPattern: '${{ runner.os }}-pkg-${{ hashFiles(\'**/package-lock.json\', \'**/yarn.lock\', \'**/pnpm-lock.yaml\') }}',
-        restoreKeys: [
-          '${{ runner.os }}-pkg-'
-        ],
+        name: "Package Manager Cache",
+        pattern: ["~/.yarn/cache", "~/.pnpm-store", "~/.cache/pip"],
+        keyPattern:
+          "${{ runner.os }}-pkg-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}",
+        restoreKeys: ["${{ runner.os }}-pkg-"],
         ttl: 168, // 1 week
         compression: true,
-        priority: 'medium'
+        priority: "medium",
       },
       {
-        name: 'Tool Binaries',
-        pattern: ['~/.local/bin', '/usr/local/bin/tools'],
-        keyPattern: '${{ runner.os }}-tools-${{ hashFiles(\'.tool-versions\', \'**/tool-config.json\') }}',
-        restoreKeys: [
-          '${{ runner.os }}-tools-'
-        ],
+        name: "Tool Binaries",
+        pattern: ["~/.local/bin", "/usr/local/bin/tools"],
+        keyPattern:
+          "${{ runner.os }}-tools-${{ hashFiles('.tool-versions', '**/tool-config.json') }}",
+        restoreKeys: ["${{ runner.os }}-tools-"],
         ttl: 720, // 1 month
         compression: true,
-        priority: 'low'
-      }
+        priority: "low",
+      },
     ];
   }
 
   private loadCacheEntries(): void {
-    const entriesFile = path.join(this.outputDir, 'cache-entries.json');
-    
+    const entriesFile = path.join(this.outputDir, "cache-entries.json");
+
     if (fs.existsSync(entriesFile)) {
       try {
-        const data = fs.readFileSync(entriesFile, 'utf8');
+        const data = fs.readFileSync(entriesFile, "utf8");
         const entries = JSON.parse(data);
         this.cacheEntries = new Map(Object.entries(entries));
         this.updateStatistics();
       } catch (error) {
-        console.warn('Failed to load cache entries, starting fresh');
+        console.warn("Failed to load cache entries, starting fresh");
       }
     }
   }
 
   private saveCacheEntries(): void {
-    const entriesFile = path.join(this.outputDir, 'cache-entries.json');
+    const entriesFile = path.join(this.outputDir, "cache-entries.json");
     const entries = Object.fromEntries(this.cacheEntries);
     fs.writeFileSync(entriesFile, JSON.stringify(entries, null, 2));
   }
 
   public generateCacheKey(pattern: string, files: string[]): string {
     // Simulate file hashing for cache key generation
-    const contentHash = crypto.createHash('sha256');
-    
-    files.forEach(file => {
+    const contentHash = crypto.createHash("sha256");
+
+    files.forEach((file) => {
       // In real implementation, would hash actual file contents
       contentHash.update(file);
     });
-    
-    const hash = contentHash.digest('hex').substring(0, 12);
+
+    const hash = contentHash.digest("hex").substring(0, 12);
     return pattern.replace(/\$\{\{[^}]+\}\}/g, hash);
   }
 
   public async optimizeCacheUsage(): Promise<void> {
-    console.log('🔄 Optimizing cache usage...');
-    
+    console.log("🔄 Optimizing cache usage...");
+
     // Clean expired entries
     await this.cleanExpiredEntries();
-    
+
     // Optimize cache size
     await this.optimizeCacheSize();
-    
+
     // Generate cache configuration
     await this.generateCacheConfiguration();
-    
+
     // Update statistics
     this.updateStatistics();
-    
-    console.log('✅ Cache optimization complete');
+
+    console.log("✅ Cache optimization complete");
   }
 
   private async cleanExpiredEntries(): Promise<void> {
     const now = new Date();
     let cleanedCount = 0;
-    
+
     for (const [key, entry] of this.cacheEntries) {
       if (entry.expiresAt && new Date(entry.expiresAt) < now) {
         this.cacheEntries.delete(key);
         cleanedCount++;
       }
     }
-    
+
     if (cleanedCount > 0) {
       console.log(`🧹 Cleaned ${cleanedCount} expired cache entries`);
       this.saveCacheEntries();
@@ -218,77 +214,90 @@ class CacheManager {
   }
 
   private async optimizeCacheSize(): Promise<void> {
-    const currentSize = Array.from(this.cacheEntries.values())
-      .reduce((sum, entry) => sum + entry.size, 0);
-    
+    const currentSize = Array.from(this.cacheEntries.values()).reduce(
+      (sum, entry) => sum + entry.size,
+      0,
+    );
+
     if (currentSize > this.maxCacheSize) {
-      console.log(`📦 Cache size (${this.formatBytes(currentSize)}) exceeds limit (${this.formatBytes(this.maxCacheSize)})`);
-      
+      console.log(
+        `📦 Cache size (${this.formatBytes(currentSize)}) exceeds limit (${this.formatBytes(this.maxCacheSize)})`,
+      );
+
       // Sort entries by priority and last accessed time
-      const sortedEntries = Array.from(this.cacheEntries.entries())
-        .sort((a, b) => {
+      const sortedEntries = Array.from(this.cacheEntries.entries()).sort(
+        (a, b) => {
           const priorityWeight = { high: 3, medium: 2, low: 1 };
           const aPriority = this.getEntryPriority(a[1]);
           const bPriority = this.getEntryPriority(b[1]);
-          
+
           if (aPriority !== bPriority) {
             return priorityWeight[bPriority] - priorityWeight[aPriority];
           }
-          
-          return new Date(b[1].lastAccessed).getTime() - new Date(a[1].lastAccessed).getTime();
-        });
-      
+
+          return (
+            new Date(b[1].lastAccessed).getTime() -
+            new Date(a[1].lastAccessed).getTime()
+          );
+        },
+      );
+
       // Remove least important entries
       let removedSize = 0;
       let removedCount = 0;
-      
-      while (currentSize - removedSize > this.maxCacheSize * 0.8 && sortedEntries.length > 0) {
+
+      while (
+        currentSize - removedSize > this.maxCacheSize * 0.8 &&
+        sortedEntries.length > 0
+      ) {
         const [key, entry] = sortedEntries.pop()!;
         removedSize += entry.size;
         removedCount++;
         this.cacheEntries.delete(key);
       }
-      
-      console.log(`🗑️  Removed ${removedCount} cache entries (${this.formatBytes(removedSize)})`);
+
+      console.log(
+        `🗑️  Removed ${removedCount} cache entries (${this.formatBytes(removedSize)})`,
+      );
       this.saveCacheEntries();
     }
   }
 
-  private getEntryPriority(entry: CacheEntry): 'high' | 'medium' | 'low' {
+  private getEntryPriority(entry: CacheEntry): "high" | "medium" | "low" {
     // Determine priority based on entry characteristics
-    if (entry.hitCount > 10) return 'high';
-    if (entry.hitCount > 3) return 'medium';
-    return 'low';
+    if (entry.hitCount > 10) return "high";
+    if (entry.hitCount > 3) return "medium";
+    return "low";
   }
 
   private async generateCacheConfiguration(): Promise<void> {
     const config = {
-      version: '1.0',
-      strategies: this.cacheStrategies.map(strategy => ({
+      version: "1.0",
+      strategies: this.cacheStrategies.map((strategy) => ({
         name: strategy.name,
         enabled: true,
         cache: {
-          path: strategy.pattern.join('\n'),
+          path: strategy.pattern.join("\n"),
           key: strategy.keyPattern,
-          'restore-keys': strategy.restoreKeys.join('\n'),
-          'compression-level': strategy.compression ? 6 : 0
+          "restore-keys": strategy.restoreKeys.join("\n"),
+          "compression-level": strategy.compression ? 6 : 0,
         },
         optimization: {
           ttl: strategy.ttl,
           priority: strategy.priority,
-          'max-size': this.getMaxSizeForStrategy(strategy),
-          'cleanup-threshold': 0.8
-        }
+          "max-size": this.getMaxSizeForStrategy(strategy),
+          "cleanup-threshold": 0.8,
+        },
       })),
       global: {
-        'max-cache-size': this.formatBytes(this.maxCacheSize),
-        'retention-days': 30,
-        'compression': true,
-        'metrics': true
-      }
+        "max-cache-size": this.formatBytes(this.maxCacheSize),
+        "retention-days": 30,
+        compression: true,
+        metrics: true,
+      },
     };
 
-    const configFile = path.join(this.outputDir, 'cache-config.json');
+    const configFile = path.join(this.outputDir, "cache-config.json");
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
 
     // Generate GitHub Actions cache configuration
@@ -297,39 +306,49 @@ class CacheManager {
 
   private getMaxSizeForStrategy(strategy: CacheStrategy): string {
     const sizes = {
-      high: '2GB',
-      medium: '1GB',
-      low: '500MB'
+      high: "2GB",
+      medium: "1GB",
+      low: "500MB",
     };
     return sizes[strategy.priority];
   }
 
   private async generateGitHubActionsCacheConfig(): Promise<void> {
-    const actionsConfig = this.cacheStrategies.map(strategy => ({
+    const actionsConfig = this.cacheStrategies.map((strategy) => ({
       name: `Cache ${strategy.name}`,
-      uses: 'actions/cache@v3',
+      uses: "actions/cache@v3",
       with: {
-        path: strategy.pattern.join('\n'),
+        path: strategy.pattern.join("\n"),
         key: strategy.keyPattern,
-        'restore-keys': strategy.restoreKeys.join('\n'),
-        'compression-level': strategy.compression ? 6 : 0
-      }
+        "restore-keys": strategy.restoreKeys.join("\n"),
+        "compression-level": strategy.compression ? 6 : 0,
+      },
     }));
 
     const yamlContent = `# GitHub Actions Cache Configuration
 # Generated by CacheManager
 # 
 # Usage in workflow:
-${actionsConfig.map(config => `
+${actionsConfig
+  .map(
+    (config) => `
 # - name: ${config.name}
 #   uses: ${config.uses}
 #   with:
 #     path: |
-#       ${config.with.path.split('\n').map(p => `#       ${p}`).join('\n')}
+#       ${config.with.path
+      .split("\n")
+      .map((p) => `#       ${p}`)
+      .join("\n")}
 #     key: ${config.with.key}
 #     restore-keys: |
-#       ${config.with['restore-keys'].split('\n').map(k => `#       ${k}`).join('\n')}
-`).join('')}
+#       ${config.with["restore-keys"]
+      .split("\n")
+      .map((k) => `#       ${k}`)
+      .join("\n")}
+`,
+  )
+  .join("")}
 
 # Performance Tips:
 # 1. Use specific cache keys to improve hit rates
@@ -339,7 +358,7 @@ ${actionsConfig.map(config => `
 # 5. Monitor cache hit rates and adjust strategies
 `;
 
-    const yamlFile = path.join(this.outputDir, 'github-actions-cache.yml');
+    const yamlFile = path.join(this.outputDir, "github-actions-cache.yml");
     fs.writeFileSync(yamlFile, yamlContent);
   }
 
@@ -347,77 +366,99 @@ ${actionsConfig.map(config => `
     const entries = Array.from(this.cacheEntries.values());
     const totalHits = entries.reduce((sum, entry) => sum + entry.hitCount, 0);
     const totalMisses = entries.length; // Simplified calculation
-    
+
     this.statistics = {
       totalEntries: entries.length,
       totalSize: entries.reduce((sum, entry) => sum + entry.size, 0),
-      hitRate: totalHits > 0 ? (totalHits / (totalHits + totalMisses)) * 100 : 0,
-      missRate: totalMisses > 0 ? (totalMisses / (totalHits + totalMisses)) * 100 : 0,
-      averageEntrySize: entries.length > 0 ? entries.reduce((sum, entry) => sum + entry.size, 0) / entries.length : 0,
-      spaceUtilization: (entries.reduce((sum, entry) => sum + entry.size, 0) / this.maxCacheSize) * 100
+      hitRate:
+        totalHits > 0 ? (totalHits / (totalHits + totalMisses)) * 100 : 0,
+      missRate:
+        totalMisses > 0 ? (totalMisses / (totalHits + totalMisses)) * 100 : 0,
+      averageEntrySize:
+        entries.length > 0
+          ? entries.reduce((sum, entry) => sum + entry.size, 0) / entries.length
+          : 0,
+      spaceUtilization:
+        (entries.reduce((sum, entry) => sum + entry.size, 0) /
+          this.maxCacheSize) *
+        100,
     };
   }
 
   public async generateCacheReport(): Promise<void> {
-    console.log('📊 Generating cache optimization report...');
-    
+    console.log("📊 Generating cache optimization report...");
+
     const report = {
       timestamp: new Date().toISOString(),
       statistics: this.statistics,
-      strategies: this.cacheStrategies.map(strategy => ({
+      strategies: this.cacheStrategies.map((strategy) => ({
         ...strategy,
-        estimatedSavings: this.calculateSavingsForStrategy(strategy)
+        estimatedSavings: this.calculateSavingsForStrategy(strategy),
       })),
       recommendations: this.generateCacheRecommendations(),
       performance: {
-        expectedHitRate: '85%',
-        expectedSpeedImprovement: '40%',
-        expectedResourceSavings: '60%'
-      }
+        expectedHitRate: "85%",
+        expectedSpeedImprovement: "40%",
+        expectedResourceSavings: "60%",
+      },
     };
 
-    const reportFile = path.join(this.outputDir, 'cache-optimization-report.json');
+    const reportFile = path.join(
+      this.outputDir,
+      "cache-optimization-report.json",
+    );
     fs.writeFileSync(reportFile, JSON.stringify(report, null, 2));
 
     // Generate HTML report
     await this.generateHTMLCacheReport(report);
-    
+
     console.log(`✅ Cache report saved to ${reportFile}`);
   }
 
   private calculateSavingsForStrategy(strategy: CacheStrategy): string {
     // Estimate time savings based on strategy priority and type
     const baseSavings = {
-      'Node.js Dependencies': 120, // seconds
-      'Build Artifacts': 180,
-      'Test Results': 60,
-      'TypeScript Compilation': 90,
-      'Package Manager Cache': 150,
-      'Tool Binaries': 240
+      "Node.js Dependencies": 120, // seconds
+      "Build Artifacts": 180,
+      "Test Results": 60,
+      "TypeScript Compilation": 90,
+      "Package Manager Cache": 150,
+      "Tool Binaries": 240,
     };
-    
-    const savings = baseSavings[strategy.name as keyof typeof baseSavings] || 60;
+
+    const savings =
+      baseSavings[strategy.name as keyof typeof baseSavings] || 60;
     return `${savings}s per build`;
   }
 
   private generateCacheRecommendations(): string[] {
     const recommendations = [];
-    
+
     if (this.statistics.hitRate < 70) {
-      recommendations.push('Improve cache key specificity to increase hit rates');
+      recommendations.push(
+        "Improve cache key specificity to increase hit rates",
+      );
     }
-    
+
     if (this.statistics.spaceUtilization > 90) {
-      recommendations.push('Increase cache size limit or implement more aggressive cleanup');
+      recommendations.push(
+        "Increase cache size limit or implement more aggressive cleanup",
+      );
     }
-    
+
     if (this.statistics.totalEntries > 1000) {
-      recommendations.push('Consider implementing cache partitioning by project or branch');
+      recommendations.push(
+        "Consider implementing cache partitioning by project or branch",
+      );
     }
-    
-    recommendations.push('Regularly monitor cache performance and adjust strategies');
-    recommendations.push('Use cache analytics to identify optimization opportunities');
-    
+
+    recommendations.push(
+      "Regularly monitor cache performance and adjust strategies",
+    );
+    recommendations.push(
+      "Use cache analytics to identify optimization opportunities",
+    );
+
     return recommendations;
   }
 
@@ -476,21 +517,25 @@ ${actionsConfig.map(config => `
         </div>
 
         <h2>🚀 Cache Strategies</h2>
-        ${report.strategies.map((s: any) => `
+        ${report.strategies
+          .map(
+            (s: any) => `
             <div class="strategy ${s.priority}">
                 <h3>${s.name}</h3>
                 <p><strong>Priority:</strong> ${s.priority}</p>
-                <p><strong>TTL:</strong> ${s.ttl || 'N/A'} hours</p>
-                <p><strong>Compression:</strong> ${s.compression ? 'Enabled' : 'Disabled'}</p>
+                <p><strong>TTL:</strong> ${s.ttl || "N/A"} hours</p>
+                <p><strong>Compression:</strong> ${s.compression ? "Enabled" : "Disabled"}</p>
                 <p><strong>Estimated Savings:</strong> ${s.estimatedSavings}</p>
-                <p><strong>Pattern:</strong> ${s.pattern.join(', ')}</p>
+                <p><strong>Pattern:</strong> ${s.pattern.join(", ")}</p>
             </div>
-        `).join('')}
+        `,
+          )
+          .join("")}
 
         <h2>💡 Recommendations</h2>
         <div class="recommendations">
             <ul>
-                ${report.recommendations.map((r: string) => `<li>${r}</li>`).join('')}
+                ${report.recommendations.map((r: string) => `<li>${r}</li>`).join("")}
             </ul>
         </div>
 
@@ -546,40 +591,44 @@ ${actionsConfig.map(config => `
 </body>
 </html>`;
 
-    const htmlFile = path.join(this.outputDir, 'cache-optimization-report.html');
+    const htmlFile = path.join(
+      this.outputDir,
+      "cache-optimization-report.html",
+    );
     fs.writeFileSync(htmlFile, html);
   }
 
   private formatBytes(bytes: number): string {
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes === 0) return '0 Bytes';
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    if (bytes === 0) return "0 Bytes";
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
   }
 }
 
 // CLI interface
 async function main(): Promise<void> {
-  console.log('💾 Starting CI/CD Cache Optimization...');
-  console.log('');
+  console.log("💾 Starting CI/CD Cache Optimization...");
+  console.log("");
 
   const cacheManager = new CacheManager();
 
   try {
     // Optimize cache usage
     await cacheManager.optimizeCacheUsage();
-    console.log('');
+    console.log("");
 
     // Generate comprehensive report
     await cacheManager.generateCacheReport();
-    console.log('');
+    console.log("");
 
-    console.log('🎉 Cache optimization complete!');
-    console.log('📄 Check ci-artifacts/cache/ for detailed reports and configurations');
-    console.log('');
-
+    console.log("🎉 Cache optimization complete!");
+    console.log(
+      "📄 Check ci-artifacts/cache/ for detailed reports and configurations",
+    );
+    console.log("");
   } catch (error) {
-    console.error('❌ Cache optimization failed:', error);
+    console.error("❌ Cache optimization failed:", error);
     process.exit(1);
   }
 }

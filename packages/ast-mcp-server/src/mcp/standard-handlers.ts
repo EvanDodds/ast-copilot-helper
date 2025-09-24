@@ -1,24 +1,22 @@
 /**
  * MCP Standard Method Handlers
- * 
- * Implements core MCP protocol handlers for initialize, ping, 
+ *
+ * Implements core MCP protocol handlers for initialize, ping,
  * tools/list, tools/call, and other standard methods
  */
 
-import { BaseHandler } from './handlers.js';
-import type { 
-  JSONRPCRequest, 
+import { BaseHandler } from "./handlers.js";
+import type {
+  JSONRPCRequest,
   JSONRPCResponse,
   MCPServerCapabilities,
-  MCPToolDefinition
-} from './protocol.js';
-import { 
-  MCPErrorCode
-} from './protocol.js';
+  MCPToolDefinition,
+} from "./protocol.js";
+import { MCPErrorCode } from "./protocol.js";
 
-import { Issue17ToolRegistry } from './issue17-tools.js';
-import { ResourceHandlerFactory } from './resources.js';
-import type { DatabaseReader } from '../types.js';
+import { Issue17ToolRegistry } from "./issue17-tools.js";
+import { ResourceHandlerFactory } from "./resources.js";
+import type { DatabaseReader } from "../types.js";
 
 /**
  * Common interface for tool registries
@@ -34,8 +32,12 @@ interface IToolRegistry {
  */
 export class InitializeHandler extends BaseHandler {
   constructor(
-    private config: { serverName: string; serverVersion: string; protocolVersion: string },
-    private capabilities: MCPServerCapabilities
+    private config: {
+      serverName: string;
+      serverVersion: string;
+      protocolVersion: string;
+    },
+    private capabilities: MCPServerCapabilities,
   ) {
     super();
   }
@@ -43,7 +45,7 @@ export class InitializeHandler extends BaseHandler {
   async handle(request: JSONRPCRequest): Promise<JSONRPCResponse> {
     try {
       const { params } = request;
-      
+
       // Validate initialization parameters
       if (!params?.protocolVersion) {
         return {
@@ -51,8 +53,8 @@ export class InitializeHandler extends BaseHandler {
           id: request.id,
           error: {
             code: MCPErrorCode.INVALID_PARAMS,
-            message: "Missing protocolVersion in initialization"
-          }
+            message: "Missing protocolVersion in initialization",
+          },
         };
       }
 
@@ -64,8 +66,8 @@ export class InitializeHandler extends BaseHandler {
           id: request.id,
           error: {
             code: MCPErrorCode.INITIALIZATION_FAILED,
-            message: `Protocol version mismatch. Server: ${this.config.protocolVersion}, Client: ${clientVersion}`
-          }
+            message: `Protocol version mismatch. Server: ${this.config.protocolVersion}, Client: ${clientVersion}`,
+          },
         };
       }
 
@@ -77,19 +79,18 @@ export class InitializeHandler extends BaseHandler {
           capabilities: this.capabilities,
           serverInfo: {
             name: this.config.serverName,
-            version: this.config.serverVersion
-          }
-        }
+            version: this.config.serverVersion,
+          },
+        },
       };
-
     } catch (error) {
       return {
         jsonrpc: "2.0",
         id: request.id,
         error: {
           code: MCPErrorCode.INITIALIZATION_FAILED,
-          message: `Initialization failed: ${(error as Error).message}`
-        }
+          message: `Initialization failed: ${(error as Error).message}`,
+        },
       };
     }
   }
@@ -103,7 +104,7 @@ export class PingHandler extends BaseHandler {
     return {
       jsonrpc: "2.0",
       id: request.id,
-      result: {}
+      result: {},
     };
   }
 }
@@ -124,18 +125,17 @@ export class ToolsListHandler extends BaseHandler {
         jsonrpc: "2.0",
         id: request.id,
         result: {
-          tools: toolDefinitions
-        }
+          tools: toolDefinitions,
+        },
       };
-
     } catch (error) {
       return {
         jsonrpc: "2.0",
         id: request.id,
         error: {
           code: MCPErrorCode.INTERNAL_ERROR,
-          message: `Failed to list tools: ${(error as Error).message}`
-        }
+          message: `Failed to list tools: ${(error as Error).message}`,
+        },
       };
     }
   }
@@ -152,24 +152,27 @@ export class ToolsCallHandler extends BaseHandler {
   async handle(request: JSONRPCRequest): Promise<JSONRPCResponse> {
     try {
       const { params } = request;
-      
+
       // Validate required parameters
-      const validationError = this.validateParams(params, ['name', 'arguments']);
+      const validationError = this.validateParams(params, [
+        "name",
+        "arguments",
+      ]);
       if (validationError) {
         return {
           jsonrpc: "2.0",
           id: request.id,
           error: {
             code: MCPErrorCode.INVALID_PARAMS,
-            message: validationError
-          }
+            message: validationError,
+          },
         };
       }
 
       // Validate parameter types
       const typeError = this.validateParamTypes(params, {
-        name: 'string',
-        arguments: 'object'
+        name: "string",
+        arguments: "object",
       });
       if (typeError) {
         return {
@@ -177,8 +180,8 @@ export class ToolsCallHandler extends BaseHandler {
           id: request.id,
           error: {
             code: MCPErrorCode.INVALID_PARAMS,
-            message: typeError
-          }
+            message: typeError,
+          },
         };
       }
 
@@ -190,8 +193,8 @@ export class ToolsCallHandler extends BaseHandler {
           id: request.id,
           error: {
             code: MCPErrorCode.METHOD_NOT_FOUND,
-            message: `Tool not found: ${params.name}`
-          }
+            message: `Tool not found: ${params.name}`,
+          },
         };
       }
 
@@ -200,15 +203,14 @@ export class ToolsCallHandler extends BaseHandler {
         jsonrpc: "2.0",
         id: request.id,
         method: params.name,
-        params: params.arguments
+        params: params.arguments,
       };
 
       // Execute the tool
       const toolResponse = await toolHandler.handle(toolRequest);
-      
+
       // Return the tool result or error
       return toolResponse;
-
     } catch (error) {
       return {
         jsonrpc: "2.0",
@@ -216,8 +218,8 @@ export class ToolsCallHandler extends BaseHandler {
         error: {
           code: MCPErrorCode.TOOL_EXECUTION_ERROR,
           message: `Tool execution failed: ${(error as Error).message}`,
-          data: { error: error instanceof Error ? error.stack : String(error) }
-        }
+          data: { error: error instanceof Error ? error.stack : String(error) },
+        },
       };
     }
   }
@@ -236,8 +238,12 @@ export class StandardHandlerFactory {
   }
 
   createInitializeHandler(
-    config: { serverName: string; serverVersion: string; protocolVersion: string },
-    capabilities: MCPServerCapabilities
+    config: {
+      serverName: string;
+      serverVersion: string;
+      protocolVersion: string;
+    },
+    capabilities: MCPServerCapabilities,
   ): InitializeHandler {
     return new InitializeHandler(config, capabilities);
   }

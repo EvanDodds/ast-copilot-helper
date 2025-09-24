@@ -8,7 +8,7 @@ This directory contains the comprehensive testing infrastructure for the AST Cop
 tests/
 ├─ unit/                    # Unit tests for individual modules
 │  ├─ parser/              # AST parsing tests
-│  ├─ annotator/           # Annotation generation tests  
+│  ├─ annotator/           # Annotation generation tests
 │  ├─ embedder/            # Embedding generation tests
 │  ├─ cli/                 # CLI command tests
 │  └─ utils/               # Utility function tests
@@ -33,18 +33,21 @@ tests/
 ## Test Categories
 
 ### Unit Tests
+
 - Target >90% code coverage
 - Test individual modules in isolation
 - Use mocking for external dependencies
 - Fast execution (< 5 seconds total)
 
-### Integration Tests  
+### Integration Tests
+
 - Test full workflow interactions
 - Validate MCP protocol compliance
 - Test VS Code extension integration
 - Cross-platform compatibility validation
 
 ### Benchmark Tests
+
 - Performance validation against requirements
 - Parsing: 15k+ nodes in <10 minutes
 - Query latency: <200ms MCP, <500ms CLI
@@ -53,6 +56,7 @@ tests/
 - Index building: 100k nodes in <10 minutes
 
 ### Fixtures
+
 - **small-repo/**: Basic multi-language repository for unit testing
 - **mixed-languages/**: TypeScript, JavaScript, Python files for cross-language testing
 - **edge-cases/**: Malformed files, large files, and error scenarios
@@ -73,7 +77,7 @@ npm test
 
 # Specific test categories
 yarn run test:unit
-yarn run test:integration  
+yarn run test:integration
 yarn run test:benchmark
 
 # With coverage
@@ -86,7 +90,7 @@ yarn run test:watch
 ## Coverage Requirements
 
 - Branches: 90%
-- Functions: 90% 
+- Functions: 90%
 - Lines: 90%
 - Statements: 90%
 

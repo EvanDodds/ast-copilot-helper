@@ -3,7 +3,7 @@
  * @description Rate limiting implementation for transmission requests
  */
 
-import type { RateLimitConfig } from './types.js';
+import type { RateLimitConfig } from "./types.js";
 
 /**
  * Token bucket rate limiter implementation
@@ -35,12 +35,12 @@ export class RateLimiter {
 
     // Check request rate limit
     if (eventCount > this.requestTokens) {
-      await this.handleRateLimit('requests', eventCount);
+      await this.handleRateLimit("requests", eventCount);
     }
 
     // Check byte rate limit
     if (payloadSize > this.byteTokens) {
-      await this.handleRateLimit('bytes', payloadSize);
+      await this.handleRateLimit("bytes", payloadSize);
     }
 
     // Consume tokens
@@ -54,8 +54,12 @@ export class RateLimiter {
 
     // Clean old entries (older than 1 minute)
     const oneMinuteAgo = now - 60000;
-    this.requestWindow = this.requestWindow.filter(entry => (entry as any).timestamp > oneMinuteAgo);
-    this.byteWindow = this.byteWindow.filter(entry => (entry as any).timestamp > oneMinuteAgo);
+    this.requestWindow = this.requestWindow.filter(
+      (entry) => (entry as any).timestamp > oneMinuteAgo,
+    );
+    this.byteWindow = this.byteWindow.filter(
+      (entry) => (entry as any).timestamp > oneMinuteAgo,
+    );
   }
 
   /**
@@ -63,12 +67,15 @@ export class RateLimiter {
    */
   updateConfig(config: Partial<RateLimitConfig>): void {
     this.config = { ...this.config, ...config };
-    
+
     // Reset tokens if limits changed
     if (config.requestsPerMinute !== undefined) {
-      this.requestTokens = Math.min(this.requestTokens, config.requestsPerMinute);
+      this.requestTokens = Math.min(
+        this.requestTokens,
+        config.requestsPerMinute,
+      );
     }
-    
+
     if (config.bytesPerMinute !== undefined) {
       this.byteTokens = Math.min(this.byteTokens, config.bytesPerMinute);
     }
@@ -86,14 +93,14 @@ export class RateLimiter {
   } {
     const now = Date.now();
     const oneMinuteAgo = now - 60000;
-    
+
     // Calculate usage in current minute
     const requestsUsed = this.requestWindow
-      .filter(entry => (entry as any).timestamp > oneMinuteAgo)
+      .filter((entry) => (entry as any).timestamp > oneMinuteAgo)
       .reduce((sum, entry) => sum + (entry as any).count, 0);
-    
+
     const bytesUsed = this.byteWindow
-      .filter(entry => (entry as any).timestamp > oneMinuteAgo)
+      .filter((entry) => (entry as any).timestamp > oneMinuteAgo)
       .reduce((sum, entry) => sum + (entry as any).bytes, 0);
 
     // Next reset is start of next minute
@@ -104,7 +111,7 @@ export class RateLimiter {
       bytesRemaining: this.byteTokens,
       requestsUsedThisMinute: requestsUsed,
       bytesUsedThisMinute: bytesUsed,
-      resetAt: new Date(nextMinute)
+      resetAt: new Date(nextMinute),
     };
   }
 
@@ -118,8 +125,9 @@ export class RateLimiter {
   private async refillTokens(): Promise<void> {
     const now = Date.now();
     const elapsed = now - this.lastRefill;
-    
-    if (elapsed >= 60000) { // Refill every minute
+
+    if (elapsed >= 60000) {
+      // Refill every minute
       this.requestTokens = this.config.requestsPerMinute;
       this.byteTokens = this.config.bytesPerMinute;
       this.lastRefill = now;
@@ -129,12 +137,15 @@ export class RateLimiter {
   /**
    * Handle rate limit exceeded scenario
    */
-  private async handleRateLimit(type: 'requests' | 'bytes', required: number): Promise<void> {
+  private async handleRateLimit(
+    type: "requests" | "bytes",
+    required: number,
+  ): Promise<void> {
     switch (this.config.strategy) {
-      case 'reject':
+      case "reject":
         throw new Error(`Rate limit exceeded: ${type} (required: ${required})`);
 
-      case 'delay': {
+      case "delay": {
         // Calculate delay until tokens are available
         const delayMs = this.calculateDelay();
         if (delayMs > 0) {
@@ -144,7 +155,7 @@ export class RateLimiter {
         break;
       }
 
-      case 'queue': {
+      case "queue": {
         // In a full implementation, this would queue the request
         // For now, we'll just delay
         const queueDelay = this.calculateDelay();
@@ -170,6 +181,6 @@ export class RateLimiter {
    * Sleep for specified duration
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

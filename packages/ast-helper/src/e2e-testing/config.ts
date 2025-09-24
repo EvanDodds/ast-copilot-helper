@@ -2,8 +2,12 @@
  * @fileoverview End-to-end testing configuration management
  */
 
-import type { E2ETestingConfig, E2ECategory, E2EScenarioConfig } from './types.js';
-import { DEFAULT_E2E_CONFIG } from './types.js';
+import type {
+  E2ETestingConfig,
+  E2ECategory,
+  E2EScenarioConfig,
+} from "./types.js";
+import { DEFAULT_E2E_CONFIG } from "./types.js";
 
 /**
  * E2E testing configuration with production-ready defaults
@@ -26,8 +30,8 @@ export class E2EConfig {
    * Get scenarios for a specific category
    */
   public getScenariosForCategory(category: E2ECategory): E2EScenarioConfig[] {
-    return this.config.scenarios.filter(scenario => 
-      scenario.category === category && scenario.enabled
+    return this.config.scenarios.filter(
+      (scenario) => scenario.category === category && scenario.enabled,
     );
   }
 
@@ -35,7 +39,7 @@ export class E2EConfig {
    * Get all enabled scenarios
    */
   public getEnabledScenarios(): E2EScenarioConfig[] {
-    return this.config.scenarios.filter(scenario => scenario.enabled);
+    return this.config.scenarios.filter((scenario) => scenario.enabled);
   }
 
   /**
@@ -48,13 +52,16 @@ export class E2EConfig {
   /**
    * Update an existing scenario
    */
-  public updateScenario(name: string, updates: Partial<E2EScenarioConfig>): boolean {
-    const index = this.config.scenarios.findIndex(s => s.name === name);
+  public updateScenario(
+    name: string,
+    updates: Partial<E2EScenarioConfig>,
+  ): boolean {
+    const index = this.config.scenarios.findIndex((s) => s.name === name);
     if (index !== -1) {
       const currentScenario = this.config.scenarios[index];
       if (currentScenario) {
-        this.config.scenarios[index] = { 
-          ...currentScenario, 
+        this.config.scenarios[index] = {
+          ...currentScenario,
           ...updates,
           // Ensure required fields are preserved
           name: updates.name ?? currentScenario.name,
@@ -66,7 +73,7 @@ export class E2EConfig {
           prerequisites: updates.prerequisites ?? currentScenario.prerequisites,
           cleanup: updates.cleanup ?? currentScenario.cleanup,
           parallel: updates.parallel ?? currentScenario.parallel,
-          environment: updates.environment ?? currentScenario.environment
+          environment: updates.environment ?? currentScenario.environment,
         };
         return true;
       }
@@ -78,7 +85,7 @@ export class E2EConfig {
    * Remove a scenario
    */
   public removeScenario(name: string): boolean {
-    const index = this.config.scenarios.findIndex(s => s.name === name);
+    const index = this.config.scenarios.findIndex((s) => s.name === name);
     if (index !== -1) {
       this.config.scenarios.splice(index, 1);
       return true;
@@ -103,7 +110,9 @@ export class E2EConfig {
   /**
    * Update resource limits
    */
-  public updateResourceConfig(updates: Partial<E2ETestingConfig['resources']>): void {
+  public updateResourceConfig(
+    updates: Partial<E2ETestingConfig["resources"]>,
+  ): void {
     this.config.resources = { ...this.config.resources, ...updates };
   }
 
@@ -117,7 +126,9 @@ export class E2EConfig {
   /**
    * Update monitoring configuration
    */
-  public updateMonitoringConfig(updates: Partial<E2ETestingConfig['monitoring']>): void {
+  public updateMonitoringConfig(
+    updates: Partial<E2ETestingConfig["monitoring"]>,
+  ): void {
     this.config.monitoring = { ...this.config.monitoring, ...updates };
   }
 
@@ -131,20 +142,26 @@ export class E2EConfig {
   /**
    * Update simulation configuration
    */
-  public updateSimulationConfig(updates: Partial<E2ETestingConfig['simulation']>): void {
+  public updateSimulationConfig(
+    updates: Partial<E2ETestingConfig["simulation"]>,
+  ): void {
     this.config.simulation = { ...this.config.simulation, ...updates };
   }
 
   /**
    * Validate the configuration
    */
-  public validateConfig(): { valid: boolean; errors: string[]; warnings: string[] } {
+  public validateConfig(): {
+    valid: boolean;
+    errors: string[];
+    warnings: string[];
+  } {
     const errors: string[] = [];
     const warnings: string[] = [];
 
     // Validate scenarios
     if (this.config.scenarios.length === 0) {
-      warnings.push('No test scenarios configured');
+      warnings.push("No test scenarios configured");
     }
 
     this.config.scenarios.forEach((scenario, index) => {
@@ -161,31 +178,39 @@ export class E2EConfig {
 
     // Validate resources
     if (this.config.resources.maxMemoryMB <= 0) {
-      errors.push('Max memory must be positive');
+      errors.push("Max memory must be positive");
     }
-    if (this.config.resources.maxCpuPercent <= 0 || this.config.resources.maxCpuPercent > 100) {
-      errors.push('Max CPU percent must be between 1 and 100');
+    if (
+      this.config.resources.maxCpuPercent <= 0 ||
+      this.config.resources.maxCpuPercent > 100
+    ) {
+      errors.push("Max CPU percent must be between 1 and 100");
     }
 
     // Validate simulation
     if (this.config.simulation.realWorldCodebases.length === 0) {
-      warnings.push('No real-world codebases configured for testing');
+      warnings.push("No real-world codebases configured for testing");
     }
     if (this.config.simulation.userProfiles.length === 0) {
-      warnings.push('No user profiles configured for simulation');
+      warnings.push("No user profiles configured for simulation");
     }
 
     // Validate monitoring
-    if (this.config.monitoring.enabled && this.config.monitoring.alerting.enabled) {
+    if (
+      this.config.monitoring.enabled &&
+      this.config.monitoring.alerting.enabled
+    ) {
       if (this.config.monitoring.alerting.thresholds.length === 0) {
-        warnings.push('Monitoring alerting is enabled but no thresholds configured');
+        warnings.push(
+          "Monitoring alerting is enabled but no thresholds configured",
+        );
       }
     }
 
     return {
       valid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -196,28 +221,28 @@ export class E2EConfig {
     return {
       enabled: this.config.enabled,
       totalScenarios: this.config.scenarios.length,
-      enabledScenarios: this.config.scenarios.filter(s => s.enabled).length,
-      categories: [...new Set(this.config.scenarios.map(s => s.category))],
+      enabledScenarios: this.config.scenarios.filter((s) => s.enabled).length,
+      categories: [...new Set(this.config.scenarios.map((s) => s.category))],
       resources: {
         maxMemoryMB: this.config.resources.maxMemoryMB,
         maxCpuPercent: this.config.resources.maxCpuPercent,
-        maxConcurrentUsers: this.config.resources.maxConcurrentUsers
+        maxConcurrentUsers: this.config.resources.maxConcurrentUsers,
       },
       simulation: {
         codebases: this.config.simulation.realWorldCodebases.length,
         userProfiles: this.config.simulation.userProfiles.length,
-        networkConditions: this.config.simulation.networkConditions.length
+        networkConditions: this.config.simulation.networkConditions.length,
       },
       monitoring: {
         enabled: this.config.monitoring.enabled,
         alerting: this.config.monitoring.alerting.enabled,
-        thresholds: this.config.monitoring.alerting.thresholds.length
+        thresholds: this.config.monitoring.alerting.thresholds.length,
       },
       reporting: {
         enabled: this.config.reporting.enabled,
         formats: this.config.reporting.format,
-        detailLevel: this.config.reporting.detailLevel
-      }
+        detailLevel: this.config.reporting.detailLevel,
+      },
     };
   }
 
@@ -226,7 +251,7 @@ export class E2EConfig {
    */
   private mergeConfig(
     base: E2ETestingConfig,
-    custom: Partial<E2ETestingConfig>
+    custom: Partial<E2ETestingConfig>,
   ): E2ETestingConfig {
     const merged = { ...base };
 
@@ -244,29 +269,40 @@ export class E2EConfig {
 
     if (custom.simulation) {
       merged.simulation = { ...base.simulation, ...custom.simulation };
-      
+
       if (custom.simulation.realWorldCodebases) {
-        merged.simulation.realWorldCodebases = [...custom.simulation.realWorldCodebases];
+        merged.simulation.realWorldCodebases = [
+          ...custom.simulation.realWorldCodebases,
+        ];
       }
       if (custom.simulation.userProfiles) {
         merged.simulation.userProfiles = [...custom.simulation.userProfiles];
       }
       if (custom.simulation.networkConditions) {
-        merged.simulation.networkConditions = [...custom.simulation.networkConditions];
+        merged.simulation.networkConditions = [
+          ...custom.simulation.networkConditions,
+        ];
       }
       if (custom.simulation.failureScenarios) {
-        merged.simulation.failureScenarios = [...custom.simulation.failureScenarios];
+        merged.simulation.failureScenarios = [
+          ...custom.simulation.failureScenarios,
+        ];
       }
     }
 
     if (custom.monitoring) {
       merged.monitoring = { ...base.monitoring, ...custom.monitoring };
-      
+
       if (custom.monitoring.alerting) {
-        merged.monitoring.alerting = { ...base.monitoring.alerting, ...custom.monitoring.alerting };
-        
+        merged.monitoring.alerting = {
+          ...base.monitoring.alerting,
+          ...custom.monitoring.alerting,
+        };
+
         if (custom.monitoring.alerting.thresholds) {
-          merged.monitoring.alerting.thresholds = [...custom.monitoring.alerting.thresholds];
+          merged.monitoring.alerting.thresholds = [
+            ...custom.monitoring.alerting.thresholds,
+          ];
         }
       }
     }
@@ -293,7 +329,9 @@ export class E2EConfig {
       const config = JSON.parse(json) as Partial<E2ETestingConfig>;
       return new E2EConfig(config);
     } catch (error) {
-      throw new Error(`Invalid E2E configuration JSON: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Invalid E2E configuration JSON: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 }
@@ -309,89 +347,89 @@ export class E2EConfigPresets {
     return new E2EConfig({
       scenarios: [
         {
-          name: 'large-codebase-analysis',
-          description: 'Analyze enterprise-scale codebase with 10,000+ files',
+          name: "large-codebase-analysis",
+          description: "Analyze enterprise-scale codebase with 10,000+ files",
           enabled: true,
-          category: 'codebase-analysis',
+          category: "codebase-analysis",
           timeout: 900000, // 15 minutes
           retries: 2,
-          prerequisites: ['cli', 'mcp-server'],
+          prerequisites: ["cli", "mcp-server"],
           cleanup: true,
           parallel: false,
-          environment: ['cli', 'mcp-server']
+          environment: ["cli", "mcp-server"],
         },
         {
-          name: 'high-concurrency-collaboration',
-          description: 'Test with 10+ simultaneous users',
+          name: "high-concurrency-collaboration",
+          description: "Test with 10+ simultaneous users",
           enabled: true,
-          category: 'collaboration',
+          category: "collaboration",
           timeout: 1200000, // 20 minutes
           retries: 1,
-          prerequisites: ['mcp-server', 'vscode-extension'],
+          prerequisites: ["mcp-server", "vscode-extension"],
           cleanup: true,
           parallel: true,
-          environment: ['mcp-server', 'vscode-extension']
+          environment: ["mcp-server", "vscode-extension"],
         },
         {
-          name: 'continuous-file-watching',
-          description: 'Long-running file watching with frequent changes',
+          name: "continuous-file-watching",
+          description: "Long-running file watching with frequent changes",
           enabled: true,
-          category: 'incremental-updates',
+          category: "incremental-updates",
           timeout: 600000, // 10 minutes
           retries: 2,
-          prerequisites: ['cli', 'mcp-server'],
+          prerequisites: ["cli", "mcp-server"],
           cleanup: true,
           parallel: false,
-          environment: ['cli', 'mcp-server']
+          environment: ["cli", "mcp-server"],
         },
         {
-          name: 'network-failure-recovery',
-          description: 'Test resilience under network failures',
+          name: "network-failure-recovery",
+          description: "Test resilience under network failures",
           enabled: true,
-          category: 'error-recovery',
+          category: "error-recovery",
           timeout: 480000, // 8 minutes
           retries: 3,
-          prerequisites: ['cli', 'mcp-server', 'vscode-extension'],
+          prerequisites: ["cli", "mcp-server", "vscode-extension"],
           cleanup: true,
           parallel: false,
-          environment: ['cli', 'mcp-server', 'vscode-extension']
+          environment: ["cli", "mcp-server", "vscode-extension"],
         },
         {
-          name: 'memory-leak-detection',
-          description: 'Long-running test to detect memory leaks',
+          name: "memory-leak-detection",
+          description: "Long-running test to detect memory leaks",
           enabled: true,
-          category: 'resource-management',
+          category: "resource-management",
           timeout: 1800000, // 30 minutes
           retries: 1,
-          prerequisites: ['cli', 'mcp-server'],
+          prerequisites: ["cli", "mcp-server"],
           cleanup: true,
           parallel: false,
-          environment: ['cli', 'mcp-server']
+          environment: ["cli", "mcp-server"],
         },
         {
-          name: 'full-stack-integration',
-          description: 'Test complete workflow across all components',
+          name: "full-stack-integration",
+          description: "Test complete workflow across all components",
           enabled: true,
-          category: 'cross-component',
+          category: "cross-component",
           timeout: 720000, // 12 minutes
           retries: 2,
-          prerequisites: ['cli', 'mcp-server', 'vscode-extension'],
+          prerequisites: ["cli", "mcp-server", "vscode-extension"],
           cleanup: true,
           parallel: false,
-          environment: ['cli', 'mcp-server', 'vscode-extension']
+          environment: ["cli", "mcp-server", "vscode-extension"],
         },
         {
-          name: 'production-deployment-simulation',
-          description: 'Simulate production deployment scenarios',
+          name: "production-deployment-simulation",
+          description: "Simulate production deployment scenarios",
           enabled: true,
-          category: 'production-simulation',
+          category: "production-simulation",
           timeout: 600000, // 10 minutes
           retries: 2,
-          prerequisites: ['cli', 'mcp-server', 'vscode-extension'],
+          prerequisites: ["cli", "mcp-server", "vscode-extension"],
           cleanup: true,
           parallel: false,
-          environment: ['cli', 'mcp-server', 'vscode-extension']
-        }
+          environment: ["cli", "mcp-server", "vscode-extension"],
+        },
       ],
       resources: {
         maxMemoryMB: 2048,
@@ -399,82 +437,82 @@ export class E2EConfigPresets {
         maxDiskSpaceMB: 5120,
         maxNetworkBandwidthMB: 200,
         maxConcurrentUsers: 15,
-        testDataSizeMB: 1024
+        testDataSizeMB: 1024,
       },
       simulation: {
         realWorldCodebases: [
           {
-            name: 'enterprise-typescript-monorepo',
-            type: 'typescript',
-            size: 'enterprise',
-            languages: ['typescript', 'javascript', 'json'],
+            name: "enterprise-typescript-monorepo",
+            type: "typescript",
+            size: "enterprise",
+            languages: ["typescript", "javascript", "json"],
             files: 10000,
-            complexity: 'highly-complex',
-            generatedData: true
+            complexity: "highly-complex",
+            generatedData: true,
           },
           {
-            name: 'large-python-project',
-            type: 'python',
-            size: 'large',
-            languages: ['python'],
+            name: "large-python-project",
+            type: "python",
+            size: "large",
+            languages: ["python"],
             files: 5000,
-            complexity: 'complex',
-            generatedData: true
-          }
+            complexity: "complex",
+            generatedData: true,
+          },
         ],
         userProfiles: [
           {
-            name: 'heavy-user',
-            type: 'developer',
+            name: "heavy-user",
+            type: "developer",
             concurrency: 3,
-            actions: ['query', 'analyze', 'navigate', 'modify'],
+            actions: ["query", "analyze", "navigate", "modify"],
             thinkTime: 1000,
-            sessionDuration: 60
+            sessionDuration: 60,
           },
           {
-            name: 'architect-user',
-            type: 'architect',
+            name: "architect-user",
+            type: "architect",
             concurrency: 2,
-            actions: ['analyze', 'navigate'],
+            actions: ["analyze", "navigate"],
             thinkTime: 3000,
-            sessionDuration: 45
-          }
+            sessionDuration: 45,
+          },
         ],
         networkConditions: [
           {
-            name: 'slow-connection',
+            name: "slow-connection",
             bandwidth: 10,
             latency: 100,
             packetLoss: 1,
-            jitter: 20
-          }
+            jitter: 20,
+          },
         ],
         systemLoad: {
           cpuLoad: 50,
           memoryUsage: 70,
           diskIo: 20,
           networkIo: 15,
-          backgroundProcesses: 50
+          backgroundProcesses: 50,
         },
         failureScenarios: [
           {
-            name: 'intermittent-network',
-            type: 'network',
+            name: "intermittent-network",
+            type: "network",
             probability: 0.2,
             duration: 10000,
-            recovery: 'retry',
-            impact: 'high'
+            recovery: "retry",
+            impact: "high",
           },
           {
-            name: 'resource-exhaustion',
-            type: 'resource',
+            name: "resource-exhaustion",
+            type: "resource",
             probability: 0.1,
             duration: 30000,
-            recovery: 'graceful-degradation',
-            impact: 'critical'
-          }
-        ]
-      }
+            recovery: "graceful-degradation",
+            impact: "critical",
+          },
+        ],
+      },
     });
   }
 
@@ -485,29 +523,29 @@ export class E2EConfigPresets {
     return new E2EConfig({
       scenarios: [
         {
-          name: 'basic-functionality-check',
-          description: 'Quick verification of core functionality',
+          name: "basic-functionality-check",
+          description: "Quick verification of core functionality",
           enabled: true,
-          category: 'codebase-analysis',
+          category: "codebase-analysis",
           timeout: 60000, // 1 minute
           retries: 1,
-          prerequisites: ['cli'],
+          prerequisites: ["cli"],
           cleanup: true,
           parallel: false,
-          environment: ['cli']
+          environment: ["cli"],
         },
         {
-          name: 'component-health-check',
-          description: 'Verify all components are responsive',
+          name: "component-health-check",
+          description: "Verify all components are responsive",
           enabled: true,
-          category: 'cross-component',
+          category: "cross-component",
           timeout: 120000, // 2 minutes
           retries: 1,
-          prerequisites: ['cli', 'mcp-server'],
+          prerequisites: ["cli", "mcp-server"],
           cleanup: true,
           parallel: false,
-          environment: ['cli', 'mcp-server']
-        }
+          environment: ["cli", "mcp-server"],
+        },
       ],
       resources: {
         maxMemoryMB: 512,
@@ -515,8 +553,8 @@ export class E2EConfigPresets {
         maxDiskSpaceMB: 1024,
         maxNetworkBandwidthMB: 50,
         maxConcurrentUsers: 2,
-        testDataSizeMB: 100
-      }
+        testDataSizeMB: 100,
+      },
     });
   }
 
@@ -527,29 +565,29 @@ export class E2EConfigPresets {
     return new E2EConfig({
       scenarios: [
         {
-          name: 'high-load-stress-test',
-          description: 'Test system under high load conditions',
+          name: "high-load-stress-test",
+          description: "Test system under high load conditions",
           enabled: true,
-          category: 'resource-management',
+          category: "resource-management",
           timeout: 600000, // 10 minutes
           retries: 1,
-          prerequisites: ['cli', 'mcp-server', 'vscode-extension'],
+          prerequisites: ["cli", "mcp-server", "vscode-extension"],
           cleanup: true,
           parallel: true,
-          environment: ['cli', 'mcp-server', 'vscode-extension']
+          environment: ["cli", "mcp-server", "vscode-extension"],
         },
         {
-          name: 'scalability-limit-test',
-          description: 'Find system scalability limits',
+          name: "scalability-limit-test",
+          description: "Find system scalability limits",
           enabled: true,
-          category: 'collaboration',
+          category: "collaboration",
           timeout: 900000, // 15 minutes
           retries: 1,
-          prerequisites: ['mcp-server', 'vscode-extension'],
+          prerequisites: ["mcp-server", "vscode-extension"],
           cleanup: true,
           parallel: true,
-          environment: ['mcp-server', 'vscode-extension']
-        }
+          environment: ["mcp-server", "vscode-extension"],
+        },
       ],
       resources: {
         maxMemoryMB: 4096,
@@ -557,7 +595,7 @@ export class E2EConfigPresets {
         maxDiskSpaceMB: 8192,
         maxNetworkBandwidthMB: 500,
         maxConcurrentUsers: 50,
-        testDataSizeMB: 2048
+        testDataSizeMB: 2048,
       },
       monitoring: {
         enabled: true,
@@ -570,28 +608,28 @@ export class E2EConfigPresets {
           enabled: true,
           thresholds: [
             {
-              metric: 'memory_usage_mb',
-              operator: 'gt',
+              metric: "memory_usage_mb",
+              operator: "gt",
               value: 3500,
               duration: 60000,
-              severity: 'warning'
+              severity: "warning",
             },
             {
-              metric: 'response_time_ms',
-              operator: 'gt',
+              metric: "response_time_ms",
+              operator: "gt",
               value: 2000,
               duration: 30000,
-              severity: 'error'
-            }
+              severity: "error",
+            },
           ],
-          channels: ['console', 'log'],
+          channels: ["console", "log"],
           escalation: {
             enabled: false,
             levels: [],
-            timeout: 60
-          }
-        }
-      }
+            timeout: 60,
+          },
+        },
+      },
     });
   }
 }

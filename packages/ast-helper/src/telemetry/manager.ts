@@ -2,20 +2,16 @@
  * Privacy-respecting telemetry manager implementation
  */
 
- 
-
-import crypto from 'crypto';
-import os from 'os';
-import {
-  MAX_BUFFER_SIZE,
-} from './types.js';
+import crypto from "crypto";
+import os from "os";
+import { MAX_BUFFER_SIZE } from "./types.js";
 import {
   mergeTelemetryConfig,
   getEnvironmentConfig,
   validateTelemetryConfig,
   isTelemetryEnabled,
   getTelemetryFeatures,
-} from './config.js';
+} from "./config.js";
 
 /**
  * Privacy-respecting telemetry manager implementation
@@ -29,7 +25,7 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
   private isInitialized = false;
   private isShutdown = false;
   private features: TelemetryFeatures;
-  
+
   // Component dependencies (will be injected)
   private consentManager?: IConsentManager;
   private dataCollector?: DataCollector;
@@ -40,10 +36,10 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
     // Merge user config with defaults and environment overrides
     const envConfig = getEnvironmentConfig();
     this.config = mergeTelemetryConfig({ ...config, ...envConfig });
-    
+
     // Generate session ID
     this.sessionId = this.generateSessionId();
-    
+
     // Set features based on privacy level
     this.features = getTelemetryFeatures(this.config.privacyLevel);
   }
@@ -53,24 +49,26 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
    */
   async initialize(config?: TelemetryConfig): Promise<void> {
     if (this.isInitialized && !this.isShutdown) {
-      throw new Error('Telemetry manager is already initialized');
+      throw new Error("Telemetry manager is already initialized");
     }
 
     if (this.isShutdown) {
-      throw new Error('Telemetry manager has been shutdown');
+      throw new Error("Telemetry manager has been shutdown");
     }
 
     // Validate configuration before trying to initialize
     if (config) {
       const validationErrors = validateTelemetryConfig(config);
       if (validationErrors.length > 0) {
-        throw new Error(`Invalid telemetry configuration: ${validationErrors.join(', ')}`);
+        throw new Error(
+          `Invalid telemetry configuration: ${validationErrors.join(", ")}`,
+        );
       }
     }
 
     try {
-      console.log('Initializing telemetry system...');
-      
+      console.log("Initializing telemetry system...");
+
       // Update configuration if provided
       if (config) {
         this.config = mergeTelemetryConfig(config, this.config);
@@ -81,24 +79,33 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
 
       // Initialize consent management with real implementation
       try {
-        this.consentManager = new PrivacyRespectingConsentManager(this.config, '1.0.0', '1.0.0');
+        this.consentManager = new PrivacyRespectingConsentManager(
+          this.config,
+          "1.0.0",
+          "1.0.0",
+        );
         await this.consentManager.initialize();
       } catch (error: any) {
-        console.warn('Failed to initialize PrivacyRespectingConsentManager, using stub:', error.message);
+        console.warn(
+          "Failed to initialize PrivacyRespectingConsentManager, using stub:",
+          error.message,
+        );
         this.consentManager = new ConsentManager(this.config);
         await this.consentManager.initialize();
       }
 
       // Check if telemetry should be enabled
       if (!this.config.enabled || !isTelemetryEnabled(this.config)) {
-        console.log('Telemetry disabled or not available - running in privacy mode');
+        console.log(
+          "Telemetry disabled or not available - running in privacy mode",
+        );
         this.isInitialized = true;
         return;
       }
 
       // Check user consent
       if (!(await this.hasUserConsent())) {
-        console.log('Telemetry disabled - no user consent');
+        console.log("Telemetry disabled - no user consent");
         this.isInitialized = true;
         return;
       }
@@ -107,14 +114,17 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       this.dataCollector = new DataCollector(this.config, this.features);
       await this.dataCollector.initialize();
 
-      // Initialize data anonymizer with real implementation  
+      // Initialize data anonymizer with real implementation
       try {
         this.anonymizer = new PrivacyRespectingDataAnonymizer({
-          privacyLevel: this.config.privacyLevel
+          privacyLevel: this.config.privacyLevel,
         });
         await this.anonymizer.initialize();
       } catch (error: any) {
-        console.warn('Failed to initialize PrivacyRespectingDataAnonymizer, using stub:', error.message);
+        console.warn(
+          "Failed to initialize PrivacyRespectingDataAnonymizer, using stub:",
+          error.message,
+        );
         this.anonymizer = new DataAnonymizer(this.config.anonymization);
         await this.anonymizer.initialize();
       }
@@ -127,10 +137,9 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       this.startPeriodicFlush();
 
       this.isInitialized = true;
-      console.log('Telemetry system initialized successfully');
-
+      console.log("Telemetry system initialized successfully");
     } catch (error) {
-      console.error('Failed to initialize telemetry system:', error);
+      console.error("Failed to initialize telemetry system:", error);
       // Don't throw - fail gracefully and continue without telemetry
       this.isInitialized = true;
     }
@@ -140,28 +149,32 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
    * Collect comprehensive usage metrics
    */
   async collectUsageMetrics(): Promise<UsageMetrics> {
-    if (!this.isInitialized || !await this.hasUserConsent()) {
+    if (!this.isInitialized || !(await this.hasUserConsent())) {
       return this.createEmptyMetrics();
     }
 
     try {
-      console.log('Collecting usage metrics...');
+      console.log("Collecting usage metrics...");
 
       // Collect system information
       const systemInfo = await this.collectSystemInfo();
-      
+
       // Collect usage data from data collector
-      const commandUsage = this.dataCollector ? 
-        await this.dataCollector.collectCommandUsage() : [];
-      
-      const featureUsage = this.dataCollector ? 
-        await this.dataCollector.collectFeatureUsage() : [];
-      
-      const performanceData = this.dataCollector ? 
-        await this.dataCollector.collectPerformanceData() : this.createEmptyPerformanceData();
-      
-      const errorSummaries = this.dataCollector ? 
-        await this.dataCollector.collectErrorSummaries() : [];
+      const commandUsage = this.dataCollector
+        ? await this.dataCollector.collectCommandUsage()
+        : [];
+
+      const featureUsage = this.dataCollector
+        ? await this.dataCollector.collectFeatureUsage()
+        : [];
+
+      const performanceData = this.dataCollector
+        ? await this.dataCollector.collectPerformanceData()
+        : this.createEmptyPerformanceData();
+
+      const errorSummaries = this.dataCollector
+        ? await this.dataCollector.collectErrorSummaries()
+        : [];
 
       const metrics: UsageMetrics = {
         sessionId: this.sessionId,
@@ -177,14 +190,14 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       };
 
       // Anonymize sensitive data
-      const anonymizedMetrics = this.anonymizer ? 
-        await this.anonymizer.anonymizeUsageMetrics(metrics) : metrics;
+      const anonymizedMetrics = this.anonymizer
+        ? await this.anonymizer.anonymizeUsageMetrics(metrics)
+        : metrics;
 
-      console.log('Usage metrics collected successfully');
+      console.log("Usage metrics collected successfully");
       return anonymizedMetrics;
-
     } catch (error) {
-      console.error('Failed to collect usage metrics:', error);
+      console.error("Failed to collect usage metrics:", error);
       return this.createEmptyMetrics();
     }
   }
@@ -193,13 +206,17 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
    * Track feature usage
    */
   async trackFeatureUsage(feature: string, data?: any): Promise<void> {
-    if (!this.isInitialized || !await this.hasUserConsent() || !this.features.featureAdoption) {
+    if (
+      !this.isInitialized ||
+      !(await this.hasUserConsent()) ||
+      !this.features.featureAdoption
+    ) {
       return;
     }
 
     try {
       const event: FeatureUsageEvent = {
-        type: 'feature_usage',
+        type: "feature_usage",
         timestamp: new Date(),
         sessionId: this.sessionId,
         eventId: this.generateEventId(),
@@ -210,7 +227,6 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
 
       await this.bufferEvent(event);
       console.log(`Feature usage tracked: ${feature}`);
-
     } catch (error) {
       console.error(`Failed to track feature usage for ${feature}:`, error);
     }
@@ -220,13 +236,17 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
    * Record performance metrics
    */
   async recordPerformanceMetrics(metrics: PerformanceMetrics): Promise<void> {
-    if (!this.isInitialized || !await this.hasUserConsent() || !this.features.performanceMonitoring) {
+    if (
+      !this.isInitialized ||
+      !(await this.hasUserConsent()) ||
+      !this.features.performanceMonitoring
+    ) {
       return;
     }
 
     try {
       const event: PerformanceEvent = {
-        type: 'performance',
+        type: "performance",
         timestamp: new Date(),
         sessionId: this.sessionId,
         eventId: this.generateEventId(),
@@ -242,10 +262,11 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       };
 
       await this.bufferEvent(event);
-      console.log(`Performance metrics recorded: ${metrics.operation} (${metrics.duration}ms)`);
-
+      console.log(
+        `Performance metrics recorded: ${metrics.operation} (${metrics.duration}ms)`,
+      );
     } catch (error) {
-      console.error('Failed to record performance metrics:', error);
+      console.error("Failed to record performance metrics:", error);
     }
   }
 
@@ -253,7 +274,11 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
    * Report error with sanitization
    */
   async reportError(error: ErrorReport): Promise<void> {
-    if (!this.isInitialized || !await this.hasUserConsent() || !this.features.errorReporting) {
+    if (
+      !this.isInitialized ||
+      !(await this.hasUserConsent()) ||
+      !this.features.errorReporting
+    ) {
       return;
     }
 
@@ -262,7 +287,7 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       const sanitizedError = await this.sanitizeErrorReport(error);
 
       const event: ErrorEvent = {
-        type: 'error',
+        type: "error",
         timestamp: new Date(),
         sessionId: this.sessionId,
         eventId: this.generateEventId(),
@@ -273,15 +298,18 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
         severity: sanitizedError.severity,
         context: sanitizedError.context,
         messageHash: await this.hashMessage(error.message),
-        stackHash: error.stack ? await this.hashStackTrace(error.stack) : undefined,
+        stackHash: error.stack
+          ? await this.hashStackTrace(error.stack)
+          : undefined,
         data: {},
       };
 
       await this.bufferEvent(event);
-      console.log(`Error reported: ${sanitizedError.type} (${sanitizedError.severity})`);
-
+      console.log(
+        `Error reported: ${sanitizedError.type} (${sanitizedError.severity})`,
+      );
     } catch (reportingError) {
-      console.error('Failed to report error:', reportingError);
+      console.error("Failed to report error:", reportingError);
     }
   }
 
@@ -289,12 +317,16 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
    * Send buffered telemetry data
    */
   async sendTelemetryData(): Promise<TelemetryResult> {
-    if (!this.isInitialized || !await this.hasUserConsent() || this.buffer.length === 0) {
+    if (
+      !this.isInitialized ||
+      !(await this.hasUserConsent()) ||
+      this.buffer.length === 0
+    ) {
       return {
         success: true,
         eventsSent: 0,
         duration: 0,
-        message: 'No telemetry data to send',
+        message: "No telemetry data to send",
       };
     }
 
@@ -311,7 +343,7 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
 
       // Send telemetry data
       if (!this.sender) {
-        throw new Error('Telemetry sender not initialized');
+        throw new Error("Telemetry sender not initialized");
       }
 
       const response = await this.sender.sendTelemetry(payload);
@@ -324,18 +356,18 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
           success: true,
           eventsSent: payload.events.length,
           duration: Date.now() - startTime,
-          message: 'Telemetry data sent successfully',
+          message: "Telemetry data sent successfully",
         };
 
-        console.log(`Telemetry sent: ${result.eventsSent} events in ${result.duration}ms`);
+        console.log(
+          `Telemetry sent: ${result.eventsSent} events in ${result.duration}ms`,
+        );
         return result;
-
       } else {
         throw new Error(`Telemetry server error: ${response.error}`);
       }
-
     } catch (error: any) {
-      console.error('Failed to send telemetry data:', error);
+      console.error("Failed to send telemetry data:", error);
 
       // Schedule retry with exponential backoff
       await this.scheduleRetry();
@@ -358,11 +390,11 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       return {
         hasConsent: false,
         enabled: false,
-        consentVersion: '1.0.0',
+        consentVersion: "1.0.0",
         settings: {},
       };
     }
-    
+
     return await this.consentManager.getConsentStatus();
   }
 
@@ -370,18 +402,23 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
    * Configure telemetry settings
    */
   async configureTelemetry(settings: TelemetrySettings): Promise<void> {
-    console.log('Configuring telemetry settings...');
+    console.log("Configuring telemetry settings...");
 
     try {
       // Validate settings
       const validationErrors = validateTelemetryConfig(settings);
       if (validationErrors.length > 0) {
-        throw new Error(`Invalid telemetry settings: ${validationErrors.join(', ')}`);
+        throw new Error(
+          `Invalid telemetry settings: ${validationErrors.join(", ")}`,
+        );
       }
 
       // Update consent status
       if (this.consentManager && settings.enabled !== undefined) {
-        await this.consentManager.setConsent(settings.enabled, settings.consentVersion || '1.0.0');
+        await this.consentManager.setConsent(
+          settings.enabled,
+          settings.consentVersion || "1.0.0",
+        );
       }
 
       // Update configuration
@@ -390,7 +427,7 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       // Update privacy level and features
       if (settings.privacyLevel) {
         this.features = getTelemetryFeatures(settings.privacyLevel);
-        
+
         // Update anonymizer if available
         if (this.anonymizer) {
           await this.anonymizer.updatePrivacyLevel(settings.privacyLevel);
@@ -402,11 +439,11 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
         if (settings.collectPerformance !== undefined) {
           this.dataCollector.setCollectPerformance(settings.collectPerformance);
         }
-        
+
         if (settings.collectErrors !== undefined) {
           this.dataCollector.setCollectErrors(settings.collectErrors);
         }
-        
+
         if (settings.collectUsage !== undefined) {
           this.dataCollector.setCollectUsage(settings.collectUsage);
         }
@@ -417,10 +454,9 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
         await this.consentManager.saveSettings(settings);
       }
 
-      console.log('Telemetry configuration updated successfully');
-
+      console.log("Telemetry configuration updated successfully");
     } catch (error) {
-      console.error('Failed to configure telemetry:', error);
+      console.error("Failed to configure telemetry:", error);
       throw error;
     }
   }
@@ -433,7 +469,7 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       return;
     }
 
-    console.log('Shutting down telemetry system...');
+    console.log("Shutting down telemetry system...");
 
     try {
       // Stop periodic flush
@@ -467,10 +503,9 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
       }
 
       this.isShutdown = true;
-      console.log('Telemetry system shutdown completed');
-
+      console.log("Telemetry system shutdown completed");
     } catch (error) {
-      console.error('Error during telemetry shutdown:', error);
+      console.error("Error during telemetry shutdown:", error);
       this.isShutdown = true;
     }
   }
@@ -500,14 +535,14 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
 
   private async collectSystemInfo() {
     return {
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env.npm_package_version || "1.0.0",
       platform: os.platform(),
       nodeVersion: process.version,
     };
   }
 
   private async getAnonymousUserId(): Promise<string | undefined> {
-    if (this.config.privacyLevel === 'strict') {
+    if (this.config.privacyLevel === "strict") {
       return undefined;
     }
 
@@ -524,9 +559,9 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
     return {
       sessionId: this.sessionId,
       timestamp: new Date(),
-      version: '1.0.0',
-      platform: 'unknown',
-      nodeVersion: 'unknown',
+      version: "1.0.0",
+      platform: "unknown",
+      nodeVersion: "unknown",
       commands: [],
       features: [],
       performance: this.createEmptyPerformanceData(),
@@ -541,7 +576,7 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
         average: 0,
         peak: 0,
         current: 0,
-        unit: 'mb' as const,
+        unit: "mb" as const,
       },
       errorRate: 0,
       throughputMetrics: {
@@ -552,7 +587,9 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
     };
   }
 
-  private async sanitizeErrorReport(error: ErrorReport): Promise<SanitizedErrorReport> {
+  private async sanitizeErrorReport(
+    error: ErrorReport,
+  ): Promise<SanitizedErrorReport> {
     return {
       type: error.type,
       code: error.code,
@@ -566,40 +603,54 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
     const message = error.message.toLowerCase();
     const type = error.type.toLowerCase();
 
-    if (type.includes('parse') || message.includes('parse')) {
-      return 'parser';
+    if (type.includes("parse") || message.includes("parse")) {
+      return "parser";
     }
-    if (type.includes('file') || message.includes('file') || message.includes('directory')) {
-      return 'filesystem';
+    if (
+      type.includes("file") ||
+      message.includes("file") ||
+      message.includes("directory")
+    ) {
+      return "filesystem";
     }
-    if (type.includes('network') || message.includes('fetch') || message.includes('request')) {
-      return 'network';
+    if (
+      type.includes("network") ||
+      message.includes("fetch") ||
+      message.includes("request")
+    ) {
+      return "network";
     }
-    if (type.includes('config') || message.includes('config')) {
-      return 'configuration';
+    if (type.includes("config") || message.includes("config")) {
+      return "configuration";
     }
-    if (type.includes('validation') || message.includes('invalid')) {
-      return 'validation';
+    if (type.includes("validation") || message.includes("invalid")) {
+      return "validation";
     }
-    if (type.includes('user') || message.includes('user input')) {
-      return 'user_error';
+    if (type.includes("user") || message.includes("user input")) {
+      return "user_error";
     }
-    if (type.includes('external') || message.includes('external')) {
-      return 'external_service';
+    if (type.includes("external") || message.includes("external")) {
+      return "external_service";
     }
 
-    return 'internal';
+    return "internal";
   }
 
   private async sanitizeContext(context: any): Promise<any> {
-    if (!context || typeof context !== 'object') {
+    if (!context || typeof context !== "object") {
       return {};
     }
 
     const sanitized: any = {};
 
     // Only include safe context fields
-    const safeFields = ['operation', 'fileType', 'language', 'commandName', 'featureName'];
+    const safeFields = [
+      "operation",
+      "fileType",
+      "language",
+      "commandName",
+      "featureName",
+    ];
 
     for (const field of safeFields) {
       if (context[field]) {
@@ -613,7 +664,9 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
     }
 
     if (context.codebaseSize) {
-      sanitized.codebaseSizeRange = this.quantifyCodebaseSize(context.codebaseSize);
+      sanitized.codebaseSizeRange = this.quantifyCodebaseSize(
+        context.codebaseSize,
+      );
     }
 
     return sanitized;
@@ -621,69 +674,74 @@ export class PrivacyRespectingTelemetryManager implements TelemetryManager {
 
   private quantifyFileCount(count?: number): string {
     if (!count) {
-return 'unknown';
-}
+      return "unknown";
+    }
 
     if (count < 10) {
-return '1-9';
-}
+      return "1-9";
+    }
     if (count < 50) {
-return '10-49';
-}
+      return "10-49";
+    }
     if (count < 100) {
-return '50-99';
-}
+      return "50-99";
+    }
     if (count < 500) {
-return '100-499';
-}
+      return "100-499";
+    }
     if (count < 1000) {
-return '500-999';
-}
-    return '1000+';
+      return "500-999";
+    }
+    return "1000+";
   }
 
   private quantifyCodebaseSize(size?: number): string {
     if (!size) {
-return 'unknown';
-}
+      return "unknown";
+    }
 
     const mb = size / 1024 / 1024;
 
     if (mb < 1) {
-return '<1MB';
-}
+      return "<1MB";
+    }
     if (mb < 10) {
-return '1-10MB';
-}
+      return "1-10MB";
+    }
     if (mb < 50) {
-return '10-50MB';
-}
+      return "10-50MB";
+    }
     if (mb < 100) {
-return '50-100MB';
-}
+      return "50-100MB";
+    }
     if (mb < 500) {
-return '100-500MB';
-}
-    return '>500MB';
+      return "100-500MB";
+    }
+    return ">500MB";
   }
 
   private async hashMessage(message: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(message + this.config.anonymization.hashSalt);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16);
+    return hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("")
+      .substring(0, 16);
   }
 
   private async hashStackTrace(stack: string): Promise<string> {
     // Remove file paths and line numbers, keep only error structure
     const cleanedStack = stack
-      .split('\n')
-      .map(line => {
+      .split("\n")
+      .map((line) => {
         // Remove file paths but keep function names
-        return line.replace(/\/.*?\//g, '/[path]/').replace(/:\d+:\d+/g, ':*:*');
+        return line
+          .replace(/\/.*?\//g, "/[path]/")
+          .replace(/:\d+:\d+/g, ":*:*");
       })
-      .join('\n');
+      .join("\n");
 
     return this.hashMessage(cleanedStack);
   }
@@ -729,7 +787,8 @@ return '100-500MB';
 
     // Implement exponential backoff
     const baseDelay = 60000; // 1 minute
-    const retryDelay = baseDelay * Math.pow(2, Math.min(3, this.config.retryAttempts));
+    const retryDelay =
+      baseDelay * Math.pow(2, Math.min(3, this.config.retryAttempts));
 
     this.retryTimer = setTimeout(async () => {
       if (this.buffer.length > 0) {
@@ -740,11 +799,13 @@ return '100-500MB';
 }
 
 // Real implementations for Privacy and Consent Management
-import { PrivacyRespectingConsentManager } from './consent/manager.js';
-import { PrivacyRespectingDataAnonymizer } from './anonymization/anonymizer.js';
+import { PrivacyRespectingConsentManager } from "./consent/manager.js";
+import { PrivacyRespectingDataAnonymizer } from "./anonymization/anonymizer.js";
 
 // Import the interface types
-import type { ConsentManager as IConsentManager, DataAnonymizer as IDataAnonymizer ,
+import type {
+  ConsentManager as IConsentManager,
+  DataAnonymizer as IDataAnonymizer,
   TelemetryManager,
   TelemetryConfig,
   UsageMetrics,
@@ -761,7 +822,8 @@ import type { ConsentManager as IConsentManager, DataAnonymizer as IDataAnonymiz
   SanitizedErrorReport,
   ErrorCategory,
   PrivacyLevel,
-  TelemetryFeatures} from './types.js';
+  TelemetryFeatures,
+} from "./types.js";
 
 // Stub implementations for dependent components
 // These will be implemented in subsequent subtasks
@@ -781,7 +843,7 @@ class ConsentManager {
     return {
       hasConsent: false,
       enabled: false,
-      consentVersion: '1.0.0',
+      consentVersion: "1.0.0",
       settings: {},
     };
   }
@@ -801,7 +863,14 @@ class ConsentManager {
 
 class DataCollector {
   // @ts-ignore - Stub class, parameters will be used in full implementation
-  constructor(private _config: TelemetryConfig, private _features: TelemetryFeatures) {}
+  constructor(
+    private _config: TelemetryConfig,
+    private _features: TelemetryFeatures,
+  ) {
+    // Explicitly mark as used to avoid TS errors during development
+    void this._config;
+    void this._features;
+  }
 
   async initialize(): Promise<void> {
     // Implementation will be added in Data Collection and Analytics subtask
@@ -857,11 +926,11 @@ class DataAnonymizer {
   }
 
   async generateMachineId(): Promise<string> {
-    return 'anonymous-machine-id';
+    return "anonymous-machine-id";
   }
 
   async hashUserId(_machineId: string): Promise<string> {
-    return 'anonymous-user-id';
+    return "anonymous-user-id";
   }
 
   async updatePrivacyLevel(_level: PrivacyLevel): Promise<void> {
@@ -882,11 +951,11 @@ class TelemetrySender {
   async initialize(): Promise<void> {
     try {
       // In a real implementation, this would set up HTTP client, auth, etc.
-      console.log('🔧 Initializing telemetry sender...');
-      
+      console.log("🔧 Initializing telemetry sender...");
+
       // Validate configuration
       if (!this.config.endpoint) {
-        throw new Error('Telemetry endpoint not configured');
+        throw new Error("Telemetry endpoint not configured");
       }
 
       // Initialize HTTP client (mock implementation)
@@ -895,74 +964,83 @@ class TelemetrySender {
           console.log(`📤 Mock telemetry send to ${url}:`, {
             eventCount: data.events?.length || 0,
             timestamp: data.timestamp,
-            clientVersion: data.clientVersion
+            clientVersion: data.clientVersion,
           });
           return { status: 200, ok: true };
-        }
+        },
       };
 
       this.initialized = true;
-      console.log('✅ Telemetry sender initialized');
+      console.log("✅ Telemetry sender initialized");
     } catch (error) {
-      throw new Error(`Failed to initialize telemetry sender: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to initialize telemetry sender: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
-  async sendTelemetry(payload: TelemetryPayload): Promise<{ success: boolean; error?: string }> {
+  async sendTelemetry(
+    payload: TelemetryPayload,
+  ): Promise<{ success: boolean; error?: string }> {
     if (!this.initialized) {
-      return { success: false, error: 'Telemetry sender not initialized' };
+      return { success: false, error: "Telemetry sender not initialized" };
     }
 
     try {
       // Validate payload
       if (!payload.events || payload.events.length === 0) {
-        return { success: false, error: 'No events to send' };
+        return { success: false, error: "No events to send" };
       }
 
       // Filter events based on privacy settings
-      const filteredEvents = payload.events.filter(event => {
+      const filteredEvents = payload.events.filter((event) => {
         return this.isEventAllowed(event);
       });
 
       if (filteredEvents.length === 0) {
-        console.log('📋 All events filtered out by privacy settings');
+        console.log("📋 All events filtered out by privacy settings");
         return { success: true };
       }
 
       // Prepare telemetry payload
       const sanitizedPayload = {
         ...payload,
-        events: filteredEvents.map(event => this.sanitizeEvent(event))
+        events: filteredEvents.map((event) => this.sanitizeEvent(event)),
       };
 
       // Send to telemetry endpoint
-      const response = await this.httpClient!.post(this.config.endpoint, sanitizedPayload);
+      const response = await this.httpClient!.post(
+        this.config.endpoint,
+        sanitizedPayload,
+      );
 
       if (!response.ok) {
         return { success: false, error: `HTTP ${response.status}` };
       }
 
-      console.log(`✅ Successfully sent ${filteredEvents.length} telemetry events`);
+      console.log(
+        `✅ Successfully sent ${filteredEvents.length} telemetry events`,
+      );
       return { success: true };
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ Failed to send telemetry:', errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("❌ Failed to send telemetry:", errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
   async shutdown(): Promise<void> {
-    console.log('🔧 Shutting down telemetry sender...');
-    
+    console.log("🔧 Shutting down telemetry sender...");
+
     try {
       // In a real implementation, this would close connections, flush buffers, etc.
       this.httpClient = undefined;
       this.initialized = false;
-      
-      console.log('✅ Telemetry sender shutdown complete');
+
+      console.log("✅ Telemetry sender shutdown complete");
     } catch (error) {
-      console.error('❌ Error during telemetry sender shutdown:', error);
+      console.error("❌ Error during telemetry sender shutdown:", error);
     }
   }
 
@@ -973,10 +1051,10 @@ class TelemetrySender {
     // In a real implementation, this would check privacy preferences
     // Since the manager.ts uses the types.ts TelemetryEvent interface,
     // we'll check the data field for privacy level
-    const privacyLevel = event.data?.privacyLevel || 'basic';
-    
+    const privacyLevel = event.data?.privacyLevel || "basic";
+
     // Allow basic and functional events, filter out detailed/diagnostic
-    return privacyLevel === 'basic' || privacyLevel === 'functional';
+    return privacyLevel === "basic" || privacyLevel === "functional";
   }
 
   /**
@@ -985,7 +1063,7 @@ class TelemetrySender {
   private sanitizeEvent(event: TelemetryEvent): TelemetryEvent {
     // Remove or hash sensitive data from the data field
     const sanitized = { ...event };
-    
+
     // Remove potentially sensitive data
     if (sanitized.data) {
       const { filePath, userName, ...safeData } = sanitized.data;

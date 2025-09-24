@@ -3,10 +3,10 @@
  * @description Comprehensive data collection implementation with privacy-respecting features
  */
 
-import { EventEmitter } from 'events';
-import type { PrivacyLevel } from '../types.js';
-import type { 
-  TelemetryEvent, 
+import { EventEmitter } from "events";
+import type { PrivacyLevel } from "../types.js";
+import type {
+  TelemetryEvent,
   DataCollector as IDataCollector,
   CollectionConfig,
   CollectionStats,
@@ -15,15 +15,17 @@ import type {
   FeatureUsageEvent,
   CommandExecutionEvent,
   PerformanceEvent,
-  ErrorEvent
-} from './types.js';
-import { PrivacyRespectingEventSanitizer } from './sanitizer.js';
-import { EventBuilderFactory } from './builder.js';
+  ErrorEvent,
+} from "./types.js";
+import { PrivacyRespectingEventSanitizer } from "./sanitizer.js";
+import { EventBuilderFactory } from "./builder.js";
 
 /**
  * Privacy-first telemetry data collector
  */
-export class TelemetryDataCollector extends EventEmitter implements IDataCollector {
+export class TelemetryDataCollector
+  extends EventEmitter
+  implements IDataCollector {
   private readonly sanitizer: PrivacyRespectingEventSanitizer;
   private config: CollectionConfig;
   private stats: CollectionStats;
@@ -34,14 +36,14 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
 
   constructor(config?: Partial<CollectionConfig>) {
     super();
-    
-    this.config = { 
-      ...this.getDefaultConfig(), 
-      ...(config || {}) 
+
+    this.config = {
+      ...this.getDefaultConfig(),
+      ...(config || {}),
     };
-    
+
     this.sanitizer = new PrivacyRespectingEventSanitizer();
-    
+
     this.stats = {
       eventsCollected: 0,
       eventsDropped: 0,
@@ -50,7 +52,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
       lastCollectionTime: new Date(),
       lastTransmissionTime: new Date(),
       bufferSize: 0,
-      bufferUtilization: 0
+      bufferUtilization: 0,
     };
   }
 
@@ -69,14 +71,14 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
     // Start flush timer
     if (this.config.flushInterval > 0) {
       this.flushTimer = setInterval(() => {
-        this.flush().catch(error => {
-          this.emit('error', error);
+        this.flush().catch((error) => {
+          this.emit("error", error);
         });
       }, this.config.flushInterval);
     }
 
     this.isInitialized = true;
-    this.emit('initialized');
+    this.emit("initialized");
   }
 
   /**
@@ -84,21 +86,21 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
    */
   async startSession(context?: Partial<CollectionContext>): Promise<string> {
     const sessionId = this.generateSessionId();
-    
+
     this.currentSession = {
       sessionId,
       startTime: new Date(),
       platform: context?.platform || process.platform,
-      version: context?.session?.version || '1.0.0',
-      environment: context?.session?.environment || 'development',
+      version: context?.session?.version || "1.0.0",
+      environment: context?.session?.environment || "development",
       totalEvents: 0,
       features: [],
       commands: [],
       errors: 0,
-      userId: context?.session?.userId
+      userId: context?.session?.userId,
     };
 
-    this.emit('sessionStarted', this.currentSession);
+    this.emit("sessionStarted", this.currentSession);
     return sessionId;
   }
 
@@ -116,14 +118,15 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
 
     this.currentSession.endTime = new Date();
     if (this.currentSession.startTime && this.currentSession.endTime) {
-      this.currentSession.totalDuration = 
-        this.currentSession.endTime.getTime() - this.currentSession.startTime.getTime();
+      this.currentSession.totalDuration =
+        this.currentSession.endTime.getTime() -
+        this.currentSession.startTime.getTime();
     }
 
     // Flush any remaining events
     await this.flush();
 
-    this.emit('sessionEnded', this.currentSession);
+    this.emit("sessionEnded", this.currentSession);
     this.currentSession = undefined;
   }
 
@@ -144,19 +147,22 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
       // Validate event structure
       if (!this.sanitizer.validate(event)) {
         this.stats.eventsDropped++;
-        this.emit('eventDropped', { event, reason: 'validation_failed' });
+        this.emit("eventDropped", { event, reason: "validation_failed" });
         return;
       }
 
       // Check if event should be collected based on filters
       if (!this.sanitizer.shouldCollect(event, this.config)) {
         this.stats.eventsDropped++;
-        this.emit('eventDropped', { event, reason: 'filtered_out' });
+        this.emit("eventDropped", { event, reason: "filtered_out" });
         return;
       }
 
       // Sanitize event for privacy
-      const sanitizedEvent = this.sanitizer.sanitize(event, this.config.privacyLevel);
+      const sanitizedEvent = this.sanitizer.sanitize(
+        event,
+        this.config.privacyLevel,
+      );
 
       // Add to buffer
       await this.addToBuffer(sanitizedEvent);
@@ -168,22 +174,24 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
       this.updateSessionStats(sanitizedEvent);
 
       // Emit collection event
-      this.emit('eventCollected', sanitizedEvent);
+      this.emit("eventCollected", sanitizedEvent);
 
       // Check if buffer should be flushed
       if (this.eventBuffer.length >= this.config.bufferSize) {
         await this.flush();
       }
-
     } catch (error) {
-      this.emit('collectionError', { event, error });
+      this.emit("collectionError", { event, error });
     }
   }
 
   /**
    * Collect feature usage data
    */
-  async collectFeatureUsage(_feature: string, data: FeatureUsageEvent['data']): Promise<void> {
+  async collectFeatureUsage(
+    _feature: string,
+    data: FeatureUsageEvent["data"],
+  ): Promise<void> {
     if (!this.currentSession) {
       await this.startSession();
     }
@@ -213,7 +221,10 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
   /**
    * Collect command execution data
    */
-  async collectCommandExecution(_command: string, data: CommandExecutionEvent['data']): Promise<void> {
+  async collectCommandExecution(
+    _command: string,
+    data: CommandExecutionEvent["data"],
+  ): Promise<void> {
     if (!this.currentSession) {
       await this.startSession();
     }
@@ -251,7 +262,10 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
   /**
    * Collect performance metrics
    */
-  async collectPerformanceMetrics(_operation: string, data: PerformanceEvent['data']): Promise<void> {
+  async collectPerformanceMetrics(
+    _operation: string,
+    data: PerformanceEvent["data"],
+  ): Promise<void> {
     if (!this.currentSession) {
       await this.startSession();
     }
@@ -284,7 +298,10 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
   /**
    * Collect error information
    */
-  async collectError(error: Error, context: ErrorEvent['data']['context']): Promise<void> {
+  async collectError(
+    error: Error,
+    context: ErrorEvent["data"]["context"],
+  ): Promise<void> {
     if (!this.currentSession) {
       await this.startSession();
     }
@@ -293,11 +310,11 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
       .withSessionId(this.currentSession!.sessionId)
       .withMessage(error.message)
       .withErrorType(error.constructor.name)
-      .withSeverity('medium')
+      .withSeverity("medium")
       .withContext(context)
       .withHandled(true)
       .withRecoverable(true)
-      .withUserImpact('low')
+      .withUserImpact("low")
       .withPrivacyLevel(this.config.privacyLevel);
 
     if (error.stack && this.config.includeStackTraces) {
@@ -325,17 +342,20 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
 
     // Get system information
     try {
-      const os = await import('os');
+      const os = await import("os");
       event.withMemoryMetrics(os.totalmem(), os.freemem());
       event.withCpuCount(os.cpus().length);
-      
+
       if (os.loadavg) {
         event.withLoadAverage(os.loadavg());
       }
     } catch {
       // Fallback to process information
       const memUsage = process.memoryUsage();
-      event.withMemoryMetrics(memUsage.rss + memUsage.heapTotal, memUsage.heapTotal - memUsage.heapUsed);
+      event.withMemoryMetrics(
+        memUsage.rss + memUsage.heapTotal,
+        memUsage.heapTotal - memUsage.heapUsed,
+      );
       event.withCpuCount(1);
     }
 
@@ -347,8 +367,10 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
    */
   async getStats(): Promise<CollectionStats> {
     this.stats.bufferSize = this.eventBuffer.length;
-    this.stats.bufferUtilization = this.config.bufferSize > 0 ? 
-      (this.eventBuffer.length / this.config.bufferSize) * 100 : 0;
+    this.stats.bufferUtilization =
+      this.config.bufferSize > 0
+        ? (this.eventBuffer.length / this.config.bufferSize) * 100
+        : 0;
 
     return { ...this.stats };
   }
@@ -367,16 +389,15 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
     try {
       // In a real implementation, this would send events to a remote endpoint
       // For now, we just emit them
-      this.emit('eventsBatched', events);
-      
+      this.emit("eventsBatched", events);
+
       this.stats.eventsSent += events.length;
       this.stats.lastTransmissionTime = new Date();
-      
     } catch (error) {
       // Put events back in buffer for retry
       this.eventBuffer.unshift(...events);
       this.stats.eventsRetried += events.length;
-      this.emit('transmissionError', { events, error });
+      this.emit("transmissionError", { events, error });
     }
   }
 
@@ -403,7 +424,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
     this.removeAllListeners();
     this.isInitialized = false;
 
-    this.emit('shutdown');
+    this.emit("shutdown");
   }
 
   // ============================================================================
@@ -415,7 +436,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
    */
   updateConfig(newConfig: Partial<CollectionConfig>): void {
     Object.assign(this.config, newConfig);
-    this.emit('configUpdated', this.config);
+    this.emit("configUpdated", this.config);
   }
 
   /**
@@ -437,7 +458,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
    */
   setPrivacyLevel(privacyLevel: PrivacyLevel): void {
     this.config.privacyLevel = privacyLevel;
-    this.emit('privacyLevelChanged', privacyLevel);
+    this.emit("privacyLevelChanged", privacyLevel);
   }
 
   // ============================================================================
@@ -450,7 +471,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
   private getDefaultConfig(): CollectionConfig {
     return {
       enabled: true,
-      privacyLevel: 'balanced' as PrivacyLevel,
+      privacyLevel: "balanced" as PrivacyLevel,
       collectUsage: true,
       collectPerformance: true,
       collectErrors: true,
@@ -464,7 +485,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
       maxRetries: 3,
       localRetentionDays: 7,
       includeStackTraces: false,
-      includePII: false
+      includePII: false,
     };
   }
 
@@ -483,14 +504,17 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
     const eventSize = JSON.stringify(event).length;
     if (eventSize > this.config.maxEventSize) {
       this.stats.eventsDropped++;
-      this.emit('eventDropped', { event, reason: 'size_exceeded' });
+      this.emit("eventDropped", { event, reason: "size_exceeded" });
       return;
     }
 
     // Check session limits
-    if (this.currentSession && this.currentSession.totalEvents >= this.config.maxEventsPerSession) {
+    if (
+      this.currentSession &&
+      this.currentSession.totalEvents >= this.config.maxEventsPerSession
+    ) {
       this.stats.eventsDropped++;
-      this.emit('eventDropped', { event, reason: 'session_limit_exceeded' });
+      this.emit("eventDropped", { event, reason: "session_limit_exceeded" });
       return;
     }
 
@@ -499,7 +523,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
       // Remove oldest event
       const removedEvent = this.eventBuffer.shift();
       this.stats.eventsDropped++;
-      this.emit('eventDropped', { event: removedEvent, reason: 'buffer_full' });
+      this.emit("eventDropped", { event: removedEvent, reason: "buffer_full" });
     }
 
     this.eventBuffer.push(event);
@@ -524,7 +548,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
     this.currentSession.totalEvents++;
 
     // Track features used
-    if (event.eventType === 'usage' && event.category === 'vscode_extension') {
+    if (event.eventType === "usage" && event.category === "vscode_extension") {
       const featureEvent = event as FeatureUsageEvent;
       const feature = featureEvent.data.feature;
       if (feature && !this.currentSession.features.includes(feature)) {
@@ -533,7 +557,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
     }
 
     // Track commands executed
-    if (event.eventType === 'usage' && event.category === 'cli_operations') {
+    if (event.eventType === "usage" && event.category === "cli_operations") {
       const commandEvent = event as CommandExecutionEvent;
       const command = commandEvent.data.command;
       if (command && !this.currentSession.commands.includes(command)) {
@@ -542,7 +566,7 @@ export class TelemetryDataCollector extends EventEmitter implements IDataCollect
     }
 
     // Count errors
-    if (event.eventType === 'error') {
+    if (event.eventType === "error") {
       this.currentSession.errors++;
     }
   }
@@ -562,29 +586,33 @@ export class DataCollectorFactory {
   /**
    * Create a data collector with strict privacy settings
    */
-  static createStrictPrivacy(config?: Partial<CollectionConfig>): TelemetryDataCollector {
+  static createStrictPrivacy(
+    config?: Partial<CollectionConfig>,
+  ): TelemetryDataCollector {
     return new TelemetryDataCollector({
       ...config,
-      privacyLevel: 'strict',
+      privacyLevel: "strict",
       collectSystem: false,
       includeStackTraces: false,
-      includePII: false
+      includePII: false,
     });
   }
 
   /**
    * Create a data collector with permissive settings for development
    */
-  static createDevelopment(config?: Partial<CollectionConfig>): TelemetryDataCollector {
+  static createDevelopment(
+    config?: Partial<CollectionConfig>,
+  ): TelemetryDataCollector {
     return new TelemetryDataCollector({
       ...config,
-      privacyLevel: 'permissive',
+      privacyLevel: "permissive",
       collectUsage: true,
       collectPerformance: true,
       collectErrors: true,
       collectSystem: true,
       collectCustom: true,
-      includeStackTraces: true
+      includeStackTraces: true,
     });
   }
 }
@@ -604,18 +632,20 @@ export class PerformanceCollector {
     options?: {
       includeMemory?: boolean;
       context?: Record<string, any>;
-    }
+    },
   ): Promise<T> {
     const startTime = performance.now();
-    const startMemory = options?.includeMemory ? process.memoryUsage() : undefined;
+    const startMemory = options?.includeMemory
+      ? process.memoryUsage()
+      : undefined;
 
     try {
       const result = await fn();
       const duration = performance.now() - startTime;
 
-      const performanceData: PerformanceEvent['data'] = {
+      const performanceData: PerformanceEvent["data"] = {
         operation,
-        duration
+        duration,
       };
 
       if (startMemory && options?.includeMemory) {
@@ -623,27 +653,33 @@ export class PerformanceCollector {
         performanceData.memoryUsage = {
           heapUsed: endMemory.heapUsed,
           heapTotal: endMemory.heapTotal,
-          external: endMemory.external
+          external: endMemory.external,
         };
       }
 
-      await this.dataCollector.collectPerformanceMetrics(operation, performanceData);
+      await this.dataCollector.collectPerformanceMetrics(
+        operation,
+        performanceData,
+      );
 
       return result;
     } catch (error) {
       const duration = performance.now() - startTime;
-      
+
       // Collect performance data for failed operation
-      await this.dataCollector.collectPerformanceMetrics(`${operation}_failed`, {
-        operation: `${operation}_failed`,
-        duration
-      });
+      await this.dataCollector.collectPerformanceMetrics(
+        `${operation}_failed`,
+        {
+          operation: `${operation}_failed`,
+          duration,
+        },
+      );
 
       // Also collect error
       if (error instanceof Error) {
         await this.dataCollector.collectError(error, {
           operation,
-          ...options?.context
+          ...options?.context,
         });
       }
 

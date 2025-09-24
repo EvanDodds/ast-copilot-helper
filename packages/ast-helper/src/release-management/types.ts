@@ -1,56 +1,56 @@
 /**
  * Type definitions for the comprehensive release management system
- * 
- * @fileoverview Core types and interfaces for semantic versioning, 
+ *
+ * @fileoverview Core types and interfaces for semantic versioning,
  * release workflows, compatibility checking, and multi-platform publishing.
- * 
+ *
  * @author GitHub Copilot
  * @version 1.0.0
  */
 
 // Core release management types
 export enum ReleaseType {
-  MAJOR = 'major',
-  MINOR = 'minor', 
-  PATCH = 'patch',
-  PRERELEASE = 'prerelease',
-  HOTFIX = 'hotfix'
+  MAJOR = "major",
+  MINOR = "minor",
+  PATCH = "patch",
+  PRERELEASE = "prerelease",
+  HOTFIX = "hotfix",
 }
 
 export enum ReleaseChannel {
-  STABLE = 'stable',
-  BETA = 'beta',
-  ALPHA = 'alpha',
-  NIGHTLY = 'nightly'
+  STABLE = "stable",
+  BETA = "beta",
+  ALPHA = "alpha",
+  NIGHTLY = "nightly",
 }
 
 export enum ValidationSeverity {
-  ERROR = 'error',
-  WARNING = 'warning',
-  INFO = 'info'
+  ERROR = "error",
+  WARNING = "warning",
+  INFO = "info",
 }
 
 export enum SuggestionActionType {
-  CODE_CHANGE = 'code-change',
-  FILE_CREATE = 'file-create', 
-  FILE_DELETE = 'file-delete',
-  COMMAND_RUN = 'command-run',
-  CONFIG_UPDATE = 'config-update',
-  INSTALL_PACKAGE = 'install-package'
+  CODE_CHANGE = "code-change",
+  FILE_CREATE = "file-create",
+  FILE_DELETE = "file-delete",
+  COMMAND_RUN = "command-run",
+  CONFIG_UPDATE = "config-update",
+  INSTALL_PACKAGE = "install-package",
 }
 
 export enum SuggestionType {
-  QUICK_FIX = 'quick-fix',
-  REFACTOR = 'refactor',
-  ENHANCEMENT = 'enhancement',
-  DOCUMENTATION = 'documentation'
+  QUICK_FIX = "quick-fix",
+  REFACTOR = "refactor",
+  ENHANCEMENT = "enhancement",
+  DOCUMENTATION = "documentation",
 }
 
 export enum RiskLevel {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical'
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  CRITICAL = "critical",
 }
 
 // Configuration interfaces
@@ -76,7 +76,7 @@ export interface RepositoryConfig {
 }
 
 export interface VersioningConfig {
-  scheme: 'semver' | 'calver' | 'custom';
+  scheme: "semver" | "calver" | "custom";
   initialVersion: string;
   prereleasePattern?: string;
   channels: VersionChannel[];
@@ -92,7 +92,7 @@ export interface VersionChannel {
 }
 
 export interface ChangelogConfig {
-  format: 'keepachangelog' | 'conventional' | 'custom';
+  format: "keepachangelog" | "conventional" | "custom";
   sections: ChangelogSection[];
   includeCommitLinks: boolean;
   includeAuthor: boolean;
@@ -107,7 +107,7 @@ export interface ChangelogSection {
 }
 
 export interface PlatformConfig {
-  name: 'npm' | 'vscode-marketplace' | 'github-releases' | 'docker' | 'custom';
+  name: "npm" | "vscode-marketplace" | "github-releases" | "docker" | "custom";
   enabled: boolean;
   config: Record<string, any>;
   requirements: string[];
@@ -140,7 +140,7 @@ export interface NotificationConfig {
 }
 
 export interface NotificationChannel {
-  type: 'email' | 'slack' | 'teams' | 'webhook';
+  type: "email" | "slack" | "teams" | "webhook";
   config: Record<string, any>;
   events: string[];
 }
@@ -192,7 +192,7 @@ export interface PackageDependency {
   name: string;
   currentVersion: string;
   targetVersion?: string;
-  type: 'dependencies' | 'devDependencies' | 'peerDependencies';
+  type: "dependencies" | "devDependencies" | "peerDependencies";
 }
 
 export interface ChangelogEntry {
@@ -213,7 +213,7 @@ export interface BreakingChange {
   description: string;
   migration: string;
   affectedApi: string[];
-  severity: 'minor' | 'major' | 'critical';
+  severity: "minor" | "major" | "critical";
   automatedMigration: boolean;
 }
 
@@ -221,7 +221,7 @@ export interface DependencyUpdate {
   name: string;
   from: string;
   to: string;
-  type: 'patch' | 'minor' | 'major';
+  type: "patch" | "minor" | "major";
   breaking: boolean;
   securityFix: boolean;
 }
@@ -264,7 +264,7 @@ export interface RollbackPlan {
 export interface RollbackStep {
   name: string;
   description: string;
-  type: 'git' | 'package' | 'database' | 'config' | 'custom';
+  type: "git" | "package" | "database" | "config" | "custom";
   command?: string;
   script?: string;
   validation?: string;
@@ -275,7 +275,7 @@ export interface RollbackRisk {
   description: string;
   severity: RiskLevel;
   mitigation: string;
-  likelihood: 'low' | 'medium' | 'high';
+  likelihood: "low" | "medium" | "high";
 }
 
 // Validation and results
@@ -390,7 +390,7 @@ export interface MigrationGuide {
 export interface MigrationStep {
   title: string;
   description: string;
-  type: 'manual' | 'automated' | 'review';
+  type: "manual" | "automated" | "review";
   actions: MigrationAction[];
   validation: string;
   rollback?: string;

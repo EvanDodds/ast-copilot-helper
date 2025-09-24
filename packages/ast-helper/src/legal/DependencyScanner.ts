@@ -2,10 +2,10 @@
  * @fileoverview Dependency scanner for analyzing package.json files and extracting license information
  */
 
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import type { LicenseInfo, ComplianceConfig } from './types.js';
-import { LicenseDatabase } from './LicenseDatabase.js';
+import { promises as fs } from "fs";
+import { join } from "path";
+import type { LicenseInfo, ComplianceConfig } from "./types.js";
+import { LicenseDatabase } from "./LicenseDatabase.js";
 
 export interface PackageInfo {
   name: string;
@@ -51,9 +51,12 @@ export class DependencyScanner {
   /**
    * Get package information from npm registry or local cache
    */
-  async getPackageInfo(packageName: string, version: string): Promise<PackageInfo> {
+  async getPackageInfo(
+    packageName: string,
+    version: string,
+  ): Promise<PackageInfo> {
     const cacheKey = `${packageName}@${version}`;
-    
+
     if (this.packageCache.has(cacheKey)) {
       return this.packageCache.get(cacheKey)!;
     }
@@ -70,17 +73,19 @@ export class DependencyScanner {
       const registryInfo = await this.getNpmPackageInfo(packageName, version);
       this.packageCache.set(cacheKey, registryInfo);
       return registryInfo;
-
     } catch (error) {
-      console.warn(`Failed to get package info for ${packageName}@${version}:`, error);
-      
+      console.warn(
+        `Failed to get package info for ${packageName}@${version}:`,
+        error,
+      );
+
       // Return minimal info as fallback
       const fallbackInfo: PackageInfo = {
         name: packageName,
         version,
-        license: 'UNKNOWN'
+        license: "UNKNOWN",
       };
-      
+
       this.packageCache.set(cacheKey, fallbackInfo);
       return fallbackInfo;
     }
@@ -92,18 +97,19 @@ export class DependencyScanner {
   async parseLicenseString(licenseData: string | object): Promise<LicenseInfo> {
     let licenseId: string;
 
-    if (typeof licenseData === 'string') {
+    if (typeof licenseData === "string") {
       licenseId = licenseData;
-    } else if (typeof licenseData === 'object' && licenseData !== null) {
+    } else if (typeof licenseData === "object" && licenseData !== null) {
       const licenseObj = licenseData as any;
-      licenseId = licenseObj.type || licenseObj.name || licenseObj.license || 'UNKNOWN';
+      licenseId =
+        licenseObj.type || licenseObj.name || licenseObj.license || "UNKNOWN";
     } else {
-      licenseId = 'UNKNOWN';
+      licenseId = "UNKNOWN";
     }
 
     // Handle complex license expressions
     const parseResult = this.licenseDatabase.parseLicenseExpression(licenseId);
-    
+
     if (parseResult.valid && parseResult.licenses.length > 0) {
       // Return the primary license (first one for OR expressions)
       const primaryLicense = parseResult.licenses[0];
@@ -119,12 +125,15 @@ export class DependencyScanner {
   /**
    * Extract copyright holders from package metadata
    */
-  async extractCopyrightHolders(packageInfo: PackageInfo, packageName: string): Promise<string[]> {
+  async extractCopyrightHolders(
+    packageInfo: PackageInfo,
+    packageName: string,
+  ): Promise<string[]> {
     const holders: string[] = [];
 
     // Extract from author
     if (packageInfo.author) {
-      if (typeof packageInfo.author === 'string') {
+      if (typeof packageInfo.author === "string") {
         holders.push(packageInfo.author);
       } else if (packageInfo.author.name) {
         holders.push(packageInfo.author.name);
@@ -134,7 +143,7 @@ export class DependencyScanner {
     // Extract from contributors
     if (packageInfo.contributors) {
       for (const contributor of packageInfo.contributors) {
-        if (typeof contributor === 'string') {
+        if (typeof contributor === "string") {
           holders.push(contributor);
         } else if (contributor.name) {
           holders.push(contributor.name);
@@ -143,11 +152,12 @@ export class DependencyScanner {
     }
 
     // Try to extract from license files
-    const licenseFileHolders = await this.extractCopyrightFromFiles(packageName);
+    const licenseFileHolders =
+      await this.extractCopyrightFromFiles(packageName);
     holders.push(...licenseFileHolders);
 
     // Remove duplicates and empty entries
-    return Array.from(new Set(holders.filter(h => h && h.trim())));
+    return Array.from(new Set(holders.filter((h) => h && h.trim())));
   }
 
   /**
@@ -177,16 +187,23 @@ export class DependencyScanner {
     return null;
   }
 
-  private async searchPackageFiles(dir: string, results: string[]): Promise<void> {
+  private async searchPackageFiles(
+    dir: string,
+    results: string[],
+  ): Promise<void> {
     try {
       const entries = await fs.readdir(dir, { withFileTypes: true });
 
       for (const entry of entries) {
         const fullPath = join(dir, entry.name);
 
-        if (entry.name === 'package.json') {
+        if (entry.name === "package.json") {
           results.push(fullPath);
-        } else if (entry.isDirectory() && entry.name !== 'node_modules' && !entry.name.startsWith('.')) {
+        } else if (
+          entry.isDirectory() &&
+          entry.name !== "node_modules" &&
+          !entry.name.startsWith(".")
+        ) {
           await this.searchPackageFiles(fullPath, results);
         }
       }
@@ -196,50 +213,62 @@ export class DependencyScanner {
     }
   }
 
-  private async getLocalPackageInfo(packageName: string): Promise<PackageInfo | null> {
-    const packageJsonPath = join(process.cwd(), 'node_modules', packageName, 'package.json');
-    
+  private async getLocalPackageInfo(
+    packageName: string,
+  ): Promise<PackageInfo | null> {
+    const packageJsonPath = join(
+      process.cwd(),
+      "node_modules",
+      packageName,
+      "package.json",
+    );
+
     try {
-      const content = await fs.readFile(packageJsonPath, 'utf8');
+      const content = await fs.readFile(packageJsonPath, "utf8");
       const packageJson = JSON.parse(content);
-      
+
       // Look for license files
       const licenseFile = await this.findLicenseFile(packageName);
-      
+
       return {
         name: packageJson.name || packageName,
-        version: packageJson.version || 'unknown',
+        version: packageJson.version || "unknown",
         license: packageJson.license,
         licenses: packageJson.licenses,
         repository: packageJson.repository,
         homepage: packageJson.homepage,
         author: packageJson.author,
         contributors: packageJson.contributors,
-        licenseFile: licenseFile || undefined
+        licenseFile: licenseFile || undefined,
       };
     } catch (error) {
       return null;
     }
   }
 
-  private async getNpmPackageInfo(packageName: string, version: string): Promise<PackageInfo> {
+  private async getNpmPackageInfo(
+    packageName: string,
+    version: string,
+  ): Promise<PackageInfo> {
     // In a real implementation, this would make an HTTP request to the npm registry
     // For now, we'll return basic info
-    console.warn(`NPM registry lookup not implemented for ${packageName}@${version}`);
-    
+    console.warn(
+      `NPM registry lookup not implemented for ${packageName}@${version}`,
+    );
+
     return {
       name: packageName,
       version,
-      license: 'UNKNOWN'
+      license: "UNKNOWN",
     };
   }
 
   private createUnknownLicenseInfo(licenseId: string): LicenseInfo {
     return {
-      name: licenseId || 'Unknown License',
-      spdxId: licenseId || 'UNKNOWN',
-      url: '',
-      text: 'License text not available',
+      name: licenseId || "Unknown License",
+      spdxId: licenseId || "UNKNOWN",
+      url: "",
+      text: "License text not available",
       permissions: [],
       conditions: [],
       limitations: [],
@@ -250,29 +279,36 @@ export class DependencyScanner {
         requiresSourceDisclosure: false,
         allowsLinking: true,
         isCopeyleft: false,
-        copyleftScope: null
-      }
+        copyleftScope: null,
+      },
     };
   }
 
-  private async extractCopyrightFromFiles(packageName: string): Promise<string[]> {
+  private async extractCopyrightFromFiles(
+    packageName: string,
+  ): Promise<string[]> {
     const holders: string[] = [];
     const licenseFile = await this.findLicenseFile(packageName);
-    
+
     if (!licenseFile) {
       return holders;
     }
 
     try {
-      const content = await fs.readFile(licenseFile, 'utf8');
-      
+      const content = await fs.readFile(licenseFile, "utf8");
+
       // Look for copyright statements
-      const copyrightRegex = /Copyright\s*(?:\(c\))?\s*(\d{4}(?:-\d{4})?)\s+(.+?)(?:\n|$)/gi;
+      const copyrightRegex =
+        /Copyright\s*(?:\(c\))?\s*(\d{4}(?:-\d{4})?)\s+(.+?)(?:\n|$)/gi;
       let match;
-      
+
       while ((match = copyrightRegex.exec(content)) !== null) {
         const holder = match[2]?.trim();
-        if (holder && !holder.includes('THE SOFTWARE') && !holder.includes('AUTHORS OR COPYRIGHT HOLDERS')) {
+        if (
+          holder &&
+          !holder.includes("THE SOFTWARE") &&
+          !holder.includes("AUTHORS OR COPYRIGHT HOLDERS")
+        ) {
           holders.push(holder);
         }
       }

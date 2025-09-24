@@ -2,7 +2,7 @@
  * @fileoverview Configuration for production readiness validation
  */
 
-import type { ProductionReadinessConfig } from './types.js';
+import type { ProductionReadinessConfig } from "./types.js";
 
 /**
  * Default configuration for production readiness validation
@@ -11,83 +11,83 @@ export const DEFAULT_PRODUCTION_READINESS_CONFIG: ProductionReadinessConfig = {
   testing: {
     testSuites: [
       {
-        name: 'cli-integration',
-        type: 'cli-integration',
+        name: "cli-integration",
+        type: "cli-integration",
         tests: [
-          'test-basic-parsing',
-          'test-complex-codebases',
-          'test-multi-language-support',
-          'test-large-file-handling',
-          'test-error-scenarios',
-          'test-configuration-variations',
-          'test-output-formats',
-          'test-performance-benchmarks',
+          "test-basic-parsing",
+          "test-complex-codebases",
+          "test-multi-language-support",
+          "test-large-file-handling",
+          "test-error-scenarios",
+          "test-configuration-variations",
+          "test-output-formats",
+          "test-performance-benchmarks",
         ],
         timeout: 300000, // 5 minutes per test
         parallel: true,
         retries: 2,
       },
       {
-        name: 'mcp-integration',
-        type: 'mcp-integration',
+        name: "mcp-integration",
+        type: "mcp-integration",
         tests: [
-          'test-server-startup',
-          'test-protocol-compliance',
-          'test-tool-registration',
-          'test-query-processing',
-          'test-embedding-generation',
-          'test-vector-search',
-          'test-concurrent-connections',
-          'test-error-handling',
-          'test-resource-cleanup',
+          "test-server-startup",
+          "test-protocol-compliance",
+          "test-tool-registration",
+          "test-query-processing",
+          "test-embedding-generation",
+          "test-vector-search",
+          "test-concurrent-connections",
+          "test-error-handling",
+          "test-resource-cleanup",
         ],
         timeout: 180000, // 3 minutes per test
         parallel: false, // Sequential for server tests
         retries: 3,
       },
       {
-        name: 'vscode-integration',
-        type: 'vscode-integration',
+        name: "vscode-integration",
+        type: "vscode-integration",
         tests: [
-          'test-extension-activation',
-          'test-command-registration',
-          'test-mcp-server-communication',
-          'test-ui-components',
-          'test-settings-integration',
-          'test-workspace-handling',
-          'test-multi-workspace-support',
-          'test-performance-ui',
+          "test-extension-activation",
+          "test-command-registration",
+          "test-mcp-server-communication",
+          "test-ui-components",
+          "test-settings-integration",
+          "test-workspace-handling",
+          "test-multi-workspace-support",
+          "test-performance-ui",
         ],
         timeout: 240000, // 4 minutes per test
         parallel: true,
         retries: 2,
       },
       {
-        name: 'cross-platform',
-        type: 'cross-platform',
+        name: "cross-platform",
+        type: "cross-platform",
         tests: [
-          'test-windows-compatibility',
-          'test-macos-compatibility',
-          'test-linux-compatibility',
-          'test-node-version-compatibility',
-          'test-path-handling',
-          'test-file-system-permissions',
-          'test-environment-variables',
+          "test-windows-compatibility",
+          "test-macos-compatibility",
+          "test-linux-compatibility",
+          "test-node-version-compatibility",
+          "test-path-handling",
+          "test-file-system-permissions",
+          "test-environment-variables",
         ],
         timeout: 360000, // 6 minutes per test
         parallel: true,
         retries: 1,
       },
       {
-        name: 'e2e-workflows',
-        type: 'e2e-workflows',
+        name: "e2e-workflows",
+        type: "e2e-workflows",
         tests: [
-          'test-full-codebase-analysis-workflow',
-          'test-incremental-update-workflow',
-          'test-multi-project-workflow',
-          'test-collaboration-workflow',
-          'test-backup-recovery-workflow',
-          'test-migration-workflow',
+          "test-full-codebase-analysis-workflow",
+          "test-incremental-update-workflow",
+          "test-multi-project-workflow",
+          "test-collaboration-workflow",
+          "test-backup-recovery-workflow",
+          "test-migration-workflow",
         ],
         timeout: 600000, // 10 minutes per test
         parallel: false, // Sequential for E2E tests
@@ -103,8 +103,8 @@ export const DEFAULT_PRODUCTION_READINESS_CONFIG: ProductionReadinessConfig = {
       retries: 2,
       parallel: true,
     },
-    platforms: ['linux', 'darwin', 'win32'],
-    languages: ['typescript', 'javascript', 'python', 'java'],
+    platforms: ["linux", "darwin", "win32"],
+    languages: ["typescript", "javascript", "python", "java"],
   },
 
   performance: {
@@ -129,25 +129,25 @@ export const DEFAULT_PRODUCTION_READINESS_CONFIG: ProductionReadinessConfig = {
   security: {
     vulnerabilityScanning: {
       enabled: true,
-      severity: ['moderate', 'high', 'critical'],
+      severity: ["moderate", "high", "critical"],
     },
     inputValidation: {
       enabled: true,
       testCases: [
-        'sql-injection',
-        'xss-attacks',
-        'path-traversal',
-        'command-injection',
-        'buffer-overflow',
+        "sql-injection",
+        "xss-attacks",
+        "path-traversal",
+        "command-injection",
+        "buffer-overflow",
       ],
     },
     dataPrivacy: {
       enabled: true,
       policies: [
-        'data-retention',
-        'data-cleanup',
-        'user-consent',
-        'data-anonymization',
+        "data-retention",
+        "data-cleanup",
+        "user-consent",
+        "data-anonymization",
       ],
     },
     authentication: {
@@ -158,15 +158,15 @@ export const DEFAULT_PRODUCTION_READINESS_CONFIG: ProductionReadinessConfig = {
 
   deployment: {
     buildValidation: {
-      platforms: ['linux', 'darwin', 'win32'],
-      artifacts: ['cli', 'mcp-server', 'vscode-extension'],
+      platforms: ["linux", "darwin", "win32"],
+      artifacts: ["cli", "mcp-server", "vscode-extension"],
     },
     packageDistribution: {
-      registries: ['npm', 'vscode-marketplace'],
+      registries: ["npm", "vscode-marketplace"],
       verification: true,
     },
     healthChecks: {
-      endpoints: ['/health', '/status', '/metrics'],
+      endpoints: ["/health", "/status", "/metrics"],
       timeout: 5000,
     },
   },
@@ -174,22 +174,22 @@ export const DEFAULT_PRODUCTION_READINESS_CONFIG: ProductionReadinessConfig = {
   compliance: {
     requirements: [
       {
-        name: 'MIT License Compliance',
-        type: 'legal',
+        name: "MIT License Compliance",
+        type: "legal",
         mandatory: true,
-        validator: 'license-validator',
+        validator: "license-validator",
       },
       {
-        name: 'GDPR Compliance',
-        type: 'regulatory',
+        name: "GDPR Compliance",
+        type: "regulatory",
         mandatory: false,
-        validator: 'gdpr-validator',
+        validator: "gdpr-validator",
       },
       {
-        name: 'Code Quality Standards',
-        type: 'internal',
+        name: "Code Quality Standards",
+        type: "internal",
         mandatory: true,
-        validator: 'quality-validator',
+        validator: "quality-validator",
       },
     ],
     auditing: {
@@ -199,23 +199,23 @@ export const DEFAULT_PRODUCTION_READINESS_CONFIG: ProductionReadinessConfig = {
   },
 
   certification: {
-    levels: ['NOT_READY', 'STAGING_READY', 'PRODUCTION_READY'],
+    levels: ["NOT_READY", "STAGING_READY", "PRODUCTION_READY"],
     signOff: {
       required: true,
-      approvers: ['maintainer', 'security-lead'],
+      approvers: ["maintainer", "security-lead"],
     },
     documentation: {
       required: [
-        'README.md',
-        'API documentation',
-        'Installation guide',
-        'Configuration guide',
-        'Troubleshooting guide',
+        "README.md",
+        "API documentation",
+        "Installation guide",
+        "Configuration guide",
+        "Troubleshooting guide",
       ],
       optional: [
-        'Architecture documentation',
-        'Performance benchmarks',
-        'Security audit report',
+        "Architecture documentation",
+        "Performance benchmarks",
+        "Security audit report",
       ],
     },
   },
@@ -223,32 +223,32 @@ export const DEFAULT_PRODUCTION_READINESS_CONFIG: ProductionReadinessConfig = {
   monitoring: {
     metrics: [
       {
-        name: 'response_time',
-        type: 'histogram',
-        labels: ['method', 'endpoint'],
+        name: "response_time",
+        type: "histogram",
+        labels: ["method", "endpoint"],
         threshold: 500,
       },
       {
-        name: 'error_count',
-        type: 'counter',
-        labels: ['error_type', 'component'],
+        name: "error_count",
+        type: "counter",
+        labels: ["error_type", "component"],
       },
       {
-        name: 'memory_usage',
-        type: 'gauge',
-        labels: ['component'],
+        name: "memory_usage",
+        type: "gauge",
+        labels: ["component"],
         threshold: 512 * 1024 * 1024,
       },
       {
-        name: 'active_connections',
-        type: 'gauge',
-        labels: ['server_type'],
+        name: "active_connections",
+        type: "gauge",
+        labels: ["server_type"],
         threshold: 10,
       },
     ],
     alerting: {
       enabled: true,
-      channels: ['console', 'log'],
+      channels: ["console", "log"],
     },
     dashboards: {
       enabled: false,
@@ -259,17 +259,17 @@ export const DEFAULT_PRODUCTION_READINESS_CONFIG: ProductionReadinessConfig = {
   rollback: {
     enabled: true,
     procedures: [
-      'validate-current-state',
-      'backup-configuration',
-      'revert-changes',
-      'verify-rollback',
-      'notify-stakeholders',
+      "validate-current-state",
+      "backup-configuration",
+      "revert-changes",
+      "verify-rollback",
+      "notify-stakeholders",
     ],
     validationSteps: [
-      'health-check',
-      'functionality-test',
-      'performance-test',
-      'data-integrity-check',
+      "health-check",
+      "functionality-test",
+      "performance-test",
+      "data-integrity-check",
     ],
     timeout: 300000, // 5 minutes
   },
@@ -278,45 +278,64 @@ export const DEFAULT_PRODUCTION_READINESS_CONFIG: ProductionReadinessConfig = {
 /**
  * Validate production readiness configuration
  */
-export function validateConfig(config: ProductionReadinessConfig): { valid: boolean; errors: string[] } {
+export function validateConfig(config: ProductionReadinessConfig): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   // Validate testing config
-  if (!config.testing || !config.testing.testSuites || config.testing.testSuites.length === 0) {
-    errors.push('Testing configuration must include at least one test suite');
+  if (
+    !config.testing ||
+    !config.testing.testSuites ||
+    config.testing.testSuites.length === 0
+  ) {
+    errors.push("Testing configuration must include at least one test suite");
   }
 
-  if (config.testing?.coverage?.minimum < 0 || config.testing?.coverage?.minimum > 100) {
-    errors.push('Coverage minimum must be between 0 and 100');
+  if (
+    config.testing?.coverage?.minimum < 0 ||
+    config.testing?.coverage?.minimum > 100
+  ) {
+    errors.push("Coverage minimum must be between 0 and 100");
   }
 
   // Validate performance config
   if (!config.performance || !config.performance.targets) {
-    errors.push('Performance configuration must include targets');
+    errors.push("Performance configuration must include targets");
   }
 
   if (config.performance?.targets?.cliQueryResponseTime <= 0) {
-    errors.push('CLI query response time target must be positive');
+    errors.push("CLI query response time target must be positive");
   }
 
   if (config.performance?.targets?.memoryUsage <= 0) {
-    errors.push('Memory usage target must be positive');
+    errors.push("Memory usage target must be positive");
   }
 
   // Validate security config
-  if (config.security?.vulnerabilityScanning?.enabled && 
-      (!config.security.vulnerabilityScanning.severity || config.security.vulnerabilityScanning.severity.length === 0)) {
-    errors.push('Vulnerability scanning requires severity levels');
+  if (
+    config.security?.vulnerabilityScanning?.enabled &&
+    (!config.security.vulnerabilityScanning.severity ||
+      config.security.vulnerabilityScanning.severity.length === 0)
+  ) {
+    errors.push("Vulnerability scanning requires severity levels");
   }
 
   // Validate deployment config
-  if (!config.deployment?.buildValidation?.platforms || config.deployment.buildValidation.platforms.length === 0) {
-    errors.push('Deployment configuration must include platforms');
+  if (
+    !config.deployment?.buildValidation?.platforms ||
+    config.deployment.buildValidation.platforms.length === 0
+  ) {
+    errors.push("Deployment configuration must include platforms");
   }
 
   // Validate certification config
-  if (!config.certification?.levels || config.certification.levels.length === 0) {
-    errors.push('Certification configuration must include levels');
+  if (
+    !config.certification?.levels ||
+    config.certification.levels.length === 0
+  ) {
+    errors.push("Certification configuration must include levels");
   }
 
   return {
@@ -328,7 +347,9 @@ export function validateConfig(config: ProductionReadinessConfig): { valid: bool
 /**
  * Merge user configuration with defaults
  */
-export function mergeConfig(userConfig: Partial<ProductionReadinessConfig>): ProductionReadinessConfig {
+export function mergeConfig(
+  userConfig: Partial<ProductionReadinessConfig>,
+): ProductionReadinessConfig {
   return {
     testing: {
       ...DEFAULT_PRODUCTION_READINESS_CONFIG.testing,

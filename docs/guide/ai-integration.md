@@ -119,7 +119,6 @@ Claude Desktop is one of the most popular MCP clients. Here's how to connect it 
 #### Installation
 
 1. **Download Claude Desktop:**
-
    - Visit [claude.ai/desktop](https://claude.ai/desktop)
    - Install for your platform (Windows, macOS, Linux)
 

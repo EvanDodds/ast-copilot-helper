@@ -4,7 +4,7 @@
  */
 
 // Import file watching types
-import type { FileWatchConfig } from './filesystem/types.js';
+import type { FileWatchConfig } from "./filesystem/types.js";
 
 /**
  * Core configuration interface for AST Copilot Helper
@@ -13,22 +13,22 @@ import type { FileWatchConfig } from './filesystem/types.js';
 export interface Config {
   /** File patterns to parse */
   parseGlob: string[];
-  
+
   /** File patterns to watch */
   watchGlob: string[];
-  
+
   /** File watching configuration */
   fileWatching?: FileWatchConfig;
-  
+
   /** Output directory for database files */
   outputDir: string;
-  
+
   /** Number of results to return */
   topK: number;
-  
+
   /** Lines of code context */
   snippetLines: number;
-  
+
   /** HNSW index parameters */
   indexParams: {
     /** Build quality (16-800) */
@@ -36,10 +36,10 @@ export interface Config {
     /** Connectivity (4-64) */
     M: number;
   };
-  
+
   /** Model download URL */
   modelHost: string;
-  
+
   /** Model configuration */
   model: {
     /** Default model name to use */
@@ -53,16 +53,16 @@ export interface Config {
     /** Enable download progress reporting */
     showProgress: boolean;
   };
-  
+
   /** Usage analytics enabled */
   enableTelemetry: boolean;
-  
+
   /** Parallel processing limit */
   concurrency: number;
-  
+
   /** Batch processing size */
   batchSize: number;
-  
+
   /** Embedding generation configuration */
   embeddings?: {
     /** Embedding model name (e.g., 'codebert-base') */
@@ -93,7 +93,7 @@ export interface Config {
       maxSnippetLength: number;
     };
   };
-  
+
   /** CLI-specific logging options */
   verbose?: boolean;
   debug?: boolean;
@@ -153,16 +153,16 @@ export type PartialConfig = Partial<{
  */
 export interface CliArgs {
   config?: string;
-  'top-k'?: number;
-  'batch-size'?: number;
-  'snippet-lines'?: number;
+  "top-k"?: number;
+  "batch-size"?: number;
+  "snippet-lines"?: number;
   concurrency?: number;
-  'parse-glob'?: string;
-  'watch-glob'?: string;
-  'model-host'?: string;
-  'enable-telemetry'?: boolean;
-  'ef-construction'?: number;
-  'M'?: number;
+  "parse-glob"?: string;
+  "watch-glob"?: string;
+  "model-host"?: string;
+  "enable-telemetry"?: boolean;
+  "ef-construction"?: number;
+  M?: number;
   // Additional CLI-specific options
   source?: string;
   outputDir?: string;

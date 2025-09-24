@@ -3,10 +3,10 @@
  * @description File-based storage implementation for consent records
  */
 
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { homedir } from 'os';
-import type { ConsentStorage, ConsentRecord } from './types.js';
+import { promises as fs } from "fs";
+import { join } from "path";
+import { homedir } from "os";
+import type { ConsentStorage, ConsentRecord } from "./types.js";
 
 /**
  * File-based consent storage implementation
@@ -16,10 +16,10 @@ export class FileConsentStorage implements ConsentStorage {
   private readonly consentFile: string;
   private readonly historyFile: string;
 
-  constructor(appName = 'ast-copilot-helper') {
-    this.storageDir = join(homedir(), `.${appName}`, 'telemetry');
-    this.consentFile = join(this.storageDir, 'consent.json');
-    this.historyFile = join(this.storageDir, 'consent-history.json');
+  constructor(appName = "ast-copilot-helper") {
+    this.storageDir = join(homedir(), `.${appName}`, "telemetry");
+    this.consentFile = join(this.storageDir, "consent.json");
+    this.historyFile = join(this.storageDir, "consent-history.json");
   }
 
   /**
@@ -29,8 +29,10 @@ export class FileConsentStorage implements ConsentStorage {
     try {
       await fs.mkdir(this.storageDir, { recursive: true, mode: 0o700 });
     } catch (error: any) {
-      if (error.code !== 'EEXIST') {
-        throw new Error(`Failed to create consent storage directory: ${error.message}`);
+      if (error.code !== "EEXIST") {
+        throw new Error(
+          `Failed to create consent storage directory: ${error.message}`,
+        );
       }
     }
   }
@@ -40,26 +42,34 @@ export class FileConsentStorage implements ConsentStorage {
    */
   async saveConsent(record: ConsentRecord): Promise<void> {
     await this.ensureStorageDir();
-    
+
     try {
       // Save current consent
       const consentData = {
         ...record,
-        timestamp: record.timestamp.toISOString()
+        timestamp: record.timestamp.toISOString(),
       };
-      await fs.writeFile(this.consentFile, JSON.stringify(consentData, null, 2), { mode: 0o600 });
+      await fs.writeFile(
+        this.consentFile,
+        JSON.stringify(consentData, null, 2),
+        { mode: 0o600 },
+      );
 
       // Add to history
       const history = await this.getConsentHistory();
       history.push(record);
-      
+
       // Keep only last 50 records
       const trimmedHistory = history.slice(-50);
-      const historyData = trimmedHistory.map(r => ({
+      const historyData = trimmedHistory.map((r) => ({
         ...r,
-        timestamp: r.timestamp.toISOString()
+        timestamp: r.timestamp.toISOString(),
       }));
-      await fs.writeFile(this.historyFile, JSON.stringify(historyData, null, 2), { mode: 0o600 });
+      await fs.writeFile(
+        this.historyFile,
+        JSON.stringify(historyData, null, 2),
+        { mode: 0o600 },
+      );
     } catch (error: any) {
       throw new Error(`Failed to save consent record: ${error.message}`);
     }
@@ -70,14 +80,14 @@ export class FileConsentStorage implements ConsentStorage {
    */
   async loadConsent(): Promise<ConsentRecord | null> {
     try {
-      const data = await fs.readFile(this.consentFile, 'utf8');
+      const data = await fs.readFile(this.consentFile, "utf8");
       const parsed = JSON.parse(data);
       return {
         ...parsed,
-        timestamp: new Date(parsed.timestamp)
+        timestamp: new Date(parsed.timestamp),
       };
     } catch (error: any) {
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         return null; // No consent record exists
       }
       throw new Error(`Failed to load consent record: ${error.message}`);
@@ -89,14 +99,14 @@ export class FileConsentStorage implements ConsentStorage {
    */
   async getConsentHistory(): Promise<ConsentRecord[]> {
     try {
-      const data = await fs.readFile(this.historyFile, 'utf8');
+      const data = await fs.readFile(this.historyFile, "utf8");
       const parsed = JSON.parse(data);
       return parsed.map((record: any) => ({
         ...record,
-        timestamp: new Date(record.timestamp)
+        timestamp: new Date(record.timestamp),
       }));
     } catch (error: any) {
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         return []; // No history exists yet
       }
       throw new Error(`Failed to load consent history: ${error.message}`);
@@ -112,7 +122,7 @@ export class FileConsentStorage implements ConsentStorage {
       try {
         await fs.unlink(this.consentFile);
       } catch (error: any) {
-        if (error.code !== 'ENOENT') {
+        if (error.code !== "ENOENT") {
           throw error;
         }
       }
@@ -120,7 +130,7 @@ export class FileConsentStorage implements ConsentStorage {
       try {
         await fs.unlink(this.historyFile);
       } catch (error: any) {
-        if (error.code !== 'ENOENT') {
+        if (error.code !== "ENOENT") {
           throw error;
         }
       }
@@ -142,12 +152,12 @@ export class FileConsentStorage implements ConsentStorage {
   async isAvailable(): Promise<boolean> {
     try {
       await this.ensureStorageDir();
-      
+
       // Test write access
-      const testFile = join(this.storageDir, '.test');
-      await fs.writeFile(testFile, 'test');
+      const testFile = join(this.storageDir, ".test");
+      await fs.writeFile(testFile, "test");
       await fs.unlink(testFile);
-      
+
       return true;
     } catch {
       return false;

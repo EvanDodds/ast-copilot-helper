@@ -3,12 +3,15 @@
  * Exports file system utilities and types for cross-platform operations
  */
 
-export { FileSystemManager } from './manager.js';
-export { createFileWatcher, ChokidarFileWatcher } from './file-watcher.js';
-export { createIncrementalUpdateManager, IncementalUpdateManagerImpl } from './incremental-update-manager.js';
-export type { 
-  FileSystemUtils, 
-  ListOptions, 
+export { FileSystemManager } from "./manager.js";
+export { createFileWatcher, ChokidarFileWatcher } from "./file-watcher.js";
+export {
+  createIncrementalUpdateManager,
+  IncementalUpdateManagerImpl,
+} from "./incremental-update-manager.js";
+export type {
+  FileSystemUtils,
+  ListOptions,
   FileStats,
   AtomicWriteOptions,
   CopyOptions,
@@ -18,5 +21,5 @@ export type {
   FileWatcher,
   FileWatcherEvents,
   IncrementalUpdateManager,
-  ConsistencyReport
-} from './types.js';
+  ConsistencyReport,
+} from "./types.js";

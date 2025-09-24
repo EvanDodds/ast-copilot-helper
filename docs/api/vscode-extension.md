@@ -247,14 +247,14 @@ Shows AST information when hovering over code elements.
 class ASTHoverProvider implements vscode.HoverProvider {
   async provideHover(
     document: vscode.TextDocument,
-    position: vscode.Position
+    position: vscode.Position,
   ): Promise<vscode.Hover | undefined> {
     const annotation = await getAnnotationAtPosition(document, position);
 
     if (annotation) {
       const markdown = new vscode.MarkdownString();
       markdown.appendMarkdown(
-        `**${annotation.name}** (${annotation.type})\n\n`
+        `**${annotation.name}** (${annotation.type})\n\n`,
       );
 
       if (annotation.description) {
@@ -282,7 +282,7 @@ Provides intelligent completions based on AST analysis.
 class ASTCompletionProvider implements vscode.CompletionItemProvider {
   async provideCompletionItems(
     document: vscode.TextDocument,
-    position: vscode.Position
+    position: vscode.Position,
   ): Promise<vscode.CompletionItem[]> {
     const context = await getCompletionContext(document, position);
     const suggestions = await getSuggestions(context);
@@ -290,7 +290,7 @@ class ASTCompletionProvider implements vscode.CompletionItemProvider {
     return suggestions.map((suggestion) => {
       const item = new vscode.CompletionItem(
         suggestion.label,
-        vscode.CompletionItemKind.Function
+        vscode.CompletionItemKind.Function,
       );
 
       item.detail = suggestion.detail;
@@ -311,7 +311,7 @@ Navigate to definitions using AST annotations.
 class ASTDefinitionProvider implements vscode.DefinitionProvider {
   async provideDefinition(
     document: vscode.TextDocument,
-    position: vscode.Position
+    position: vscode.Position,
   ): Promise<vscode.Definition | undefined> {
     const symbol = getSymbolAtPosition(document, position);
     const definition = await findDefinition(symbol);
@@ -319,7 +319,7 @@ class ASTDefinitionProvider implements vscode.DefinitionProvider {
     if (definition) {
       return new vscode.Location(
         vscode.Uri.file(definition.file),
-        new vscode.Position(definition.line - 1, definition.column)
+        new vscode.Position(definition.line - 1, definition.column),
       );
     }
   }
@@ -335,7 +335,7 @@ class ASTReferenceProvider implements vscode.ReferenceProvider {
   async provideReferences(
     document: vscode.TextDocument,
     position: vscode.Position,
-    context: vscode.ReferenceContext
+    context: vscode.ReferenceContext,
   ): Promise<vscode.Location[]> {
     const symbol = getSymbolAtPosition(document, position);
     const references = await findReferences(symbol);
@@ -344,8 +344,8 @@ class ASTReferenceProvider implements vscode.ReferenceProvider {
       (ref) =>
         new vscode.Location(
           vscode.Uri.file(ref.file),
-          new vscode.Position(ref.line - 1, ref.column)
-        )
+          new vscode.Position(ref.line - 1, ref.column),
+        ),
     );
   }
 }
@@ -378,7 +378,7 @@ function updateDecorations(editor: vscode.TextEditor) {
           annotation.line - 1,
           annotation.column,
           annotation.line - 1,
-          annotation.column + annotation.name.length
+          annotation.column + annotation.name.length,
         ),
         hoverMessage: `Function: ${annotation.name}`,
       });
@@ -410,10 +410,10 @@ class ASTDiagnosticsProvider {
           issue.line - 1,
           issue.column,
           issue.line - 1,
-          issue.column + issue.length
+          issue.column + issue.length,
         ),
         issue.message,
-        this.getSeverity(issue.severity)
+        this.getSeverity(issue.severity),
       );
 
       diagnostic.code = issue.code;
@@ -452,7 +452,7 @@ Provide code actions based on AST analysis.
 class ASTCodeActionProvider implements vscode.CodeActionProvider {
   async provideCodeActions(
     document: vscode.TextDocument,
-    range: vscode.Range | vscode.Selection
+    range: vscode.Range | vscode.Selection,
   ): Promise<vscode.CodeAction[]> {
     const actions: vscode.CodeAction[] = [];
     const annotation = await getAnnotationAtRange(document, range);
@@ -461,14 +461,14 @@ class ASTCodeActionProvider implements vscode.CodeActionProvider {
       // Add documentation action
       const addDocAction = new vscode.CodeAction(
         "Add JSDoc documentation",
-        vscode.CodeActionKind.QuickFix
+        vscode.CodeActionKind.QuickFix,
       );
 
       addDocAction.edit = new vscode.WorkspaceEdit();
       addDocAction.edit.insert(
         document.uri,
         new vscode.Position(annotation.line - 1, 0),
-        generateJSDoc(annotation)
+        generateJSDoc(annotation),
       );
 
       actions.push(addDocAction);
@@ -477,7 +477,7 @@ class ASTCodeActionProvider implements vscode.CodeActionProvider {
       if (annotation.type === "function") {
         const extractAction = new vscode.CodeAction(
           "Extract to separate file",
-          vscode.CodeActionKind.Refactor
+          vscode.CodeActionKind.Refactor,
         );
 
         extractAction.command = {
@@ -511,7 +511,7 @@ class QueryPanel {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-      }
+      },
     );
 
     panel.webview.html = this.getHtmlForWebview(panel.webview, extensionUri);
@@ -531,13 +531,13 @@ class QueryPanel {
 
   private static getHtmlForWebview(
     webview: vscode.Webview,
-    extensionUri: vscode.Uri
+    extensionUri: vscode.Uri,
   ): string {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "media", "query.js")
+      vscode.Uri.joinPath(extensionUri, "media", "query.js"),
     );
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "media", "query.css")
+      vscode.Uri.joinPath(extensionUri, "media", "query.css"),
     );
 
     return `<!DOCTYPE html>
@@ -660,13 +660,11 @@ suite("Extension Test Suite", () => {
 ### Common Issues
 
 1. **Extension not activating**
-
    - Check if workspace contains supported file types
    - Verify `.ast-helper.json` configuration is valid
    - Check Output panel for error messages
 
 2. **MCP server won't start**
-
    - Ensure port is not already in use
    - Check firewall settings
    - Verify CLI is properly installed

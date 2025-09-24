@@ -80,7 +80,7 @@ export interface MemoryStats {
   average: number;
   peak: number;
   current: number;
-  unit: 'bytes' | 'kb' | 'mb' | 'gb';
+  unit: "bytes" | "kb" | "mb" | "gb";
 }
 
 export interface ThroughputMetrics {
@@ -178,13 +178,13 @@ export interface TelemetryPayload {
 }
 
 export interface FeatureUsageEvent extends TelemetryEvent {
-  type: 'feature_usage';
+  type: "feature_usage";
   feature: string;
   data: Record<string, any>;
 }
 
 export interface PerformanceEvent extends TelemetryEvent {
-  type: 'performance';
+  type: "performance";
   operation: string;
   duration: number;
   memoryUsage: number;
@@ -195,7 +195,7 @@ export interface PerformanceEvent extends TelemetryEvent {
 }
 
 export interface ErrorEvent extends TelemetryEvent {
-  type: 'error';
+  type: "error";
   errorType: string;
   errorCode?: string;
   errorCategory: ErrorCategory;
@@ -206,7 +206,7 @@ export interface ErrorEvent extends TelemetryEvent {
 }
 
 export interface UsageEvent extends TelemetryEvent {
-  type: 'usage';
+  type: "usage";
   command?: string;
   feature?: string;
   duration?: number;
@@ -223,7 +223,7 @@ export interface SanitizedErrorReport {
 }
 
 // Enums and type unions
-export type PrivacyLevel = 'strict' | 'balanced' | 'permissive';
+export type PrivacyLevel = "strict" | "balanced" | "permissive";
 
 /**
  * Consent manager interface for privacy-respecting consent handling
@@ -248,9 +248,23 @@ export interface DataAnonymizer {
   updatePrivacyLevel(level: PrivacyLevel): Promise<void>;
   shutdown(): Promise<void>;
 }
-export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
-export type ErrorCategory = 'parser' | 'filesystem' | 'network' | 'configuration' | 'validation' | 'internal' | 'user_error' | 'external_service';
-export type TelemetryEventType = 'feature_usage' | 'performance' | 'error' | 'usage' | 'system' | 'session';
+export type ErrorSeverity = "low" | "medium" | "high" | "critical";
+export type ErrorCategory =
+  | "parser"
+  | "filesystem"
+  | "network"
+  | "configuration"
+  | "validation"
+  | "internal"
+  | "user_error"
+  | "external_service";
+export type TelemetryEventType =
+  | "feature_usage"
+  | "performance"
+  | "error"
+  | "usage"
+  | "system"
+  | "session";
 
 // Constants
 export const DEFAULT_BATCH_SIZE = 50;
@@ -282,7 +296,10 @@ export const DEFAULT_TELEMETRY_FEATURES: TelemetryFeatures = {
 };
 
 // Privacy level feature matrix
-export const PRIVACY_LEVEL_FEATURES: Record<PrivacyLevel, Partial<TelemetryFeatures>> = {
+export const PRIVACY_LEVEL_FEATURES: Record<
+  PrivacyLevel,
+  Partial<TelemetryFeatures>
+> = {
   strict: {
     usageTracking: false,
     performanceMonitoring: true,

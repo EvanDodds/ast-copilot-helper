@@ -3,12 +3,12 @@
  * Comprehensive error reporting and diagnostics for AST Copilot Helper
  */
 
-import { ComprehensiveErrorReportingManager } from './manager.js';
+import { ComprehensiveErrorReportingManager } from "./manager.js";
 import type {
   ErrorReportingConfig,
   ReportResult,
-  ErrorHistoryEntry
-} from './types.js';
+  ErrorHistoryEntry,
+} from "./types.js";
 
 // Export main interfaces and types
 export type {
@@ -30,11 +30,11 @@ export type {
   PerformanceDiagnostics,
   DependencyDiagnostics,
   ResolutionInfo,
-  UserFeedback
-} from './types.js';
+  UserFeedback,
+} from "./types.js";
 
 // Export main implementation
-export { ComprehensiveErrorReportingManager } from './manager.js';
+export { ComprehensiveErrorReportingManager } from "./manager.js";
 
 // Create and export default instance
 export const errorReporter = new ComprehensiveErrorReportingManager();
@@ -42,7 +42,9 @@ export const errorReporter = new ComprehensiveErrorReportingManager();
 /**
  * Initialize the error reporting system with default configuration
  */
-export async function initializeErrorReporting(config?: Partial<ErrorReportingConfig>): Promise<void> {
+export async function initializeErrorReporting(
+  config?: Partial<ErrorReportingConfig>,
+): Promise<void> {
   const defaultConfig: ErrorReportingConfig = {
     enabled: true,
     enableCrashReporting: true,
@@ -62,8 +64,8 @@ export async function initializeErrorReporting(config?: Partial<ErrorReportingCo
       dependencies: true,
       maxCollectionTimeMs: 10000,
       includeEnvironmentVars: true,
-      includeProcessInfo: true
-    }
+      includeProcessInfo: true,
+    },
   };
 
   const mergedConfig = { ...defaultConfig, ...config };
@@ -73,7 +75,10 @@ export async function initializeErrorReporting(config?: Partial<ErrorReportingCo
 /**
  * Report an error to the system
  */
-export async function reportError(error: Error, context?: any): Promise<ReportResult> {
+export async function reportError(
+  error: Error,
+  context?: any,
+): Promise<ReportResult> {
   const errorReport = await errorReporter.generateErrorReport(error, context);
   return await errorReporter.reportError(errorReport);
 }
@@ -102,6 +107,8 @@ export async function clearErrorHistory(): Promise<void> {
 /**
  * Export diagnostic data
  */
-export async function exportDiagnostics(format: 'json' | 'text' = 'json'): Promise<string> {
+export async function exportDiagnostics(
+  format: "json" | "text" = "json",
+): Promise<string> {
   return await errorReporter.exportDiagnostics(format);
 }

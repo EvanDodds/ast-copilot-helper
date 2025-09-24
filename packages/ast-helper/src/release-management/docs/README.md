@@ -73,7 +73,7 @@ const validation = await manager.validateRelease(plan);
 if (validation.success) {
   const result = await manager.executeRelease(plan);
   console.log(
-    `Release ${result.version} ${result.success ? "succeeded" : "failed"}`
+    `Release ${result.version} ${result.success ? "succeeded" : "failed"}`,
   );
 }
 ```
@@ -158,7 +158,7 @@ const result = await manager.executeRelease(plan);
 // Create alpha
 const alphaPlan = await manager.planRelease(
   "1.1.0-alpha.1",
-  ReleaseType.PRERELEASE
+  ReleaseType.PRERELEASE,
 );
 await manager.executeRelease(alphaPlan);
 

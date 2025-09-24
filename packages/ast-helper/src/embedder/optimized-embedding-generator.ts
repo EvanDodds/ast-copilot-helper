@@ -2,13 +2,17 @@
  * Enhanced embedding generator with performance optimizations
  */
 
-import { XenovaEmbeddingGenerator } from './XenovaEmbeddingGenerator.js';
-import type { IntelligentEmbeddingCache} from './intelligent-cache.js';
-import { getEmbeddingCache } from './intelligent-cache.js';
-import { DynamicBatchOptimizer } from './dynamic-batch-optimizer.js';
-import { MemoryAwareProcessor } from './memory-aware-processor.js';
-import type { EmbeddingResult, Annotation, BatchProcessOptions } from './types.js';
-import { createLogger } from '../logging/index.js';
+import { XenovaEmbeddingGenerator } from "./XenovaEmbeddingGenerator.js";
+import type { IntelligentEmbeddingCache } from "./intelligent-cache.js";
+import { getEmbeddingCache } from "./intelligent-cache.js";
+import { DynamicBatchOptimizer } from "./dynamic-batch-optimizer.js";
+import { MemoryAwareProcessor } from "./memory-aware-processor.js";
+import type {
+  EmbeddingResult,
+  Annotation,
+  BatchProcessOptions,
+} from "./types.js";
+import { createLogger } from "../logging/index.js";
 
 export interface PerformanceOptimizationConfig {
   /** Enable intelligent caching */
@@ -107,7 +111,7 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
   private cache: IntelligentEmbeddingCache | null = null;
   private batchOptimizer: DynamicBatchOptimizer | null = null;
   private memoryProcessor: MemoryAwareProcessor | null = null;
-  private logger = createLogger({ operation: 'OptimizedEmbeddingGenerator' });
+  private logger = createLogger({ operation: "OptimizedEmbeddingGenerator" });
 
   constructor(config: Partial<PerformanceOptimizationConfig> = {}) {
     super();
@@ -122,7 +126,7 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
     // Initialize cache if enabled
     if (this.performanceConfig.enableCaching) {
       this.cache = getEmbeddingCache(this.performanceConfig.cacheConfig);
-      this.logger.info('Intelligent caching enabled');
+      this.logger.info("Intelligent caching enabled");
     }
 
     // Initialize batch optimizer if enabled
@@ -130,25 +134,30 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
       this.batchOptimizer = new DynamicBatchOptimizer(32, {
         minBatchSize: this.performanceConfig.batchConfig?.minBatchSize || 1,
         maxBatchSize: this.performanceConfig.batchConfig?.maxBatchSize || 128,
-        targetCpuUsage: this.performanceConfig.batchConfig?.targetCpuUsage || 70,
-        targetMemoryUsage: this.performanceConfig.batchConfig?.targetMemoryUsage || 75,
+        targetCpuUsage:
+          this.performanceConfig.batchConfig?.targetCpuUsage || 70,
+        targetMemoryUsage:
+          this.performanceConfig.batchConfig?.targetMemoryUsage || 75,
       });
-      this.logger.info('Dynamic batch optimization enabled');
+      this.logger.info("Dynamic batch optimization enabled");
     }
 
     // Initialize memory-aware processor if enabled
     if (this.performanceConfig.enableMemoryAwareProcessing) {
-      const memoryThresholds = this.performanceConfig.memoryConfig?.memoryThresholds;
+      const memoryThresholds =
+        this.performanceConfig.memoryConfig?.memoryThresholds;
       this.memoryProcessor = new MemoryAwareProcessor({
-        memoryThresholds: memoryThresholds ? {
-          critical: memoryThresholds.critical || 85,
-          high: memoryThresholds.high || 70,
-          normal: memoryThresholds.normal || 55,
-          low: memoryThresholds.low || 35,
-        } : undefined,
+        memoryThresholds: memoryThresholds
+          ? {
+              critical: memoryThresholds.critical || 85,
+              high: memoryThresholds.high || 70,
+              normal: memoryThresholds.normal || 55,
+              low: memoryThresholds.low || 35,
+            }
+          : undefined,
         enableGcHints: this.performanceConfig.memoryConfig?.enableGcHints,
       });
-      this.logger.info('Memory-aware processing enabled');
+      this.logger.info("Memory-aware processing enabled");
     }
   }
 
@@ -156,45 +165,48 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
    * Enhanced batch processing with all optimizations
    */
   override async batchProcess(
-    annotations: Annotation[], 
-    options: Partial<BatchProcessOptions> = {}
+    annotations: Annotation[],
+    options: Partial<BatchProcessOptions> = {},
   ): Promise<EmbeddingResult[]> {
     const startTime = performance.now();
-    
-    this.logger.info('Starting optimized batch processing', {
+
+    this.logger.info("Starting optimized batch processing", {
       annotationCount: annotations.length,
       cacheEnabled: !!this.cache,
       batchOptimizationEnabled: !!this.batchOptimizer,
-      memoryAwareEnabled: !!this.memoryProcessor
+      memoryAwareEnabled: !!this.memoryProcessor,
     });
 
     try {
       // Step 1: Check cache for existing results
-      const { cachedResults, uncachedAnnotations } = await this.checkCache(annotations);
-      
-      this.logger.debug('Cache check completed', {
+      const { cachedResults, uncachedAnnotations } =
+        await this.checkCache(annotations);
+
+      this.logger.debug("Cache check completed", {
         cached: cachedResults.length,
         uncached: uncachedAnnotations.length,
-        cacheHitRatio: annotations.length > 0 
-          ? (cachedResults.length / annotations.length * 100).toFixed(1) + '%'
-          : '0%'
+        cacheHitRatio:
+          annotations.length > 0
+            ? ((cachedResults.length / annotations.length) * 100).toFixed(1) +
+              "%"
+            : "0%",
       });
 
       // Step 2: Process uncached annotations with optimizations
       let newResults: EmbeddingResult[] = [];
-      
+
       if (uncachedAnnotations.length > 0) {
         if (this.memoryProcessor && this.batchOptimizer) {
           // Use advanced memory-aware processing with dynamic batching
           newResults = await this.processWithAdvancedOptimizations(
-            uncachedAnnotations, 
-            options
+            uncachedAnnotations,
+            options,
           );
         } else if (this.batchOptimizer) {
           // Use dynamic batch optimization only
           newResults = await this.processWithBatchOptimization(
-            uncachedAnnotations, 
-            options
+            uncachedAnnotations,
+            options,
           );
         } else {
           // Fallback to standard processing
@@ -209,18 +221,19 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
       const allResults = [...cachedResults, ...newResults];
       const totalTime = performance.now() - startTime;
 
-      this.logger.info('Optimized batch processing completed', {
+      this.logger.info("Optimized batch processing completed", {
         totalResults: allResults.length,
         cacheHits: cachedResults.length,
         newResults: newResults.length,
         totalTime: `${totalTime.toFixed(2)}ms`,
-        throughput: `${(allResults.length / (totalTime / 1000)).toFixed(2)} items/sec`
+        throughput: `${(allResults.length / (totalTime / 1000)).toFixed(2)} items/sec`,
       });
 
       return allResults;
-
     } catch (error: any) {
-      this.logger.error('Optimized batch processing failed', { error: error.message });
+      this.logger.error("Optimized batch processing failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -255,7 +268,8 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
         throughputTrend: batchAnalytics.trends.throughputTrend,
         memoryTrend: batchAnalytics.trends.memoryTrend,
         cpuTrend: batchAnalytics.trends.cpuTrend,
-        recommendedBatchSize: batchAnalytics.recommendations.recommendedBatchSize,
+        recommendedBatchSize:
+          batchAnalytics.recommendations.recommendedBatchSize,
         confidence: batchAnalytics.recommendations.confidence,
       };
       scoreComponents.push(batchAnalytics.recommendations.confidence);
@@ -263,23 +277,30 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
 
     // Memory processing metrics
     if (this.memoryProcessor) {
-      const memoryRecommendations = this.memoryProcessor.getProcessingRecommendations();
+      const memoryRecommendations =
+        this.memoryProcessor.getProcessingRecommendations();
       metrics.memoryProcessing = {
         currentStrategy: memoryRecommendations.currentStrategy.name,
-        memoryUsagePercent: memoryRecommendations.memoryMetrics.memoryUsagePercent,
+        memoryUsagePercent:
+          memoryRecommendations.memoryMetrics.memoryUsagePercent,
         availableMemory: memoryRecommendations.memoryMetrics.availableMemory,
         recommendations: memoryRecommendations.recommendations,
       };
-      
+
       // Score based on memory efficiency
-      const memoryScore = Math.max(0, 1 - (memoryRecommendations.memoryMetrics.memoryUsagePercent / 100));
+      const memoryScore = Math.max(
+        0,
+        1 - memoryRecommendations.memoryMetrics.memoryUsagePercent / 100,
+      );
       scoreComponents.push(memoryScore);
     }
 
     // Calculate overall performance score
-    metrics.overallScore = scoreComponents.length > 0 
-      ? scoreComponents.reduce((sum, score) => sum + score, 0) / scoreComponents.length 
-      : 0.5;
+    metrics.overallScore =
+      scoreComponents.length > 0
+        ? scoreComponents.reduce((sum, score) => sum + score, 0) /
+          scoreComponents.length
+        : 0.5;
 
     return metrics;
   }
@@ -288,7 +309,7 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
    * Optimize performance settings based on current metrics
    */
   async optimizePerformance(): Promise<void> {
-    this.logger.info('Starting performance optimization');
+    this.logger.info("Starting performance optimization");
 
     // Optimize cache if enabled
     if (this.cache) {
@@ -301,8 +322,8 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
     }
 
     const metrics = this.getPerformanceMetrics();
-    this.logger.info('Performance optimization completed', {
-      overallScore: (metrics.overallScore * 100).toFixed(1) + '%'
+    this.logger.info("Performance optimization completed", {
+      overallScore: (metrics.overallScore * 100).toFixed(1) + "%",
     });
   }
 
@@ -313,12 +334,12 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
     if (this.memoryProcessor) {
       this.memoryProcessor.stop();
     }
-    
+
     if (this.cache) {
       this.cache.clear();
     }
-    
-    this.logger.info('Optimized embedding generator cleanup completed');
+
+    this.logger.info("Optimized embedding generator cleanup completed");
   }
 
   /**
@@ -350,15 +371,18 @@ export class OptimizedEmbeddingGenerator extends XenovaEmbeddingGenerator {
   /**
    * Cache new results
    */
-  private async cacheResults(annotations: Annotation[], results: EmbeddingResult[]): Promise<void> {
+  private async cacheResults(
+    annotations: Annotation[],
+    results: EmbeddingResult[],
+  ): Promise<void> {
     if (!this.cache) {
-return;
-}
+      return;
+    }
 
     for (let i = 0; i < Math.min(annotations.length, results.length); i++) {
       const annotation = annotations[i];
       const result = results[i];
-      
+
       if (annotation && result) {
         await this.cache.set(annotation, result);
       }
@@ -370,56 +394,60 @@ return;
    */
   private async processWithAdvancedOptimizations(
     annotations: Annotation[],
-    options: Partial<BatchProcessOptions>
+    options: Partial<BatchProcessOptions>,
   ): Promise<EmbeddingResult[]> {
     const processor = async (batch: Annotation[]) => {
       // Use optimized batch size from batch optimizer
       const optimizedBatchSize = this.batchOptimizer!.getCurrentBatchSize();
       const batchStartTime = performance.now();
-      
+
       // Process with parent class method
       const results = await super.batchProcess(batch, {
         ...options,
         batchSize: optimizedBatchSize,
       });
-      
+
       const processingTime = performance.now() - batchStartTime;
-      
+
       // Record performance for batch optimizer
       this.batchOptimizer!.recordPerformance(
         batch.length,
         processingTime,
         results.length,
-        true
+        true,
       );
-      
+
       return results;
     };
 
-    const processingResult = await this.memoryProcessor!.processWithMemoryAwareness<Annotation, EmbeddingResult>({
-      items: annotations,
-      processor,
-      onProgress: options.progressCallback,
-      onMemoryWarning: (memoryMetrics) => {
-        this.logger.warn('Memory warning during processing', {
-          usage: `${memoryMetrics.memoryUsagePercent.toFixed(1)}%`,
-          available: `${(memoryMetrics.availableMemory / 1024 / 1024).toFixed(0)}MB`
-        });
-      },
-      onStrategyChange: (oldStrategy, newStrategy) => {
-        this.logger.info('Processing strategy changed', {
-          from: oldStrategy.name,
-          to: newStrategy.name
-        });
-      },
-    });
+    const processingResult =
+      await this.memoryProcessor!.processWithMemoryAwareness<
+        Annotation,
+        EmbeddingResult
+      >({
+        items: annotations,
+        processor,
+        onProgress: options.progressCallback,
+        onMemoryWarning: (memoryMetrics) => {
+          this.logger.warn("Memory warning during processing", {
+            usage: `${memoryMetrics.memoryUsagePercent.toFixed(1)}%`,
+            available: `${(memoryMetrics.availableMemory / 1024 / 1024).toFixed(0)}MB`,
+          });
+        },
+        onStrategyChange: (oldStrategy, newStrategy) => {
+          this.logger.info("Processing strategy changed", {
+            from: oldStrategy.name,
+            to: newStrategy.name,
+          });
+        },
+      });
 
-    this.logger.debug('Advanced processing completed', {
+    this.logger.debug("Advanced processing completed", {
       totalItems: processingResult.stats.totalItems,
       successful: processingResult.stats.successfulItems,
       strategyChanges: processingResult.stats.strategyChanges,
       memoryCleanups: processingResult.stats.memoryCleanups,
-      peakMemoryUsage: `${processingResult.stats.peakMemoryUsage.toFixed(1)}%`
+      peakMemoryUsage: `${processingResult.stats.peakMemoryUsage.toFixed(1)}%`,
     });
 
     return processingResult.results;
@@ -430,26 +458,26 @@ return;
    */
   private async processWithBatchOptimization(
     annotations: Annotation[],
-    options: Partial<BatchProcessOptions>
+    options: Partial<BatchProcessOptions>,
   ): Promise<EmbeddingResult[]> {
     const optimizedBatchSize = this.batchOptimizer!.getCurrentBatchSize();
     const startTime = performance.now();
-    
+
     const results = await super.batchProcess(annotations, {
       ...options,
       batchSize: optimizedBatchSize,
     });
-    
+
     const processingTime = performance.now() - startTime;
-    
+
     // Record performance for batch optimizer
     this.batchOptimizer!.recordPerformance(
       annotations.length,
       processingTime,
       results.length,
-      true
+      true,
     );
-    
+
     return results;
   }
 }

@@ -1,15 +1,17 @@
 /**
  * Performance Testing Utilities
- * 
+ *
  * Utilities for timing, measurement, and performance testing operations.
  */
 
-import { totalmem, freemem } from 'os';
+import { totalmem, freemem } from "os";
 
 export class PerformanceTimer {
   private timers: Map<string, number> = new Map();
-  
-  static async measure<T>(fn: () => Promise<T>): Promise<{ result: T; duration: number }> {
+
+  static async measure<T>(
+    fn: () => Promise<T>,
+  ): Promise<{ result: T; duration: number }> {
     const start = performance.now();
     const result = await fn();
     const duration = performance.now() - start;
@@ -39,11 +41,15 @@ export class PerformanceTimer {
     return duration;
   }
 
-  static assertPerformance(duration: number, threshold: number, operation: string): void {
+  static assertPerformance(
+    duration: number,
+    threshold: number,
+    operation: string,
+  ): void {
     if (duration > threshold) {
       throw new Error(
         `Performance assertion failed for ${operation}: ` +
-        `${duration}ms > ${threshold}ms threshold`
+          `${duration}ms > ${threshold}ms threshold`,
       );
     }
   }
@@ -58,7 +64,7 @@ export class CPUMonitor {
   start(): void {
     this.startUsage = process.cpuUsage();
     this.samples = [];
-    
+
     // Sample CPU usage every 100ms
     this.intervalId = setInterval(() => {
       if (this.startUsage) {
@@ -73,16 +79,16 @@ export class CPUMonitor {
 
   startMonitoring(_interval = 100): void {
     if (this.monitoring) {
-return;
-}
+      return;
+    }
     this.start();
     this.monitoring = true;
   }
 
   stopMonitoring(): void {
     if (!this.monitoring) {
-return;
-}
+      return;
+    }
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
@@ -94,7 +100,10 @@ return;
     if (this.samples.length === 0) {
       return 0;
     }
-    return this.samples.reduce((sum, sample) => sum + sample, 0) / this.samples.length;
+    return (
+      this.samples.reduce((sum, sample) => sum + sample, 0) /
+      this.samples.length
+    );
   }
 
   async stop(): Promise<number> {
@@ -108,7 +117,10 @@ return;
     }
 
     // Return average CPU usage
-    return this.samples.reduce((sum, sample) => sum + sample, 0) / this.samples.length;
+    return (
+      this.samples.reduce((sum, sample) => sum + sample, 0) /
+      this.samples.length
+    );
   }
 }
 
@@ -119,23 +131,28 @@ export class MemoryMonitor {
   start(): void {
     this.samples = [];
     this.samples.push(process.memoryUsage());
-    
+
     // Sample memory usage every 100ms
     this.intervalId = setInterval(() => {
       this.samples.push(process.memoryUsage());
     }, 100);
   }
 
-  getCurrentUsage(): { used: number; total: number; free: number; percentage: number } {
+  getCurrentUsage(): {
+    used: number;
+    total: number;
+    free: number;
+    percentage: number;
+  } {
     const totalMemory = totalmem();
     const freeMemory = freemem();
     const usedMemory = totalMemory - freeMemory;
-    
+
     return {
       used: usedMemory,
       total: totalMemory,
       free: freeMemory,
-      percentage: (usedMemory / totalMemory) * 100
+      percentage: (usedMemory / totalMemory) * 100,
     };
   }
 
@@ -157,11 +174,12 @@ export class MemoryMonitor {
       };
     }
 
-    const heapUsages = this.samples.map(s => s.heapUsed / 1024 / 1024);
-    
+    const heapUsages = this.samples.map((s) => s.heapUsed / 1024 / 1024);
+
     return {
       peak: Math.max(...heapUsages),
-      average: heapUsages.reduce((sum, usage) => sum + usage, 0) / heapUsages.length,
+      average:
+        heapUsages.reduce((sum, usage) => sum + usage, 0) / heapUsages.length,
       start: heapUsages[0] ?? 0,
       end: heapUsages[heapUsages.length - 1] ?? 0,
     };
@@ -169,14 +187,14 @@ export class MemoryMonitor {
 }
 
 export interface MemoryStats {
-  peak: number;      // Peak memory usage in MB
-  average: number;   // Average memory usage in MB
-  start: number;     // Starting memory usage in MB
-  end: number;       // Ending memory usage in MB
+  peak: number; // Peak memory usage in MB
+  average: number; // Average memory usage in MB
+  start: number; // Starting memory usage in MB
+  end: number; // Ending memory usage in MB
 }
 
 export async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function formatDuration(ms: number): string {
@@ -201,6 +219,9 @@ export function formatMemory(bytes: number): string {
   }
 }
 
-export function calculateThroughput(itemCount: number, durationMs: number): number {
+export function calculateThroughput(
+  itemCount: number,
+  durationMs: number,
+): number {
   return (itemCount * 1000) / durationMs; // items per second
 }

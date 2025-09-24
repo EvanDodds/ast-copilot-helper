@@ -3,24 +3,24 @@
  * Handles local model storage, cache validation, and metadata tracking
  */
 
-import { promises as fs } from 'fs';
-import { join, dirname } from 'path';
-import type { ModelConfig, ModelMetadata } from './types.js';
-import { createModuleLogger } from '../logging/index.js';
-import { fileVerifier } from './verification.js';
-import { validateModelConfig } from './validation.js';
+import { promises as fs } from "fs";
+import { join, dirname } from "path";
+import type { ModelConfig, ModelMetadata } from "./types.js";
+import { createModuleLogger } from "../logging/index.js";
+import { fileVerifier } from "./verification.js";
+import { validateModelConfig } from "./validation.js";
 
-const logger = createModuleLogger('ModelCache');
+const logger = createModuleLogger("ModelCache");
 
 /**
  * Cache entry status
  */
 export enum CacheStatus {
-  MISSING = 'missing',
-  VALID = 'valid',
-  INVALID = 'invalid',
-  CORRUPTED = 'corrupted',
-  OUTDATED = 'outdated'
+  MISSING = "missing",
+  VALID = "valid",
+  INVALID = "invalid",
+  CORRUPTED = "corrupted",
+  OUTDATED = "outdated",
 }
 
 /**
@@ -85,8 +85,8 @@ export class ModelCache {
   private autoCleanup: boolean;
 
   constructor(options: CacheOptions = {}) {
-    this.cacheDir = options.cacheDir || '.astdb/models';
-    this.metadataFile = join(this.cacheDir, 'cache-metadata.json');
+    this.cacheDir = options.cacheDir || ".astdb/models";
+    this.metadataFile = join(this.cacheDir, "cache-metadata.json");
     this.maxCacheSize = options.maxCacheSize || 5 * 1024 * 1024 * 1024; // 5GB default
     this.maxAge = options.maxAge || 30; // 30 days default
     this.autoCleanup = options.autoCleanup ?? true;
@@ -100,14 +100,14 @@ export class ModelCache {
   async initialize(): Promise<void> {
     try {
       await fs.mkdir(this.cacheDir, { recursive: true });
-      await fs.mkdir(join(this.cacheDir, 'temp'), { recursive: true });
-      
+      await fs.mkdir(join(this.cacheDir, "temp"), { recursive: true });
+
       // Create metadata file if it doesn't exist
       try {
         await fs.access(this.metadataFile);
       } catch {
         const initialMetadata = {
-          version: '1.0.0',
+          version: "1.0.0",
           created: new Date().toISOString(),
           models: {},
           stats: {
@@ -115,15 +115,20 @@ export class ModelCache {
             totalSize: 0,
             validModels: 0,
             invalidModels: 0,
-            lastCleanup: new Date().toISOString()
-          }
+            lastCleanup: new Date().toISOString(),
+          },
         };
-        await fs.writeFile(this.metadataFile, JSON.stringify(initialMetadata, null, 2));
+        await fs.writeFile(
+          this.metadataFile,
+          JSON.stringify(initialMetadata, null, 2),
+        );
       }
 
       logger.info(`Cache initialized at: ${this.cacheDir}`);
     } catch (error) {
-      logger.error(`Failed to initialize cache: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to initialize cache: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -147,7 +152,7 @@ export class ModelCache {
         return {
           hit: false,
           status: CacheStatus.MISSING,
-          reason: 'Model file not found in cache'
+          reason: "Model file not found in cache",
         };
       }
 
@@ -155,7 +160,7 @@ export class ModelCache {
         return {
           hit: false,
           status: CacheStatus.INVALID,
-          reason: 'Model metadata not found in cache'
+          reason: "Model metadata not found in cache",
         };
       }
 
@@ -165,7 +170,7 @@ export class ModelCache {
         return {
           hit: false,
           status: CacheStatus.INVALID,
-          reason: 'Failed to load model metadata'
+          reason: "Failed to load model metadata",
         };
       }
 
@@ -176,26 +181,32 @@ export class ModelCache {
           status: CacheStatus.OUTDATED,
           filePath: modelPath,
           metadata,
-          reason: `Version mismatch: cached ${metadata.config.version} vs requested ${modelConfig.version}`
+          reason: `Version mismatch: cached ${metadata.config.version} vs requested ${modelConfig.version}`,
         };
       }
 
       // Check if file is too old
-      const ageInDays = (Date.now() - new Date(metadata.downloadedAt).getTime()) / (1000 * 60 * 60 * 24);
+      const ageInDays =
+        (Date.now() - new Date(metadata.downloadedAt).getTime()) /
+        (1000 * 60 * 60 * 24);
       if (ageInDays > this.maxAge) {
         return {
           hit: false,
           status: CacheStatus.OUTDATED,
           filePath: modelPath,
           metadata,
-          reason: `Cache entry expired: ${Math.round(ageInDays)} days old`
+          reason: `Cache entry expired: ${Math.round(ageInDays)} days old`,
         };
       }
 
       // Verify file integrity
-      const verification = await fileVerifier.verifyModelFile(modelPath, modelConfig, {
-        skipFormatCheck: true // Skip ONNX format check for performance
-      });
+      const verification = await fileVerifier.verifyModelFile(
+        modelPath,
+        modelConfig,
+        {
+          skipFormatCheck: true, // Skip ONNX format check for performance
+        },
+      );
 
       if (!verification.valid) {
         return {
@@ -203,7 +214,7 @@ export class ModelCache {
           status: CacheStatus.CORRUPTED,
           filePath: modelPath,
           metadata,
-          reason: `File integrity check failed: ${verification.errors.join(', ')}`
+          reason: `File integrity check failed: ${verification.errors.join(", ")}`,
         };
       }
 
@@ -212,15 +223,16 @@ export class ModelCache {
         hit: true,
         status: CacheStatus.VALID,
         filePath: modelPath,
-        metadata
+        metadata,
       };
-
     } catch (error) {
-      logger.error(`Cache check failed for ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Cache check failed for ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return {
         hit: false,
         status: CacheStatus.INVALID,
-        reason: `Cache check error: ${error instanceof Error ? error.message : String(error)}`
+        reason: `Cache check error: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
   }
@@ -231,12 +243,17 @@ export class ModelCache {
    * - ✅ Metadata storage
    * - ✅ Cache management
    */
-  async storeModel(modelConfig: ModelConfig, sourceFilePath: string): Promise<string> {
+  async storeModel(
+    modelConfig: ModelConfig,
+    sourceFilePath: string,
+  ): Promise<string> {
     try {
       // Validate model configuration
       const validation = validateModelConfig(modelConfig);
       if (!validation.valid) {
-        throw new Error(`Invalid model configuration: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Invalid model configuration: ${validation.errors.join(", ")}`,
+        );
       }
 
       await this.initialize();
@@ -273,26 +290,29 @@ export class ModelCache {
           successRate: 100,
           performanceHistory: [],
           hourlyUsage: {},
-          weeklyUsage: {}
-        }
+          weeklyUsage: {},
+        },
       };
 
       // Save model metadata
       await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
 
       // Update global cache metadata
-      await this.updateCacheMetadata(modelConfig, stats.size, 'add');
+      await this.updateCacheMetadata(modelConfig, stats.size, "add");
 
       // Trigger cleanup if enabled
       if (this.autoCleanup) {
         await this.cleanup();
       }
 
-      logger.info(`Model cached: ${modelConfig.name} v${modelConfig.version} -> ${modelPath}`);
+      logger.info(
+        `Model cached: ${modelConfig.name} v${modelConfig.version} -> ${modelPath}`,
+      );
       return modelPath;
-
     } catch (error) {
-      logger.error(`Failed to store model ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to store model ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -302,13 +322,17 @@ export class ModelCache {
    * Addresses acceptance criteria:
    * - ✅ Metadata retrieval
    */
-  async loadModelMetadata(modelConfig: ModelConfig): Promise<ModelMetadata | null> {
+  async loadModelMetadata(
+    modelConfig: ModelConfig,
+  ): Promise<ModelMetadata | null> {
     try {
       const metadataPath = this.getMetadataPath(modelConfig);
-      const data = await fs.readFile(metadataPath, 'utf-8');
+      const data = await fs.readFile(metadataPath, "utf-8");
       return JSON.parse(data);
     } catch (error) {
-      logger.warn(`Failed to load metadata for ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(
+        `Failed to load metadata for ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return null;
     }
   }
@@ -320,8 +344,8 @@ export class ModelCache {
     try {
       const metadata = await this.loadModelMetadata(modelConfig);
       if (!metadata) {
-return;
-}
+        return;
+      }
 
       // Initialize usage stats if not present or create full stats object
       if (!metadata.usageStats) {
@@ -337,19 +361,23 @@ return;
           successRate: 100,
           performanceHistory: [],
           hourlyUsage: {},
-          weeklyUsage: {}
+          weeklyUsage: {},
         };
       }
-      
+
       metadata.usageStats.loadCount++;
       metadata.usageStats.lastUsed = new Date();
 
       const metadataPath = this.getMetadataPath(modelConfig);
       await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
 
-      logger.debug(`Updated usage stats for ${modelConfig.name}: ${metadata.usageStats.loadCount} loads`);
+      logger.debug(
+        `Updated usage stats for ${modelConfig.name}: ${metadata.usageStats.loadCount} loads`,
+      );
     } catch (error) {
-      logger.warn(`Failed to update usage stats for ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(
+        `Failed to update usage stats for ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -360,24 +388,26 @@ return;
    */
   async getStats(): Promise<CacheStats> {
     try {
-      const metadataContent = await fs.readFile(this.metadataFile, 'utf-8');
+      const metadataContent = await fs.readFile(this.metadataFile, "utf-8");
       const cacheMetadata = JSON.parse(metadataContent);
-      
+
       return {
         totalModels: cacheMetadata.stats.totalModels || 0,
         totalSize: cacheMetadata.stats.totalSize || 0,
         validModels: cacheMetadata.stats.validModels || 0,
         invalidModels: cacheMetadata.stats.invalidModels || 0,
-        lastCleanup: new Date(cacheMetadata.stats.lastCleanup || Date.now())
+        lastCleanup: new Date(cacheMetadata.stats.lastCleanup || Date.now()),
       };
     } catch (error) {
-      logger.error(`Failed to get cache stats: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to get cache stats: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return {
         totalModels: 0,
         totalSize: 0,
         validModels: 0,
         invalidModels: 0,
-        lastCleanup: new Date()
+        lastCleanup: new Date(),
       };
     }
   }
@@ -394,7 +424,9 @@ return;
 
       // Check if cache size exceeds limit
       if (stats.totalSize > this.maxCacheSize) {
-        logger.info(`Cache size (${Math.round(stats.totalSize / 1024 / 1024)}MB) exceeds limit (${Math.round(this.maxCacheSize / 1024 / 1024)}MB), cleaning up...`);
+        logger.info(
+          `Cache size (${Math.round(stats.totalSize / 1024 / 1024)}MB) exceeds limit (${Math.round(this.maxCacheSize / 1024 / 1024)}MB), cleaning up...`,
+        );
         removedCount += await this.cleanupBySize();
       }
 
@@ -413,7 +445,9 @@ return;
 
       return removedCount;
     } catch (error) {
-      logger.error(`Cache cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Cache cleanup failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return 0;
     }
   }
@@ -432,18 +466,26 @@ return;
       // Remove files
       await Promise.all([
         fs.unlink(modelPath).catch(() => {}), // Ignore errors if file doesn't exist
-        fs.unlink(metadataPath).catch(() => {})
+        fs.unlink(metadataPath).catch(() => {}),
       ]);
 
       // Update global metadata
       if (metadata) {
-        await this.updateCacheMetadata(modelConfig, metadata.config.size, 'remove');
+        await this.updateCacheMetadata(
+          modelConfig,
+          metadata.config.size,
+          "remove",
+        );
       }
 
-      logger.info(`Removed cached model: ${modelConfig.name} v${modelConfig.version}`);
+      logger.info(
+        `Removed cached model: ${modelConfig.name} v${modelConfig.version}`,
+      );
       return true;
     } catch (error) {
-      logger.error(`Failed to remove model ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to remove model ${modelConfig.name}: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return false;
     }
   }
@@ -455,9 +497,11 @@ return;
     try {
       await fs.rm(this.cacheDir, { recursive: true, force: true });
       await this.initialize();
-      logger.info('Cache cleared and reinitialized');
+      logger.info("Cache cleared and reinitialized");
     } catch (error) {
-      logger.error(`Failed to clear cache: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to clear cache: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -466,12 +510,12 @@ return;
 
   private getModelPath(modelConfig: ModelConfig): string {
     const fileName = `${modelConfig.name}-${modelConfig.version}.${modelConfig.format}`;
-    return join(this.cacheDir, 'models', fileName);
+    return join(this.cacheDir, "models", fileName);
   }
 
   private getMetadataPath(modelConfig: ModelConfig): string {
     const fileName = `${modelConfig.name}-${modelConfig.version}.json`;
-    return join(this.cacheDir, 'metadata', fileName);
+    return join(this.cacheDir, "metadata", fileName);
   }
 
   private async fileExists(path: string): Promise<boolean> {
@@ -483,20 +527,27 @@ return;
     }
   }
 
-  private async updateCacheMetadata(modelConfig: ModelConfig, fileSize: number, operation: 'add' | 'remove'): Promise<void> {
+  private async updateCacheMetadata(
+    modelConfig: ModelConfig,
+    fileSize: number,
+    operation: "add" | "remove",
+  ): Promise<void> {
     try {
-      const cacheMetadataContent = await fs.readFile(this.metadataFile, 'utf-8');
+      const cacheMetadataContent = await fs.readFile(
+        this.metadataFile,
+        "utf-8",
+      );
       const cacheMetadata = JSON.parse(cacheMetadataContent);
 
       const modelKey = `${modelConfig.name}:${modelConfig.version}`;
 
-      if (operation === 'add') {
+      if (operation === "add") {
         cacheMetadata.models[modelKey] = {
           name: modelConfig.name,
           version: modelConfig.version,
           size: fileSize,
           cachedAt: new Date().toISOString(),
-          lastVerified: new Date().toISOString()
+          lastVerified: new Date().toISOString(),
         };
         cacheMetadata.stats.totalModels++;
         cacheMetadata.stats.totalSize += fileSize;
@@ -510,9 +561,14 @@ return;
         }
       }
 
-      await fs.writeFile(this.metadataFile, JSON.stringify(cacheMetadata, null, 2));
+      await fs.writeFile(
+        this.metadataFile,
+        JSON.stringify(cacheMetadata, null, 2),
+      );
     } catch (error) {
-      logger.warn(`Failed to update cache metadata: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(
+        `Failed to update cache metadata: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -527,20 +583,27 @@ return;
     const cutoffDate = new Date(Date.now() - this.maxAge * 24 * 60 * 60 * 1000);
 
     try {
-      const cacheMetadataContent = await fs.readFile(this.metadataFile, 'utf-8');
+      const cacheMetadataContent = await fs.readFile(
+        this.metadataFile,
+        "utf-8",
+      );
       const cacheMetadata = JSON.parse(cacheMetadataContent);
 
-      for (const [modelKey, modelInfo] of Object.entries(cacheMetadata.models)) {
+      for (const [modelKey, modelInfo] of Object.entries(
+        cacheMetadata.models,
+      )) {
         const cachedAt = new Date((modelInfo as any).cachedAt);
         if (cachedAt < cutoffDate) {
-          const [name, version] = modelKey.split(':');
+          const [name, version] = modelKey.split(":");
           const mockConfig = { name, version } as ModelConfig;
           await this.removeModel(mockConfig);
           removedCount++;
         }
       }
     } catch (error) {
-      logger.warn(`Age-based cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(
+        `Age-based cleanup failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     return removedCount;
@@ -553,12 +616,20 @@ return;
 
   private async updateCleanupTimestamp(): Promise<void> {
     try {
-      const cacheMetadataContent = await fs.readFile(this.metadataFile, 'utf-8');
+      const cacheMetadataContent = await fs.readFile(
+        this.metadataFile,
+        "utf-8",
+      );
       const cacheMetadata = JSON.parse(cacheMetadataContent);
       cacheMetadata.stats.lastCleanup = new Date().toISOString();
-      await fs.writeFile(this.metadataFile, JSON.stringify(cacheMetadata, null, 2));
+      await fs.writeFile(
+        this.metadataFile,
+        JSON.stringify(cacheMetadata, null, 2),
+      );
     } catch (error) {
-      logger.warn(`Failed to update cleanup timestamp: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(
+        `Failed to update cleanup timestamp: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }
@@ -571,13 +642,18 @@ export const modelCache = new ModelCache();
 /**
  * Convenience function for cache checking
  */
-export async function checkModelCache(modelConfig: ModelConfig): Promise<CacheHitResult> {
+export async function checkModelCache(
+  modelConfig: ModelConfig,
+): Promise<CacheHitResult> {
   return modelCache.checkCache(modelConfig);
 }
 
 /**
  * Convenience function for model storage
  */
-export async function storeModelInCache(modelConfig: ModelConfig, sourceFilePath: string): Promise<string> {
+export async function storeModelInCache(
+  modelConfig: ModelConfig,
+  sourceFilePath: string,
+): Promise<string> {
   return modelCache.storeModel(modelConfig, sourceFilePath);
 }

@@ -5,7 +5,7 @@ This fixture contains files in multiple programming languages for testing cross-
 ## Languages Included
 
 - TypeScript (.ts)
-- JavaScript (.js)  
+- JavaScript (.js)
 - Python (.py)
 - JSON configuration files
 - YAML configuration files

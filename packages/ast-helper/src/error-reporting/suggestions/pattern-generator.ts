@@ -8,8 +8,8 @@ import type {
   SuggestionContext,
   ResolutionSuggestion,
   ErrorPattern,
-  SuggestionType
-} from './types.js';
+  SuggestionType,
+} from "./types.js";
 
 /**
  * Built-in error patterns and their suggested resolutions
@@ -17,147 +17,183 @@ import type {
 const ERROR_PATTERNS: ErrorPattern[] = [
   // Module/Import Errors
   {
-    id: 'module-not-found',
+    id: "module-not-found",
     pattern: /Cannot find module ['"]([^'"]+)['"]/,
-    type: 'regex',
-    scope: 'message',
+    type: "regex",
+    scope: "message",
     weight: 0.9,
-    category: 'dependency-error',
-    tags: ['import', 'module', 'dependency'],
-    associatedSuggestions: ['install-missing-module', 'check-module-path', 'update-imports'],
+    category: "dependency-error",
+    tags: ["import", "module", "dependency"],
+    associatedSuggestions: [
+      "install-missing-module",
+      "check-module-path",
+      "update-imports",
+    ],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.85
+    successRate: 0.85,
   },
   {
-    id: 'es-module-import',
+    id: "es-module-import",
     pattern: /require\(\) of ES modules is not supported/,
-    type: 'regex',
-    scope: 'message',
+    type: "regex",
+    scope: "message",
     weight: 0.8,
-    category: 'module-system-error',
-    tags: ['esm', 'commonjs', 'import'],
-    associatedSuggestions: ['convert-to-import', 'add-type-module', 'use-dynamic-import'],
+    category: "module-system-error",
+    tags: ["esm", "commonjs", "import"],
+    associatedSuggestions: [
+      "convert-to-import",
+      "add-type-module",
+      "use-dynamic-import",
+    ],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.75
+    successRate: 0.75,
   },
-  
+
   // TypeScript Errors
   {
-    id: 'ts-property-not-exist',
+    id: "ts-property-not-exist",
     pattern: /Property ['"]([^'"]+)['"] does not exist on type/,
-    type: 'regex',
-    scope: 'message',
+    type: "regex",
+    scope: "message",
     weight: 0.8,
-    category: 'typescript-error',
-    tags: ['typescript', 'property', 'type'],
-    associatedSuggestions: ['add-property-to-interface', 'use-optional-chaining', 'type-assertion'],
+    category: "typescript-error",
+    tags: ["typescript", "property", "type"],
+    associatedSuggestions: [
+      "add-property-to-interface",
+      "use-optional-chaining",
+      "type-assertion",
+    ],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.7
+    successRate: 0.7,
   },
   {
-    id: 'ts-cannot-assign',
+    id: "ts-cannot-assign",
     pattern: /Type ['"]([^'"]+)['"] is not assignable to type ['"]([^'"]+)['"]/,
-    type: 'regex',
-    scope: 'message',
+    type: "regex",
+    scope: "message",
     weight: 0.8,
-    category: 'typescript-error',
-    tags: ['typescript', 'assignment', 'type'],
-    associatedSuggestions: ['fix-type-mismatch', 'add-type-assertion', 'update-interface'],
+    category: "typescript-error",
+    tags: ["typescript", "assignment", "type"],
+    associatedSuggestions: [
+      "fix-type-mismatch",
+      "add-type-assertion",
+      "update-interface",
+    ],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.8
+    successRate: 0.8,
   },
-  
+
   // Syntax Errors
   {
-    id: 'unexpected-token',
+    id: "unexpected-token",
     pattern: /Unexpected token/,
-    type: 'substring',
-    scope: 'message',
+    type: "substring",
+    scope: "message",
     weight: 0.7,
-    category: 'syntax-error',
-    tags: ['syntax', 'parsing'],
-    associatedSuggestions: ['check-syntax', 'check-brackets', 'check-semicolons'],
+    category: "syntax-error",
+    tags: ["syntax", "parsing"],
+    associatedSuggestions: [
+      "check-syntax",
+      "check-brackets",
+      "check-semicolons",
+    ],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.6
+    successRate: 0.6,
   },
-  
+
   // Runtime Errors
   {
-    id: 'undefined-variable',
+    id: "undefined-variable",
     pattern: /ReferenceError: ([^\s]+) is not defined/,
-    type: 'regex',
-    scope: 'message',
+    type: "regex",
+    scope: "message",
     weight: 0.8,
-    category: 'reference-error',
-    tags: ['variable', 'undefined', 'reference'],
-    associatedSuggestions: ['declare-variable', 'check-imports', 'check-scope'],
+    category: "reference-error",
+    tags: ["variable", "undefined", "reference"],
+    associatedSuggestions: ["declare-variable", "check-imports", "check-scope"],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.9
+    successRate: 0.9,
   },
   {
-    id: 'cannot-read-property',
+    id: "cannot-read-property",
     pattern: /Cannot read propert(y|ies) ['"]([^'"]+)['"] of (null|undefined)/,
-    type: 'regex',
-    scope: 'message',
+    type: "regex",
+    scope: "message",
     weight: 0.9,
-    category: 'null-reference-error',
-    tags: ['null', 'undefined', 'property'],
-    associatedSuggestions: ['add-null-check', 'use-optional-chaining', 'initialize-variable'],
+    category: "null-reference-error",
+    tags: ["null", "undefined", "property"],
+    associatedSuggestions: [
+      "add-null-check",
+      "use-optional-chaining",
+      "initialize-variable",
+    ],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.85
+    successRate: 0.85,
   },
-  
+
   // File System Errors
   {
-    id: 'enoent-file',
+    id: "enoent-file",
     pattern: /ENOENT: no such file or directory/,
-    type: 'substring',
-    scope: 'message',
+    type: "substring",
+    scope: "message",
     weight: 0.8,
-    category: 'file-error',
-    tags: ['file', 'path', 'filesystem'],
-    associatedSuggestions: ['check-file-path', 'create-missing-file', 'check-permissions'],
+    category: "file-error",
+    tags: ["file", "path", "filesystem"],
+    associatedSuggestions: [
+      "check-file-path",
+      "create-missing-file",
+      "check-permissions",
+    ],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.8
+    successRate: 0.8,
   },
-  
+
   // Network Errors
   {
-    id: 'econnrefused',
+    id: "econnrefused",
     pattern: /ECONNREFUSED/,
-    type: 'substring',
-    scope: 'message',
+    type: "substring",
+    scope: "message",
     weight: 0.8,
-    category: 'network-error',
-    tags: ['network', 'connection', 'server'],
-    associatedSuggestions: ['check-server-running', 'check-port', 'check-firewall'],
+    category: "network-error",
+    tags: ["network", "connection", "server"],
+    associatedSuggestions: [
+      "check-server-running",
+      "check-port",
+      "check-firewall",
+    ],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.7
+    successRate: 0.7,
   },
-  
+
   // Configuration Errors
   {
-    id: 'invalid-json',
+    id: "invalid-json",
     pattern: /Unexpected token .* in JSON/,
-    type: 'regex',
-    scope: 'message',
+    type: "regex",
+    scope: "message",
     weight: 0.9,
-    category: 'config-error',
-    tags: ['json', 'configuration', 'parsing'],
-    associatedSuggestions: ['validate-json', 'check-json-syntax', 'use-json-validator'],
+    category: "config-error",
+    tags: ["json", "configuration", "parsing"],
+    associatedSuggestions: [
+      "validate-json",
+      "check-json-syntax",
+      "use-json-validator",
+    ],
     lastUpdated: new Date().toISOString(),
     matchCount: 0,
-    successRate: 0.9
-  }
+    successRate: 0.9,
+  },
 ];
 
 /**
@@ -165,10 +201,10 @@ const ERROR_PATTERNS: ErrorPattern[] = [
  * and provides contextual resolution suggestions
  */
 export class PatternBasedSuggestionGenerator implements SuggestionGenerator {
-  readonly name = 'pattern-based';
-  readonly source: SuggestionSource = 'pattern-matching';
+  readonly name = "pattern-based";
+  readonly source: SuggestionSource = "pattern-matching";
   readonly priority = 10;
-  readonly supportedTypes = ['*']; // Supports all error types
+  readonly supportedTypes = ["*"]; // Supports all error types
 
   private patterns: ErrorPattern[] = [...ERROR_PATTERNS];
   private suggestionTemplates: Map<string, ResolutionSuggestion> = new Map();
@@ -184,174 +220,178 @@ export class PatternBasedSuggestionGenerator implements SuggestionGenerator {
     const templates: ResolutionSuggestion[] = [
       // Module/Import Solutions
       {
-        id: 'install-missing-module',
-        title: 'Install Missing Module',
-        description: 'Install the missing npm package that your code is trying to import.',
-        type: 'dependency',
-        source: 'pattern-matching',
-        confidence: 'high',
+        id: "install-missing-module",
+        title: "Install Missing Module",
+        description:
+          "Install the missing npm package that your code is trying to import.",
+        type: "dependency",
+        source: "pattern-matching",
+        confidence: "high",
         priority: 90,
         relevanceScore: 0.9,
-        matchedPatterns: ['module-not-found'],
-        contextualFactors: ['package.json exists', 'npm project'],
+        matchedPatterns: ["module-not-found"],
+        contextualFactors: ["package.json exists", "npm project"],
         actions: [
           {
-            type: 'command-run',
-            description: 'Install the missing package using npm',
-            command: 'npm install {{moduleName}}',
+            type: "command-run",
+            description: "Install the missing package using npm",
+            command: "npm install {{moduleName}}",
             automated: false,
-            riskLevel: 'low'
-          }
+            riskLevel: "low",
+          },
         ],
         evidence: {
-          errorPatterns: ['Cannot find module'],
-          contextClues: ['import statement', 'require call'],
+          errorPatterns: ["Cannot find module"],
+          contextClues: ["import statement", "require call"],
           similarCases: 1000,
-          successRate: 0.9
+          successRate: 0.9,
         },
-        tags: ['dependency', 'npm', 'install'],
-        difficulty: 'beginner',
-        estimatedTime: '1-2 minutes',
+        tags: ["dependency", "npm", "install"],
+        difficulty: "beginner",
+        estimatedTime: "1-2 minutes",
         resources: [
           {
-            type: 'documentation',
-            url: 'https://docs.npmjs.com/cli/v8/commands/npm-install',
-            title: 'npm install documentation'
-          }
+            type: "documentation",
+            url: "https://docs.npmjs.com/cli/v8/commands/npm-install",
+            title: "npm install documentation",
+          },
         ],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         usageCount: 0,
-        successCount: 0
+        successCount: 0,
       },
-      
+
       {
-        id: 'convert-to-import',
-        title: 'Convert require() to import',
-        description: 'Convert CommonJS require() statements to ES module import statements.',
-        type: 'code-fix',
-        source: 'pattern-matching',
-        confidence: 'medium',
+        id: "convert-to-import",
+        title: "Convert require() to import",
+        description:
+          "Convert CommonJS require() statements to ES module import statements.",
+        type: "code-fix",
+        source: "pattern-matching",
+        confidence: "medium",
         priority: 70,
         relevanceScore: 0.8,
-        matchedPatterns: ['es-module-import'],
-        contextualFactors: ['ES modules used', 'type: module in package.json'],
+        matchedPatterns: ["es-module-import"],
+        contextualFactors: ["ES modules used", "type: module in package.json"],
         actions: [
           {
-            type: 'code-change',
-            description: 'Replace require() with import statement',
+            type: "code-change",
+            description: "Replace require() with import statement",
             automated: true,
-            riskLevel: 'low'
-          }
+            riskLevel: "low",
+          },
         ],
         evidence: {
-          errorPatterns: ['require() of ES modules is not supported'],
-          contextClues: ['type: module', 'import statements present'],
+          errorPatterns: ["require() of ES modules is not supported"],
+          contextClues: ["type: module", "import statements present"],
           similarCases: 500,
-          successRate: 0.75
+          successRate: 0.75,
         },
-        tags: ['esm', 'commonjs', 'conversion'],
-        difficulty: 'intermediate',
-        estimatedTime: '2-5 minutes',
+        tags: ["esm", "commonjs", "conversion"],
+        difficulty: "intermediate",
+        estimatedTime: "2-5 minutes",
         resources: [
           {
-            type: 'tutorial',
-            url: 'https://nodejs.org/api/esm.html',
-            title: 'Node.js ES Modules'
-          }
+            type: "tutorial",
+            url: "https://nodejs.org/api/esm.html",
+            title: "Node.js ES Modules",
+          },
         ],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         usageCount: 0,
-        successCount: 0
+        successCount: 0,
       },
 
       {
-        id: 'add-null-check',
-        title: 'Add Null/Undefined Check',
-        description: 'Add a safety check to prevent accessing properties of null or undefined values.',
-        type: 'code-fix',
-        source: 'pattern-matching',
-        confidence: 'high',
+        id: "add-null-check",
+        title: "Add Null/Undefined Check",
+        description:
+          "Add a safety check to prevent accessing properties of null or undefined values.",
+        type: "code-fix",
+        source: "pattern-matching",
+        confidence: "high",
         priority: 85,
         relevanceScore: 0.9,
-        matchedPatterns: ['cannot-read-property'],
-        contextualFactors: ['property access', 'null/undefined value'],
+        matchedPatterns: ["cannot-read-property"],
+        contextualFactors: ["property access", "null/undefined value"],
         actions: [
           {
-            type: 'code-change',
-            description: 'Add null/undefined check before property access',
+            type: "code-change",
+            description: "Add null/undefined check before property access",
             automated: true,
-            riskLevel: 'low'
-          }
+            riskLevel: "low",
+          },
         ],
-        prerequisites: ['Identify the variable that could be null/undefined'],
+        prerequisites: ["Identify the variable that could be null/undefined"],
         evidence: {
-          errorPatterns: ['Cannot read property', 'of null', 'of undefined'],
-          contextClues: ['property access', 'object reference'],
+          errorPatterns: ["Cannot read property", "of null", "of undefined"],
+          contextClues: ["property access", "object reference"],
           similarCases: 2000,
-          successRate: 0.85
+          successRate: 0.85,
         },
-        tags: ['null-check', 'defensive-coding', 'safety'],
-        difficulty: 'beginner',
-        estimatedTime: '1-3 minutes',
+        tags: ["null-check", "defensive-coding", "safety"],
+        difficulty: "beginner",
+        estimatedTime: "1-3 minutes",
         resources: [
           {
-            type: 'documentation',
-            url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining',
-            title: 'Optional chaining (?.) - MDN'
-          }
+            type: "documentation",
+            url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining",
+            title: "Optional chaining (?.) - MDN",
+          },
         ],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         usageCount: 0,
-        successCount: 0
+        successCount: 0,
       },
 
       {
-        id: 'check-file-path',
-        title: 'Verify File Path',
-        description: 'Check if the file path is correct and the file exists at the specified location.',
-        type: 'debugging',
-        source: 'pattern-matching',
-        confidence: 'medium',
+        id: "check-file-path",
+        title: "Verify File Path",
+        description:
+          "Check if the file path is correct and the file exists at the specified location.",
+        type: "debugging",
+        source: "pattern-matching",
+        confidence: "medium",
         priority: 75,
         relevanceScore: 0.8,
-        matchedPatterns: ['enoent-file'],
-        contextualFactors: ['file operation', 'path reference'],
+        matchedPatterns: ["enoent-file"],
+        contextualFactors: ["file operation", "path reference"],
         actions: [
           {
-            type: 'command-run',
-            description: 'Check if file exists',
-            command: 'ls -la {{filePath}}',
+            type: "command-run",
+            description: "Check if file exists",
+            command: "ls -la {{filePath}}",
             automated: false,
-            riskLevel: 'low'
-          }
+            riskLevel: "low",
+          },
         ],
         evidence: {
-          errorPatterns: ['ENOENT', 'no such file or directory'],
-          contextClues: ['file system operation', 'path string'],
+          errorPatterns: ["ENOENT", "no such file or directory"],
+          contextClues: ["file system operation", "path string"],
           similarCases: 800,
-          successRate: 0.8
+          successRate: 0.8,
         },
-        tags: ['filesystem', 'path', 'debugging'],
-        difficulty: 'beginner',
-        estimatedTime: '2-5 minutes',
+        tags: ["filesystem", "path", "debugging"],
+        difficulty: "beginner",
+        estimatedTime: "2-5 minutes",
         resources: [
           {
-            type: 'documentation',
-            url: 'https://nodejs.org/api/fs.html',
-            title: 'Node.js File System'
-          }
+            type: "documentation",
+            url: "https://nodejs.org/api/fs.html",
+            title: "Node.js File System",
+          },
         ],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         usageCount: 0,
-        successCount: 0
-      }
+        successCount: 0,
+      },
     ];
 
-    templates.forEach(template => {
+    templates.forEach((template) => {
       this.suggestionTemplates.set(template.id, template);
     });
   }
@@ -367,7 +407,9 @@ export class PatternBasedSuggestionGenerator implements SuggestionGenerator {
   /**
    * Generate suggestions for the given context
    */
-  async generateSuggestions(context: SuggestionContext): Promise<ResolutionSuggestion[]> {
+  async generateSuggestions(
+    context: SuggestionContext,
+  ): Promise<ResolutionSuggestion[]> {
     const matchedPatterns = await this.findMatchingPatterns(context);
     const suggestions: ResolutionSuggestion[] = [];
 
@@ -375,7 +417,7 @@ export class PatternBasedSuggestionGenerator implements SuggestionGenerator {
       const patternSuggestions = await this.generateSuggestionsForPattern(
         patternMatch.pattern,
         patternMatch.matches,
-        context
+        context,
       );
       suggestions.push(...patternSuggestions);
     }
@@ -394,21 +436,23 @@ export class PatternBasedSuggestionGenerator implements SuggestionGenerator {
   async getConfidenceScore(context: SuggestionContext): Promise<number> {
     const matchedPatterns = await this.findMatchingPatterns(context);
     if (matchedPatterns.length === 0) {
-return 0;
-}
+      return 0;
+    }
 
-    const maxWeight = Math.max(...matchedPatterns.map(m => m.pattern.weight));
+    const maxWeight = Math.max(...matchedPatterns.map((m) => m.pattern.weight));
     return maxWeight;
   }
 
   /**
    * Find patterns that match the error context
    */
-  private async findMatchingPatterns(context: SuggestionContext): Promise<Array<{
-    pattern: ErrorPattern;
-    matches: RegExpMatchArray | null;
-    score: number;
-  }>> {
+  private async findMatchingPatterns(context: SuggestionContext): Promise<
+    Array<{
+      pattern: ErrorPattern;
+      matches: RegExpMatchArray | null;
+      score: number;
+    }>
+  > {
     const matches: Array<{
       pattern: ErrorPattern;
       matches: RegExpMatchArray | null;
@@ -421,7 +465,7 @@ return 0;
         matches.push({
           pattern,
           matches: matchResult.matches,
-          score: matchResult.score
+          score: matchResult.score,
         });
       }
     }
@@ -432,7 +476,10 @@ return 0;
   /**
    * Match a single pattern against the error context
    */
-  private matchPattern(pattern: ErrorPattern, context: SuggestionContext): {
+  private matchPattern(
+    pattern: ErrorPattern,
+    context: SuggestionContext,
+  ): {
     matches: RegExpMatchArray | null;
     score: number;
   } {
@@ -441,28 +488,31 @@ return 0;
     let score = 0;
 
     switch (pattern.type) {
-      case 'regex':
+      case "regex":
         if (pattern.pattern instanceof RegExp) {
           matches = targetText.match(pattern.pattern);
         } else {
           matches = targetText.match(new RegExp(pattern.pattern));
         }
         break;
-        
-      case 'substring':
+
+      case "substring":
         if (targetText.includes(pattern.pattern.toString())) {
           matches = [targetText] as RegExpMatchArray;
         }
         break;
-        
-      case 'exact':
+
+      case "exact":
         if (targetText === pattern.pattern.toString()) {
           matches = [targetText] as RegExpMatchArray;
         }
         break;
-        
-      case 'fuzzy': {
-        const similarity = this.calculateSimilarity(targetText, pattern.pattern.toString());
+
+      case "fuzzy": {
+        const similarity = this.calculateSimilarity(
+          targetText,
+          pattern.pattern.toString(),
+        );
         if (similarity > 0.7) {
           matches = [targetText] as RegExpMatchArray;
           score = similarity;
@@ -473,7 +523,7 @@ return 0;
 
     if (matches) {
       score = score || pattern.weight;
-      
+
       // Boost score based on context relevance
       score *= this.calculateContextRelevance(pattern, context);
     }
@@ -486,36 +536,39 @@ return 0;
    */
   private getTargetText(scope: string, context: SuggestionContext): string {
     switch (scope) {
-      case 'message':
-        return context.error.message || '';
-      case 'stack':
-        return context.error.stack || '';
-      case 'code':
-        return context.error.code || '';
-      case 'all':
+      case "message":
+        return context.error.message || "";
+      case "stack":
+        return context.error.stack || "";
+      case "code":
+        return context.error.code || "";
+      case "all":
         return `${context.error.message} ${context.error.stack} ${context.error.code}`;
       default:
-        return context.error.message || '';
+        return context.error.message || "";
     }
   }
 
   /**
    * Calculate context relevance for pattern matching
    */
-  private calculateContextRelevance(pattern: ErrorPattern, context: SuggestionContext): number {
+  private calculateContextRelevance(
+    pattern: ErrorPattern,
+    context: SuggestionContext,
+  ): number {
     let relevance = 1.0;
 
     // Check if pattern tags match context
     const contextFactors = [
-      ...context.codebase.languages.map(lang => lang.toLowerCase()),
-      ...(context.codebase.frameworks || []).map(fw => fw.toLowerCase()),
-      ...(context.environment.configFiles || []).map(file => 
-        file.split('.').pop()?.toLowerCase() || ''
-      )
+      ...context.codebase.languages.map((lang) => lang.toLowerCase()),
+      ...(context.codebase.frameworks || []).map((fw) => fw.toLowerCase()),
+      ...(context.environment.configFiles || []).map(
+        (file) => file.split(".").pop()?.toLowerCase() || "",
+      ),
     ];
 
-    const matchingTags = pattern.tags.filter(tag => 
-      contextFactors.includes(tag.toLowerCase())
+    const matchingTags = pattern.tags.filter((tag) =>
+      contextFactors.includes(tag.toLowerCase()),
     );
 
     if (matchingTags.length > 0) {
@@ -536,11 +589,11 @@ return 0;
   private calculateSimilarity(str1: string, str2: string): number {
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
-    
+
     if (longer.length === 0) {
-return 1.0;
-}
-    
+      return 1.0;
+    }
+
     const editDistance = this.levenshteinDistance(longer, shorter);
     return (longer.length - editDistance) / longer.length;
   }
@@ -550,7 +603,7 @@ return 1.0;
    */
   private levenshteinDistance(str1: string, str2: string): number {
     const matrix: number[][] = Array(str2.length + 1);
-    
+
     // Initialize matrix
     for (let i = 0; i <= str2.length; i++) {
       matrix[i] = Array(str1.length + 1);
@@ -570,7 +623,7 @@ return 1.0;
         matrix[j]![i] = Math.min(
           matrix[j]![i - 1]! + 1, // deletion
           matrix[j - 1]![i]! + 1, // insertion
-          matrix[j - 1]![i - 1]! + indicator // substitution
+          matrix[j - 1]![i - 1]! + indicator, // substitution
         );
       }
     }
@@ -584,7 +637,7 @@ return 1.0;
   private async generateSuggestionsForPattern(
     pattern: ErrorPattern,
     matches: RegExpMatchArray | null,
-    context: SuggestionContext
+    context: SuggestionContext,
   ): Promise<ResolutionSuggestion[]> {
     const suggestions: ResolutionSuggestion[] = [];
 
@@ -595,7 +648,7 @@ return 1.0;
           template,
           pattern,
           matches,
-          context
+          context,
         );
         suggestions.push(customizedSuggestion);
       }
@@ -611,32 +664,37 @@ return 1.0;
     template: ResolutionSuggestion,
     pattern: ErrorPattern,
     matches: RegExpMatchArray | null,
-    context: SuggestionContext
+    context: SuggestionContext,
   ): Promise<ResolutionSuggestion> {
     const customized: ResolutionSuggestion = {
       ...template,
       id: `${template.id}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      relevanceScore: pattern.weight * this.calculateContextRelevance(pattern, context),
+      relevanceScore:
+        pattern.weight * this.calculateContextRelevance(pattern, context),
       matchedPatterns: [pattern.id],
-      contextualFactors: this.extractContextualFactors(context)
+      contextualFactors: this.extractContextualFactors(context),
     };
 
     // Customize actions with extracted data
-    customized.actions = template.actions.map(action => ({
+    customized.actions = template.actions.map((action) => ({
       ...action,
-      command: this.interpolateCommand(action.command || '', matches, context),
-      content: this.interpolateContent(action.content || '', matches, context)
+      command: this.interpolateCommand(action.command || "", matches, context),
+      content: this.interpolateContent(action.content || "", matches, context),
     }));
 
     // Adjust confidence based on context
-    customized.confidence = this.adjustConfidence(template.confidence, pattern, context);
+    customized.confidence = this.adjustConfidence(
+      template.confidence,
+      pattern,
+      context,
+    );
 
     // Update evidence with pattern-specific information
     customized.evidence = {
       ...template.evidence,
       errorPatterns: [pattern.pattern.toString()],
       contextClues: this.extractContextClues(matches, context),
-      successRate: pattern.successRate
+      successRate: pattern.successRate,
     };
 
     return customized;
@@ -645,7 +703,11 @@ return 1.0;
   /**
    * Interpolate variables in command strings
    */
-  private interpolateCommand(command: string, matches: RegExpMatchArray | null, context: SuggestionContext): string {
+  private interpolateCommand(
+    command: string,
+    matches: RegExpMatchArray | null,
+    context: SuggestionContext,
+  ): string {
     let interpolated = command;
 
     // Replace common placeholders
@@ -656,8 +718,14 @@ return 1.0;
     }
 
     // Replace with context-specific values
-    interpolated = interpolated.replace(/\{\{nodeVersion\}\}/g, context.environment.nodeVersion);
-    interpolated = interpolated.replace(/\{\{platform\}\}/g, context.environment.platform);
+    interpolated = interpolated.replace(
+      /\{\{nodeVersion\}\}/g,
+      context.environment.nodeVersion,
+    );
+    interpolated = interpolated.replace(
+      /\{\{platform\}\}/g,
+      context.environment.platform,
+    );
 
     return interpolated;
   }
@@ -665,7 +733,11 @@ return 1.0;
   /**
    * Interpolate variables in content strings
    */
-  private interpolateContent(content: string, matches: RegExpMatchArray | null, context: SuggestionContext): string {
+  private interpolateContent(
+    content: string,
+    matches: RegExpMatchArray | null,
+    context: SuggestionContext,
+  ): string {
     return this.interpolateCommand(content, matches, context);
   }
 
@@ -677,17 +749,17 @@ return 1.0;
 
     factors.push(`Node.js ${context.environment.nodeVersion}`);
     factors.push(`Platform: ${context.environment.platform}`);
-    
+
     if (context.environment.projectType) {
       factors.push(`Project type: ${context.environment.projectType}`);
     }
 
     if (context.codebase.languages.length > 0) {
-      factors.push(`Languages: ${context.codebase.languages.join(', ')}`);
+      factors.push(`Languages: ${context.codebase.languages.join(", ")}`);
     }
 
     if (context.codebase.frameworks && context.codebase.frameworks.length > 0) {
-      factors.push(`Frameworks: ${context.codebase.frameworks.join(', ')}`);
+      factors.push(`Frameworks: ${context.codebase.frameworks.join(", ")}`);
     }
 
     if (context.history.similarErrors > 0) {
@@ -700,7 +772,10 @@ return 1.0;
   /**
    * Extract context clues from matches and context
    */
-  private extractContextClues(matches: RegExpMatchArray | null, context: SuggestionContext): string[] {
+  private extractContextClues(
+    matches: RegExpMatchArray | null,
+    context: SuggestionContext,
+  ): string[] {
     const clues: string[] = [];
 
     if (matches) {
@@ -714,8 +789,13 @@ return 1.0;
       clues.push(`Operation: ${context.error.operation}`);
     }
 
-    if (context.codebase.recentChanges && context.codebase.recentChanges.length > 0) {
-      clues.push(`Recent changes: ${context.codebase.recentChanges.length} files`);
+    if (
+      context.codebase.recentChanges &&
+      context.codebase.recentChanges.length > 0
+    ) {
+      clues.push(
+        `Recent changes: ${context.codebase.recentChanges.length} files`,
+      );
     }
 
     return clues;
@@ -727,26 +807,29 @@ return 1.0;
   private adjustConfidence(
     baseConfidence: string,
     pattern: ErrorPattern,
-    context: SuggestionContext
-  ): SuggestionType extends 'code-fix' ? 'high' : 'medium' {
+    context: SuggestionContext,
+  ): SuggestionType extends "code-fix" ? "high" : "medium" {
     let confidence = baseConfidence;
 
     // Increase confidence for patterns with high success rate
-    if (pattern.successRate > 0.8 && confidence === 'medium') {
-      confidence = 'high';
+    if (pattern.successRate > 0.8 && confidence === "medium") {
+      confidence = "high";
     }
 
     // Decrease confidence for patterns with low match count (less tested)
-    if (pattern.matchCount < 10 && confidence === 'high') {
-      confidence = 'medium';
+    if (pattern.matchCount < 10 && confidence === "high") {
+      confidence = "medium";
     }
 
     // Adjust based on user experience
-    if (context.user.experienceLevel === 'beginner' && confidence === 'critical') {
-      confidence = 'high';
+    if (
+      context.user.experienceLevel === "beginner" &&
+      confidence === "critical"
+    ) {
+      confidence = "high";
     }
 
-    return confidence as SuggestionType extends 'code-fix' ? 'high' : 'medium';
+    return confidence as SuggestionType extends "code-fix" ? "high" : "medium";
   }
 
   /**
@@ -754,11 +837,16 @@ return 1.0;
    */
   private confidenceToNumber(confidence: string): number {
     switch (confidence) {
-      case 'critical': return 1.0;
-      case 'high': return 0.8;
-      case 'medium': return 0.6;
-      case 'low': return 0.4;
-      default: return 0.5;
+      case "critical":
+        return 1.0;
+      case "high":
+        return 0.8;
+      case "medium":
+        return 0.6;
+      case "low":
+        return 0.4;
+      default:
+        return 0.5;
     }
   }
 
@@ -780,7 +868,7 @@ return 1.0;
    * Update pattern statistics
    */
   updatePatternStats(patternId: string, success: boolean): void {
-    const pattern = this.patterns.find(p => p.id === patternId);
+    const pattern = this.patterns.find((p) => p.id === patternId);
     if (pattern) {
       pattern.matchCount++;
       if (success) {
@@ -793,12 +881,17 @@ return 1.0;
   /**
    * Get pattern statistics
    */
-  getPatternStats(): Array<{ id: string; matchCount: number; successRate: number; lastUpdated: string }> {
-    return this.patterns.map(p => ({
+  getPatternStats(): Array<{
+    id: string;
+    matchCount: number;
+    successRate: number;
+    lastUpdated: string;
+  }> {
+    return this.patterns.map((p) => ({
       id: p.id,
       matchCount: p.matchCount,
       successRate: p.successRate,
-      lastUpdated: p.lastUpdated
+      lastUpdated: p.lastUpdated,
     }));
   }
 }

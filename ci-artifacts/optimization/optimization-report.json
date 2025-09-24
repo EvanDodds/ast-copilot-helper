@@ -3,9 +3,7 @@
   "baseline": {
     "totalWorkflowTime": 600,
     "averageJobTime": 120,
-    "bottleneckJobs": [
-      "build-and-test"
-    ],
+    "bottleneckJobs": ["build-and-test"],
     "resourceUtilization": 65,
     "parallelizationEfficiency": 75
   },

@@ -1,19 +1,19 @@
 /**
  * Platform Publishing Implementation
- * 
+ *
  * @fileoverview Implements multi-platform publishing for NPM, VS Code Marketplace,
  * GitHub Releases, and other platforms with coordinated release management.
- * 
+ *
  * @author GitHub Copilot
  * @version 1.0.0
  */
 
-import type { PlatformPublisher } from '../interfaces.js';
+import type { PlatformPublisher } from "../interfaces.js";
 import type {
   PlatformConfig,
   PublishResult,
-  ReleaseArtifact
-} from '../types.js';
+  ReleaseArtifact,
+} from "../types.js";
 
 /**
  * Multi-platform publishing implementation
@@ -23,22 +23,28 @@ export class PlatformPublisherImpl implements PlatformPublisher {
   private initialized = false;
 
   async initialize(platforms: PlatformConfig[]): Promise<void> {
-    console.log(`📦 Initializing platform publisher for ${platforms.length} platforms...`);
+    console.log(
+      `📦 Initializing platform publisher for ${platforms.length} platforms...`,
+    );
     this._platforms = platforms;
-    
+
     // Validate platform configurations
     if (!this._platforms || this._platforms.length === 0) {
-      console.warn('⚠️  No platform configurations provided');
+      console.warn("⚠️  No platform configurations provided");
     }
-    
+
     this.initialized = true;
-    console.log('✅ Platform publisher initialized');
+    console.log("✅ Platform publisher initialized");
   }
 
-  async publishToPlatform(platform: string, version: string, artifacts: ReleaseArtifact[]): Promise<PublishResult> {
+  async publishToPlatform(
+    platform: string,
+    version: string,
+    artifacts: ReleaseArtifact[],
+  ): Promise<PublishResult> {
     this.ensureInitialized();
     console.log(`📦 Publishing ${version} to ${platform}...`);
-    
+
     // Implementation would publish to specific platform
     return {
       platform,
@@ -46,53 +52,65 @@ export class PlatformPublisherImpl implements PlatformPublisher {
       version,
       url: `https://example.com/releases/${version}`,
       message: `Successfully published to ${platform}`,
-      artifacts
+      artifacts,
     };
   }
 
-  async publishToMultiplePlatforms(platforms: string[], version: string, artifacts: ReleaseArtifact[]): Promise<PublishResult[]> {
+  async publishToMultiplePlatforms(
+    platforms: string[],
+    version: string,
+    artifacts: ReleaseArtifact[],
+  ): Promise<PublishResult[]> {
     this.ensureInitialized();
     console.log(`📦 Publishing ${version} to ${platforms.length} platforms...`);
-    
+
     const results: PublishResult[] = [];
     for (const platform of platforms) {
       const result = await this.publishToPlatform(platform, version, artifacts);
       results.push(result);
     }
-    
+
     return results;
   }
 
   async validatePlatformRequirements(platform: string): Promise<boolean> {
     this.ensureInitialized();
     console.log(`✅ Validating requirements for ${platform}...`);
-    
+
     // Implementation would validate platform requirements
     return true;
   }
 
-  async getPlatformMetadata(platform: string, version: string): Promise<Record<string, any>> {
+  async getPlatformMetadata(
+    platform: string,
+    version: string,
+  ): Promise<Record<string, any>> {
     this.ensureInitialized();
     console.log(`📋 Getting metadata for ${platform} ${version}...`);
-    
+
     return {
       platform,
       version,
-      publishedAt: new Date().toISOString()
+      publishedAt: new Date().toISOString(),
     };
   }
 
-  async buildArtifacts(platform: string, version: string): Promise<ReleaseArtifact[]> {
+  async buildArtifacts(
+    platform: string,
+    version: string,
+  ): Promise<ReleaseArtifact[]> {
     this.ensureInitialized();
     console.log(`🔨 Building artifacts for ${platform} ${version}...`);
-    
+
     // Implementation would build platform-specific artifacts
     return [];
   }
 
   private ensureInitialized(): void {
     if (!this.initialized) {
-      throw new Error('PlatformPublisher not initialized. Call initialize() first.');
+      throw new Error(
+        "PlatformPublisher not initialized. Call initialize() first.",
+      );
     }
   }
 }

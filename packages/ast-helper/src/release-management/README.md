@@ -27,7 +27,7 @@ interface ReleaseManager {
   generateChangelog(fromVersion: string, toVersion: string): Promise<Changelog>;
   checkBackwardCompatibility(
     newVersion: string,
-    baseVersion: string
+    baseVersion: string,
   ): Promise<CompatibilityReport>;
   rollbackRelease(version: string, reason: string): Promise<RollbackResult>;
 }

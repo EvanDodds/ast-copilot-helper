@@ -185,7 +185,7 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.commands.executeCommand(
     "setContext",
     "releaseManager.isReleaseProject",
-    isReleaseProject
+    isReleaseProject,
   );
 
   if (isReleaseProject) {
@@ -199,13 +199,13 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.commands.executeCommand(
         "setContext",
         "releaseManager.isReleaseProject",
-        hasReleaseConfig
+        hasReleaseConfig,
       );
 
       if (hasReleaseConfig && !releaseProvider) {
         await initializeReleaseManager(context);
       }
-    }
+    },
   );
 
   context.subscriptions.push(workspaceWatcher);
@@ -225,19 +225,19 @@ async function initializeReleaseManager(context: vscode.ExtensionContext) {
     // Register tree view
     vscode.window.registerTreeDataProvider(
       "releaseManagerView",
-      releaseProvider
+      releaseProvider,
     );
 
     // Register webview provider
     const webviewProvider = new ReleaseWebviewProvider(
       context.extensionUri,
-      releaseManager
+      releaseManager,
     );
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
         "releaseManagerWebview",
-        webviewProvider
-      )
+        webviewProvider,
+      ),
     );
 
     // Register commands
@@ -249,7 +249,7 @@ async function initializeReleaseManager(context: vscode.ExtensionContext) {
     console.log("Release Manager initialized successfully");
   } catch (error) {
     vscode.window.showErrorMessage(
-      `Failed to initialize Release Manager: ${error.message}`
+      `Failed to initialize Release Manager: ${error.message}`,
     );
   }
 }
@@ -257,25 +257,25 @@ async function initializeReleaseManager(context: vscode.ExtensionContext) {
 function registerCommands(context: vscode.ExtensionContext) {
   const commands = [
     vscode.commands.registerCommand("releaseManager.planRelease", () =>
-      releaseCommands.planRelease()
+      releaseCommands.planRelease(),
     ),
     vscode.commands.registerCommand("releaseManager.executeRelease", (plan?) =>
-      releaseCommands.executeRelease(plan)
+      releaseCommands.executeRelease(plan),
     ),
     vscode.commands.registerCommand("releaseManager.generateChangelog", () =>
-      releaseCommands.generateChangelog()
+      releaseCommands.generateChangelog(),
     ),
     vscode.commands.registerCommand("releaseManager.checkCompatibility", () =>
-      releaseCommands.checkCompatibility()
+      releaseCommands.checkCompatibility(),
     ),
     vscode.commands.registerCommand("releaseManager.rollbackRelease", () =>
-      releaseCommands.rollbackRelease()
+      releaseCommands.rollbackRelease(),
     ),
     vscode.commands.registerCommand("releaseManager.openConfiguration", () =>
-      releaseCommands.openConfiguration()
+      releaseCommands.openConfiguration(),
     ),
     vscode.commands.registerCommand("releaseManager.refreshView", () =>
-      releaseProvider.refresh()
+      releaseProvider.refresh(),
     ),
   ];
 
@@ -311,7 +311,7 @@ async function loadReleaseConfiguration() {
   const workspaceFolder = vscode.workspace.workspaceFolders![0];
   const configPath = vscode.Uri.joinPath(
     workspaceFolder.uri,
-    ".releaserc.json"
+    ".releaserc.json",
   );
 
   try {
@@ -377,9 +377,8 @@ export class ReleaseCommands {
       const releaseType = await this.quickPickProvider.selectReleaseType();
       if (!releaseType) return;
 
-      const version = await this.quickPickProvider.selectOrEnterVersion(
-        releaseType
-      );
+      const version =
+        await this.quickPickProvider.selectOrEnterVersion(releaseType);
       if (!version) return;
 
       await vscode.window.withProgress(
@@ -395,7 +394,7 @@ export class ReleaseCommands {
 
           const plan = await this.releaseManager.planRelease(
             version,
-            releaseType
+            releaseType,
           );
 
           progress.report({ message: "Validating release plan..." });
@@ -406,11 +405,11 @@ export class ReleaseCommands {
           } else {
             this.showValidationErrors(validation.errors);
           }
-        }
+        },
       );
     } catch (error) {
       vscode.window.showErrorMessage(
-        `Failed to plan release: ${error.message}`
+        `Failed to plan release: ${error.message}`,
       );
     }
   }
@@ -424,7 +423,7 @@ export class ReleaseCommands {
     const confirmation = await vscode.window.showWarningMessage(
       `Execute release ${plan.version}?`,
       { modal: true },
-      "Yes, Execute Release"
+      "Yes, Execute Release",
     );
 
     if (confirmation) {
@@ -443,7 +442,7 @@ export class ReleaseCommands {
             vscode.window
               .showInformationMessage(
                 `✅ Release ${result.version} completed successfully!`,
-                "View Release Notes"
+                "View Release Notes",
               )
               .then((selection) => {
                 if (selection === "View Release Notes") {
@@ -452,10 +451,10 @@ export class ReleaseCommands {
               });
           } else {
             vscode.window.showErrorMessage(
-              `❌ Release failed: ${result.error}`
+              `❌ Release failed: ${result.error}`,
             );
           }
-        }
+        },
       );
     }
   }
@@ -477,14 +476,14 @@ export class ReleaseCommands {
         async (progress) => {
           const changelog = await this.releaseManager.generateChangelog(
             fromVersion,
-            toVersion
+            toVersion,
           );
           await this.showChangelogInEditor(changelog);
-        }
+        },
       );
     } catch (error) {
       vscode.window.showErrorMessage(
-        `Failed to generate changelog: ${error.message}`
+        `Failed to generate changelog: ${error.message}`,
       );
     }
   }
@@ -506,14 +505,14 @@ export class ReleaseCommands {
         async (progress) => {
           const report = await this.releaseManager.checkBackwardCompatibility(
             newVersion,
-            baseVersion
+            baseVersion,
           );
           await this.showCompatibilityReport(report);
-        }
+        },
       );
     } catch (error) {
       vscode.window.showErrorMessage(
-        `Failed to check compatibility: ${error.message}`
+        `Failed to check compatibility: ${error.message}`,
       );
     }
   }
@@ -533,7 +532,7 @@ export class ReleaseCommands {
       const confirmation = await vscode.window.showWarningMessage(
         `Rollback release ${version}?`,
         { modal: true },
-        "Yes, Rollback"
+        "Yes, Rollback",
       );
 
       if (confirmation) {
@@ -546,24 +545,24 @@ export class ReleaseCommands {
           async (progress) => {
             const result = await this.releaseManager.rollbackRelease(
               version,
-              reason
+              reason,
             );
 
             if (result.success) {
               vscode.window.showInformationMessage(
-                `✅ Rolled back to version ${result.rolledBackVersion}`
+                `✅ Rolled back to version ${result.rolledBackVersion}`,
               );
             } else {
               vscode.window.showErrorMessage(
-                `❌ Rollback failed: ${result.error}`
+                `❌ Rollback failed: ${result.error}`,
               );
             }
-          }
+          },
         );
       }
     } catch (error) {
       vscode.window.showErrorMessage(
-        `Failed to rollback release: ${error.message}`
+        `Failed to rollback release: ${error.message}`,
       );
     }
   }
@@ -572,7 +571,7 @@ export class ReleaseCommands {
     const workspaceFolder = vscode.workspace.workspaceFolders![0];
     const configPath = vscode.Uri.joinPath(
       workspaceFolder.uri,
-      ".releaserc.json"
+      ".releaserc.json",
     );
 
     try {
@@ -582,7 +581,7 @@ export class ReleaseCommands {
       // Create new configuration file
       const createConfig = await vscode.window.showInformationMessage(
         "No release configuration found. Create one?",
-        "Create Configuration"
+        "Create Configuration",
       );
 
       if (createConfig) {
@@ -605,7 +604,7 @@ Would you like to execute this release?
       planSummary,
       "Execute Release",
       "View Details",
-      "Cancel"
+      "Cancel",
     );
 
     switch (action) {
@@ -680,7 +679,7 @@ ${
   }
 
   private async createDefaultConfiguration(
-    configPath: vscode.Uri
+    configPath: vscode.Uri,
   ): Promise<void> {
     const defaultConfig = {
       repository: {
@@ -702,7 +701,7 @@ ${
 
     await vscode.workspace.fs.writeFile(
       configPath,
-      Buffer.from(JSON.stringify(defaultConfig, null, 2))
+      Buffer.from(JSON.stringify(defaultConfig, null, 2)),
     );
 
     const doc = await vscode.workspace.openTextDocument(configPath);
@@ -713,7 +712,7 @@ ${
     const workspaceFolder = vscode.workspace.workspaceFolders![0];
     const notesPath = vscode.Uri.joinPath(
       workspaceFolder.uri,
-      `releases/v${version}.md`
+      `releases/v${version}.md`,
     );
 
     try {
@@ -780,14 +779,14 @@ export class ReleaseQuickPickProvider {
   }
 
   async selectOrEnterVersion(
-    releaseType: ReleaseType
+    releaseType: ReleaseType,
   ): Promise<string | undefined> {
     // Calculate suggested version
     const currentVersion = await this.releaseManager.getLatestVersion("stable");
     const versionManager = this.releaseManager["versionManager"];
     const suggestedVersion = await versionManager.calculateNextVersion(
       currentVersion,
-      releaseType
+      releaseType,
     );
 
     const items = [
@@ -931,9 +930,8 @@ export class ReleaseManagerProvider
 
     try {
       // Current version
-      const currentVersion = await this.releaseManager.getLatestVersion(
-        "stable"
-      );
+      const currentVersion =
+        await this.releaseManager.getLatestVersion("stable");
       items.push(
         new ReleaseTreeItem(
           `Current Version: ${currentVersion}`,
@@ -943,14 +941,14 @@ export class ReleaseManagerProvider
             command: "releaseManager.showVersionDetails",
             title: "Show Version Details",
             arguments: [currentVersion],
-          }
-        )
+          },
+        ),
       );
 
       // Pending changes
       const changes = await this.releaseManager.generateChangelog(
         currentVersion,
-        "HEAD"
+        "HEAD",
       );
       items.push(
         new ReleaseTreeItem(
@@ -962,8 +960,8 @@ export class ReleaseManagerProvider
                 command: "releaseManager.showPendingChanges",
                 title: "Show Pending Changes",
               }
-            : undefined
-        )
+            : undefined,
+        ),
       );
 
       // Recent releases
@@ -971,8 +969,8 @@ export class ReleaseManagerProvider
         new ReleaseTreeItem(
           "Recent Releases",
           vscode.TreeItemCollapsibleState.Collapsible,
-          "releases"
-        )
+          "releases",
+        ),
       );
 
       // Platforms
@@ -980,16 +978,16 @@ export class ReleaseManagerProvider
         new ReleaseTreeItem(
           "Platforms",
           vscode.TreeItemCollapsibleState.Collapsible,
-          "platforms"
-        )
+          "platforms",
+        ),
       );
     } catch (error) {
       items.push(
         new ReleaseTreeItem(
           "Error loading release information",
           vscode.TreeItemCollapsibleState.None,
-          "error"
-        )
+          "error",
+        ),
       );
     }
 
@@ -997,18 +995,17 @@ export class ReleaseManagerProvider
   }
 
   private async getChildItems(
-    element: ReleaseTreeItem
+    element: ReleaseTreeItem,
   ): Promise<ReleaseTreeItem[]> {
     const items: ReleaseTreeItem[] = [];
 
     switch (element.contextValue) {
       case "changes":
-        const currentVersion = await this.releaseManager.getLatestVersion(
-          "stable"
-        );
+        const currentVersion =
+          await this.releaseManager.getLatestVersion("stable");
         const changes = await this.releaseManager.generateChangelog(
           currentVersion,
-          "HEAD"
+          "HEAD",
         );
 
         // Group by type
@@ -1021,8 +1018,8 @@ export class ReleaseManagerProvider
             new ReleaseTreeItem(
               `✨ Features: ${features.length}`,
               vscode.TreeItemCollapsibleState.None,
-              "feature-group"
-            )
+              "feature-group",
+            ),
           );
         }
 
@@ -1031,8 +1028,8 @@ export class ReleaseManagerProvider
             new ReleaseTreeItem(
               `🐛 Bug Fixes: ${fixes.length}`,
               vscode.TreeItemCollapsibleState.None,
-              "fix-group"
-            )
+              "fix-group",
+            ),
           );
         }
 
@@ -1041,8 +1038,8 @@ export class ReleaseManagerProvider
             new ReleaseTreeItem(
               `💥 Breaking: ${breaking.length}`,
               vscode.TreeItemCollapsibleState.None,
-              "breaking-group"
-            )
+              "breaking-group",
+            ),
           );
         }
         break;
@@ -1061,8 +1058,8 @@ export class ReleaseManagerProvider
                 command: "releaseManager.showReleaseDetails",
                 title: "Show Release Details",
                 arguments: [release],
-              }
-            )
+              },
+            ),
           );
         }
         break;
@@ -1081,8 +1078,8 @@ export class ReleaseManagerProvider
                 command: "releaseManager.showPlatformStatus",
                 title: "Show Platform Status",
                 arguments: [platform],
-              }
-            )
+              },
+            ),
           );
         }
         break;
@@ -1097,7 +1094,7 @@ class ReleaseTreeItem extends vscode.TreeItem {
     public readonly label: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly contextValue: string,
-    public readonly command?: vscode.Command
+    public readonly command?: vscode.Command,
   ) {
     super(label, collapsibleState);
     this.tooltip = this.label;
@@ -1154,7 +1151,7 @@ export class ReleaseStatusBarManager {
   constructor(private releaseManager: ComprehensiveReleaseManager) {
     this.statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
-      10
+      10,
     );
   }
 
@@ -1171,12 +1168,11 @@ export class ReleaseStatusBarManager {
 
   private async updateStatusBar(): Promise<void> {
     try {
-      const currentVersion = await this.releaseManager.getLatestVersion(
-        "stable"
-      );
+      const currentVersion =
+        await this.releaseManager.getLatestVersion("stable");
       const changes = await this.releaseManager.generateChangelog(
         currentVersion,
-        "HEAD"
+        "HEAD",
       );
       const pendingCount = changes.entries.length;
 
@@ -1187,7 +1183,7 @@ export class ReleaseStatusBarManager {
         this.statusBarItem.text += ` (${pendingCount})`;
         this.statusBarItem.tooltip += `\n${pendingCount} pending changes`;
         this.statusBarItem.backgroundColor = new vscode.ThemeColor(
-          "statusBarItem.warningBackground"
+          "statusBarItem.warningBackground",
         );
       } else {
         this.statusBarItem.backgroundColor = undefined;
@@ -1198,7 +1194,7 @@ export class ReleaseStatusBarManager {
       this.statusBarItem.text = "$(error) Release Error";
       this.statusBarItem.tooltip = `Release Manager error: ${error.message}`;
       this.statusBarItem.backgroundColor = new vscode.ThemeColor(
-        "statusBarItem.errorBackground"
+        "statusBarItem.errorBackground",
       );
     }
   }

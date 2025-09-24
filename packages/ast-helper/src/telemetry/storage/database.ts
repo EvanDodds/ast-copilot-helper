@@ -3,11 +3,11 @@
  * @description SQLite-based implementation of telemetry data storage
  */
 
-import type { Database } from 'better-sqlite3';
-import { promises as fs } from 'fs';
-import { dirname, resolve } from 'path';
-import { gzip, gunzip } from 'zlib';
-import { promisify } from 'util';
+import type { Database } from "better-sqlite3";
+import { promises as fs } from "fs";
+import { dirname, resolve } from "path";
+import { gzip, gunzip } from "zlib";
+import { promisify } from "util";
 import type {
   TelemetryStorage,
   StoredEvent,
@@ -15,12 +15,11 @@ import type {
   StorageStats,
   CleanupResult,
   StorageConfig,
-  TransmissionStatus} from './types.js';
-import {
-  DEFAULT_STORAGE_CONFIG
-} from './types.js';
-import type { TelemetryEvent } from '../collection/types.js';
-import type { PrivacyLevel } from '../types.js';
+  TransmissionStatus,
+} from "./types.js";
+import { DEFAULT_STORAGE_CONFIG } from "./types.js";
+import type { TelemetryEvent } from "../collection/types.js";
+import type { PrivacyLevel } from "../types.js";
 
 const gzipAsync = promisify(gzip);
 const gunzipAsync = promisify(gunzip);
@@ -53,23 +52,25 @@ export class SqliteTelemetryStorage implements TelemetryStorage {
       await fs.mkdir(dbDir, { recursive: true });
 
       // Import better-sqlite3 dynamically
-      const Database = (await import('better-sqlite3')).default;
-      
+      const Database = (await import("better-sqlite3")).default;
+
       // Create database connection
       this.db = new Database(dbPath);
-      
+
       // Configure database
       this.setupDatabase();
-      
+
       // Create tables
       this.createTables();
-      
+
       // Setup automatic cleanup
       this.setupAutoCleanup();
-      
+
       this.initialized = true;
     } catch (error) {
-      throw new Error(`Failed to initialize SQLite storage: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to initialize SQLite storage: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -78,19 +79,19 @@ export class SqliteTelemetryStorage implements TelemetryStorage {
    */
   private setupDatabase(): void {
     if (!this.db) {
-return;
-}
+      return;
+    }
 
     // Enable WAL mode for better concurrency
     if (this.config.enableWalMode) {
-      this.db.pragma('journal_mode = WAL');
+      this.db.pragma("journal_mode = WAL");
     }
 
     // Optimize for our use case
-    this.db.pragma('synchronous = NORMAL');
-    this.db.pragma('cache_size = 10000');
-    this.db.pragma('temp_store = memory');
-    this.db.pragma('mmap_size = 268435456'); // 256MB
+    this.db.pragma("synchronous = NORMAL");
+    this.db.pragma("cache_size = 10000");
+    this.db.pragma("temp_store = memory");
+    this.db.pragma("mmap_size = 268435456"); // 256MB
   }
 
   /**
@@ -98,8 +99,8 @@ return;
    */
   private createTables(): void {
     if (!this.db) {
-return;
-}
+      return;
+    }
 
     // Main events table
     this.db.exec(`
@@ -177,7 +178,7 @@ return;
       try {
         await this.cleanup(this.config.retentionDays);
       } catch (error) {
-        console.error('Automatic cleanup failed:', error);
+        console.error("Automatic cleanup failed:", error);
       }
     }, intervalMs);
   }
@@ -187,11 +188,11 @@ return;
    */
   async store(event: TelemetryEvent): Promise<void> {
     if (!this.initialized || !this.db) {
-      throw new Error('Storage not initialized');
+      throw new Error("Storage not initialized");
     }
 
     const storedEvent = await this.prepareEventForStorage(event);
-    
+
     const stmt = this.db.prepare(`
       INSERT INTO telemetry_events (
         event_id, session_id, timestamp, user_id, event_type, category,
@@ -210,7 +211,7 @@ return;
       storedEvent.eventSize,
       storedEvent.compressed,
       storedEvent.event_data,
-      storedEvent.serialized_metadata
+      storedEvent.serialized_metadata,
     );
   }
 
@@ -219,12 +220,12 @@ return;
    */
   async storeBatch(events: TelemetryEvent[]): Promise<void> {
     if (!this.initialized || !this.db) {
-      throw new Error('Storage not initialized');
+      throw new Error("Storage not initialized");
     }
 
     if (events.length === 0) {
-return;
-}
+      return;
+    }
 
     const stmt = this.db.prepare(`
       INSERT INTO telemetry_events (
@@ -253,9 +254,9 @@ return;
           stored.eventSize,
           stored.compressed,
           stored.event_data,
-          stored.serialized_metadata
+          stored.serialized_metadata,
         ];
-      })
+      }),
     );
 
     transaction(preparedEvents);
@@ -267,24 +268,27 @@ return;
   private async prepareEventForStorage(event: TelemetryEvent): Promise<any> {
     const eventData = JSON.stringify({
       data: (event as any).data || {},
-      context: (event as any).context || {}
+      context: (event as any).context || {},
     });
 
     const metadata = JSON.stringify(event.metadata);
     let finalEventData = eventData;
     let compressed = false;
-    let eventSize = Buffer.byteLength(eventData, 'utf8');
+    let eventSize = Buffer.byteLength(eventData, "utf8");
 
     // Compress large events if enabled
-    if (this.config.enableCompression && eventSize > this.config.compressionThreshold) {
+    if (
+      this.config.enableCompression &&
+      eventSize > this.config.compressionThreshold
+    ) {
       try {
-        const compressedData = await gzipAsync(Buffer.from(eventData, 'utf8'));
-        finalEventData = compressedData.toString('base64');
+        const compressedData = await gzipAsync(Buffer.from(eventData, "utf8"));
+        finalEventData = compressedData.toString("base64");
         compressed = true;
         eventSize = compressedData.length;
       } catch (error) {
         // Fall back to uncompressed if compression fails
-        console.warn('Event compression failed, storing uncompressed:', error);
+        console.warn("Event compression failed, storing uncompressed:", error);
       }
     }
 
@@ -293,7 +297,7 @@ return;
       event_data: finalEventData,
       serialized_metadata: metadata,
       eventSize,
-      compressed
+      compressed,
     };
   }
 
@@ -302,68 +306,85 @@ return;
    */
   async query(criteria: QueryCriteria): Promise<TelemetryEvent[]> {
     if (!this.initialized || !this.db) {
-      throw new Error('Storage not initialized');
+      throw new Error("Storage not initialized");
     }
 
     const { query, params } = this.buildQuery(criteria);
     const rows = this.db.prepare(query).all(...params);
 
-    return Promise.all(
-      rows.map(row => this.deserializeEvent(row))
-    );
+    return Promise.all(rows.map((row) => this.deserializeEvent(row)));
   }
 
   /**
    * Build SQL query from criteria
    */
-  private buildQuery(criteria: QueryCriteria): { query: string; params: any[] } {
-    let query = 'SELECT * FROM telemetry_events';
+  private buildQuery(criteria: QueryCriteria): {
+    query: string;
+    params: any[];
+  } {
+    let query = "SELECT * FROM telemetry_events";
     const conditions: string[] = [];
     const params: any[] = [];
 
     if (criteria.eventIds?.length) {
-      conditions.push(`event_id IN (${criteria.eventIds.map(() => '?').join(', ')})`);
+      conditions.push(
+        `event_id IN (${criteria.eventIds.map(() => "?").join(", ")})`,
+      );
       params.push(...criteria.eventIds);
     }
 
     if (criteria.sessionIds?.length) {
-      conditions.push(`session_id IN (${criteria.sessionIds.map(() => '?').join(', ')})`);
+      conditions.push(
+        `session_id IN (${criteria.sessionIds.map(() => "?").join(", ")})`,
+      );
       params.push(...criteria.sessionIds);
     }
 
     if (criteria.eventTypes?.length) {
-      conditions.push(`event_type IN (${criteria.eventTypes.map(() => '?').join(', ')})`);
+      conditions.push(
+        `event_type IN (${criteria.eventTypes.map(() => "?").join(", ")})`,
+      );
       params.push(...criteria.eventTypes);
     }
 
     if (criteria.categories?.length) {
-      conditions.push(`category IN (${criteria.categories.map(() => '?').join(', ')})`);
+      conditions.push(
+        `category IN (${criteria.categories.map(() => "?").join(", ")})`,
+      );
       params.push(...criteria.categories);
     }
 
     if (criteria.privacyLevels?.length) {
-      conditions.push(`privacy_level IN (${criteria.privacyLevels.map(() => '?').join(', ')})`);
+      conditions.push(
+        `privacy_level IN (${criteria.privacyLevels.map(() => "?").join(", ")})`,
+      );
       params.push(...criteria.privacyLevels);
     }
 
     if (criteria.transmissionStatus?.length) {
-      conditions.push(`transmission_status IN (${criteria.transmissionStatus.map(() => '?').join(', ')})`);
+      conditions.push(
+        `transmission_status IN (${criteria.transmissionStatus.map(() => "?").join(", ")})`,
+      );
       params.push(...criteria.transmissionStatus);
     }
 
     if (criteria.dateRange) {
-      conditions.push('timestamp BETWEEN ? AND ?');
-      params.push(criteria.dateRange.start.toISOString(), criteria.dateRange.end.toISOString());
+      conditions.push("timestamp BETWEEN ? AND ?");
+      params.push(
+        criteria.dateRange.start.toISOString(),
+        criteria.dateRange.end.toISOString(),
+      );
     }
 
     if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
+      query += " WHERE " + conditions.join(" AND ");
     }
 
     // Add sorting
     if (criteria.sortBy) {
-      const column = criteria.sortBy === 'storedAt' ? 'stored_at' : criteria.sortBy;
-      query += ` ORDER BY ${column} ${criteria.sortOrder || 'desc'}`;
+      const column =
+        criteria.sortBy === "storedAt" ? "stored_at" : criteria.sortBy;
+      query += ` ORDER BY ${column} ${criteria.sortOrder || "desc"}`;
     }
 
     // Add pagination
@@ -385,20 +406,22 @@ return;
    */
   private async deserializeEvent(row: any): Promise<TelemetryEvent> {
     let eventData = row.event_data;
-    
+
     // Decompress if needed
     if (row.compressed) {
       try {
-        const compressedBuffer = Buffer.from(eventData, 'base64');
+        const compressedBuffer = Buffer.from(eventData, "base64");
         const decompressed = await gunzipAsync(compressedBuffer);
-        eventData = decompressed.toString('utf8');
+        eventData = decompressed.toString("utf8");
       } catch (error) {
-        throw new Error(`Failed to decompress event ${row.event_id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new Error(
+          `Failed to decompress event ${row.event_id}: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
       }
     }
 
     const parsedEventData = JSON.parse(eventData);
-    const metadata = JSON.parse(row.metadata || '{}');
+    const metadata = JSON.parse(row.metadata || "{}");
 
     return {
       id: row.event_id,
@@ -409,16 +432,18 @@ return;
       category: row.category,
       privacyLevel: row.privacy_level as PrivacyLevel,
       metadata,
-      ...parsedEventData
+      ...parsedEventData,
     };
   }
 
   /**
    * Get events ready for transmission
    */
-  async getPendingEvents(batchSize = this.config.batchSize): Promise<StoredEvent[]> {
+  async getPendingEvents(
+    batchSize = this.config.batchSize,
+  ): Promise<StoredEvent[]> {
     if (!this.initialized || !this.db) {
-      throw new Error('Storage not initialized');
+      throw new Error("Storage not initialized");
     }
 
     const query = `
@@ -431,7 +456,7 @@ return;
     `;
 
     const rows = this.db.prepare(query).all(batchSize);
-    
+
     return Promise.all(
       rows.map(async (row: any) => {
         const event = await this.deserializeEvent(row);
@@ -441,13 +466,17 @@ return;
           storedAt: new Date(row.stored_at),
           transmissionStatus: row.transmission_status as TransmissionStatus,
           transmissionAttempts: row.transmission_attempts,
-          lastTransmissionAttempt: row.last_transmission_attempt ? new Date(row.last_transmission_attempt) : undefined,
-          nextRetryAt: row.next_retry_at ? new Date(row.next_retry_at) : undefined,
+          lastTransmissionAttempt: row.last_transmission_attempt
+            ? new Date(row.last_transmission_attempt)
+            : undefined,
+          nextRetryAt: row.next_retry_at
+            ? new Date(row.next_retry_at)
+            : undefined,
           transmissionError: row.transmission_error || undefined,
           eventSize: row.event_size,
-          compressed: Boolean(row.compressed)
+          compressed: Boolean(row.compressed),
         } as StoredEvent;
-      })
+      }),
     );
   }
 
@@ -493,11 +522,13 @@ return;
       WHERE event_id = ?
     `);
 
-    const transaction = this.db.transaction((ids: string[], errorMsg: string) => {
-      for (const id of ids) {
-        stmt.run(errorMsg, id);
-      }
-    });
+    const transaction = this.db.transaction(
+      (ids: string[], errorMsg: string) => {
+        for (const id of ids) {
+          stmt.run(errorMsg, id);
+        }
+      },
+    );
 
     transaction(eventIds, error);
   }
@@ -507,7 +538,7 @@ return;
    */
   async cleanup(retentionDays: number): Promise<CleanupResult> {
     if (!this.initialized || !this.db) {
-      throw new Error('Storage not initialized');
+      throw new Error("Storage not initialized");
     }
 
     const startTime = Date.now();
@@ -526,20 +557,28 @@ return;
 
     const result = deleteStmt.run(
       cutoffDate.toISOString(),
-      cutoffDate.toISOString()
+      cutoffDate.toISOString(),
     );
 
     // Clean up orphaned queue entries
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       DELETE FROM transmission_queue 
       WHERE event_id NOT IN (SELECT event_id FROM telemetry_events)
-    `).run();
+    `,
+      )
+      .run();
 
     // Update metadata
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT OR REPLACE INTO storage_metadata (key, value) 
       VALUES ('last_cleanup', ?)
-    `).run(new Date().toISOString());
+    `,
+      )
+      .run(new Date().toISOString());
 
     // Get stats after cleanup
     const afterStats = await this.getStats();
@@ -552,7 +591,7 @@ return;
       cleanupDuration,
       cleanupTimestamp: new Date(),
       removedByStatus: beforeStats.removedByStatus,
-      removedByAge: beforeStats.removedByAge
+      removedByAge: beforeStats.removedByAge,
     };
   }
 
@@ -561,8 +600,8 @@ return;
    */
   private async getCleanupStats(cutoffDate: Date): Promise<any> {
     if (!this.db) {
-return { removedByStatus: {}, removedByAge: {} };
-}
+      return { removedByStatus: {}, removedByAge: {} };
+    }
 
     const statusQuery = this.db.prepare(`
       SELECT transmission_status, COUNT(*) as count 
@@ -571,16 +610,20 @@ return { removedByStatus: {}, removedByAge: {} };
       GROUP BY transmission_status
     `);
 
-    const statusResults = statusQuery.all(cutoffDate.toISOString(), cutoffDate.toISOString()) as any[];
+    const statusResults = statusQuery.all(
+      cutoffDate.toISOString(),
+      cutoffDate.toISOString(),
+    ) as any[];
 
     const removedByStatus: Partial<Record<TransmissionStatus, number>> = {};
     for (const row of statusResults) {
-      removedByStatus[row.transmission_status as TransmissionStatus] = row.count;
+      removedByStatus[row.transmission_status as TransmissionStatus] =
+        row.count;
     }
 
     return {
       removedByStatus: removedByStatus as Record<TransmissionStatus, number>,
-      removedByAge: {} // Could implement age-based tracking
+      removedByAge: {}, // Could implement age-based tracking
     };
   }
 
@@ -589,23 +632,27 @@ return { removedByStatus: {}, removedByAge: {} };
    */
   async clearQueue(): Promise<void> {
     if (!this.initialized || !this.db) {
-      throw new Error('Storage not initialized');
+      throw new Error("Storage not initialized");
     }
 
     try {
       // Clear all queued events
-      const clearStmt = this.db.prepare('DELETE FROM transmission_queue');
+      const clearStmt = this.db.prepare("DELETE FROM transmission_queue");
       const result = clearStmt.run();
-      
-      console.log(`✅ Cleared ${result.changes} queued events from transmission queue`);
+
+      console.log(
+        `✅ Cleared ${result.changes} queued events from transmission queue`,
+      );
 
       // Update metadata
       const updateMetaStmt = this.db.prepare(
-        'INSERT OR REPLACE INTO storage_metadata (key, value, updated_at) VALUES (?, ?, datetime(\'now\'))'
+        "INSERT OR REPLACE INTO storage_metadata (key, value, updated_at) VALUES (?, ?, datetime('now'))",
       );
-      updateMetaStmt.run('last_queue_clear', new Date().toISOString());
+      updateMetaStmt.run("last_queue_clear", new Date().toISOString());
     } catch (error) {
-      throw new Error(`Failed to clear queue: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to clear queue: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -614,58 +661,76 @@ return { removedByStatus: {}, removedByAge: {} };
    */
   async getStats(): Promise<StorageStats> {
     if (!this.initialized || !this.db) {
-      throw new Error('Storage not initialized');
+      throw new Error("Storage not initialized");
     }
 
     // Total events
-    const totalEventsResult = this.db.prepare('SELECT COUNT(*) as count FROM telemetry_events').get() as any;
+    const totalEventsResult = this.db
+      .prepare("SELECT COUNT(*) as count FROM telemetry_events")
+      .get() as any;
     const totalEvents = totalEventsResult?.count || 0;
 
     // Events by status
-    const statusResults = this.db.prepare(`
+    const statusResults = this.db
+      .prepare(
+        `
       SELECT transmission_status, COUNT(*) as count 
       FROM telemetry_events 
       GROUP BY transmission_status
-    `).all() as any[];
-    
+    `,
+      )
+      .all() as any[];
+
     const eventsByStatus: Partial<Record<TransmissionStatus, number>> = {};
     for (const row of statusResults) {
       eventsByStatus[row.transmission_status as TransmissionStatus] = row.count;
     }
 
     // Events by type
-    const typeResults = this.db.prepare(`
+    const typeResults = this.db
+      .prepare(
+        `
       SELECT event_type, COUNT(*) as count 
       FROM telemetry_events 
       GROUP BY event_type
-    `).all() as any[];
-    
+    `,
+      )
+      .all() as any[];
+
     const eventsByType: Record<string, number> = {};
     for (const row of typeResults) {
       eventsByType[row.event_type] = row.count;
     }
 
     // Events by privacy level
-    const privacyResults = this.db.prepare(`
+    const privacyResults = this.db
+      .prepare(
+        `
       SELECT privacy_level, COUNT(*) as count 
       FROM telemetry_events 
       GROUP BY privacy_level
-    `).all() as any[];
-    
+    `,
+      )
+      .all() as any[];
+
     const eventsByPrivacyLevel: Partial<Record<PrivacyLevel, number>> = {};
     for (const row of privacyResults) {
       eventsByPrivacyLevel[row.privacy_level as PrivacyLevel] = row.count;
     }
 
     // Size statistics
-    const sizeResults = this.db.prepare(`
+    const sizeResults = this.db
+      .prepare(
+        `
       SELECT 
         COALESCE(SUM(event_size), 0) as totalSize,
         COALESCE(AVG(event_size), 0) as averageSize,
         MIN(timestamp) as oldestEvent,
         MAX(timestamp) as newestEvent
       FROM telemetry_events
-    `).get() as any;
+    `,
+      )
+      .get() as any;
 
     // Database file size
     const dbPath = resolve(this.config.databasePath);
@@ -678,31 +743,48 @@ return { removedByStatus: {}, removedByAge: {} };
     }
 
     // Last cleanup
-    const lastCleanupResult = this.db.prepare(`
+    const lastCleanupResult = this.db
+      .prepare(
+        `
       SELECT value FROM storage_metadata WHERE key = 'last_cleanup'
-    `).get() as any;
+    `,
+      )
+      .get() as any;
 
     return {
       totalEvents,
       eventsByStatus: eventsByStatus as Record<TransmissionStatus, number>,
       eventsByType,
-      eventsByPrivacyLevel: eventsByPrivacyLevel as Record<PrivacyLevel, number>,
+      eventsByPrivacyLevel: eventsByPrivacyLevel as Record<
+        PrivacyLevel,
+        number
+      >,
       totalSize: sizeResults?.totalSize || 0,
       averageEventSize: sizeResults?.averageSize || 0,
-      oldestEvent: sizeResults?.oldestEvent ? new Date(sizeResults.oldestEvent) : undefined,
-      newestEvent: sizeResults?.newestEvent ? new Date(sizeResults.newestEvent) : undefined,
+      oldestEvent: sizeResults?.oldestEvent
+        ? new Date(sizeResults.oldestEvent)
+        : undefined,
+      newestEvent: sizeResults?.newestEvent
+        ? new Date(sizeResults.newestEvent)
+        : undefined,
       databaseSize,
-      lastCleanup: lastCleanupResult ? new Date(lastCleanupResult.value) : undefined,
+      lastCleanup: lastCleanupResult
+        ? new Date(lastCleanupResult.value)
+        : undefined,
       collectionStats: {
         eventsCollected: totalEvents,
         eventsDropped: 0, // Would need to track this
         eventsSent: eventsByStatus.transmitted || 0,
         eventsRetried: 0, // Would need to track retry counts
-        lastCollectionTime: sizeResults?.newestEvent ? new Date(sizeResults.newestEvent) : new Date(),
-        lastTransmissionTime: sizeResults?.newestEvent ? new Date(sizeResults.newestEvent) : new Date(),
+        lastCollectionTime: sizeResults?.newestEvent
+          ? new Date(sizeResults.newestEvent)
+          : new Date(),
+        lastTransmissionTime: sizeResults?.newestEvent
+          ? new Date(sizeResults.newestEvent)
+          : new Date(),
         bufferSize: 0, // Not applicable for storage stats
-        bufferUtilization: 0 // Not applicable for storage stats
-      }
+        bufferUtilization: 0, // Not applicable for storage stats
+      },
     };
   }
 
@@ -731,7 +813,9 @@ export class StorageFactory {
   /**
    * Create SQLite storage with custom configuration
    */
-  static createSqliteStorage(config?: Partial<StorageConfig>): SqliteTelemetryStorage {
+  static createSqliteStorage(
+    config?: Partial<StorageConfig>,
+  ): SqliteTelemetryStorage {
     return new SqliteTelemetryStorage(config);
   }
 
@@ -740,9 +824,9 @@ export class StorageFactory {
    */
   static createDevelopmentStorage(): SqliteTelemetryStorage {
     return new SqliteTelemetryStorage({
-      databasePath: ':memory:',
+      databasePath: ":memory:",
       retentionDays: 1,
-      enableCompression: false
+      enableCompression: false,
     });
   }
 
@@ -751,11 +835,11 @@ export class StorageFactory {
    */
   static createProductionStorage(dataDir: string): SqliteTelemetryStorage {
     return new SqliteTelemetryStorage({
-      databasePath: resolve(dataDir, 'telemetry.db'),
+      databasePath: resolve(dataDir, "telemetry.db"),
       maxDatabaseSize: 100 * 1024 * 1024, // 100MB
       retentionDays: 90,
       enableCompression: true,
-      enableWalMode: true
+      enableWalMode: true,
     });
   }
 }

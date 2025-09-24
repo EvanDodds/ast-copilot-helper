@@ -1,31 +1,34 @@
 /**
  * File-based Query Processor
- * 
+ *
  * Implements specialized processing for file-based queries including:
  * - File path and name searches
- * - Glob pattern matching 
+ * - Glob pattern matching
  * - Directory traversal
  * - File content filtering
  * - Text-based search capabilities
  */
 
-import { EventEmitter } from 'events';
-import { minimatch } from 'minimatch';
-import path from 'path';
-import { createLogger, LogLevel } from '../../../ast-helper/src/logging/index.js';
-import type { 
+import { EventEmitter } from "events";
+import { minimatch } from "minimatch";
+import path from "path";
+import {
+  createLogger,
+  LogLevel,
+} from "../../../ast-helper/src/logging/index.js";
+import type {
   FileQuery,
   ASTNodeMatch,
   AnnotationMatch,
   QueryPerformanceMetrics,
   FileMatchCriteria,
-  Annotation
-} from './types.js';
-import type { ASTDatabaseReader } from '../database/reader.js';
+  Annotation,
+} from "./types.js";
+import type { ASTDatabaseReader } from "../database/reader.js";
 
-const logger = createLogger({ 
+const logger = createLogger({
   level: LogLevel.INFO,
-  operation: 'file-processor'
+  operation: "file-processor",
 });
 
 /**
@@ -58,7 +61,7 @@ const DEFAULT_CONFIG: Required<FileProcessorConfig> = {
   maxDepth: 10,
   enableGlobPatterns: true,
   fuzzyMatching: true,
-  fuzzyThreshold: 0.6
+  fuzzyThreshold: 0.6,
 };
 
 /**
@@ -76,7 +79,7 @@ interface FileSearchResult {
   /** Match score (0-1) */
   score: number;
   /** Match type (exact, glob, fuzzy, content) */
-  matchType: 'exact' | 'glob' | 'fuzzy' | 'content';
+  matchType: "exact" | "glob" | "fuzzy" | "content";
   /** Matched content snippets if content search */
   contentMatches?: Array<{
     line: number;
@@ -94,7 +97,7 @@ export class FileQueryProcessor extends EventEmitter {
 
   constructor(
     databaseReader: ASTDatabaseReader,
-    config: FileProcessorConfig = {}
+    config: FileProcessorConfig = {},
   ) {
     super();
     this.databaseReader = databaseReader;
@@ -127,14 +130,13 @@ export class FileQueryProcessor extends EventEmitter {
         processingTime: 0,
         resultCount: annotationMatches.length,
         cacheHit: false,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       return {
         matches: annotationMatches,
-        performance
+        performance,
       };
-
     } catch (error) {
       const endTime = Date.now();
       const performance: QueryPerformanceMetrics = {
@@ -144,17 +146,17 @@ export class FileQueryProcessor extends EventEmitter {
         resultCount: 0,
         cacheHit: false,
         timestamp: new Date(),
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
 
-      logger.error('File query processing failed', { 
+      logger.error("File query processing failed", {
         query: query.text,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
 
       return {
         matches: [],
-        performance
+        performance,
       };
     }
   }
@@ -172,7 +174,7 @@ export class FileQueryProcessor extends EventEmitter {
 
     for (const fileInfo of allFiles) {
       const matches = this.evaluateFileMatch(fileInfo, searchText, criteria);
-      
+
       if (matches.length > 0) {
         results.push(...matches);
       }
@@ -188,12 +190,14 @@ export class FileQueryProcessor extends EventEmitter {
   /**
    * Get all available files from the database
    */
-  private async getAllFiles(): Promise<Array<{
-    path: string;
-    name: string;
-    directory: string;
-    extension: string;
-  }>> {
+  private async getAllFiles(): Promise<
+    Array<{
+      path: string;
+      name: string;
+      directory: string;
+      extension: string;
+    }>
+  > {
     try {
       // Get file paths from the database - this is a simplified approach
       // In a real implementation, we'd have a dedicated file index
@@ -206,9 +210,8 @@ export class FileQueryProcessor extends EventEmitter {
 
       // For now, return empty array - this would be populated from database file index
       return files;
-
     } catch (error) {
-      logger.error('Failed to get files from database', { error });
+      logger.error("Failed to get files from database", { error });
       return [];
     }
   }
@@ -224,21 +227,25 @@ export class FileQueryProcessor extends EventEmitter {
       extension: string;
     },
     searchText: string,
-    criteria: FileMatchCriteria
+    criteria: FileMatchCriteria,
   ): FileSearchResult[] {
     const results: FileSearchResult[] = [];
-    const fileName = this.config.caseSensitive ? fileInfo.name : fileInfo.name.toLowerCase();
-    const filePath = this.config.caseSensitive ? fileInfo.path : fileInfo.path.toLowerCase();
-    
+    const fileName = this.config.caseSensitive
+      ? fileInfo.name
+      : fileInfo.name.toLowerCase();
+    const filePath = this.config.caseSensitive
+      ? fileInfo.path
+      : fileInfo.path.toLowerCase();
+
     // Skip hidden files if not included
-    if (!this.config.includeHidden && fileInfo.name.startsWith('.')) {
+    if (!this.config.includeHidden && fileInfo.name.startsWith(".")) {
       return results;
     }
 
     // Check file extension filters
     if (criteria.extensions && criteria.extensions.length > 0) {
-      const matchesExtension = criteria.extensions.some((ext: string) => 
-        fileInfo.extension.toLowerCase() === ext.toLowerCase()
+      const matchesExtension = criteria.extensions.some(
+        (ext: string) => fileInfo.extension.toLowerCase() === ext.toLowerCase(),
       );
       if (!matchesExtension) {
         return results;
@@ -249,7 +256,9 @@ export class FileQueryProcessor extends EventEmitter {
     if (criteria.directories && criteria.directories.length > 0) {
       const matchesDirectory = criteria.directories.some((dir: string) => {
         const dirPattern = this.config.caseSensitive ? dir : dir.toLowerCase();
-        const fileDir = this.config.caseSensitive ? fileInfo.directory : fileInfo.directory.toLowerCase();
+        const fileDir = this.config.caseSensitive
+          ? fileInfo.directory
+          : fileInfo.directory.toLowerCase();
         return fileDir.includes(dirPattern);
       });
       if (!matchesDirectory) {
@@ -265,7 +274,7 @@ export class FileQueryProcessor extends EventEmitter {
         directory: fileInfo.directory,
         extension: fileInfo.extension,
         score: 1.0,
-        matchType: 'exact'
+        matchType: "exact",
       });
     }
 
@@ -277,26 +286,28 @@ export class FileQueryProcessor extends EventEmitter {
         directory: fileInfo.directory,
         extension: fileInfo.extension,
         score: 0.95,
-        matchType: 'exact'
+        matchType: "exact",
       });
     }
 
     // 3. Glob pattern matching
     if (this.config.enableGlobPatterns && this.isGlobPattern(searchText)) {
-      const globOptions = { 
+      const globOptions = {
         nocase: !this.config.caseSensitive,
-        matchBase: true
+        matchBase: true,
       };
-      
-      if (minimatch(fileName, searchText, globOptions) || 
-          minimatch(filePath, searchText, globOptions)) {
+
+      if (
+        minimatch(fileName, searchText, globOptions) ||
+        minimatch(filePath, searchText, globOptions)
+      ) {
         results.push({
           filePath: fileInfo.path,
           fileName: fileInfo.name,
           directory: fileInfo.directory,
           extension: fileInfo.extension,
           score: 0.9,
-          matchType: 'glob'
+          matchType: "glob",
         });
       }
     }
@@ -310,7 +321,7 @@ export class FileQueryProcessor extends EventEmitter {
         directory: fileInfo.directory,
         extension: fileInfo.extension,
         score: Math.max(0.8, score),
-        matchType: 'exact'
+        matchType: "exact",
       });
     }
 
@@ -324,7 +335,7 @@ export class FileQueryProcessor extends EventEmitter {
           directory: fileInfo.directory,
           extension: fileInfo.extension,
           score: fuzzyScore * 0.7, // Reduce score for fuzzy matches
-          matchType: 'fuzzy'
+          matchType: "fuzzy",
         });
       }
     }
@@ -353,24 +364,24 @@ export class FileQueryProcessor extends EventEmitter {
    */
   private calculateFuzzyScore(str1: string, str2: string): number {
     if (str1.length === 0) {
-return str2.length === 0 ? 1 : 0;
-}
+      return str2.length === 0 ? 1 : 0;
+    }
     if (str2.length === 0) {
-return 0;
-}
+      return 0;
+    }
 
     const matrix: number[][] = [];
-    
+
     // Initialize matrix with proper size
     for (let i = 0; i <= str1.length; i++) {
       matrix[i] = new Array(str2.length + 1);
     }
-    
+
     // Initialize first row and column
     for (let i = 0; i <= str2.length; i++) {
       matrix[0]![i] = i;
     }
-    
+
     for (let j = 1; j <= str1.length; j++) {
       matrix[j]![0] = j;
     }
@@ -382,9 +393,9 @@ return 0;
           matrix[j]![i] = matrix[j - 1]![i - 1]!;
         } else {
           matrix[j]![i] = Math.min(
-            matrix[j - 1]![i]! + 1,     // deletion
-            matrix[j]![i - 1]! + 1,     // insertion
-            matrix[j - 1]![i - 1]! + 1  // substitution
+            matrix[j - 1]![i]! + 1, // deletion
+            matrix[j]![i - 1]! + 1, // insertion
+            matrix[j - 1]![i - 1]! + 1, // substitution
           );
         }
       }
@@ -392,24 +403,30 @@ return 0;
 
     const maxLength = Math.max(str1.length, str2.length);
     const distance = matrix[str1.length]![str2.length]!;
-    return 1 - (distance / maxLength);
+    return 1 - distance / maxLength;
   }
 
   /**
    * Convert file search results to AST node matches
    */
-  private async convertToASTMatches(fileResults: FileSearchResult[]): Promise<ASTNodeMatch[]> {
+  private async convertToASTMatches(
+    fileResults: FileSearchResult[],
+  ): Promise<ASTNodeMatch[]> {
     const astMatches: ASTNodeMatch[] = [];
 
     for (const fileResult of fileResults) {
       try {
         // Get AST nodes for this file
-        const nodes = await this.databaseReader.getFileNodes(fileResult.filePath);
-        
+        const nodes = await this.databaseReader.getFileNodes(
+          fileResult.filePath,
+        );
+
         if (nodes && nodes.length > 0) {
           // Find the root/file node
-          const fileNode = nodes.find(node => node.nodeType === 'file' || node.parentId === null);
-          
+          const fileNode = nodes.find(
+            (node) => node.nodeType === "file" || node.parentId === null,
+          );
+
           if (fileNode) {
             astMatches.push({
               id: fileNode.nodeId,
@@ -424,15 +441,15 @@ return 0;
                 matchType: fileResult.matchType,
                 directory: fileResult.directory,
                 extension: fileResult.extension,
-                contentMatches: fileResult.contentMatches
-              }
+                contentMatches: fileResult.contentMatches,
+              },
             });
           }
         } else {
           // Create a virtual file match if no AST nodes exist
           astMatches.push({
             id: `file-${fileResult.filePath}`,
-            type: 'file',
+            type: "file",
             name: fileResult.fileName,
             filePath: fileResult.filePath,
             startLine: 1,
@@ -443,21 +460,20 @@ return 0;
               matchType: fileResult.matchType,
               directory: fileResult.directory,
               extension: fileResult.extension,
-              contentMatches: fileResult.contentMatches
-            }
+              contentMatches: fileResult.contentMatches,
+            },
           });
         }
-
       } catch (error) {
-        logger.warn('Failed to get AST nodes for file', {
+        logger.warn("Failed to get AST nodes for file", {
           file: fileResult.filePath,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
 
         // Create virtual match for files without AST data
         astMatches.push({
           id: `file-${fileResult.filePath}`,
-          type: 'file',
+          type: "file",
           name: fileResult.fileName,
           filePath: fileResult.filePath,
           startLine: 1,
@@ -468,8 +484,8 @@ return 0;
             matchType: fileResult.matchType,
             directory: fileResult.directory,
             extension: fileResult.extension,
-            contentMatches: fileResult.contentMatches
-          }
+            contentMatches: fileResult.contentMatches,
+          },
         });
       }
     }
@@ -480,8 +496,10 @@ return 0;
   /**
    * Convert AST node matches to annotation matches
    */
-  private convertToAnnotationMatches(astMatches: ASTNodeMatch[]): AnnotationMatch[] {
-    return astMatches.map(match => {
+  private convertToAnnotationMatches(
+    astMatches: ASTNodeMatch[],
+  ): AnnotationMatch[] {
+    return astMatches.map((match) => {
       // Create a minimal annotation from AST match
       const annotation: Annotation = {
         nodeId: match.id,
@@ -492,15 +510,15 @@ return 0;
         language: this.getLanguageFromExtension(match.filePath),
         confidence: match.score,
         lastUpdated: new Date(),
-        nodeType: match.type
+        nodeType: match.type,
       };
 
       return {
         annotation,
         score: match.score,
-        matchReason: match.metadata?.matchType || 'file-match',
+        matchReason: match.metadata?.matchType || "file-match",
         contextSnippet: match.sourceSnippet,
-        relatedMatches: []
+        relatedMatches: [],
       };
     });
   }
@@ -511,21 +529,21 @@ return 0;
   private getLanguageFromExtension(filePath: string): string {
     const ext = path.extname(filePath).toLowerCase();
     const languageMap: Record<string, string> = {
-      '.js': 'javascript',
-      '.ts': 'typescript',
-      '.py': 'python',
-      '.java': 'java',
-      '.cpp': 'cpp',
-      '.c': 'c',
-      '.cs': 'csharp',
-      '.go': 'go',
-      '.rs': 'rust',
-      '.php': 'php',
-      '.rb': 'ruby',
-      '.swift': 'swift',
-      '.kt': 'kotlin'
+      ".js": "javascript",
+      ".ts": "typescript",
+      ".py": "python",
+      ".java": "java",
+      ".cpp": "cpp",
+      ".c": "c",
+      ".cs": "csharp",
+      ".go": "go",
+      ".rs": "rust",
+      ".php": "php",
+      ".rb": "ruby",
+      ".swift": "swift",
+      ".kt": "kotlin",
     };
-    return languageMap[ext] || 'unknown';
+    return languageMap[ext] || "unknown";
   }
 
   /**
@@ -533,15 +551,17 @@ return 0;
    */
   async searchFileContent(
     query: string,
-    filePaths?: string[]
-  ): Promise<Array<{
-    filePath: string;
-    matches: Array<{
-      line: number;
-      text: string;
-      snippet: string;
-    }>;
-  }>> {
+    filePaths?: string[],
+  ): Promise<
+    Array<{
+      filePath: string;
+      matches: Array<{
+        line: number;
+        text: string;
+        snippet: string;
+      }>;
+    }>
+  > {
     const results: Array<{
       filePath: string;
       matches: Array<{
@@ -554,15 +574,18 @@ return 0;
     try {
       // Use database text search to find content matches
       const textMatches = await this.databaseReader.searchNodes(query, {
-        maxResults: this.config.maxResults
+        maxResults: this.config.maxResults,
       });
 
       // Group matches by file
-      const fileMatches = new Map<string, Array<{
-        line: number;
-        text: string;
-        snippet: string;
-      }>>();
+      const fileMatches = new Map<
+        string,
+        Array<{
+          line: number;
+          text: string;
+          snippet: string;
+        }>
+      >();
 
       for (const match of textMatches) {
         if (!filePaths || filePaths.includes(match.filePath)) {
@@ -574,8 +597,8 @@ return 0;
 
           matches.push({
             line: match.startLine,
-            text: match.sourceSnippet || '',
-            snippet: match.sourceSnippet || ''
+            text: match.sourceSnippet || "",
+            snippet: match.sourceSnippet || "",
           });
         }
       }
@@ -584,11 +607,10 @@ return 0;
       for (const [filePath, matches] of fileMatches) {
         results.push({ filePath, matches });
       }
-
     } catch (error) {
-      logger.error('Content search failed', { 
+      logger.error("Content search failed", {
         query,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
 
@@ -621,13 +643,12 @@ return 0;
         name: fileName,
         directory,
         extension,
-        nodeCount
+        nodeCount,
       };
-
     } catch (error) {
-      logger.error('Failed to get file info', {
+      logger.error("Failed to get file info", {
         filePath,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       return null;
     }

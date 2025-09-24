@@ -83,7 +83,7 @@ Creates a comprehensive release plan for the specified version and type.
 ```typescript
 const plan = await manager.planRelease("1.2.0", ReleaseType.MINOR);
 console.log(
-  `Planning release ${plan.version} with ${plan.changes.length} changes`
+  `Planning release ${plan.version} with ${plan.changes.length} changes`,
 );
 ```
 
@@ -169,7 +169,7 @@ Checks backward compatibility between versions.
 ```typescript
 const compatibility = await manager.checkBackwardCompatibility(
   "2.0.0",
-  "1.5.0"
+  "1.5.0",
 );
 if (!compatibility.compatible) {
   console.log(`Found ${compatibility.breakingChanges.length} breaking changes`);
@@ -215,7 +215,7 @@ Rolls back a release to the previous version.
 ```typescript
 const rollback = await manager.rollbackRelease(
   "1.2.0",
-  "Critical bug detected"
+  "Critical bug detected",
 );
 if (rollback.success) {
   console.log(`Rolled back to version ${rollback.rolledBackVersion}`);
@@ -283,7 +283,7 @@ await versionManager.initialize(config.versioning);
 
 const nextVersion = await versionManager.calculateNextVersion(
   "1.0.0",
-  ReleaseType.MINOR
+  ReleaseType.MINOR,
 );
 console.log(`Next version: ${nextVersion}`); // "1.1.0"
 ```
@@ -459,7 +459,7 @@ async function performRelease() {
     // Plan the release
     const plan = await manager.planRelease("1.1.0", ReleaseType.MINOR);
     console.log(
-      `Planned release ${plan.version} with ${plan.changes.length} changes`
+      `Planned release ${plan.version} with ${plan.changes.length} changes`,
     );
 
     // Validate the plan
@@ -475,7 +475,7 @@ async function performRelease() {
       console.log(`✅ Release ${result.version} completed successfully!`);
       console.log(`📦 Generated ${result.artifacts?.length || 0} artifacts`);
       console.log(
-        `🚀 Published to ${result.publishResults?.length || 0} platforms`
+        `🚀 Published to ${result.publishResults?.length || 0} platforms`,
       );
     } else {
       console.error("❌ Release failed:", result.error);
@@ -498,7 +498,7 @@ async function generateChangelog() {
 
   console.log("# Changelog\n");
   console.log(
-    `## ${changelog.version} - ${changelog.date.toISOString().split("T")[0]}\n`
+    `## ${changelog.version} - ${changelog.date.toISOString().split("T")[0]}\n`,
   );
 
   // Group by type
@@ -510,7 +510,7 @@ async function generateChangelog() {
     console.log("### 🚀 New Features\n");
     features.forEach((entry) => {
       console.log(
-        `- ${entry.description} ${entry.scope ? `(${entry.scope})` : ""}`
+        `- ${entry.description} ${entry.scope ? `(${entry.scope})` : ""}`,
       );
     });
     console.log();
@@ -520,7 +520,7 @@ async function generateChangelog() {
     console.log("### 🐛 Bug Fixes\n");
     bugfixes.forEach((entry) => {
       console.log(
-        `- ${entry.description} ${entry.scope ? `(${entry.scope})` : ""}`
+        `- ${entry.description} ${entry.scope ? `(${entry.scope})` : ""}`,
       );
     });
     console.log();
@@ -546,7 +546,7 @@ async function checkCompatibility() {
   const report = await manager.checkBackwardCompatibility("2.0.0", "1.5.0");
 
   console.log(
-    `Compatibility Check: ${report.baseVersion} → ${report.newVersion}`
+    `Compatibility Check: ${report.baseVersion} → ${report.newVersion}`,
   );
   console.log(`Compatible: ${report.compatible ? "✅" : "❌"}`);
 
@@ -669,7 +669,7 @@ try {
     if (config.rollback.enabled) {
       const rollback = await manager.rollbackRelease(
         plan.version,
-        result.error
+        result.error,
       );
       if (rollback.success) {
         console.log("Successfully rolled back release");

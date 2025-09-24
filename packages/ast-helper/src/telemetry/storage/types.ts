@@ -3,8 +3,8 @@
  * @description Type definitions for telemetry data storage and queuing
  */
 
-import type { TelemetryEvent, CollectionStats } from '../collection/types.js';
-import type { PrivacyLevel } from '../types.js';
+import type { TelemetryEvent, CollectionStats } from "../collection/types.js";
+import type { PrivacyLevel } from "../types.js";
 
 // ============================================================================
 // Storage Interfaces
@@ -234,12 +234,12 @@ export interface QueryCriteria {
   /**
    * Sort criteria
    */
-  sortBy?: 'timestamp' | 'storedAt' | 'eventType' | 'transmissionAttempts';
+  sortBy?: "timestamp" | "storedAt" | "eventType" | "transmissionAttempts";
 
   /**
    * Sort direction
    */
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 // ============================================================================
@@ -250,13 +250,13 @@ export interface QueryCriteria {
  * Transmission status for events
  */
 export type TransmissionStatus =
-  | 'pending'      // Waiting to be transmitted
-  | 'queued'       // In transmission queue
-  | 'processing'   // Currently being transmitted
-  | 'transmitted'  // Successfully transmitted
-  | 'failed'       // Transmission failed (temporary)
-  | 'rejected'     // Permanently rejected
-  | 'expired';     // Too old to transmit
+  | "pending" // Waiting to be transmitted
+  | "queued" // In transmission queue
+  | "processing" // Currently being transmitted
+  | "transmitted" // Successfully transmitted
+  | "failed" // Transmission failed (temporary)
+  | "rejected" // Permanently rejected
+  | "expired"; // Too old to transmit
 
 /**
  * Storage statistics
@@ -469,7 +469,7 @@ export interface QueueConfig {
   /**
    * Retry backoff strategy
    */
-  retryBackoff: 'exponential' | 'linear' | 'fixed';
+  retryBackoff: "exponential" | "linear" | "fixed";
 
   /**
    * Base retry delay (milliseconds)
@@ -484,7 +484,7 @@ export interface QueueConfig {
   /**
    * Event priority strategy
    */
-  priorityStrategy: 'fifo' | 'priority' | 'mixed';
+  priorityStrategy: "fifo" | "priority" | "mixed";
 
   /**
    * Processing timeout (milliseconds)
@@ -496,7 +496,7 @@ export interface QueueConfig {
  * Default storage configuration
  */
 export const DEFAULT_STORAGE_CONFIG: StorageConfig = {
-  databasePath: './telemetry.db',
+  databasePath: "./telemetry.db",
   maxDatabaseSize: 50 * 1024 * 1024, // 50MB
   retentionDays: 30,
   batchSize: 100,
@@ -509,10 +509,10 @@ export const DEFAULT_STORAGE_CONFIG: StorageConfig = {
     maxQueueSize: 10000,
     defaultBatchSize: 50,
     maxRetryAttempts: 3,
-    retryBackoff: 'exponential',
+    retryBackoff: "exponential",
     baseRetryDelay: 1000, // 1 second
     maxRetryDelay: 300000, // 5 minutes
-    priorityStrategy: 'mixed',
+    priorityStrategy: "mixed",
     processingTimeout: 30000, // 30 seconds
-  }
+  },
 };

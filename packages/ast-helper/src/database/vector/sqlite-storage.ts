@@ -1,19 +1,19 @@
 /**
  * SQLite Vector Storage Implementation
- * 
+ *
  * Handles vector metadata storage, label mappings, and binary vector data persistence
  * for the HNSW vector database system.
  */
 
-import Database from 'better-sqlite3';
-import { promises as fs } from 'fs';
-import { dirname } from 'path';
-import type { 
-  VectorMetadata, 
-  VectorInsert, 
-  VectorDBConfig, 
-  LabelMapping 
-} from './types.js';
+import Database from "better-sqlite3";
+import { promises as fs } from "fs";
+import { dirname } from "path";
+import type {
+  VectorMetadata,
+  VectorInsert,
+  VectorDBConfig,
+  LabelMapping,
+} from "./types.js";
 
 /**
  * SQLite table schemas for vector storage
@@ -35,7 +35,7 @@ const VECTOR_TABLES = {
       vector_hash TEXT NOT NULL
     )
   `,
-  
+
   labels: `
     CREATE TABLE IF NOT EXISTS labels (
       node_id TEXT PRIMARY KEY,
@@ -43,7 +43,7 @@ const VECTOR_TABLES = {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `,
-  
+
   metadata: `
     CREATE TABLE IF NOT EXISTS vector_metadata (
       key TEXT PRIMARY KEY,
@@ -57,12 +57,17 @@ const VECTOR_TABLES = {
  * Indexes for performance optimization
  */
 const VECTOR_INDEXES = {
-  vectors_file_id: 'CREATE INDEX IF NOT EXISTS idx_vectors_file_id ON vectors(file_id)',
-  vectors_file_path: 'CREATE INDEX IF NOT EXISTS idx_vectors_file_path ON vectors(file_path)',
-  vectors_confidence: 'CREATE INDEX IF NOT EXISTS idx_vectors_confidence ON vectors(confidence)',
-  vectors_last_updated: 'CREATE INDEX IF NOT EXISTS idx_vectors_last_updated ON vectors(last_updated)',
-  vectors_hash: 'CREATE INDEX IF NOT EXISTS idx_vectors_hash ON vectors(vector_hash)',
-  labels_label: 'CREATE INDEX IF NOT EXISTS idx_labels_label ON labels(label)',
+  vectors_file_id:
+    "CREATE INDEX IF NOT EXISTS idx_vectors_file_id ON vectors(file_id)",
+  vectors_file_path:
+    "CREATE INDEX IF NOT EXISTS idx_vectors_file_path ON vectors(file_path)",
+  vectors_confidence:
+    "CREATE INDEX IF NOT EXISTS idx_vectors_confidence ON vectors(confidence)",
+  vectors_last_updated:
+    "CREATE INDEX IF NOT EXISTS idx_vectors_last_updated ON vectors(last_updated)",
+  vectors_hash:
+    "CREATE INDEX IF NOT EXISTS idx_vectors_hash ON vectors(vector_hash)",
+  labels_label: "CREATE INDEX IF NOT EXISTS idx_labels_label ON labels(label)",
 };
 
 /**
@@ -85,13 +90,13 @@ export class SQLiteVectorStorage {
   constructor(config: VectorDBConfig) {
     this.config = config;
     this.db = new Database(config.storageFile);
-    
+
     // Configure SQLite for performance
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('synchronous = NORMAL');
-    this.db.pragma('cache_size = 10000');
-    this.db.pragma('temp_store = MEMORY');
-    this.db.pragma('mmap_size = 268435456'); // 256MB
+    this.db.pragma("journal_mode = WAL");
+    this.db.pragma("synchronous = NORMAL");
+    this.db.pragma("cache_size = 10000");
+    this.db.pragma("temp_store = MEMORY");
+    this.db.pragma("mmap_size = 268435456"); // 256MB
   }
 
   /**
@@ -120,18 +125,26 @@ export class SQLiteVectorStorage {
 
       this.isInitialized = true;
     } catch (error) {
-      throw new Error(`Failed to initialize SQLite vector storage: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to initialize SQLite vector storage: ${(error as Error).message}`,
+      );
     }
   }
 
   /**
    * Insert a single vector with metadata
    */
-  async insertVector(nodeId: string, vector: number[], metadata: VectorMetadata): Promise<number> {
+  async insertVector(
+    nodeId: string,
+    vector: number[],
+    metadata: VectorMetadata,
+  ): Promise<number> {
     this.ensureInitialized();
 
     if (vector.length !== this.config.dimensions) {
-      throw new Error(`Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`);
+      throw new Error(
+        `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`,
+      );
     }
 
     const vectorBuffer = Buffer.from(new Float32Array(vector).buffer);
@@ -139,53 +152,69 @@ export class SQLiteVectorStorage {
 
     try {
       // Start transaction
-      const transaction = this.db.transaction((nodeId: string, vectorData: Buffer, metadata: VectorMetadata, hash: string) => {
-        // Insert vector data
-        this.insertVectorStmt!.run({
-          node_id: nodeId,
-          vector_data: vectorData,
-          dimensions: this.config.dimensions,
-          signature: metadata.signature,
-          summary: metadata.summary,
-          file_id: metadata.fileId,
-          file_path: metadata.filePath,
-          line_number: metadata.lineNumber,
-          confidence: metadata.confidence,
-          last_updated: metadata.lastUpdated.toISOString(),
-          vector_hash: hash,
-        });
-
-        // Get or create label
-        const existingLabel = this.db.prepare('SELECT label FROM labels WHERE node_id = ?').get(nodeId) as { label: number } | undefined;
-        
-        let label: number;
-        if (existingLabel) {
-          label = existingLabel.label;
-        } else {
-          // Get next available label from metadata counter
-          const nextLabelResult = this.db.prepare('SELECT value FROM vector_metadata WHERE key = ?').get('next_label_id') as { value: string } | undefined;
-          if (!nextLabelResult) {
-            throw new Error('next_label_id not found in metadata - database may be corrupted');
-          }
-          label = parseInt(nextLabelResult.value, 10);
-          
-          // Insert new label mapping
-          this.insertLabelStmt!.run({
+      const transaction = this.db.transaction(
+        (
+          nodeId: string,
+          vectorData: Buffer,
+          metadata: VectorMetadata,
+          hash: string,
+        ) => {
+          // Insert vector data
+          this.insertVectorStmt!.run({
             node_id: nodeId,
-            label: label,
+            vector_data: vectorData,
+            dimensions: this.config.dimensions,
+            signature: metadata.signature,
+            summary: metadata.summary,
+            file_id: metadata.fileId,
+            file_path: metadata.filePath,
+            line_number: metadata.lineNumber,
+            confidence: metadata.confidence,
+            last_updated: metadata.lastUpdated.toISOString(),
+            vector_hash: hash,
           });
 
-          // Increment the counter for next time
-          this.db.prepare('UPDATE vector_metadata SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?')
-            .run((label + 1).toString(), 'next_label_id');
-        }
+          // Get or create label
+          const existingLabel = this.db
+            .prepare("SELECT label FROM labels WHERE node_id = ?")
+            .get(nodeId) as { label: number } | undefined;
 
-        return label;
-      });
+          let label: number;
+          if (existingLabel) {
+            label = existingLabel.label;
+          } else {
+            // Get next available label from metadata counter
+            const nextLabelResult = this.db
+              .prepare("SELECT value FROM vector_metadata WHERE key = ?")
+              .get("next_label_id") as { value: string } | undefined;
+            if (!nextLabelResult) {
+              throw new Error(
+                "next_label_id not found in metadata - database may be corrupted",
+              );
+            }
+            label = parseInt(nextLabelResult.value, 10);
+
+            // Insert new label mapping
+            this.insertLabelStmt!.run({
+              node_id: nodeId,
+              label: label,
+            });
+
+            // Increment the counter for next time
+            this.db
+              .prepare(
+                "UPDATE vector_metadata SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?",
+              )
+              .run((label + 1).toString(), "next_label_id");
+          }
+
+          return label;
+        },
+      );
 
       return transaction(nodeId, vectorBuffer, metadata, vectorHash);
     } catch (error) {
-      if ((error as Error).message.includes('UNIQUE constraint failed')) {
+      if ((error as Error).message.includes("UNIQUE constraint failed")) {
         throw new Error(`Vector with nodeId '${nodeId}' already exists`);
       }
       throw new Error(`Failed to insert vector: ${(error as Error).message}`);
@@ -195,7 +224,13 @@ export class SQLiteVectorStorage {
   /**
    * Insert multiple vectors in a batch transaction
    */
-  async insertVectors(vectors: VectorInsert[]): Promise<{ successCount: number; failureCount: number; errors: Array<{ nodeId: string; error: string }> }> {
+  async insertVectors(
+    vectors: VectorInsert[],
+  ): Promise<{
+    successCount: number;
+    failureCount: number;
+    errors: Array<{ nodeId: string; error: string }>;
+  }> {
     this.ensureInitialized();
 
     const results = {
@@ -208,10 +243,14 @@ export class SQLiteVectorStorage {
       for (const vectorInsert of vectors) {
         try {
           if (vectorInsert.vector.length !== this.config.dimensions) {
-            throw new Error(`Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vectorInsert.vector.length}`);
+            throw new Error(
+              `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vectorInsert.vector.length}`,
+            );
           }
 
-          const vectorBuffer = Buffer.from(new Float32Array(vectorInsert.vector).buffer);
+          const vectorBuffer = Buffer.from(
+            new Float32Array(vectorInsert.vector).buffer,
+          );
           const vectorHash = this.calculateVectorHash(vectorInsert.vector);
 
           // Insert vector data
@@ -230,12 +269,16 @@ export class SQLiteVectorStorage {
           });
 
           // Get or create label
-          const existingLabel = this.db.prepare('SELECT label FROM labels WHERE node_id = ?').get(vectorInsert.nodeId) as { label: number } | undefined;
-          
+          const existingLabel = this.db
+            .prepare("SELECT label FROM labels WHERE node_id = ?")
+            .get(vectorInsert.nodeId) as { label: number } | undefined;
+
           if (!existingLabel) {
-            const maxLabelResult = this.db.prepare('SELECT MAX(label) as max_label FROM labels').get() as { max_label: number | null };
+            const maxLabelResult = this.db
+              .prepare("SELECT MAX(label) as max_label FROM labels")
+              .get() as { max_label: number | null };
             const label = (maxLabelResult.max_label || 0) + 1;
-            
+
             this.insertLabelStmt!.run({
               node_id: vectorInsert.nodeId,
               label: label,
@@ -260,11 +303,17 @@ export class SQLiteVectorStorage {
   /**
    * Update vector data and metadata
    */
-  async updateVector(nodeId: string, vector: number[], metadata?: Partial<VectorMetadata>): Promise<void> {
+  async updateVector(
+    nodeId: string,
+    vector: number[],
+    metadata?: Partial<VectorMetadata>,
+  ): Promise<void> {
     this.ensureInitialized();
 
     if (vector.length !== this.config.dimensions) {
-      throw new Error(`Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`);
+      throw new Error(
+        `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`,
+      );
     }
 
     const vectorBuffer = Buffer.from(new Float32Array(vector).buffer);
@@ -277,7 +326,11 @@ export class SQLiteVectorStorage {
       if (!existing) {
         throw new Error(`Vector with nodeId '${nodeId}' not found`);
       }
-      finalMetadata = { ...existing.metadata, ...metadata, lastUpdated: new Date() };
+      finalMetadata = {
+        ...existing.metadata,
+        ...metadata,
+        lastUpdated: new Date(),
+      };
     } else {
       const existing = await this.getVector(nodeId);
       if (!existing) {
@@ -318,7 +371,9 @@ export class SQLiteVectorStorage {
   /**
    * Get vector data and metadata by nodeId
    */
-  async getVector(nodeId: string): Promise<{ vector: number[]; metadata: VectorMetadata } | null> {
+  async getVector(
+    nodeId: string,
+  ): Promise<{ vector: number[]; metadata: VectorMetadata } | null> {
     this.ensureInitialized();
 
     const row = this.getVectorStmt!.get(nodeId) as any;
@@ -335,16 +390,21 @@ export class SQLiteVectorStorage {
   /**
    * Get multiple vectors by nodeIds
    */
-  async getVectors(nodeIds: string[]): Promise<Map<string, { vector: number[]; metadata: VectorMetadata }>> {
+  async getVectors(
+    nodeIds: string[],
+  ): Promise<Map<string, { vector: number[]; metadata: VectorMetadata }>> {
     this.ensureInitialized();
 
-    const results = new Map<string, { vector: number[]; metadata: VectorMetadata }>();
-    
+    const results = new Map<
+      string,
+      { vector: number[]; metadata: VectorMetadata }
+    >();
+
     if (nodeIds.length === 0) {
       return results;
     }
 
-    const placeholders = nodeIds.map(() => '?').join(',');
+    const placeholders = nodeIds.map(() => "?").join(",");
     const query = `SELECT * FROM vectors WHERE node_id IN (${placeholders})`;
     const rows = this.db.prepare(query).all(...nodeIds) as any[];
 
@@ -364,8 +424,11 @@ export class SQLiteVectorStorage {
   async getLabelMappings(): Promise<LabelMapping> {
     this.ensureInitialized();
 
-    const rows = this.getLabelsStmt!.all() as Array<{ node_id: string; label: number }>;
-    
+    const rows = this.getLabelsStmt!.all() as Array<{
+      node_id: string;
+      label: number;
+    }>;
+
     const nodeIdToLabel = new Map<string, number>();
     const labelToNodeId = new Map<number, string>();
     let nextLabel = 0;
@@ -386,22 +449,24 @@ export class SQLiteVectorStorage {
   /**
    * Get metadata for search results by nodeIds
    */
-  async getSearchMetadata(nodeIds: string[]): Promise<Map<string, VectorMetadata>> {
+  async getSearchMetadata(
+    nodeIds: string[],
+  ): Promise<Map<string, VectorMetadata>> {
     this.ensureInitialized();
 
     const results = new Map<string, VectorMetadata>();
-    
+
     if (nodeIds.length === 0) {
       return results;
     }
 
-    const placeholders = nodeIds.map(() => '?').join(',');
+    const placeholders = nodeIds.map(() => "?").join(",");
     const query = `
       SELECT node_id, signature, summary, file_id, file_path, line_number, confidence, last_updated
       FROM vectors 
       WHERE node_id IN (${placeholders})
     `;
-    
+
     const rows = this.db.prepare(query).all(...nodeIds) as any[];
 
     for (const row of rows) {
@@ -423,14 +488,18 @@ export class SQLiteVectorStorage {
   }> {
     this.ensureInitialized();
 
-    const stats = this.db.prepare(`
+    const stats = this.db
+      .prepare(
+        `
       SELECT 
         COUNT(*) as vector_count,
         AVG(confidence) as avg_confidence,
         MIN(created_at) as oldest,
         MAX(last_updated) as newest
       FROM vectors
-    `).get() as any;
+    `,
+      )
+      .get() as any;
 
     // Get file size
     const storageSize = await this.getFileSize(this.config.storageFile);
@@ -457,7 +526,9 @@ export class SQLiteVectorStorage {
 
   private ensureInitialized(): void {
     if (!this.isInitialized) {
-      throw new Error('SQLite vector storage not initialized. Call initialize() first.');
+      throw new Error(
+        "SQLite vector storage not initialized. Call initialize() first.",
+      );
     }
   }
 
@@ -490,23 +561,33 @@ export class SQLiteVectorStorage {
       WHERE node_id = @node_id
     `);
 
-    this.deleteVectorStmt = this.db.prepare(`DELETE FROM vectors WHERE node_id = ?`);
-    this.deleteLabelStmt = this.db.prepare(`DELETE FROM labels WHERE node_id = ?`);
+    this.deleteVectorStmt = this.db.prepare(
+      `DELETE FROM vectors WHERE node_id = ?`,
+    );
+    this.deleteLabelStmt = this.db.prepare(
+      `DELETE FROM labels WHERE node_id = ?`,
+    );
 
-    this.getVectorStmt = this.db.prepare(`SELECT * FROM vectors WHERE node_id = ?`);
-    this.getLabelsStmt = this.db.prepare(`SELECT node_id, label FROM labels ORDER BY label`);
+    this.getVectorStmt = this.db.prepare(
+      `SELECT * FROM vectors WHERE node_id = ?`,
+    );
+    this.getLabelsStmt = this.db.prepare(
+      `SELECT node_id, label FROM labels ORDER BY label`,
+    );
   }
 
   private async initializeMetadata(): Promise<void> {
     // Get current max label to initialize next_label_id
-    const maxLabelResult = this.db.prepare('SELECT MAX(label) as max_label FROM labels').get() as { max_label: number | null };
+    const maxLabelResult = this.db
+      .prepare("SELECT MAX(label) as max_label FROM labels")
+      .get() as { max_label: number | null };
     const nextLabelId = (maxLabelResult.max_label || 0) + 1;
 
     const metadata = [
-      { key: 'version', value: '1.0.0' },
-      { key: 'dimensions', value: this.config.dimensions.toString() },
-      { key: 'space', value: this.config.space },
-      { key: 'initialized_at', value: new Date().toISOString() },
+      { key: "version", value: "1.0.0" },
+      { key: "dimensions", value: this.config.dimensions.toString() },
+      { key: "space", value: this.config.space },
+      { key: "initialized_at", value: new Date().toISOString() },
     ];
 
     const insertMetadata = this.db.prepare(`
@@ -519,14 +600,18 @@ export class SQLiteVectorStorage {
     }
 
     // Initialize next_label_id if it doesn't exist
-    const existingLabelId = this.db.prepare('SELECT value FROM vector_metadata WHERE key = ?').get('next_label_id') as { value: string } | undefined;
+    const existingLabelId = this.db
+      .prepare("SELECT value FROM vector_metadata WHERE key = ?")
+      .get("next_label_id") as { value: string } | undefined;
     if (!existingLabelId) {
-      insertMetadata.run('next_label_id', nextLabelId.toString());
+      insertMetadata.run("next_label_id", nextLabelId.toString());
     }
   }
 
   private deserializeVector(buffer: Buffer): number[] {
-    return Array.from(new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4));
+    return Array.from(
+      new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4),
+    );
   }
 
   private deserializeMetadata(row: any): VectorMetadata {
@@ -546,8 +631,10 @@ export class SQLiteVectorStorage {
    */
   async getLabelMapping(nodeId: string): Promise<number | null> {
     this.ensureInitialized();
-    
-    const row = this.db.prepare('SELECT label FROM labels WHERE node_id = ?').get(nodeId) as { label: number } | undefined;
+
+    const row = this.db
+      .prepare("SELECT label FROM labels WHERE node_id = ?")
+      .get(nodeId) as { label: number } | undefined;
     return row ? row.label : null;
   }
 
@@ -556,8 +643,10 @@ export class SQLiteVectorStorage {
    */
   async getNodeIdFromLabel(label: number): Promise<string | null> {
     this.ensureInitialized();
-    
-    const row = this.db.prepare('SELECT node_id FROM labels WHERE label = ?').get(label) as { node_id: string } | undefined;
+
+    const row = this.db
+      .prepare("SELECT node_id FROM labels WHERE label = ?")
+      .get(label) as { node_id: string } | undefined;
     return row ? row.node_id : null;
   }
 
@@ -566,9 +655,11 @@ export class SQLiteVectorStorage {
    */
   async getAllNodeIds(): Promise<string[]> {
     this.ensureInitialized();
-    
-    const rows = this.db.prepare('SELECT node_id FROM vectors').all() as Array<{ node_id: string }>;
-    return rows.map(row => row.node_id);
+
+    const rows = this.db.prepare("SELECT node_id FROM vectors").all() as Array<{
+      node_id: string;
+    }>;
+    return rows.map((row) => row.node_id);
   }
 
   /**

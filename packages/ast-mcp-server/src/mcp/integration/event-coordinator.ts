@@ -1,5 +1,5 @@
-import { EventEmitter } from 'events';
-import { logger } from '../../logging/logger.js';
+import { EventEmitter } from "events";
+import { logger } from "../../logging/logger.js";
 
 export interface EventCoordinatorConfig {
   maxListeners?: number;
@@ -26,7 +26,10 @@ export class EventCoordinator extends EventEmitter {
   private eventMetrics = new Map<string, EventMetrics>();
   private eventHandlers = new Map<string, Set<(...args: any[]) => void>>();
   private processingEvents = new Set<string>();
-  private pendingWaits = new Set<{ reject: (reason?: any) => void; eventType: string }>();
+  private pendingWaits = new Set<{
+    reject: (reason?: any) => void;
+    eventType: string;
+  }>();
 
   constructor(config: EventCoordinatorConfig = {}) {
     super();
@@ -35,16 +38,16 @@ export class EventCoordinator extends EventEmitter {
       eventTimeout: 10000, // 10 seconds
       retryEvents: true,
       retryAttempts: 3,
-      ...config
+      ...config,
     };
 
     this.setMaxListeners(this.config.maxListeners!);
     this.setupGlobalErrorHandling();
 
-    logger.info('Event coordinator initialized', {
+    logger.info("Event coordinator initialized", {
       maxListeners: this.config.maxListeners,
       eventTimeout: this.config.eventTimeout,
-      retryEvents: this.config.retryEvents
+      retryEvents: this.config.retryEvents,
     });
   }
 
@@ -53,27 +56,27 @@ export class EventCoordinator extends EventEmitter {
    */
   emitEvent(eventType: string, ...args: any[]): boolean {
     const eventId = this.generateEventId(eventType);
-    
-    // Update metrics
-    this.updateEventMetrics(eventType, 'emitted');
 
-    logger.debug('Emitting coordinated event', {
+    // Update metrics
+    this.updateEventMetrics(eventType, "emitted");
+
+    logger.debug("Emitting coordinated event", {
       eventId,
       eventType,
-      argsCount: args.length
+      argsCount: args.length,
     });
 
     try {
       // Emit with timeout and error handling
       return this.emitWithCoordination(eventType, eventId, args);
     } catch (error) {
-      logger.error('Error emitting event', {
+      logger.error("Error emitting event", {
         eventId,
         eventType,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       });
 
-      this.updateEventMetrics(eventType, 'error');
+      this.updateEventMetrics(eventType, "error");
       return false;
     }
   }
@@ -90,12 +93,15 @@ export class EventCoordinator extends EventEmitter {
     handlers.add(handler);
 
     // Wrap handler with coordination logic
-    const coordinatedHandler = this.createCoordinatedHandler(eventType, handler);
+    const coordinatedHandler = this.createCoordinatedHandler(
+      eventType,
+      handler,
+    );
     this.on(eventType, coordinatedHandler);
 
-    logger.debug('Event handler registered', {
+    logger.debug("Event handler registered", {
       eventType,
-      handlerCount: handlers.size
+      handlerCount: handlers.size,
     });
   }
 
@@ -106,7 +112,7 @@ export class EventCoordinator extends EventEmitter {
     const handlers = this.eventHandlers.get(eventType);
     if (handlers) {
       handlers.delete(handler);
-      
+
       if (handlers.size === 0) {
         this.eventHandlers.delete(eventType);
       }
@@ -114,9 +120,9 @@ export class EventCoordinator extends EventEmitter {
 
     this.off(eventType, handler);
 
-    logger.debug('Event handler unregistered', {
+    logger.debug("Event handler unregistered", {
       eventType,
-      remainingHandlers: handlers?.size || 0
+      remainingHandlers: handlers?.size || 0,
     });
   }
 
@@ -125,15 +131,19 @@ export class EventCoordinator extends EventEmitter {
    */
   async waitForEvent(eventType: string, timeout?: number): Promise<any[]> {
     const eventTimeout = timeout || this.config.eventTimeout!;
-    
+
     return new Promise((resolve, reject) => {
       const waitInfo = { reject, eventType };
       this.pendingWaits.add(waitInfo);
-      
+
       const timer = setTimeout(() => {
         this.pendingWaits.delete(waitInfo);
         this.off(eventType, handler);
-        reject(new Error(`Event timeout: ${eventType} not received within ${eventTimeout}ms`));
+        reject(
+          new Error(
+            `Event timeout: ${eventType} not received within ${eventTimeout}ms`,
+          ),
+        );
       }, eventTimeout);
 
       const handler = (...args: any[]) => {
@@ -150,17 +160,21 @@ export class EventCoordinator extends EventEmitter {
   /**
    * Emit event and wait for acknowledgment
    */
-  async emitAndWait(eventType: string, ackEventType: string, ...args: any[]): Promise<any[]> {
+  async emitAndWait(
+    eventType: string,
+    ackEventType: string,
+    ...args: any[]
+  ): Promise<any[]> {
     const ackPromise = this.waitForEvent(ackEventType);
     this.emitEvent(eventType, ...args);
-    
+
     try {
       return await ackPromise;
     } catch (error) {
-      logger.warn('Event acknowledgment timeout', {
+      logger.warn("Event acknowledgment timeout", {
         eventType,
         ackEventType,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -171,24 +185,24 @@ export class EventCoordinator extends EventEmitter {
    */
   broadcastEvent(eventTypes: string[], ...args: any[]): boolean {
     let success = true;
-    
+
     for (const eventType of eventTypes) {
       try {
         const result = this.emitEvent(eventType, ...args);
         success = success && result;
       } catch (error) {
-        logger.error('Error broadcasting to event type', {
+        logger.error("Error broadcasting to event type", {
           eventType,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : "Unknown error",
         });
         success = false;
       }
     }
 
-    logger.info('Event broadcast completed', {
+    logger.info("Event broadcast completed", {
       eventTypes,
       success,
-      argsCount: args.length
+      argsCount: args.length,
     });
 
     return success;
@@ -199,7 +213,9 @@ export class EventCoordinator extends EventEmitter {
    */
   getEventMetrics(eventType?: string): EventMetrics | EventMetrics[] {
     if (eventType) {
-      return this.eventMetrics.get(eventType) || this.createEmptyMetrics(eventType);
+      return (
+        this.eventMetrics.get(eventType) || this.createEmptyMetrics(eventType)
+      );
     }
 
     return Array.from(this.eventMetrics.values());
@@ -210,7 +226,7 @@ export class EventCoordinator extends EventEmitter {
    */
   getCoordinationStats() {
     const metrics = Array.from(this.eventMetrics.values());
-    
+
     return {
       totalEvents: metrics.reduce((sum, m) => sum + m.emittedCount, 0),
       totalHandled: metrics.reduce((sum, m) => sum + m.handledCount, 0),
@@ -218,7 +234,7 @@ export class EventCoordinator extends EventEmitter {
       eventTypes: metrics.length,
       processingEvents: this.processingEvents.size,
       registeredHandlers: this.eventHandlers.size,
-      averageHandleTime: this.calculateAverageHandleTime(metrics)
+      averageHandleTime: this.calculateAverageHandleTime(metrics),
     };
   }
 
@@ -227,22 +243,26 @@ export class EventCoordinator extends EventEmitter {
    */
   resetMetrics(): void {
     this.eventMetrics.clear();
-    logger.info('Event coordinator metrics reset');
+    logger.info("Event coordinator metrics reset");
   }
 
   /**
    * Shutdown event coordinator
    */
   async shutdown(): Promise<void> {
-    logger.info('Shutting down event coordinator', {
+    logger.info("Shutting down event coordinator", {
       eventTypes: this.eventHandlers.size,
       processingEvents: this.processingEvents.size,
-      pendingWaits: this.pendingWaits.size
+      pendingWaits: this.pendingWaits.size,
     });
 
     // Cancel all pending waits
     for (const waitInfo of this.pendingWaits) {
-      waitInfo.reject(new Error(`Event coordinator shutdown, cancelled waiting for: ${waitInfo.eventType}`));
+      waitInfo.reject(
+        new Error(
+          `Event coordinator shutdown, cancelled waiting for: ${waitInfo.eventType}`,
+        ),
+      );
     }
     this.pendingWaits.clear();
 
@@ -250,14 +270,20 @@ export class EventCoordinator extends EventEmitter {
     const shutdownTimeout = 5000; // 5 seconds
     const startTime = Date.now();
 
-    while (this.processingEvents.size > 0 && (Date.now() - startTime) < shutdownTimeout) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+    while (
+      this.processingEvents.size > 0 &&
+      Date.now() - startTime < shutdownTimeout
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     if (this.processingEvents.size > 0) {
-      logger.warn('Event coordinator shutdown timeout, some events still processing', {
-        processingEvents: Array.from(this.processingEvents)
-      });
+      logger.warn(
+        "Event coordinator shutdown timeout, some events still processing",
+        {
+          processingEvents: Array.from(this.processingEvents),
+        },
+      );
     }
 
     // Remove all listeners
@@ -265,20 +291,24 @@ export class EventCoordinator extends EventEmitter {
     this.eventHandlers.clear();
     this.processingEvents.clear();
 
-    logger.info('Event coordinator shutdown complete');
+    logger.info("Event coordinator shutdown complete");
   }
 
   /**
    * Private coordination methods
    */
-  private emitWithCoordination(eventType: string, eventId: string, args: any[]): boolean {
+  private emitWithCoordination(
+    eventType: string,
+    eventId: string,
+    args: any[],
+  ): boolean {
     this.processingEvents.add(eventId);
 
     try {
       const result = super.emit(eventType, eventId, ...args);
-      
+
       if (result) {
-        this.updateEventMetrics(eventType, 'handled');
+        this.updateEventMetrics(eventType, "handled");
       }
 
       return result;
@@ -287,40 +317,43 @@ export class EventCoordinator extends EventEmitter {
     }
   }
 
-  private createCoordinatedHandler(eventType: string, originalHandler: (...args: any[]) => void): (...args: any[]) => void {
+  private createCoordinatedHandler(
+    eventType: string,
+    originalHandler: (...args: any[]) => void,
+  ): (...args: any[]) => void {
     return async (eventId: string, ...args: any[]) => {
       const startTime = Date.now();
 
       try {
-        logger.debug('Handling coordinated event', {
+        logger.debug("Handling coordinated event", {
           eventId,
-          eventType
+          eventType,
         });
 
         // Execute original handler
         const result = await Promise.resolve(originalHandler(eventId, ...args));
-        
+
         const handleTime = Date.now() - startTime;
-        this.updateEventMetrics(eventType, 'handled', handleTime);
+        this.updateEventMetrics(eventType, "handled", handleTime);
 
         return result;
       } catch (error) {
         const handleTime = Date.now() - startTime;
-        this.updateEventMetrics(eventType, 'error', handleTime);
+        this.updateEventMetrics(eventType, "error", handleTime);
 
-        logger.error('Error in coordinated event handler', {
+        logger.error("Error in coordinated event handler", {
           eventId,
           eventType,
           handleTime,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : "Unknown error",
         });
 
         // Re-emit as error event
-        this.emitEvent('coordinatorError', {
+        this.emitEvent("coordinatorError", {
           eventId,
           eventType,
           originalError: error,
-          handleTime
+          handleTime,
         });
 
         throw error;
@@ -328,7 +361,11 @@ export class EventCoordinator extends EventEmitter {
     };
   }
 
-  private updateEventMetrics(eventType: string, operation: 'emitted' | 'handled' | 'error', handleTime?: number): void {
+  private updateEventMetrics(
+    eventType: string,
+    operation: "emitted" | "handled" | "error",
+    handleTime?: number,
+  ): void {
     if (!this.eventMetrics.has(eventType)) {
       this.eventMetrics.set(eventType, this.createEmptyMetrics(eventType));
     }
@@ -336,21 +373,23 @@ export class EventCoordinator extends EventEmitter {
     const metrics = this.eventMetrics.get(eventType)!;
 
     switch (operation) {
-      case 'emitted':
+      case "emitted":
         metrics.emittedCount++;
         metrics.lastEmitted = new Date();
         break;
-      case 'handled':
+      case "handled":
         metrics.handledCount++;
         metrics.lastHandled = new Date();
         if (handleTime !== undefined) {
-          metrics.averageHandleTime = (metrics.averageHandleTime + handleTime) / 2;
+          metrics.averageHandleTime =
+            (metrics.averageHandleTime + handleTime) / 2;
         }
         break;
-      case 'error':
+      case "error":
         metrics.errorCount++;
         if (handleTime !== undefined) {
-          metrics.averageHandleTime = (metrics.averageHandleTime + handleTime) / 2;
+          metrics.averageHandleTime =
+            (metrics.averageHandleTime + handleTime) / 2;
         }
         break;
     }
@@ -362,15 +401,15 @@ export class EventCoordinator extends EventEmitter {
       emittedCount: 0,
       handledCount: 0,
       errorCount: 0,
-      averageHandleTime: 0
+      averageHandleTime: 0,
     };
   }
 
   private calculateAverageHandleTime(metrics: EventMetrics[]): number {
     if (metrics.length === 0) {
-return 0;
-}
-    
+      return 0;
+    }
+
     const totalTime = metrics.reduce((sum, m) => sum + m.averageHandleTime, 0);
     return totalTime / metrics.length;
   }
@@ -380,9 +419,9 @@ return 0;
   }
 
   private setupGlobalErrorHandling(): void {
-    this.on('error', (error) => {
-      logger.error('Unhandled event coordinator error', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+    this.on("error", (error) => {
+      logger.error("Unhandled event coordinator error", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     });
   }

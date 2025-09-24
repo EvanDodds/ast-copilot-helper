@@ -23,7 +23,9 @@ export class TestClass {
   }
 
   // Complex method with nested structures
-  public processData(data: Array<{ id: number; value: string }>): Map<number, string> {
+  public processData(
+    data: Array<{ id: number; value: string }>,
+  ): Map<number, string> {
     const result = new Map<number, string>();
 
     for (const item of data) {
@@ -43,9 +45,9 @@ export interface TestInterface {
 }
 
 export enum TestEnum {
-  OPTION_A = 'A',
-  OPTION_B = 'B',
-  OPTION_C = 'C',
+  OPTION_A = "A",
+  OPTION_B = "B",
+  OPTION_C = "C",
 }
 
 export function utilityFunction(param1: string, param2: number): boolean {

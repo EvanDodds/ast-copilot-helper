@@ -2,8 +2,8 @@
  * Enhanced logging utilities for better operation tracing and debugging
  */
 
-import { randomUUID } from 'crypto';
-import type { Logger } from './types.js';
+import { randomUUID } from "crypto";
+import type { Logger } from "./types.js";
 
 /**
  * Enhanced context interface for better operation tracking
@@ -52,7 +52,7 @@ export function generateCorrelationId(): string {
  * Create enhanced context with automatic ID generation
  */
 export function createEnhancedContext(
-  baseContext: Partial<EnhancedLogContext> = {}
+  baseContext: Partial<EnhancedLogContext> = {},
 ): EnhancedLogContext {
   return {
     operationId: baseContext.operationId || generateOperationId(),
@@ -67,10 +67,10 @@ export function createEnhancedContext(
  */
 export class EnhancedLogger {
   private baseContext: EnhancedLogContext;
-  
+
   constructor(
     private logger: Logger,
-    context: Partial<EnhancedLogContext> = {}
+    context: Partial<EnhancedLogContext> = {},
   ) {
     this.baseContext = createEnhancedContext(context);
   }
@@ -89,9 +89,9 @@ export class EnhancedLogger {
    * Log with enhanced context
    */
   private logWithContext(
-    level: 'error' | 'warn' | 'info' | 'debug' | 'trace',
+    level: "error" | "warn" | "info" | "debug" | "trace",
     message: string,
-    context?: Record<string, any>
+    context?: Record<string, any>,
   ): void {
     const enhancedContext = {
       ...this.baseContext,
@@ -103,31 +103,31 @@ export class EnhancedLogger {
   }
 
   error(message: string, context?: Record<string, any>): void {
-    this.logWithContext('error', message, context);
+    this.logWithContext("error", message, context);
   }
 
   warn(message: string, context?: Record<string, any>): void {
-    this.logWithContext('warn', message, context);
+    this.logWithContext("warn", message, context);
   }
 
   info(message: string, context?: Record<string, any>): void {
-    this.logWithContext('info', message, context);
+    this.logWithContext("info", message, context);
   }
 
   debug(message: string, context?: Record<string, any>): void {
-    this.logWithContext('debug', message, context);
+    this.logWithContext("debug", message, context);
   }
 
   trace(message: string, context?: Record<string, any>): void {
-    this.logWithContext('trace', message, context);
+    this.logWithContext("trace", message, context);
   }
 
   /**
    * Start operation with performance tracking (convenience method)
    */
   startOperation(
-    operation: string, 
-    context?: Record<string, any>
+    operation: string,
+    context?: Record<string, any>,
   ): PerformanceContext {
     return this.startPerformanceTracking(operation, context);
   }
@@ -137,7 +137,7 @@ export class EnhancedLogger {
    */
   startPerformanceTracking(
     operation: string,
-    context?: Partial<EnhancedLogContext>
+    context?: Partial<EnhancedLogContext>,
   ): PerformanceContext {
     const performanceContext: PerformanceContext = {
       ...this.baseContext,
@@ -150,7 +150,7 @@ export class EnhancedLogger {
     this.info(`Started operation: ${operation}`, {
       ...performanceContext,
       operation,
-      event: 'operation_start',
+      event: "operation_start",
     });
 
     return performanceContext;
@@ -162,7 +162,7 @@ export class EnhancedLogger {
   addCheckpoint(
     context: PerformanceContext,
     checkpointName: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     const now = Date.now();
     const checkpoint = {
@@ -177,7 +177,7 @@ export class EnhancedLogger {
     this.debug(`Checkpoint: ${checkpointName}`, {
       ...context,
       checkpoint,
-      event: 'checkpoint',
+      event: "checkpoint",
     });
   }
 
@@ -188,7 +188,7 @@ export class EnhancedLogger {
     context: PerformanceContext,
     operation: string,
     success = true,
-    error?: Error
+    error?: Error,
   ): void {
     const endTime = Date.now();
     const totalDuration = endTime - context.startTime;
@@ -200,7 +200,7 @@ export class EnhancedLogger {
       totalDuration,
       endTime,
       checkpointCount: context.checkpoints?.length || 0,
-      event: 'operation_complete',
+      event: "operation_complete",
     };
 
     if (error) {
@@ -212,9 +212,15 @@ export class EnhancedLogger {
     }
 
     if (success) {
-      this.info(`Completed operation: ${operation} (${totalDuration}ms)`, summary);
+      this.info(
+        `Completed operation: ${operation} (${totalDuration}ms)`,
+        summary,
+      );
     } else {
-      this.error(`Failed operation: ${operation} (${totalDuration}ms)`, summary);
+      this.error(
+        `Failed operation: ${operation} (${totalDuration}ms)`,
+        summary,
+      );
     }
   }
 
@@ -224,16 +230,21 @@ export class EnhancedLogger {
   async withOperation<T>(
     operationName: string,
     operation: (context: PerformanceContext) => Promise<T>,
-    context?: Partial<EnhancedLogContext>
+    context?: Partial<EnhancedLogContext>,
   ): Promise<T> {
     const perfContext = this.startPerformanceTracking(operationName, context);
-    
+
     try {
       const result = await operation(perfContext);
       this.endPerformanceTracking(perfContext, operationName, true);
       return result;
     } catch (error) {
-      this.endPerformanceTracking(perfContext, operationName, false, error as Error);
+      this.endPerformanceTracking(
+        perfContext,
+        operationName,
+        false,
+        error as Error,
+      );
       throw error;
     }
   }
@@ -244,7 +255,7 @@ export class EnhancedLogger {
   logError(
     error: Error,
     operation: string,
-    context?: Record<string, any>
+    context?: Record<string, any>,
   ): void {
     this.error(`Error in ${operation}: ${error.message}`, {
       ...context,
@@ -254,7 +265,7 @@ export class EnhancedLogger {
         stack: error.stack,
       },
       operation,
-      event: 'error',
+      event: "error",
     });
   }
 
@@ -271,7 +282,7 @@ export class EnhancedLogger {
  */
 export function createEnhancedLogger(
   baseLogger: Logger,
-  context?: Partial<EnhancedLogContext>
+  context?: Partial<EnhancedLogContext>,
 ): EnhancedLogger {
   return new EnhancedLogger(baseLogger, context);
 }
@@ -282,12 +293,12 @@ export function createEnhancedLogger(
 export function createRequestLogger(
   baseLogger: Logger,
   requestId: string,
-  userId?: string
+  userId?: string,
 ): EnhancedLogger {
   return createEnhancedLogger(baseLogger, {
     requestId,
     userId,
-    component: 'http-request',
+    component: "http-request",
   });
 }
 
@@ -297,7 +308,7 @@ export function createRequestLogger(
 export function createComponentLogger(
   baseLogger: Logger,
   component: string,
-  method?: string
+  method?: string,
 ): EnhancedLogger {
   return createEnhancedLogger(baseLogger, {
     component,

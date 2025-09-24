@@ -1,10 +1,10 @@
 /**
  * @fileoverview Query Processing Integration Tests
- * 
+ *
  * Comprehensive integration test suite for the MCP Server Query Processing System.
  * Tests complete query workflows, cross-language capabilities, performance optimization,
  * caching mechanisms, and system-wide integration scenarios.
- * 
+ *
  * Coverage includes:
  * - Complex query scenarios with multiple query types
  * - Cross-language query processing and result correlation
@@ -16,39 +16,54 @@
  * - Concurrent query processing and system scalability
  */
 
-import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'fs';
-import path from 'path';
-import os from 'os';
-import { BaseIntegrationTestSuite } from './framework/integration-test-suite.js';
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+} from "vitest";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "fs";
+import path from "path";
+import os from "os";
+import { BaseIntegrationTestSuite } from "./framework/integration-test-suite.js";
 
 // Query system imports
-import { MCPQueryProcessor } from '../../packages/ast-mcp-server/src/query/processor.js';
-import { SemanticQueryProcessor } from '../../packages/ast-mcp-server/src/query/semantic-processor.js';
-import { SignatureQueryProcessor } from '../../packages/ast-mcp-server/src/query/signature-processor.js';
-import { FileQueryProcessor } from '../../packages/ast-mcp-server/src/query/file-processor.js';
-import { ResponseAssembler } from '../../packages/ast-mcp-server/src/query/response-assembler.js';
-import { PerformanceMonitor } from '../../packages/ast-mcp-server/src/query/performance-monitor.js';
+import { MCPQueryProcessor } from "../../packages/ast-mcp-server/src/query/processor.js";
+import { SemanticQueryProcessor } from "../../packages/ast-mcp-server/src/query/semantic-processor.js";
+import { SignatureQueryProcessor } from "../../packages/ast-mcp-server/src/query/signature-processor.js";
+import { FileQueryProcessor } from "../../packages/ast-mcp-server/src/query/file-processor.js";
+import { ResponseAssembler } from "../../packages/ast-mcp-server/src/query/response-assembler.js";
+import { PerformanceMonitor } from "../../packages/ast-mcp-server/src/query/performance-monitor.js";
 
 // Database and infrastructure imports
-import { ASTDatabaseReader } from '../../packages/ast-mcp-server/src/database/reader.js';
-import { HNSWVectorDatabase } from '../../packages/ast-helper/src/database/vector/index.js';
-import { createVectorDBConfig } from '../../packages/ast-helper/src/database/vector/types.js';
+import { ASTDatabaseReader } from "../../packages/ast-mcp-server/src/database/reader.js";
+import { HNSWVectorDatabase } from "../../packages/ast-helper/src/database/vector/index.js";
+import { createVectorDBConfig } from "../../packages/ast-helper/src/database/vector/types.js";
 
 // Conditional imports for native dependencies
 let XenovaEmbeddingGenerator: any = null;
 let hasEmbeddingSupport = false;
 
 async function loadEmbeddingGenerator() {
-  if (hasEmbeddingSupport) {return;}
-  
+  if (hasEmbeddingSupport) {
+    return;
+  }
+
   try {
-    const embeddingModule = await import('../../packages/ast-helper/src/embedder/index.js');
+    const embeddingModule = await import(
+      "../../packages/ast-helper/src/embedder/index.js"
+    );
     XenovaEmbeddingGenerator = embeddingModule.XenovaEmbeddingGenerator;
     hasEmbeddingSupport = true;
   } catch (error: any) {
-    console.warn('⚠️ Embedding support not available in this environment:', error.message);
-    console.warn('Tests will run with limited functionality');
+    console.warn(
+      "⚠️ Embedding support not available in this environment:",
+      error.message,
+    );
+    console.warn("Tests will run with limited functionality");
     hasEmbeddingSupport = false;
   }
 }
@@ -69,16 +84,25 @@ import type {
   PerformanceMetrics,
   QueryType,
   QueryContext,
-} from '../../packages/ast-mcp-server/src/query/types.js';
+} from "../../packages/ast-mcp-server/src/query/types.js";
 
 /**
  * Query Processing Test Utilities
  * Helper functions and test data management for query processing integration tests
  */
 class QueryProcessingTestUtils {
-  private static readonly TEST_DB_PATH = path.join(os.tmpdir(), 'query-processing-integration-test.db');
-  private static readonly TEST_VECTORS_PATH = path.join(os.tmpdir(), 'query-processing-vectors-test');
-  private static readonly TEST_FILES_PATH = path.join(os.tmpdir(), 'query-processing-test-files');
+  private static readonly TEST_DB_PATH = path.join(
+    os.tmpdir(),
+    "query-processing-integration-test.db",
+  );
+  private static readonly TEST_VECTORS_PATH = path.join(
+    os.tmpdir(),
+    "query-processing-vectors-test",
+  );
+  private static readonly TEST_FILES_PATH = path.join(
+    os.tmpdir(),
+    "query-processing-test-files",
+  );
 
   /**
    * Create comprehensive test environment with sample code files and annotations
@@ -105,23 +129,25 @@ class QueryProcessingTestUtils {
 
     // Initialize database reader (mock implementation for testing)
     // Create test database path
-    const testWorkspacePath = path.join(this.TEST_FILES_PATH, 'test-workspace');
-    
+    const testWorkspacePath = path.join(this.TEST_FILES_PATH, "test-workspace");
+
     // Create database reader with workspace path
     const databaseReader = new ASTDatabaseReader(testWorkspacePath);
 
     // Initialize embedding generator (no constructor arguments)
     await loadEmbeddingGenerator();
-    const embeddingGenerator = hasEmbeddingSupport ? new XenovaEmbeddingGenerator() : null;
+    const embeddingGenerator = hasEmbeddingSupport
+      ? new XenovaEmbeddingGenerator()
+      : null;
 
     // Create vector database config and initialize
     const vectorDbConfig = createVectorDBConfig({
       dimensions: 768,
-      storageFile: path.join(this.TEST_VECTORS_PATH, 'vectors.db'),
-      indexFile: path.join(this.TEST_VECTORS_PATH, 'vectors.idx'),
+      storageFile: path.join(this.TEST_VECTORS_PATH, "vectors.db"),
+      indexFile: path.join(this.TEST_VECTORS_PATH, "vectors.idx"),
       maxElements: 10000,
       M: 16,
-      efConstruction: 200
+      efConstruction: 200,
     });
     const vectorDatabase = new HNSWVectorDatabase(vectorDbConfig);
 
@@ -139,7 +165,7 @@ class QueryProcessingTestUtils {
         maxConcurrentQueries: 10,
       },
       ranking: {
-        defaultMode: 'relevance',
+        defaultMode: "relevance",
         contextBoostFactor: 0.2,
         confidenceWeight: 0.3,
         recencyWeight: 0.1,
@@ -420,9 +446,15 @@ class DataProcessor:
 `;
 
     // Write test files
-    writeFileSync(path.join(this.TEST_FILES_PATH, 'user-service.ts'), tsServiceFile);
-    writeFileSync(path.join(this.TEST_FILES_PATH, 'utils.js'), jsUtilFile);
-    writeFileSync(path.join(this.TEST_FILES_PATH, 'data_processor.py'), pyProcessorFile);
+    writeFileSync(
+      path.join(this.TEST_FILES_PATH, "user-service.ts"),
+      tsServiceFile,
+    );
+    writeFileSync(path.join(this.TEST_FILES_PATH, "utils.js"), jsUtilFile);
+    writeFileSync(
+      path.join(this.TEST_FILES_PATH, "data_processor.py"),
+      pyProcessorFile,
+    );
   }
 
   /**
@@ -432,64 +464,64 @@ class DataProcessor:
     return [
       // Semantic queries
       {
-        type: 'semantic',
-        text: 'find user by email address',
+        type: "semantic",
+        text: "find user by email address",
         maxResults: 10,
         minScore: 0.1,
       },
       {
-        type: 'semantic',
-        text: 'async password hashing function',
+        type: "semantic",
+        text: "async password hashing function",
         maxResults: 5,
         options: {
-          languageFilter: ['javascript', 'typescript'],
+          languageFilter: ["javascript", "typescript"],
           confidenceThreshold: 0.8,
         } as SignatureQueryOptions,
       },
       {
-        type: 'semantic',
-        text: 'data validation and processing',
+        type: "semantic",
+        text: "data validation and processing",
         maxResults: 15,
         context: {
-          currentFile: path.join(this.TEST_FILES_PATH, 'data_processor.py'),
-          selectedText: 'validate_data_point',
+          currentFile: path.join(this.TEST_FILES_PATH, "data_processor.py"),
+          selectedText: "validate_data_point",
         } as SignatureQueryOptions,
       },
 
       // Signature queries
       {
-        type: 'signature',
-        text: 'async createUser(userData: CreateUserRequest): Promise<User>',
+        type: "signature",
+        text: "async createUser(userData: CreateUserRequest): Promise<User>",
         maxResults: 10,
         options: {
           includeReturnType: true,
-          languageFilter: ['typescript'],
+          languageFilter: ["typescript"],
         } as SignatureQueryOptions,
       },
       {
-        type: 'signature',
-        text: 'function generateSecureToken',
+        type: "signature",
+        text: "function generateSecureToken",
         maxResults: 5,
         options: {
           fuzzyThreshold: 0.8,
-          languageFilter: ['javascript'],
+          languageFilter: ["javascript"],
         } as SignatureQueryOptions,
       },
       {
-        type: 'signature',
-        text: 'def process_batch(self, data_points)',
+        type: "signature",
+        text: "def process_batch(self, data_points)",
         maxResults: 8,
         options: {
           includeReturnType: false,
           fuzzyThreshold: 0.7,
-          languageFilter: ['python'],
+          languageFilter: ["python"],
         } as SignatureQueryOptions,
       },
 
       // File queries
       {
-        type: 'file',
-        text: '*.ts',
+        type: "file",
+        text: "*.ts",
         maxResults: 20,
         options: {
           recursive: true,
@@ -497,34 +529,34 @@ class DataProcessor:
         } as FileQueryOptions,
       },
       {
-        type: 'file',
-        text: 'user',
+        type: "file",
+        text: "user",
         maxResults: 10,
         options: {
-          fileFilter: ['user-service.ts'],
+          fileFilter: ["user-service.ts"],
         } as SignatureQueryOptions,
       },
 
       // Contextual queries
       {
-        type: 'contextual',
-        text: 'error handling patterns',
+        type: "contextual",
+        text: "error handling patterns",
         maxResults: 12,
         context: {
-          currentFile: path.join(this.TEST_FILES_PATH, 'utils.js'),
+          currentFile: path.join(this.TEST_FILES_PATH, "utils.js"),
           recentFiles: [
-            path.join(this.TEST_FILES_PATH, 'user-service.ts'),
-            path.join(this.TEST_FILES_PATH, 'data_processor.py'),
+            path.join(this.TEST_FILES_PATH, "user-service.ts"),
+            path.join(this.TEST_FILES_PATH, "data_processor.py"),
           ],
         } as SignatureQueryOptions,
       },
       {
-        type: 'contextual',
-        text: 'async processing workflow',
+        type: "contextual",
+        text: "async processing workflow",
         maxResults: 8,
         context: {
-          selectedText: 'await this._validate_data_point',
-          currentFile: path.join(this.TEST_FILES_PATH, 'data_processor.py'),
+          selectedText: "await this._validate_data_point",
+          currentFile: path.join(this.TEST_FILES_PATH, "data_processor.py"),
         } as SignatureQueryOptions,
       },
     ];
@@ -533,40 +565,43 @@ class DataProcessor:
   /**
    * Validate query response structure and content
    */
-  static validateQueryResponse(response: QueryResponse, expectedType: QueryType): void {
+  static validateQueryResponse(
+    response: QueryResponse,
+    expectedType: QueryType,
+  ): void {
     expect(response).toBeDefined();
     expect(response.results).toBeDefined();
     expect(Array.isArray(response.results)).toBe(true);
-    expect(typeof response.totalMatches).toBe('number');
+    expect(typeof response.totalMatches).toBe("number");
     expect(response.totalMatches).toBeGreaterThanOrEqual(0);
-    expect(typeof response.queryTime).toBe('number');
+    expect(typeof response.queryTime).toBe("number");
     expect(response.queryTime).toBeGreaterThanOrEqual(0);
-    expect(typeof response.searchStrategy).toBe('string');
+    expect(typeof response.searchStrategy).toBe("string");
     expect(response.searchStrategy.length).toBeGreaterThan(0);
     expect(response.metadata).toBeDefined();
-    
+
     // Validate metadata structure
-    expect(typeof response.metadata.vectorSearchTime).toBe('number');
-    expect(typeof response.metadata.rankingTime).toBe('number');
-    expect(typeof response.metadata.totalCandidates).toBe('number');
+    expect(typeof response.metadata.vectorSearchTime).toBe("number");
+    expect(typeof response.metadata.rankingTime).toBe("number");
+    expect(typeof response.metadata.totalCandidates).toBe("number");
     expect(Array.isArray(response.metadata.appliedFilters)).toBe(true);
-    expect(typeof response.metadata.searchParameters).toBe('object');
-    
+    expect(typeof response.metadata.searchParameters).toBe("object");
+
     // Validate individual results
     response.results.forEach((result: AnnotationMatch) => {
       expect(result.annotation).toBeDefined();
-      expect(typeof result.score).toBe('number');
+      expect(typeof result.score).toBe("number");
       expect(result.score).toBeGreaterThanOrEqual(0);
       expect(result.score).toBeLessThanOrEqual(1);
-      expect(typeof result.matchReason).toBe('string');
-      
+      expect(typeof result.matchReason).toBe("string");
+
       // Validate annotation structure
-      expect(typeof result.annotation.nodeId).toBe('string');
-      expect(typeof result.annotation.signature).toBe('string');
-      expect(typeof result.annotation.filePath).toBe('string');
-      expect(typeof result.annotation.lineNumber).toBe('number');
-      expect(typeof result.annotation.language).toBe('string');
-      expect(typeof result.annotation.confidence).toBe('number');
+      expect(typeof result.annotation.nodeId).toBe("string");
+      expect(typeof result.annotation.signature).toBe("string");
+      expect(typeof result.annotation.filePath).toBe("string");
+      expect(typeof result.annotation.lineNumber).toBe("number");
+      expect(typeof result.annotation.language).toBe("string");
+      expect(typeof result.annotation.confidence).toBe("number");
     });
   }
 
@@ -575,8 +610,13 @@ class DataProcessor:
    */
   static generatePerformanceTestQueries(count: number): MCPQuery[] {
     const queries: MCPQuery[] = [];
-    const queryTypes: QueryType[] = ['semantic', 'signature', 'file', 'contextual'];
-    
+    const queryTypes: QueryType[] = [
+      "semantic",
+      "signature",
+      "file",
+      "contextual",
+    ];
+
     for (let i = 0; i < count; i++) {
       const type = queryTypes[i % queryTypes.length];
       queries.push({
@@ -586,7 +626,7 @@ class DataProcessor:
         minScore: Math.random() * 0.5 + 0.1,
       });
     }
-    
+
     return queries;
   }
 
@@ -625,47 +665,54 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
   };
 
   protected getTestName(): string {
-    return 'Query Processing Integration Tests';
+    return "Query Processing Integration Tests";
   }
 
   protected async setupQueryProcessingEnvironment(): Promise<void> {
     await super.setupTestEnvironment();
-    
+
     // Create comprehensive test environment
-    this.testEnvironment = await QueryProcessingTestUtils.createTestEnvironment();
-    
+    this.testEnvironment =
+      await QueryProcessingTestUtils.createTestEnvironment();
+
     // Initialize query processing components
     await this.initializeQueryProcessors();
-    
-    console.log('Query processing test environment initialized');
+
+    console.log("Query processing test environment initialized");
   }
 
   protected async teardownQueryProcessingEnvironment(): Promise<void> {
     await super.cleanupTestEnvironment();
-    
+
     // Clean up test files and databases
     await QueryProcessingTestUtils.cleanup();
-    
-    console.log('Query processing test environment cleaned up');
+
+    console.log("Query processing test environment cleaned up");
   }
 
   /**
    * Initialize all query processing components
    */
   private async initializeQueryProcessors(): Promise<void> {
-    const { databaseReader, embeddingGenerator, vectorDatabase, config } = this.testEnvironment;
+    const { databaseReader, embeddingGenerator, vectorDatabase, config } =
+      this.testEnvironment;
 
     try {
       // Initialize database reader first
       try {
         await databaseReader.initialize();
-        console.log('Database reader initialized successfully');
+        console.log("Database reader initialized successfully");
       } catch (dbError: any) {
-        console.warn('Database reader initialization failed, continuing with limited functionality:', dbError.message);
+        console.warn(
+          "Database reader initialization failed, continuing with limited functionality:",
+          dbError.message,
+        );
       }
 
       if (!hasEmbeddingSupport || !embeddingGenerator) {
-        console.warn('⚠️ Embedding support not available - using mock processors');
+        console.warn(
+          "⚠️ Embedding support not available - using mock processors",
+        );
         // Create mock processors that skip embedding-dependent functionality
         this.queryProcessor = null as any;
         this.semanticProcessor = null as any;
@@ -677,7 +724,7 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
         databaseReader,
         config,
         embeddingGenerator,
-        vectorDatabase
+        vectorDatabase,
       );
 
       // Initialize specialized processors for direct testing
@@ -685,37 +732,36 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
         embeddingGenerator,
         vectorDatabase,
         databaseReader,
-        config
+        config,
       );
 
       this.signatureProcessor = new SignatureQueryProcessor(
         databaseReader,
-        config
+        config,
       );
 
-      this.fileProcessor = new FileQueryProcessor(
-        databaseReader,
-        {
-          maxResults: config.search.defaultMaxResults,
-          caseSensitive: false,
-          includeHidden: false,
-          maxDepth: 10,
-          enableGlobPatterns: true,
-          fuzzyMatching: true,
-        }
-      );
+      this.fileProcessor = new FileQueryProcessor(databaseReader, {
+        maxResults: config.search.defaultMaxResults,
+        caseSensitive: false,
+        includeHidden: false,
+        maxDepth: 10,
+        enableGlobPatterns: true,
+        fuzzyMatching: true,
+      });
 
       this.responseAssembler = new ResponseAssembler(config);
       this.performanceMonitor = new PerformanceMonitor();
 
       // Initialize the main processor
       await this.queryProcessor.initialize();
-      
-      console.log('Query processors initialized successfully');
+
+      console.log("Query processors initialized successfully");
     } catch (error: any) {
       // If model initialization fails, skip the suite
-      if (error.message?.includes('Failed to initialize embedding model')) {
-        console.warn('SKIP_SUITE: Embedding model not available - ' + error.message);
+      if (error.message?.includes("Failed to initialize embedding model")) {
+        console.warn(
+          "SKIP_SUITE: Embedding model not available - " + error.message,
+        );
         return;
       }
       throw error;
@@ -725,32 +771,49 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
   /**
    * Helper method to safely process queries, skipping semantic queries if embedding models are unavailable
    */
-  private async safeProcessQuery(query: MCPQuery): Promise<QueryResponse | null> {
+  private async safeProcessQuery(
+    query: MCPQuery,
+  ): Promise<QueryResponse | null> {
     try {
       // Check if we have embedding support
       if (!hasEmbeddingSupport || !this.queryProcessor) {
-        console.warn(`Skipping query due to missing embedding support: ${query.type} - ${query.text}`);
+        console.warn(
+          `Skipping query due to missing embedding support: ${query.type} - ${query.text}`,
+        );
         return null;
       }
-      
+
       // Check if this is a semantic query and if we can handle it
-      if (query.type === 'semantic' && !(this.queryProcessor as any).semanticProcessor) {
-        console.warn(`Skipping semantic query due to missing embedding support: ${query.text}`);
+      if (
+        query.type === "semantic" &&
+        !(this.queryProcessor as any).semanticProcessor
+      ) {
+        console.warn(
+          `Skipping semantic query due to missing embedding support: ${query.text}`,
+        );
         return null;
       }
-      
+
       return await this.queryProcessor.processQuery(query);
     } catch (error) {
       if (error instanceof Error) {
         // Skip if database reader is not initialized (environment setup issue)
-        if (error.message.includes('Database reader not initialized')) {
-          console.warn(`Skipping query due to database initialization issue: ${error.message}`);
+        if (error.message.includes("Database reader not initialized")) {
+          console.warn(
+            `Skipping query due to database initialization issue: ${error.message}`,
+          );
           return null;
         }
-        
+
         // Skip if semantic queries require embedding dependencies
-        if (error.message.includes('Semantic queries require embedding generator and vector database')) {
-          console.warn(`Skipping semantic query due to embedding dependency: ${error.message}`);
+        if (
+          error.message.includes(
+            "Semantic queries require embedding generator and vector database",
+          )
+        ) {
+          console.warn(
+            `Skipping semantic query due to embedding dependency: ${error.message}`,
+          );
           return null;
         }
       }
@@ -783,20 +846,24 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
         QueryProcessingTestUtils.validateQueryResponse(response, query.type);
 
         // Validate query time is reasonable (should be < 5000ms per config)
-        expect(queryTime).toBeLessThan(this.testEnvironment.config.performance.maxQueryTime);
+        expect(queryTime).toBeLessThan(
+          this.testEnvironment.config.performance.maxQueryTime,
+        );
 
         // Validate search strategy matches query type
-        if (query.type === 'semantic') {
-          expect(response.searchStrategy).toContain('semantic');
-        } else if (query.type === 'signature') {
-          expect(response.searchStrategy).toContain('signature');
-        } else if (query.type === 'file') {
-          expect(response.searchStrategy).toContain('file');
+        if (query.type === "semantic") {
+          expect(response.searchStrategy).toContain("semantic");
+        } else if (query.type === "signature") {
+          expect(response.searchStrategy).toContain("signature");
+        } else if (query.type === "file") {
+          expect(response.searchStrategy).toContain("file");
         }
 
         results.push(response);
 
-        console.log(`Query processed successfully: ${query.type} - ${queryTime}ms`);
+        console.log(
+          `Query processed successfully: ${query.type} - ${queryTime}ms`,
+        );
       } catch (error) {
         console.error(`Query processing failed: ${query.type}`, { error });
         throw error;
@@ -804,20 +871,26 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
     }
 
     // Validate overall processing statistics (allowing for graceful degradation)
-    const successfulResults = results.filter(r => r !== null);
-    
+    const successfulResults = results.filter((r) => r !== null);
+
     if (successfulResults.length > 0) {
-      const avgQueryTime = successfulResults.reduce((sum, r) => sum + r.queryTime, 0) / successfulResults.length;
+      const avgQueryTime =
+        successfulResults.reduce((sum, r) => sum + r.queryTime, 0) /
+        successfulResults.length;
       expect(avgQueryTime).toBeGreaterThan(0);
       expect(avgQueryTime).toBeLessThan(5000); // Should complete within 5 seconds
       expect(avgQueryTime).toBeLessThan(2000); // Average should be under 2 seconds
     } else {
       // In environments without embeddings/database setup, all queries may be skipped
       // This is acceptable for CI environments with limited dependencies
-      console.warn('All queries were skipped due to missing dependencies (embeddings/database). This is expected in CI environments.');
+      console.warn(
+        "All queries were skipped due to missing dependencies (embeddings/database). This is expected in CI environments.",
+      );
     }
 
-    console.log(`Complex multi-query scenarios completed: ${results.length} queries processed`);
+    console.log(
+      `Complex multi-query scenarios completed: ${results.length} queries processed`,
+    );
   }
 
   /**
@@ -826,25 +899,25 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
   async testCrossLanguageQueryProcessing(): Promise<void> {
     const crossLanguageQueries: MCPQuery[] = [
       {
-        type: 'semantic',
-        text: 'user authentication and password handling',
+        type: "semantic",
+        text: "user authentication and password handling",
         maxResults: 15,
         options: {
-          languageFilter: ['typescript', 'javascript', 'python'],
+          languageFilter: ["typescript", "javascript", "python"],
         } as SignatureQueryOptions,
       },
       {
-        type: 'semantic',
-        text: 'async function data processing',
+        type: "semantic",
+        text: "async function data processing",
         maxResults: 10,
         options: {
-          languageFilter: ['javascript', 'python'],
+          languageFilter: ["javascript", "python"],
           confidenceThreshold: 0.8,
         } as SignatureQueryOptions,
       },
       {
-        type: 'signature',
-        text: 'validate',
+        type: "signature",
+        text: "validate",
         maxResults: 12,
         options: {
           fuzzyThreshold: 0.6,
@@ -856,16 +929,18 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
 
     for (const query of crossLanguageQueries) {
       const response = await this.safeProcessQuery(query);
-      
+
       // Skip validation if query was skipped due to semantic dependency issues
       if (response === null) {
-        console.log(`Skipped cross-language query: ${query.type} - ${query.text}`);
+        console.log(
+          `Skipped cross-language query: ${query.type} - ${query.text}`,
+        );
         continue;
       }
       QueryProcessingTestUtils.validateQueryResponse(response, query.type);
 
       // Group results by language
-      response.results.forEach(result => {
+      response.results.forEach((result) => {
         const language = result.annotation.language;
         if (!languageResults.has(language)) {
           languageResults.set(language, []);
@@ -876,41 +951,59 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
 
     // Validate cross-language results (allow for graceful degradation)
     if (languageResults.size > 0) {
-      console.log(`Cross-language results from ${languageResults.size} languages`);
-      
+      console.log(
+        `Cross-language results from ${languageResults.size} languages`,
+      );
+
       if (languageResults.size > 1) {
         // If we have results from multiple languages, validate them
         const languages = Array.from(languageResults.keys());
-        console.log(`Languages with results: ${languages.join(', ')}`);
+        console.log(`Languages with results: ${languages.join(", ")}`);
 
         // Validate result quality across languages
         for (const [language, results] of languageResults) {
           expect(results.length).toBeGreaterThan(0);
-          expect(results.every(r => r.score > 0.1)).toBe(true);
-          
-          const avgScore = results.reduce((sum, r) => sum + r.score, 0) / results.length;
+          expect(results.every((r) => r.score > 0.1)).toBe(true);
+
+          const avgScore =
+            results.reduce((sum, r) => sum + r.score, 0) / results.length;
           expect(avgScore).toBeGreaterThan(0.1); // Reasonable relevance threshold
-          
-          console.log(`Cross-language results for ${language}: ${results.length} matches, avg score: ${avgScore.toFixed(3)}`);
+
+          console.log(
+            `Cross-language results for ${language}: ${results.length} matches, avg score: ${avgScore.toFixed(3)}`,
+          );
         }
       } else {
-        console.log('Limited cross-language results due to environment constraints');
+        console.log(
+          "Limited cross-language results due to environment constraints",
+        );
       }
     } else {
-      console.warn('No cross-language results available, skipping detailed validation');
+      console.warn(
+        "No cross-language results available, skipping detailed validation",
+      );
     }
 
-    console.log(`Cross-language query processing completed: ${languageResults.size} languages processed`);
+    console.log(
+      `Cross-language query processing completed: ${languageResults.size} languages processed`,
+    );
   }
 
   /**
    * Test 3: Query Optimization and Performance Characteristics
    */
   async testQueryOptimizationAndPerformance(): Promise<void> {
-    const optimizationTestQueries = QueryProcessingTestUtils.generatePerformanceTestQueries(50);
-    const performanceMetrics: Array<{ queryTime: number; resultCount: number; type: QueryType }> = [];
+    const optimizationTestQueries =
+      QueryProcessingTestUtils.generatePerformanceTestQueries(50);
+    const performanceMetrics: Array<{
+      queryTime: number;
+      resultCount: number;
+      type: QueryType;
+    }> = [];
 
-    console.log(`Testing query optimization with ${optimizationTestQueries.length} queries`);
+    console.log(
+      `Testing query optimization with ${optimizationTestQueries.length} queries`,
+    );
 
     // Process queries with timing
     for (const query of optimizationTestQueries) {
@@ -920,7 +1013,9 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
 
       // Skip if query was skipped due to semantic dependency issues
       if (response === null) {
-        console.log(`Skipped performance test query: ${query.type} - ${query.text}`);
+        console.log(
+          `Skipped performance test query: ${query.type} - ${query.text}`,
+        );
         continue;
       }
 
@@ -931,13 +1026,18 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
       });
 
       // Validate performance requirements
-      expect(queryTime).toBeLessThan(this.testEnvironment.config.performance.maxQueryTime);
+      expect(queryTime).toBeLessThan(
+        this.testEnvironment.config.performance.maxQueryTime,
+      );
     }
 
     // Analyze performance characteristics
-    const performanceByType = new Map<QueryType, { times: number[]; resultCounts: number[] }>();
-    
-    performanceMetrics.forEach(metric => {
+    const performanceByType = new Map<
+      QueryType,
+      { times: number[]; resultCounts: number[] }
+    >();
+
+    performanceMetrics.forEach((metric) => {
       if (!performanceByType.has(metric.type)) {
         performanceByType.set(metric.type, { times: [], resultCounts: [] });
       }
@@ -949,21 +1049,28 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
     // Validate performance characteristics by query type
     for (const [queryType, metrics] of performanceByType) {
       if (metrics.times.length === 0) {
-        console.warn(`No performance metrics for ${queryType} - queries may have been skipped`);
+        console.warn(
+          `No performance metrics for ${queryType} - queries may have been skipped`,
+        );
         continue;
       }
-      
-      const avgTime = metrics.times.reduce((a, b) => a + b) / metrics.times.length;
+
+      const avgTime =
+        metrics.times.reduce((a, b) => a + b) / metrics.times.length;
       const maxTime = Math.max(...metrics.times);
-      const avgResults = metrics.resultCounts.reduce((a, b) => a + b) / metrics.resultCounts.length;
+      const avgResults =
+        metrics.resultCounts.reduce((a, b) => a + b) /
+        metrics.resultCounts.length;
 
       // Performance assertions (with graceful degradation)
       expect(avgTime).toBeLessThan(1000); // Average under 1 second
       expect(maxTime).toBeLessThan(5000); // Maximum under 5 seconds
-      
+
       // Only expect results if we have any metrics
       if (metrics.resultCounts.length > 0) {
-        console.log(`Performance metrics for ${queryType}: avg=${avgTime.toFixed(1)}ms, max=${maxTime}ms, avgResults=${avgResults.toFixed(1)}`);
+        console.log(
+          `Performance metrics for ${queryType}: avg=${avgTime.toFixed(1)}ms, max=${maxTime}ms, avgResults=${avgResults.toFixed(1)}`,
+        );
       }
     }
 
@@ -972,13 +1079,17 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
       const queryStats = this.queryProcessor.getQueryStats();
       expect(queryStats).toBeDefined();
       expect(queryStats.totalQueries).toBeGreaterThan(0);
-      expect(typeof queryStats.averageQueryTime).toBe('number');
+      expect(typeof queryStats.averageQueryTime).toBe("number");
       expect(queryStats.performanceMetrics).toBeDefined();
     } else {
-      console.warn('⚠️ Skipping query stats test - queryProcessor not available');
+      console.warn(
+        "⚠️ Skipping query stats test - queryProcessor not available",
+      );
     }
 
-    console.log('Query optimization and performance testing completed successfully');
+    console.log(
+      "Query optimization and performance testing completed successfully",
+    );
   }
 
   /**
@@ -987,14 +1098,14 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
   async testResultAccuracyAndRelevanceScoring(): Promise<void> {
     const accuracyTestQueries: MCPQuery[] = [
       {
-        type: 'semantic',
-        text: 'find user by id',
+        type: "semantic",
+        text: "find user by id",
         maxResults: 5,
         minScore: 0.3,
       },
       {
-        type: 'semantic',
-        text: 'password hash salt crypto',
+        type: "semantic",
+        text: "password hash salt crypto",
         maxResults: 3,
         minScore: 0.5,
         options: {
@@ -1002,53 +1113,61 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
         } as SignatureQueryOptions,
       },
       {
-        type: 'signature',
-        text: 'async findUserById(id: string): Promise<User | null>',
+        type: "signature",
+        text: "async findUserById(id: string): Promise<User | null>",
         maxResults: 1,
-        options: {
-        } as SignatureQueryOptions,
+        options: {} as SignatureQueryOptions,
       },
     ];
 
     for (const query of accuracyTestQueries) {
       const response = await this.safeProcessQuery(query);
-      
+
       // Skip validation if query was skipped due to semantic dependency issues
       if (response === null) {
-        console.log(`Skipped accuracy test query: ${query.type} - ${query.text}`);
+        console.log(
+          `Skipped accuracy test query: ${query.type} - ${query.text}`,
+        );
         continue;
       }
-      
+
       // Validate minimum score requirement
       if (query.minScore) {
-        response.results.forEach(result => {
+        response.results.forEach((result) => {
           expect(result.score).toBeGreaterThanOrEqual(query.minScore!);
         });
       }
 
       // Validate result relevance ordering (scores should be descending)
       for (let i = 1; i < response.results.length; i++) {
-        expect(response.results[i-1].score).toBeGreaterThanOrEqual(response.results[i].score);
+        expect(response.results[i - 1].score).toBeGreaterThanOrEqual(
+          response.results[i].score,
+        );
       }
 
       // Validate match reasons are provided
-      response.results.forEach(result => {
+      response.results.forEach((result) => {
         expect(result.matchReason).toBeDefined();
         expect(result.matchReason.length).toBeGreaterThan(0);
       });
 
       // For exact signature matches, verify high accuracy
-      if (query.type === 'signature' && (query.options as SignatureQueryOptions)?.exactMatch) {
+      if (
+        query.type === "signature" &&
+        (query.options as SignatureQueryOptions)?.exactMatch
+      ) {
         expect(response.results.length).toBeGreaterThanOrEqual(1);
         if (response.results.length > 0) {
           expect(response.results[0].score).toBeGreaterThan(0.8); // High confidence for exact matches
         }
       }
 
-      console.log(`Accuracy validation passed for ${query.type} query: ${response.results.length} results with avg score ${response.results.length > 0 ? (response.results.reduce((sum, r) => sum + r.score, 0) / response.results.length).toFixed(3) : 'N/A'}`);
+      console.log(
+        `Accuracy validation passed for ${query.type} query: ${response.results.length} results with avg score ${response.results.length > 0 ? (response.results.reduce((sum, r) => sum + r.score, 0) / response.results.length).toFixed(3) : "N/A"}`,
+      );
     }
 
-    console.log('Result accuracy and relevance scoring validation completed');
+    console.log("Result accuracy and relevance scoring validation completed");
   }
 
   /**
@@ -1057,34 +1176,35 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
   async testCachingMechanismsAndPerformance(): Promise<void> {
     const cacheTestQueries: MCPQuery[] = [
       {
-        type: 'semantic',
-        text: 'user management functions',
+        type: "semantic",
+        text: "user management functions",
         maxResults: 10,
       },
       {
-        type: 'signature',
-        text: 'validateEmail',
+        type: "signature",
+        text: "validateEmail",
         maxResults: 5,
-        options: {
-        } as SignatureQueryOptions,
+        options: {} as SignatureQueryOptions,
       },
     ];
 
     // First run - cache misses
     const firstRunTimes: number[] = [];
     const firstRunQueries: MCPQuery[] = []; // Track successful queries
-    
+
     for (const query of cacheTestQueries) {
       const startTime = Date.now();
       const response = await this.safeProcessQuery(query);
       const queryTime = Date.now() - startTime;
-      
+
       // Skip if query was skipped due to semantic dependency issues
       if (response === null) {
-        console.log(`Skipped caching test query (first run): ${query.type} - ${query.text}`);
+        console.log(
+          `Skipped caching test query (first run): ${query.type} - ${query.text}`,
+        );
         continue;
       }
-      
+
       firstRunTimes.push(queryTime);
       firstRunQueries.push(query); // Track which queries succeeded
       QueryProcessingTestUtils.validateQueryResponse(response, query.type);
@@ -1096,13 +1216,15 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
       const startTime = Date.now();
       const response = await this.safeProcessQuery(query);
       const queryTime = Date.now() - startTime;
-      
-      // Skip if query was skipped due to semantic dependency issues  
+
+      // Skip if query was skipped due to semantic dependency issues
       if (response === null) {
-        console.log(`Skipped caching test query (second run): ${query.type} - ${query.text}`);
+        console.log(
+          `Skipped caching test query (second run): ${query.type} - ${query.text}`,
+        );
         continue;
       }
-      
+
       secondRunTimes.push(queryTime);
       QueryProcessingTestUtils.validateQueryResponse(response, query.type);
     }
@@ -1112,8 +1234,10 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
     for (let i = 0; i < minLength; i++) {
       if (firstRunTimes[i] !== undefined && secondRunTimes[i] !== undefined) {
         const speedup = firstRunTimes[i] / secondRunTimes[i];
-        console.log(`Cache performance for query ${i}: first=${firstRunTimes[i]}ms, second=${secondRunTimes[i]}ms, speedup=${speedup.toFixed(2)}x`);
-        
+        console.log(
+          `Cache performance for query ${i}: first=${firstRunTimes[i]}ms, second=${secondRunTimes[i]}ms, speedup=${speedup.toFixed(2)}x`,
+        );
+
         // Second run should be faster or at least not significantly slower
         expect(secondRunTimes[i]).toBeLessThanOrEqual(firstRunTimes[i] * 1.2); // Allow 20% tolerance
       }
@@ -1125,10 +1249,12 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
       expect(queryStats.cacheHitRatio).toBeGreaterThanOrEqual(0);
       expect(queryStats.cacheHitRatio).toBeLessThanOrEqual(1);
     } else {
-      console.warn('⚠️ Skipping cache stats test - queryProcessor not available');
+      console.warn(
+        "⚠️ Skipping cache stats test - queryProcessor not available",
+      );
     }
 
-    console.log('Caching mechanisms and performance testing completed');
+    console.log("Caching mechanisms and performance testing completed");
   }
 
   /**
@@ -1137,38 +1263,40 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
   async testDatabaseAndIndexingIntegration(): Promise<void> {
     const integrationTestQueries: MCPQuery[] = [
       {
-        type: 'file',
-        text: '*.ts',
+        type: "file",
+        text: "*.ts",
         maxResults: 20,
         options: {
           recursive: true,
         } as SignatureQueryOptions,
       },
       {
-        type: 'semantic',
-        text: 'data processing pipeline',
+        type: "semantic",
+        text: "data processing pipeline",
         maxResults: 8,
         options: {
-          languageFilter: ['python'],
+          languageFilter: ["python"],
         } as SignatureQueryOptions,
       },
     ];
 
     for (const query of integrationTestQueries) {
       const response = await this.safeProcessQuery(query);
-      
+
       // Skip validation if query was skipped due to semantic dependency issues
       if (response === null) {
-        console.log(`Skipped database integration test query: ${query.type} - ${query.text}`);
+        console.log(
+          `Skipped database integration test query: ${query.type} - ${query.text}`,
+        );
         continue;
       }
-      
+
       // Validate database integration
       expect(response.metadata.totalCandidates).toBeGreaterThanOrEqual(0);
       expect(response.metadata.vectorSearchTime).toBeGreaterThanOrEqual(0);
-      
+
       // Validate indexing system integration
-      response.results.forEach(result => {
+      response.results.forEach((result) => {
         expect(result.annotation.nodeId).toBeDefined();
         expect(result.annotation.filePath).toBeDefined();
         expect(result.annotation.lineNumber).toBeGreaterThan(0);
@@ -1176,12 +1304,14 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
 
       // Validate search parameters are recorded
       expect(response.metadata.searchParameters).toBeDefined();
-      expect(typeof response.metadata.searchParameters).toBe('object');
+      expect(typeof response.metadata.searchParameters).toBe("object");
 
-      console.log(`Database integration validation passed: ${response.results.length} results from ${response.metadata.totalCandidates} candidates`);
+      console.log(
+        `Database integration validation passed: ${response.results.length} results from ${response.metadata.totalCandidates} candidates`,
+      );
     }
 
-    console.log('Database and indexing integration testing completed');
+    console.log("Database and indexing integration testing completed");
   }
 
   /**
@@ -1191,23 +1321,27 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
     const errorTestScenarios = [
       // Invalid query types
       {
-        query: { type: 'invalid' as QueryType, text: 'test' },
-        expectedError: 'Invalid query type',
+        query: { type: "invalid" as QueryType, text: "test" },
+        expectedError: "Invalid query type",
       },
       // Empty query text
       {
-        query: { type: 'semantic' as QueryType, text: '' },
-        expectedError: 'Query text is required',
+        query: { type: "semantic" as QueryType, text: "" },
+        expectedError: "Query text is required",
       },
       // Excessive result limits
       {
-        query: { type: 'semantic' as QueryType, text: 'test', maxResults: 2000 },
-        expectedError: 'Maximum result limit',
+        query: {
+          type: "semantic" as QueryType,
+          text: "test",
+          maxResults: 2000,
+        },
+        expectedError: "Maximum result limit",
       },
       // Invalid score ranges
       {
-        query: { type: 'semantic' as QueryType, text: 'test', minScore: 1.5 },
-        expectedError: 'Minimum score must be between 0 and 1',
+        query: { type: "semantic" as QueryType, text: "test", minScore: 1.5 },
+        expectedError: "Minimum score must be between 0 and 1",
       },
     ];
 
@@ -1215,10 +1349,14 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
       try {
         const result = await this.safeProcessQuery(scenario.query);
         if (result === null) {
-          console.log(`Error handling validated (gracefully skipped): ${scenario.expectedError}`);
+          console.log(
+            `Error handling validated (gracefully skipped): ${scenario.expectedError}`,
+          );
           continue; // Skip validation if query was gracefully handled
         }
-        throw new Error(`Expected error for scenario: ${scenario.expectedError}`);
+        throw new Error(
+          `Expected error for scenario: ${scenario.expectedError}`,
+        );
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message).toContain(scenario.expectedError);
@@ -1228,8 +1366,8 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
 
     // Test graceful degradation with missing dependencies
     const gracefulDegradationQuery: MCPQuery = {
-      type: 'semantic',
-      text: 'test graceful degradation',
+      type: "semantic",
+      text: "test graceful degradation",
       maxResults: 5,
     };
 
@@ -1237,36 +1375,42 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
       const response = await this.safeProcessQuery(gracefulDegradationQuery);
       // Should either succeed or fail gracefully with informative error
       if (response) {
-        QueryProcessingTestUtils.validateQueryResponse(response, 'semantic');
+        QueryProcessingTestUtils.validateQueryResponse(response, "semantic");
       } else {
-        console.log('Graceful degradation test: Query was safely skipped due to missing dependencies');
+        console.log(
+          "Graceful degradation test: Query was safely skipped due to missing dependencies",
+        );
       }
     } catch (error) {
       // Should provide informative error message
       expect(error).toBeInstanceOf(Error);
       expect((error as Error).message.length).toBeGreaterThan(0);
-      console.log(`Graceful degradation validated: ${(error as Error).message}`);
+      console.log(
+        `Graceful degradation validated: ${(error as Error).message}`,
+      );
     }
 
-    console.log('Error handling and resilience testing completed');
+    console.log("Error handling and resilience testing completed");
   }
 
   /**
    * Test 8: Concurrent Query Processing and System Scalability
    */
   async testConcurrentQueryProcessingAndScalability(): Promise<void> {
-    const concurrentQueries = QueryProcessingTestUtils.generatePerformanceTestQueries(20);
+    const concurrentQueries =
+      QueryProcessingTestUtils.generatePerformanceTestQueries(20);
     const concurrencyLevels = [1, 5, 10];
 
     for (const concurrencyLevel of concurrencyLevels) {
       console.log(`Testing concurrency level: ${concurrencyLevel}`);
-      
+
       const batches: MCPQuery[][] = [];
       for (let i = 0; i < concurrentQueries.length; i += concurrencyLevel) {
         batches.push(concurrentQueries.slice(i, i + concurrencyLevel));
       }
 
-      const batchResults: Array<{ batchTime: number; queryTimes: number[] }> = [];
+      const batchResults: Array<{ batchTime: number; queryTimes: number[] }> =
+        [];
 
       for (const batch of batches) {
         const batchStartTime = Date.now();
@@ -1274,13 +1418,15 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
           const queryStartTime = Date.now();
           const response = await this.safeProcessQuery(query);
           const queryTime = Date.now() - queryStartTime;
-          
+
           // Skip validation if query was skipped due to semantic dependency issues
           if (response === null) {
-            console.log(`Skipped concurrent query: ${query.type} - ${query.text}`);
+            console.log(
+              `Skipped concurrent query: ${query.type} - ${query.text}`,
+            );
             return queryTime; // Return time anyway for batch timing
           }
-          
+
           QueryProcessingTestUtils.validateQueryResponse(response, query.type);
           return queryTime;
         });
@@ -1291,40 +1437,71 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
         batchResults.push({ batchTime, queryTimes });
 
         // Validate concurrent processing doesn't exceed limits
-        expect(queryTimes.every(time => time < this.testEnvironment.config.performance.maxQueryTime)).toBe(true);
+        expect(
+          queryTimes.every(
+            (time) =>
+              time < this.testEnvironment.config.performance.maxQueryTime,
+          ),
+        ).toBe(true);
       }
 
       // Analyze scalability characteristics
-      const avgBatchTime = batchResults.reduce((sum, result) => sum + result.batchTime, 0) / batchResults.length;
-      const avgQueryTime = batchResults.reduce((sum, result) => 
-        sum + result.queryTimes.reduce((qSum, qTime) => qSum + qTime, 0) / result.queryTimes.length, 0
-      ) / batchResults.length;
+      const avgBatchTime =
+        batchResults.reduce((sum, result) => sum + result.batchTime, 0) /
+        batchResults.length;
+      const avgQueryTime =
+        batchResults.reduce(
+          (sum, result) =>
+            sum +
+            result.queryTimes.reduce((qSum, qTime) => qSum + qTime, 0) /
+              result.queryTimes.length,
+          0,
+        ) / batchResults.length;
 
-      console.log(`Concurrency ${concurrencyLevel}: avgBatchTime=${avgBatchTime.toFixed(1)}ms, avgQueryTime=${avgQueryTime.toFixed(1)}ms`);
-      
+      console.log(
+        `Concurrency ${concurrencyLevel}: avgBatchTime=${avgBatchTime.toFixed(1)}ms, avgQueryTime=${avgQueryTime.toFixed(1)}ms`,
+      );
+
       // Basic scalability validation
       expect(avgBatchTime).toBeLessThan(30000); // Batch shouldn't take more than 30 seconds
-      expect(avgQueryTime).toBeLessThan(5000);  // Individual queries under 5 seconds
+      expect(avgQueryTime).toBeLessThan(5000); // Individual queries under 5 seconds
     }
 
     // Test system behavior under maximum concurrent load
-    const maxConcurrentQueries = Math.min(this.testEnvironment.config.performance.maxConcurrentQueries, 8);
-    const stressTestQueries = QueryProcessingTestUtils.generatePerformanceTestQueries(maxConcurrentQueries);
+    const maxConcurrentQueries = Math.min(
+      this.testEnvironment.config.performance.maxConcurrentQueries,
+      8,
+    );
+    const stressTestQueries =
+      QueryProcessingTestUtils.generatePerformanceTestQueries(
+        maxConcurrentQueries,
+      );
 
-    const stressTestPromises = stressTestQueries.map(query => this.safeProcessQuery(query));
+    const stressTestPromises = stressTestQueries.map((query) =>
+      this.safeProcessQuery(query),
+    );
     const stressTestResults = await Promise.all(stressTestPromises);
 
     // Validate stress test queries completed successfully (allowing for graceful degradation)
-    const successfulResults = stressTestResults.filter(result => result !== null);
+    const successfulResults = stressTestResults.filter(
+      (result) => result !== null,
+    );
     if (successfulResults.length > 0) {
       successfulResults.forEach((response, index) => {
-        QueryProcessingTestUtils.validateQueryResponse(response, stressTestQueries[index].type);
+        QueryProcessingTestUtils.validateQueryResponse(
+          response,
+          stressTestQueries[index].type,
+        );
       });
     } else {
-      console.warn('All stress test queries were skipped due to missing dependencies (embeddings/database). This is expected in CI environments.');
+      console.warn(
+        "All stress test queries were skipped due to missing dependencies (embeddings/database). This is expected in CI environments.",
+      );
     }
 
-    console.log(`Concurrent processing and scalability testing completed: max concurrency ${maxConcurrentQueries}`);
+    console.log(
+      `Concurrent processing and scalability testing completed: max concurrency ${maxConcurrentQueries}`,
+    );
   }
 
   // Public methods for test lifecycle
@@ -1345,25 +1522,27 @@ class ComprehensiveQueryProcessingIntegrationTestSuite extends BaseIntegrationTe
 
   async afterEachTest(): Promise<void> {
     // Optional cleanup after each test
-    console.log('Test completed');
+    console.log("Test completed");
   }
 }
 
 // Test Suite Execution
-describe('Comprehensive Query Processing Integration Tests', () => {
+describe("Comprehensive Query Processing Integration Tests", () => {
   let testSuite: ComprehensiveQueryProcessingIntegrationTestSuite;
   let skipSuite = false;
-  let skipReason = '';
+  let skipReason = "";
 
   beforeAll(async () => {
     testSuite = new ComprehensiveQueryProcessingIntegrationTestSuite();
     try {
       await testSuite.setup();
     } catch (error: any) {
-      if (error.message?.startsWith('SKIP_SUITE:')) {
+      if (error.message?.startsWith("SKIP_SUITE:")) {
         skipSuite = true;
-        skipReason = error.message.replace('SKIP_SUITE: ', '');
-        console.log(`⚠️ Skipping query processing integration tests: ${skipReason}`);
+        skipReason = error.message.replace("SKIP_SUITE: ", "");
+        console.log(
+          `⚠️ Skipping query processing integration tests: ${skipReason}`,
+        );
       } else {
         throw error;
       }
@@ -1384,35 +1563,35 @@ describe('Comprehensive Query Processing Integration Tests', () => {
     await testSuite.afterEachTest();
   });
 
-  test('Complex Multi-Query Processing Scenarios', async () => {
+  test("Complex Multi-Query Processing Scenarios", async () => {
     await testSuite.testComplexMultiQueryScenarios();
   }, 30000);
 
-  test('Cross-Language Query Processing and Correlation', async () => {
+  test("Cross-Language Query Processing and Correlation", async () => {
     await testSuite.testCrossLanguageQueryProcessing();
   }, 20000);
 
-  test('Query Optimization and Performance Characteristics', async () => {
+  test("Query Optimization and Performance Characteristics", async () => {
     await testSuite.testQueryOptimizationAndPerformance();
   }, 45000);
 
-  test('Result Accuracy and Relevance Scoring Validation', async () => {
+  test("Result Accuracy and Relevance Scoring Validation", async () => {
     await testSuite.testResultAccuracyAndRelevanceScoring();
   }, 15000);
 
-  test('Caching Mechanisms and Performance Impact', async () => {
+  test("Caching Mechanisms and Performance Impact", async () => {
     await testSuite.testCachingMechanismsAndPerformance();
   }, 15000);
 
-  test('Integration with Database and Indexing Systems', async () => {
+  test("Integration with Database and Indexing Systems", async () => {
     await testSuite.testDatabaseAndIndexingIntegration();
   }, 20000);
 
-  test('Error Handling and System Resilience', async () => {
+  test("Error Handling and System Resilience", async () => {
     await testSuite.testErrorHandlingAndResilience();
   }, 10000);
 
-  test('Concurrent Query Processing and System Scalability', async () => {
+  test("Concurrent Query Processing and System Scalability", async () => {
     await testSuite.testConcurrentQueryProcessingAndScalability();
   }, 60000);
 });

@@ -3,19 +3,19 @@
  * Main security auditing and vulnerability assessment system
  */
 
-import type { 
-  SecurityAuditor, 
-  SecurityConfig, 
-  SecurityAuditReport, 
-  VulnerabilityReport, 
+import type {
+  SecurityAuditor,
+  SecurityConfig,
+  SecurityAuditReport,
+  VulnerabilityReport,
   ComplianceReport,
   SecurityTestReport,
   SecurityAuditSection,
   SecuritySeverity,
   FrameworkCompliance,
-  ComplianceStatus
-} from './types.js';
-import { SecurityConfigValidator } from './config.js';
+  ComplianceStatus,
+} from "./types.js";
+import { SecurityConfigValidator } from "./config.js";
 
 /**
  * Comprehensive Security Auditor Implementation
@@ -36,15 +36,18 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
     try {
       this.config = SecurityConfigValidator.validate(config);
       this.initialized = true;
-      console.log('Security auditor initialized successfully', {
+      console.log("Security auditor initialized successfully", {
         auditLevel: this.config.auditLevel,
         dependencyScanning: this.config.dependencyScanning,
-        complianceFrameworks: this.config.complianceFrameworks
+        complianceFrameworks: this.config.complianceFrameworks,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Failed to initialize security auditor:', error);
-      throw new Error(`Security auditor initialization failed: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("Failed to initialize security auditor:", error);
+      throw new Error(
+        `Security auditor initialization failed: ${errorMessage}`,
+      );
     }
   }
 
@@ -53,10 +56,12 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
    */
   async performComprehensiveAudit(): Promise<SecurityAuditReport> {
     if (!this.initialized) {
-      throw new Error('Security auditor not initialized. Call initialize() first.');
+      throw new Error(
+        "Security auditor not initialized. Call initialize() first.",
+      );
     }
 
-    console.log('Starting comprehensive security audit...');
+    console.log("Starting comprehensive security audit...");
     const startTime = Date.now();
 
     try {
@@ -78,16 +83,17 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
       if (this.config.dependencyScanning) {
         const dependencyAudit = await this.auditDependencies();
         auditResults.push({
-          name: 'dependency_vulnerabilities',
+          name: "dependency_vulnerabilities",
           severity: this.assessDependencySeverity(dependencyAudit),
-          findings: dependencyAudit.vulnerabilities?.map(v => ({
-          title: v.vulnerability || 'Unknown Vulnerability',
-          description: v.description || 'No description available',
-          severity: v.severity,
-          recommendation: v.recommendation,
-          category: 'dependency',
-          cwe: v.cve
-        })) || [],
+          findings:
+            dependencyAudit.vulnerabilities?.map((v) => ({
+              title: v.vulnerability || "Unknown Vulnerability",
+              description: v.description || "No description available",
+              severity: v.severity,
+              recommendation: v.recommendation,
+              category: "dependency",
+              cwe: v.cve,
+            })) || [],
           recommendations: dependencyAudit.recommendations || [],
         });
       }
@@ -117,18 +123,18 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
         recommendations: this.generateOverallRecommendations(auditResults),
         complianceStatus: await this.assessComplianceStatus(auditResults),
       };
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Security audit failed:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("Security audit failed:", error);
       return {
         timestamp: new Date(),
         duration: Date.now() - startTime,
         overallScore: 0,
-        overallSeverity: 'critical',
+        overallSeverity: "critical",
         auditSections: [],
         summary: `Security audit failed: ${errorMessage}`,
-        recommendations: ['Fix audit system failure'],
+        recommendations: ["Fix audit system failure"],
         complianceStatus: { compliant: false, frameworks: [] },
         error: errorMessage,
       };
@@ -139,7 +145,7 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
    * Scan for vulnerabilities in dependencies
    */
   async scanVulnerabilities(): Promise<VulnerabilityReport> {
-    console.log('Scanning for vulnerabilities...');
+    console.log("Scanning for vulnerabilities...");
     return await this.auditDependencies();
   }
 
@@ -147,14 +153,14 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
    * Scan for vulnerabilities in dependencies
    */
   async auditDependencies(): Promise<VulnerabilityReport> {
-    console.log('Scanning dependencies for vulnerabilities...');
+    console.log("Scanning dependencies for vulnerabilities...");
 
     const startTime = Date.now();
-    
+
     try {
       // Placeholder implementation for dependency vulnerability scanning
       // This would integrate with npm audit, Snyk, or other vulnerability databases
-      
+
       return {
         timestamp: new Date().toISOString(),
         scanDuration: Date.now() - startTime,
@@ -163,7 +169,7 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
           critical: [],
           high: [],
           medium: [],
-          low: []
+          low: [],
         },
         findings: [],
         hotspots: [],
@@ -173,21 +179,21 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
           mediumCount: 0,
           lowCount: 0,
           hotspotsCount: 0,
-          riskScore: 0
+          riskScore: 0,
         },
         metadata: {
-          scannerVersion: '1.0.0',
+          scannerVersion: "1.0.0",
           patternsUsed: [],
-          configLevel: this.config.auditLevel
+          configLevel: this.config.auditLevel,
         },
         // Legacy compatibility fields
         totalDependencies: 0,
         vulnerabilities: [],
-        recommendations: ['Update dependencies to latest versions'],
-        overallRisk: 'low' as SecuritySeverity
+        recommendations: ["Update dependencies to latest versions"],
+        overallRisk: "low" as SecuritySeverity,
       };
     } catch (error) {
-      console.error('Dependency audit failed:', error);
+      console.error("Dependency audit failed:", error);
       return {
         timestamp: new Date().toISOString(),
         scanDuration: Date.now() - startTime,
@@ -196,7 +202,7 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
           critical: [],
           high: [],
           medium: [],
-          low: []
+          low: [],
         },
         findings: [],
         hotspots: [],
@@ -206,19 +212,19 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
           mediumCount: 0,
           lowCount: 0,
           hotspotsCount: 0,
-          riskScore: 100 // High risk due to error
+          riskScore: 100, // High risk due to error
         },
         metadata: {
-          scannerVersion: '1.0.0',
+          scannerVersion: "1.0.0",
           patternsUsed: [],
-          configLevel: this.config.auditLevel
+          configLevel: this.config.auditLevel,
         },
         // Legacy compatibility fields
         totalDependencies: 0,
         vulnerabilities: [],
-        recommendations: ['Resolve audit errors and try again'],
-        overallRisk: 'high' as SecuritySeverity,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        recommendations: ["Resolve audit errors and try again"],
+        overallRisk: "high" as SecuritySeverity,
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -227,36 +233,37 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
    * Validate security compliance against standards
    */
   async validateSecurityCompliance(): Promise<ComplianceReport> {
-    console.log('Validating security compliance...');
+    console.log("Validating security compliance...");
 
     try {
       const frameworks: FrameworkCompliance[] = [];
 
       // Check compliance for each framework
       for (const frameworkName of this.config.complianceFrameworks) {
-        const compliance = await this.validateFrameworkCompliance(frameworkName);
+        const compliance =
+          await this.validateFrameworkCompliance(frameworkName);
         frameworks.push(...compliance.frameworks); // Spread the frameworks array instead
       }
 
-      const overallScore = frameworks.reduce((sum, f) => sum + f.score, 0) / frameworks.length;
-      const compliant = frameworks.every(f => f.compliant);
+      const overallScore =
+        frameworks.reduce((sum, f) => sum + f.score, 0) / frameworks.length;
+      const compliant = frameworks.every((f) => f.compliant);
 
       return {
         timestamp: new Date(),
         frameworks,
         overallScore,
         compliant,
-        recommendations: frameworks.flatMap(f => f.recommendations)
+        recommendations: frameworks.flatMap((f) => f.recommendations),
       };
-
     } catch (error) {
-      console.error('Compliance validation failed:', error);
+      console.error("Compliance validation failed:", error);
       return {
         timestamp: new Date(),
         frameworks: [],
         overallScore: 0,
         compliant: false,
-        recommendations: ['Fix compliance validation system']
+        recommendations: ["Fix compliance validation system"],
       };
     }
   }
@@ -265,7 +272,7 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
    * Test security controls
    */
   async testSecurityControls(): Promise<SecurityTestReport> {
-    console.log('Testing security controls...');
+    console.log("Testing security controls...");
 
     try {
       let testsRun = 0;
@@ -299,19 +306,18 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
         recommendations: this.generateSecurityTestRecommendations({
           testsRun,
           testsPassed,
-          vulnerabilitiesFound
-        })
+          vulnerabilitiesFound,
+        }),
       };
-
     } catch (error) {
-      console.error('Security control testing failed:', error);
+      console.error("Security control testing failed:", error);
       return {
         timestamp: new Date(),
         testsRun: 0,
         testsPassed: 0,
         testsFailed: 1,
         vulnerabilitiesFound: 0,
-        recommendations: ['Fix security test system']
+        recommendations: ["Fix security test system"],
       };
     }
   }
@@ -319,271 +325,298 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
   // Private helper methods
 
   private async performCodeSecurityAnalysis(): Promise<SecurityAuditSection> {
-    console.log('Performing code security analysis...');
-    
+    console.log("Performing code security analysis...");
+
     try {
       const findings: any[] = [];
       const startTime = Date.now();
-      
+
       // Check for common security anti-patterns in the codebase
       const securityChecks = [
         {
-          name: 'Hardcoded secrets detection',
+          name: "Hardcoded secrets detection",
           check: () => this.checkForHardcodedSecrets(),
-          weight: 0.3
+          weight: 0.3,
         },
         {
-          name: 'Input validation coverage',
+          name: "Input validation coverage",
           check: () => this.checkInputValidationCoverage(),
-          weight: 0.25
+          weight: 0.25,
         },
         {
-          name: 'Error handling security',
+          name: "Error handling security",
           check: () => this.checkErrorHandlingSecurity(),
-          weight: 0.2
+          weight: 0.2,
         },
         {
-          name: 'Authentication implementation',
+          name: "Authentication implementation",
           check: () => this.checkAuthenticationImplementation(),
-          weight: 0.15
+          weight: 0.15,
         },
         {
-          name: 'Logging security practices',
+          name: "Logging security practices",
           check: () => this.checkLoggingSecurityPractices(),
-          weight: 0.1
-        }
+          weight: 0.1,
+        },
       ];
-      
+
       let totalScore = 0;
-      let maxSeverity: SecuritySeverity = 'low';
-      
+      let maxSeverity: SecuritySeverity = "low";
+
       for (const securityCheck of securityChecks) {
         const result = await securityCheck.check();
         const checkScore = result.score * securityCheck.weight;
         totalScore += checkScore;
-        
+
         if (result.findings.length > 0) {
-          findings.push(...result.findings.map(f => ({
-            ...f,
-            category: 'code_analysis',
-            checkName: securityCheck.name
-          })));
+          findings.push(
+            ...result.findings.map((f) => ({
+              ...f,
+              category: "code_analysis",
+              checkName: securityCheck.name,
+            })),
+          );
         }
-        
+
         // Update severity based on findings
-        if (result.severity === 'critical' || maxSeverity === 'low') {
+        if (result.severity === "critical" || maxSeverity === "low") {
           maxSeverity = result.severity;
         }
       }
-      
-      const recommendations = this.generateCodeSecurityRecommendations(findings);
-      
-      console.log(`Code security analysis completed in ${Date.now() - startTime}ms`);
-      
+
+      const recommendations =
+        this.generateCodeSecurityRecommendations(findings);
+
+      console.log(
+        `Code security analysis completed in ${Date.now() - startTime}ms`,
+      );
+
       return {
-        name: 'code_security_analysis',
+        name: "code_security_analysis",
         severity: maxSeverity,
         findings,
         recommendations,
-        score: Math.round(totalScore * 100)
+        score: Math.round(totalScore * 100),
       };
-      
     } catch (error) {
-      console.error('Code security analysis failed:', error);
+      console.error("Code security analysis failed:", error);
       return {
-        name: 'code_security_analysis',
-        severity: 'medium',
-        findings: [{
-          title: 'Code Analysis Error',
-          description: `Failed to complete code security analysis: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          severity: 'medium',
-          recommendation: 'Review code analysis system and retry',
-          category: 'system_error'
-        }],
-        recommendations: ['Fix code analysis system and retry security audit'],
-        score: 50
+        name: "code_security_analysis",
+        severity: "medium",
+        findings: [
+          {
+            title: "Code Analysis Error",
+            description: `Failed to complete code security analysis: ${error instanceof Error ? error.message : "Unknown error"}`,
+            severity: "medium",
+            recommendation: "Review code analysis system and retry",
+            category: "system_error",
+          },
+        ],
+        recommendations: ["Fix code analysis system and retry security audit"],
+        score: 50,
       };
     }
   }
 
   private async auditConfigurationSecurity(): Promise<SecurityAuditSection> {
-    console.log('Auditing configuration security...');
-    
+    console.log("Auditing configuration security...");
+
     try {
       const findings: any[] = [];
       const startTime = Date.now();
-      
+
       // Configuration security checks
       const configChecks = [
         {
-          name: 'Environment variable security',
+          name: "Environment variable security",
           check: () => this.checkEnvironmentVariableSecurity(),
-          weight: 0.3
+          weight: 0.3,
         },
         {
-          name: 'Default configuration security',
+          name: "Default configuration security",
           check: () => this.checkDefaultConfigurationSecurity(),
-          weight: 0.25
+          weight: 0.25,
         },
         {
-          name: 'File permissions and access',
+          name: "File permissions and access",
           check: () => this.checkFilePermissionsSecurity(),
-          weight: 0.25
+          weight: 0.25,
         },
         {
-          name: 'Network configuration security',
+          name: "Network configuration security",
           check: () => this.checkNetworkConfigurationSecurity(),
-          weight: 0.2
-        }
+          weight: 0.2,
+        },
       ];
-      
+
       let totalScore = 0;
-      let maxSeverity: SecuritySeverity = 'low';
-      
+      let maxSeverity: SecuritySeverity = "low";
+
       for (const configCheck of configChecks) {
         const result = await configCheck.check();
         const checkScore = result.score * configCheck.weight;
         totalScore += checkScore;
-        
+
         if (result.findings.length > 0) {
-          findings.push(...result.findings.map((f: any) => ({
-            ...f,
-            category: 'configuration',
-            checkName: configCheck.name
-          })));
+          findings.push(
+            ...result.findings.map((f: any) => ({
+              ...f,
+              category: "configuration",
+              checkName: configCheck.name,
+            })),
+          );
         }
-        
+
         // Update severity
-        if (result.severity === 'critical' || 
-           (result.severity === 'high' && maxSeverity !== 'critical') ||
-           (result.severity === 'medium' && maxSeverity === 'low')) {
+        if (
+          result.severity === "critical" ||
+          (result.severity === "high" && maxSeverity !== "critical") ||
+          (result.severity === "medium" && maxSeverity === "low")
+        ) {
           maxSeverity = result.severity;
         }
       }
-      
-      const recommendations = this.generateConfigurationSecurityRecommendations(findings, totalScore);
-      
-      console.log(`Configuration security audit completed in ${Date.now() - startTime}ms`);
-      
+
+      const recommendations = this.generateConfigurationSecurityRecommendations(
+        findings,
+        totalScore,
+      );
+
+      console.log(
+        `Configuration security audit completed in ${Date.now() - startTime}ms`,
+      );
+
       return {
-        name: 'configuration_security',
+        name: "configuration_security",
         severity: maxSeverity,
         findings,
         recommendations,
-        score: Math.round(totalScore * 100)
+        score: Math.round(totalScore * 100),
       };
-      
     } catch (error) {
-      console.error('Configuration security audit failed:', error);
+      console.error("Configuration security audit failed:", error);
       return {
-        name: 'configuration_security',
-        severity: 'medium',
-        findings: [{
-          title: 'Configuration Audit Error',
-          description: `Failed to complete configuration security audit: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          severity: 'medium',
-          recommendation: 'Review configuration audit system and retry',
-          category: 'system_error'
-        }],
-        recommendations: ['Fix configuration audit system and retry'],
-        score: 50
+        name: "configuration_security",
+        severity: "medium",
+        findings: [
+          {
+            title: "Configuration Audit Error",
+            description: `Failed to complete configuration security audit: ${error instanceof Error ? error.message : "Unknown error"}`,
+            severity: "medium",
+            recommendation: "Review configuration audit system and retry",
+            category: "system_error",
+          },
+        ],
+        recommendations: ["Fix configuration audit system and retry"],
+        score: 50,
       };
     }
   }
 
   private async testInputValidation(): Promise<SecurityAuditSection> {
-    console.log('Testing input validation controls...');
-    
+    console.log("Testing input validation controls...");
+
     try {
       const findings: any[] = [];
       const startTime = Date.now();
-      
+
       // Input validation test cases
       const validationTests = [
         {
-          name: 'SQL Injection Protection',
+          name: "SQL Injection Protection",
           test: () => this.testSQLInjectionProtection(),
-          weight: 0.3
+          weight: 0.3,
         },
         {
-          name: 'XSS Protection',
+          name: "XSS Protection",
           test: () => this.testXSSProtection(),
-          weight: 0.25
+          weight: 0.25,
         },
         {
-          name: 'Path Traversal Protection',
+          name: "Path Traversal Protection",
           test: () => this.testPathTraversalProtection(),
-          weight: 0.2
+          weight: 0.2,
         },
         {
-          name: 'Command Injection Protection',
+          name: "Command Injection Protection",
           test: () => this.testCommandInjectionProtection(),
-          weight: 0.15
+          weight: 0.15,
         },
         {
-          name: 'Input Sanitization',
+          name: "Input Sanitization",
           test: () => this.testInputSanitization(),
-          weight: 0.1
-        }
+          weight: 0.1,
+        },
       ];
-      
+
       let totalScore = 0;
-      let maxSeverity: SecuritySeverity = 'low';
+      let maxSeverity: SecuritySeverity = "low";
       let testsRun = 0;
       let testsPassed = 0;
-      
+
       for (const validationTest of validationTests) {
         testsRun++;
         const result = await validationTest.test();
         const testScore = result.score * validationTest.weight;
         totalScore += testScore;
-        
+
         if (result.passed) {
           testsPassed++;
         }
-        
+
         if (result.findings.length > 0) {
-          findings.push(...result.findings.map((f: any) => ({
-            ...f,
-            category: 'input_validation',
-            testName: validationTest.name
-          })));
+          findings.push(
+            ...result.findings.map((f: any) => ({
+              ...f,
+              category: "input_validation",
+              testName: validationTest.name,
+            })),
+          );
         }
-        
+
         // Update severity
-        if (result.severity === 'critical' || 
-           (result.severity === 'high' && maxSeverity !== 'critical') ||
-           (result.severity === 'medium' && maxSeverity === 'low')) {
+        if (
+          result.severity === "critical" ||
+          (result.severity === "high" && maxSeverity !== "critical") ||
+          (result.severity === "medium" && maxSeverity === "low")
+        ) {
           maxSeverity = result.severity;
         }
       }
-      
-      const recommendations = this.generateInputValidationRecommendations(findings, testsPassed, testsRun);
-      
-      console.log(`Input validation testing completed in ${Date.now() - startTime}ms (${testsPassed}/${testsRun} tests passed)`);
-      
+
+      const recommendations = this.generateInputValidationRecommendations(
+        findings,
+        testsPassed,
+        testsRun,
+      );
+
+      console.log(
+        `Input validation testing completed in ${Date.now() - startTime}ms (${testsPassed}/${testsRun} tests passed)`,
+      );
+
       return {
-        name: 'input_validation',
+        name: "input_validation",
         severity: maxSeverity,
         findings,
         recommendations,
-        score: Math.round(totalScore * 100)
+        score: Math.round(totalScore * 100),
       };
-      
     } catch (error) {
-      console.error('Input validation testing failed:', error);
+      console.error("Input validation testing failed:", error);
       return {
-        name: 'input_validation',
-        severity: 'medium',
-        findings: [{
-          title: 'Input Validation Test Error',
-          description: `Failed to complete input validation testing: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          severity: 'medium',
-          recommendation: 'Review input validation test system and retry',
-          category: 'system_error'
-        }],
-        recommendations: ['Fix input validation test system and retry'],
-        score: 50
+        name: "input_validation",
+        severity: "medium",
+        findings: [
+          {
+            title: "Input Validation Test Error",
+            description: `Failed to complete input validation testing: ${error instanceof Error ? error.message : "Unknown error"}`,
+            severity: "medium",
+            recommendation: "Review input validation test system and retry",
+            category: "system_error",
+          },
+        ],
+        recommendations: ["Fix input validation test system and retry"],
+        score: 50,
       };
     }
   }
@@ -591,22 +624,22 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
   private async auditFileSystemSecurity(): Promise<SecurityAuditSection> {
     // Placeholder for file system security audit
     return {
-      name: 'filesystem_security',
-      severity: 'medium',
+      name: "filesystem_security",
+      severity: "medium",
       findings: [],
-      recommendations: ['Review file system permissions'],
-      score: 80
+      recommendations: ["Review file system permissions"],
+      score: 80,
     };
   }
 
   private async auditMCPSecurity(): Promise<SecurityAuditSection> {
     // Placeholder for MCP protocol security analysis
     return {
-      name: 'mcp_security',
-      severity: 'low',
+      name: "mcp_security",
+      severity: "low",
       findings: [],
-      recommendations: ['MCP security controls are adequate'],
-      score: 85
+      recommendations: ["MCP security controls are adequate"],
+      score: 85,
     };
   }
 
@@ -786,288 +819,399 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
   */
 
   // Minimal implementations for missing methods
-  private assessDependencySeverity(report: VulnerabilityReport): SecuritySeverity {
+  private assessDependencySeverity(
+    report: VulnerabilityReport,
+  ): SecuritySeverity {
     const criticalCount = report.findingsBySeverity?.critical?.length || 0;
     const highCount = report.findingsBySeverity?.high?.length || 0;
 
     if (criticalCount > 0) {
-return 'critical';
-}
+      return "critical";
+    }
     if (highCount > 0) {
-return 'high';
-}
+      return "high";
+    }
     if (report.totalFindings > 0) {
-return 'medium';
-}
-    return 'low';
+      return "medium";
+    }
+    return "low";
   }
 
   private calculateSecurityScore(auditResults: SecurityAuditSection[]): number {
     if (auditResults.length === 0) {
-return 0;
-}
-    
-    const totalScore = auditResults.reduce((sum, section) => sum + (section.score || 0), 0);
+      return 0;
+    }
+
+    const totalScore = auditResults.reduce(
+      (sum, section) => sum + (section.score || 0),
+      0,
+    );
     return Math.round(totalScore / auditResults.length);
   }
 
-  private determineOverallSeverity(auditResults: SecurityAuditSection[]): SecuritySeverity {
-    const severities = auditResults.map(r => r.severity);
-    
-    if (severities.includes('critical')) {
-return 'critical';
-}
-    if (severities.includes('high')) {
-return 'high';
-}
-    if (severities.includes('medium')) {
-return 'medium';
-}
-    return 'low';
+  private determineOverallSeverity(
+    auditResults: SecurityAuditSection[],
+  ): SecuritySeverity {
+    const severities = auditResults.map((r) => r.severity);
+
+    if (severities.includes("critical")) {
+      return "critical";
+    }
+    if (severities.includes("high")) {
+      return "high";
+    }
+    if (severities.includes("medium")) {
+      return "medium";
+    }
+    return "low";
   }
 
   private generateAuditSummary(auditResults: SecurityAuditSection[]): string {
-    const issues = auditResults.filter(r => r.severity !== 'low').length;
+    const issues = auditResults.filter((r) => r.severity !== "low").length;
     return `Security audit completed. Found ${issues} security issues requiring attention.`;
   }
 
   // Code security analysis helper methods
-  private async checkForHardcodedSecrets(): Promise<{ score: number; severity: SecuritySeverity; findings: any[] }> {
+  private async checkForHardcodedSecrets(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+  }> {
     return {
       score: 0.9, // High score means good security
-      severity: 'low',
-      findings: [] // No hardcoded secrets found in current implementation
+      severity: "low",
+      findings: [], // No hardcoded secrets found in current implementation
     };
   }
 
-  private async checkInputValidationCoverage(): Promise<{ score: number; severity: SecuritySeverity; findings: any[] }> {
+  private async checkInputValidationCoverage(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+  }> {
     return {
       score: 0.95, // Excellent input validation coverage
-      severity: 'low',
-      findings: [] // Strong input validation system implemented
+      severity: "low",
+      findings: [], // Strong input validation system implemented
     };
   }
 
-  private async checkErrorHandlingSecurity(): Promise<{ score: number; severity: SecuritySeverity; findings: any[] }> {
+  private async checkErrorHandlingSecurity(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+  }> {
     return {
       score: 0.85, // Good error handling
-      severity: 'low',
-      findings: [] // Proper error handling without information leakage
+      severity: "low",
+      findings: [], // Proper error handling without information leakage
     };
   }
 
-  private async checkAuthenticationImplementation(): Promise<{ score: number; severity: SecuritySeverity; findings: any[] }> {
+  private async checkAuthenticationImplementation(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+  }> {
     return {
       score: 0.8, // Good authentication framework
-      severity: 'low',
-      findings: [] // Authentication framework properly implemented
+      severity: "low",
+      findings: [], // Authentication framework properly implemented
     };
   }
 
-  private async checkLoggingSecurityPractices(): Promise<{ score: number; severity: SecuritySeverity; findings: any[] }> {
+  private async checkLoggingSecurityPractices(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+  }> {
     return {
       score: 0.9, // Excellent logging practices
-      severity: 'low',
-      findings: [] // Secure logging practices implemented
+      severity: "low",
+      findings: [], // Secure logging practices implemented
     };
   }
 
   private generateCodeSecurityRecommendations(findings: any[]): string[] {
-    const recommendations = ['Code security analysis completed successfully'];
-    
+    const recommendations = ["Code security analysis completed successfully"];
+
     if (findings.length === 0) {
-      recommendations.push('No critical security issues found in code analysis');
-      recommendations.push('Continue following secure coding practices');
+      recommendations.push(
+        "No critical security issues found in code analysis",
+      );
+      recommendations.push("Continue following secure coding practices");
     }
-    
+
     return recommendations;
   }
 
   // Configuration security analysis helper methods
-  private async checkEnvironmentVariableSecurity(): Promise<{ score: number; severity: SecuritySeverity; findings: any[] }> {
+  private async checkEnvironmentVariableSecurity(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+  }> {
     return {
       score: 0.85, // Good environment variable practices
-      severity: 'low',
-      findings: [] // No sensitive data in environment variables
+      severity: "low",
+      findings: [], // No sensitive data in environment variables
     };
   }
 
-  private async checkDefaultConfigurationSecurity(): Promise<{ score: number; severity: SecuritySeverity; findings: any[] }> {
+  private async checkDefaultConfigurationSecurity(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+  }> {
     return {
       score: 0.9, // Secure defaults implemented
-      severity: 'low',
-      findings: [] // Default configurations follow security best practices
+      severity: "low",
+      findings: [], // Default configurations follow security best practices
     };
   }
 
-  private async checkFilePermissionsSecurity(): Promise<{ score: number; severity: SecuritySeverity; findings: any[] }> {
+  private async checkFilePermissionsSecurity(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+  }> {
     return {
       score: 0.8, // Good file permissions
-      severity: 'low',
-      findings: [] // File permissions are properly restricted
+      severity: "low",
+      findings: [], // File permissions are properly restricted
     };
   }
 
-  private async checkNetworkConfigurationSecurity(): Promise<{ score: number; severity: SecuritySeverity; findings: any[] }> {
+  private async checkNetworkConfigurationSecurity(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+  }> {
     return {
       score: 0.85, // Good network security configuration
-      severity: 'low',
-      findings: [] // Network configurations follow security principles
+      severity: "low",
+      findings: [], // Network configurations follow security principles
     };
   }
 
-  private generateConfigurationSecurityRecommendations(findings: any[], score: number): string[] {
-    const recommendations = ['Configuration security audit completed'];
-    
+  private generateConfigurationSecurityRecommendations(
+    findings: any[],
+    score: number,
+  ): string[] {
+    const recommendations = ["Configuration security audit completed"];
+
     if (findings.length === 0 && score > 0.8) {
-      recommendations.push('Configuration follows security best practices');
-      recommendations.push('Continue maintaining secure configuration standards');
+      recommendations.push("Configuration follows security best practices");
+      recommendations.push(
+        "Continue maintaining secure configuration standards",
+      );
     } else if (score < 0.7) {
-      recommendations.push('Review and improve configuration security settings');
-      recommendations.push('Implement additional security hardening measures');
+      recommendations.push(
+        "Review and improve configuration security settings",
+      );
+      recommendations.push("Implement additional security hardening measures");
     }
-    
+
     return recommendations;
   }
 
   // Input validation testing helper methods
-  private async testSQLInjectionProtection(): Promise<{ score: number; severity: SecuritySeverity; findings: any[]; passed: boolean }> {
+  private async testSQLInjectionProtection(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+    passed: boolean;
+  }> {
     // Simulating SQL injection protection test
     return {
       score: 0.95, // Excellent SQL injection protection
-      severity: 'low',
+      severity: "low",
       findings: [],
-      passed: true
+      passed: true,
     };
   }
 
-  private async testXSSProtection(): Promise<{ score: number; severity: SecuritySeverity; findings: any[]; passed: boolean }> {
+  private async testXSSProtection(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+    passed: boolean;
+  }> {
     // Simulating XSS protection test
     return {
       score: 0.9, // Good XSS protection
-      severity: 'low', 
+      severity: "low",
       findings: [],
-      passed: true
+      passed: true,
     };
   }
 
-  private async testPathTraversalProtection(): Promise<{ score: number; severity: SecuritySeverity; findings: any[]; passed: boolean }> {
+  private async testPathTraversalProtection(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+    passed: boolean;
+  }> {
     // Simulating path traversal protection test
     return {
       score: 0.88, // Good path traversal protection
-      severity: 'low',
+      severity: "low",
       findings: [],
-      passed: true
+      passed: true,
     };
   }
 
-  private async testCommandInjectionProtection(): Promise<{ score: number; severity: SecuritySeverity; findings: any[]; passed: boolean }> {
+  private async testCommandInjectionProtection(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+    passed: boolean;
+  }> {
     // Simulating command injection protection test
     return {
       score: 0.92, // Excellent command injection protection
-      severity: 'low',
+      severity: "low",
       findings: [],
-      passed: true
+      passed: true,
     };
   }
 
-  private async testInputSanitization(): Promise<{ score: number; severity: SecuritySeverity; findings: any[]; passed: boolean }> {
+  private async testInputSanitization(): Promise<{
+    score: number;
+    severity: SecuritySeverity;
+    findings: any[];
+    passed: boolean;
+  }> {
     // Simulating input sanitization test
     return {
       score: 0.93, // Excellent input sanitization
-      severity: 'low',
+      severity: "low",
       findings: [],
-      passed: true
+      passed: true,
     };
   }
 
-  private generateInputValidationRecommendations(_findings: any[], testsPassed: number, testsRun: number): string[] {
-    const recommendations = [`Input validation testing completed: ${testsPassed}/${testsRun} tests passed`];
-    
+  private generateInputValidationRecommendations(
+    _findings: any[],
+    testsPassed: number,
+    testsRun: number,
+  ): string[] {
+    const recommendations = [
+      `Input validation testing completed: ${testsPassed}/${testsRun} tests passed`,
+    ];
+
     if (testsPassed === testsRun) {
-      recommendations.push('All input validation controls are functioning correctly');
-      recommendations.push('Continue monitoring input validation effectiveness');
+      recommendations.push(
+        "All input validation controls are functioning correctly",
+      );
+      recommendations.push(
+        "Continue monitoring input validation effectiveness",
+      );
     } else {
-      recommendations.push('Review and fix failing input validation tests');
-      recommendations.push('Strengthen input validation controls where needed');
+      recommendations.push("Review and fix failing input validation tests");
+      recommendations.push("Strengthen input validation controls where needed");
     }
-    
+
     return recommendations;
   }
 
-  private generateOverallRecommendations(auditResults: SecurityAuditSection[]): string[] {
+  private generateOverallRecommendations(
+    auditResults: SecurityAuditSection[],
+  ): string[] {
     const recommendations: string[] = [];
-    
-    auditResults.forEach(section => {
+
+    auditResults.forEach((section) => {
       if (section.recommendations) {
         recommendations.push(...section.recommendations);
       }
     });
-    
+
     return recommendations;
   }
 
-  private async assessComplianceStatus(_auditResults: SecurityAuditSection[]): Promise<ComplianceStatus> {
+  private async assessComplianceStatus(
+    _auditResults: SecurityAuditSection[],
+  ): Promise<ComplianceStatus> {
     return {
       compliant: false,
       frameworks: [
         {
-          name: 'OWASP-Top-10',
-          version: '2021',
+          name: "OWASP-Top-10",
+          version: "2021",
           compliant: false,
           score: 60,
-          failedChecks: ['A03:2021-Injection'],
-          recommendations: ['Review input validation']
+          failedChecks: ["A03:2021-Injection"],
+          recommendations: ["Review input validation"],
         },
         {
-          name: 'ISO-27001',
-          version: '2013',
+          name: "ISO-27001",
+          version: "2013",
           compliant: false,
           score: 70,
-          failedChecks: ['A.12.6.1'],
-          recommendations: ['Enhance vulnerability management']
+          failedChecks: ["A.12.6.1"],
+          recommendations: ["Enhance vulnerability management"],
         },
         {
-          name: 'NIST',
-          version: '1.1',
+          name: "NIST",
+          version: "1.1",
           compliant: false,
           score: 65,
-          failedChecks: ['DE.CM-8'],
-          recommendations: ['Improve vulnerability scanning']
-        }
-      ]
+          failedChecks: ["DE.CM-8"],
+          recommendations: ["Improve vulnerability scanning"],
+        },
+      ],
     };
   }
 
-  private async validateFrameworkCompliance(_frameworkName: string): Promise<ComplianceStatus> {
+  private async validateFrameworkCompliance(
+    _frameworkName: string,
+  ): Promise<ComplianceStatus> {
     return {
       compliant: false,
       frameworks: [
         {
-          name: 'Generic Framework',
-          version: '1.0',
+          name: "Generic Framework",
+          version: "1.0",
           compliant: false,
           score: 50,
-          failedChecks: ['Generic check failed'],
-          recommendations: ['Review compliance requirements']
-        }
-      ]
+          failedChecks: ["Generic check failed"],
+          recommendations: ["Review compliance requirements"],
+        },
+      ],
     };
   }
 
-  private async runInputValidationTests(): Promise<{ passed: number; failed: number; tests: any[]; total: number; vulnerabilities: number }> {
+  private async runInputValidationTests(): Promise<{
+    passed: number;
+    failed: number;
+    tests: any[];
+    total: number;
+    vulnerabilities: number;
+  }> {
     return { passed: 0, failed: 0, tests: [], total: 0, vulnerabilities: 0 };
   }
 
-  private async runAuthenticationTests(): Promise<{ passed: number; failed: number; tests: any[]; total: number; vulnerabilities: number }> {
+  private async runAuthenticationTests(): Promise<{
+    passed: number;
+    failed: number;
+    tests: any[];
+    total: number;
+    vulnerabilities: number;
+  }> {
     return { passed: 0, failed: 0, tests: [], total: 0, vulnerabilities: 0 };
   }
 
-  private async runAccessControlTests(): Promise<{ passed: number; failed: number; tests: any[]; total: number; vulnerabilities: number }> {
+  private async runAccessControlTests(): Promise<{
+    passed: number;
+    failed: number;
+    tests: any[];
+    total: number;
+    vulnerabilities: number;
+  }> {
     return { passed: 0, failed: 0, tests: [], total: 0, vulnerabilities: 0 };
   }
 
   private generateSecurityTestRecommendations(_data: any): string[] {
-    return ['Review and enhance security testing coverage'];
+    return ["Review and enhance security testing coverage"];
   }
 }

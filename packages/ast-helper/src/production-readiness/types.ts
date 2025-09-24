@@ -30,7 +30,12 @@ export interface FinalTestingConfig {
 
 export interface TestSuiteConfig {
   name: string;
-  type: 'cli-integration' | 'mcp-integration' | 'vscode-integration' | 'cross-platform' | 'e2e-workflows';
+  type:
+    | "cli-integration"
+    | "mcp-integration"
+    | "vscode-integration"
+    | "cross-platform"
+    | "e2e-workflows";
   tests: string[];
   timeout: number;
   parallel: boolean;
@@ -61,7 +66,7 @@ export interface PerformanceTargets {
 export interface SecurityValidationConfig {
   vulnerabilityScanning: {
     enabled: boolean;
-    severity: ('low' | 'moderate' | 'high' | 'critical')[];
+    severity: ("low" | "moderate" | "high" | "critical")[];
   };
   inputValidation: {
     enabled: boolean;
@@ -102,13 +107,13 @@ export interface ComplianceConfig {
 
 export interface ComplianceRequirement {
   name: string;
-  type: 'legal' | 'regulatory' | 'internal';
+  type: "legal" | "regulatory" | "internal";
   mandatory: boolean;
   validator: string;
 }
 
 export interface CertificationConfig {
-  levels: ('STAGING_READY' | 'PRODUCTION_READY' | 'NOT_READY')[];
+  levels: ("STAGING_READY" | "PRODUCTION_READY" | "NOT_READY")[];
   signOff: {
     required: boolean;
     approvers: string[];
@@ -133,7 +138,7 @@ export interface MonitoringConfig {
 
 export interface MetricConfig {
   name: string;
-  type: 'counter' | 'gauge' | 'histogram';
+  type: "counter" | "gauge" | "histogram";
   labels: string[];
   threshold?: number;
 }
@@ -196,7 +201,7 @@ export interface PerformanceMetrics {
 }
 
 export interface TestIssue {
-  type: 'critical' | 'high' | 'medium' | 'low';
+  type: "critical" | "high" | "medium" | "low";
   message: string;
   details?: string;
   recommendation: string;
@@ -204,7 +209,7 @@ export interface TestIssue {
 
 export interface TestRecommendation {
   type: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   message: string;
   benefit: string;
 }
@@ -224,7 +229,7 @@ export interface ReadinessCategory {
   name: string;
   description: string;
   score: number; // 0-100
-  status: 'pass' | 'warning' | 'fail';
+  status: "pass" | "warning" | "fail";
   checks: ReadinessCheck[];
   issues: string[];
   recommendations: string[];
@@ -233,15 +238,21 @@ export interface ReadinessCategory {
 export interface ReadinessCheck {
   name: string;
   description: string;
-  status: 'pass' | 'warning' | 'fail';
+  status: "pass" | "warning" | "fail";
   value?: string | number;
   threshold?: string | number;
   details?: string;
 }
 
 export interface ProductionIssue {
-  type: 'code-quality' | 'performance' | 'security' | 'infrastructure' | 'monitoring' | 'compliance';
-  severity: 'critical' | 'high' | 'medium' | 'low';
+  type:
+    | "code-quality"
+    | "performance"
+    | "security"
+    | "infrastructure"
+    | "monitoring"
+    | "compliance";
+  severity: "critical" | "high" | "medium" | "low";
   message: string;
   impact: string;
   recommendation: string;
@@ -249,7 +260,7 @@ export interface ProductionIssue {
 
 export interface ProductionRecommendation {
   type: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   message: string;
   benefit: string;
 }
@@ -258,20 +269,20 @@ export interface SignOffRequirement {
   category: string;
   required: boolean;
   approver: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   comments?: string;
 }
 
 export interface DeploymentApproval {
   approved: boolean;
-  approvalLevel: 'none' | 'conditional' | 'full';
+  approvalLevel: "none" | "conditional" | "full";
   conditions: string[];
   approvedBy?: string;
   approvedAt?: Date;
 }
 
 export interface RiskAssessment {
-  overallRisk: 'low' | 'medium' | 'high' | 'critical';
+  overallRisk: "low" | "medium" | "high" | "critical";
   riskFactors: RiskFactor[];
   mitigationStrategies: string[];
   recommendedActions: string[];
@@ -279,7 +290,7 @@ export interface RiskAssessment {
 
 export interface RiskFactor {
   name: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   probability: number; // 0-1
   impact: string;
   mitigation: string;
@@ -327,7 +338,7 @@ export interface PerformanceSummary {
 export interface E2EIssue {
   scenario: string;
   step?: string;
-  severity: 'critical' | 'high' | 'medium' | 'low';
+  severity: "critical" | "high" | "medium" | "low";
   message: string;
   recommendation: string;
 }
@@ -339,7 +350,7 @@ export interface ReleaseCertification {
   certificationId: string;
   timestamp: Date;
   version: string;
-  certificationLevel: 'PRODUCTION_READY' | 'STAGING_READY' | 'NOT_READY';
+  certificationLevel: "PRODUCTION_READY" | "STAGING_READY" | "NOT_READY";
   validations: ValidationResults;
   blockers: ReleaseBlocker[];
   recommendations: FinalRecommendation[];
@@ -358,7 +369,7 @@ export interface ValidationResults {
 
 export interface ReleaseBlocker {
   type: string;
-  severity: 'critical' | 'high';
+  severity: "critical" | "high";
   message: string;
   resolution: string;
   estimatedTime: number;
@@ -366,7 +377,7 @@ export interface ReleaseBlocker {
 
 export interface FinalRecommendation {
   category: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   message: string;
   implementation: string;
   benefit: string;

@@ -1,10 +1,10 @@
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { cpus, totalmem, freemem } from 'node:os';
-import { PerformanceBenchmarkRunner } from '../performance/benchmark-runner.js';
-import type { PerformanceReport } from '../performance/types.js';
-import { createLogger } from '../logging/index.js';
-import type { Config } from '../types.js';
+import * as path from "path";
+import * as fs from "fs/promises";
+import { cpus, totalmem, freemem } from "node:os";
+import { PerformanceBenchmarkRunner } from "../performance/benchmark-runner.js";
+import type { PerformanceReport } from "../performance/types.js";
+import { createLogger } from "../logging/index.js";
+import type { Config } from "../types.js";
 
 /**
  * Command handler interface
@@ -29,82 +29,96 @@ export interface PerformanceBenchmarkOptions {
 /**
  * Handler for performance benchmark command
  */
-export class PerformanceBenchmarkCommandHandler implements CommandHandler<PerformanceBenchmarkOptions> {
+export class PerformanceBenchmarkCommandHandler
+  implements CommandHandler<PerformanceBenchmarkOptions> {
   private logger = createLogger();
 
-  async execute(options: PerformanceBenchmarkOptions, _config: Config): Promise<void> {
+  async execute(
+    options: PerformanceBenchmarkOptions,
+    _config: Config,
+  ): Promise<void> {
     const startTime = Date.now();
-    
+
     try {
-      this.logger.info('🚀 Starting performance benchmark suite...');
-      
+      this.logger.info("🚀 Starting performance benchmark suite...");
+
       // Initialize benchmark runner
       const runner = new PerformanceBenchmarkRunner();
-      
+
       // Configure benchmark types
-      const benchmarkTypes = this.getBenchmarkTypes(options.type || 'all');
-      this.logger.info(`Running benchmark types: ${benchmarkTypes.join(', ')}`);
-      
+      const benchmarkTypes = this.getBenchmarkTypes(options.type || "all");
+      this.logger.info(`Running benchmark types: ${benchmarkTypes.join(", ")}`);
+
       // Run benchmarks
       let report: PerformanceReport;
-      
-      if (benchmarkTypes.includes('all')) {
+
+      if (benchmarkTypes.includes("all")) {
         report = await runner.generatePerformanceReport();
       } else {
         // Run specific benchmark types
         report = await this.runSpecificBenchmarks(runner, benchmarkTypes);
       }
-      
+
       // Output results
       await this.outputResults(report, options);
-      
+
       // Performance validation
       const validationPassed = report.validation.passed;
       const duration = Date.now() - startTime;
-      
+
       this.logger.info(`✅ Benchmark completed in ${duration}ms`);
-      this.logger.info(`📊 Validation: ${validationPassed ? 'PASSED' : 'FAILED'} (${report.validation.summary.passedTests}/${report.validation.summary.totalTests})`);
-      
+      this.logger.info(
+        `📊 Validation: ${validationPassed ? "PASSED" : "FAILED"} (${report.validation.summary.passedTests}/${report.validation.summary.totalTests})`,
+      );
+
       if (!validationPassed) {
-        this.logger.warn('⚠️ Performance targets not met. See detailed results for recommendations.');
-        
+        this.logger.warn(
+          "⚠️ Performance targets not met. See detailed results for recommendations.",
+        );
+
         // Show failed tests
-        const failedTests = report.validation.results.filter(r => !r.passed);
-        for (const test of failedTests.slice(0, 5)) { // Show first 5 failures
-          this.logger.warn(`   ${test.criterion}: ${test.actual} vs target ${test.target} - ${test.message}`);
+        const failedTests = report.validation.results.filter((r) => !r.passed);
+        for (const test of failedTests.slice(0, 5)) {
+          // Show first 5 failures
+          this.logger.warn(
+            `   ${test.criterion}: ${test.actual} vs target ${test.target} - ${test.message}`,
+          );
         }
-        
+
         if (failedTests.length > 5) {
-          this.logger.warn(`   ... and ${failedTests.length - 5} more failures`);
+          this.logger.warn(
+            `   ... and ${failedTests.length - 5} more failures`,
+          );
         }
       }
-      
     } catch (error: any) {
-      this.logger.error('Performance benchmark failed:', { error: error.message || error });
+      this.logger.error("Performance benchmark failed:", {
+        error: error.message || error,
+      });
       throw error;
     }
   }
-  
+
   /**
    * Get benchmark types from user input
    */
   private getBenchmarkTypes(type: string): string[] {
-    if (type === 'all') {
-      return ['parsing', 'querying', 'memory', 'concurrency', 'scalability'];
+    if (type === "all") {
+      return ["parsing", "querying", "memory", "concurrency", "scalability"];
     }
-    
-    return type.split(',').map(t => t.trim());
+
+    return type.split(",").map((t) => t.trim());
   }
-  
+
   /**
    * Run specific benchmark types
    */
   private async runSpecificBenchmarks(
     runner: PerformanceBenchmarkRunner,
-    types: string[]
+    types: string[],
   ): Promise<PerformanceReport> {
-    this.logger.info('🔧 Running specific benchmark types...');
-    
+    this.logger.info("🔧 Running specific benchmark types...");
+
     // Create a basic report structure
     const systemInfo = {
       platform: process.platform,
@@ -114,7 +128,7 @@ export class PerformanceBenchmarkCommandHandler implements CommandHandler<Perfor
       totalMemory: Math.round(totalmem() / 1024 / 1024),
       freeMemory: Math.round(freemem() / 1024 / 1024),
     };
-    
+
     const benchmarkResults = {
       parsingBenchmarks: [],
       queryBenchmarks: [],
@@ -122,27 +136,27 @@ export class PerformanceBenchmarkCommandHandler implements CommandHandler<Perfor
       vectorSearchBenchmarks: [],
       systemBenchmarks: [],
     };
-    
+
     let concurrencyResults;
     let memoryProfile;
     let scalabilityReport;
-    
+
     // Run specific benchmarks
-    if (types.includes('concurrency')) {
-      this.logger.info('Running concurrency benchmarks...');
+    if (types.includes("concurrency")) {
+      this.logger.info("Running concurrency benchmarks...");
       concurrencyResults = await runner.testConcurrentOperations();
     }
-    
-    if (types.includes('memory')) {
-      this.logger.info('Running memory profiling...');
+
+    if (types.includes("memory")) {
+      this.logger.info("Running memory profiling...");
       memoryProfile = await runner.profileMemoryUsage();
     }
-    
-    if (types.includes('scalability')) {
-      this.logger.info('Running scalability tests...');
+
+    if (types.includes("scalability")) {
+      this.logger.info("Running scalability tests...");
       scalabilityReport = await runner.measureScalabilityLimits();
     }
-    
+
     // Create validation results
     const validation = {
       passed: true,
@@ -154,7 +168,7 @@ export class PerformanceBenchmarkCommandHandler implements CommandHandler<Perfor
         passRate: 100,
       },
     };
-    
+
     return {
       timestamp: new Date(),
       systemInfo,
@@ -180,36 +194,45 @@ export class PerformanceBenchmarkCommandHandler implements CommandHandler<Perfor
       recommendations: [],
     };
   }
-  
+
   /**
    * Output benchmark results in the requested format
    */
-  private async outputResults(report: PerformanceReport, options: any): Promise<void> {
-    const format = options.format || 'table';
-    
+  private async outputResults(
+    report: PerformanceReport,
+    options: any,
+  ): Promise<void> {
+    const format = options.format || "table";
+
     switch (format) {
-      case 'json':
+      case "json":
         await this.outputJsonResults(report, options);
         break;
-      case 'table':
+      case "table":
         this.outputTableResults(report);
         break;
-      case 'html':
+      case "html":
         await this.outputHtmlResults(report, options);
         break;
       default:
         throw new Error(`Unsupported format: ${format}`);
     }
   }
-  
+
   /**
    * Output results as JSON
    */
-  private async outputJsonResults(report: PerformanceReport, options: any): Promise<void> {
+  private async outputJsonResults(
+    report: PerformanceReport,
+    options: any,
+  ): Promise<void> {
     const output = JSON.stringify(report, null, 2);
-    
+
     if (options.outputDir) {
-      const outputPath = path.join(options.outputDir, 'performance-results.json');
+      const outputPath = path.join(
+        options.outputDir,
+        "performance-results.json",
+      );
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
       await fs.writeFile(outputPath, output);
       this.logger.info(`📁 Results saved to: ${outputPath}`);
@@ -217,74 +240,101 @@ export class PerformanceBenchmarkCommandHandler implements CommandHandler<Perfor
       console.log(output);
     }
   }
-  
+
   /**
    * Output results as formatted table
    */
   private outputTableResults(report: PerformanceReport): void {
-    console.log('\n📊 Performance Benchmark Results');
-    console.log('================================\n');
-    
+    console.log("\n📊 Performance Benchmark Results");
+    console.log("================================\n");
+
     // System Information
-    console.log('🖥️  System Information:');
-    console.log(`   Platform: ${report.systemInfo.platform} (${report.systemInfo.arch})`);
+    console.log("🖥️  System Information:");
+    console.log(
+      `   Platform: ${report.systemInfo.platform} (${report.systemInfo.arch})`,
+    );
     console.log(`   Node.js: ${report.systemInfo.nodeVersion}`);
     console.log(`   CPUs: ${report.systemInfo.cpuCount}`);
-    console.log(`   Memory: ${(report.systemInfo.totalMemory / 1024).toFixed(1)}GB total, ${(report.systemInfo.freeMemory / 1024).toFixed(1)}GB free\n`);
-    
+    console.log(
+      `   Memory: ${(report.systemInfo.totalMemory / 1024).toFixed(1)}GB total, ${(report.systemInfo.freeMemory / 1024).toFixed(1)}GB free\n`,
+    );
+
     // Memory Profile
     if (report.memoryProfile) {
-      console.log('🧠 Memory Profile:');
-      console.log(`   Peak Usage: ${report.memoryProfile.peakUsage.toFixed(1)} MB`);
-      console.log(`   Average Usage: ${report.memoryProfile.averageUsage.toFixed(1)} MB`);
-      console.log(`   Memory Leaks: ${report.memoryProfile.memoryLeaks.length} detected`);
-      console.log(`   GC Events: ${report.memoryProfile.gcPerformance.length}\n`);
+      console.log("🧠 Memory Profile:");
+      console.log(
+        `   Peak Usage: ${report.memoryProfile.peakUsage.toFixed(1)} MB`,
+      );
+      console.log(
+        `   Average Usage: ${report.memoryProfile.averageUsage.toFixed(1)} MB`,
+      );
+      console.log(
+        `   Memory Leaks: ${report.memoryProfile.memoryLeaks.length} detected`,
+      );
+      console.log(
+        `   GC Events: ${report.memoryProfile.gcPerformance.length}\n`,
+      );
     }
-    
+
     // Concurrency Results
     if (report.concurrencyResults) {
-      console.log('🔄 Concurrency Performance:');
-      console.log(`   Max Sustainable: ${report.concurrencyResults.maxSustainableConcurrency} concurrent operations`);
-      console.log(`   Degradation Point: ${report.concurrencyResults.degradationPoint} operations`);
-      console.log(`   Test Levels: ${report.concurrencyResults.levels.length}\n`);
+      console.log("🔄 Concurrency Performance:");
+      console.log(
+        `   Max Sustainable: ${report.concurrencyResults.maxSustainableConcurrency} concurrent operations`,
+      );
+      console.log(
+        `   Degradation Point: ${report.concurrencyResults.degradationPoint} operations`,
+      );
+      console.log(
+        `   Test Levels: ${report.concurrencyResults.levels.length}\n`,
+      );
     }
-    
+
     // Validation Summary
-    console.log('✅ Validation Results:');
-    console.log(`   Overall: ${report.validation.passed ? 'PASSED' : 'FAILED'}`);
-    console.log(`   Tests: ${report.validation.summary.passedTests}/${report.validation.summary.totalTests} passed (${report.validation.summary.passRate.toFixed(1)}%)`);
-    
+    console.log("✅ Validation Results:");
+    console.log(
+      `   Overall: ${report.validation.passed ? "PASSED" : "FAILED"}`,
+    );
+    console.log(
+      `   Tests: ${report.validation.summary.passedTests}/${report.validation.summary.totalTests} passed (${report.validation.summary.passRate.toFixed(1)}%)`,
+    );
+
     if (!report.validation.passed) {
-      console.log('\n❌ Failed Tests:');
-      const failedTests = report.validation.results.filter(r => !r.passed);
+      console.log("\n❌ Failed Tests:");
+      const failedTests = report.validation.results.filter((r) => !r.passed);
       for (const test of failedTests) {
-        console.log(`   ${test.criterion}: ${test.actual} (target: ${test.target}) - ${test.message}`);
+        console.log(
+          `   ${test.criterion}: ${test.actual} (target: ${test.target}) - ${test.message}`,
+        );
       }
     }
-    
+
     // Recommendations
     if (report.recommendations.length > 0) {
-      console.log('\n💡 Recommendations:');
+      console.log("\n💡 Recommendations:");
       for (const recommendation of report.recommendations) {
         console.log(`   • ${recommendation}`);
       }
     }
   }
-  
+
   /**
    * Output results as HTML report
    */
-  private async outputHtmlResults(report: PerformanceReport, options: any): Promise<void> {
+  private async outputHtmlResults(
+    report: PerformanceReport,
+    options: any,
+  ): Promise<void> {
     const html = this.generateHtmlReport(report);
-    const outputPath = options.outputDir 
-      ? path.join(options.outputDir, 'performance-report.html')
-      : './performance-report.html';
-    
+    const outputPath = options.outputDir
+      ? path.join(options.outputDir, "performance-report.html")
+      : "./performance-report.html";
+
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
     await fs.writeFile(outputPath, html);
     this.logger.info(`📁 HTML report saved to: ${outputPath}`);
   }
-  
+
   /**
    * Generate HTML report content
    */
@@ -308,7 +358,7 @@ export class PerformanceBenchmarkCommandHandler implements CommandHandler<Perfor
     <div class="header">
         <h1>🚀 Performance Benchmark Report</h1>
         <p>Generated: ${report.timestamp.toISOString()}</p>
-        <p>Status: <span class="${report.validation.passed ? 'status-pass' : 'status-fail'}">${report.validation.passed ? 'PASSED' : 'FAILED'}</span></p>
+        <p>Status: <span class="${report.validation.passed ? "status-pass" : "status-fail"}">${report.validation.passed ? "PASSED" : "FAILED"}</span></p>
     </div>
     
     <div class="section">
@@ -342,14 +392,18 @@ export class PerformanceBenchmarkCommandHandler implements CommandHandler<Perfor
         <div class="metric">Success Rate: ${report.validation.summary.passRate.toFixed(1)}%</div>
     </div>
     
-    ${report.recommendations.length > 0 ? `
+    ${
+      report.recommendations.length > 0
+        ? `
     <div class="section">
         <h2>💡 Recommendations</h2>
         <ul>
-            ${report.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+            ${report.recommendations.map((rec) => `<li>${rec}</li>`).join("")}
         </ul>
     </div>
-    ` : ''}
+    `
+        : ""
+    }
 </body>
 </html>`;
   }

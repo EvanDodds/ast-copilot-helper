@@ -3,10 +3,10 @@
  * Defines the core types for package distribution and marketplace publishing
  */
 
-export type Platform = 'win32' | 'darwin' | 'linux';
-export type PackageType = 'npm' | 'vscode-extension' | 'binary';
-export type RegistryType = 'npm' | 'vscode-marketplace' | 'github';
-export type ReleaseChannel = 'stable' | 'beta' | 'alpha';
+export type Platform = "win32" | "darwin" | "linux";
+export type PackageType = "npm" | "vscode-extension" | "binary";
+export type RegistryType = "npm" | "vscode-marketplace" | "github";
+export type ReleaseChannel = "stable" | "beta" | "alpha";
 
 /**
  * Main distribution manager interface
@@ -58,7 +58,7 @@ export interface PackageConfig {
  */
 export interface PublishConfig {
   registry: string;
-  access: 'public' | 'private';
+  access: "public" | "private";
   tag: string;
   prerelease: boolean;
   files: string[];
@@ -96,7 +96,7 @@ export interface RegistryConfig {
  * Marketplace configuration
  */
 export interface MarketplaceConfig {
-  type: 'vscode-marketplace' | 'openvsx';
+  type: "vscode-marketplace" | "openvsx";
   publisherId?: string; // Required for VS Code Marketplace
   token: string;
   categories?: string[];
@@ -139,11 +139,11 @@ export interface NotarizationConfig {
  */
 export interface PackagingConfig {
   formats: PackageFormat[];
-  compression: 'gzip' | 'zip' | 'none';
+  compression: "gzip" | "zip" | "none";
   includeAssets: boolean;
 }
 
-export type PackageFormat = 'tar.gz' | 'zip' | 'msi' | 'pkg' | 'deb' | 'rpm';
+export type PackageFormat = "tar.gz" | "zip" | "msi" | "pkg" | "deb" | "rpm";
 
 /**
  * Distribution channel configuration
@@ -221,7 +221,7 @@ export interface UpdateClientConfig {
  * Update authentication configuration
  */
 export interface UpdateAuthConfig {
-  type: 'token' | 'signature';
+  type: "token" | "signature";
   key: string;
   algorithm?: string;
 }
@@ -243,7 +243,7 @@ export interface RollbackConfig {
  * Rollback trigger
  */
 export interface RollbackTrigger {
-  type: 'crash' | 'error-rate' | 'user-report';
+  type: "crash" | "error-rate" | "user-report";
   threshold: number;
   timeWindow: number;
 }
@@ -534,7 +534,7 @@ export interface ValidationMessage {
   code: string;
   message: string;
   field?: string;
-  severity: 'info' | 'warning' | 'error';
+  severity: "info" | "warning" | "error";
 }
 
 /**

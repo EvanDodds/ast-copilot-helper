@@ -3,12 +3,12 @@
  * Tests compatibility across different Node.js versions
  */
 
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import * as os from 'os';
-import { spawn } from 'child_process';
-import { promisify } from 'util';
-import { TestResult } from '../types.js';
+import * as fs from "fs/promises";
+import * as path from "path";
+import * as os from "os";
+import { spawn } from "child_process";
+import { promisify } from "util";
+import { TestResult } from "../types.js";
 
 export interface NodeVersionTestResult {
   platform: string;
@@ -62,7 +62,9 @@ export class NodeVersionCompatibilityTester {
   }
 
   async runTests(): Promise<NodeVersionTestResult> {
-    console.log(`🔧 Testing Node.js version compatibility on ${this.platform}/${this.architecture}`);
+    console.log(
+      `🔧 Testing Node.js version compatibility on ${this.platform}/${this.architecture}`,
+    );
     console.log(`📦 Current Node.js version: ${this.currentNodeVersion}`);
 
     const startTime = Date.now();
@@ -75,10 +77,10 @@ export class NodeVersionCompatibilityTester {
     testResults.push(await this.testESModuleSupport());
 
     // Test 3: Modern JavaScript Features
-    testResults.push(...await this.testJavaScriptFeatures());
+    testResults.push(...(await this.testJavaScriptFeatures()));
 
     // Test 4: Core API Compatibility
-    testResults.push(...await this.testCoreAPICompatibility());
+    testResults.push(...(await this.testCoreAPICompatibility()));
 
     // Test 5: Performance Characteristics
     testResults.push(await this.testPerformanceCharacteristics());
@@ -103,24 +105,30 @@ export class NodeVersionCompatibilityTester {
 
     const summary = this.generateSummary(testResults, duration);
 
-    console.log(`✅ Node.js compatibility testing completed: ${summary.passed}/${summary.total} tests passed`);
+    console.log(
+      `✅ Node.js compatibility testing completed: ${summary.passed}/${summary.total} tests passed`,
+    );
 
     return {
       platform: this.platform,
       architecture: this.architecture,
       nodeVersion: this.currentNodeVersion,
       testResults,
-      summary
+      summary,
     };
   }
 
   private async testNodeVersionParsing(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
-      const versionMatch = this.currentNodeVersion.match(/^v(\d+)\.(\d+)\.(\d+)/);
+      const versionMatch = this.currentNodeVersion.match(
+        /^v(\d+)\.(\d+)\.(\d+)/,
+      );
       if (!versionMatch) {
-        throw new Error(`Invalid Node.js version format: ${this.currentNodeVersion}`);
+        throw new Error(
+          `Invalid Node.js version format: ${this.currentNodeVersion}`,
+        );
       }
 
       const [, major, minor, patch] = versionMatch;
@@ -133,8 +141,8 @@ export class NodeVersionCompatibilityTester {
       const isCurrent = majorVersion >= 21;
 
       return {
-        name: 'node_version_parsing',
-        category: 'nodejs',
+        name: "node_version_parsing",
+        category: "nodejs",
         passed: true,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -146,49 +154,50 @@ export class NodeVersionCompatibilityTester {
           isSupported,
           isLTS,
           isCurrent,
-          minimumSupported: majorVersion >= 18
-        }
+          minimumSupported: majorVersion >= 18,
+        },
       };
     } catch (error) {
       return {
-        name: 'node_version_parsing',
-        category: 'nodejs',
+        name: "node_version_parsing",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         details: {
           fullVersion: this.currentNodeVersion,
-          parseError: true
-        }
+          parseError: true,
+        },
       };
     }
   }
 
   private async testESModuleSupport(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test dynamic import
-      const moduleTest = await import('os');
-      const hasModuleAccess = typeof moduleTest.platform === 'function';
+      const moduleTest = await import("os");
+      const hasModuleAccess = typeof moduleTest.platform === "function";
 
       // Test import.meta availability
-      const hasImportMeta = typeof import.meta === 'object' && !!import.meta.url;
+      const hasImportMeta =
+        typeof import.meta === "object" && !!import.meta.url;
 
       // Test top-level await support
       let hasTopLevelAwait = true;
       try {
         // This will work in Node.js 14.8+ with --harmony-top-level-await
         // or Node.js 16+ by default
-        eval('(async () => { await Promise.resolve(); })()');
+        eval("(async () => { await Promise.resolve(); })()");
       } catch (error) {
         hasTopLevelAwait = false;
       }
 
       return {
-        name: 'es_module_support',
-        category: 'nodejs',
+        name: "es_module_support",
+        category: "nodejs",
         passed: hasModuleAccess && hasImportMeta,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -196,20 +205,20 @@ export class NodeVersionCompatibilityTester {
           dynamicImport: hasModuleAccess,
           importMeta: hasImportMeta,
           topLevelAwait: hasTopLevelAwait,
-          moduleType: 'ES2020+'
-        }
+          moduleType: "ES2020+",
+        },
       };
     } catch (error) {
       return {
-        name: 'es_module_support',
-        category: 'nodejs',
+        name: "es_module_support",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         details: {
-          moduleError: true
-        }
+          moduleError: true,
+        },
       };
     }
   }
@@ -219,13 +228,13 @@ export class NodeVersionCompatibilityTester {
 
     // Optional Chaining (?.)
     tests.push(await this.testOptionalChaining());
-    
+
     // Nullish Coalescing (??)
     tests.push(await this.testNullishCoalescing());
-    
+
     // Private Class Fields
     tests.push(await this.testPrivateFields());
-    
+
     // Static Class Blocks
     tests.push(await this.testStaticBlocks());
 
@@ -234,95 +243,97 @@ export class NodeVersionCompatibilityTester {
 
   private async testOptionalChaining(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       const testObj: any = { nested: { value: 42 } };
-      
+
       // Test optional chaining
       const result1 = testObj?.nested?.value;
       const result2 = testObj?.missing?.value;
       const result3 = testObj?.nested?.missing?.deep;
-      
-      const passed = result1 === 42 && result2 === undefined && result3 === undefined;
+
+      const passed =
+        result1 === 42 && result2 === undefined && result3 === undefined;
 
       return {
-        name: 'optional_chaining',
-        category: 'nodejs',
+        name: "optional_chaining",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          feature: 'Optional Chaining (?.)',
+          feature: "Optional Chaining (?.)",
           supported: passed,
-          nodeVersionRequired: '14.0.0+'
-        }
+          nodeVersionRequired: "14.0.0+",
+        },
       };
     } catch (error) {
       return {
-        name: 'optional_chaining',
-        category: 'nodejs',
+        name: "optional_chaining",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async testNullishCoalescing(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test nullish coalescing - these warnings are expected as we're testing the operator
       // @ts-ignore
       // eslint-disable-next-line no-constant-binary-expression
-      const test1 = null ?? 'default';
-      // @ts-ignore  
-      // eslint-disable-next-line no-constant-binary-expression
-      const test2 = undefined ?? 'default';
+      const test1 = null ?? "default";
       // @ts-ignore
       // eslint-disable-next-line no-constant-binary-expression
-      const test3 = 0 ?? 'default';
+      const test2 = undefined ?? "default";
       // @ts-ignore
       // eslint-disable-next-line no-constant-binary-expression
-      const test4 = '' ?? 'default';
+      const test3 = 0 ?? "default";
       // @ts-ignore
       // eslint-disable-next-line no-constant-binary-expression
-      const test5 = false ?? 'default';
-      
-      const passed = test1 === 'default' && 
-                    test2 === 'default' && 
-                    test3 === 0 && 
-                    test4 === '' && 
-                    test5 === false;
+      const test4 = "" ?? "default";
+      // @ts-ignore
+      // eslint-disable-next-line no-constant-binary-expression
+      const test5 = false ?? "default";
+
+      const passed =
+        test1 === "default" &&
+        test2 === "default" &&
+        test3 === 0 &&
+        test4 === "" &&
+        test5 === false;
 
       return {
-        name: 'nullish_coalescing',
-        category: 'nodejs',
+        name: "nullish_coalescing",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          feature: 'Nullish Coalescing (??)',
+          feature: "Nullish Coalescing (??)",
           supported: passed,
-          nodeVersionRequired: '14.0.0+'
-        }
+          nodeVersionRequired: "14.0.0+",
+        },
       };
     } catch (error) {
       return {
-        name: 'nullish_coalescing',
-        category: 'nodejs',
+        name: "nullish_coalescing",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async testPrivateFields(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test private field syntax
       const testClass = eval(`
@@ -340,47 +351,47 @@ export class NodeVersionCompatibilityTester {
         
         new TestClass();
       `);
-      
+
       const result = testClass.getPrivate();
       const hasAccess = testClass.hasPrivateAccess();
-      const passed = result === 'private' && hasAccess === true;
+      const passed = result === "private" && hasAccess === true;
 
       return {
-        name: 'private_fields',
-        category: 'nodejs',
+        name: "private_fields",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          feature: 'Private Class Fields (#)',
+          feature: "Private Class Fields (#)",
           supported: passed,
-          nodeVersionRequired: '12.0.0+'
-        }
+          nodeVersionRequired: "12.0.0+",
+        },
       };
     } catch (error) {
       return {
-        name: 'private_fields',
-        category: 'nodejs',
+        name: "private_fields",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         details: {
-          feature: 'Private Class Fields (#)',
+          feature: "Private Class Fields (#)",
           supported: false,
-          nodeVersionRequired: '12.0.0+'
-        }
+          nodeVersionRequired: "12.0.0+",
+        },
       };
     }
   }
 
   private async testStaticBlocks(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test static initialization blocks
       const staticBlockExecuted = false;
-      
+
       const testClass = eval(`
         class TestClass {
           static value;
@@ -393,34 +404,34 @@ export class NodeVersionCompatibilityTester {
         
         TestClass;
       `);
-      
-      const passed = testClass.value === 'initialized' && staticBlockExecuted;
+
+      const passed = testClass.value === "initialized" && staticBlockExecuted;
 
       return {
-        name: 'static_blocks',
-        category: 'nodejs',
+        name: "static_blocks",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          feature: 'Static Initialization Blocks',
+          feature: "Static Initialization Blocks",
           supported: passed,
-          nodeVersionRequired: '16.11.0+'
-        }
+          nodeVersionRequired: "16.11.0+",
+        },
       };
     } catch (error) {
       return {
-        name: 'static_blocks',
-        category: 'nodejs',
+        name: "static_blocks",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         details: {
-          feature: 'Static Initialization Blocks',
+          feature: "Static Initialization Blocks",
           supported: false,
-          nodeVersionRequired: '16.11.0+'
-        }
+          nodeVersionRequired: "16.11.0+",
+        },
       };
     }
   }
@@ -430,13 +441,13 @@ export class NodeVersionCompatibilityTester {
 
     // Test each core API
     const apis = [
-      { name: 'crypto', module: 'crypto' },
-      { name: 'fs', module: 'fs/promises' },
-      { name: 'os', module: 'os' },
-      { name: 'path', module: 'path' },
-      { name: 'worker_threads', module: 'worker_threads' },
-      { name: 'perf_hooks', module: 'perf_hooks' },
-      { name: 'stream', module: 'stream' }
+      { name: "crypto", module: "crypto" },
+      { name: "fs", module: "fs/promises" },
+      { name: "os", module: "os" },
+      { name: "path", module: "path" },
+      { name: "worker_threads", module: "worker_threads" },
+      { name: "perf_hooks", module: "perf_hooks" },
+      { name: "stream", module: "stream" },
     ];
 
     for (const api of apis) {
@@ -446,39 +457,42 @@ export class NodeVersionCompatibilityTester {
     return tests;
   }
 
-  private async testCoreAPI(apiName: string, moduleName: string): Promise<TestResult> {
+  private async testCoreAPI(
+    apiName: string,
+    moduleName: string,
+  ): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       const module = await import(moduleName);
       const hasExpectedExports = Object.keys(module).length > 0;
-      
+
       // Test specific API features based on the module
       let specificTest = true;
       const specificDetails: any = {};
 
       switch (apiName) {
-        case 'crypto':
-          specificTest = typeof module.randomUUID === 'function';
+        case "crypto":
+          specificTest = typeof module.randomUUID === "function";
           specificDetails.randomUUID = specificTest;
           break;
-        case 'fs':
-          specificTest = typeof module.readFile === 'function';
+        case "fs":
+          specificTest = typeof module.readFile === "function";
           specificDetails.promisesAPI = specificTest;
           break;
-        case 'worker_threads':
-          specificTest = typeof module.Worker === 'function';
+        case "worker_threads":
+          specificTest = typeof module.Worker === "function";
           specificDetails.workerClass = specificTest;
           break;
-        case 'perf_hooks':
-          specificTest = typeof module.performance === 'object';
+        case "perf_hooks":
+          specificTest = typeof module.performance === "object";
           specificDetails.performance = specificTest;
           break;
       }
 
       return {
         name: `core_api_${apiName}`,
-        category: 'nodejs',
+        category: "nodejs",
         passed: hasExpectedExports && specificTest,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -486,59 +500,62 @@ export class NodeVersionCompatibilityTester {
           apiName,
           moduleName,
           hasExports: hasExpectedExports,
-          ...specificDetails
-        }
+          ...specificDetails,
+        },
       };
     } catch (error) {
       return {
         name: `core_api_${apiName}`,
-        category: 'nodejs',
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         details: {
           apiName,
           moduleName,
-          importError: true
-        }
+          importError: true,
+        },
       };
     }
   }
 
   private async testPerformanceCharacteristics(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test startup and execution performance
-      const { performance } = await import('perf_hooks');
-      
+      const { performance } = await import("perf_hooks");
+
       const perfStart = performance.now();
-      
+
       // CPU-intensive task - reduced for CI stability
       let sum = 0;
-      for (let i = 0; i < 10000; i++) { // Reduced from 100000 to 10000
+      for (let i = 0; i < 10000; i++) {
+        // Reduced from 100000 to 10000
         sum += Math.sqrt(i);
       }
-      
+
       const cpuTime = performance.now() - perfStart;
-      
+
       // Memory usage test
       const memBefore = process.memoryUsage();
-      const testArray = new Array(10000).fill(0).map((_, i) => ({ id: i, data: `test-${i}` }));
+      const testArray = new Array(10000)
+        .fill(0)
+        .map((_, i) => ({ id: i, data: `test-${i}` }));
       const memAfter = process.memoryUsage();
-      
+
       const memoryDiff = memAfter.heapUsed - memBefore.heapUsed;
-      
+
       // V8 heap statistics
-      const v8 = await import('v8');
+      const v8 = await import("v8");
       const heapStats = v8.getHeapStatistics();
-      
+
       const passed = cpuTime < 1000 && memoryDiff > 0; // Reasonable performance bounds
 
       return {
-        name: 'performance_characteristics',
-        category: 'nodejs',
+        name: "performance_characteristics",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -548,44 +565,47 @@ export class NodeVersionCompatibilityTester {
           v8HeapSize: heapStats.total_heap_size,
           v8HeapUsed: heapStats.used_heap_size,
           arrayLength: testArray.length,
-          performanceWithinBounds: passed
-        }
+          performanceWithinBounds: passed,
+        },
       };
     } catch (error) {
       return {
-        name: 'performance_characteristics',
-        category: 'nodejs',
+        name: "performance_characteristics",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async testNativeModuleCompatibility(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test Node.js addon loading capability
       const configVars = process.config.variables as any;
-      const nativeModulesSupported = process.config.target_defaults &&
-                                     process.config.variables &&
-                                     configVars.node_module_version;
+      const nativeModulesSupported =
+        process.config.target_defaults &&
+        process.config.variables &&
+        configVars.node_module_version;
 
       // Test specific native modules if available
       const nativeModuleTests = {
         hasNodeModuleVersion: !!configVars.node_module_version,
         hasV8Version: !!process.versions.v8,
         hasUVVersion: !!process.versions.uv,
-        hasAddonAPI: typeof process.dlopen === 'function'
+        hasAddonAPI: typeof process.dlopen === "function",
       };
 
-      const passed = Object.values(nativeModuleTests).every(test => test === true);
+      const passed = Object.values(nativeModuleTests).every(
+        (test) => test === true,
+      );
 
       return {
-        name: 'native_module_compatibility',
-        category: 'nodejs',
+        name: "native_module_compatibility",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -594,102 +614,108 @@ export class NodeVersionCompatibilityTester {
           nodeModuleVersion: configVars.node_module_version,
           v8Version: process.versions.v8,
           uvVersion: process.versions.uv,
-          ...nativeModuleTests
-        }
+          ...nativeModuleTests,
+        },
       };
     } catch (error) {
       return {
-        name: 'native_module_compatibility',
-        category: 'nodejs',
+        name: "native_module_compatibility",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async testWorkerThreadsSupport(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
-      const { Worker, isMainThread, parentPort } = await import('worker_threads');
-      
+      const { Worker, isMainThread, parentPort } = await import(
+        "worker_threads"
+      );
+
       if (!isMainThread) {
         // We're in a worker thread
         return {
-          name: 'worker_threads_support',
-          category: 'nodejs',
+          name: "worker_threads_support",
+          category: "nodejs",
           passed: true,
           platform: this.platform,
           duration: Date.now() - startTime,
           details: {
             isWorkerThread: true,
-            hasParentPort: !!parentPort
-          }
+            hasParentPort: !!parentPort,
+          },
         };
       }
 
       // Test worker thread creation capability
-      const hasWorkerClass = typeof Worker === 'function';
+      const hasWorkerClass = typeof Worker === "function";
       const isMainThreadCorrect = isMainThread === true;
-      
+
       const passed = hasWorkerClass && isMainThreadCorrect;
 
       return {
-        name: 'worker_threads_support',
-        category: 'nodejs',
+        name: "worker_threads_support",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
           hasWorkerClass,
           isMainThread: isMainThreadCorrect,
-          workerThreadsSupported: passed
-        }
+          workerThreadsSupported: passed,
+        },
       };
     } catch (error) {
       return {
-        name: 'worker_threads_support',
-        category: 'nodejs',
+        name: "worker_threads_support",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async testStreamAPICompatibility(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
-      const { Readable, Writable, Transform, pipeline } = await import('stream');
-      const { promisify } = await import('util');
-      
+      const { Readable, Writable, Transform, pipeline } = await import(
+        "stream"
+      );
+      const { promisify } = await import("util");
+
       // Test stream classes availability
-      const hasStreamClasses = typeof Readable === 'function' && 
-                              typeof Writable === 'function' && 
-                              typeof Transform === 'function';
+      const hasStreamClasses =
+        typeof Readable === "function" &&
+        typeof Writable === "function" &&
+        typeof Transform === "function";
 
       // Test pipeline function
-      const hasPipeline = typeof pipeline === 'function';
-      
+      const hasPipeline = typeof pipeline === "function";
+
       // Test promisified pipeline
       const pipelineAsync = promisify(pipeline);
-      const hasAsyncPipeline = typeof pipelineAsync === 'function';
+      const hasAsyncPipeline = typeof pipelineAsync === "function";
 
       // Test modern stream features
       let hasAsyncIterators = false;
       try {
         const readable = new Readable({
           read() {
-            this.push('test');
+            this.push("test");
             this.push(null);
-          }
+          },
         });
-        
-        hasAsyncIterators = typeof readable[Symbol.asyncIterator] === 'function';
+
+        hasAsyncIterators =
+          typeof readable[Symbol.asyncIterator] === "function";
       } catch (error) {
         hasAsyncIterators = false;
       }
@@ -697,8 +723,8 @@ export class NodeVersionCompatibilityTester {
       const passed = hasStreamClasses && hasPipeline && hasAsyncPipeline;
 
       return {
-        name: 'stream_api_compatibility',
-        category: 'nodejs',
+        name: "stream_api_compatibility",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -707,43 +733,44 @@ export class NodeVersionCompatibilityTester {
           hasPipeline,
           hasAsyncPipeline,
           hasAsyncIterators,
-          streamAPIComplete: passed
-        }
+          streamAPIComplete: passed,
+        },
       };
     } catch (error) {
       return {
-        name: 'stream_api_compatibility',
-        category: 'nodejs',
+        name: "stream_api_compatibility",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async testAsyncFeatures(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test async/await
       const asyncTest = async () => {
-        const result = await Promise.resolve('async-success');
+        const result = await Promise.resolve("async-success");
         return result;
       };
 
       const asyncResult = await asyncTest();
-      
+
       // Test Promise.allSettled (Node.js 12.9+)
       let hasAllSettled = false;
       try {
         const settled = await Promise.allSettled([
-          Promise.resolve('success'),
-          Promise.reject('error')
+          Promise.resolve("success"),
+          Promise.reject("error"),
         ]);
-        hasAllSettled = settled.length === 2 && 
-                       settled[0].status === 'fulfilled' && 
-                       settled[1].status === 'rejected';
+        hasAllSettled =
+          settled.length === 2 &&
+          settled[0].status === "fulfilled" &&
+          settled[1].status === "rejected";
       } catch (error) {
         hasAllSettled = false;
       }
@@ -752,79 +779,80 @@ export class NodeVersionCompatibilityTester {
       let hasAny = false;
       try {
         const result = await Promise.any([
-          Promise.reject('error1'),
-          Promise.resolve('success'),
-          Promise.reject('error2')
+          Promise.reject("error1"),
+          Promise.resolve("success"),
+          Promise.reject("error2"),
         ]);
-        hasAny = result === 'success';
+        hasAny = result === "success";
       } catch (error) {
         hasAny = false;
       }
 
-      const passed = asyncResult === 'async-success' && hasAllSettled;
+      const passed = asyncResult === "async-success" && hasAllSettled;
 
       return {
-        name: 'async_features',
-        category: 'nodejs',
+        name: "async_features",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          asyncAwait: asyncResult === 'async-success',
+          asyncAwait: asyncResult === "async-success",
           promiseAllSettled: hasAllSettled,
           promiseAny: hasAny,
-          asyncFeaturesSupported: passed
-        }
+          asyncFeaturesSupported: passed,
+        },
       };
     } catch (error) {
       return {
-        name: 'async_features',
-        category: 'nodejs',
+        name: "async_features",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async testErrorHandling(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test error stack traces
-      let errorStack = '';
+      let errorStack = "";
       try {
-        throw new Error('Test error');
+        throw new Error("Test error");
       } catch (error) {
-        errorStack = error instanceof Error ? (error.stack || '') : '';
+        errorStack = error instanceof Error ? error.stack || "" : "";
       }
 
-      const hasStackTrace = errorStack.includes('testErrorHandling') || 
-                           errorStack.includes('Test error');
+      const hasStackTrace =
+        errorStack.includes("testErrorHandling") ||
+        errorStack.includes("Test error");
 
       // Test unhandled rejection detection
       let hasUnhandledRejectionDetection = false;
-      const originalHandler = process.listeners('unhandledRejection');
-      
-      process.on('unhandledRejection', () => {
+      const originalHandler = process.listeners("unhandledRejection");
+
+      process.on("unhandledRejection", () => {
         hasUnhandledRejectionDetection = true;
       });
 
       // Trigger and immediately handle to test detection
-      Promise.reject('test-rejection').catch(() => {});
-      
+      Promise.reject("test-rejection").catch(() => {});
+
       // Restore original handlers
-      process.removeAllListeners('unhandledRejection');
-      originalHandler.forEach(handler => {
-        process.on('unhandledRejection', handler);
+      process.removeAllListeners("unhandledRejection");
+      originalHandler.forEach((handler) => {
+        process.on("unhandledRejection", handler);
       });
 
       // Test error cause support (Node.js 16.9+)
       let hasCauseSupport = false;
       try {
-        const cause = new Error('Original error');
-        const wrappedError = new Error('Wrapped error', { cause });
+        const cause = new Error("Original error");
+        const wrappedError = new Error("Wrapped error", { cause });
         hasCauseSupport = (wrappedError as any).cause === cause;
       } catch (error) {
         hasCauseSupport = false;
@@ -833,8 +861,8 @@ export class NodeVersionCompatibilityTester {
       const passed = hasStackTrace;
 
       return {
-        name: 'error_handling',
-        category: 'nodejs',
+        name: "error_handling",
+        category: "nodejs",
         passed,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -842,24 +870,27 @@ export class NodeVersionCompatibilityTester {
           hasStackTrace,
           hasUnhandledRejectionDetection,
           hasCauseSupport,
-          errorHandlingComplete: passed
-        }
+          errorHandlingComplete: passed,
+        },
       };
     } catch (error) {
       return {
-        name: 'error_handling',
-        category: 'nodejs',
+        name: "error_handling",
+        category: "nodejs",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
-  private generateSummary(testResults: TestResult[], duration: number): NodeVersionTestResult['summary'] {
+  private generateSummary(
+    testResults: TestResult[],
+    duration: number,
+  ): NodeVersionTestResult["summary"] {
     const total = testResults.length;
-    const passed = testResults.filter(test => test.passed).length;
+    const passed = testResults.filter((test) => test.passed).length;
     const failed = total - passed;
 
     // Extract version information
@@ -869,39 +900,45 @@ export class NodeVersionCompatibilityTester {
 
     // Determine feature compatibility based on test results
     const getFeatureSupport = (testName: string) => {
-      const test = testResults.find(t => t.name === testName);
+      const test = testResults.find((t) => t.name === testName);
       return test ? test.passed : false;
     };
 
     const featureCompatibility = {
-      esModules: getFeatureSupport('es_module_support'),
-      asyncAwait: getFeatureSupport('async_features'),
-      optionalChaining: getFeatureSupport('optional_chaining'),
-      nullishCoalescing: getFeatureSupport('nullish_coalescing'),
-      topLevelAwait: testResults.find(t => t.name === 'es_module_support')?.details?.topLevelAwait || false,
-      privateFields: getFeatureSupport('private_fields'),
-      staticBlocks: getFeatureSupport('static_blocks'),
-      importMeta: testResults.find(t => t.name === 'es_module_support')?.details?.importMeta || false
+      esModules: getFeatureSupport("es_module_support"),
+      asyncAwait: getFeatureSupport("async_features"),
+      optionalChaining: getFeatureSupport("optional_chaining"),
+      nullishCoalescing: getFeatureSupport("nullish_coalescing"),
+      topLevelAwait:
+        testResults.find((t) => t.name === "es_module_support")?.details
+          ?.topLevelAwait || false,
+      privateFields: getFeatureSupport("private_fields"),
+      staticBlocks: getFeatureSupport("static_blocks"),
+      importMeta:
+        testResults.find((t) => t.name === "es_module_support")?.details
+          ?.importMeta || false,
     };
 
     const apiCompatibility = {
-      crypto: getFeatureSupport('core_api_crypto'),
-      fs: getFeatureSupport('core_api_fs'),
-      os: getFeatureSupport('core_api_os'),
-      path: getFeatureSupport('core_api_path'),
-      worker_threads: getFeatureSupport('worker_threads_support'),
-      perf_hooks: getFeatureSupport('core_api_perf_hooks'),
+      crypto: getFeatureSupport("core_api_crypto"),
+      fs: getFeatureSupport("core_api_fs"),
+      os: getFeatureSupport("core_api_os"),
+      path: getFeatureSupport("core_api_path"),
+      worker_threads: getFeatureSupport("worker_threads_support"),
+      perf_hooks: getFeatureSupport("core_api_perf_hooks"),
       diagnostics_channel: false, // Would need additional test
-      stream: getFeatureSupport('stream_api_compatibility')
+      stream: getFeatureSupport("stream_api_compatibility"),
     };
 
     // Extract performance metrics
-    const perfTest = testResults.find(t => t.name === 'performance_characteristics');
+    const perfTest = testResults.find(
+      (t) => t.name === "performance_characteristics",
+    );
     const performanceMetrics = {
       startupTime: 0, // Would need separate measurement
       memoryUsage: perfTest?.details?.memoryDiff || 0,
       v8HeapSize: perfTest?.details?.v8HeapSize || 0,
-      moduleLoadTime: duration // Approximation
+      moduleLoadTime: duration, // Approximation
     };
 
     return {
@@ -912,7 +949,7 @@ export class NodeVersionCompatibilityTester {
       versionSupported,
       featureCompatibility,
       apiCompatibility,
-      performanceMetrics
+      performanceMetrics,
     };
   }
 }

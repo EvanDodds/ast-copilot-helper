@@ -1,12 +1,17 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { TestReport, TestSummary, TestFailure, PerformanceMetrics } from './integration-test-suite';
+import { promises as fs } from "fs";
+import { join } from "path";
+import {
+  TestReport,
+  TestSummary,
+  TestFailure,
+  PerformanceMetrics,
+} from "./integration-test-suite";
 
 /**
  * Test report generation and analysis utilities
  */
 export class TestReportGenerator {
-  constructor(private outputDirectory: string = './test-reports') {}
+  constructor(private outputDirectory: string = "./test-reports") {}
 
   /**
    * Generate a comprehensive test report
@@ -15,7 +20,11 @@ export class TestReportGenerator {
     const summary = this.calculateSummary(results);
     const performance = this.aggregatePerformanceMetrics(results);
     const failures = this.extractFailures(results);
-    const recommendations = this.generateRecommendations(results, summary, performance);
+    const recommendations = this.generateRecommendations(
+      results,
+      summary,
+      performance,
+    );
 
     return {
       summary,
@@ -28,23 +37,26 @@ export class TestReportGenerator {
   /**
    * Save report to file system
    */
-  async saveReport(report: TestReport, format: 'json' | 'html' | 'junit' = 'json'): Promise<string> {
+  async saveReport(
+    report: TestReport,
+    format: "json" | "html" | "junit" = "json",
+  ): Promise<string> {
     await fs.mkdir(this.outputDirectory, { recursive: true });
-    
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `integration-test-report-${timestamp}`;
     const filepath = join(this.outputDirectory, `${filename}.${format}`);
 
     let content: string;
-    
+
     switch (format) {
-      case 'json':
+      case "json":
         content = JSON.stringify(report, null, 2);
         break;
-      case 'html':
+      case "html":
         content = this.generateHtmlReport(report);
         break;
-      case 'junit':
+      case "junit":
         content = this.generateJunitReport(report);
         break;
       default:
@@ -53,7 +65,7 @@ export class TestReportGenerator {
 
     await fs.writeFile(filepath, content);
     console.log(`Test report saved: ${filepath}`);
-    
+
     return filepath;
   }
 
@@ -61,9 +73,10 @@ export class TestReportGenerator {
    * Generate HTML report
    */
   private generateHtmlReport(report: TestReport): string {
-    const passRate = report.summary.totalTests > 0 
-      ? ((report.summary.passed / report.summary.totalTests) * 100).toFixed(1)
-      : '0';
+    const passRate =
+      report.summary.totalTests > 0
+        ? ((report.summary.passed / report.summary.totalTests) * 100).toFixed(1)
+        : "0";
 
     return `
 <!DOCTYPE html>
@@ -148,7 +161,7 @@ export class TestReportGenerator {
         .pass-rate { 
             font-size: 1.2em; 
             font-weight: bold; 
-            color: ${parseFloat(passRate) >= 80 ? '#28a745' : parseFloat(passRate) >= 60 ? '#ffc107' : '#dc3545'};
+            color: ${parseFloat(passRate) >= 80 ? "#28a745" : parseFloat(passRate) >= 60 ? "#ffc107" : "#dc3545"};
         }
     </style>
 </head>
@@ -202,30 +215,46 @@ export class TestReportGenerator {
             </div>
         </div>
 
-        ${report.failures.length > 0 ? `
+        ${
+          report.failures.length > 0
+            ? `
         <div class="section">
             <h2>Test Failures (${report.failures.length})</h2>
             <div class="failures">
-                ${report.failures.map((failure: TestFailure) => `
+                ${report.failures
+                  .map(
+                    (failure: TestFailure) => `
                 <div class="failure-item">
                     <div class="failure-title">${failure.testName}</div>
                     <div class="failure-error">${failure.error}</div>
                 </div>
-                `).join('')}
+                `,
+                  )
+                  .join("")}
             </div>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
 
-        ${report.recommendations.length > 0 ? `
+        ${
+          report.recommendations.length > 0
+            ? `
         <div class="section">
             <h2>Recommendations (${report.recommendations.length})</h2>
             <div class="recommendations">
-                ${report.recommendations.map((rec: string) => `
+                ${report.recommendations
+                  .map(
+                    (rec: string) => `
                 <div class="recommendation">${rec}</div>
-                `).join('')}
+                `,
+                  )
+                  .join("")}
             </div>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
     </div>
 </body>
 </html>
@@ -244,11 +273,15 @@ export class TestReportGenerator {
              tests="${report.summary.totalTests}"
              failures="${report.summary.failed}"
              time="${report.summary.duration / 1000}">
-    ${report.failures.map((failure: TestFailure) => `
+    ${report.failures
+      .map(
+        (failure: TestFailure) => `
     <testcase name="${failure.testName}" time="0">
       <failure message="${failure.error}">${failure.stackTrace}</failure>
     </testcase>
-    `).join('')}
+    `,
+      )
+      .join("")}
   </testsuite>
 </testsuites>`;
   }
@@ -280,37 +313,55 @@ export class TestReportGenerator {
     return [];
   }
 
-  private generateRecommendations(results: any, summary: TestSummary, performance: PerformanceMetrics): string[] {
+  private generateRecommendations(
+    results: any,
+    summary: TestSummary,
+    performance: PerformanceMetrics,
+  ): string[] {
     const recommendations: string[] = [];
 
     // Performance-based recommendations
     if (performance.queryTime > 200) {
-      recommendations.push('Query response time exceeds 200ms threshold. Consider optimizing query operations.');
+      recommendations.push(
+        "Query response time exceeds 200ms threshold. Consider optimizing query operations.",
+      );
     }
 
-    if (performance.memoryUsage > 1000000000) { // 1GB
-      recommendations.push('Memory usage is high (>1GB). Review memory-intensive operations and add cleanup.');
+    if (performance.memoryUsage > 1000000000) {
+      // 1GB
+      recommendations.push(
+        "Memory usage is high (>1GB). Review memory-intensive operations and add cleanup.",
+      );
     }
 
-    if (performance.parseTime > 10000) { // 10 seconds
-      recommendations.push('Parse time is high (>10s). Consider optimizing parser or reducing file count.');
+    if (performance.parseTime > 10000) {
+      // 10 seconds
+      recommendations.push(
+        "Parse time is high (>10s). Consider optimizing parser or reducing file count.",
+      );
     }
 
     // Test result-based recommendations
     if (summary.failed > 0) {
       const failureRate = (summary.failed / summary.totalTests) * 100;
       if (failureRate > 20) {
-        recommendations.push(`High failure rate (${failureRate.toFixed(1)}%). Review failing tests and system stability.`);
+        recommendations.push(
+          `High failure rate (${failureRate.toFixed(1)}%). Review failing tests and system stability.`,
+        );
       }
     }
 
     if (summary.totalTests === 0) {
-      recommendations.push('No tests were executed. Verify test configuration and execution.');
+      recommendations.push(
+        "No tests were executed. Verify test configuration and execution.",
+      );
     }
 
     // Coverage-based recommendations
     if (summary.coverage.statements < 80) {
-      recommendations.push(`Statement coverage is low (${summary.coverage.statements}%). Increase test coverage.`);
+      recommendations.push(
+        `Statement coverage is low (${summary.coverage.statements}%). Increase test coverage.`,
+      );
     }
 
     return recommendations;
@@ -329,38 +380,59 @@ export class PerformanceBenchmarks {
   };
 
   static evaluatePerformance(metrics: PerformanceMetrics): {
-    overall: 'excellent' | 'good' | 'poor';
-    details: Record<string, 'excellent' | 'good' | 'poor'>;
+    overall: "excellent" | "good" | "poor";
+    details: Record<string, "excellent" | "good" | "poor">;
   } {
     const memoryMB = metrics.memoryUsage / 1024 / 1024;
-    
+
     const evaluations = {
-      parseTime: this.evaluateMetric(metrics.parseTime, this.BENCHMARKS.parseTime),
-      queryTime: this.evaluateMetric(metrics.queryTime, this.BENCHMARKS.queryTime),
+      parseTime: this.evaluateMetric(
+        metrics.parseTime,
+        this.BENCHMARKS.parseTime,
+      ),
+      queryTime: this.evaluateMetric(
+        metrics.queryTime,
+        this.BENCHMARKS.queryTime,
+      ),
       memoryUsage: this.evaluateMetric(memoryMB, this.BENCHMARKS.memoryUsage),
-      indexTime: this.evaluateMetric(metrics.indexTime, this.BENCHMARKS.indexTime),
+      indexTime: this.evaluateMetric(
+        metrics.indexTime,
+        this.BENCHMARKS.indexTime,
+      ),
     };
 
     // Calculate overall score
-    const scores = Object.values(evaluations).map(score => {
+    const scores = Object.values(evaluations).map((score) => {
       switch (score) {
-        case 'excellent': return 3;
-        case 'good': return 2;
-        case 'poor': return 1;
-        default: return 1;
+        case "excellent":
+          return 3;
+        case "good":
+          return 2;
+        case "poor":
+          return 1;
+        default:
+          return 1;
       }
     });
 
     const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const overall = averageScore >= 2.5 ? 'excellent' : averageScore >= 1.5 ? 'good' : 'poor';
+    const overall =
+      averageScore >= 2.5 ? "excellent" : averageScore >= 1.5 ? "good" : "poor";
 
     return { overall, details: evaluations };
   }
 
-  private static evaluateMetric(value: number, thresholds: { excellent: number; good: number; poor: number }): 'excellent' | 'good' | 'poor' {
-    if (value <= thresholds.excellent) {return 'excellent';}
-    if (value <= thresholds.good) {return 'good';}
-    return 'poor';
+  private static evaluateMetric(
+    value: number,
+    thresholds: { excellent: number; good: number; poor: number },
+  ): "excellent" | "good" | "poor" {
+    if (value <= thresholds.excellent) {
+      return "excellent";
+    }
+    if (value <= thresholds.good) {
+      return "good";
+    }
+    return "poor";
   }
 
   static generatePerformanceReport(metrics: PerformanceMetrics): string {
@@ -377,11 +449,11 @@ Metrics:
 - Memory Usage: ${memoryMB}MB (${evaluation.details.memoryUsage})
 
 Recommendations:
-${evaluation.overall === 'poor' ? '⚠️  Performance needs improvement. Review system resources and optimization opportunities.' : ''}
-${evaluation.details.parseTime === 'poor' ? '- Optimize parsing operations or reduce file count' : ''}
-${evaluation.details.queryTime === 'poor' ? '- Optimize query execution and indexing' : ''}
-${evaluation.details.memoryUsage === 'poor' ? '- Review memory usage and add cleanup operations' : ''}
-${evaluation.details.indexTime === 'poor' ? '- Optimize indexing operations' : ''}
+${evaluation.overall === "poor" ? "⚠️  Performance needs improvement. Review system resources and optimization opportunities." : ""}
+${evaluation.details.parseTime === "poor" ? "- Optimize parsing operations or reduce file count" : ""}
+${evaluation.details.queryTime === "poor" ? "- Optimize query execution and indexing" : ""}
+${evaluation.details.memoryUsage === "poor" ? "- Review memory usage and add cleanup operations" : ""}
+${evaluation.details.indexTime === "poor" ? "- Optimize indexing operations" : ""}
     `.trim();
   }
 }

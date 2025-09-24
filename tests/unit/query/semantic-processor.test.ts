@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { SemanticQueryProcessor } from '../../../packages/ast-mcp-server/src/query/semantic-processor';
-import { SemanticQuery } from '../../../packages/ast-mcp-server/src/query/types';
-import { ASTDatabaseReader } from '../../../packages/ast-mcp-server/src/database/reader';
-import { PerformanceMonitor } from '../../../packages/ast-mcp-server/src/query/performance-monitor';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { SemanticQueryProcessor } from "../../../packages/ast-mcp-server/src/query/semantic-processor";
+import { SemanticQuery } from "../../../packages/ast-mcp-server/src/query/types";
+import { ASTDatabaseReader } from "../../../packages/ast-mcp-server/src/database/reader";
+import { PerformanceMonitor } from "../../../packages/ast-mcp-server/src/query/performance-monitor";
 
 // Mock the database reader
-vi.mock('../../../packages/ast-mcp-server/src/database/reader');
+vi.mock("../../../packages/ast-mcp-server/src/database/reader");
 
-describe('SemanticQueryProcessor', () => {
+describe("SemanticQueryProcessor", () => {
   let processor: SemanticQueryProcessor;
   let mockDatabaseReader: any;
   let mockConfig: any;
@@ -21,43 +21,43 @@ describe('SemanticQueryProcessor', () => {
       searchNodes: vi.fn(),
       isReady: vi.fn().mockReturnValue(true),
       getNodeById: vi.fn().mockResolvedValue({
-        id: 'test-node',
-        signature: 'test function signature',
-        summary: 'Test function description',
-        filePath: '/test/path/file.js',
+        id: "test-node",
+        signature: "test function signature",
+        summary: "Test function description",
+        filePath: "/test/path/file.js",
         lineNumber: 10,
-        language: 'javascript',
-        confidence: 0.9
-      })
+        language: "javascript",
+        confidence: 0.9,
+      }),
     };
 
     mockEmbeddingGenerator = {
       generateEmbeddings: vi.fn().mockResolvedValue([[0.1, 0.2, 0.3]]),
-      isReady: vi.fn().mockReturnValue(true)
+      isReady: vi.fn().mockReturnValue(true),
     };
 
     mockVectorDatabase = {
       search: vi.fn().mockResolvedValue([]),
       searchSimilar: vi.fn().mockResolvedValue([
-        { id: 'test-1', score: 0.95, metadata: { nodeId: 'node-1' } },
-        { id: 'test-2', score: 0.85, metadata: { nodeId: 'node-2' } }
+        { id: "test-1", score: 0.95, metadata: { nodeId: "node-1" } },
+        { id: "test-2", score: 0.85, metadata: { nodeId: "node-2" } },
       ]),
-      getItemById: vi.fn()
+      getItemById: vi.fn(),
     };
 
     mockConfig = {
       search: {
         defaultMaxResults: 20,
         defaultMinScore: 0.3,
-        defaultSearchEf: 50
-      }
+        defaultSearchEf: 50,
+      },
     };
 
     processor = new SemanticQueryProcessor(
-      mockEmbeddingGenerator, 
+      mockEmbeddingGenerator,
       mockVectorDatabase,
-      mockDatabaseReader, 
-      mockConfig
+      mockDatabaseReader,
+      mockConfig,
     );
   });
 
@@ -65,23 +65,23 @@ describe('SemanticQueryProcessor', () => {
     vi.clearAllMocks();
   });
 
-  describe('processQuery', () => {
-    it('should handle basic semantic queries', async () => {
+  describe("processQuery", () => {
+    it("should handle basic semantic queries", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'authentication function',
-        maxResults: 10
+        type: "semantic",
+        text: "authentication function",
+        maxResults: 10,
       };
 
       const mockResults = [
         {
-          nodeId: 'node1',
-          signature: 'function authenticate(user: User): boolean',
-          filePath: '/src/auth.ts',
+          nodeId: "node1",
+          signature: "function authenticate(user: User): boolean",
+          filePath: "/src/auth.ts",
           lineNumber: 15,
           score: 0.95,
-          context: 'User authentication logic'
-        }
+          context: "User authentication logic",
+        },
       ];
 
       mockDatabaseReader.vectorSearch.mockResolvedValue(mockResults);
@@ -94,34 +94,34 @@ describe('SemanticQueryProcessor', () => {
       expect(Array.isArray(result.results)).toBe(true);
       expect(result.totalMatches).toBeGreaterThanOrEqual(0);
       expect(mockDatabaseReader.vectorSearch).toHaveBeenCalledWith(
-        'authentication function',
+        "authentication function",
         expect.objectContaining({
-          maxResults: 10
-        })
+          maxResults: 10,
+        }),
       );
     });
 
-    it('should handle queries with search options', async () => {
+    it("should handle queries with search options", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'react hooks',
+        type: "semantic",
+        text: "react hooks",
         maxResults: 20,
         options: {
           searchEf: 200,
           useContextBoosting: true,
-          includeSimilarResults: true
-        }
+          includeSimilarResults: true,
+        },
       };
 
       const mockResults = [
         {
-          nodeId: 'node1',
-          signature: 'const [state, setState] = useState()',
-          filePath: '/src/components/Counter.tsx',
+          nodeId: "node1",
+          signature: "const [state, setState] = useState()",
+          filePath: "/src/components/Counter.tsx",
           lineNumber: 5,
           score: 0.88,
-          context: 'React hook for state management'
-        }
+          context: "React hook for state management",
+        },
       ];
 
       mockDatabaseReader.vectorSearch.mockResolvedValue(mockResults);
@@ -132,31 +132,31 @@ describe('SemanticQueryProcessor', () => {
       expect(result.results).toBeDefined();
       expect(result.metadata).toBeDefined();
       expect(mockDatabaseReader.vectorSearch).toHaveBeenCalledWith(
-        'react hooks',
+        "react hooks",
         expect.objectContaining({
           maxResults: 20,
-          searchEf: 200
-        })
+          searchEf: 200,
+        }),
       );
     });
 
-    it('should handle language-specific queries', async () => {
+    it("should handle language-specific queries", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'python class definition',
-        language: 'python',
-        maxResults: 15
+        type: "semantic",
+        text: "python class definition",
+        language: "python",
+        maxResults: 15,
       };
 
       const mockResults = [
         {
-          nodeId: 'node1',
-          signature: 'class DatabaseConnection:',
-          filePath: '/src/database.py',
+          nodeId: "node1",
+          signature: "class DatabaseConnection:",
+          filePath: "/src/database.py",
           lineNumber: 10,
           score: 0.92,
-          context: 'Database connection class'
-        }
+          context: "Database connection class",
+        },
       ];
 
       mockDatabaseReader.vectorSearch.mockResolvedValue(mockResults);
@@ -166,31 +166,31 @@ describe('SemanticQueryProcessor', () => {
       expect(result).toBeDefined();
       expect(result.results).toBeDefined();
       expect(mockDatabaseReader.vectorSearch).toHaveBeenCalledWith(
-        'python class definition',
+        "python class definition",
         expect.objectContaining({
           maxResults: 15,
-          language: 'python'
-        })
+          language: "python",
+        }),
       );
     });
 
-    it('should handle file path filters', async () => {
+    it("should handle file path filters", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'utility functions',
-        filePath: '/src/utils/',
-        maxResults: 10
+        type: "semantic",
+        text: "utility functions",
+        filePath: "/src/utils/",
+        maxResults: 10,
       };
 
       const mockResults = [
         {
-          nodeId: 'node1',
-          signature: 'function formatDate(date: Date): string',
-          filePath: '/src/utils/date.ts',
+          nodeId: "node1",
+          signature: "function formatDate(date: Date): string",
+          filePath: "/src/utils/date.ts",
           lineNumber: 8,
           score: 0.85,
-          context: 'Date formatting utility'
-        }
+          context: "Date formatting utility",
+        },
       ];
 
       mockDatabaseReader.vectorSearch.mockResolvedValue(mockResults);
@@ -200,18 +200,18 @@ describe('SemanticQueryProcessor', () => {
       expect(result).toBeDefined();
       expect(result.results).toBeDefined();
       expect(mockDatabaseReader.vectorSearch).toHaveBeenCalledWith(
-        'utility functions',
+        "utility functions",
         expect.objectContaining({
-          filePath: '/src/utils/'
-        })
+          filePath: "/src/utils/",
+        }),
       );
     });
 
-    it('should handle empty search results', async () => {
+    it("should handle empty search results", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'non-existent-functionality-12345',
-        maxResults: 10
+        type: "semantic",
+        text: "non-existent-functionality-12345",
+        maxResults: 10,
       };
 
       mockDatabaseReader.vectorSearch.mockResolvedValue([]);
@@ -224,11 +224,11 @@ describe('SemanticQueryProcessor', () => {
       expect(result.metadata.totalCandidates).toBe(0);
     });
 
-    it('should include performance metrics', async () => {
+    it("should include performance metrics", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'test query',
-        maxResults: 5
+        type: "semantic",
+        text: "test query",
+        maxResults: 5,
       };
 
       mockDatabaseReader.vectorSearch.mockResolvedValue([]);
@@ -244,43 +244,45 @@ describe('SemanticQueryProcessor', () => {
       expect(result.metadata.timestamp).toBeInstanceOf(Date);
     });
 
-    it('should handle database errors gracefully', async () => {
+    it("should handle database errors gracefully", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'test query',
-        maxResults: 10
+        type: "semantic",
+        text: "test query",
+        maxResults: 10,
       };
 
-      mockDatabaseReader.vectorSearch.mockRejectedValue(new Error('Vector search failed'));
+      mockDatabaseReader.vectorSearch.mockRejectedValue(
+        new Error("Vector search failed"),
+      );
 
       const result = await processor.processQuery(query);
 
       expect(result).toBeDefined();
       expect(result.results).toHaveLength(0);
       expect(result.metadata).toBeDefined();
-      expect(result.metadata.error).toContain('Vector search failed');
+      expect(result.metadata.error).toContain("Vector search failed");
     });
 
-    it('should handle context boosting queries', async () => {
+    it("should handle context boosting queries", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'error handling',
-        context: 'try-catch exception management',
+        type: "semantic",
+        text: "error handling",
+        context: "try-catch exception management",
         options: {
-          useContextBoosting: true
+          useContextBoosting: true,
         },
-        maxResults: 10
+        maxResults: 10,
       };
 
       const mockResults = [
         {
-          nodeId: 'node1',
-          signature: 'try { ... } catch (error) { ... }',
-          filePath: '/src/error-handler.ts',
+          nodeId: "node1",
+          signature: "try { ... } catch (error) { ... }",
+          filePath: "/src/error-handler.ts",
           lineNumber: 20,
           score: 0.91,
-          context: 'Exception handling block'
-        }
+          context: "Exception handling block",
+        },
       ];
 
       mockDatabaseReader.vectorSearch.mockResolvedValue(mockResults);
@@ -290,18 +292,18 @@ describe('SemanticQueryProcessor', () => {
       expect(result).toBeDefined();
       expect(result.results).toBeDefined();
       expect(mockDatabaseReader.vectorSearch).toHaveBeenCalledWith(
-        'error handling',
+        "error handling",
         expect.objectContaining({
-          useContextBoosting: true
-        })
+          useContextBoosting: true,
+        }),
       );
     });
 
-    it('should respect maxResults parameter', async () => {
+    it("should respect maxResults parameter", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'functions',
-        maxResults: 3
+        type: "semantic",
+        text: "functions",
+        maxResults: 3,
       };
 
       const mockResults = Array.from({ length: 10 }, (_, i) => ({
@@ -310,7 +312,7 @@ describe('SemanticQueryProcessor', () => {
         filePath: `/src/test${i}.ts`,
         lineNumber: 10 + i,
         score: 0.9 - i * 0.05,
-        context: `Test function ${i}`
+        context: `Test function ${i}`,
       }));
 
       mockDatabaseReader.vectorSearch.mockResolvedValue(mockResults);
@@ -319,38 +321,38 @@ describe('SemanticQueryProcessor', () => {
 
       expect(result.results.length).toBeLessThanOrEqual(3);
       expect(mockDatabaseReader.vectorSearch).toHaveBeenCalledWith(
-        'functions',
+        "functions",
         expect.objectContaining({
-          maxResults: 3
-        })
+          maxResults: 3,
+        }),
       );
     });
 
-    it('should handle minimum score thresholds', async () => {
+    it("should handle minimum score thresholds", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'api endpoints',
+        type: "semantic",
+        text: "api endpoints",
         minScore: 0.8,
-        maxResults: 10
+        maxResults: 10,
       };
 
       const mockResults = [
         {
-          nodeId: 'node1',
+          nodeId: "node1",
           signature: 'app.get("/api/users", handler)',
-          filePath: '/src/routes.ts',
+          filePath: "/src/routes.ts",
           lineNumber: 15,
           score: 0.95,
-          context: 'User API endpoint'
+          context: "User API endpoint",
         },
         {
-          nodeId: 'node2',
+          nodeId: "node2",
           signature: 'app.post("/api/auth", handler)',
-          filePath: '/src/routes.ts',
+          filePath: "/src/routes.ts",
           lineNumber: 25,
           score: 0.75, // Below threshold
-          context: 'Auth API endpoint'
-        }
+          context: "Auth API endpoint",
+        },
       ];
 
       mockDatabaseReader.vectorSearch.mockResolvedValue(mockResults);
@@ -358,26 +360,26 @@ describe('SemanticQueryProcessor', () => {
       const result = await processor.processQuery(query);
 
       // Should filter out results below minScore
-      expect(result.results.every(match => match.score >= 0.8)).toBe(true);
+      expect(result.results.every((match) => match.score >= 0.8)).toBe(true);
     });
 
-    it('should handle node type filters', async () => {
+    it("should handle node type filters", async () => {
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'class methods',
-        nodeType: 'method',
-        maxResults: 10
+        type: "semantic",
+        text: "class methods",
+        nodeType: "method",
+        maxResults: 10,
       };
 
       const mockResults = [
         {
-          nodeId: 'node1',
-          signature: 'getUserData(): UserData',
-          filePath: '/src/user.ts',
+          nodeId: "node1",
+          signature: "getUserData(): UserData",
+          filePath: "/src/user.ts",
           lineNumber: 15,
           score: 0.89,
-          context: 'Method to retrieve user data'
-        }
+          context: "Method to retrieve user data",
+        },
       ];
 
       mockDatabaseReader.vectorSearch.mockResolvedValue(mockResults);
@@ -387,21 +389,21 @@ describe('SemanticQueryProcessor', () => {
       expect(result).toBeDefined();
       expect(result.results).toBeDefined();
       expect(mockDatabaseReader.vectorSearch).toHaveBeenCalledWith(
-        'class methods',
+        "class methods",
         expect.objectContaining({
-          nodeType: 'method'
-        })
+          nodeType: "method",
+        }),
       );
     });
   });
 
-  describe('initialization', () => {
-    it('should initialize with database reader', () => {
+  describe("initialization", () => {
+    it("should initialize with database reader", () => {
       expect(processor).toBeDefined();
       expect(processor).toBeInstanceOf(SemanticQueryProcessor);
     });
 
-    it('should initialize with custom configuration', () => {
+    it("should initialize with custom configuration", () => {
       const customConfig = {
         cache: {
           maxSize: 200,
@@ -415,7 +417,7 @@ describe('SemanticQueryProcessor', () => {
           maxConcurrentQueries: 10,
         },
         ranking: {
-          defaultMode: 'weighted' as any,
+          defaultMode: "weighted" as any,
           contextBoostFactor: 1.2,
           confidenceWeight: 0.8,
           recencyWeight: 0.3,
@@ -429,33 +431,33 @@ describe('SemanticQueryProcessor', () => {
       };
 
       const customProcessor = new SemanticQueryProcessor(
-        mockEmbeddingGenerator, 
+        mockEmbeddingGenerator,
         mockVectorDatabase,
-        mockDatabaseReader, 
-        customConfig
+        mockDatabaseReader,
+        customConfig,
       );
       expect(customProcessor).toBeDefined();
     });
   });
 
-  describe('error handling', () => {
-    it('should handle invalid queries gracefully', async () => {
+  describe("error handling", () => {
+    it("should handle invalid queries gracefully", async () => {
       const query: any = {
-        type: 'semantic',
+        type: "semantic",
         // Missing required 'text' property
-        maxResults: 10
+        maxResults: 10,
       };
 
       await expect(processor.processQuery(query)).rejects.toThrow();
     });
 
-    it('should handle database reader not ready', async () => {
+    it("should handle database reader not ready", async () => {
       mockDatabaseReader.isReady.mockReturnValue(false);
 
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'test query',
-        maxResults: 10
+        type: "semantic",
+        text: "test query",
+        maxResults: 10,
       };
 
       // The current implementation doesn't check isReady, so this test might not be valid
@@ -465,8 +467,8 @@ describe('SemanticQueryProcessor', () => {
     });
   });
 
-  describe('caching', () => {
-    it('should cache query results when enabled', async () => {
+  describe("caching", () => {
+    it("should cache query results when enabled", async () => {
       const cacheConfig = {
         cache: {
           maxSize: 100,
@@ -480,7 +482,7 @@ describe('SemanticQueryProcessor', () => {
           maxConcurrentQueries: 10,
         },
         ranking: {
-          defaultMode: 'weighted' as any,
+          defaultMode: "weighted" as any,
           contextBoostFactor: 1.2,
           confidenceWeight: 0.8,
           recencyWeight: 0.3,
@@ -501,20 +503,23 @@ describe('SemanticQueryProcessor', () => {
         enableAlerts: true,
       };
 
-      const performanceMonitor = new PerformanceMonitor(cacheConfig.cache, performanceMonitorConfig);
+      const performanceMonitor = new PerformanceMonitor(
+        cacheConfig.cache,
+        performanceMonitorConfig,
+      );
 
       const cachedProcessor = new SemanticQueryProcessor(
-        mockEmbeddingGenerator, 
+        mockEmbeddingGenerator,
         mockVectorDatabase,
-        mockDatabaseReader, 
+        mockDatabaseReader,
         cacheConfig,
-        performanceMonitor
+        performanceMonitor,
       );
 
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'cached query',
-        maxResults: 10
+        type: "semantic",
+        text: "cached query",
+        maxResults: 10,
       };
 
       mockDatabaseReader.vectorSearch.mockResolvedValue([]);
@@ -529,7 +534,7 @@ describe('SemanticQueryProcessor', () => {
     });
 
     // Skipping TTL test due to timing sensitivity in CI environments
-    it.skip('should invalidate cache when appropriate', async () => {
+    it.skip("should invalidate cache when appropriate", async () => {
       const cacheConfig = {
         cache: {
           maxSize: 100,
@@ -543,7 +548,7 @@ describe('SemanticQueryProcessor', () => {
           maxConcurrentQueries: 10,
         },
         ranking: {
-          defaultMode: 'weighted' as any,
+          defaultMode: "weighted" as any,
           contextBoostFactor: 1.2,
           confidenceWeight: 0.8,
           recencyWeight: 0.3,
@@ -564,20 +569,23 @@ describe('SemanticQueryProcessor', () => {
         enableAlerts: true,
       };
 
-      const performanceMonitor = new PerformanceMonitor(cacheConfig.cache, performanceMonitorConfig);
+      const performanceMonitor = new PerformanceMonitor(
+        cacheConfig.cache,
+        performanceMonitorConfig,
+      );
 
       const cachedProcessor = new SemanticQueryProcessor(
-        mockEmbeddingGenerator, 
+        mockEmbeddingGenerator,
         mockVectorDatabase,
-        mockDatabaseReader, 
+        mockDatabaseReader,
         cacheConfig,
-        performanceMonitor
+        performanceMonitor,
       );
 
       const query: SemanticQuery = {
-        type: 'semantic',
-        text: 'ttl query',
-        maxResults: 10
+        type: "semantic",
+        text: "ttl query",
+        maxResults: 10,
       };
 
       mockDatabaseReader.vectorSearch.mockResolvedValue([]);
@@ -586,7 +594,7 @@ describe('SemanticQueryProcessor', () => {
       await cachedProcessor.processQuery(query);
 
       // Wait for TTL to expire (100ms TTL + extra buffer)
-      await new Promise(resolve => setTimeout(resolve, 250));
+      await new Promise((resolve) => setTimeout(resolve, 250));
 
       // Second query should not use cache
       const result = await cachedProcessor.processQuery(query);

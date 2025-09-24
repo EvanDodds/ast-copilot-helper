@@ -349,13 +349,11 @@ Create `.vscode/settings.json`:
 **Step 3: Use Extension Features** (5 minutes)
 
 1. **Code Search**:
-
    - Press `Cmd/Ctrl+Shift+P`
    - Type "AST: Search Codebase"
    - Search for "division operations"
 
 2. **Find Similar Code**:
-
    - Select the `add` method
    - Right-click → "AST: Find Similar Functions"
    - See other mathematical operations

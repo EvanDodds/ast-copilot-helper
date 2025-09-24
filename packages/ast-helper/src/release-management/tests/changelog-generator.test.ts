@@ -1,36 +1,44 @@
-import { describe, test, expect, beforeEach, vi, beforeAll, afterEach } from 'vitest';
-import { ChangelogGeneratorImpl } from '../core/changelog-generator.js';
-import { ChangelogConfig, ChangelogEntry } from '../types.js';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  vi,
+  beforeAll,
+  afterEach,
+} from "vitest";
+import { ChangelogGeneratorImpl } from "../core/changelog-generator.js";
+import { ChangelogConfig, ChangelogEntry } from "../types.js";
 
 // Mock child_process at the top level
-vi.mock('child_process', () => ({
-  execSync: vi.fn()
+vi.mock("child_process", () => ({
+  execSync: vi.fn(),
 }));
 
-describe('ChangelogGeneratorImpl', () => {
+describe("ChangelogGeneratorImpl", () => {
   let changelogGenerator: ChangelogGeneratorImpl;
   let mockConfig: ChangelogConfig;
   let mockExecSync: any;
 
   beforeAll(async () => {
-    const { execSync } = await import('child_process');
+    const { execSync } = await import("child_process");
     mockExecSync = execSync as any;
   });
 
   beforeEach(async () => {
     mockConfig = {
-      format: 'conventional',
+      format: "conventional",
       sections: [
-        { title: 'Features', types: ['feat'] },
-        { title: 'Bug Fixes', types: ['fix'] },
-        { title: 'Documentation', types: ['docs'] },
-        { title: 'Performance', types: ['perf'] },
-        { title: 'Refactoring', types: ['refactor'] }
+        { title: "Features", types: ["feat"] },
+        { title: "Bug Fixes", types: ["fix"] },
+        { title: "Documentation", types: ["docs"] },
+        { title: "Performance", types: ["perf"] },
+        { title: "Refactoring", types: ["refactor"] },
       ],
       includeCommitLinks: true,
       includeAuthor: true,
-      excludeTypes: ['chore', 'style'],
-      customTemplate: undefined
+      excludeTypes: ["chore", "style"],
+      customTemplate: undefined,
     };
 
     changelogGenerator = new ChangelogGeneratorImpl();
@@ -41,345 +49,354 @@ describe('ChangelogGeneratorImpl', () => {
     vi.clearAllMocks();
   });
 
-  describe('change detection', () => {
-    test('should detect changes since version', async () => {
+  describe("change detection", () => {
+    test("should detect changes since version", async () => {
       // Setup successful git mock
       mockExecSync.mockReturnValue(`abc123|Test Author|2024-01-01T00:00:00.000Z|feat: add new feature|
 def456|Another Author|2024-01-02T00:00:00.000Z|fix: resolve bug|`);
 
-      const changes = await changelogGenerator.detectChangesSince('1.0.0');
-      
+      const changes = await changelogGenerator.detectChangesSince("1.0.0");
+
       expect(Array.isArray(changes)).toBe(true);
       expect(changes.length).toBeGreaterThanOrEqual(0);
     });
 
-    test('should handle git command failures', async () => {
+    test("should handle git command failures", async () => {
       // Setup failing git mock
       mockExecSync.mockImplementation(() => {
-        throw new Error('Git command failed');
+        throw new Error("Git command failed");
       });
 
-      await expect(changelogGenerator.detectChangesSince('1.0.0'))
-        .rejects.toThrow('Failed to detect changes');
+      await expect(
+        changelogGenerator.detectChangesSince("1.0.0"),
+      ).rejects.toThrow("Failed to detect changes");
     });
   });
 
-  describe('commit parsing', () => {
-    test('should parse conventional commits', async () => {
+  describe("commit parsing", () => {
+    test("should parse conventional commits", async () => {
       const commits = [
-        'feat(auth): add OAuth2 support',
-        'fix(api): resolve null pointer exception',
-        'docs: update API documentation',
-        'feat!: breaking change in user API',
-        'chore: update dependencies'
+        "feat(auth): add OAuth2 support",
+        "fix(api): resolve null pointer exception",
+        "docs: update API documentation",
+        "feat!: breaking change in user API",
+        "chore: update dependencies",
       ];
 
       const entries = await changelogGenerator.parseCommits(commits);
-      
+
       expect(Array.isArray(entries)).toBe(true);
       expect(entries.length).toBe(4); // excluding 'chore'
-      
-      const featEntry = entries.find(e => e.type === 'feat' && e.scope === 'auth');
+
+      const featEntry = entries.find(
+        (e) => e.type === "feat" && e.scope === "auth",
+      );
       expect(featEntry).toBeDefined();
-      expect(featEntry?.description).toBe('add OAuth2 support');
-      
-      const breakingEntry = entries.find(e => e.breaking === true);
+      expect(featEntry?.description).toBe("add OAuth2 support");
+
+      const breakingEntry = entries.find((e) => e.breaking === true);
       expect(breakingEntry).toBeDefined();
     });
 
-    test('should handle malformed commits', async () => {
+    test("should handle malformed commits", async () => {
       const commits = [
-        'not a conventional commit',
-        'random text',
-        'feat: valid commit'
+        "not a conventional commit",
+        "random text",
+        "feat: valid commit",
       ];
 
       const entries = await changelogGenerator.parseCommits(commits);
-      
+
       expect(Array.isArray(entries)).toBe(true);
       expect(entries.length).toBe(1); // only the valid commit
-      expect(entries[0].type).toBe('feat');
+      expect(entries[0].type).toBe("feat");
     });
 
-    test('should extract scope from commits', async () => {
+    test("should extract scope from commits", async () => {
       const commits = [
-        'feat(core): add new core feature',
-        'fix(ui): fix button styling',
-        'docs(api): improve API docs'
+        "feat(core): add new core feature",
+        "fix(ui): fix button styling",
+        "docs(api): improve API docs",
       ];
 
       const entries = await changelogGenerator.parseCommits(commits);
-      
-      expect(entries[0].scope).toBe('core');
-      expect(entries[1].scope).toBe('ui');
-      expect(entries[2].scope).toBe('api');
+
+      expect(entries[0].scope).toBe("core");
+      expect(entries[1].scope).toBe("ui");
+      expect(entries[2].scope).toBe("api");
     });
 
-    test('should detect breaking changes', async () => {
+    test("should detect breaking changes", async () => {
       const commits = [
-        'feat!: breaking API change',
-        'fix(api)!: breaking fix',
-        'feat: regular feature'
+        "feat!: breaking API change",
+        "fix(api)!: breaking fix",
+        "feat: regular feature",
       ];
 
       const entries = await changelogGenerator.parseCommits(commits);
-      
+
       expect(entries[0].breaking).toBe(true);
       expect(entries[1].breaking).toBe(true);
       expect(entries[2].breaking).toBe(false);
     });
   });
 
-  describe('change categorization', () => {
-    test('should categorize commits by type', async () => {
+  describe("change categorization", () => {
+    test("should categorize commits by type", async () => {
       const mockCommits = [
         {
-          hash: 'abc123',
-          message: 'feat: add feature',
-          author: 'Test Author',
-          date: new Date('2024-01-01'),
-          files: ['src/feature.ts']
+          hash: "abc123",
+          message: "feat: add feature",
+          author: "Test Author",
+          date: new Date("2024-01-01"),
+          files: ["src/feature.ts"],
         },
         {
-          hash: 'def456',
-          message: 'fix: fix bug',
-          author: 'Test Author',
-          date: new Date('2024-01-02'),
-          files: ['src/bug.ts']
+          hash: "def456",
+          message: "fix: fix bug",
+          author: "Test Author",
+          date: new Date("2024-01-02"),
+          files: ["src/bug.ts"],
         },
         {
-          hash: 'ghi789',
-          message: 'docs: update docs',
-          author: 'Test Author',
-          date: new Date('2024-01-03'),
-          files: ['README.md']
-        }
+          hash: "ghi789",
+          message: "docs: update docs",
+          author: "Test Author",
+          date: new Date("2024-01-03"),
+          files: ["README.md"],
+        },
       ];
 
       const entries = await changelogGenerator.categorizeChanges(mockCommits);
-      
+
       expect(Array.isArray(entries)).toBe(true);
-      expect(entries.some(e => e.type === 'feat')).toBe(true);
-      expect(entries.some(e => e.type === 'fix')).toBe(true);
-      expect(entries.some(e => e.type === 'docs')).toBe(true);
+      expect(entries.some((e) => e.type === "feat")).toBe(true);
+      expect(entries.some((e) => e.type === "fix")).toBe(true);
+      expect(entries.some((e) => e.type === "docs")).toBe(true);
     });
 
-    test('should exclude configured types', async () => {
+    test("should exclude configured types", async () => {
       const mockCommits = [
         {
-          hash: 'abc123',
-          message: 'chore: update dependencies',
-          author: 'Test Author',
+          hash: "abc123",
+          message: "chore: update dependencies",
+          author: "Test Author",
           date: new Date(),
-          files: ['package.json']
+          files: ["package.json"],
         },
         {
-          hash: 'def456',
-          message: 'feat: add feature',
-          author: 'Test Author',
+          hash: "def456",
+          message: "feat: add feature",
+          author: "Test Author",
           date: new Date(),
-          files: ['src/feature.ts']
-        }
+          files: ["src/feature.ts"],
+        },
       ];
 
       const entries = await changelogGenerator.categorizeChanges(mockCommits);
-      
-      expect(entries.some(e => e.type === 'chore')).toBe(false);
-      expect(entries.some(e => e.type === 'feat')).toBe(true);
+
+      expect(entries.some((e) => e.type === "chore")).toBe(false);
+      expect(entries.some((e) => e.type === "feat")).toBe(true);
     });
   });
 
-  describe('changelog formatting', () => {
-    test('should format changelog in conventional format', async () => {
+  describe("changelog formatting", () => {
+    test("should format changelog in conventional format", async () => {
       const entries: ChangelogEntry[] = [
         {
-          type: 'feat',
-          scope: 'auth',
-          description: 'add OAuth2 support',
+          type: "feat",
+          scope: "auth",
+          description: "add OAuth2 support",
           breaking: false,
-          author: 'Test Author',
-          commit: 'abc123',
-          timestamp: new Date('2024-01-01'),
-          affectedPackages: ['auth']
+          author: "Test Author",
+          commit: "abc123",
+          timestamp: new Date("2024-01-01"),
+          affectedPackages: ["auth"],
         },
         {
-          type: 'fix',
-          description: 'resolve null pointer',
+          type: "fix",
+          description: "resolve null pointer",
           breaking: false,
-          author: 'Another Author',
-          commit: 'def456',
-          timestamp: new Date('2024-01-02'),
-          affectedPackages: ['core']
-        }
+          author: "Another Author",
+          commit: "def456",
+          timestamp: new Date("2024-01-02"),
+          affectedPackages: ["core"],
+        },
       ];
 
       const formatted = await changelogGenerator.formatChangelog(entries);
-      
-      expect(typeof formatted).toBe('string');
-      expect(formatted).toContain('Features');
-      expect(formatted).toContain('Bug Fixes');
-      expect(formatted).toContain('add OAuth2 support');
-      expect(formatted).toContain('resolve null pointer');
+
+      expect(typeof formatted).toBe("string");
+      expect(formatted).toContain("Features");
+      expect(formatted).toContain("Bug Fixes");
+      expect(formatted).toContain("add OAuth2 support");
+      expect(formatted).toContain("resolve null pointer");
     });
 
-    test('should include commit links when configured', async () => {
+    test("should include commit links when configured", async () => {
       const entries: ChangelogEntry[] = [
         {
-          type: 'feat',
-          description: 'add feature',
+          type: "feat",
+          description: "add feature",
           breaking: false,
-          commit: 'abc123',
+          commit: "abc123",
           timestamp: new Date(),
-          affectedPackages: []
-        }
+          affectedPackages: [],
+        },
       ];
 
       const formatted = await changelogGenerator.formatChangelog(entries);
-      
-      expect(formatted).toContain('abc123');
+
+      expect(formatted).toContain("abc123");
     });
 
-    test('should include author information when configured', async () => {
+    test("should include author information when configured", async () => {
       const entries: ChangelogEntry[] = [
         {
-          type: 'feat',
-          description: 'add feature',
+          type: "feat",
+          description: "add feature",
           breaking: false,
-          author: 'Test Author',
+          author: "Test Author",
           timestamp: new Date(),
-          affectedPackages: []
-        }
+          affectedPackages: [],
+        },
       ];
 
       const formatted = await changelogGenerator.formatChangelog(entries);
-      
-      expect(formatted).toContain('Test Author');
+
+      expect(formatted).toContain("Test Author");
     });
   });
 
-  describe('entry generation', () => {
-    test('should generate structured entries', async () => {
+  describe("entry generation", () => {
+    test("should generate structured entries", async () => {
       const changes: ChangelogEntry[] = [
         {
-          type: 'feat',
-          description: 'raw feature',
+          type: "feat",
+          description: "raw feature",
           breaking: false,
           timestamp: new Date(),
-          affectedPackages: []
-        }
+          affectedPackages: [],
+        },
       ];
 
       const entries = await changelogGenerator.generateEntries(changes);
-      
+
       expect(Array.isArray(entries)).toBe(true);
       expect(entries.length).toBe(1);
-      expect(entries[0].type).toBe('feat');
-      expect(entries[0].description).toBe('raw feature');
+      expect(entries[0].type).toBe("feat");
+      expect(entries[0].description).toBe("raw feature");
     });
 
-    test('should enrich entries with metadata', async () => {
+    test("should enrich entries with metadata", async () => {
       const changes: ChangelogEntry[] = [
         {
-          type: 'feat',
-          description: 'basic feature',
+          type: "feat",
+          description: "basic feature",
           breaking: false,
           timestamp: new Date(),
-          affectedPackages: []
-        }
+          affectedPackages: [],
+        },
       ];
 
       const entries = await changelogGenerator.generateEntries(changes);
-      
-      expect(entries[0]).toHaveProperty('timestamp');
-      expect(entries[0]).toHaveProperty('affectedPackages');
+
+      expect(entries[0]).toHaveProperty("timestamp");
+      expect(entries[0]).toHaveProperty("affectedPackages");
     });
   });
 
-  describe('release notes generation', () => {
-    test('should generate release notes from entries', async () => {
+  describe("release notes generation", () => {
+    test("should generate release notes from entries", async () => {
       const entries: ChangelogEntry[] = [
         {
-          type: 'feat',
-          description: 'major new feature',
+          type: "feat",
+          description: "major new feature",
           breaking: true,
           timestamp: new Date(),
-          affectedPackages: ['core']
+          affectedPackages: ["core"],
         },
         {
-          type: 'fix',
-          description: 'critical bug fix',
+          type: "fix",
+          description: "critical bug fix",
           breaking: false,
           timestamp: new Date(),
-          affectedPackages: ['api']
-        }
+          affectedPackages: ["api"],
+        },
       ];
 
-      const releaseNotes = await changelogGenerator.generateReleaseNotes('1.1.0', entries);
-      
+      const releaseNotes = await changelogGenerator.generateReleaseNotes(
+        "1.1.0",
+        entries,
+      );
+
       expect(releaseNotes).toBeDefined();
-      expect(releaseNotes.version).toBe('1.1.0');
-      expect(typeof releaseNotes.title).toBe('string');
-      expect(typeof releaseNotes.description).toBe('string');
+      expect(releaseNotes.version).toBe("1.1.0");
+      expect(typeof releaseNotes.title).toBe("string");
+      expect(typeof releaseNotes.description).toBe("string");
       expect(Array.isArray(releaseNotes.highlights)).toBe(true);
       expect(Array.isArray(releaseNotes.breakingChanges)).toBe(true);
       expect(releaseNotes.breakingChanges.length).toBe(1);
     });
 
-    test('should handle empty changelog entries', async () => {
-      const releaseNotes = await changelogGenerator.generateReleaseNotes('1.0.1', []);
-      
+    test("should handle empty changelog entries", async () => {
+      const releaseNotes = await changelogGenerator.generateReleaseNotes(
+        "1.0.1",
+        [],
+      );
+
       expect(releaseNotes).toBeDefined();
-      expect(releaseNotes.version).toBe('1.0.1');
+      expect(releaseNotes.version).toBe("1.0.1");
       expect(releaseNotes.highlights.length).toBe(0);
     });
   });
 
-  describe('configuration handling', () => {
-    test('should handle keepachangelog format', async () => {
+  describe("configuration handling", () => {
+    test("should handle keepachangelog format", async () => {
       const keepAChangelogConfig = {
         ...mockConfig,
-        format: 'keepachangelog' as const
+        format: "keepachangelog" as const,
       };
 
       const newGenerator = new ChangelogGeneratorImpl();
       await newGenerator.initialize(keepAChangelogConfig);
-      
+
       const entries: ChangelogEntry[] = [
         {
-          type: 'feat',
-          description: 'new feature',
+          type: "feat",
+          description: "new feature",
           breaking: false,
           timestamp: new Date(),
-          affectedPackages: []
-        }
+          affectedPackages: [],
+        },
       ];
 
       const formatted = await newGenerator.formatChangelog(entries);
-      expect(formatted).toContain('Added');
+      expect(formatted).toContain("Added");
     });
 
-    test('should handle custom templates', async () => {
+    test("should handle custom templates", async () => {
       const customConfig = {
         ...mockConfig,
-        format: 'custom' as const,
-        customTemplate: '## {version}\n### {type}\n- {description}'
+        format: "custom" as const,
+        customTemplate: "## {version}\n### {type}\n- {description}",
       };
 
       const newGenerator = new ChangelogGeneratorImpl();
       await newGenerator.initialize(customConfig);
-      
+
       const entries: ChangelogEntry[] = [
         {
-          type: 'feat',
-          description: 'custom feature',
+          type: "feat",
+          description: "custom feature",
           breaking: false,
           timestamp: new Date(),
-          affectedPackages: []
-        }
+          affectedPackages: [],
+        },
       ];
 
       const formatted = await newGenerator.formatChangelog(entries);
-      expect(formatted).toContain('custom feature');
+      expect(formatted).toContain("custom feature");
     });
   });
 });

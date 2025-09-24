@@ -9,6 +9,7 @@ This guide explains how to set up and use the automated maintenance tools for th
 Automatically updates project dependencies with safety checks and validation.
 
 #### Features
+
 - **Monorepo Support**: Handles multiple packages in the repository
 - **Safety Checks**: Validates updates before applying
 - **Rollback Capability**: Automatically reverts on test failures
@@ -54,6 +55,7 @@ Create `.maintenance-config.json` in the project root:
 Performs comprehensive repository health checks across multiple dimensions.
 
 #### Health Check Categories
+
 - **Git Health**: Repository status, recent activity, branch protection
 - **Dependencies**: Outdated packages, security vulnerabilities
 - **Security**: Sensitive files, security configurations
@@ -83,6 +85,7 @@ node scripts/maintenance/health-check.mjs --verbose
 ```
 
 #### Exit Codes
+
 - `0`: Health check passed or no critical issues
 - `1`: Critical issues found or health check failed
 
@@ -91,6 +94,7 @@ node scripts/maintenance/health-check.mjs --verbose
 Automated cleanup of build artifacts, caches, and temporary files.
 
 #### Cleanup Categories
+
 - **Build Artifacts**: dist/, build/, coverage/, .tsbuildinfo files
 - **Dependencies**: npm cache, stale node_modules
 - **Caches**: .cache, .tmp, .eslintcache, tool-specific caches
@@ -129,7 +133,7 @@ name: Weekly Dependency Updates
 
 on:
   schedule:
-    - cron: '0 9 * * 1' # Monday 9 AM UTC
+    - cron: "0 9 * * 1" # Monday 9 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -139,16 +143,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          
+          node-version: "18"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Update dependencies
         run: |
           node scripts/maintenance/update-dependencies.mjs --apply --create-pr
@@ -165,7 +169,7 @@ name: Daily Health Check
 
 on:
   schedule:
-    - cron: '0 6 * * *' # Daily at 6 AM UTC
+    - cron: "0 6 * * *" # Daily at 6 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -173,27 +177,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          
+          node-version: "18"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Run health check
         run: |
           node scripts/maintenance/health-check.mjs --format markdown > health-report.md
-          
+
       - name: Upload health report
         uses: actions/upload-artifact@v3
         with:
           name: health-report
           path: health-report.md
           retention-days: 30
-          
+
       - name: Comment on issues if critical
         if: failure()
         uses: actions/github-script@v6
@@ -221,7 +225,7 @@ name: Monthly Cleanup
 
 on:
   schedule:
-    - cron: '0 3 1 * *' # First day of month at 3 AM UTC
+    - cron: "0 3 1 * *" # First day of month at 3 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -229,13 +233,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          
+          node-version: "18"
+          cache: "npm"
+
       - name: Run cleanup
         run: |
           node scripts/maintenance/cleanup.mjs --tasks cache,logs,temp --verbose
@@ -347,8 +351,9 @@ Add to individual `package.json` files:
 ### Health Score Tracking
 
 The health check script provides scores (0-100) for each category:
+
 - **90-100**: Excellent
-- **75-89**: Good  
+- **75-89**: Good
 - **60-74**: Fair
 - **40-59**: Poor
 - **0-39**: Critical
@@ -356,6 +361,7 @@ The health check script provides scores (0-100) for each category:
 ### Alert Conditions
 
 Alerts are triggered for:
+
 - Health score below threshold (default: 70)
 - Security vulnerabilities detected
 - Build or test failures
@@ -386,23 +392,27 @@ gh issue create \
 ## Best Practices
 
 ### 1. Gradual Rollout
+
 - Start with dry-run mode
 - Test on development branches first
 - Monitor results before full automation
 
 ### 2. Safety Measures
+
 - Always run tests after updates
-- Implement rollback mechanisms  
+- Implement rollback mechanisms
 - Use branch protection rules
 - Require review for critical changes
 
 ### 3. Monitoring
+
 - Track health scores over time
 - Monitor automation success rates
 - Set up alerts for failures
 - Regular review of maintenance logs
 
 ### 4. Customization
+
 - Adjust schedules for team workflow
 - Configure exclusions for stability
 - Set appropriate thresholds
@@ -413,6 +423,7 @@ gh issue create \
 ### Common Issues
 
 **Permission Errors**
+
 ```bash
 # Ensure scripts are executable
 chmod +x scripts/maintenance/*.mjs
@@ -422,6 +433,7 @@ ls -la scripts/maintenance/
 ```
 
 **Network Timeouts**
+
 ```bash
 # Increase timeout for slow networks
 export NODE_OPTIONS="--max-old-space-size=4096"
@@ -429,6 +441,7 @@ node scripts/maintenance/update-dependencies.mjs --timeout 600000
 ```
 
 **Git Authentication**
+
 ```bash
 # For GitHub Actions
 env:
@@ -439,6 +452,7 @@ gh auth login
 ```
 
 **Test Failures**
+
 ```bash
 # Debug test issues
 node scripts/maintenance/health-check.mjs --checks testing --verbose
@@ -450,6 +464,7 @@ node scripts/maintenance/update-dependencies.mjs --skip-tests
 ### Log Analysis
 
 Check maintenance logs:
+
 ```bash
 # View recent maintenance activity
 grep "maintenance" ~/.npm/_logs/*.log
@@ -464,18 +479,21 @@ ls -la health-*.json | tail -10
 ## Security Considerations
 
 ### Token Security
+
 - Use repository secrets for tokens
 - Rotate tokens regularly
 - Limit token permissions
 - Monitor token usage
 
 ### Safe Operations
+
 - Never automate destructive operations without approval
 - Use branch protection for critical branches
 - Require status checks before merging
 - Implement audit logging
 
 ### Dependency Security
+
 - Scan for vulnerabilities before updates
 - Use lock files for reproducible builds
 - Monitor security advisories

@@ -1,6 +1,10 @@
-import { EventEmitter } from 'events';
-import { logger } from '../logging/logger';
-import type { MCPResource, ResourceValidationResult, ResourceMetadata } from './protocol/types';
+import { EventEmitter } from "events";
+import { logger } from "../logging/logger";
+import type {
+  MCPResource,
+  ResourceValidationResult,
+  ResourceMetadata,
+} from "./protocol/types";
 
 /**
  * Resource execution statistics for performance monitoring
@@ -72,24 +76,26 @@ export class MCPResourceRegistry extends EventEmitter {
   private readonly defaultCacheTtl: number;
   private readonly maxCacheSize: number;
 
-  constructor(options: { 
-    maxAccessTime?: number;
-    defaultCacheTtl?: number;
-    maxCacheSize?: number;
-  } = {}) {
+  constructor(
+    options: {
+      maxAccessTime?: number;
+      defaultCacheTtl?: number;
+      maxCacheSize?: number;
+    } = {},
+  ) {
     super();
     this.maxAccessTime = options.maxAccessTime ?? 100; // 100ms default per performance requirements
     this.defaultCacheTtl = options.defaultCacheTtl ?? 300000; // 5 minutes default
     this.maxCacheSize = options.maxCacheSize ?? 1000; // Max 1000 cached resources
-    
+
     // Cleanup cache periodically
     setInterval(() => this.cleanupCache(), 60000); // Every minute
-    
-    logger.info('MCP Resource Registry initialized', {
+
+    logger.info("MCP Resource Registry initialized", {
       maxAccessTime: this.maxAccessTime,
       defaultCacheTtl: this.defaultCacheTtl,
       maxCacheSize: this.maxCacheSize,
-      registeredResources: 0
+      registeredResources: 0,
     });
   }
 
@@ -98,40 +104,44 @@ export class MCPResourceRegistry extends EventEmitter {
    */
   async registerResource(
     resource: MCPResource,
-    options: ResourceRegistrationOptions = {}
+    options: ResourceRegistrationOptions = {},
   ): Promise<void> {
     try {
       // Validate resource before registration
       if (!options.skipValidation) {
         const validation = await this.validateResource(resource);
         if (!validation.isValid) {
-          throw new Error(`Resource validation failed: ${validation.errors.join(', ')}`);
+          throw new Error(
+            `Resource validation failed: ${validation.errors.join(", ")}`,
+          );
         }
       }
 
       // Check for URI conflicts
       if (this.resources.has(resource.uri)) {
-        throw new Error(`Resource with URI '${resource.uri}' is already registered`);
+        throw new Error(
+          `Resource with URI '${resource.uri}' is already registered`,
+        );
       }
 
       // Register the resource
       this.resources.set(resource.uri, resource);
-      
+
       // Initialize metadata
       const metadata: ResourceMetadata = {
         uri: resource.uri,
         name: resource.name,
         description: resource.description,
         mimeType: resource.mimeType,
-        category: options.category || 'general',
+        category: options.category || "general",
         tags: options.tags || [],
         registeredAt: new Date(),
         lastModified: new Date(),
-        version: '1.0.0',
-        author: 'AST MCP Server',
+        version: "1.0.0",
+        author: "AST MCP Server",
         config: options.config || {},
         cacheable: options.cacheable ?? false,
-        cacheTtl: options.cacheTtl ?? this.defaultCacheTtl
+        cacheTtl: options.cacheTtl ?? this.defaultCacheTtl,
       };
       this.metadata.set(resource.uri, metadata);
 
@@ -142,7 +152,7 @@ export class MCPResourceRegistry extends EventEmitter {
         averageAccessTime: 0,
         successRate: 1.0,
         errorCount: 0,
-        cacheHitRate: 0
+        cacheHitRate: 0,
       });
 
       // Update category mapping
@@ -171,21 +181,21 @@ export class MCPResourceRegistry extends EventEmitter {
         this.mimeTypes.get(resource.mimeType)!.add(resource.uri);
       }
 
-      this.emit('resource-registered', resource.uri, metadata);
-      
-      logger.info('Resource registered successfully', {
+      this.emit("resource-registered", resource.uri, metadata);
+
+      logger.info("Resource registered successfully", {
         resourceUri: resource.uri,
         resourceName: resource.name,
         category: metadata.category,
         tags: metadata.tags,
         mimeType: resource.mimeType,
-        cacheable: metadata.cacheable
+        cacheable: metadata.cacheable,
       });
     } catch (error) {
-      logger.error('Failed to register resource', {
+      logger.error("Failed to register resource", {
         resourceUri: resource.uri,
         resourceName: resource.name,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
@@ -200,7 +210,7 @@ export class MCPResourceRegistry extends EventEmitter {
     }
 
     const metadata = this.metadata.get(resourceUri);
-    
+
     // Remove from all data structures
     this.resources.delete(resourceUri);
     this.metadata.delete(resourceUri);
@@ -244,9 +254,9 @@ export class MCPResourceRegistry extends EventEmitter {
       }
     }
 
-    this.emit('resource-unregistered', resourceUri);
-    
-    logger.info('Resource unregistered successfully', { resourceUri });
+    this.emit("resource-unregistered", resourceUri);
+
+    logger.info("Resource unregistered successfully", { resourceUri });
     return true;
   }
 
@@ -265,47 +275,59 @@ export class MCPResourceRegistry extends EventEmitter {
 
     // Filter by URI (exact match)
     if (options.uri) {
-      candidateUris = new Set([options.uri].filter(uri => candidateUris.has(uri)));
+      candidateUris = new Set(
+        [options.uri].filter((uri) => candidateUris.has(uri)),
+      );
     }
 
     // Filter by pattern (regex or glob-like)
     if (options.pattern) {
-      const pattern = new RegExp(options.pattern.replace(/\*/g, '.*'), 'i');
+      const pattern = new RegExp(options.pattern.replace(/\*/g, ".*"), "i");
       candidateUris = new Set(
-        Array.from(candidateUris).filter(uri => pattern.test(uri))
+        Array.from(candidateUris).filter((uri) => pattern.test(uri)),
       );
     }
 
     // Filter by category
     if (options.category) {
-      const categoryResources = this.categories.get(options.category) || new Set();
-      candidateUris = new Set(Array.from(candidateUris).filter(uri => categoryResources.has(uri)));
+      const categoryResources =
+        this.categories.get(options.category) || new Set();
+      candidateUris = new Set(
+        Array.from(candidateUris).filter((uri) => categoryResources.has(uri)),
+      );
     }
 
     // Filter by tags (intersection)
     if (options.tags && options.tags.length > 0) {
       for (const tag of options.tags) {
         const tagResources = this.tags.get(tag) || new Set();
-        candidateUris = new Set(Array.from(candidateUris).filter(uri => tagResources.has(uri)));
+        candidateUris = new Set(
+          Array.from(candidateUris).filter((uri) => tagResources.has(uri)),
+        );
       }
     }
 
     // Filter by MIME type
     if (options.mimeType) {
-      const mimeTypeResources = this.mimeTypes.get(options.mimeType) || new Set();
-      candidateUris = new Set(Array.from(candidateUris).filter(uri => mimeTypeResources.has(uri)));
+      const mimeTypeResources =
+        this.mimeTypes.get(options.mimeType) || new Set();
+      candidateUris = new Set(
+        Array.from(candidateUris).filter((uri) => mimeTypeResources.has(uri)),
+      );
     }
 
     // Filter disabled resources unless explicitly included
     if (!options.includeDisabled) {
       candidateUris = new Set(
-        Array.from(candidateUris).filter(uri => !this.disabledResources.has(uri))
+        Array.from(candidateUris).filter(
+          (uri) => !this.disabledResources.has(uri),
+        ),
       );
     }
 
     return Array.from(candidateUris)
-      .map(uri => this.resources.get(uri)!)
-      .filter(resource => resource !== undefined);
+      .map((uri) => this.resources.get(uri)!)
+      .filter((resource) => resource !== undefined);
   }
 
   /**
@@ -334,7 +356,7 @@ export class MCPResourceRegistry extends EventEmitter {
    */
   async accessResource(
     resourceUri: string,
-    params?: Record<string, any>
+    params?: Record<string, any>,
   ): Promise<any> {
     const startTime = Date.now();
     const resource = this.resources.get(resourceUri);
@@ -357,23 +379,29 @@ export class MCPResourceRegistry extends EventEmitter {
       if (metadata.cacheable) {
         const cacheKey = this.getCacheKey(resourceUri, params);
         const cachedEntry = this.cache.get(cacheKey);
-        
-        if (cachedEntry && Date.now() - cachedEntry.timestamp.getTime() < cachedEntry.ttl) {
+
+        if (
+          cachedEntry &&
+          Date.now() - cachedEntry.timestamp.getTime() < cachedEntry.ttl
+        ) {
           result = cachedEntry.content;
           cacheHit = true;
           cachedEntry.accessCount++;
-          
-          logger.debug('Resource cache hit', { resourceUri, cacheKey });
+
+          logger.debug("Resource cache hit", { resourceUri, cacheKey });
         }
       }
 
       if (!cacheHit) {
         // Set up access timeout
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Resource access timeout')), this.maxAccessTime)
+          setTimeout(
+            () => reject(new Error("Resource access timeout")),
+            this.maxAccessTime,
+          ),
         );
 
-        const accessPromise = (resource as any).handler 
+        const accessPromise = (resource as any).handler
           ? (resource as any).handler(params)
           : this.defaultResourceHandler(resource, params);
 
@@ -391,20 +419,23 @@ export class MCPResourceRegistry extends EventEmitter {
       stats.accessCount++;
       stats.totalAccessTime += accessTime;
       stats.averageAccessTime = stats.totalAccessTime / stats.accessCount;
-      stats.successRate = (stats.accessCount - stats.errorCount) / stats.accessCount;
+      stats.successRate =
+        (stats.accessCount - stats.errorCount) / stats.accessCount;
       stats.lastAccessed = new Date();
-      
+
       // Update cache hit rate
       const totalCacheAccess = cacheHit ? 1 : 0;
-      stats.cacheHitRate = (stats.cacheHitRate * (stats.accessCount - 1) + totalCacheAccess) / stats.accessCount;
+      stats.cacheHitRate =
+        (stats.cacheHitRate * (stats.accessCount - 1) + totalCacheAccess) /
+        stats.accessCount;
 
-      this.emit('resource-accessed', resourceUri, accessTime, result, cacheHit);
+      this.emit("resource-accessed", resourceUri, accessTime, result, cacheHit);
 
-      logger.info('Resource accessed successfully', {
+      logger.info("Resource accessed successfully", {
         resourceUri,
         accessTime,
         cacheHit,
-        resultSize: this.getResultSize(result)
+        resultSize: this.getResultSize(result),
       });
 
       return result;
@@ -415,16 +446,18 @@ export class MCPResourceRegistry extends EventEmitter {
       stats.errorCount++;
       stats.totalAccessTime += accessTime;
       stats.averageAccessTime = stats.totalAccessTime / stats.accessCount;
-      stats.successRate = (stats.accessCount - stats.errorCount) / stats.accessCount;
-      stats.lastError = error instanceof Error ? error : new Error(String(error));
+      stats.successRate =
+        (stats.accessCount - stats.errorCount) / stats.accessCount;
+      stats.lastError =
+        error instanceof Error ? error : new Error(String(error));
       stats.lastAccessed = new Date();
 
-      this.emit('resource-error', resourceUri, error);
+      this.emit("resource-error", resourceUri, error);
 
-      logger.error('Resource access failed', {
+      logger.error("Resource access failed", {
         resourceUri,
         accessTime,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
 
       throw error;
@@ -441,12 +474,12 @@ export class MCPResourceRegistry extends EventEmitter {
 
     if (enabled) {
       this.disabledResources.delete(resourceUri);
-      this.emit('resource-enabled', resourceUri);
-      logger.info('Resource enabled', { resourceUri });
+      this.emit("resource-enabled", resourceUri);
+      logger.info("Resource enabled", { resourceUri });
     } else {
       this.disabledResources.add(resourceUri);
-      this.emit('resource-disabled', resourceUri);
-      logger.info('Resource disabled', { resourceUri });
+      this.emit("resource-disabled", resourceUri);
+      logger.info("Resource disabled", { resourceUri });
     }
 
     return true;
@@ -456,7 +489,10 @@ export class MCPResourceRegistry extends EventEmitter {
    * Check if a resource is enabled
    */
   isResourceEnabled(resourceUri: string): boolean {
-    return this.resources.has(resourceUri) && !this.disabledResources.has(resourceUri);
+    return (
+      this.resources.has(resourceUri) &&
+      !this.disabledResources.has(resourceUri)
+    );
   }
 
   /**
@@ -486,8 +522,8 @@ export class MCPResourceRegistry extends EventEmitter {
   getResourcesByCategory(category: string): MCPResource[] {
     const resourceUris = this.categories.get(category) || new Set();
     return Array.from(resourceUris)
-      .map(uri => this.resources.get(uri)!)
-      .filter(resource => resource !== undefined);
+      .map((uri) => this.resources.get(uri)!)
+      .filter((resource) => resource !== undefined);
   }
 
   /**
@@ -496,8 +532,8 @@ export class MCPResourceRegistry extends EventEmitter {
   getResourcesByTag(tag: string): MCPResource[] {
     const resourceUris = this.tags.get(tag) || new Set();
     return Array.from(resourceUris)
-      .map(uri => this.resources.get(uri)!)
-      .filter(resource => resource !== undefined);
+      .map((uri) => this.resources.get(uri)!)
+      .filter((resource) => resource !== undefined);
   }
 
   /**
@@ -506,8 +542,8 @@ export class MCPResourceRegistry extends EventEmitter {
   getResourcesByMimeType(mimeType: string): MCPResource[] {
     const resourceUris = this.mimeTypes.get(mimeType) || new Set();
     return Array.from(resourceUris)
-      .map(uri => this.resources.get(uri)!)
-      .filter(resource => resource !== undefined);
+      .map((uri) => this.resources.get(uri)!)
+      .filter((resource) => resource !== undefined);
   }
 
   /**
@@ -524,9 +560,9 @@ export class MCPResourceRegistry extends EventEmitter {
       delete stats.lastAccessed;
       delete stats.lastError;
     }
-    
-    this.emit('stats-cleared');
-    logger.info('Resource execution statistics cleared');
+
+    this.emit("stats-cleared");
+    logger.info("Resource execution statistics cleared");
   }
 
   /**
@@ -541,16 +577,16 @@ export class MCPResourceRegistry extends EventEmitter {
           keysToDelete.push(key);
         }
       }
-      keysToDelete.forEach(key => this.cache.delete(key));
-      
-      logger.info('Resource cache cleared', { resourceUri });
+      keysToDelete.forEach((key) => this.cache.delete(key));
+
+      logger.info("Resource cache cleared", { resourceUri });
     } else {
       // Clear entire cache
       this.cache.clear();
-      logger.info('All resource cache cleared');
+      logger.info("All resource cache cleared");
     }
-    
-    this.emit('cache-cleared', resourceUri);
+
+    this.emit("cache-cleared", resourceUri);
   }
 
   /**
@@ -568,18 +604,26 @@ export class MCPResourceRegistry extends EventEmitter {
     cacheSize: number;
     averageCacheHitRate: number;
   } {
-    const totalAccesses = Array.from(this.stats.values())
-      .reduce((sum, stats) => sum + stats.accessCount, 0);
+    const totalAccesses = Array.from(this.stats.values()).reduce(
+      (sum, stats) => sum + stats.accessCount,
+      0,
+    );
 
-    const averageSuccessRate = this.stats.size > 0
-      ? Array.from(this.stats.values())
-          .reduce((sum, stats) => sum + stats.successRate, 0) / this.stats.size
-      : 1.0;
+    const averageSuccessRate =
+      this.stats.size > 0
+        ? Array.from(this.stats.values()).reduce(
+            (sum, stats) => sum + stats.successRate,
+            0,
+          ) / this.stats.size
+        : 1.0;
 
-    const averageCacheHitRate = this.stats.size > 0
-      ? Array.from(this.stats.values())
-          .reduce((sum, stats) => sum + stats.cacheHitRate, 0) / this.stats.size
-      : 0;
+    const averageCacheHitRate =
+      this.stats.size > 0
+        ? Array.from(this.stats.values()).reduce(
+            (sum, stats) => sum + stats.cacheHitRate,
+            0,
+          ) / this.stats.size
+        : 0;
 
     return {
       totalResources: this.resources.size,
@@ -591,37 +635,39 @@ export class MCPResourceRegistry extends EventEmitter {
       totalAccesses,
       averageSuccessRate,
       cacheSize: this.cache.size,
-      averageCacheHitRate
+      averageCacheHitRate,
     };
   }
 
   /**
    * Validate a resource definition
    */
-  private async validateResource(resource: MCPResource): Promise<ResourceValidationResult> {
+  private async validateResource(
+    resource: MCPResource,
+  ): Promise<ResourceValidationResult> {
     const errors: string[] = [];
 
     // Basic validation
-    if (!resource.uri || typeof resource.uri !== 'string') {
-      errors.push('Resource URI is required and must be a string');
+    if (!resource.uri || typeof resource.uri !== "string") {
+      errors.push("Resource URI is required and must be a string");
     }
 
-    if (!resource.name || typeof resource.name !== 'string') {
-      errors.push('Resource name is required and must be a string');
+    if (!resource.name || typeof resource.name !== "string") {
+      errors.push("Resource name is required and must be a string");
     }
 
-    if (!resource.description || typeof resource.description !== 'string') {
-      errors.push('Resource description is required and must be a string');
+    if (!resource.description || typeof resource.description !== "string") {
+      errors.push("Resource description is required and must be a string");
     }
 
     // Validate URI format (basic check)
     if (resource.uri && !this.isValidUri(resource.uri)) {
-      errors.push('Resource URI format is invalid');
+      errors.push("Resource URI format is invalid");
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -631,7 +677,12 @@ export class MCPResourceRegistry extends EventEmitter {
   private isValidUri(uri: string): boolean {
     try {
       // Simple URI validation - should contain scheme or be relative path
-      return uri.includes(':') || uri.startsWith('/') || uri.startsWith('./') || uri.startsWith('../');
+      return (
+        uri.includes(":") ||
+        uri.startsWith("/") ||
+        uri.startsWith("./") ||
+        uri.startsWith("../")
+      );
     } catch {
       return false;
     }
@@ -640,7 +691,10 @@ export class MCPResourceRegistry extends EventEmitter {
   /**
    * Default resource handler when no custom handler is provided
    */
-  private async defaultResourceHandler(resource: MCPResource, params?: Record<string, any>): Promise<any> {
+  private async defaultResourceHandler(
+    resource: MCPResource,
+    params?: Record<string, any>,
+  ): Promise<any> {
     // This is a basic implementation that could be extended based on resource type
     return {
       uri: resource.uri,
@@ -648,15 +702,20 @@ export class MCPResourceRegistry extends EventEmitter {
       description: resource.description,
       mimeType: resource.mimeType,
       content: `Default content for resource: ${resource.name}`,
-      params: params || {}
+      params: params || {},
     };
   }
 
   /**
    * Generate cache key for resource access
    */
-  private getCacheKey(resourceUri: string, params?: Record<string, any>): string {
-    const paramsStr = params ? JSON.stringify(params, Object.keys(params).sort()) : '';
+  private getCacheKey(
+    resourceUri: string,
+    params?: Record<string, any>,
+  ): string {
+    const paramsStr = params
+      ? JSON.stringify(params, Object.keys(params).sort())
+      : "";
     return `${resourceUri}:${paramsStr}`;
   }
 
@@ -667,10 +726,10 @@ export class MCPResourceRegistry extends EventEmitter {
     resourceUri: string,
     params: Record<string, any> | undefined,
     result: any,
-    ttl: number
+    ttl: number,
   ): void {
     const cacheKey = this.getCacheKey(resourceUri, params);
-    
+
     // Ensure cache size limit before adding new entry
     while (this.cache.size >= this.maxCacheSize) {
       this.evictOldestCacheEntry();
@@ -680,10 +739,10 @@ export class MCPResourceRegistry extends EventEmitter {
       content: result,
       timestamp: new Date(),
       ttl,
-      accessCount: 1
+      accessCount: 1,
     });
 
-    logger.debug('Resource result cached', { resourceUri, cacheKey, ttl });
+    logger.debug("Resource result cached", { resourceUri, cacheKey, ttl });
   }
 
   /**
@@ -702,7 +761,7 @@ export class MCPResourceRegistry extends EventEmitter {
 
     if (oldestKey) {
       this.cache.delete(oldestKey);
-      logger.debug('Evicted oldest cache entry', { cacheKey: oldestKey });
+      logger.debug("Evicted oldest cache entry", { cacheKey: oldestKey });
     }
   }
 
@@ -719,10 +778,12 @@ export class MCPResourceRegistry extends EventEmitter {
       }
     }
 
-    keysToDelete.forEach(key => this.cache.delete(key));
+    keysToDelete.forEach((key) => this.cache.delete(key));
 
     if (keysToDelete.length > 0) {
-      logger.debug('Cleaned up expired cache entries', { count: keysToDelete.length });
+      logger.debug("Cleaned up expired cache entries", {
+        count: keysToDelete.length,
+      });
     }
   }
 

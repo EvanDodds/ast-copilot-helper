@@ -145,11 +145,13 @@ The AST MCP Server follows a strict layered architecture pattern:
 **Purpose:** Manages all server configuration with support for multiple sources (file, environment, programmatic) and hot-reloading.
 
 **Key Classes:**
+
 - `ConfigManager`: Central configuration management
 - `ConfigValidator`: Configuration validation and constraint checking
 - `ConfigDefaults`: Environment-specific default configurations
 
 **Design Patterns:**
+
 - **Strategy Pattern**: Different configuration sources
 - **Observer Pattern**: Configuration change notifications
 - **Factory Pattern**: Environment-specific configuration creation
@@ -158,12 +160,12 @@ The AST MCP Server follows a strict layered architecture pattern:
 // Example usage
 const configManager = new ConfigManager();
 await configManager.loadConfig({
-  configFile: './config.json',
-  environment: 'production'
+  configFile: "./config.json",
+  environment: "production",
 });
 
-configManager.on('config:updated', (newConfig, oldConfig) => {
-  console.log('Configuration updated');
+configManager.on("config:updated", (newConfig, oldConfig) => {
+  console.log("Configuration updated");
 });
 ```
 
@@ -174,12 +176,14 @@ configManager.on('config:updated', (newConfig, oldConfig) => {
 **Purpose:** Implements the Model Context Protocol specification for JSON-RPC 2.0 communication.
 
 **Key Components:**
+
 - `MCPServer`: Main protocol server implementation
 - `RequestHandler`: Handles incoming requests
 - `ResponseManager`: Manages response formatting
 - `ErrorHandler`: Centralized error handling
 
 **Message Flow:**
+
 ```
 Client Request → Transport → Protocol Router → Handler → Response → Transport → Client
 ```
@@ -191,12 +195,14 @@ Client Request → Transport → Protocol Router → Handler → Response → Tr
 **Purpose:** Abstracts different communication mechanisms (STDIO, WebSocket, HTTP).
 
 **Key Classes:**
+
 - `Transport`: Abstract transport interface
 - `StdioTransport`: Standard input/output transport
 - `WebSocketTransport`: WebSocket-based transport
 - `TransportManager`: Transport lifecycle management
 
 **Transport Interface:**
+
 ```typescript
 interface Transport extends EventEmitter {
   start(): Promise<void>;
@@ -213,26 +219,28 @@ interface Transport extends EventEmitter {
 **Purpose:** Manages available tools, their registration, validation, and execution.
 
 **Key Components:**
+
 - `ToolRegistry`: Central tool registration and discovery
 - `ToolExecutor`: Tool execution and result formatting
 - `ToolValidator`: Input validation and schema checking
 
 **Tool Registration Example:**
+
 ```typescript
 toolRegistry.registerTool({
-  name: 'parse_file',
-  description: 'Parse a file into AST',
+  name: "parse_file",
+  description: "Parse a file into AST",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      filePath: { type: 'string' },
-      includeComments: { type: 'boolean' }
+      filePath: { type: "string" },
+      includeComments: { type: "boolean" },
     },
-    required: ['filePath']
+    required: ["filePath"],
   },
   handler: async (params) => {
     // Tool implementation
-  }
+  },
 });
 ```
 
@@ -243,15 +251,17 @@ toolRegistry.registerTool({
 **Purpose:** Provides URI-based access to analyzed data and computed resources.
 
 **Key Components:**
+
 - `ResourceManager`: Resource registration and serving
 - `ResourceProvider`: Base class for resource providers
 - `URIResolver`: Resolves resource URIs to providers
 
 **Resource Provider Example:**
+
 ```typescript
 class ASTResourceProvider extends ResourceProvider {
   getScheme(): string {
-    return 'ast';
+    return "ast";
   }
 
   async readResource(uri: string): Promise<Resource> {
@@ -267,6 +277,7 @@ class ASTResourceProvider extends ResourceProvider {
 **Purpose:** Handles persistent storage of AST data, analysis results, and search indices.
 
 **Key Components:**
+
 - `DatabaseManager`: Database connection and query management
 - `ASTModel`: AST storage and retrieval
 - `SearchIndex`: Full-text and semantic search indexing
@@ -274,21 +285,26 @@ class ASTResourceProvider extends ResourceProvider {
 ### Design Patterns Used
 
 #### 1. Factory Pattern
+
 Used for creating environment-specific configurations and transport instances.
 
 ```typescript
 class TransportFactory {
   static create(type: TransportType, config: TransportConfig): Transport {
     switch (type) {
-      case 'stdio': return new StdioTransport(config);
-      case 'websocket': return new WebSocketTransport(config);
-      default: throw new Error(`Unsupported transport: ${type}`);
+      case "stdio":
+        return new StdioTransport(config);
+      case "websocket":
+        return new WebSocketTransport(config);
+      default:
+        throw new Error(`Unsupported transport: ${type}`);
     }
   }
 }
 ```
 
 #### 2. Observer Pattern
+
 Used for configuration changes and server events.
 
 ```typescript
@@ -296,12 +312,13 @@ class ConfigManager extends EventEmitter {
   updateConfig(changes: Partial<Config>): void {
     const oldConfig = this.config;
     this.config = { ...oldConfig, ...changes };
-    this.emit('config:updated', this.config, oldConfig);
+    this.emit("config:updated", this.config, oldConfig);
   }
 }
 ```
 
 #### 3. Strategy Pattern
+
 Used for different parsing strategies and transport implementations.
 
 ```typescript
@@ -317,6 +334,7 @@ class TypeScriptParsingStrategy implements ParsingStrategy {
 ```
 
 #### 4. Decorator Pattern
+
 Used for adding cross-cutting concerns like logging and validation.
 
 ```typescript
@@ -364,6 +382,7 @@ We use **Conventional Commits** specification:
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only changes
@@ -373,17 +392,18 @@ We use **Conventional Commits** specification:
 - `chore`: Maintenance tasks
 
 **Examples:**
+
 ```
 feat(tools): add semantic search functionality
 
-Add semantic search tool that uses embeddings to find 
+Add semantic search tool that uses embeddings to find
 relevant code snippets based on natural language queries.
 
 Closes #123
 
 fix(parser): handle malformed TypeScript interfaces
 
-Previously the parser would crash when encountering 
+Previously the parser would crash when encountering
 certain malformed interface declarations.
 
 Fixes #456
@@ -392,6 +412,7 @@ Fixes #456
 ### Development Workflow Steps
 
 1. **Create Feature Branch**
+
    ```bash
    git checkout develop
    git pull origin develop
@@ -405,6 +426,7 @@ Fixes #456
    - Update documentation
 
 3. **Code Quality Checks**
+
    ```bash
    yarn run lint          # ESLint checks
    yarn run format        # Prettier formatting
@@ -414,12 +436,14 @@ Fixes #456
    ```
 
 4. **Commit Changes**
+
    ```bash
    git add .
    git commit -m "feat(tools): add semantic search functionality"
    ```
 
 5. **Push and Create PR**
+
    ```bash
    git push origin feature/issue-123-add-feature
    # Create Pull Request on GitHub
@@ -445,17 +469,17 @@ interface ParseFileParams {
 
 class ASTParser {
   private readonly cache = new Map<string, AST>();
-  
+
   public async parseFile(params: ParseFileParams): Promise<ParseResult> {
     const { filePath, includeComments = false } = params;
-    
+
     if (this.cache.has(filePath)) {
       return this.getCachedResult(filePath);
     }
-    
+
     const content = await this.readFile(filePath);
     const ast = this.parseContent(content, { includeComments });
-    
+
     this.cache.set(filePath, ast);
     return { success: true, ast };
   }
@@ -464,7 +488,7 @@ class ASTParser {
 // ❌ Avoid: Implicit types, unclear naming
 class Parser {
   cache = new Map();
-  
+
   async parse(path, opts = {}) {
     if (this.cache.has(path)) return this.cache.get(path);
     const content = await fs.readFile(path);
@@ -484,16 +508,16 @@ class ParseError extends Error {
     message: string,
     public readonly filePath: string,
     public readonly line: number,
-    public readonly column: number
+    public readonly column: number,
   ) {
     super(message);
-    this.name = 'ParseError';
+    this.name = "ParseError";
   }
 }
 
 async function parseFile(filePath: string): Promise<AST> {
   try {
-    const content = await fs.readFile(filePath, 'utf-8');
+    const content = await fs.readFile(filePath, "utf-8");
     return parser.parse(content);
   } catch (error) {
     if (error instanceof SyntaxError) {
@@ -501,7 +525,7 @@ async function parseFile(filePath: string): Promise<AST> {
         `Syntax error in ${filePath}`,
         filePath,
         error.line,
-        error.column
+        error.column,
       );
     }
     throw error; // Re-throw unexpected errors
@@ -532,79 +556,81 @@ Our testing strategy follows the testing pyramid:
 ### Test Categories
 
 #### 1. Unit Tests
+
 **Purpose:** Test individual functions and classes in isolation.
 **Location:** `src/**/__tests__/*.test.ts`
 **Runner:** Vitest
 
 ```typescript
 // Example: src/config/__tests__/validator.test.ts
-import { describe, it, expect } from 'vitest';
-import { validateConfig } from '../validator';
+import { describe, it, expect } from "vitest";
+import { validateConfig } from "../validator";
 
-describe('ConfigValidator', () => {
-  describe('validateConfig', () => {
-    it('should validate complete configuration', () => {
+describe("ConfigValidator", () => {
+  describe("validateConfig", () => {
+    it("should validate complete configuration", () => {
       const config = {
-        name: 'Test Server',
-        version: '1.0.0',
-        transport: { type: 'stdio' },
+        name: "Test Server",
+        version: "1.0.0",
+        transport: { type: "stdio" },
         // ... complete config
       };
-      
+
       const result = validateConfig(config);
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
-    
-    it('should reject invalid port numbers', () => {
+
+    it("should reject invalid port numbers", () => {
       const config = {
-        transport: { type: 'websocket', port: 70000 }
+        transport: { type: "websocket", port: 70000 },
       };
-      
+
       const result = validateConfig(config);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Port must be between 1 and 65535');
+      expect(result.errors).toContain("Port must be between 1 and 65535");
     });
   });
 });
 ```
 
 #### 2. Integration Tests
+
 **Purpose:** Test component interactions and API endpoints.
 **Location:** `test/integration/`
 
 ```typescript
 // Example: test/integration/mcp-server.test.ts
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { MCPServer } from '../src/server';
-import { StdioTransport } from '../src/mcp/transport/stdio';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { MCPServer } from "../src/server";
+import { StdioTransport } from "../src/mcp/transport/stdio";
 
-describe('MCP Server Integration', () => {
+describe("MCP Server Integration", () => {
   let server: MCPServer;
-  
+
   beforeEach(async () => {
     server = new MCPServer({
-      transport: { type: 'stdio' },
-      database: { path: ':memory:' }
+      transport: { type: "stdio" },
+      database: { path: ":memory:" },
     });
     await server.start();
   });
-  
+
   afterEach(async () => {
     await server.stop();
   });
-  
-  it('should handle tool calls end-to-end', async () => {
+
+  it("should handle tool calls end-to-end", async () => {
     const response = await server.handleRequest({
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: 1,
-      method: 'tools/call',
+      method: "tools/call",
       params: {
-        name: 'parse_file',
-        arguments: { filePath: './test-file.ts' }
-      }
+        name: "parse_file",
+        arguments: { filePath: "./test-file.ts" },
+      },
     });
-    
+
     expect(response.result.content).toBeDefined();
     expect(response.result.isError).toBe(false);
   });
@@ -612,36 +638,37 @@ describe('MCP Server Integration', () => {
 ```
 
 #### 3. End-to-End Tests
+
 **Purpose:** Test complete user workflows.
 **Location:** `test/e2e/`
 
 ```typescript
 // Example: test/e2e/full-workflow.test.ts
-import { describe, it, expect } from 'vitest';
-import { spawn } from 'child_process';
-import { MCPClient } from '@modelcontextprotocol/sdk/client';
+import { describe, it, expect } from "vitest";
+import { spawn } from "child_process";
+import { MCPClient } from "@modelcontextprotocol/sdk/client";
 
-describe('E2E: Full Workflow', () => {
-  it('should perform complete analysis workflow', async () => {
+describe("E2E: Full Workflow", () => {
+  it("should perform complete analysis workflow", async () => {
     // Start server process
-    const serverProcess = spawn('node', ['dist/cli.js']);
-    
+    const serverProcess = spawn("node", ["dist/cli.js"]);
+
     // Create client and connect
     const client = new MCPClient(/* stdio transport */);
     await client.connect();
-    
+
     // Test full workflow
-    const parseResult = await client.callTool('parse_file', {
-      filePath: './test-project/src/index.ts'
+    const parseResult = await client.callTool("parse_file", {
+      filePath: "./test-project/src/index.ts",
     });
     expect(parseResult.success).toBe(true);
-    
-    const searchResult = await client.callTool('semantic_search', {
-      query: 'authentication logic',
-      maxResults: 5
+
+    const searchResult = await client.callTool("semantic_search", {
+      query: "authentication logic",
+      maxResults: 5,
     });
     expect(searchResult.results).toHaveLength(5);
-    
+
     // Cleanup
     await client.disconnect();
     serverProcess.kill();
@@ -652,33 +679,28 @@ describe('E2E: Full Workflow', () => {
 ### Test Configuration
 
 **vitest.config.ts:**
+
 ```typescript
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: "node",
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.d.ts',
-        'test/',
-        '**/*.test.ts'
-      ],
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: ["node_modules/", "dist/", "**/*.d.ts", "test/", "**/*.test.ts"],
       thresholds: {
         global: {
           branches: 80,
           functions: 80,
           lines: 80,
-          statements: 80
-        }
-      }
-    }
-  }
+          statements: 80,
+        },
+      },
+    },
+  },
 });
 ```
 
@@ -707,16 +729,17 @@ yarn run test:e2e
 ### Test Utilities
 
 **test/utils/test-helpers.ts:**
+
 ```typescript
-import { vi } from 'vitest';
-import { MCPServer } from '../src/server';
+import { vi } from "vitest";
+import { MCPServer } from "../src/server";
 
 export function createMockServer(overrides = {}) {
   return new MCPServer({
-    transport: { type: 'stdio' },
-    database: { path: ':memory:' },
-    logging: { level: 'error' }, // Suppress logs in tests
-    ...overrides
+    transport: { type: "stdio" },
+    database: { path: ":memory:" },
+    logging: { level: "error" }, // Suppress logs in tests
+    ...overrides,
   });
 }
 
@@ -725,10 +748,10 @@ export function mockFileSystem() {
     readFile: vi.fn(),
     writeFile: vi.fn(),
     stat: vi.fn(),
-    readdir: vi.fn()
+    readdir: vi.fn(),
   }));
-  
-  vi.mock('fs/promises', () => fs);
+
+  vi.mock("fs/promises", () => fs);
   return fs;
 }
 
@@ -738,7 +761,7 @@ export async function waitFor(condition: () => boolean, timeout = 5000) {
     if (Date.now() - start > timeout) {
       throw new Error(`Timeout waiting for condition`);
     }
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
   }
 }
 ```
@@ -761,6 +784,7 @@ node --inspect dist/cli.js
 ### VS Code Debug Configuration
 
 **.vscode/launch.json:**
+
 ```json
 {
   "version": "0.2.0",
@@ -777,7 +801,7 @@ node --inspect dist/cli.js
     },
     {
       "name": "Debug Tests",
-      "type": "node", 
+      "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
       "args": ["run", "--reporter=verbose"],
@@ -793,19 +817,19 @@ node --inspect dist/cli.js
 The server uses a structured logging system with multiple levels:
 
 ```typescript
-import { logger } from './logging';
+import { logger } from "./logging";
 
 // Different log levels
-logger.debug('Detailed debug information', { context: 'parser' });
-logger.info('General information', { userId: 123 });
-logger.warn('Warning condition', { performance: 'slow' });
-logger.error('Error occurred', { error: error.message, stack: error.stack });
+logger.debug("Detailed debug information", { context: "parser" });
+logger.info("General information", { userId: 123 });
+logger.warn("Warning condition", { performance: "slow" });
+logger.error("Error occurred", { error: error.message, stack: error.stack });
 
 // Structured logging with context
-logger.child({ component: 'ast-parser' }).info('Parsing file', {
-  filePath: './src/index.ts',
+logger.child({ component: "ast-parser" }).info("Parsing file", {
+  filePath: "./src/index.ts",
   duration: 156,
-  nodeCount: 234
+  nodeCount: 234,
 });
 ```
 
@@ -815,19 +839,19 @@ logger.child({ component: 'ast-parser' }).info('Parsing file', {
 
 ```typescript
 // Add debugging to parser
-logger.debug('Starting parse', { filePath, options });
+logger.debug("Starting parse", { filePath, options });
 
 try {
   const ast = parser.parse(content, options);
-  logger.debug('Parse successful', { nodeCount: ast.body.length });
+  logger.debug("Parse successful", { nodeCount: ast.body.length });
   return ast;
 } catch (error) {
-  logger.error('Parse failed', {
+  logger.error("Parse failed", {
     filePath,
     error: error.message,
     line: error.loc?.line,
     column: error.loc?.column,
-    content: content.slice(Math.max(0, error.index - 50), error.index + 50)
+    content: content.slice(Math.max(0, error.index - 50), error.index + 50),
   });
   throw error;
 }
@@ -837,19 +861,19 @@ try {
 
 ```typescript
 // Debug transport layer
-transport.on('message', (message) => {
-  logger.debug('Received message', {
-    type: message.method || 'response',
+transport.on("message", (message) => {
+  logger.debug("Received message", {
+    type: message.method || "response",
     id: message.id,
-    size: JSON.stringify(message).length
+    size: JSON.stringify(message).length,
   });
 });
 
-transport.on('error', (error) => {
-  logger.error('Transport error', {
+transport.on("error", (error) => {
+  logger.error("Transport error", {
     transport: transport.constructor.name,
     error: error.message,
-    connected: transport.isConnected()
+    connected: transport.isConnected(),
   });
 });
 ```
@@ -864,11 +888,15 @@ function withTiming<T>(name: string, fn: () => Promise<T>): Promise<T> {
     try {
       const result = await fn();
       const duration = Number(process.hrtime.bigint() - start) / 1_000_000;
-      logger.info('Operation completed', { operation: name, duration });
+      logger.info("Operation completed", { operation: name, duration });
       return result;
     } catch (error) {
       const duration = Number(process.hrtime.bigint() - start) / 1_000_000;
-      logger.error('Operation failed', { operation: name, duration, error: error.message });
+      logger.error("Operation failed", {
+        operation: name,
+        duration,
+        error: error.message,
+      });
       throw error;
     }
   };
@@ -896,29 +924,29 @@ kill -USR2 <pid>
 
 ```typescript
 // Add CPU profiling to critical paths
-import { performance } from 'perf_hooks';
+import { performance } from "perf_hooks";
 
 class ASTParser {
   async parseFile(filePath: string): Promise<AST> {
-    const mark = performance.mark('parse-start');
-    
+    const mark = performance.mark("parse-start");
+
     try {
       const result = await this.doParse(filePath);
-      performance.mark('parse-end');
-      performance.measure('parse-duration', 'parse-start', 'parse-end');
-      
-      const measure = performance.getEntriesByName('parse-duration')[0];
-      logger.info('Parse completed', { 
-        filePath, 
+      performance.mark("parse-end");
+      performance.measure("parse-duration", "parse-start", "parse-end");
+
+      const measure = performance.getEntriesByName("parse-duration")[0];
+      logger.info("Parse completed", {
+        filePath,
         duration: measure.duration,
-        nodeCount: result.nodeCount 
+        nodeCount: result.nodeCount,
       });
-      
+
       return result;
     } finally {
-      performance.clearMarks('parse-start');
-      performance.clearMarks('parse-end');
-      performance.clearMeasures('parse-duration');
+      performance.clearMarks("parse-start");
+      performance.clearMarks("parse-end");
+      performance.clearMeasures("parse-duration");
     }
   }
 }
@@ -930,12 +958,12 @@ class ASTParser {
 // Monitor memory usage
 function logMemoryUsage(context: string) {
   const usage = process.memoryUsage();
-  logger.info('Memory usage', {
+  logger.info("Memory usage", {
     context,
     heapUsed: Math.round(usage.heapUsed / 1024 / 1024),
     heapTotal: Math.round(usage.heapTotal / 1024 / 1024),
     external: Math.round(usage.external / 1024 / 1024),
-    rss: Math.round(usage.rss / 1024 / 1024)
+    rss: Math.round(usage.rss / 1024 / 1024),
   });
 }
 ```
@@ -945,28 +973,28 @@ function logMemoryUsage(context: string) {
 #### 1. Caching
 
 ```typescript
-import LRU from 'lru-cache';
+import LRU from "lru-cache";
 
 class ASTCache {
   private cache = new LRU<string, AST>({
     max: 1000,
     maxSize: 100 * 1024 * 1024, // 100MB
     sizeCalculation: (ast) => JSON.stringify(ast).length,
-    ttl: 5 * 60 * 1000 // 5 minutes
+    ttl: 5 * 60 * 1000, // 5 minutes
   });
-  
+
   get(filePath: string): AST | undefined {
     return this.cache.get(filePath);
   }
-  
+
   set(filePath: string, ast: AST): void {
     this.cache.set(filePath, ast);
   }
-  
+
   delete(filePath: string): boolean {
     return this.cache.delete(filePath);
   }
-  
+
   clear(): void {
     this.cache.clear();
   }
@@ -976,26 +1004,26 @@ class ASTCache {
 #### 2. Streaming for Large Files
 
 ```typescript
-import { createReadStream } from 'fs';
-import { createInterface } from 'readline';
+import { createReadStream } from "fs";
+import { createInterface } from "readline";
 
 async function processLargeFile(filePath: string): Promise<void> {
   const fileStream = createReadStream(filePath);
   const rl = createInterface({
     input: fileStream,
-    crlfDelay: Infinity
+    crlfDelay: Infinity,
   });
-  
+
   let lineNumber = 0;
   for await (const line of rl) {
     lineNumber++;
-    
+
     // Process line by line to avoid loading entire file into memory
     await this.processLine(line, lineNumber);
-    
+
     // Yield control occasionally
     if (lineNumber % 1000 === 0) {
-      await new Promise(resolve => setImmediate(resolve));
+      await new Promise((resolve) => setImmediate(resolve));
     }
   }
 }
@@ -1005,28 +1033,28 @@ async function processLargeFile(filePath: string): Promise<void> {
 
 ```typescript
 // main.ts
-import { Worker } from 'worker_threads';
+import { Worker } from "worker_threads";
 
 class ParserWorkerPool {
   private workers: Worker[] = [];
   private queue: Array<{ data: any; resolve: Function; reject: Function }> = [];
-  
+
   constructor(poolSize = 4) {
     for (let i = 0; i < poolSize; i++) {
       this.createWorker();
     }
   }
-  
+
   async parse(filePath: string, content: string): Promise<AST> {
     return new Promise((resolve, reject) => {
       this.queue.push({ data: { filePath, content }, resolve, reject });
       this.processQueue();
     });
   }
-  
+
   private createWorker(): void {
-    const worker = new Worker('./parser-worker.js');
-    worker.on('message', (result) => {
+    const worker = new Worker("./parser-worker.js");
+    worker.on("message", (result) => {
       // Handle worker response
     });
     this.workers.push(worker);
@@ -1034,9 +1062,9 @@ class ParserWorkerPool {
 }
 
 // parser-worker.js
-import { parentPort } from 'worker_threads';
+import { parentPort } from "worker_threads";
 
-parentPort?.on('message', ({ filePath, content }) => {
+parentPort?.on("message", ({ filePath, content }) => {
   try {
     const ast = parser.parse(content);
     parentPort?.postMessage({ success: true, ast });
@@ -1051,27 +1079,27 @@ parentPort?.on('message', ({ filePath, content }) => {
 ```typescript
 class PerformanceMonitor {
   private metrics = new Map<string, number[]>();
-  
+
   record(operation: string, duration: number): void {
     if (!this.metrics.has(operation)) {
       this.metrics.set(operation, []);
     }
-    
+
     const durations = this.metrics.get(operation)!;
     durations.push(duration);
-    
+
     // Keep only last 1000 measurements
     if (durations.length > 1000) {
       durations.shift();
     }
   }
-  
+
   getStats(operation: string) {
     const durations = this.metrics.get(operation) || [];
     if (durations.length === 0) return null;
-    
+
     durations.sort((a, b) => a - b);
-    
+
     return {
       count: durations.length,
       min: durations[0],
@@ -1079,7 +1107,7 @@ class PerformanceMonitor {
       avg: durations.reduce((sum, d) => sum + d, 0) / durations.length,
       p50: durations[Math.floor(durations.length * 0.5)],
       p95: durations[Math.floor(durations.length * 0.95)],
-      p99: durations[Math.floor(durations.length * 0.99)]
+      p99: durations[Math.floor(durations.length * 0.99)],
     };
   }
 }
@@ -1090,6 +1118,7 @@ class PerformanceMonitor {
 ### Getting Started
 
 1. **Fork the Repository**
+
    ```bash
    # Fork on GitHub, then clone your fork
    git clone https://github.com/your-username/ast-copilot-helper.git
@@ -1097,6 +1126,7 @@ class PerformanceMonitor {
    ```
 
 2. **Set Up Development Environment**
+
    ```bash
    yarn install
    yarn run build
@@ -1105,6 +1135,7 @@ class PerformanceMonitor {
    ```
 
 3. **Create Feature Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -1163,6 +1194,7 @@ When creating issues:
 ### Versioning
 
 We follow **Semantic Versioning** (SemVer):
+
 - `MAJOR.MINOR.PATCH`
 - Major: Breaking changes
 - Minor: New features (backward compatible)
@@ -1171,6 +1203,7 @@ We follow **Semantic Versioning** (SemVer):
 ### Release Workflow
 
 1. **Create Release Branch**
+
    ```bash
    git checkout develop
    git pull origin develop
@@ -1178,12 +1211,14 @@ We follow **Semantic Versioning** (SemVer):
    ```
 
 2. **Update Version and Changelog**
+
    ```bash
    npm version minor  # or major/patch
    # Update CHANGELOG.md with new features and fixes
    ```
 
 3. **Final Testing**
+
    ```bash
    yarn run test:all
    yarn run build
@@ -1196,6 +1231,7 @@ We follow **Semantic Versioning** (SemVer):
    - Require approval from all maintainers
 
 5. **Merge and Tag**
+
    ```bash
    git checkout main
    git merge release/v1.2.0
@@ -1204,6 +1240,7 @@ We follow **Semantic Versioning** (SemVer):
    ```
 
 6. **Publish Package**
+
    ```bash
    npm publish
    ```

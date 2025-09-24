@@ -1,6 +1,6 @@
 /**
  * Core AST Schema Definition
- * 
+ *
  * Defines the normalized AST schema and types used across all supported
  * programming languages for consistent data structures.
  */
@@ -22,45 +22,45 @@ export interface Position {
  */
 export enum NodeType {
   // Top-level constructs
-  FILE = 'file',
-  MODULE = 'module',
-  NAMESPACE = 'namespace',
-  
+  FILE = "file",
+  MODULE = "module",
+  NAMESPACE = "namespace",
+
   // Class-related
-  CLASS = 'class',
-  INTERFACE = 'interface',
-  ENUM = 'enum',
-  TYPE_ALIAS = 'type_alias',
-  
+  CLASS = "class",
+  INTERFACE = "interface",
+  ENUM = "enum",
+  TYPE_ALIAS = "type_alias",
+
   // Function-related
-  FUNCTION = 'function',
-  METHOD = 'method',
-  CONSTRUCTOR = 'constructor',
-  GETTER = 'getter',
-  SETTER = 'setter',
-  ARROW_FUNCTION = 'arrow_function',
-  
+  FUNCTION = "function",
+  METHOD = "method",
+  CONSTRUCTOR = "constructor",
+  GETTER = "getter",
+  SETTER = "setter",
+  ARROW_FUNCTION = "arrow_function",
+
   // Variable-related
-  VARIABLE = 'variable',
-  PARAMETER = 'parameter',
-  PROPERTY = 'property',
-  FIELD = 'field',
-  
+  VARIABLE = "variable",
+  PARAMETER = "parameter",
+  PROPERTY = "property",
+  FIELD = "field",
+
   // Control flow
-  IF_STATEMENT = 'if_statement',
-  FOR_LOOP = 'for_loop',
-  WHILE_LOOP = 'while_loop',
-  SWITCH_STATEMENT = 'switch_statement',
-  TRY_CATCH = 'try_catch',
-  
+  IF_STATEMENT = "if_statement",
+  FOR_LOOP = "for_loop",
+  WHILE_LOOP = "while_loop",
+  SWITCH_STATEMENT = "switch_statement",
+  TRY_CATCH = "try_catch",
+
   // Imports and exports
-  IMPORT = 'import',
-  EXPORT = 'export',
-  
+  IMPORT = "import",
+  EXPORT = "export",
+
   // Other significant constructs
-  DECORATOR = 'decorator',
-  COMMENT = 'comment',
-  STRING_LITERAL = 'string_literal',
+  DECORATOR = "decorator",
+  COMMENT = "comment",
+  STRING_LITERAL = "string_literal",
 }
 
 /**
@@ -112,7 +112,7 @@ export interface ASTNode {
   type: NodeType;
   /** Identifier name (function name, class name, etc.) */
   name?: string;
-  
+
   // Location information
   /** Absolute file path */
   filePath: string;
@@ -120,23 +120,23 @@ export interface ASTNode {
   start: Position;
   /** End position in source */
   end: Position;
-  
+
   // Hierarchy and relationships
   /** Parent node ID */
   parent?: string;
   /** Child node IDs */
   children: string[];
-  
+
   // Metadata and context
   /** Language-specific and contextual information */
   metadata: NodeMetadata;
-  
+
   // Content and analysis
   /** Raw source code (for small nodes, max 500 chars) */
   sourceText?: string;
   /** Generated signature (functions, classes) */
   signature?: string;
-  
+
   // Quality and significance metrics
   /** How important this node is for indexing */
   significance: SignificanceLevel;
@@ -165,7 +165,7 @@ export interface ProcessingContext {
 /**
  * Version information for schema compatibility
  */
-export const AST_SCHEMA_VERSION = '1.0.0';
+export const AST_SCHEMA_VERSION = "1.0.0";
 
 /**
  * Configuration constants
@@ -174,9 +174,9 @@ export const AST_CONFIG = {
   /** Maximum source text length to include in nodes */
   MAX_SOURCE_TEXT_LENGTH: 500,
   /** Hash algorithm for node IDs */
-  HASH_ALGORITHM: 'sha256' as const,
+  HASH_ALGORITHM: "sha256" as const,
   /** File extension for serialized AST nodes */
-  AST_FILE_EXTENSION: '.json',
+  AST_FILE_EXTENSION: ".json",
 } as const;
 
 /**
@@ -184,13 +184,13 @@ export const AST_CONFIG = {
  */
 export function isValidPosition(obj: any): obj is Position {
   return (
-    typeof obj === 'object' &&
+    typeof obj === "object" &&
     obj !== null &&
-    typeof obj.line === 'number' &&
-    typeof obj.column === 'number' &&
+    typeof obj.line === "number" &&
+    typeof obj.column === "number" &&
     obj.line >= 1 &&
     obj.column >= 0 &&
-    (obj.offset === undefined || typeof obj.offset === 'number')
+    (obj.offset === undefined || typeof obj.offset === "number")
   );
 }
 
@@ -199,16 +199,16 @@ export function isValidPosition(obj: any): obj is Position {
  */
 export function isValidASTNode(obj: any): obj is ASTNode {
   return (
-    typeof obj === 'object' &&
+    typeof obj === "object" &&
     obj !== null &&
-    typeof obj.id === 'string' &&
+    typeof obj.id === "string" &&
     obj.id.length === 64 && // SHA-256 hex length
     Object.values(NodeType).includes(obj.type) &&
-    typeof obj.filePath === 'string' &&
+    typeof obj.filePath === "string" &&
     isValidPosition(obj.start) &&
     isValidPosition(obj.end) &&
     Array.isArray(obj.children) &&
-    typeof obj.metadata === 'object' &&
+    typeof obj.metadata === "object" &&
     obj.metadata !== null &&
     Object.values(SignificanceLevel).includes(obj.significance)
   );
@@ -224,6 +224,8 @@ export function isValidNodeType(type: string): type is NodeType {
 /**
  * Type guard to check if a number is a valid SignificanceLevel
  */
-export function isValidSignificanceLevel(level: number): level is SignificanceLevel {
+export function isValidSignificanceLevel(
+  level: number,
+): level is SignificanceLevel {
   return Object.values(SignificanceLevel).includes(level as SignificanceLevel);
 }

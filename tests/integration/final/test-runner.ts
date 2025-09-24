@@ -2,18 +2,18 @@
  * @fileoverview Final integration test runner for production readiness
  */
 
-import type { 
-  TestSuiteConfig, 
-  TestSuiteResult, 
-  FailedTest, 
-  CoverageReport, 
-  PerformanceMetrics 
-} from '../../../packages/ast-helper/src/production-readiness/types.js';
+import type {
+  TestSuiteConfig,
+  TestSuiteResult,
+  FailedTest,
+  CoverageReport,
+  PerformanceMetrics,
+} from "../../../packages/ast-helper/src/production-readiness/types.js";
 
-import { execSync, spawn } from 'child_process';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import * as os from 'os';
+import { execSync, spawn } from "child_process";
+import { promises as fs } from "fs";
+import * as path from "path";
+import * as os from "os";
 
 export class FinalTestRunner {
   private workspaceRoot: string;
@@ -21,19 +21,19 @@ export class FinalTestRunner {
 
   constructor(workspaceRoot: string = process.cwd()) {
     this.workspaceRoot = workspaceRoot;
-    this.testOutputDir = path.join(workspaceRoot, 'test-output', 'integration');
+    this.testOutputDir = path.join(workspaceRoot, "test-output", "integration");
   }
 
   async initialize(): Promise<void> {
-    console.log('Initializing final integration test runner...');
-    
+    console.log("Initializing final integration test runner...");
+
     // Ensure test output directory exists
     await fs.mkdir(this.testOutputDir, { recursive: true });
-    
+
     // Prepare test fixtures and environments
     await this.prepareTestEnvironments();
-    
-    console.log('Final integration test runner initialized');
+
+    console.log("Final integration test runner initialized");
   }
 
   async runTestSuite(suiteConfig: TestSuiteConfig): Promise<TestSuiteResult> {
@@ -53,26 +53,26 @@ export class FinalTestRunner {
         try {
           console.log(`  Running test: ${testName}`);
           await this.runSingleTest(suiteConfig.type, testName, suiteConfig);
-          
+
           const testDuration = Date.now() - testStartTime;
           performanceData[testName] = testDuration;
           passed++;
-          
         } catch (error) {
           const testDuration = Date.now() - testStartTime;
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           const errorStack = error instanceof Error ? error.stack : undefined;
-          
+
           failedTests.push({
             name: testName,
             error: errorMessage,
             stackTrace: errorStack,
             duration: testDuration,
           });
-          
+
           performanceData[testName] = testDuration;
           failed++;
-          
+
           console.error(`  ❌ Test failed: ${testName} - ${errorMessage}`);
         }
       }
@@ -92,15 +92,17 @@ export class FinalTestRunner {
         performanceData,
       };
 
-      console.log(`Test suite ${suiteConfig.name} completed: ${passed}/${suiteConfig.tests.length} passed`);
+      console.log(
+        `Test suite ${suiteConfig.name} completed: ${passed}/${suiteConfig.tests.length} passed`,
+      );
       return result;
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       console.error(`Test suite ${suiteConfig.name} failed: ${errorMessage}`);
-      
+
       return {
         name: suiteConfig.name,
         success: false,
@@ -109,36 +111,38 @@ export class FinalTestRunner {
         failed: suiteConfig.tests.length,
         skipped: 0,
         duration,
-        failedTests: [{
-          name: 'suite-execution',
-          error: `Suite execution failed: ${errorMessage}`,
-          stackTrace: error instanceof Error ? error.stack : undefined,
-          duration,
-        }],
+        failedTests: [
+          {
+            name: "suite-execution",
+            error: `Suite execution failed: ${errorMessage}`,
+            stackTrace: error instanceof Error ? error.stack : undefined,
+            duration,
+          },
+        ],
         performanceData: {},
       };
     }
   }
 
   private async runSingleTest(
-    suiteType: string, 
-    testName: string, 
-    config: TestSuiteConfig
+    suiteType: string,
+    testName: string,
+    config: TestSuiteConfig,
   ): Promise<void> {
     switch (suiteType) {
-      case 'cli-integration':
+      case "cli-integration":
         await this.runCliIntegrationTest(testName, config);
         break;
-      case 'mcp-integration':
+      case "mcp-integration":
         await this.runMcpIntegrationTest(testName, config);
         break;
-      case 'vscode-integration':
+      case "vscode-integration":
         await this.runVscodeIntegrationTest(testName, config);
         break;
-      case 'cross-platform':
+      case "cross-platform":
         await this.runCrossPlatformTest(testName, config);
         break;
-      case 'e2e-workflows':
+      case "e2e-workflows":
         await this.runE2eWorkflowTest(testName, config);
         break;
       default:
@@ -146,32 +150,41 @@ export class FinalTestRunner {
     }
   }
 
-  private async runCliIntegrationTest(testName: string, config: TestSuiteConfig): Promise<void> {
-    const cliPath = path.join(this.workspaceRoot, 'packages', 'ast-helper', 'dist', 'cli.js');
-    
+  private async runCliIntegrationTest(
+    testName: string,
+    config: TestSuiteConfig,
+  ): Promise<void> {
+    const cliPath = path.join(
+      this.workspaceRoot,
+      "packages",
+      "ast-helper",
+      "dist",
+      "cli.js",
+    );
+
     switch (testName) {
-      case 'test-basic-parsing':
+      case "test-basic-parsing":
         await this.testBasicCliParsing(cliPath);
         break;
-      case 'test-complex-codebases':
+      case "test-complex-codebases":
         await this.testComplexCodebaseParsing(cliPath);
         break;
-      case 'test-multi-language-support':
+      case "test-multi-language-support":
         await this.testMultiLanguageSupport(cliPath);
         break;
-      case 'test-large-file-handling':
+      case "test-large-file-handling":
         await this.testLargeFileHandling(cliPath);
         break;
-      case 'test-error-scenarios':
+      case "test-error-scenarios":
         await this.testErrorScenarios(cliPath);
         break;
-      case 'test-configuration-variations':
+      case "test-configuration-variations":
         await this.testConfigurationVariations(cliPath);
         break;
-      case 'test-output-formats':
+      case "test-output-formats":
         await this.testOutputFormats(cliPath);
         break;
-      case 'test-performance-benchmarks':
+      case "test-performance-benchmarks":
         await this.testPerformanceBenchmarks(cliPath);
         break;
       default:
@@ -179,35 +192,44 @@ export class FinalTestRunner {
     }
   }
 
-  private async runMcpIntegrationTest(testName: string, config: TestSuiteConfig): Promise<void> {
-    const mcpServerPath = path.join(this.workspaceRoot, 'packages', 'ast-mcp-server', 'dist', 'index.js');
-    
+  private async runMcpIntegrationTest(
+    testName: string,
+    config: TestSuiteConfig,
+  ): Promise<void> {
+    const mcpServerPath = path.join(
+      this.workspaceRoot,
+      "packages",
+      "ast-mcp-server",
+      "dist",
+      "index.js",
+    );
+
     switch (testName) {
-      case 'test-server-startup':
+      case "test-server-startup":
         await this.testMcpServerStartup(mcpServerPath);
         break;
-      case 'test-protocol-compliance':
+      case "test-protocol-compliance":
         await this.testMcpProtocolCompliance(mcpServerPath);
         break;
-      case 'test-tool-registration':
+      case "test-tool-registration":
         await this.testMcpToolRegistration(mcpServerPath);
         break;
-      case 'test-query-processing':
+      case "test-query-processing":
         await this.testMcpQueryProcessing(mcpServerPath);
         break;
-      case 'test-embedding-generation':
+      case "test-embedding-generation":
         await this.testMcpEmbeddingGeneration(mcpServerPath);
         break;
-      case 'test-vector-search':
+      case "test-vector-search":
         await this.testMcpVectorSearch(mcpServerPath);
         break;
-      case 'test-concurrent-connections':
+      case "test-concurrent-connections":
         await this.testMcpConcurrentConnections(mcpServerPath);
         break;
-      case 'test-error-handling':
+      case "test-error-handling":
         await this.testMcpErrorHandling(mcpServerPath);
         break;
-      case 'test-resource-cleanup':
+      case "test-resource-cleanup":
         await this.testMcpResourceCleanup(mcpServerPath);
         break;
       default:
@@ -215,32 +237,39 @@ export class FinalTestRunner {
     }
   }
 
-  private async runVscodeIntegrationTest(testName: string, config: TestSuiteConfig): Promise<void> {
-    const extensionPath = path.join(this.workspaceRoot, 'packages', 'vscode-extension');
-    
+  private async runVscodeIntegrationTest(
+    testName: string,
+    config: TestSuiteConfig,
+  ): Promise<void> {
+    const extensionPath = path.join(
+      this.workspaceRoot,
+      "packages",
+      "vscode-extension",
+    );
+
     switch (testName) {
-      case 'test-extension-activation':
+      case "test-extension-activation":
         await this.testVscodeExtensionActivation(extensionPath);
         break;
-      case 'test-command-registration':
+      case "test-command-registration":
         await this.testVscodeCommandRegistration(extensionPath);
         break;
-      case 'test-mcp-server-communication':
+      case "test-mcp-server-communication":
         await this.testVscodeMcpCommunication(extensionPath);
         break;
-      case 'test-ui-components':
+      case "test-ui-components":
         await this.testVscodeUiComponents(extensionPath);
         break;
-      case 'test-settings-integration':
+      case "test-settings-integration":
         await this.testVscodeSettingsIntegration(extensionPath);
         break;
-      case 'test-workspace-handling':
+      case "test-workspace-handling":
         await this.testVscodeWorkspaceHandling(extensionPath);
         break;
-      case 'test-multi-workspace-support':
+      case "test-multi-workspace-support":
         await this.testVscodeMultiWorkspaceSupport(extensionPath);
         break;
-      case 'test-performance-ui':
+      case "test-performance-ui":
         await this.testVscodePerformanceUi(extensionPath);
         break;
       default:
@@ -248,41 +277,44 @@ export class FinalTestRunner {
     }
   }
 
-  private async runCrossPlatformTest(testName: string, config: TestSuiteConfig): Promise<void> {
+  private async runCrossPlatformTest(
+    testName: string,
+    config: TestSuiteConfig,
+  ): Promise<void> {
     const platform = os.platform();
-    
+
     switch (testName) {
-      case 'test-windows-compatibility':
-        if (platform === 'win32') {
+      case "test-windows-compatibility":
+        if (platform === "win32") {
           await this.testWindowsCompatibility();
         } else {
-          console.log('  Skipping Windows test on non-Windows platform');
+          console.log("  Skipping Windows test on non-Windows platform");
         }
         break;
-      case 'test-macos-compatibility':
-        if (platform === 'darwin') {
+      case "test-macos-compatibility":
+        if (platform === "darwin") {
           await this.testMacosCompatibility();
         } else {
-          console.log('  Skipping macOS test on non-macOS platform');
+          console.log("  Skipping macOS test on non-macOS platform");
         }
         break;
-      case 'test-linux-compatibility':
-        if (platform === 'linux') {
+      case "test-linux-compatibility":
+        if (platform === "linux") {
           await this.testLinuxCompatibility();
         } else {
-          console.log('  Skipping Linux test on non-Linux platform');
+          console.log("  Skipping Linux test on non-Linux platform");
         }
         break;
-      case 'test-node-version-compatibility':
+      case "test-node-version-compatibility":
         await this.testNodeVersionCompatibility();
         break;
-      case 'test-path-handling':
+      case "test-path-handling":
         await this.testPathHandling();
         break;
-      case 'test-file-system-permissions':
+      case "test-file-system-permissions":
         await this.testFileSystemPermissions();
         break;
-      case 'test-environment-variables':
+      case "test-environment-variables":
         await this.testEnvironmentVariables();
         break;
       default:
@@ -290,24 +322,27 @@ export class FinalTestRunner {
     }
   }
 
-  private async runE2eWorkflowTest(testName: string, config: TestSuiteConfig): Promise<void> {
+  private async runE2eWorkflowTest(
+    testName: string,
+    config: TestSuiteConfig,
+  ): Promise<void> {
     switch (testName) {
-      case 'test-full-codebase-analysis-workflow':
+      case "test-full-codebase-analysis-workflow":
         await this.testFullCodebaseAnalysisWorkflow();
         break;
-      case 'test-incremental-update-workflow':
+      case "test-incremental-update-workflow":
         await this.testIncrementalUpdateWorkflow();
         break;
-      case 'test-multi-project-workflow':
+      case "test-multi-project-workflow":
         await this.testMultiProjectWorkflow();
         break;
-      case 'test-collaboration-workflow':
+      case "test-collaboration-workflow":
         await this.testCollaborationWorkflow();
         break;
-      case 'test-backup-recovery-workflow':
+      case "test-backup-recovery-workflow":
         await this.testBackupRecoveryWorkflow();
         break;
-      case 'test-migration-workflow':
+      case "test-migration-workflow":
         await this.testMigrationWorkflow();
         break;
       default:
@@ -317,46 +352,53 @@ export class FinalTestRunner {
 
   // CLI Integration Test Implementations
   private async testBasicCliParsing(cliPath: string): Promise<void> {
-    const testProject = await this.createTestProject('basic-typescript');
+    const testProject = await this.createTestProject("basic-typescript");
     try {
-      const result = execSync(`node "${cliPath}" parse "${testProject}"`, { 
-        encoding: 'utf8',
+      const result = execSync(`node "${cliPath}" parse "${testProject}"`, {
+        encoding: "utf8",
         timeout: 30000,
       });
-      
-      if (!result.includes('Successfully parsed')) {
-        throw new Error('Basic parsing failed - no success message');
+
+      if (!result.includes("Successfully parsed")) {
+        throw new Error("Basic parsing failed - no success message");
       }
-      
+
       // Verify output files exist
       const outputExists = await this.verifyOutputFiles(testProject);
       if (!outputExists) {
-        throw new Error('Basic parsing failed - no output files generated');
+        throw new Error("Basic parsing failed - no output files generated");
       }
-      
     } finally {
       await this.cleanupTestProject(testProject);
     }
   }
 
   private async testComplexCodebaseParsing(cliPath: string): Promise<void> {
-    const testProject = await this.createTestProject('complex-mixed-languages');
+    const testProject = await this.createTestProject("complex-mixed-languages");
     try {
-      const result = execSync(`node "${cliPath}" parse "${testProject}" --recursive --languages typescript,javascript,python`, { 
-        encoding: 'utf8',
-        timeout: 120000, // 2 minutes for complex codebase
-      });
-      
-      if (!result.includes('Successfully parsed')) {
-        throw new Error('Complex codebase parsing failed');
+      const result = execSync(
+        `node "${cliPath}" parse "${testProject}" --recursive --languages typescript,javascript,python`,
+        {
+          encoding: "utf8",
+          timeout: 120000, // 2 minutes for complex codebase
+        },
+      );
+
+      if (!result.includes("Successfully parsed")) {
+        throw new Error("Complex codebase parsing failed");
       }
-      
+
       // Verify multi-language files were processed
       const stats = await this.getParsingStats(testProject);
-      if (stats.typescriptFiles < 5 || stats.javascriptFiles < 3 || stats.pythonFiles < 2) {
-        throw new Error('Complex codebase parsing incomplete - missing language files');
+      if (
+        stats.typescriptFiles < 5 ||
+        stats.javascriptFiles < 3 ||
+        stats.pythonFiles < 2
+      ) {
+        throw new Error(
+          "Complex codebase parsing incomplete - missing language files",
+        );
       }
-      
     } finally {
       await this.cleanupTestProject(testProject);
     }
@@ -366,13 +408,16 @@ export class FinalTestRunner {
     // Create test project with multiple languages
     const testProject = await this.createMultiLanguageProject();
     try {
-      const languages = ['typescript', 'javascript', 'python', 'java'];
+      const languages = ["typescript", "javascript", "python", "java"];
       for (const lang of languages) {
-        const result = execSync(`node "${cliPath}" parse "${testProject}" --language ${lang}`, { 
-          encoding: 'utf8',
-          timeout: 60000,
-        });
-        
+        const result = execSync(
+          `node "${cliPath}" parse "${testProject}" --language ${lang}`,
+          {
+            encoding: "utf8",
+            timeout: 60000,
+          },
+        );
+
         if (!result.includes(`Processing ${lang} files`)) {
           throw new Error(`Multi-language support failed for ${lang}`);
         }
@@ -383,25 +428,26 @@ export class FinalTestRunner {
   }
 
   private async testLargeFileHandling(cliPath: string): Promise<void> {
-    const testProject = await this.createTestProject('large-files');
+    const testProject = await this.createTestProject("large-files");
     try {
       // Create a large TypeScript file (>1MB)
-      const largeFilePath = path.join(testProject, 'large-file.ts');
-      const largeContent = 'export class Test {\n' + 
-        '  // '.repeat(100000) + '\n' + 
+      const largeFilePath = path.join(testProject, "large-file.ts");
+      const largeContent =
+        "export class Test {\n" +
+        "  // ".repeat(100000) +
+        "\n" +
         '  method() { return "test"; }\n' +
-        '}\n';
+        "}\n";
       await fs.writeFile(largeFilePath, largeContent);
-      
-      const result = execSync(`node "${cliPath}" parse "${testProject}"`, { 
-        encoding: 'utf8',
+
+      const result = execSync(`node "${cliPath}" parse "${testProject}"`, {
+        encoding: "utf8",
         timeout: 180000, // 3 minutes for large files
       });
-      
-      if (!result.includes('Successfully parsed')) {
-        throw new Error('Large file handling failed');
+
+      if (!result.includes("Successfully parsed")) {
+        throw new Error("Large file handling failed");
       }
-      
     } finally {
       await this.cleanupTestProject(testProject);
     }
@@ -409,103 +455,117 @@ export class FinalTestRunner {
 
   private async testErrorScenarios(cliPath: string): Promise<void> {
     // Test invalid syntax file
-    const testProject = await this.createTestProject('error-scenarios');
+    const testProject = await this.createTestProject("error-scenarios");
     try {
-      const invalidFilePath = path.join(testProject, 'invalid.ts');
-      await fs.writeFile(invalidFilePath, 'this is not valid typescript { } [ syntax');
-      
+      const invalidFilePath = path.join(testProject, "invalid.ts");
+      await fs.writeFile(
+        invalidFilePath,
+        "this is not valid typescript { } [ syntax",
+      );
+
       try {
-        execSync(`node "${cliPath}" parse "${testProject}"`, { 
-          encoding: 'utf8',
+        execSync(`node "${cliPath}" parse "${testProject}"`, {
+          encoding: "utf8",
           timeout: 30000,
         });
         // If no error thrown, parsing should have handled the error gracefully
       } catch (error) {
         // Errors are expected for invalid syntax, but should be handled gracefully
-        const errorOutput = error instanceof Error ? error.message : String(error);
-        if (errorOutput.includes('ENOENT') || errorOutput.includes('command not found')) {
-          throw new Error('CLI command not found or executable');
+        const errorOutput =
+          error instanceof Error ? error.message : String(error);
+        if (
+          errorOutput.includes("ENOENT") ||
+          errorOutput.includes("command not found")
+        ) {
+          throw new Error("CLI command not found or executable");
         }
         // Other errors are expected for invalid syntax
       }
-      
     } finally {
       await this.cleanupTestProject(testProject);
     }
   }
 
   private async testConfigurationVariations(cliPath: string): Promise<void> {
-    const testProject = await this.createTestProject('config-variations');
+    const testProject = await this.createTestProject("config-variations");
     try {
       // Test different configuration options
       const configs = [
-        '--output json',
-        '--output yaml', 
-        '--include-dependencies',
-        '--max-depth 5',
-        '--exclude node_modules',
+        "--output json",
+        "--output yaml",
+        "--include-dependencies",
+        "--max-depth 5",
+        "--exclude node_modules",
       ];
-      
+
       for (const config of configs) {
-        const result = execSync(`node "${cliPath}" parse "${testProject}" ${config}`, { 
-          encoding: 'utf8',
-          timeout: 60000,
-        });
-        
-        if (!result.includes('Successfully') && !result.includes('Complete')) {
+        const result = execSync(
+          `node "${cliPath}" parse "${testProject}" ${config}`,
+          {
+            encoding: "utf8",
+            timeout: 60000,
+          },
+        );
+
+        if (!result.includes("Successfully") && !result.includes("Complete")) {
           throw new Error(`Configuration variation failed: ${config}`);
         }
       }
-      
     } finally {
       await this.cleanupTestProject(testProject);
     }
   }
 
   private async testOutputFormats(cliPath: string): Promise<void> {
-    const testProject = await this.createTestProject('output-formats');
+    const testProject = await this.createTestProject("output-formats");
     try {
-      const formats = ['json', 'yaml', 'xml'];
-      
+      const formats = ["json", "yaml", "xml"];
+
       for (const format of formats) {
         const outputFile = path.join(this.testOutputDir, `output.${format}`);
-        const result = execSync(`node "${cliPath}" parse "${testProject}" --output ${format} --output-file "${outputFile}"`, { 
-          encoding: 'utf8',
-          timeout: 60000,
-        });
-        
+        const result = execSync(
+          `node "${cliPath}" parse "${testProject}" --output ${format} --output-file "${outputFile}"`,
+          {
+            encoding: "utf8",
+            timeout: 60000,
+          },
+        );
+
         // Verify output file was created and has content
         const stats = await fs.stat(outputFile);
         if (stats.size === 0) {
           throw new Error(`Output format ${format} produced empty file`);
         }
       }
-      
     } finally {
       await this.cleanupTestProject(testProject);
     }
   }
 
   private async testPerformanceBenchmarks(cliPath: string): Promise<void> {
-    const testProject = await this.createTestProject('performance-benchmark');
+    const testProject = await this.createTestProject("performance-benchmark");
     try {
       // Create a project with known size for benchmarking
       await this.createBenchmarkProject(testProject, 100); // 100 files
-      
+
       const startTime = Date.now();
-      const result = execSync(`node "${cliPath}" parse "${testProject}" --benchmark`, { 
-        encoding: 'utf8',
-        timeout: 300000, // 5 minutes
-      });
+      const result = execSync(
+        `node "${cliPath}" parse "${testProject}" --benchmark`,
+        {
+          encoding: "utf8",
+          timeout: 300000, // 5 minutes
+        },
+      );
       const duration = Date.now() - startTime;
-      
+
       // Performance targets: < 2 minutes for 100 files
       if (duration > 120000) {
-        throw new Error(`Performance benchmark failed: ${duration}ms > 120000ms`);
+        throw new Error(
+          `Performance benchmark failed: ${duration}ms > 120000ms`,
+        );
       }
-      
+
       console.log(`  Performance benchmark: ${duration}ms for 100 files`);
-      
     } finally {
       await this.cleanupTestProject(testProject);
     }
@@ -516,196 +576,217 @@ export class FinalTestRunner {
     let serverProcess: any;
     try {
       // Start MCP server
-      serverProcess = spawn('node', [mcpServerPath], {
-        stdio: ['pipe', 'pipe', 'pipe'],
+      serverProcess = spawn("node", [mcpServerPath], {
+        stdio: ["pipe", "pipe", "pipe"],
       });
-      
+
       // Wait for server to start
       await new Promise((resolve, reject) => {
-        let output = '';
-        const timeout = setTimeout(() => reject(new Error('Server startup timeout')), 10000);
-        
-        serverProcess.stdout.on('data', (data: Buffer) => {
+        let output = "";
+        const timeout = setTimeout(
+          () => reject(new Error("Server startup timeout")),
+          10000,
+        );
+
+        serverProcess.stdout.on("data", (data: Buffer) => {
           output += data.toString();
-          if (output.includes('Server started') || output.includes('MCP server listening')) {
+          if (
+            output.includes("Server started") ||
+            output.includes("MCP server listening")
+          ) {
             clearTimeout(timeout);
             resolve(undefined);
           }
         });
-        
-        serverProcess.on('error', (error: Error) => {
+
+        serverProcess.on("error", (error: Error) => {
           clearTimeout(timeout);
           reject(error);
         });
       });
-      
     } finally {
       if (serverProcess) {
-        serverProcess.kill('SIGTERM');
+        serverProcess.kill("SIGTERM");
       }
     }
   }
 
-  private async testMcpProtocolCompliance(_mcpServerPath: string): Promise<void> {
+  private async testMcpProtocolCompliance(
+    _mcpServerPath: string,
+  ): Promise<void> {
     // Mock implementation - would test MCP protocol compliance
-    console.log('  Testing MCP protocol compliance (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing MCP protocol compliance (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testMcpToolRegistration(_mcpServerPath: string): Promise<void> {
     // Mock implementation - would test tool registration
-    console.log('  Testing MCP tool registration (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing MCP tool registration (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testMcpQueryProcessing(_mcpServerPath: string): Promise<void> {
     // Mock implementation - would test query processing
-    console.log('  Testing MCP query processing (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing MCP query processing (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  private async testMcpEmbeddingGeneration(_mcpServerPath: string): Promise<void> {
+  private async testMcpEmbeddingGeneration(
+    _mcpServerPath: string,
+  ): Promise<void> {
     // Mock implementation - would test embedding generation
-    console.log('  Testing MCP embedding generation (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing MCP embedding generation (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testMcpVectorSearch(_mcpServerPath: string): Promise<void> {
     // Mock implementation - would test vector search
-    console.log('  Testing MCP vector search (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing MCP vector search (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  private async testMcpConcurrentConnections(_mcpServerPath: string): Promise<void> {
+  private async testMcpConcurrentConnections(
+    _mcpServerPath: string,
+  ): Promise<void> {
     // Mock implementation - would test concurrent connections
-    console.log('  Testing MCP concurrent connections (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing MCP concurrent connections (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testMcpErrorHandling(_mcpServerPath: string): Promise<void> {
     // Mock implementation - would test error handling
-    console.log('  Testing MCP error handling (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing MCP error handling (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testMcpResourceCleanup(_mcpServerPath: string): Promise<void> {
     // Mock implementation - would test resource cleanup
-    console.log('  Testing MCP resource cleanup (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing MCP resource cleanup (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   // VSCode Extension Integration Test Implementations
-  private async testVscodeExtensionActivation(_extensionPath: string): Promise<void> {
+  private async testVscodeExtensionActivation(
+    _extensionPath: string,
+  ): Promise<void> {
     // Mock implementation - would test extension activation
-    console.log('  Testing VSCode extension activation (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing VSCode extension activation (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  private async testVscodeCommandRegistration(_extensionPath: string): Promise<void> {
+  private async testVscodeCommandRegistration(
+    _extensionPath: string,
+  ): Promise<void> {
     // Mock implementation - would test command registration
-    console.log('  Testing VSCode command registration (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing VSCode command registration (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  private async testVscodeMcpCommunication(_extensionPath: string): Promise<void> {
+  private async testVscodeMcpCommunication(
+    _extensionPath: string,
+  ): Promise<void> {
     // Mock implementation - would test MCP communication
-    console.log('  Testing VSCode MCP communication (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing VSCode MCP communication (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testVscodeUiComponents(_extensionPath: string): Promise<void> {
     // Mock implementation - would test UI components
-    console.log('  Testing VSCode UI components (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing VSCode UI components (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  private async testVscodeSettingsIntegration(_extensionPath: string): Promise<void> {
+  private async testVscodeSettingsIntegration(
+    _extensionPath: string,
+  ): Promise<void> {
     // Mock implementation - would test settings integration
-    console.log('  Testing VSCode settings integration (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing VSCode settings integration (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  private async testVscodeWorkspaceHandling(_extensionPath: string): Promise<void> {
+  private async testVscodeWorkspaceHandling(
+    _extensionPath: string,
+  ): Promise<void> {
     // Mock implementation - would test workspace handling
-    console.log('  Testing VSCode workspace handling (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing VSCode workspace handling (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  private async testVscodeMultiWorkspaceSupport(_extensionPath: string): Promise<void> {
+  private async testVscodeMultiWorkspaceSupport(
+    _extensionPath: string,
+  ): Promise<void> {
     // Mock implementation - would test multi-workspace support
-    console.log('  Testing VSCode multi-workspace support (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing VSCode multi-workspace support (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testVscodePerformanceUi(_extensionPath: string): Promise<void> {
     // Mock implementation - would test performance UI
-    console.log('  Testing VSCode performance UI (mock)');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log("  Testing VSCode performance UI (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   // Cross-Platform Test Implementations
   private async testWindowsCompatibility(): Promise<void> {
     // Test Windows-specific functionality
-    console.log('  Testing Windows compatibility');
-    
+    console.log("  Testing Windows compatibility");
+
     // Test Windows path handling
-    const windowsPath = 'C:\\Users\\Test\\Project';
+    const windowsPath = "C:\\Users\\Test\\Project";
     const normalizedPath = path.normalize(windowsPath);
-    if (!normalizedPath.includes('C:')) {
-      throw new Error('Windows path normalization failed');
+    if (!normalizedPath.includes("C:")) {
+      throw new Error("Windows path normalization failed");
     }
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testMacosCompatibility(): Promise<void> {
     // Test macOS-specific functionality
-    console.log('  Testing macOS compatibility');
-    
+    console.log("  Testing macOS compatibility");
+
     // Test macOS path handling
-    const macPath = '/Users/test/project';
+    const macPath = "/Users/test/project";
     const normalizedPath = path.normalize(macPath);
-    if (!normalizedPath.startsWith('/Users')) {
-      throw new Error('macOS path normalization failed');
+    if (!normalizedPath.startsWith("/Users")) {
+      throw new Error("macOS path normalization failed");
     }
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testLinuxCompatibility(): Promise<void> {
     // Test Linux-specific functionality
-    console.log('  Testing Linux compatibility');
-    
+    console.log("  Testing Linux compatibility");
+
     // Test Linux path handling
-    const linuxPath = '/home/user/project';
+    const linuxPath = "/home/user/project";
     const normalizedPath = path.normalize(linuxPath);
-    if (!normalizedPath.startsWith('/home')) {
-      throw new Error('Linux path normalization failed');
+    if (!normalizedPath.startsWith("/home")) {
+      throw new Error("Linux path normalization failed");
     }
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   private async testNodeVersionCompatibility(): Promise<void> {
     // Test Node.js version compatibility
     const nodeVersion = process.version;
-    const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
-    
+    const majorVersion = parseInt(nodeVersion.slice(1).split(".")[0]);
+
     if (majorVersion < 18) {
-      throw new Error(`Node.js version ${nodeVersion} is not supported (minimum: 18.x)`);
+      throw new Error(
+        `Node.js version ${nodeVersion} is not supported (minimum: 18.x)`,
+      );
     }
-    
+
     console.log(`  Node.js version ${nodeVersion} is compatible`);
   }
 
   private async testPathHandling(): Promise<void> {
     // Test cross-platform path handling
-    const testPaths = [
-      './relative/path',
-      '../parent/path',
-      'simple-path',
-    ];
-    
+    const testPaths = ["./relative/path", "../parent/path", "simple-path"];
+
     for (const testPath of testPaths) {
       const resolved = path.resolve(testPath);
       if (!path.isAbsolute(resolved)) {
@@ -716,83 +797,86 @@ export class FinalTestRunner {
 
   private async testFileSystemPermissions(): Promise<void> {
     // Test file system permissions
-    const testFile = path.join(this.testOutputDir, 'permission-test.txt');
-    
+    const testFile = path.join(this.testOutputDir, "permission-test.txt");
+
     try {
-      await fs.writeFile(testFile, 'permission test');
+      await fs.writeFile(testFile, "permission test");
       await fs.access(testFile, fs.constants.R_OK | fs.constants.W_OK);
       await fs.unlink(testFile);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       throw new Error(`File system permissions test failed: ${errorMessage}`);
     }
   }
 
   private async testEnvironmentVariables(): Promise<void> {
     // Test environment variable handling
-    const testVar = 'AST_COPILOT_TEST_VAR';
-    const testValue = 'test-value-123';
-    
+    const testVar = "AST_COPILOT_TEST_VAR";
+    const testValue = "test-value-123";
+
     process.env[testVar] = testValue;
-    
+
     if (process.env[testVar] !== testValue) {
-      throw new Error('Environment variable handling failed');
+      throw new Error("Environment variable handling failed");
     }
-    
+
     delete process.env[testVar];
   }
 
   // E2E Workflow Test Implementations
   private async testFullCodebaseAnalysisWorkflow(): Promise<void> {
     // Mock implementation - would test full workflow
-    console.log('  Testing full codebase analysis workflow (mock)');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    console.log("  Testing full codebase analysis workflow (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   private async testIncrementalUpdateWorkflow(): Promise<void> {
     // Mock implementation - would test incremental updates
-    console.log('  Testing incremental update workflow (mock)');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    console.log("  Testing incremental update workflow (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   private async testMultiProjectWorkflow(): Promise<void> {
     // Mock implementation - would test multi-project support
-    console.log('  Testing multi-project workflow (mock)');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    console.log("  Testing multi-project workflow (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   private async testCollaborationWorkflow(): Promise<void> {
     // Mock implementation - would test collaboration features
-    console.log('  Testing collaboration workflow (mock)');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    console.log("  Testing collaboration workflow (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   private async testBackupRecoveryWorkflow(): Promise<void> {
     // Mock implementation - would test backup and recovery
-    console.log('  Testing backup recovery workflow (mock)');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    console.log("  Testing backup recovery workflow (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   private async testMigrationWorkflow(): Promise<void> {
     // Mock implementation - would test data migration
-    console.log('  Testing migration workflow (mock)');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    console.log("  Testing migration workflow (mock)");
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   // Helper Methods
   private async prepareTestEnvironments(): Promise<void> {
     // Prepare test fixtures and environments
-    const fixturesDir = path.join(this.testOutputDir, 'fixtures');
+    const fixturesDir = path.join(this.testOutputDir, "fixtures");
     await fs.mkdir(fixturesDir, { recursive: true });
-    
+
     // Create basic test fixtures
     await this.createBasicTestFixtures(fixturesDir);
   }
 
   private async createBasicTestFixtures(fixturesDir: string): Promise<void> {
     // Create TypeScript test files
-    const tsFile = path.join(fixturesDir, 'sample.ts');
-    await fs.writeFile(tsFile, `
+    const tsFile = path.join(fixturesDir, "sample.ts");
+    await fs.writeFile(
+      tsFile,
+      `
 export class Sample {
   private value: string;
   
@@ -804,11 +888,14 @@ export class Sample {
     return this.value;
   }
 }
-    `.trim());
-    
+    `.trim(),
+    );
+
     // Create JavaScript test files
-    const jsFile = path.join(fixturesDir, 'sample.js');
-    await fs.writeFile(jsFile, `
+    const jsFile = path.join(fixturesDir, "sample.js");
+    await fs.writeFile(
+      jsFile,
+      `
 class Sample {
   constructor(value) {
     this.value = value;
@@ -820,62 +907,74 @@ class Sample {
 }
 
 module.exports = Sample;
-    `.trim());
-    
+    `.trim(),
+    );
+
     // Create Python test files
-    const pyFile = path.join(fixturesDir, 'sample.py');
-    await fs.writeFile(pyFile, `
+    const pyFile = path.join(fixturesDir, "sample.py");
+    await fs.writeFile(
+      pyFile,
+      `
 class Sample:
     def __init__(self, value):
         self.value = value
     
     def get_value(self):
         return self.value
-    `.trim());
+    `.trim(),
+    );
   }
 
   private async createTestProject(type: string): Promise<string> {
-    const projectDir = path.join(this.testOutputDir, `test-project-${type}-${Date.now()}`);
+    const projectDir = path.join(
+      this.testOutputDir,
+      `test-project-${type}-${Date.now()}`,
+    );
     await fs.mkdir(projectDir, { recursive: true });
-    
+
     switch (type) {
-      case 'basic-typescript':
+      case "basic-typescript":
         await this.createBasicTypescriptProject(projectDir);
         break;
-      case 'complex-mixed-languages':
+      case "complex-mixed-languages":
         await this.createComplexMixedProject(projectDir);
         break;
-      case 'large-files':
+      case "large-files":
         // Project created in test method
         break;
-      case 'error-scenarios':
+      case "error-scenarios":
         // Project created in test method
         break;
-      case 'config-variations':
+      case "config-variations":
         await this.createBasicTypescriptProject(projectDir);
         break;
-      case 'output-formats':
+      case "output-formats":
         await this.createBasicTypescriptProject(projectDir);
         break;
-      case 'performance-benchmark':
+      case "performance-benchmark":
         // Project created in test method
         break;
     }
-    
+
     return projectDir;
   }
 
-  private async createBasicTypescriptProject(projectDir: string): Promise<void> {
+  private async createBasicTypescriptProject(
+    projectDir: string,
+  ): Promise<void> {
     const packageJson = {
-      name: 'test-project',
-      version: '1.0.0',
+      name: "test-project",
+      version: "1.0.0",
       dependencies: {
-        'typescript': '^5.0.0',
+        typescript: "^5.0.0",
       },
     };
-    
-    await fs.writeFile(path.join(projectDir, 'package.json'), JSON.stringify(packageJson, null, 2));
-    
+
+    await fs.writeFile(
+      path.join(projectDir, "package.json"),
+      JSON.stringify(packageJson, null, 2),
+    );
+
     const indexTs = `
 export interface User {
   id: number;
@@ -899,8 +998,8 @@ export class UserService {
   }
 }
     `.trim();
-    
-    await fs.writeFile(path.join(projectDir, 'index.ts'), indexTs);
+
+    await fs.writeFile(path.join(projectDir, "index.ts"), indexTs);
   }
 
   private async createComplexMixedProject(projectDir: string): Promise<void> {
@@ -909,13 +1008,13 @@ export class UserService {
       const content = `export class Class${i} { method${i}() { return ${i}; } }`;
       await fs.writeFile(path.join(projectDir, `class${i}.ts`), content);
     }
-    
+
     // Create JavaScript files
     for (let i = 0; i < 5; i++) {
       const content = `class JsClass${i} { method${i}() { return ${i}; } } module.exports = JsClass${i};`;
       await fs.writeFile(path.join(projectDir, `jsclass${i}.js`), content);
     }
-    
+
     // Create Python files
     for (let i = 0; i < 3; i++) {
       const content = `class PyClass${i}:\n    def method${i}(self):\n        return ${i}`;
@@ -924,25 +1023,40 @@ export class UserService {
   }
 
   private async createMultiLanguageProject(): Promise<string> {
-    const projectDir = path.join(this.testOutputDir, `multi-lang-${Date.now()}`);
+    const projectDir = path.join(
+      this.testOutputDir,
+      `multi-lang-${Date.now()}`,
+    );
     await fs.mkdir(projectDir, { recursive: true });
-    
+
     // TypeScript
-    await fs.writeFile(path.join(projectDir, 'service.ts'), 'export class Service {}');
-    
+    await fs.writeFile(
+      path.join(projectDir, "service.ts"),
+      "export class Service {}",
+    );
+
     // JavaScript
-    await fs.writeFile(path.join(projectDir, 'util.js'), 'function util() {}');
-    
+    await fs.writeFile(path.join(projectDir, "util.js"), "function util() {}");
+
     // Python
-    await fs.writeFile(path.join(projectDir, 'helper.py'), 'def helper(): pass');
-    
+    await fs.writeFile(
+      path.join(projectDir, "helper.py"),
+      "def helper(): pass",
+    );
+
     // Java
-    await fs.writeFile(path.join(projectDir, 'Main.java'), 'public class Main {}');
-    
+    await fs.writeFile(
+      path.join(projectDir, "Main.java"),
+      "public class Main {}",
+    );
+
     return projectDir;
   }
 
-  private async createBenchmarkProject(projectDir: string, fileCount: number): Promise<void> {
+  private async createBenchmarkProject(
+    projectDir: string,
+    fileCount: number,
+  ): Promise<void> {
     for (let i = 0; i < fileCount; i++) {
       const content = `
 export class BenchmarkClass${i} {
@@ -957,7 +1071,7 @@ export class BenchmarkClass${i} {
   }
 }
       `.trim();
-      
+
       await fs.writeFile(path.join(projectDir, `benchmark${i}.ts`), content);
     }
   }

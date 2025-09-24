@@ -1,18 +1,17 @@
 /**
  * Vector Database Configuration Management
- * 
+ *
  * Handles configuration loading, validation, and management for the vector database system.
  */
 
-import { promises as fs } from 'fs';
-import { join, dirname } from 'path';
-import type { 
-  VectorDBConfig} from './types.js';
-import { 
-  createVectorDBConfig, 
+import { promises as fs } from "fs";
+import { join, dirname } from "path";
+import type { VectorDBConfig } from "./types.js";
+import {
+  createVectorDBConfig,
   validateVectorDBConfig,
-  DEFAULT_VECTOR_DB_CONFIG 
-} from './types.js';
+  DEFAULT_VECTOR_DB_CONFIG,
+} from "./types.js";
 
 /**
  * Vector database configuration with environment-specific settings
@@ -20,13 +19,13 @@ import {
 export interface VectorConfigOptions {
   /** Base directory for vector database files */
   dataDir: string;
-  
+
   /** Database name prefix */
   dbName?: string;
-  
+
   /** Environment (dev, test, prod) */
   environment?: string;
-  
+
   /** Override specific config values */
   overrides?: Partial<VectorDBConfig>;
 }
@@ -35,9 +34,9 @@ export interface VectorConfigOptions {
  * Default configuration options
  */
 const DEFAULT_CONFIG_OPTIONS: Required<VectorConfigOptions> = {
-  dataDir: './data/vectors',
-  dbName: 'ast-copilot',
-  environment: 'development',
+  dataDir: "./data/vectors",
+  dbName: "ast-copilot",
+  environment: "development",
   overrides: {},
 };
 
@@ -53,28 +52,28 @@ export class VectorConfigManager {
    */
   async createConfig(options: VectorConfigOptions): Promise<VectorDBConfig> {
     const opts = { ...DEFAULT_CONFIG_OPTIONS, ...options };
-    
+
     // Ensure data directory exists
     await this.ensureDataDirectory(opts.dataDir);
-    
+
     // Build file paths
     const storageFile = join(opts.dataDir, `${opts.dbName}.sqlite`);
     const indexFile = join(opts.dataDir, `${opts.dbName}.hnsw`);
-    
+
     // Create base configuration
     const baseConfig = {
       ...DEFAULT_VECTOR_DB_CONFIG,
       storageFile,
       indexFile,
       // Environment-specific adjustments
-      ...(opts.environment === 'test' && {
+      ...(opts.environment === "test" && {
         maxElements: 1000, // Smaller for tests
-        saveInterval: 10,  // More frequent saves in tests
-        autoSave: false,   // Manual control in tests
+        saveInterval: 10, // More frequent saves in tests
+        autoSave: false, // Manual control in tests
       }),
-      ...(opts.environment === 'production' && {
+      ...(opts.environment === "production" && {
         maxElements: 500000, // Larger for production
-        saveInterval: 600,   // Less frequent saves in production
+        saveInterval: 600, // Less frequent saves in production
         autoSave: true,
       }),
       // Apply user overrides
@@ -84,7 +83,9 @@ export class VectorConfigManager {
     // Validate configuration
     const errors = validateVectorDBConfig(baseConfig);
     if (errors.length > 0) {
-      throw new Error(`Invalid vector database configuration: ${errors.join(', ')}`);
+      throw new Error(
+        `Invalid vector database configuration: ${errors.join(", ")}`,
+      );
     }
 
     this.config = baseConfig;
@@ -96,21 +97,23 @@ export class VectorConfigManager {
    */
   async loadFromFile(configPath: string): Promise<VectorDBConfig> {
     try {
-      const content = await fs.readFile(configPath, 'utf-8');
+      const content = await fs.readFile(configPath, "utf-8");
       const parsed = JSON.parse(content);
-      
+
       const config = createVectorDBConfig(parsed);
       const errors = validateVectorDBConfig(config);
-      
+
       if (errors.length > 0) {
-        throw new Error(`Invalid configuration in ${configPath}: ${errors.join(', ')}`);
+        throw new Error(
+          `Invalid configuration in ${configPath}: ${errors.join(", ")}`,
+        );
       }
-      
+
       this.config = config;
       this.configPath = configPath;
       return config;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         throw new Error(`Configuration file not found: ${configPath}`);
       }
       throw error;
@@ -122,14 +125,16 @@ export class VectorConfigManager {
    */
   async saveToFile(configPath: string): Promise<void> {
     if (!this.config) {
-      throw new Error('No configuration to save. Create or load configuration first.');
+      throw new Error(
+        "No configuration to save. Create or load configuration first.",
+      );
     }
 
     await this.ensureDataDirectory(dirname(configPath));
-    
+
     const configJson = JSON.stringify(this.config, null, 2);
-    await fs.writeFile(configPath, configJson, 'utf-8');
-    
+    await fs.writeFile(configPath, configJson, "utf-8");
+
     this.configPath = configPath;
   }
 
@@ -141,7 +146,9 @@ export class VectorConfigManager {
   }
   getConfig(): VectorDBConfig {
     if (!this.config) {
-      throw new Error('Configuration not initialized. Call createConfig() or loadFromFile() first.');
+      throw new Error(
+        "Configuration not initialized. Call createConfig() or loadFromFile() first.",
+      );
     }
     return this.config;
   }
@@ -151,14 +158,16 @@ export class VectorConfigManager {
    */
   updateConfig(updates: Partial<VectorDBConfig>): VectorDBConfig {
     if (!this.config) {
-      throw new Error('Configuration not initialized. Call createConfig() or loadFromFile() first.');
+      throw new Error(
+        "Configuration not initialized. Call createConfig() or loadFromFile() first.",
+      );
     }
 
     const newConfig = { ...this.config, ...updates };
     const errors = validateVectorDBConfig(newConfig);
-    
+
     if (errors.length > 0) {
-      throw new Error(`Invalid configuration updates: ${errors.join(', ')}`);
+      throw new Error(`Invalid configuration updates: ${errors.join(", ")}`);
     }
 
     this.config = newConfig;
@@ -170,7 +179,7 @@ export class VectorConfigManager {
    */
   getConfigSummary(): object {
     if (!this.config) {
-      return { status: 'not_initialized' };
+      return { status: "not_initialized" };
     }
 
     return {
@@ -191,21 +200,21 @@ export class VectorConfigManager {
    */
   async validatePaths(): Promise<string[]> {
     if (!this.config) {
-      return ['Configuration not initialized'];
+      return ["Configuration not initialized"];
     }
 
     const errors: string[] = [];
-    
+
     // Check if parent directories exist
     const storageDir = dirname(this.config.storageFile);
     const indexDir = dirname(this.config.indexFile);
-    
+
     try {
       await this.ensureDataDirectory(storageDir);
     } catch (error) {
       errors.push(`Cannot create storage directory: ${storageDir}`);
     }
-    
+
     try {
       await this.ensureDataDirectory(indexDir);
     } catch (error) {
@@ -218,12 +227,12 @@ export class VectorConfigManager {
   /**
    * Reset configuration to defaults
    */
-  resetToDefaults(dataDir = './data/vectors'): VectorDBConfig {
+  resetToDefaults(dataDir = "./data/vectors"): VectorDBConfig {
     const config = createVectorDBConfig({
-      storageFile: join(dataDir, 'ast-copilot.sqlite'),
-      indexFile: join(dataDir, 'ast-copilot.hnsw'),
+      storageFile: join(dataDir, "ast-copilot.sqlite"),
+      indexFile: join(dataDir, "ast-copilot.hnsw"),
     });
-    
+
     this.config = config;
     return config;
   }
@@ -243,12 +252,14 @@ export class VectorConfigManager {
 /**
  * Create a vector configuration manager with sensible defaults
  */
-export async function createVectorConfig(options?: Partial<VectorConfigOptions>): Promise<VectorDBConfig> {
+export async function createVectorConfig(
+  options?: Partial<VectorConfigOptions>,
+): Promise<VectorDBConfig> {
   const manager = new VectorConfigManager();
   const defaultOptions: VectorConfigOptions = {
-    dataDir: './data/vectors',
-    dbName: 'ast-copilot',
-    environment: 'development',
+    dataDir: "./data/vectors",
+    dbName: "ast-copilot",
+    environment: "development",
     overrides: {},
   };
   return manager.createConfig({ ...defaultOptions, ...options });
@@ -258,17 +269,17 @@ export async function createVectorConfig(options?: Partial<VectorConfigOptions>)
  * Load vector configuration from environment or defaults
  */
 export async function loadVectorConfig(): Promise<VectorDBConfig> {
-  const dataDir = process.env.AST_VECTOR_DATA_DIR || './data/vectors';
-  const dbName = process.env.AST_VECTOR_DB_NAME || 'ast-copilot';
-  const environment = process.env.NODE_ENV || 'development';
-  
+  const dataDir = process.env.AST_VECTOR_DATA_DIR || "./data/vectors";
+  const dbName = process.env.AST_VECTOR_DB_NAME || "ast-copilot";
+  const environment = process.env.NODE_ENV || "development";
+
   // Try to load from file first
   const configFile = process.env.AST_VECTOR_CONFIG_FILE;
   if (configFile) {
     const manager = new VectorConfigManager();
     return manager.loadFromFile(configFile);
   }
-  
+
   // Otherwise create with environment defaults
   return createVectorConfig({
     dataDir,

@@ -3,13 +3,13 @@
  * @module @ast-copilot-helper/ast-helper/error-reporting/privacy/privacy-manager
  */
 
-import type { 
+import type {
   ErrorReport,
   DiagnosticData,
   PrivacySettings,
   ConsentData,
-  FilterResult
-} from '../types.js';
+  FilterResult,
+} from "../types.js";
 
 /**
  * Privacy configuration options
@@ -20,7 +20,7 @@ export interface PrivacyConfig {
   /** Data retention period in days */
   retentionDays: number;
   /** Minimum anonymization level */
-  anonymizationLevel: 'none' | 'basic' | 'strict' | 'full';
+  anonymizationLevel: "none" | "basic" | "strict" | "full";
   /** Enable PII scrubbing */
   enablePiiScrubbing: boolean;
   /** Allowed data categories for collection */
@@ -62,7 +62,7 @@ export enum ConsentLevel {
   NONE = 0,
   BASIC = 1,
   ANALYTICS = 2,
-  FULL = 3
+  FULL = 3,
 }
 
 /**
@@ -75,7 +75,7 @@ const PII_PATTERNS = {
   creditCard: /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g,
   ipAddress: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
   apiKey: /(?:api[_-]?key|token|secret)['":\s=]*[a-zA-Z0-9_-]{16,}/gi,
-  path: /[A-Za-z]:\\\\[^\\n]*|\/[a-zA-Z0-9_/.-]*(?:\/[a-zA-Z0-9_.-]+)*$/g
+  path: /[A-Za-z]:\\\\[^\\n]*|\/[a-zA-Z0-9_/.-]*(?:\/[a-zA-Z0-9_.-]+)*$/g,
 };
 
 /**
@@ -92,15 +92,15 @@ export class PrivacyManager {
     this.config = {
       requireConsent: true,
       retentionDays: 30,
-      anonymizationLevel: 'basic',
+      anonymizationLevel: "basic",
       enablePiiScrubbing: true,
-      allowedCategories: ['error', 'crash', 'performance'],
+      allowedCategories: ["error", "crash", "performance"],
       enableEncryption: true,
       enableAuditLog: true,
       gdprCompliance: true,
       ccpaCompliance: true,
       customFilters: [],
-      ...config
+      ...config,
     };
 
     // Initialize encryption if enabled
@@ -108,10 +108,10 @@ export class PrivacyManager {
       this.initializeEncryption();
     }
 
-    console.log('🔒 Privacy Manager initialized with compliance:', {
+    console.log("🔒 Privacy Manager initialized with compliance:", {
       gdpr: this.config.gdprCompliance,
       ccpa: this.config.ccpaCompliance,
-      anonymization: this.config.anonymizationLevel
+      anonymization: this.config.anonymizationLevel,
     });
   }
 
@@ -120,18 +120,18 @@ export class PrivacyManager {
    */
   async setUserConsent(userId: string, consent: ConsentData): Promise<void> {
     console.log(`👤 Setting consent for user ${userId}:`, consent.level);
-    
+
     this.consentData.set(userId, {
       ...consent,
       timestamp: new Date(),
-      version: '1.0'
+      version: "1.0",
     });
 
     await this.logAuditEvent({
-      action: 'consent_set',
+      action: "consent_set",
       userId,
       data: { level: consent.level, categories: consent.categories },
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -147,18 +147,15 @@ export class PrivacyManager {
    */
   hasConsent(userId: string, category: string, level: ConsentLevel): boolean {
     if (!this.config.requireConsent) {
-return true;
-}
+      return true;
+    }
 
     const consent = this.getUserConsent(userId);
     if (!consent) {
-return false;
-}
+      return false;
+    }
 
-    return (
-      consent.level >= level &&
-      consent.categories.includes(category)
-    );
+    return consent.level >= level && consent.categories.includes(category);
   }
 
   /**
@@ -166,14 +163,16 @@ return false;
    */
   async filterErrorReport(
     errorReport: ErrorReport,
-    userId?: string
+    userId?: string,
   ): Promise<ErrorReport> {
-    const sessionId = errorReport.context?.sessionId || 'unknown';
-    const consentLevel = userId 
-      ? this.getUserConsent(userId)?.level || ConsentLevel.NONE 
+    const sessionId = errorReport.context?.sessionId || "unknown";
+    const consentLevel = userId
+      ? this.getUserConsent(userId)?.level || ConsentLevel.NONE
       : ConsentLevel.BASIC;
 
-    console.log(`🛡️ Filtering error report ${errorReport.id} with consent level ${consentLevel}`);
+    console.log(
+      `🛡️ Filtering error report ${errorReport.id} with consent level ${consentLevel}`,
+    );
 
     const filterContext: FilterContext = {
       errorId: errorReport.id,
@@ -182,14 +181,16 @@ return false;
       userId,
       sessionId,
       timestamp: errorReport.timestamp,
-      consentLevel
+      consentLevel,
     };
 
     let filteredReport = { ...errorReport };
 
     // Apply category filtering
     if (!this.config.allowedCategories.includes(errorReport.category)) {
-      throw new Error(`Category ${errorReport.category} not allowed for collection`);
+      throw new Error(
+        `Category ${errorReport.category} not allowed for collection`,
+      );
     }
 
     // Apply PII scrubbing
@@ -198,7 +199,10 @@ return false;
     }
 
     // Apply anonymization
-    filteredReport = await this.anonymizeData(filteredReport, this.config.anonymizationLevel);
+    filteredReport = await this.anonymizeData(
+      filteredReport,
+      this.config.anonymizationLevel,
+    );
 
     // Apply custom filters
     for (const filter of this.config.customFilters) {
@@ -215,7 +219,7 @@ return false;
     if (filteredReport.diagnostics) {
       filteredReport.diagnostics = await this.filterDiagnostics(
         filteredReport.diagnostics,
-        consentLevel
+        consentLevel,
       );
     }
 
@@ -225,15 +229,15 @@ return false;
     }
 
     await this.logAuditEvent({
-      action: 'data_filtered',
+      action: "data_filtered",
       userId,
       data: {
         errorId: errorReport.id,
         originalSize: JSON.stringify(errorReport).length,
         filteredSize: JSON.stringify(filteredReport).length,
-        anonymizationLevel: this.config.anonymizationLevel
+        anonymizationLevel: this.config.anonymizationLevel,
       },
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     console.log(`✅ Error report filtered successfully`);
@@ -244,22 +248,22 @@ return false;
    * Scrub PII from data using pattern matching
    */
   private async scrubPII(data: any): Promise<any> {
-    if (typeof data !== 'object' || data === null) {
-      if (typeof data === 'string') {
+    if (typeof data !== "object" || data === null) {
+      if (typeof data === "string") {
         return this.scrubStringPII(data);
       }
       return data;
     }
 
     if (Array.isArray(data)) {
-      return Promise.all(data.map(item => this.scrubPII(item)));
+      return Promise.all(data.map((item) => this.scrubPII(item)));
     }
 
     const scrubbed: any = {};
     for (const [key, value] of Object.entries(data)) {
       // Skip certain sensitive keys entirely
       if (this.isSensitiveKey(key)) {
-        scrubbed[key] = '[REDACTED]';
+        scrubbed[key] = "[REDACTED]";
       } else {
         scrubbed[key] = await this.scrubPII(value);
       }
@@ -273,7 +277,7 @@ return false;
    */
   private scrubStringPII(str: string): string {
     let scrubbed = str;
-    
+
     for (const [type, pattern] of Object.entries(PII_PATTERNS)) {
       scrubbed = scrubbed.replace(pattern, `[${type.toUpperCase()}_REDACTED]`);
     }
@@ -286,13 +290,23 @@ return false;
    */
   private isSensitiveKey(key: string): boolean {
     const sensitiveKeys = [
-      'password', 'token', 'secret', 'key', 'credential',
-      'auth', 'session', 'cookie', 'authorization',
-      'username', 'email', 'phone', 'address'
+      "password",
+      "token",
+      "secret",
+      "key",
+      "credential",
+      "auth",
+      "session",
+      "cookie",
+      "authorization",
+      "username",
+      "email",
+      "phone",
+      "address",
     ];
 
-    return sensitiveKeys.some(sensitive => 
-      key.toLowerCase().includes(sensitive)
+    return sensitiveKeys.some((sensitive) =>
+      key.toLowerCase().includes(sensitive),
     );
   }
 
@@ -301,43 +315,46 @@ return false;
    */
   private async anonymizeData(
     data: ErrorReport,
-    level: PrivacyConfig['anonymizationLevel']
+    level: PrivacyConfig["anonymizationLevel"],
   ): Promise<ErrorReport> {
-    if (level === 'none') {
-return data;
-}
+    if (level === "none") {
+      return data;
+    }
 
     const anonymized = { ...data };
 
     switch (level) {
-      case 'basic':
+      case "basic":
         // Remove direct identifiers
         if (anonymized.context) {
-          anonymized.context.sessionId = '[REDACTED]';
-          if ('userId' in anonymized.context && anonymized.context.userId) {
-            anonymized.context.userId = '[REDACTED]';
+          anonymized.context.sessionId = "[REDACTED]";
+          if ("userId" in anonymized.context && anonymized.context.userId) {
+            anonymized.context.userId = "[REDACTED]";
           }
         }
         break;
 
-      case 'strict':
+      case "strict":
         // Remove more identifying information
         if (anonymized.context) {
-          anonymized.context.sessionId = '[REDACTED]';
-          if ('userId' in anonymized.context && anonymized.context.userId) {
-            anonymized.context.userId = '[REDACTED]';
+          anonymized.context.sessionId = "[REDACTED]";
+          if ("userId" in anonymized.context && anonymized.context.userId) {
+            anonymized.context.userId = "[REDACTED]";
           }
-          if ('userAgent' in anonymized.context && anonymized.context.userAgent) {
-            anonymized.context.userAgent = '[REDACTED]';
+          if (
+            "userAgent" in anonymized.context &&
+            anonymized.context.userAgent
+          ) {
+            anonymized.context.userAgent = "[REDACTED]";
           }
         }
         if (anonymized.environment) {
-          anonymized.environment.workingDirectory = '[REDACTED]';
-          anonymized.environment.homeDirectory = '[REDACTED]';
+          anonymized.environment.workingDirectory = "[REDACTED]";
+          anonymized.environment.homeDirectory = "[REDACTED]";
         }
         break;
 
-      case 'full':
+      case "full":
         // Maximum anonymization - keep only essential error data
         return {
           id: this.generateAnonymousId(),
@@ -349,16 +366,16 @@ return data;
           operation: data.operation,
           context: {
             operation: data.operation,
-            component: 'anonymous',
+            component: "anonymous",
             timestamp: this.roundTimestamp(data.timestamp),
             environment: {},
-            platform: data.context?.platform || 'unknown',
-            architecture: data.context?.architecture || 'unknown',
-            nodeVersion: data.context?.nodeVersion || 'unknown'
+            platform: data.context?.platform || "unknown",
+            architecture: data.context?.architecture || "unknown",
+            nodeVersion: data.context?.nodeVersion || "unknown",
           },
           suggestions: data.suggestions || [],
           userProvided: false,
-          reportedToServer: data.reportedToServer || false
+          reportedToServer: data.reportedToServer || false,
         } as ErrorReport;
     }
 
@@ -370,7 +387,7 @@ return data;
    */
   private async filterDiagnostics(
     diagnostics: DiagnosticData,
-    consentLevel: ConsentLevel
+    consentLevel: ConsentLevel,
   ): Promise<DiagnosticData> {
     const filtered: DiagnosticData = {
       system: diagnostics.system,
@@ -378,13 +395,13 @@ return data;
       codebase: diagnostics.codebase,
       configuration: diagnostics.configuration,
       performance: diagnostics.performance,
-      dependencies: diagnostics.dependencies
+      dependencies: diagnostics.dependencies,
     };
 
     // System diagnostics - always allowed with basic consent
     if (consentLevel >= ConsentLevel.BASIC && diagnostics.system) {
       filtered.system = {
-        ...diagnostics.system
+        ...diagnostics.system,
         // Note: Remove any system-specific filtering as the interface doesn't include hostname/networkInfo
       };
     }
@@ -395,10 +412,19 @@ return data;
         ...diagnostics.runtime,
         node: {
           ...diagnostics.runtime.node,
-          execPath: consentLevel >= ConsentLevel.FULL ? diagnostics.runtime.node.execPath : '[REDACTED]',
-          argv: consentLevel >= ConsentLevel.FULL ? diagnostics.runtime.node.argv : [],
-          env: consentLevel >= ConsentLevel.FULL ? diagnostics.runtime.node.env : {}
-        }
+          execPath:
+            consentLevel >= ConsentLevel.FULL
+              ? diagnostics.runtime.node.execPath
+              : "[REDACTED]",
+          argv:
+            consentLevel >= ConsentLevel.FULL
+              ? diagnostics.runtime.node.argv
+              : [],
+          env:
+            consentLevel >= ConsentLevel.FULL
+              ? diagnostics.runtime.node.env
+              : {},
+        },
       };
     }
 
@@ -406,15 +432,21 @@ return data;
     if (consentLevel >= ConsentLevel.ANALYTICS && diagnostics.codebase) {
       filtered.codebase = {
         ...diagnostics.codebase,
-        git: diagnostics.codebase.git ? (consentLevel >= ConsentLevel.FULL ? {
-          ...diagnostics.codebase.git,
-          // Remove potentially sensitive commit info
-          commit: diagnostics.codebase.git.commit ? diagnostics.codebase.git.commit.substring(0, 7) : undefined
-        } : {
-          isRepository: diagnostics.codebase.git.isRepository
-        }) : {
-          isRepository: false
-        }
+        git: diagnostics.codebase.git
+          ? consentLevel >= ConsentLevel.FULL
+            ? {
+                ...diagnostics.codebase.git,
+                // Remove potentially sensitive commit info
+                commit: diagnostics.codebase.git.commit
+                  ? diagnostics.codebase.git.commit.substring(0, 7)
+                  : undefined,
+              }
+            : {
+                isRepository: diagnostics.codebase.git.isRepository,
+              }
+          : {
+              isRepository: false,
+            },
       };
     }
 
@@ -439,10 +471,12 @@ return data;
   /**
    * Encrypt sensitive data fields
    */
-  private async encryptSensitiveData(errorReport: ErrorReport): Promise<ErrorReport> {
+  private async encryptSensitiveData(
+    errorReport: ErrorReport,
+  ): Promise<ErrorReport> {
     // Placeholder for encryption implementation
     // In a real implementation, you'd use proper encryption libraries
-    console.log('🔐 Encrypting sensitive data fields...');
+    console.log("🔐 Encrypting sensitive data fields...");
     return errorReport;
   }
 
@@ -451,15 +485,15 @@ return data;
    */
   private initializeEncryption(): void {
     // Generate or load encryption key
-    this.encryptionKey = 'demo-key-' + Math.random().toString(36).substr(2, 9);
-    console.log('🔑 Encryption initialized');
+    this.encryptionKey = "demo-key-" + Math.random().toString(36).substr(2, 9);
+    console.log("🔑 Encryption initialized");
   }
 
   /**
    * Generate anonymous ID for fully anonymized reports
    */
   private generateAnonymousId(): string {
-    return 'anon-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    return "anon-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
   }
 
   /**
@@ -478,9 +512,9 @@ return data;
   private anonymizeMessage(message: string): string {
     // Remove specific file paths, line numbers, but keep error type
     return message
-      .replace(/\/[^\s]+\/[^\s]+/g, '[FILE_PATH]')
-      .replace(/line \d+/gi, 'line [LINE_NUMBER]')
-      .replace(/column \d+/gi, 'column [COLUMN_NUMBER]');
+      .replace(/\/[^\s]+\/[^\s]+/g, "[FILE_PATH]")
+      .replace(/line \d+/gi, "line [LINE_NUMBER]")
+      .replace(/column \d+/gi, "column [COLUMN_NUMBER]");
   }
 
   /**
@@ -491,7 +525,9 @@ return data;
     cutoffDate.setDate(cutoffDate.getDate() - this.config.retentionDays);
 
     const initialAuditSize = this.auditLog.length;
-    this.auditLog = this.auditLog.filter(entry => entry.timestamp > cutoffDate);
+    this.auditLog = this.auditLog.filter(
+      (entry) => entry.timestamp > cutoffDate,
+    );
 
     const initialConsentSize = this.consentData.size;
     for (const [userId, consent] of this.consentData.entries()) {
@@ -500,8 +536,10 @@ return data;
       }
     }
 
-    const cleanedCount = (initialAuditSize - this.auditLog.length) + 
-                        (initialConsentSize - this.consentData.size);
+    const cleanedCount =
+      initialAuditSize -
+      this.auditLog.length +
+      (initialConsentSize - this.consentData.size);
 
     console.log(`🗑️ Cleaned up ${cleanedCount} expired privacy records`);
     return cleanedCount;
@@ -518,7 +556,7 @@ return data;
         none: 0,
         basic: 0,
         analytics: 0,
-        full: 0
+        full: 0,
       },
       dataRetentionDays: this.config.retentionDays,
       anonymizationLevel: this.config.anonymizationLevel,
@@ -527,7 +565,7 @@ return data;
       auditLogEntries: this.auditLog.length,
       gdprCompliance: this.config.gdprCompliance,
       ccpaCompliance: this.config.ccpaCompliance,
-      lastCleanup: new Date() // Placeholder
+      lastCleanup: new Date(), // Placeholder
     };
 
     // Count consent levels
@@ -548,7 +586,7 @@ return data;
       }
     }
 
-    console.log('📊 Privacy compliance report generated');
+    console.log("📊 Privacy compliance report generated");
     return report;
   }
 
@@ -562,16 +600,16 @@ return data;
     this.consentData.delete(userId);
 
     // Clean up audit log entries for this user
-    this.auditLog = this.auditLog.filter(entry => entry.userId !== userId);
+    this.auditLog = this.auditLog.filter((entry) => entry.userId !== userId);
 
     await this.logAuditEvent({
-      action: 'consent_revoked',
+      action: "consent_revoked",
       userId,
-      data: { reason: 'user_request' },
-      timestamp: new Date()
+      data: { reason: "user_request" },
+      timestamp: new Date(),
     });
 
-    console.log('✅ User consent revoked and data cleaned up');
+    console.log("✅ User consent revoked and data cleaned up");
   }
 
   /**
@@ -582,17 +620,21 @@ return data;
 
     const consent = this.getUserConsent(userId);
     if (!consent) {
-return null;
-}
+      return null;
+    }
 
-    const userAuditEntries = this.auditLog.filter(entry => entry.userId === userId);
+    const userAuditEntries = this.auditLog.filter(
+      (entry) => entry.userId === userId,
+    );
 
     return {
       userId,
       consent,
       auditHistory: userAuditEntries,
       exportTimestamp: new Date(),
-      dataRetentionExpiry: new Date(Date.now() + this.config.retentionDays * 24 * 60 * 60 * 1000)
+      dataRetentionExpiry: new Date(
+        Date.now() + this.config.retentionDays * 24 * 60 * 60 * 1000,
+      ),
     };
   }
 
@@ -601,8 +643,8 @@ return null;
    */
   private async logAuditEvent(entry: AuditLogEntry): Promise<void> {
     if (!this.config.enableAuditLog) {
-return;
-}
+      return;
+    }
 
     this.auditLog.push(entry);
 
@@ -624,7 +666,7 @@ return;
       allowedCategories: [...this.config.allowedCategories],
       enableEncryption: this.config.enableEncryption,
       gdprCompliance: this.config.gdprCompliance,
-      ccpaCompliance: this.config.ccpaCompliance
+      ccpaCompliance: this.config.ccpaCompliance,
     };
   }
 }

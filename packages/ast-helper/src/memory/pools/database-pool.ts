@@ -3,12 +3,12 @@
  * Provides pooling for database connections with connection string management and health checks
  */
 
-import type { BasePoolConfig } from './base-pool.js';
-import { BaseResourcePool } from './base-pool.js';
-import type { 
-  DatabaseConnection, 
-  DatabaseConnectionFactory
-} from '../types.js';
+import type { BasePoolConfig } from "./base-pool.js";
+import { BaseResourcePool } from "./base-pool.js";
+import type {
+  DatabaseConnection,
+  DatabaseConnectionFactory,
+} from "../types.js";
 
 export interface DatabaseConnectionPoolConfig extends BasePoolConfig {
   databaseUrl: string;
@@ -23,7 +23,8 @@ export interface DatabaseConnectionPoolConfig extends BasePoolConfig {
 
 export class DatabaseConnectionPool extends BaseResourcePool<DatabaseConnection> {
   constructor(config: DatabaseConnectionPoolConfig) {
-    const factory: DatabaseConnectionFactory = new DatabaseConnectionFactoryImpl(config);
+    const factory: DatabaseConnectionFactory =
+      new DatabaseConnectionFactoryImpl(config);
     super(config, factory);
   }
 }
@@ -52,7 +53,7 @@ class DatabaseConnectionFactoryImpl implements DatabaseConnectionFactory {
       host: this.config.host,
       port: this.config.port,
     };
-    
+
     return connection;
   }
 
@@ -64,7 +65,10 @@ class DatabaseConnectionFactoryImpl implements DatabaseConnectionFactory {
       }
     } catch (error) {
       // Log error but don't throw - we're cleaning up
-      console.warn(`Error destroying database connection ${resource.id}:`, error);
+      console.warn(
+        `Error destroying database connection ${resource.id}:`,
+        error,
+      );
     }
   }
 
@@ -73,7 +77,7 @@ class DatabaseConnectionFactoryImpl implements DatabaseConnectionFactory {
       if (!resource.connection) {
         return false;
       }
-      
+
       // Simulate health check - replace with actual database ping/query
       await this.pingNativeConnection(resource.connection);
       resource.isHealthy = true;
@@ -92,15 +96,18 @@ class DatabaseConnectionFactoryImpl implements DatabaseConnectionFactory {
       }
     } catch (error) {
       // Ignore errors during reset - connection might not need reset
-      console.warn(`Error resetting database connection ${resource.id}:`, error);
+      console.warn(
+        `Error resetting database connection ${resource.id}:`,
+        error,
+      );
     }
   }
 
   // Private helper methods for native database operations
   private async createNativeConnection(): Promise<any> {
     // Simulate connection creation delay
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Return a mock connection object - replace with actual database connection
     return {
       connected: true,
@@ -112,8 +119,8 @@ class DatabaseConnectionFactoryImpl implements DatabaseConnectionFactory {
 
   private async closeNativeConnection(connection: any): Promise<void> {
     // Simulate connection cleanup delay
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     // Mark connection as closed - replace with actual database disconnect
     if (connection) {
       connection.connected = false;
@@ -122,18 +129,18 @@ class DatabaseConnectionFactoryImpl implements DatabaseConnectionFactory {
 
   private async pingNativeConnection(connection: any): Promise<void> {
     // Simulate ping delay
-    await new Promise(resolve => setTimeout(resolve, 25));
-    
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
     // Check if connection is still valid - replace with actual database ping
     if (!connection || !connection.connected) {
-      throw new Error('Connection not available');
+      throw new Error("Connection not available");
     }
   }
 
   private async resetNativeConnection(connection: any): Promise<void> {
     // Simulate reset delay
-    await new Promise(resolve => setTimeout(resolve, 30));
-    
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
     // Reset connection state - replace with actual database reset logic
     if (connection && connection.connected) {
       // Mock reset - in real implementation, rollback transactions, reset session, etc.

@@ -1,7 +1,7 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { tmpdir } from 'os';
-import { spawn, ChildProcess } from 'child_process';
+import { promises as fs } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
+import { spawn, ChildProcess } from "child_process";
 
 /**
  * Environment configuration for integration tests
@@ -38,27 +38,32 @@ export class TestEnvironmentManager {
   /**
    * Create an isolated test environment
    */
-  async createEnvironment(name: string, options?: {
-    useDatabase?: boolean;
-    enableDebug?: boolean;
-    configOverrides?: Record<string, any>;
-  }): Promise<TestEnvironment> {
-    const tempDir = await fs.mkdtemp(join(tmpdir(), `integration-test-${name}-`));
-    const configPath = join(tempDir, 'config.json');
-    const databasePath = join(tempDir, 'test.db');
+  async createEnvironment(
+    name: string,
+    options?: {
+      useDatabase?: boolean;
+      enableDebug?: boolean;
+      configOverrides?: Record<string, any>;
+    },
+  ): Promise<TestEnvironment> {
+    const tempDir = await fs.mkdtemp(
+      join(tmpdir(), `integration-test-${name}-`),
+    );
+    const configPath = join(tempDir, "config.json");
+    const databasePath = join(tempDir, "test.db");
 
     // Create basic configuration
     const config = {
       database: {
         path: databasePath,
-        type: 'sqlite',
+        type: "sqlite",
       },
       server: {
         port: await this.findAvailablePort(),
       },
       logging: {
-        level: options?.enableDebug ? 'debug' : 'warn',
-        file: join(tempDir, 'test.log'),
+        level: options?.enableDebug ? "debug" : "warn",
+        file: join(tempDir, "test.log"),
       },
       testing: true,
       ...options?.configOverrides,
@@ -98,18 +103,22 @@ export class TestEnvironmentManager {
       const [command, ...args] = config.startCommand!;
       const childProcess = spawn(command, args, {
         env: { ...process.env, ...config.env },
-        stdio: config.name.includes('debug') ? 'inherit' : 'pipe',
+        stdio: config.name.includes("debug") ? "inherit" : "pipe",
       });
 
       config.process = childProcess;
 
-      childProcess.on('error', (error: Error) => {
-        reject(new Error(`Failed to start service ${config.name}: ${error.message}`));
+      childProcess.on("error", (error: Error) => {
+        reject(
+          new Error(`Failed to start service ${config.name}: ${error.message}`),
+        );
       });
 
       // Wait for service to be ready
       const startTimeout = setTimeout(() => {
-        reject(new Error(`Service ${config.name} failed to start within timeout`));
+        reject(
+          new Error(`Service ${config.name} failed to start within timeout`),
+        );
       }, 10000);
 
       if (config.healthCheckUrl) {
@@ -144,16 +153,16 @@ export class TestEnvironmentManager {
     }
 
     return new Promise((resolve) => {
-      service.process!.on('exit', () => {
+      service.process!.on("exit", () => {
         resolve();
       });
 
-      service.process!.kill('SIGTERM');
+      service.process!.kill("SIGTERM");
 
       // Force kill after timeout
       setTimeout(() => {
         if (service.process && !service.process.killed) {
-          service.process.kill('SIGKILL');
+          service.process.kill("SIGKILL");
         }
         resolve();
       }, 5000);
@@ -172,19 +181,19 @@ export class TestEnvironmentManager {
    */
   async cleanupAll(): Promise<void> {
     // Stop all services
-    const stopPromises = Array.from(this.services.keys()).map(name => 
-      this.stopService(name)
+    const stopPromises = Array.from(this.services.keys()).map((name) =>
+      this.stopService(name),
     );
     await Promise.allSettled(stopPromises);
 
     // Clean up environments
-    const cleanupPromises = Array.from(this.environments.values()).map(env => 
-      env.cleanup()
+    const cleanupPromises = Array.from(this.environments.values()).map((env) =>
+      env.cleanup(),
     );
     await Promise.allSettled(cleanupPromises);
 
     // Run custom cleanup handlers
-    const handlerPromises = this.cleanupHandlers.map(handler => handler());
+    const handlerPromises = this.cleanupHandlers.map((handler) => handler());
     await Promise.allSettled(handlerPromises);
 
     this.environments.clear();
@@ -202,13 +211,16 @@ export class TestEnvironmentManager {
   /**
    * Copy test fixtures to environment
    */
-  async copyTestFixtures(environmentName: string, fixturesPath: string): Promise<void> {
+  async copyTestFixtures(
+    environmentName: string,
+    fixturesPath: string,
+  ): Promise<void> {
     const environment = this.environments.get(environmentName);
     if (!environment) {
       throw new Error(`Environment not found: ${environmentName}`);
     }
 
-    const targetPath = join(environment.tempDir, 'fixtures');
+    const targetPath = join(environment.tempDir, "fixtures");
     await this.copyDirectory(fixturesPath, targetPath);
   }
 
@@ -229,8 +241,8 @@ export class TestEnvironmentManager {
   }
 
   private async findAvailablePort(): Promise<number> {
-    const { createServer } = await import('net');
-    
+    const { createServer } = await import("net");
+
     return new Promise((resolve, reject) => {
       const server = createServer();
       server.listen(0, () => {
@@ -239,14 +251,17 @@ export class TestEnvironmentManager {
           resolve(port);
         });
       });
-      
-      server.on('error', reject);
+
+      server.on("error", reject);
     });
   }
 
-  private async waitForHealthCheck(url: string, timeout: number): Promise<void> {
+  private async waitForHealthCheck(
+    url: string,
+    timeout: number,
+  ): Promise<void> {
     const start = Date.now();
-    
+
     while (Date.now() - start < timeout) {
       try {
         // Use built-in fetch if available (Node.js 18+) or fallback to http module
@@ -257,32 +272,37 @@ export class TestEnvironmentManager {
       } catch (error) {
         // Service not ready yet, continue waiting
       }
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    
+
     throw new Error(`Health check failed for ${url} within ${timeout}ms`);
   }
 
   private async makeHttpRequest(url: string): Promise<{ ok: boolean }> {
     // Simple HTTP request implementation using Node.js built-in modules
-    const { request } = await import('http');
+    const { request } = await import("http");
     const urlObj = new URL(url);
-    
-    return new Promise((resolve, reject) => {
-      const req = request({
-        hostname: urlObj.hostname,
-        port: urlObj.port,
-        path: urlObj.pathname,
-        method: 'GET',
-      }, (res) => {
-        resolve({ ok: (res.statusCode || 0) >= 200 && (res.statusCode || 0) < 300 });
-      });
 
-      req.on('error', reject);
+    return new Promise((resolve, reject) => {
+      const req = request(
+        {
+          hostname: urlObj.hostname,
+          port: urlObj.port,
+          path: urlObj.pathname,
+          method: "GET",
+        },
+        (res) => {
+          resolve({
+            ok: (res.statusCode || 0) >= 200 && (res.statusCode || 0) < 300,
+          });
+        },
+      );
+
+      req.on("error", reject);
       req.setTimeout(5000, () => {
         req.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error("Request timeout"));
       });
       req.end();
     });
@@ -291,7 +311,7 @@ export class TestEnvironmentManager {
   private async initializeTestDatabase(databasePath: string): Promise<void> {
     // This would initialize a test database with schema
     // For now, just create an empty file
-    await fs.writeFile(databasePath, '');
+    await fs.writeFile(databasePath, "");
   }
 
   private async cleanupEnvironment(tempDir: string): Promise<void> {
@@ -304,13 +324,13 @@ export class TestEnvironmentManager {
 
   private async copyDirectory(source: string, target: string): Promise<void> {
     await fs.mkdir(target, { recursive: true });
-    
+
     const items = await fs.readdir(source, { withFileTypes: true });
-    
+
     for (const item of items) {
       const sourcePath = join(source, item.name);
       const targetPath = join(target, item.name);
-      
+
       if (item.isDirectory()) {
         await this.copyDirectory(sourcePath, targetPath);
       } else {
@@ -336,7 +356,10 @@ export class TestDataGenerator {
   /**
    * Generate sample file content for testing
    */
-  static generateSampleFile(language: string, size: 'small' | 'medium' | 'large' = 'small'): string {
+  static generateSampleFile(
+    language: string,
+    size: "small" | "medium" | "large" = "small",
+  ): string {
     const templates = {
       javascript: {
         small: `
@@ -378,16 +401,26 @@ export { User, greet };
       },
     };
 
-    return templates[language as keyof typeof templates]?.[size] || templates.javascript[size];
+    return (
+      templates[language as keyof typeof templates]?.[size] ||
+      templates.javascript[size]
+    );
   }
 
   /**
    * Generate sample repository structure
    */
-  static async generateSampleRepository(basePath: string, structure: {
-    files: Array<{ path: string; language: string; size?: 'small' | 'medium' | 'large' }>;
-    directories: string[];
-  }): Promise<void> {
+  static async generateSampleRepository(
+    basePath: string,
+    structure: {
+      files: Array<{
+        path: string;
+        language: string;
+        size?: "small" | "medium" | "large";
+      }>;
+      directories: string[];
+    },
+  ): Promise<void> {
     // Create directories
     for (const dir of structure.directories) {
       await fs.mkdir(join(basePath, dir), { recursive: true });

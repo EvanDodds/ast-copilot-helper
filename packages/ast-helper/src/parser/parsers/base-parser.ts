@@ -6,7 +6,7 @@
  * implementation will be restored when the codebase is stabilized.
  */
 
-import type { ParseResult } from '../types.js';
+import type { ParseResult } from "../types.js";
 
 export abstract class BaseParser {
   // Use 'unknown' to avoid permissive 'any' while keeping the stub safe.

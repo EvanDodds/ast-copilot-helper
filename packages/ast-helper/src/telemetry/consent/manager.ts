@@ -3,20 +3,26 @@
  * @description Comprehensive consent management system with privacy-first approach
  */
 
-import { randomUUID } from 'crypto';
-import type { ConsentManager as IConsentManager, ConsentStatus, TelemetryConfig, TelemetrySettings } from '../types.js';
-import type { 
-  ConsentRecord, 
-  ConsentStorage, 
-  ConsentValidationResult, 
-  ConsentMigrationResult, 
-  ConsentCollectionOptions} from './types.js';
-import { 
-  ConsentFeature, 
+import { randomUUID } from "crypto";
+import type {
+  ConsentManager as IConsentManager,
+  ConsentStatus,
+  TelemetryConfig,
+  TelemetrySettings,
+} from "../types.js";
+import type {
+  ConsentRecord,
+  ConsentStorage,
+  ConsentValidationResult,
+  ConsentMigrationResult,
+  ConsentCollectionOptions,
+} from "./types.js";
+import {
+  ConsentFeature,
   ConsentRenewalReason,
-  PRIVACY_LEVELS
-} from './types.js';
-import { FileConsentStorage } from './storage.js';
+  PRIVACY_LEVELS,
+} from "./types.js";
+import { FileConsentStorage } from "./storage.js";
 
 /**
  * Privacy-respecting consent manager implementation
@@ -29,9 +35,9 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
 
   constructor(
     _config: TelemetryConfig,
-    consentVersion = '1.0.0',
-    _minVersion = '1.0.0',
-    private storage: ConsentStorage = new FileConsentStorage()
+    consentVersion = "1.0.0",
+    _minVersion = "1.0.0",
+    private storage: ConsentStorage = new FileConsentStorage(),
   ) {
     this.consentVersion = consentVersion;
     this.appVersion = consentVersion; // Use consent version as app version for now
@@ -42,14 +48,14 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      throw new Error('ConsentManager is already initialized');
+      throw new Error("ConsentManager is already initialized");
     }
 
     try {
       // Check if storage is available
       const isAvailable = await this.storage.isAvailable();
       if (!isAvailable) {
-        console.warn('Consent storage not available - running in privacy mode');
+        console.warn("Consent storage not available - running in privacy mode");
       }
 
       // Load existing consent
@@ -66,7 +72,7 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
           // Attempt migration if version differs
           const migration = await this.migrateConsent(this.currentConsent);
           if (migration.requiresReConsent) {
-            console.log('Consent migration requires user re-consent');
+            console.log("Consent migration requires user re-consent");
             this.currentConsent = null;
           } else if (migration.success && migration.migratedConsent) {
             this.currentConsent = migration.migratedConsent;
@@ -76,9 +82,9 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
       }
 
       this.isInitialized = true;
-      console.log('ConsentManager initialized successfully');
+      console.log("ConsentManager initialized successfully");
     } catch (error: any) {
-      console.error('Failed to initialize ConsentManager:', error.message);
+      console.error("Failed to initialize ConsentManager:", error.message);
       // Continue in privacy mode
       this.currentConsent = null;
       this.isInitialized = true;
@@ -90,7 +96,7 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
    */
   async getConsentStatus(): Promise<ConsentStatus> {
     if (!this.isInitialized) {
-      throw new Error('ConsentManager not initialized');
+      throw new Error("ConsentManager not initialized");
     }
 
     if (!this.currentConsent) {
@@ -98,7 +104,7 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
         hasConsent: false,
         enabled: false,
         consentVersion: this.consentVersion,
-        settings: this.getDefaultSettings()
+        settings: this.getDefaultSettings(),
       };
     }
 
@@ -109,7 +115,7 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
       settings: this.consentToSettings(this.currentConsent),
       consentDate: this.currentConsent.timestamp,
       privacyLevel: this.currentConsent.privacyLevel,
-      allowedFeatures: this.currentConsent.allowedFeatures
+      allowedFeatures: this.currentConsent.allowedFeatures,
     };
   }
 
@@ -118,7 +124,7 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
    */
   async setConsent(enabled: boolean, version: string): Promise<void> {
     if (!this.isInitialized) {
-      throw new Error('ConsentManager not initialized');
+      throw new Error("ConsentManager not initialized");
     }
 
     const consent: ConsentRecord = {
@@ -132,16 +138,16 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
       dataRetentionDays: enabled ? 90 : 0,
       shareAnonymousStats: enabled,
       shareErrorReports: enabled,
-      sharePerformanceMetrics: enabled
+      sharePerformanceMetrics: enabled,
     };
 
     this.currentConsent = consent;
-    
+
     try {
       await this.storage.saveConsent(consent);
-      console.log(`Consent ${enabled ? 'granted' : 'revoked'} successfully`);
+      console.log(`Consent ${enabled ? "granted" : "revoked"} successfully`);
     } catch (error: any) {
-      console.error('Failed to save consent:', error.message);
+      console.error("Failed to save consent:", error.message);
       // Continue with in-memory consent
     }
   }
@@ -151,7 +157,7 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
    */
   async saveSettings(settings: TelemetrySettings): Promise<void> {
     if (!this.isInitialized) {
-      throw new Error('ConsentManager not initialized');
+      throw new Error("ConsentManager not initialized");
     }
 
     if (!this.currentConsent) {
@@ -167,18 +173,21 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
         id: randomUUID(), // New ID for updated consent
         timestamp: new Date(),
         privacyLevel: settings.privacyLevel ?? this.currentConsent.privacyLevel,
-        allowedFeatures: (settings.allowedFeatures as ConsentFeature[]) ?? this.currentConsent.allowedFeatures,
-        dataRetentionDays: settings.dataRetentionDays ?? this.currentConsent.dataRetentionDays,
-        enabled: settings.consentGiven ?? this.currentConsent.enabled
+        allowedFeatures:
+          (settings.allowedFeatures as ConsentFeature[]) ??
+          this.currentConsent.allowedFeatures,
+        dataRetentionDays:
+          settings.dataRetentionDays ?? this.currentConsent.dataRetentionDays,
+        enabled: settings.consentGiven ?? this.currentConsent.enabled,
       };
 
       this.currentConsent = updatedConsent;
-      
+
       try {
         await this.storage.saveConsent(updatedConsent);
-        console.log('Telemetry settings updated successfully');
+        console.log("Telemetry settings updated successfully");
       } catch (error: any) {
-        console.error('Failed to save settings:', error.message);
+        console.error("Failed to save settings:", error.message);
       }
     }
   }
@@ -194,10 +203,12 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
   /**
    * Collect consent with options
    */
-  async collectConsent(options: ConsentCollectionOptions): Promise<ConsentRecord> {
+  async collectConsent(
+    options: ConsentCollectionOptions,
+  ): Promise<ConsentRecord> {
     // In a real implementation, this would show UI to collect user consent
     // For now, we'll create a consent record with the provided options
-    
+
     const consent: ConsentRecord = {
       id: randomUUID(),
       timestamp: new Date(),
@@ -205,23 +216,26 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
       appVersion: this.appVersion,
       enabled: true, // Default to enabled for collection
       privacyLevel: options.defaultPrivacyLevel,
-      allowedFeatures: options.preSelectedFeatures || this.getDefaultAllowedFeatures(),
+      allowedFeatures:
+        options.preSelectedFeatures || this.getDefaultAllowedFeatures(),
       dataRetentionDays: 90,
       shareAnonymousStats: true,
       shareErrorReports: true,
-      sharePerformanceMetrics: true
+      sharePerformanceMetrics: true,
     };
 
     this.currentConsent = consent;
     await this.storage.saveConsent(consent);
-    
+
     return consent;
   }
 
   /**
    * Validate consent record
    */
-  private async validateConsent(consent: ConsentRecord): Promise<ConsentValidationResult> {
+  private async validateConsent(
+    consent: ConsentRecord,
+  ): Promise<ConsentValidationResult> {
     const errors: string[] = [];
     let needsRenewal = false;
     let renewalReason: string | undefined;
@@ -234,8 +248,8 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
     }
 
     // Check app version compatibility (major version changes require renewal)
-    const currentMajor = this.appVersion.split('.')[0];
-    const consentMajor = consent.appVersion.split('.')[0];
+    const currentMajor = this.appVersion.split(".")[0];
+    const consentMajor = consent.appVersion.split(".")[0];
     if (currentMajor !== consentMajor) {
       needsRenewal = true;
       renewalReason = ConsentRenewalReason.VERSION_CHANGE;
@@ -246,7 +260,7 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
     const consentAge = now.getTime() - consent.timestamp.getTime();
     const daysSinceConsent = Math.floor(consentAge / (1000 * 60 * 60 * 24));
     const maxDays = 365; // 1 year
-    
+
     if (daysSinceConsent > maxDays) {
       needsRenewal = true;
       renewalReason = ConsentRenewalReason.EXPIRED;
@@ -256,28 +270,30 @@ export class PrivacyRespectingConsentManager implements IConsentManager {
 
     // Validate required fields
     if (!consent.id) {
-errors.push('Missing consent ID');
-}
+      errors.push("Missing consent ID");
+    }
     if (!consent.consentVersion) {
-errors.push('Missing consent version');
-}
+      errors.push("Missing consent version");
+    }
     if (!consent.appVersion) {
-errors.push('Missing app version');
-}
+      errors.push("Missing app version");
+    }
 
     return {
       isValid: errors.length === 0,
       errors,
       needsRenewal,
       renewalReason,
-      daysUntilExpiry
+      daysUntilExpiry,
     };
   }
 
   /**
    * Migrate consent between versions
    */
-  private async migrateConsent(consent: ConsentRecord): Promise<ConsentMigrationResult> {
+  private async migrateConsent(
+    consent: ConsentRecord,
+  ): Promise<ConsentMigrationResult> {
     const warnings: string[] = [];
     const requiresReConsent = false;
 
@@ -288,7 +304,7 @@ errors.push('Missing app version');
           success: true,
           migratedConsent: consent,
           warnings: [],
-          requiresReConsent: false
+          requiresReConsent: false,
         };
       }
 
@@ -296,25 +312,27 @@ errors.push('Missing app version');
       const migratedConsent: ConsentRecord = {
         ...consent,
         consentVersion: this.consentVersion,
-        appVersion: this.appVersion
+        appVersion: this.appVersion,
       };
 
       // Version-specific migrations would go here
       // For now, we'll just update the versions
-      
-      warnings.push(`Migrated consent from version ${consent.consentVersion} to ${this.consentVersion}`);
+
+      warnings.push(
+        `Migrated consent from version ${consent.consentVersion} to ${this.consentVersion}`,
+      );
 
       return {
         success: true,
         migratedConsent,
         warnings,
-        requiresReConsent
+        requiresReConsent,
       };
     } catch (error: any) {
       return {
         success: false,
         warnings: [`Migration failed: ${error.message}`],
-        requiresReConsent: true
+        requiresReConsent: true,
       };
     }
   }
@@ -326,7 +344,7 @@ errors.push('Missing app version');
     return [
       ConsentFeature.USAGE_ANALYTICS,
       ConsentFeature.ERROR_REPORTING,
-      ConsentFeature.FEATURE_USAGE
+      ConsentFeature.FEATURE_USAGE,
     ];
   }
 
@@ -338,7 +356,7 @@ errors.push('Missing app version');
       consentGiven: consent.enabled,
       privacyLevel: consent.privacyLevel,
       dataRetentionDays: consent.dataRetentionDays,
-      allowedFeatures: consent.allowedFeatures
+      allowedFeatures: consent.allowedFeatures,
     };
   }
 
@@ -350,7 +368,7 @@ errors.push('Missing app version');
       consentGiven: false,
       privacyLevel: PRIVACY_LEVELS.STRICT,
       dataRetentionDays: 0,
-      allowedFeatures: []
+      allowedFeatures: [],
     };
   }
 
@@ -359,13 +377,13 @@ errors.push('Missing app version');
    */
   async getConsentHistory(): Promise<ConsentRecord[]> {
     if (!this.isInitialized) {
-      throw new Error('ConsentManager not initialized');
+      throw new Error("ConsentManager not initialized");
     }
 
     try {
       return await this.storage.getConsentHistory();
     } catch (error: any) {
-      console.error('Failed to get consent history:', error.message);
+      console.error("Failed to get consent history:", error.message);
       return [];
     }
   }
@@ -375,15 +393,15 @@ errors.push('Missing app version');
    */
   async clearAllData(): Promise<void> {
     if (!this.isInitialized) {
-      throw new Error('ConsentManager not initialized');
+      throw new Error("ConsentManager not initialized");
     }
 
     try {
       await this.storage.clearConsent();
       this.currentConsent = null;
-      console.log('All consent data cleared');
+      console.log("All consent data cleared");
     } catch (error: any) {
-      console.error('Failed to clear consent data:', error.message);
+      console.error("Failed to clear consent data:", error.message);
       throw error;
     }
   }
@@ -393,16 +411,16 @@ errors.push('Missing app version');
    */
   async exportConsentData(): Promise<any> {
     if (!this.isInitialized) {
-      throw new Error('ConsentManager not initialized');
+      throw new Error("ConsentManager not initialized");
     }
 
     const history = await this.getConsentHistory();
-    
+
     return {
       current: this.currentConsent,
       history,
       exportDate: new Date().toISOString(),
-      version: this.consentVersion
+      version: this.consentVersion,
     };
   }
 
@@ -411,7 +429,7 @@ errors.push('Missing app version');
    */
   async shutdown(): Promise<void> {
     if (this.isInitialized) {
-      console.log('ConsentManager shutdown completed');
+      console.log("ConsentManager shutdown completed");
       this.isInitialized = false;
     }
   }

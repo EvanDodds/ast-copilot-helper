@@ -1,6 +1,12 @@
-import { MemoryMonitor, PerformanceTimer, CPUMonitor } from './utils';
-import { PerformanceObserver } from 'perf_hooks';
-import type { NodeCount, MemoryProfile, PhaseMemoryProfile, MemoryLeak, GCMetrics } from './types';
+import { MemoryMonitor, PerformanceTimer, CPUMonitor } from "./utils";
+import { PerformanceObserver } from "perf_hooks";
+import type {
+  NodeCount,
+  MemoryProfile,
+  PhaseMemoryProfile,
+  MemoryLeak,
+  GCMetrics,
+} from "./types";
 
 /**
  * Memory profiling and analysis for performance testing.
@@ -22,21 +28,27 @@ export class MemoryProfiler {
   /**
    * Run comprehensive memory profiling
    */
-  async runMemoryProfiling(config: MemoryProfilingConfig): Promise<MemoryProfile> {
-    console.log('🧠 Starting comprehensive memory profiling...');
-    
+  async runMemoryProfiling(
+    config: MemoryProfilingConfig,
+  ): Promise<MemoryProfile> {
+    console.log("🧠 Starting comprehensive memory profiling...");
+
     try {
       const phases: PhaseMemoryProfile[] = [];
       let peakUsage = 0;
       let totalMemory = 0;
       let measurements = 0;
-      
+
       // Test different workload sizes
       for (const nodeCount of config.nodeCounts) {
         console.log(`Testing memory usage with ${nodeCount} nodes...`);
-        const phaseProfile = await this.profilePhase(`workload_${nodeCount}`, nodeCount, config);
+        const phaseProfile = await this.profilePhase(
+          `workload_${nodeCount}`,
+          nodeCount,
+          config,
+        );
         phases.push(phaseProfile);
-        
+
         peakUsage = Math.max(peakUsage, phaseProfile.peakMemory);
         totalMemory += phaseProfile.avgMemory;
         measurements++;
@@ -50,10 +62,10 @@ export class MemoryProfiler {
         peakUsage: peakUsage / (1024 * 1024), // Convert to MB
         averageUsage: averageUsage / (1024 * 1024), // Convert to MB
         memoryLeaks,
-        gcPerformance: [...this.gcEvents]
+        gcPerformance: [...this.gcEvents],
       };
     } catch (error) {
-      console.error('❌ Memory profiling failed:', error);
+      console.error("❌ Memory profiling failed:", error);
       throw error;
     }
   }
@@ -61,17 +73,21 @@ export class MemoryProfiler {
   /**
    * Profile a specific phase/workload
    */
-  private async profilePhase(phaseName: string, nodeCount: NodeCount, config: MemoryProfilingConfig): Promise<PhaseMemoryProfile> {
+  private async profilePhase(
+    phaseName: string,
+    nodeCount: NodeCount,
+    config: MemoryProfilingConfig,
+  ): Promise<PhaseMemoryProfile> {
     // Start monitoring
     this.memoryMonitor.start();
     this.cpuMonitor.startMonitoring();
     this.timer.start(phaseName);
-    
+
     const startMemory = process.memoryUsage().heapUsed;
     let peakMemory = startMemory;
     let totalMemory = 0;
     let sampleCount = 0;
-    
+
     try {
       // Monitor memory during workload
       const monitoringInterval = setInterval(() => {
@@ -80,29 +96,29 @@ export class MemoryProfiler {
         totalMemory += currentMemory;
         sampleCount++;
       }, 10); // Sample every 10ms
-      
+
       // Run the workload
       await this.simulateWorkload(this.getNodeCountAsNumber(nodeCount), config);
-      
+
       clearInterval(monitoringInterval);
-      
+
       // Final measurements
       const endMemory = process.memoryUsage().heapUsed;
-      const avgMemory = sampleCount > 0 ? totalMemory / sampleCount : startMemory;
+      const avgMemory =
+        sampleCount > 0 ? totalMemory / sampleCount : startMemory;
       const duration = this.timer.end(phaseName);
-      
+
       this.memoryMonitor.stop();
       this.cpuMonitor.stopMonitoring();
-      
+
       return {
         phase: phaseName,
         startMemory,
         peakMemory,
         endMemory,
         avgMemory,
-        duration
+        duration,
       };
-      
     } catch (error) {
       this.memoryMonitor.stop();
       this.cpuMonitor.stopMonitoring();
@@ -114,18 +130,21 @@ export class MemoryProfiler {
   /**
    * Simulate workload for memory testing
    */
-  private async simulateWorkload(nodeCount: number, config: MemoryProfilingConfig): Promise<void> {
+  private async simulateWorkload(
+    nodeCount: number,
+    config: MemoryProfilingConfig,
+  ): Promise<void> {
     switch (config.workloadType) {
-      case 'parsing':
+      case "parsing":
         await this.simulateParsingWorkload(nodeCount);
         break;
-      case 'querying':
+      case "querying":
         await this.simulateQueryingWorkload(nodeCount);
         break;
-      case 'indexing':
+      case "indexing":
         await this.simulateIndexingWorkload(nodeCount);
         break;
-      case 'mixed':
+      case "mixed":
         await this.simulateMixedWorkload(nodeCount);
         break;
       default:
@@ -139,34 +158,34 @@ export class MemoryProfiler {
   private async simulateParsingWorkload(nodeCount: number): Promise<void> {
     // Create test data structures that simulate AST parsing
     const nodes = [];
-    
+
     for (let i = 0; i < nodeCount; i++) {
       // Simulate AST node creation
       const node = {
         id: `node_${i}`,
-        type: 'identifier',
+        type: "identifier",
         value: `variable_${i}`,
-        position: { line: i % 1000 + 1, column: i % 100 + 1 },
+        position: { line: (i % 1000) + 1, column: (i % 100) + 1 },
         children: [],
         parent: null,
         metadata: {
           sourceFile: `file_${Math.floor(i / 100)}.ts`,
           semanticInfo: {
-            scope: 'local',
-            type: 'string',
-            references: []
-          }
-        }
+            scope: "local",
+            type: "string",
+            references: [],
+          },
+        },
       };
-      
+
       nodes.push(node);
-      
+
       // Simulate some processing
       if (i % 1000 === 0) {
         await this.sleep(1); // Yield occasionally
       }
     }
-    
+
     // Simulate AST traversal
     for (const node of nodes) {
       (node.metadata as any).processed = true;
@@ -180,29 +199,32 @@ export class MemoryProfiler {
     // Create data structures that simulate query caches and results
     const queryCache = new Map();
     const results = [];
-    
+
     const numQueries = Math.min(nodeCount / 10, 1000);
-    
+
     for (let i = 0; i < numQueries; i++) {
       const query = `query_${i}`;
       const queryResult = {
         id: `result_${i}`,
-        matches: Array.from({ length: Math.floor(Math.random() * 50) + 1 }, (_, j) => ({
-          file: `file_${j}.ts`,
-          line: j + 1,
-          column: 1,
-          text: `match_${j}`,
-          score: Math.random()
-        })),
+        matches: Array.from(
+          { length: Math.floor(Math.random() * 50) + 1 },
+          (_, j) => ({
+            file: `file_${j}.ts`,
+            line: j + 1,
+            column: 1,
+            text: `match_${j}`,
+            score: Math.random(),
+          }),
+        ),
         metadata: {
           duration: Math.random() * 100,
-          cached: false
-        }
+          cached: false,
+        },
       };
-      
+
       queryCache.set(query, queryResult);
       results.push(queryResult);
-      
+
       if (i % 100 === 0) {
         await this.sleep(1);
       }
@@ -216,28 +238,28 @@ export class MemoryProfiler {
     // Create data structures that simulate indexing
     const index = new Map();
     const embeddings = [];
-    
+
     for (let i = 0; i < nodeCount; i++) {
       // Simulate embedding generation
       const embedding = new Float32Array(384); // Typical embedding size
       for (let j = 0; j < embedding.length; j++) {
         embedding[j] = Math.random() * 2 - 1;
       }
-      
+
       const indexEntry = {
         id: `entry_${i}`,
         text: `This is sample text for entry ${i}`,
         embedding,
         metadata: {
           file: `file_${Math.floor(i / 100)}.ts`,
-          line: i % 1000 + 1,
-          type: 'function'
-        }
+          line: (i % 1000) + 1,
+          type: "function",
+        },
       };
-      
+
       index.set(`entry_${i}`, indexEntry);
       embeddings.push(embedding);
-      
+
       if (i % 500 === 0) {
         await this.sleep(1);
       }
@@ -251,11 +273,11 @@ export class MemoryProfiler {
     const parsingNodes = Math.floor(nodeCount * 0.4);
     const queryNodes = Math.floor(nodeCount * 0.3);
     const indexingNodes = Math.floor(nodeCount * 0.3);
-    
+
     await Promise.all([
       this.simulateParsingWorkload(parsingNodes),
       this.simulateQueryingWorkload(queryNodes),
-      this.simulateIndexingWorkload(indexingNodes)
+      this.simulateIndexingWorkload(indexingNodes),
     ]);
   }
 
@@ -266,22 +288,23 @@ export class MemoryProfiler {
     try {
       const obs = new PerformanceObserver((list: any) => {
         for (const entry of list.getEntries()) {
-          if (entry.entryType === 'gc') {
+          if (entry.entryType === "gc") {
             this.gcEvents.push({
               timestamp: Date.now(),
-              gcType: entry.detail?.kind || 'unknown',
+              gcType: entry.detail?.kind || "unknown",
               duration: entry.duration,
-              memoryFreed: 0 // Will be calculated if needed
+              memoryFreed: 0, // Will be calculated if needed
             });
           }
         }
       });
-      
-      obs.observe({ entryTypes: ['gc'] });
+
+      obs.observe({ entryTypes: ["gc"] });
     } catch (error: unknown) {
       // GC monitoring not available in this environment
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.warn('GC monitoring not available:', errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.warn("GC monitoring not available:", errorMessage);
     }
   }
 
@@ -290,28 +313,32 @@ export class MemoryProfiler {
    */
   private detectMemoryLeaks(phases: PhaseMemoryProfile[]): MemoryLeak[] {
     const leaks: MemoryLeak[] = [];
-    
+
     for (let i = 0; i < phases.length; i++) {
       const phase = phases[i];
       if (!phase) {
-continue;
-}
-      
-      const retentionRate = (phase.endMemory - phase.startMemory) / (phase.peakMemory - phase.startMemory || 1);
-      
+        continue;
+      }
+
+      const retentionRate =
+        (phase.endMemory - phase.startMemory) /
+        (phase.peakMemory - phase.startMemory || 1);
+
       // High retention rate indicates potential leaks
       if (retentionRate > 0.7) {
-        const severity: 'low' | 'medium' | 'high' = retentionRate > 0.9 ? 'high' : retentionRate > 0.8 ? 'medium' : 'low';
-        
+        const severity: "low" | "medium" | "high" =
+          retentionRate > 0.9 ? "high" : retentionRate > 0.8 ? "medium" : "low";
+
         leaks.push({
           location: phase.phase,
           severity,
-          leakRate: (phase.endMemory - phase.startMemory) / phase.duration / 1000, // MB/s
-          description: `High memory retention (${(retentionRate * 100).toFixed(1)}%) detected in phase ${phase.phase}`
+          leakRate:
+            (phase.endMemory - phase.startMemory) / phase.duration / 1000, // MB/s
+          description: `High memory retention (${(retentionRate * 100).toFixed(1)}%) detected in phase ${phase.phase}`,
         });
       }
     }
-    
+
     return leaks;
   }
 
@@ -319,17 +346,17 @@ continue;
    * Convert NodeCount to number
    */
   private getNodeCountAsNumber(nodeCount: NodeCount): number {
-    if (typeof nodeCount === 'number') {
-return nodeCount;
-}
-    
+    if (typeof nodeCount === "number") {
+      return nodeCount;
+    }
+
     const mapping = {
-      'small': 1000,
-      'medium': 10000,
-      'large': 50000,
-      'xlarge': 100000
+      small: 1000,
+      medium: 10000,
+      large: 50000,
+      xlarge: 100000,
     };
-    
+
     return mapping[nodeCount] || 1000;
   }
 
@@ -337,7 +364,7 @@ return nodeCount;
    * Utility sleep function
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
@@ -346,7 +373,7 @@ return nodeCount;
  */
 export interface MemoryProfilingConfig {
   nodeCounts: NodeCount[];
-  workloadType: 'parsing' | 'querying' | 'indexing' | 'mixed';
+  workloadType: "parsing" | "querying" | "indexing" | "mixed";
   iterations: number;
   timeout?: number;
 }

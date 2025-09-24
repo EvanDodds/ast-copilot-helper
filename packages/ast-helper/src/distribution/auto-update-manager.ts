@@ -1,7 +1,7 @@
-import { readFile, writeFile, stat, mkdir, rename } from 'fs/promises';
-import { join } from 'path';
-import { execSync } from 'child_process';
-import { createHash } from 'crypto';
+import { readFile, writeFile, stat, mkdir, rename } from "fs/promises";
+import { join } from "path";
+import { execSync } from "child_process";
+import { createHash } from "crypto";
 import type {
   DistributionConfig,
   ValidationResult,
@@ -15,8 +15,8 @@ import type {
   UpdateInfo,
   UpdateDownloadResult,
   UpdateInstallResult,
-  RollbackConfig
-} from './types.js';
+  RollbackConfig,
+} from "./types.js";
 
 export interface Publisher {
   initialize(config: DistributionConfig): Promise<void>;
@@ -45,9 +45,9 @@ export class AutoUpdateManager implements Publisher {
     this.updateServer = this.updateConfig.server;
     this.clientConfig = this.updateConfig.client;
     this.rollbackConfig = this.updateConfig.rollback;
-    this.updateDir = './updates';
+    this.updateDir = "./updates";
 
-    console.log('Initializing Auto-Update Manager...');
+    console.log("Initializing Auto-Update Manager...");
     console.log(`Current version: ${this.currentVersion}`);
     console.log(`Update server: ${this.updateServer.url}`);
     console.log(`Auto-updates enabled: ${this.updateConfig.enabled}`);
@@ -57,58 +57,63 @@ export class AutoUpdateManager implements Publisher {
   }
 
   async validate(): Promise<ValidationResult> {
-    console.log('Validating auto-update configuration...');
-    
+    console.log("Validating auto-update configuration...");
+
     const errors: ValidationMessage[] = [];
-    
+
     // Validate configuration
     if (!this.config.version) {
-      errors.push({ 
-        code: 'VERSION_MISSING', 
-        message: 'Version is required', 
-        field: 'version',
-        severity: 'error' 
+      errors.push({
+        code: "VERSION_MISSING",
+        message: "Version is required",
+        field: "version",
+        severity: "error",
       });
     }
 
     // Validate update server configuration
     if (this.updateConfig.enabled) {
       if (!this.updateServer.url) {
-        errors.push({ 
-          code: 'UPDATE_SERVER_URL_MISSING', 
-          message: 'Update server URL is required when auto-updates are enabled', 
-          field: 'autoUpdate.server.url',
-          severity: 'error' 
+        errors.push({
+          code: "UPDATE_SERVER_URL_MISSING",
+          message:
+            "Update server URL is required when auto-updates are enabled",
+          field: "autoUpdate.server.url",
+          severity: "error",
         });
       }
 
       if (this.updateServer.url && !this.isValidUrl(this.updateServer.url)) {
-        errors.push({ 
-          code: 'UPDATE_SERVER_URL_INVALID', 
-          message: 'Update server URL is not valid', 
-          field: 'autoUpdate.server.url',
-          severity: 'error' 
+        errors.push({
+          code: "UPDATE_SERVER_URL_INVALID",
+          message: "Update server URL is not valid",
+          field: "autoUpdate.server.url",
+          severity: "error",
         });
       }
 
       // Validate client configuration
-      if (!this.clientConfig.updateInterval || this.clientConfig.updateInterval < 1) {
-        errors.push({ 
-          code: 'UPDATE_INTERVAL_INVALID', 
-          message: 'Update check interval must be at least 1 hour', 
-          field: 'autoUpdate.client.updateInterval',
-          severity: 'error' 
+      if (
+        !this.clientConfig.updateInterval ||
+        this.clientConfig.updateInterval < 1
+      ) {
+        errors.push({
+          code: "UPDATE_INTERVAL_INVALID",
+          message: "Update check interval must be at least 1 hour",
+          field: "autoUpdate.client.updateInterval",
+          severity: "error",
         });
       }
     }
 
     // Validate rollback configuration
     if (this.rollbackConfig.enabled && !this.rollbackConfig.maxVersionsToKeep) {
-      errors.push({ 
-        code: 'ROLLBACK_VERSIONS_MISSING', 
-        message: 'Maximum rollback versions must be specified when rollback is enabled', 
-        field: 'autoUpdate.rollback.maxVersionsToKeep',
-        severity: 'error' 
+      errors.push({
+        code: "ROLLBACK_VERSIONS_MISSING",
+        message:
+          "Maximum rollback versions must be specified when rollback is enabled",
+        field: "autoUpdate.rollback.maxVersionsToKeep",
+        severity: "error",
       });
     }
 
@@ -117,40 +122,48 @@ export class AutoUpdateManager implements Publisher {
       const connectivityCheck = await this.testServerConnectivity();
       if (!connectivityCheck.success) {
         errors.push({
-          code: 'UPDATE_SERVER_UNREACHABLE',
+          code: "UPDATE_SERVER_UNREACHABLE",
           message: `Cannot reach update server: ${connectivityCheck.error}`,
-          field: 'autoUpdate.server.url',
-          severity: 'warning'
+          field: "autoUpdate.server.url",
+          severity: "warning",
         });
       }
     }
 
-    const success = errors.filter(e => e.severity === 'error').length === 0;
-    const message = success ? 'Auto-update validation passed' : `Validation failed: ${errors.filter(e => e.severity === 'error').length} errors`;
-    
+    const success = errors.filter((e) => e.severity === "error").length === 0;
+    const message = success
+      ? "Auto-update validation passed"
+      : `Validation failed: ${errors.filter((e) => e.severity === "error").length} errors`;
+
     console.log(message);
     if (!success) {
-      errors.forEach(error => console.error(`  - ${error.field}: ${error.message}`));
+      errors.forEach((error) =>
+        console.error(`  - ${error.field}: ${error.message}`),
+      );
     }
 
-    return { success, warnings: errors.filter(e => e.severity === 'warning'), errors: errors.filter(e => e.severity === 'error') };
+    return {
+      success,
+      warnings: errors.filter((e) => e.severity === "warning"),
+      errors: errors.filter((e) => e.severity === "error"),
+    };
   }
 
   async publish(): Promise<UpdateCheckResult> {
-    console.log('Checking for updates...');
+    console.log("Checking for updates...");
     const startTime = Date.now();
 
     try {
       // Validate before checking updates
       const validation = await this.validate();
       if (!validation.success) {
-        const error = `Validation failed: ${validation.errors.map(e => e.message).join(', ')}`;
+        const error = `Validation failed: ${validation.errors.map((e) => e.message).join(", ")}`;
         return {
           success: false,
           error,
           updateAvailable: false,
           currentVersion: this.currentVersion,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
       }
 
@@ -160,27 +173,29 @@ export class AutoUpdateManager implements Publisher {
           updateAvailable: false,
           currentVersion: this.currentVersion,
           latestVersion: this.currentVersion,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
       }
 
       // Check for updates
       const updateInfo = await this.checkForUpdates();
-      
+
       if (!updateInfo.updateAvailable) {
         return {
           success: true,
           updateAvailable: false,
           currentVersion: this.currentVersion,
           latestVersion: updateInfo.latestVersion || this.currentVersion,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
       }
 
       const duration = Date.now() - startTime;
-      
+
       console.log(`Update check completed in ${duration}ms`);
-      console.log(`Current version: ${this.currentVersion}, Latest: ${updateInfo.latestVersion}`);
+      console.log(
+        `Current version: ${this.currentVersion}, Latest: ${updateInfo.latestVersion}`,
+      );
 
       return {
         success: true,
@@ -188,57 +203,56 @@ export class AutoUpdateManager implements Publisher {
         currentVersion: this.currentVersion,
         latestVersion: updateInfo.latestVersion!,
         updateInfo,
-        duration
+        duration,
       };
-
     } catch (error: any) {
       const duration = Date.now() - startTime;
-      console.error('Update check failed:', error);
-      
+      console.error("Update check failed:", error);
+
       return {
         success: false,
         error: error.message,
         updateAvailable: false,
         currentVersion: this.currentVersion,
-        duration
+        duration,
       };
     }
   }
 
   async verify(result: UpdateCheckResult): Promise<VerificationResult> {
-    console.log('Verifying update check results...');
+    console.log("Verifying update check results...");
     const startTime = Date.now();
-    
+
     const checks: VerificationCheck[] = [];
 
     try {
       // Verify update check was successful
       if (!result.success) {
         checks.push({
-          name: 'update-check-success',
+          name: "update-check-success",
           success: false,
-          message: `Update check failed: ${result.error || 'Unknown error'}`
+          message: `Update check failed: ${result.error || "Unknown error"}`,
         });
       } else {
         checks.push({
-          name: 'update-check-success',
+          name: "update-check-success",
           success: true,
-          message: 'Update check completed successfully'
+          message: "Update check completed successfully",
         });
       }
 
       // Verify version consistency
       if (result.currentVersion !== this.currentVersion) {
         checks.push({
-          name: 'version-consistency',
+          name: "version-consistency",
           success: false,
-          message: `Version mismatch: expected ${this.currentVersion}, got ${result.currentVersion}`
+          message: `Version mismatch: expected ${this.currentVersion}, got ${result.currentVersion}`,
         });
       } else {
         checks.push({
-          name: 'version-consistency',
+          name: "version-consistency",
           success: true,
-          message: 'Version consistency verified'
+          message: "Version consistency verified",
         });
       }
 
@@ -253,39 +267,42 @@ export class AutoUpdateManager implements Publisher {
         const serverCheck = await this.verifyServerConnectivity();
         checks.push(serverCheck);
       }
-
     } catch (error: any) {
-      console.error('Update verification failed:', error);
+      console.error("Update verification failed:", error);
       checks.push({
-        name: 'verification-error',
+        name: "verification-error",
         success: false,
-        message: `Verification failed: ${error.message}`
+        message: `Verification failed: ${error.message}`,
       });
     }
 
-    const allChecksSucceeded = checks.every(c => c.success);
+    const allChecksSucceeded = checks.every((c) => c.success);
     const duration = Date.now() - startTime;
 
-    console.log(allChecksSucceeded 
-      ? `Update verification passed (${checks.length} checks)`
-      : `Update verification failed (${checks.filter(c => !c.success).length}/${checks.length} checks failed)`);
-    
+    console.log(
+      allChecksSucceeded
+        ? `Update verification passed (${checks.length} checks)`
+        : `Update verification failed (${checks.filter((c) => !c.success).length}/${checks.length} checks failed)`,
+    );
+
     if (!allChecksSucceeded) {
-      checks.filter(c => !c.success).forEach(check => {
-        console.error(`  ✗ ${check.name}: ${check.message}`);
-      });
+      checks
+        .filter((c) => !c.success)
+        .forEach((check) => {
+          console.error(`  ✗ ${check.name}: ${check.message}`);
+        });
     }
 
     return {
       success: allChecksSucceeded,
       checks,
-      duration
+      duration,
     };
   }
 
   async cleanup(): Promise<void> {
-    console.log('Cleaning up auto-update system...');
-    
+    console.log("Cleaning up auto-update system...");
+
     // Clean up temporary update files
     await this.cleanupTempFiles();
 
@@ -294,13 +311,15 @@ export class AutoUpdateManager implements Publisher {
       await this.cleanupOldVersions();
     }
 
-    console.log('Auto-update system cleanup completed');
+    console.log("Auto-update system cleanup completed");
   }
 
   /**
    * Download and install an available update
    */
-  async downloadAndInstallUpdate(updateInfo: UpdateInfo): Promise<UpdateInstallResult> {
+  async downloadAndInstallUpdate(
+    updateInfo: UpdateInfo,
+  ): Promise<UpdateInstallResult> {
     console.log(`Downloading update ${updateInfo.version}...`);
     const startTime = Date.now();
 
@@ -311,7 +330,7 @@ export class AutoUpdateManager implements Publisher {
         return {
           success: false,
           error: `Download failed: ${downloadResult.error}`,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
       }
 
@@ -320,8 +339,8 @@ export class AutoUpdateManager implements Publisher {
       if (!integrityCheck) {
         return {
           success: false,
-          error: 'Download integrity check failed',
-          duration: Date.now() - startTime
+          error: "Download integrity check failed",
+          duration: Date.now() - startTime,
         };
       }
 
@@ -335,14 +354,14 @@ export class AutoUpdateManager implements Publisher {
       if (!installResult.success) {
         // Attempt rollback if installation failed
         if (this.rollbackConfig.enabled && this.rollbackConfig.autoRollback) {
-          console.log('Installation failed, attempting automatic rollback...');
+          console.log("Installation failed, attempting automatic rollback...");
           await this.rollbackToPreviousVersion();
         }
-        
+
         return {
           success: false,
           error: `Installation failed: ${installResult.error}`,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
       }
 
@@ -354,26 +373,25 @@ export class AutoUpdateManager implements Publisher {
         version: updateInfo.version,
         previousVersion: this.currentVersion,
         backupPath: installResult.backupPath,
-        duration
+        duration,
       };
-
     } catch (error: any) {
-      console.error('Update installation failed:', error);
-      
+      console.error("Update installation failed:", error);
+
       // Attempt rollback on error if enabled
       if (this.rollbackConfig.enabled && this.rollbackConfig.autoRollback) {
-        console.log('Error occurred, attempting automatic rollback...');
+        console.log("Error occurred, attempting automatic rollback...");
         try {
           await this.rollbackToPreviousVersion();
         } catch (rollbackError) {
-          console.error('Rollback failed:', rollbackError);
+          console.error("Rollback failed:", rollbackError);
         }
       }
 
       return {
         success: false,
         error: error.message,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       };
     }
   }
@@ -382,27 +400,29 @@ export class AutoUpdateManager implements Publisher {
    * Rollback to a previous version
    */
   async rollbackToPreviousVersion(): Promise<UpdateInstallResult> {
-    console.log('Rolling back to previous version...');
+    console.log("Rolling back to previous version...");
     const startTime = Date.now();
 
     try {
       if (!this.rollbackConfig.enabled) {
-        throw new Error('Rollback is not enabled');
+        throw new Error("Rollback is not enabled");
       }
 
       // Find available backup versions
       const availableVersions = await this.getAvailableBackupVersions();
       if (availableVersions.length === 0) {
-        throw new Error('No backup versions available for rollback');
+        throw new Error("No backup versions available for rollback");
       }
 
       // Get the most recent backup version
       const rollbackVersion = availableVersions[0];
       if (!rollbackVersion) {
-        throw new Error('No valid rollback version found');
+        throw new Error("No valid rollback version found");
       }
-      
-      console.log(`Rolling back from ${this.currentVersion} to ${rollbackVersion.version}`);
+
+      console.log(
+        `Rolling back from ${this.currentVersion} to ${rollbackVersion.version}`,
+      );
 
       // Perform rollback
       await this.restoreFromBackup(rollbackVersion);
@@ -410,7 +430,7 @@ export class AutoUpdateManager implements Publisher {
       // Verify rollback
       const verificationResult = await this.verifyRollback(rollbackVersion);
       if (!verificationResult) {
-        throw new Error('Rollback verification failed');
+        throw new Error("Rollback verification failed");
       }
 
       const duration = Date.now() - startTime;
@@ -421,17 +441,16 @@ export class AutoUpdateManager implements Publisher {
         version: rollbackVersion.version,
         previousVersion: this.currentVersion,
         rollback: true,
-        duration
+        duration,
       };
-
     } catch (error: any) {
-      console.error('Rollback failed:', error);
-      
+      console.error("Rollback failed:", error);
+
       return {
         success: false,
         error: error.message,
         rollback: true,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       };
     }
   }
@@ -442,18 +461,22 @@ export class AutoUpdateManager implements Publisher {
       currentVersion: this.currentVersion,
       platform: process.platform,
       architecture: process.arch,
-      channel: this.clientConfig.channel || 'stable'
+      channel: this.clientConfig.channel || "stable",
     };
 
     console.log(`Checking updates from: ${updateEndpoint}`);
 
     try {
-      const response = await this.makeHttpRequest('POST', updateEndpoint, requestBody);
-      
+      const response = await this.makeHttpRequest(
+        "POST",
+        updateEndpoint,
+        requestBody,
+      );
+
       if (!response.updateAvailable) {
         return {
           updateAvailable: false,
-          latestVersion: response.latestVersion || this.currentVersion
+          latestVersion: response.latestVersion || this.currentVersion,
         };
       }
 
@@ -467,45 +490,50 @@ export class AutoUpdateManager implements Publisher {
         releaseNotes: response.releaseNotes,
         critical: response.critical || false,
         publishedAt: response.publishedAt,
-        signature: response.signature
+        signature: response.signature,
       };
-
     } catch (error: any) {
-      console.error('Failed to check for updates:', error);
+      console.error("Failed to check for updates:", error);
       throw new Error(`Update check failed: ${error.message}`);
     }
   }
 
-  private async downloadUpdate(updateInfo: UpdateInfo): Promise<UpdateDownloadResult> {
-    const downloadPath = join(this.updateDir, `update-${updateInfo.version}.tar.gz`);
-    
+  private async downloadUpdate(
+    updateInfo: UpdateInfo,
+  ): Promise<UpdateDownloadResult> {
+    const downloadPath = join(
+      this.updateDir,
+      `update-${updateInfo.version}.tar.gz`,
+    );
+
     console.log(`Downloading update from: ${updateInfo.downloadUrl}`);
     console.log(`Download path: ${downloadPath}`);
 
     try {
       // Download file using curl (in production, would use proper HTTP client)
       const curlCommand = `curl -L -o "${downloadPath}" "${updateInfo.downloadUrl}"`;
-      execSync(curlCommand, { stdio: 'inherit' });
+      execSync(curlCommand, { stdio: "inherit" });
 
       // Verify file was downloaded
       const stats = await stat(downloadPath);
-      
+
       return {
         success: true,
         downloadPath,
         size: stats.size,
-        checksum: await this.calculateChecksum(downloadPath)
+        checksum: await this.calculateChecksum(downloadPath),
       };
-
     } catch (error: any) {
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
 
-  private async verifyDownloadIntegrity(downloadResult: UpdateDownloadResult): Promise<boolean> {
+  private async verifyDownloadIntegrity(
+    downloadResult: UpdateDownloadResult,
+  ): Promise<boolean> {
     if (!downloadResult.success || !downloadResult.downloadPath) {
       return false;
     }
@@ -513,9 +541,13 @@ export class AutoUpdateManager implements Publisher {
     try {
       // Verify checksum if provided
       if (downloadResult.checksum) {
-        const actualChecksum = await this.calculateChecksum(downloadResult.downloadPath);
+        const actualChecksum = await this.calculateChecksum(
+          downloadResult.downloadPath,
+        );
         if (actualChecksum !== downloadResult.checksum) {
-          console.error(`Checksum mismatch: expected ${downloadResult.checksum}, got ${actualChecksum}`);
+          console.error(
+            `Checksum mismatch: expected ${downloadResult.checksum}, got ${actualChecksum}`,
+          );
           return false;
         }
       }
@@ -524,29 +556,32 @@ export class AutoUpdateManager implements Publisher {
       if (downloadResult.size) {
         const stats = await stat(downloadResult.downloadPath);
         if (stats.size !== downloadResult.size) {
-          console.error(`Size mismatch: expected ${downloadResult.size}, got ${stats.size}`);
+          console.error(
+            `Size mismatch: expected ${downloadResult.size}, got ${stats.size}`,
+          );
           return false;
         }
       }
 
       return true;
-
     } catch (error) {
-      console.error('Integrity verification failed:', error);
+      console.error("Integrity verification failed:", error);
       return false;
     }
   }
 
-  private async installUpdate(downloadResult: UpdateDownloadResult): Promise<{ success: boolean; error?: string; backupPath?: string }> {
+  private async installUpdate(
+    downloadResult: UpdateDownloadResult,
+  ): Promise<{ success: boolean; error?: string; backupPath?: string }> {
     if (!downloadResult.success || !downloadResult.downloadPath) {
       return {
         success: false,
-        error: 'Invalid download result'
+        error: "Invalid download result",
       };
     }
 
     try {
-      const extractPath = join(this.updateDir, 'extracted');
+      const extractPath = join(this.updateDir, "extracted");
       await this.ensureDirectory(extractPath);
 
       // Extract update package
@@ -574,26 +609,28 @@ export class AutoUpdateManager implements Publisher {
 
       return {
         success: true,
-        backupPath
+        backupPath,
       };
-
     } catch (error: any) {
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
 
   private async createVersionBackup(): Promise<void> {
-    const backupDir = join(this.updateDir, 'backups');
+    const backupDir = join(this.updateDir, "backups");
     await this.ensureDirectory(backupDir);
 
-    const backupPath = join(backupDir, `backup-${this.currentVersion}-${Date.now()}`);
+    const backupPath = join(
+      backupDir,
+      `backup-${this.currentVersion}-${Date.now()}`,
+    );
     const applicationPath = process.cwd();
 
     console.log(`Creating backup at: ${backupPath}`);
-    
+
     const backupCommand = `cp -r "${applicationPath}" "${backupPath}/"`;
     execSync(backupCommand);
 
@@ -601,29 +638,38 @@ export class AutoUpdateManager implements Publisher {
     const metadata = {
       version: this.currentVersion,
       timestamp: new Date().toISOString(),
-      path: backupPath
+      path: backupPath,
     };
 
-    await writeFile(join(backupPath, 'backup-metadata.json'), JSON.stringify(metadata, null, 2));
+    await writeFile(
+      join(backupPath, "backup-metadata.json"),
+      JSON.stringify(metadata, null, 2),
+    );
   }
 
-  private async getAvailableBackupVersions(): Promise<Array<{ version: string; path: string; timestamp: string }>> {
-    const backupDir = join(this.updateDir, 'backups');
-    const versions: Array<{ version: string; path: string; timestamp: string }> = [];
+  private async getAvailableBackupVersions(): Promise<
+    Array<{ version: string; path: string; timestamp: string }>
+  > {
+    const backupDir = join(this.updateDir, "backups");
+    const versions: Array<{
+      version: string;
+      path: string;
+      timestamp: string;
+    }> = [];
 
     try {
-      const backupDirs = execSync(`ls -1 "${backupDir}"`, { encoding: 'utf-8' })
-        .split('\n')
-        .filter(dir => dir.trim().startsWith('backup-'));
+      const backupDirs = execSync(`ls -1 "${backupDir}"`, { encoding: "utf-8" })
+        .split("\n")
+        .filter((dir) => dir.trim().startsWith("backup-"));
 
       for (const dir of backupDirs) {
-        const metadataPath = join(backupDir, dir, 'backup-metadata.json');
+        const metadataPath = join(backupDir, dir, "backup-metadata.json");
         try {
-          const metadata = JSON.parse(await readFile(metadataPath, 'utf-8'));
+          const metadata = JSON.parse(await readFile(metadataPath, "utf-8"));
           versions.push({
             version: metadata.version,
             path: join(backupDir, dir),
-            timestamp: metadata.timestamp
+            timestamp: metadata.timestamp,
           });
         } catch {
           // Skip directories without valid metadata
@@ -631,21 +677,27 @@ export class AutoUpdateManager implements Publisher {
       }
 
       // Sort by timestamp (newest first)
-      versions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      versions.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      );
 
       return versions;
-
     } catch (error) {
-      console.error('Failed to get backup versions:', error);
+      console.error("Failed to get backup versions:", error);
       return [];
     }
   }
 
-  private async restoreFromBackup(backupVersion: { version: string; path: string; timestamp: string }): Promise<void> {
+  private async restoreFromBackup(backupVersion: {
+    version: string;
+    path: string;
+    timestamp: string;
+  }): Promise<void> {
     const applicationPath = process.cwd();
-    
+
     console.log(`Restoring from backup: ${backupVersion.path}`);
-    
+
     // Remove current version
     const tempPath = join(this.updateDir, `temp-current-${Date.now()}`);
     await rename(applicationPath, tempPath);
@@ -657,13 +709,14 @@ export class AutoUpdateManager implements Publisher {
 
       // Update current version
       this.currentVersion = backupVersion.version;
-
     } catch (error) {
       // If restore fails, try to restore original
       try {
         await rename(tempPath, applicationPath);
       } catch {
-        console.error('Critical error: Failed to restore backup and cannot recover original');
+        console.error(
+          "Critical error: Failed to restore backup and cannot recover original",
+        );
       }
       throw error;
     }
@@ -676,26 +729,29 @@ export class AutoUpdateManager implements Publisher {
     }
   }
 
-  private async verifyRollback(rolledBackVersion: { version: string; path: string; timestamp: string }): Promise<boolean> {
+  private async verifyRollback(rolledBackVersion: {
+    version: string;
+    path: string;
+    timestamp: string;
+  }): Promise<boolean> {
     try {
       // Verify application is running the rolled-back version
       // This would typically check a version file or application metadata
-      const versionFile = join(process.cwd(), 'version.json');
-      const versionData = JSON.parse(await readFile(versionFile, 'utf-8'));
-      
-      return versionData.version === rolledBackVersion.version;
+      const versionFile = join(process.cwd(), "version.json");
+      const versionData = JSON.parse(await readFile(versionFile, "utf-8"));
 
+      return versionData.version === rolledBackVersion.version;
     } catch (error) {
-      console.error('Rollback verification failed:', error);
+      console.error("Rollback verification failed:", error);
       return false;
     }
   }
 
   private async updateVersionFile(): Promise<void> {
-    const versionFile = join(process.cwd(), 'version.json');
+    const versionFile = join(process.cwd(), "version.json");
     const versionData = {
       version: this.currentVersion,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     await writeFile(versionFile, JSON.stringify(versionData, null, 2));
@@ -703,11 +759,11 @@ export class AutoUpdateManager implements Publisher {
 
   private async cleanupTempFiles(): Promise<void> {
     try {
-      const tempPattern = join(this.updateDir, 'temp-*');
-      execSync(`rm -rf ${tempPattern}`, { stdio: 'ignore' });
-      
-      const downloadPattern = join(this.updateDir, 'update-*.tar.gz');
-      execSync(`rm -f ${downloadPattern}`, { stdio: 'ignore' });
+      const tempPattern = join(this.updateDir, "temp-*");
+      execSync(`rm -rf ${tempPattern}`, { stdio: "ignore" });
+
+      const downloadPattern = join(this.updateDir, "update-*.tar.gz");
+      execSync(`rm -f ${downloadPattern}`, { stdio: "ignore" });
     } catch {
       // Ignore cleanup errors
     }
@@ -720,61 +776,69 @@ export class AutoUpdateManager implements Publisher {
 
     try {
       const availableVersions = await this.getAvailableBackupVersions();
-      const versionsToRemove = availableVersions.slice(this.rollbackConfig.maxVersionsToKeep);
+      const versionsToRemove = availableVersions.slice(
+        this.rollbackConfig.maxVersionsToKeep,
+      );
 
       for (const version of versionsToRemove) {
         console.log(`Removing old backup version: ${version.version}`);
         execSync(`rm -rf "${version.path}"`);
       }
-
     } catch (error) {
-      console.error('Failed to cleanup old versions:', error);
+      console.error("Failed to cleanup old versions:", error);
     }
   }
 
-  private async testServerConnectivity(): Promise<{ success: boolean; error?: string }> {
+  private async testServerConnectivity(): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
     try {
       const testEndpoint = `${this.updateServer.url}/ping`;
-      await this.makeHttpRequest('GET', testEndpoint);
+      await this.makeHttpRequest("GET", testEndpoint);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
   }
 
-  private async verifyUpdateInfo(updateInfo: UpdateInfo): Promise<VerificationCheck> {
+  private async verifyUpdateInfo(
+    updateInfo: UpdateInfo,
+  ): Promise<VerificationCheck> {
     try {
       // Verify required fields
       if (!updateInfo.version) {
-        throw new Error('Update version is missing');
+        throw new Error("Update version is missing");
       }
 
       if (!updateInfo.downloadUrl) {
-        throw new Error('Download URL is missing');
+        throw new Error("Download URL is missing");
       }
 
       // Verify version format
       if (!this.isValidSemVer(updateInfo.version)) {
-        throw new Error('Update version is not a valid semantic version');
+        throw new Error("Update version is not a valid semantic version");
       }
 
       // Verify download URL is accessible
-      const response = await this.makeHttpRequest('HEAD', updateInfo.downloadUrl);
+      const response = await this.makeHttpRequest(
+        "HEAD",
+        updateInfo.downloadUrl,
+      );
       if (!response) {
-        throw new Error('Download URL is not accessible');
+        throw new Error("Download URL is not accessible");
       }
 
       return {
-        name: 'update-info-valid',
+        name: "update-info-valid",
         success: true,
-        message: `Update information verified for version ${updateInfo.version}`
+        message: `Update information verified for version ${updateInfo.version}`,
       };
-
     } catch (error: any) {
       return {
-        name: 'update-info-valid',
+        name: "update-info-valid",
         success: false,
-        message: `Update information validation failed: ${error.message}`
+        message: `Update information validation failed: ${error.message}`,
       };
     }
   }
@@ -782,51 +846,53 @@ export class AutoUpdateManager implements Publisher {
   private async verifyServerConnectivity(): Promise<VerificationCheck> {
     try {
       const connectivityTest = await this.testServerConnectivity();
-      
+
       if (!connectivityTest.success) {
         throw new Error(connectivityTest.error);
       }
 
       return {
-        name: 'server-connectivity',
+        name: "server-connectivity",
         success: true,
-        message: 'Update server is accessible'
+        message: "Update server is accessible",
       };
-
     } catch (error: any) {
       return {
-        name: 'server-connectivity',
+        name: "server-connectivity",
         success: false,
-        message: `Server connectivity failed: ${error.message}`
+        message: `Server connectivity failed: ${error.message}`,
       };
     }
   }
 
-  private async makeHttpRequest(method: string, url: string, body?: any): Promise<any> {
+  private async makeHttpRequest(
+    method: string,
+    url: string,
+    body?: any,
+  ): Promise<any> {
     // In a real implementation, this would use a proper HTTP client
     // For now, we'll simulate with curl commands
-    
+
     try {
       let curlCommand = `curl -s -X ${method}`;
-      
+
       if (this.updateServer.auth) {
         curlCommand += ` -H "Authorization: Bearer ${this.updateServer.auth.key}"`;
       }
-      
+
       if (body) {
         curlCommand += ` -H "Content-Type: application/json" -d '${JSON.stringify(body)}'`;
       }
-      
+
       curlCommand += ` "${url}"`;
-      
-      const result = execSync(curlCommand, { encoding: 'utf-8' });
-      
-      if (method === 'HEAD') {
+
+      const result = execSync(curlCommand, { encoding: "utf-8" });
+
+      if (method === "HEAD") {
         return true; // HEAD request succeeded
       }
-      
+
       return JSON.parse(result);
-      
     } catch (error: any) {
       throw new Error(`HTTP request failed: ${error.message}`);
     }
@@ -834,7 +900,7 @@ export class AutoUpdateManager implements Publisher {
 
   private async calculateChecksum(filePath: string): Promise<string> {
     const content = await readFile(filePath);
-    return createHash('sha256').update(content).digest('hex');
+    return createHash("sha256").update(content).digest("hex");
   }
 
   private async ensureDirectory(dirPath: string): Promise<void> {
@@ -855,29 +921,32 @@ export class AutoUpdateManager implements Publisher {
   }
 
   private isValidSemVer(version: string): boolean {
-    const semverRegex = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*|[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*|[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+    const semverRegex =
+      /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*|[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*|[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
     return semverRegex.test(version);
   }
 
   private getUpdateConfig(): AutoUpdateConfig {
-    return this.config?.autoUpdate || {
-      enabled: false,
-      server: {
-        url: '',
-        channels: ['stable']
-      },
-      client: {
-        updateInterval: 24,
-        channel: 'stable',
-        autoDownload: false,
-        autoInstall: false,
-        notifyUser: true
-      },
-      rollback: {
-        enabled: true,
-        autoRollback: false,
-        maxVersionsToKeep: 3
+    return (
+      this.config?.autoUpdate || {
+        enabled: false,
+        server: {
+          url: "",
+          channels: ["stable"],
+        },
+        client: {
+          updateInterval: 24,
+          channel: "stable",
+          autoDownload: false,
+          autoInstall: false,
+          notifyUser: true,
+        },
+        rollback: {
+          enabled: true,
+          autoRollback: false,
+          maxVersionsToKeep: 3,
+        },
       }
-    };
+    );
   }
 }

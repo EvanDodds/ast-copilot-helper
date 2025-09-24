@@ -13,7 +13,7 @@ export interface ErrorReportingManager {
   collectDiagnostics(context: DiagnosticContext): Promise<DiagnosticData>;
   generateErrorReport(error: Error, context?: any): Promise<ErrorReport>;
   provideSuggestions(error: ErrorReport): Promise<SuggestionResult[]>;
-  exportDiagnostics(format: 'json' | 'text'): Promise<string>;
+  exportDiagnostics(format: "json" | "text"): Promise<string>;
   getErrorHistory(): Promise<ErrorHistoryEntry[]>;
   clearErrorHistory(): Promise<void>;
 }
@@ -57,8 +57,8 @@ export interface DiagnosticDataConfig {
 export interface ErrorReport {
   id: string;
   timestamp: Date;
-  type: 'error' | 'crash' | 'warning' | 'performance';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "error" | "crash" | "warning" | "performance";
+  severity: "low" | "medium" | "high" | "critical";
   category: string;
   operation: string;
   message: string;
@@ -174,7 +174,7 @@ export interface SystemDiagnostics {
  */
 export interface NetworkInterface {
   name: string;
-  family: 'IPv4' | 'IPv6';
+  family: "IPv4" | "IPv6";
   address: string;
   internal: boolean;
   mac: string;
@@ -384,7 +384,7 @@ export interface DependencyInfo {
 export interface VulnerabilityInfo {
   package: string;
   version: string;
-  severity: 'low' | 'moderate' | 'high' | 'critical';
+  severity: "low" | "moderate" | "high" | "critical";
   title: string;
   description: string;
   recommendation: string;
@@ -406,7 +406,7 @@ export interface ConflictInfo {
 export interface CrashReport {
   id: string;
   timestamp: Date;
-  type: 'uncaughtException' | 'unhandledRejection' | 'signal' | 'memoryLimit';
+  type: "uncaughtException" | "unhandledRejection" | "signal" | "memoryLimit";
   exitCode?: number;
   signal?: string;
   error: Error;
@@ -467,8 +467,8 @@ export interface SuggestionResult {
   id: string;
   title: string;
   description: string;
-  severity: 'low' | 'medium' | 'high';
-  category: 'fix' | 'workaround' | 'information';
+  severity: "low" | "medium" | "high";
+  category: "fix" | "workaround" | "information";
   confidence: number; // 0-1
   commands?: string[];
   links?: string[];
@@ -519,7 +519,7 @@ export interface ErrorHistoryEntry {
  * Error resolution information
  */
 export interface ResolutionInfo {
-  type: 'auto' | 'manual' | 'suggestion';
+  type: "auto" | "manual" | "suggestion";
   method: string;
   timestamp: Date;
   success: boolean;
@@ -572,10 +572,10 @@ export interface ErrorAnalytics {
  * Error trend analysis
  */
 export interface ErrorTrend {
-  type: 'frequency' | 'severity' | 'category' | 'temporal';
+  type: "frequency" | "severity" | "category" | "temporal";
   description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  trend: 'increasing' | 'decreasing' | 'stable';
+  severity: "low" | "medium" | "high" | "critical";
+  trend: "increasing" | "decreasing" | "stable";
   confidence: number;
 }
 
@@ -589,7 +589,7 @@ export interface ErrorPattern {
   lastSeen: Date;
   avgTimeBetweenOccurrences: number;
   associatedOperations: string[];
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
 }
 
 /**
@@ -610,7 +610,7 @@ export interface ErrorCorrelation {
 export interface ErrorFrequencyPoint {
   timestamp: Date;
   count: number;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   errorTypes: string[];
   categories: string[];
 }
@@ -651,7 +651,7 @@ export interface ConsentData {
 export interface PrivacySettings {
   requireConsent: boolean;
   retentionDays: number;
-  anonymizationLevel: 'none' | 'basic' | 'strict' | 'full';
+  anonymizationLevel: "none" | "basic" | "strict" | "full";
   enablePiiScrubbing: boolean;
   allowedCategories: string[];
   enableEncryption: boolean;
@@ -687,7 +687,7 @@ export interface SecurityConfig {
   };
   authentication: {
     required: boolean;
-    method: 'apiKey' | 'oauth' | 'jwt';
+    method: "apiKey" | "oauth" | "jwt";
     keyValidationUrl?: string;
   };
 }

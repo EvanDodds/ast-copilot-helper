@@ -5,26 +5,26 @@
  * Provides complete server lifecycle management with start/stop/status commands
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
-import type { ChildProcess } from 'child_process';
-import { spawn } from 'child_process';
-import type { ServerConfig } from './server';
-import { ASTMCPServer } from './server';
-import { StdioTransport } from './mcp/stdio-transport';
-import { TCPTransport } from './mcp/tcp-transport';
-import type { MCPTransport } from './mcp/transport';
-import { MockDatabaseReader } from './database/mock-reader';
+import { promises as fs } from "fs";
+import path from "path";
+import type { ChildProcess } from "child_process";
+import { spawn } from "child_process";
+import type { ServerConfig } from "./server";
+import { ASTMCPServer } from "./server";
+import { StdioTransport } from "./mcp/stdio-transport";
+import { TCPTransport } from "./mcp/tcp-transport";
+import type { MCPTransport } from "./mcp/transport";
+import { MockDatabaseReader } from "./database/mock-reader";
 
 /**
  * CLI Configuration interface
  */
 interface CLIConfig {
-  transport: 'stdio' | 'tcp';
+  transport: "stdio" | "tcp";
   tcpPort?: number;
   tcpHost?: string;
   pidFile: string;
-  logLevel: 'error' | 'warn' | 'info' | 'debug';
+  logLevel: "error" | "warn" | "info" | "debug";
   databasePath: string;
   serverName: string;
   serverVersion: string;
@@ -35,15 +35,15 @@ interface CLIConfig {
  * Default CLI configuration
  */
 const DEFAULT_CONFIG: CLIConfig = {
-  transport: 'stdio',
+  transport: "stdio",
   tcpPort: 3000,
-  tcpHost: 'localhost',
-  pidFile: path.join(process.cwd(), '.astdb', 'mcp-server.pid'),
-  logLevel: 'info',
-  databasePath: path.join(process.cwd(), '.astdb'),
-  serverName: 'ast-mcp-server',
-  serverVersion: '0.1.0',
-  protocolVersion: '2024-11-05'
+  tcpHost: "localhost",
+  pidFile: path.join(process.cwd(), ".astdb", "mcp-server.pid"),
+  logLevel: "info",
+  databasePath: path.join(process.cwd(), ".astdb"),
+  serverName: "ast-mcp-server",
+  serverVersion: "0.1.0",
+  protocolVersion: "2024-11-05",
 };
 
 /**
@@ -64,7 +64,9 @@ class ProcessManager {
       await fs.mkdir(path.dirname(this.config.pidFile), { recursive: true });
       await fs.writeFile(this.config.pidFile, pid.toString());
     } catch (error) {
-      throw new Error(`Failed to write PID file: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to write PID file: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -73,14 +75,16 @@ class ProcessManager {
    */
   async readPidFile(): Promise<number | null> {
     try {
-      const pidStr = await fs.readFile(this.config.pidFile, 'utf8');
+      const pidStr = await fs.readFile(this.config.pidFile, "utf8");
       const pid = parseInt(pidStr.trim(), 10);
       return isNaN(pid) ? null : pid;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         return null;
       }
-      throw new Error(`Failed to read PID file: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to read PID file: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -91,8 +95,10 @@ class ProcessManager {
     try {
       await fs.unlink(this.config.pidFile);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        throw new Error(`Failed to remove PID file: ${error instanceof Error ? error.message : String(error)}`);
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw new Error(
+          `Failed to remove PID file: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
   }
@@ -113,7 +119,7 @@ class ProcessManager {
   /**
    * Send signal to process
    */
-  sendSignal(pid: number, signal: NodeJS.Signals = 'SIGTERM'): boolean {
+  sendSignal(pid: number, signal: NodeJS.Signals = "SIGTERM"): boolean {
     try {
       process.kill(pid, signal);
       return true;
@@ -127,14 +133,14 @@ class ProcessManager {
    */
   async waitForProcessStop(pid: number, timeoutMs = 10000): Promise<boolean> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeoutMs) {
       if (!this.isProcessRunning(pid)) {
         return true;
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    
+
     return false;
   }
 }
@@ -157,9 +163,9 @@ class ServerManager {
    */
   private createTransport(): MCPTransport {
     switch (this.config.transport) {
-      case 'stdio':
+      case "stdio":
         return new StdioTransport();
-      case 'tcp':
+      case "tcp":
         return new TCPTransport(this.config.tcpPort, this.config.tcpHost);
       default:
         throw new Error(`Unsupported transport type: ${this.config.transport}`);
@@ -176,7 +182,7 @@ class ServerManager {
       protocolVersion: this.config.protocolVersion,
       requestTimeout: 30000,
       maxConcurrentRequests: 10,
-      enableRequestLogging: this.config.logLevel === 'debug'
+      enableRequestLogging: this.config.logLevel === "debug",
     };
   }
 
@@ -192,7 +198,7 @@ class ServerManager {
       // Create transport and server
       const transport = this.createTransport();
       const serverConfig = this.createServerConfig();
-      
+
       this.server = new ASTMCPServer(transport, database, serverConfig);
 
       // Set up signal handlers for graceful shutdown
@@ -205,36 +211,41 @@ class ServerManager {
           await this.processManager.removePidFile();
           process.exit(0);
         } catch (error) {
-          this.logError(`Error during shutdown: ${error instanceof Error ? error.message : String(error)}`);
+          this.logError(
+            `Error during shutdown: ${error instanceof Error ? error.message : String(error)}`,
+          );
           process.exit(1);
         }
       };
 
-      process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-      process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+      process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+      process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
       // Start the server
       await this.server.start();
-      
+
       // Write PID file
       await this.processManager.writePidFile(process.pid);
 
       this.log(`Server started successfully (PID: ${process.pid})`);
-      
-      if (this.config.transport === 'tcp') {
-        this.log(`TCP server listening on ${this.config.tcpHost}:${this.config.tcpPort}`);
+
+      if (this.config.transport === "tcp") {
+        this.log(
+          `TCP server listening on ${this.config.tcpHost}:${this.config.tcpPort}`,
+        );
       } else {
-        this.log('STDIO transport ready for MCP communication');
+        this.log("STDIO transport ready for MCP communication");
       }
 
       // Keep process alive for TCP mode
-      if (this.config.transport === 'tcp') {
+      if (this.config.transport === "tcp") {
         // Server will keep the event loop alive via TCP server
         await new Promise(() => {}); // Keep running indefinitely
       }
-      
     } catch (error) {
-      this.logError(`Failed to start server: ${error instanceof Error ? error.message : String(error)}`);
+      this.logError(
+        `Failed to start server: ${error instanceof Error ? error.message : String(error)}`,
+      );
       process.exit(1);
     }
   }
@@ -244,7 +255,7 @@ class ServerManager {
    */
   async startDaemon(): Promise<void> {
     const existingPid = await this.processManager.readPidFile();
-    
+
     if (existingPid && this.processManager.isProcessRunning(existingPid)) {
       throw new Error(`Server is already running (PID: ${existingPid})`);
     }
@@ -254,19 +265,19 @@ class ServerManager {
       await this.processManager.removePidFile();
     }
 
-    const child: ChildProcess = spawn(process.execPath, [__filename, 'run'], {
+    const child: ChildProcess = spawn(process.execPath, [__filename, "run"], {
       detached: true,
-      stdio: ['ignore', 'ignore', 'ignore']
+      stdio: ["ignore", "ignore", "ignore"],
     });
 
     child.unref();
 
     // Wait a moment to ensure the process started
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const newPid = await this.processManager.readPidFile();
     if (!newPid || !this.processManager.isProcessRunning(newPid)) {
-      throw new Error('Failed to start daemon process');
+      throw new Error("Failed to start daemon process");
     }
 
     this.log(`Server started as daemon (PID: ${newPid})`);
@@ -277,33 +288,36 @@ class ServerManager {
    */
   async stopServer(): Promise<void> {
     const pid = await this.processManager.readPidFile();
-    
+
     if (!pid) {
-      throw new Error('No PID file found - server may not be running');
+      throw new Error("No PID file found - server may not be running");
     }
 
     if (!this.processManager.isProcessRunning(pid)) {
       await this.processManager.removePidFile();
-      throw new Error('Server process is not running');
+      throw new Error("Server process is not running");
     }
 
     // Send SIGTERM for graceful shutdown
     this.log(`Sending SIGTERM to process ${pid}...`);
-    if (!this.processManager.sendSignal(pid, 'SIGTERM')) {
+    if (!this.processManager.sendSignal(pid, "SIGTERM")) {
       throw new Error(`Failed to send SIGTERM to process ${pid}`);
     }
 
     // Wait for graceful shutdown
     const stopped = await this.processManager.waitForProcessStop(pid, 10000);
-    
+
     if (!stopped) {
       this.log(`Process ${pid} did not stop gracefully, sending SIGKILL...`);
-      if (!this.processManager.sendSignal(pid, 'SIGKILL')) {
+      if (!this.processManager.sendSignal(pid, "SIGKILL")) {
         throw new Error(`Failed to kill process ${pid}`);
       }
-      
+
       // Wait for force kill
-      const forceKilled = await this.processManager.waitForProcessStop(pid, 5000);
+      const forceKilled = await this.processManager.waitForProcessStop(
+        pid,
+        5000,
+      );
       if (!forceKilled) {
         throw new Error(`Failed to kill process ${pid}`);
       }
@@ -316,15 +330,19 @@ class ServerManager {
   /**
    * Get server status
    */
-  async getStatus(): Promise<{ running: boolean; pid?: number; uptime?: number }> {
+  async getStatus(): Promise<{
+    running: boolean;
+    pid?: number;
+    uptime?: number;
+  }> {
     const pid = await this.processManager.readPidFile();
-    
+
     if (!pid) {
       return { running: false };
     }
 
     const running = this.processManager.isProcessRunning(pid);
-    
+
     if (!running) {
       // Clean up stale PID file
       await this.processManager.removePidFile();
@@ -349,9 +367,9 @@ class ServerManager {
   async healthCheck(): Promise<{ healthy: boolean; message: string }> {
     try {
       const status = await this.getStatus();
-      
+
       if (!status.running) {
-        return { healthy: false, message: 'Server is not running' };
+        return { healthy: false, message: "Server is not running" };
       }
 
       // Check database accessibility
@@ -360,23 +378,23 @@ class ServerManager {
         await database.initialize();
         await database.close();
       } catch (error) {
-        return { 
-          healthy: false, 
-          message: `Database check failed: ${error instanceof Error ? error.message : String(error)}`
+        return {
+          healthy: false,
+          message: `Database check failed: ${error instanceof Error ? error.message : String(error)}`,
         };
       }
 
-      return { healthy: true, message: 'Server is running and healthy' };
+      return { healthy: true, message: "Server is running and healthy" };
     } catch (error) {
-      return { 
-        healthy: false, 
-        message: `Health check failed: ${error instanceof Error ? error.message : String(error)}`
+      return {
+        healthy: false,
+        message: `Health check failed: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
   }
 
   private log(message: string): void {
-    if (this.config.logLevel === 'debug' || this.config.logLevel === 'info') {
+    if (this.config.logLevel === "debug" || this.config.logLevel === "info") {
       console.log(`[INFO] ${message}`);
     }
   }
@@ -407,7 +425,7 @@ class CLI {
     // Override with environment variables
     if (process.env.AST_MCP_TRANSPORT) {
       const transport = process.env.AST_MCP_TRANSPORT.toLowerCase();
-      if (transport === 'stdio' || transport === 'tcp') {
+      if (transport === "stdio" || transport === "tcp") {
         config.transport = transport;
       }
     }
@@ -425,8 +443,8 @@ class CLI {
 
     if (process.env.AST_MCP_LOG_LEVEL) {
       const level = process.env.AST_MCP_LOG_LEVEL.toLowerCase();
-      if (['error', 'warn', 'info', 'debug'].includes(level)) {
-        config.logLevel = level as CLIConfig['logLevel'];
+      if (["error", "warn", "info", "debug"].includes(level)) {
+        config.logLevel = level as CLIConfig["logLevel"];
       }
     }
 
@@ -482,68 +500,72 @@ Examples:
 
     try {
       switch (command) {
-        case 'start':
-          if (this.config.transport === 'tcp') {
+        case "start":
+          if (this.config.transport === "tcp") {
             await this.serverManager.startDaemon();
           } else {
             // For STDIO, we need to run in foreground
-            console.log('Starting STDIO server in foreground...');
+            console.log("Starting STDIO server in foreground...");
             await this.serverManager.startServer();
           }
           break;
 
-        case 'stop':
+        case "stop":
           await this.serverManager.stopServer();
           break;
 
-        case 'restart':
+        case "restart":
           try {
             await this.serverManager.stopServer();
           } catch (error) {
-            console.log('Server was not running, starting fresh...');
+            console.log("Server was not running, starting fresh...");
           }
-          
-          if (this.config.transport === 'tcp') {
+
+          if (this.config.transport === "tcp") {
             await this.serverManager.startDaemon();
           } else {
             await this.serverManager.startServer();
           }
           break;
 
-        case 'status': {
+        case "status": {
           const status = await this.serverManager.getStatus();
           if (status.running) {
             console.log(`Server is running (PID: ${status.pid})`);
             if (status.uptime !== undefined) {
               console.log(`Uptime: ${status.uptime} seconds`);
             }
-            if (this.config.transport === 'tcp') {
-              console.log(`TCP server on ${this.config.tcpHost}:${this.config.tcpPort}`);
+            if (this.config.transport === "tcp") {
+              console.log(
+                `TCP server on ${this.config.tcpHost}:${this.config.tcpPort}`,
+              );
             } else {
-              console.log('Using STDIO transport');
+              console.log("Using STDIO transport");
             }
           } else {
-            console.log('Server is not running');
+            console.log("Server is not running");
           }
           break;
         }
 
-        case 'health': {
+        case "health": {
           const health = await this.serverManager.healthCheck();
-          console.log(`Health status: ${health.healthy ? 'HEALTHY' : 'UNHEALTHY'}`);
+          console.log(
+            `Health status: ${health.healthy ? "HEALTHY" : "UNHEALTHY"}`,
+          );
           console.log(`Message: ${health.message}`);
           process.exit(health.healthy ? 0 : 1);
           break;
         }
 
-        case 'run':
+        case "run":
           // Internal command for daemon mode
           await this.serverManager.startServer();
           break;
 
-        case 'help':
-        case '--help':
-        case '-h':
+        case "help":
+        case "--help":
+        case "-h":
           this.showUsage();
           break;
 
@@ -555,7 +577,9 @@ Examples:
           process.exit(1);
       }
     } catch (error) {
-      console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(
+        `Error: ${error instanceof Error ? error.message : String(error)}`,
+      );
       process.exit(1);
     }
   }
@@ -567,20 +591,22 @@ Examples:
 export async function main(): Promise<void> {
   const cli = new CLI();
   const args = process.argv.slice(2);
-  
+
   if (args.length === 0) {
-    args.push('help');
+    args.push("help");
   }
-  
+
   await cli.execute(args);
 }
 
 // Only execute if this file is run directly
- 
+
 const isMainModule = require.main === module;
 if (isMainModule) {
-  main().catch(error => {
-    console.error(`Fatal error: ${error instanceof Error ? error.message : String(error)}`);
+  main().catch((error) => {
+    console.error(
+      `Fatal error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exit(1);
   });
 }

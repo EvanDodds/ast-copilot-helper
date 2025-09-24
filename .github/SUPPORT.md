@@ -16,7 +16,7 @@ Welcome to the ast-copilot-helper community! This guide helps you find the right
 
 3. **Documentation** - Check our comprehensive docs
    - [Getting Started Guide](../docs/guide/getting-started.md)
-   - [CLI Usage](../docs/guide/cli-usage.md) 
+   - [CLI Usage](../docs/guide/cli-usage.md)
    - [VS Code Extension](../docs/guide/vscode-extension.md)
    - [API Documentation](../docs/api/)
    - [FAQ](../docs/faq.md)
@@ -115,8 +115,10 @@ We recognize community members who provide excellent support:
 ### Quick Response Templates
 
 **Needs More Information:**
+
 ```markdown
 Thanks for your question! To help you better, could you please provide:
+
 - Your operating system and version
 - Node.js version (`node --version`)
 - ast-copilot-helper version
@@ -127,6 +129,7 @@ This will help us give you a more targeted solution.
 ```
 
 **Documentation Link:**
+
 ```markdown
 Great question! This is covered in our documentation:
 [Link to relevant docs]
@@ -135,6 +138,7 @@ If the documentation isn't clear or doesn't solve your issue, please let us know
 ```
 
 **Duplicate Issue:**
+
 ```markdown
 This looks similar to a previous question/issue. Please check:
 [Link to similar discussion/issue]
@@ -145,11 +149,13 @@ If that doesn't resolve your issue, please let us know how your situation is dif
 ## 🔧 Support Tools
 
 ### Useful Commands
+
 - Search issues: `is:issue "search terms"`
 - Search discussions: `is:discussion "search terms"`
 - Find closed issues: `is:issue is:closed "search terms"`
 
 ### Labels for Issues
+
 - `question` - General questions
 - `help wanted` - Community help needed
 - `good first issue` - Good for newcomers
@@ -158,6 +164,7 @@ If that doesn't resolve your issue, please let us know how your situation is dif
 ## 📞 Escalation Contacts
 
 For issues requiring maintainer attention:
+
 - **Security issues** - Use security policy
 - **Code of conduct violations** - Contact maintainers directly
 - **Urgent bugs** - Use high priority issue template
@@ -168,6 +175,7 @@ For issues requiring maintainer attention:
 ## 💡 Tips for Effective Support
 
 ### For Help Seekers
+
 - Be specific about your problem
 - Include error messages and code snippets
 - Explain what you expected vs what happened
@@ -175,6 +183,7 @@ For issues requiring maintainer attention:
 - Be patient - community support is volunteer-based
 
 ### For Help Providers
+
 - Ask questions to understand the problem better
 - Provide step-by-step solutions
 - Link to relevant documentation
@@ -183,4 +192,4 @@ For issues requiring maintainer attention:
 
 ---
 
-*This support system is community-driven. The more we all contribute to helping each other, the stronger our community becomes!*
+_This support system is community-driven. The more we all contribute to helping each other, the stronger our community becomes!_

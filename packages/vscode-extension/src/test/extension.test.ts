@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as vscode from 'vscode';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import * as vscode from "vscode";
 
 // Mock VS Code API
-vi.mock('vscode', () => ({
+vi.mock("vscode", () => ({
   window: {
     createOutputChannel: vi.fn(() => ({
       appendLine: vi.fn(),
@@ -10,9 +10,9 @@ vi.mock('vscode', () => ({
       dispose: vi.fn(),
     })),
     createStatusBarItem: vi.fn(() => ({
-      command: '',
-      tooltip: '',
-      text: '',
+      command: "",
+      tooltip: "",
+      text: "",
       backgroundColor: undefined,
       color: undefined,
       show: vi.fn(),
@@ -38,250 +38,281 @@ vi.mock('vscode', () => ({
 }));
 
 // Mock extension module
-vi.mock('../extension', async (importOriginal) => {
+vi.mock("../extension", async (importOriginal) => {
   // Import the actual module to get real implementations
-  const actual = await importOriginal() as any;
+  const actual = (await importOriginal()) as any;
   return {
     ...actual,
   };
 });
 
-describe('VS Code Extension', () => {
+describe("VS Code Extension", () => {
   let mockContext: vscode.ExtensionContext;
-  
+
   beforeEach(async () => {
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Clear module cache to ensure fresh import
     vi.resetModules();
-    
+
     // Create mock extension context
     mockContext = {
       subscriptions: [],
     } as any;
   });
-  
+
   afterEach(() => {
     // Clean up any active mocks
     vi.restoreAllMocks();
   });
-  
-  describe('Extension Activation', () => {
-    it('should activate extension successfully', async () => {
-      const { activate } = await import('../extension');
-      
+
+  describe("Extension Activation", () => {
+    it("should activate extension successfully", async () => {
+      const { activate } = await import("../extension");
+
       expect(() => activate(mockContext)).not.toThrow();
-      
+
       // Verify output channel creation
-      expect(vscode.window.createOutputChannel).toHaveBeenCalledWith('AST MCP Helper');
-      
-      // Verify status bar creation  
-      expect(vscode.window.createStatusBarItem).toHaveBeenCalledWith(vscode.StatusBarAlignment.Right, 100);
-      
+      expect(vscode.window.createOutputChannel).toHaveBeenCalledWith(
+        "AST MCP Helper",
+      );
+
+      // Verify status bar creation
+      expect(vscode.window.createStatusBarItem).toHaveBeenCalledWith(
+        vscode.StatusBarAlignment.Right,
+        100,
+      );
+
       // Verify configuration watcher setup
       expect(vscode.workspace.onDidChangeConfiguration).toHaveBeenCalled();
     });
-    
-    it('should register all expected commands', async () => {
-      const { activate } = await import('../extension');
-      
+
+    it("should register all expected commands", async () => {
+      const { activate } = await import("../extension");
+
       activate(mockContext);
-      
+
       // Verify all 13 commands are registered
       expect(vscode.commands.registerCommand).toHaveBeenCalledTimes(13);
-      
+
       const expectedCommands = [
-        'astCopilotHelper.startServer',
-        'astCopilotHelper.stopServer', 
-        'astCopilotHelper.restartServer',
-        'astCopilotHelper.showStatus',
-        'astCopilotHelper.openSettings',
-        'astCopilotHelper.parseWorkspace',
-        'astCopilotHelper.clearIndex',
-        'astCopilotHelper.showLogs',
-        'astCopilotHelper.validateConfiguration',
-        'astCopilotHelper.analyzeIssue',
-        'astCopilotHelper.generateCode',
-        'astCopilotHelper.createPullRequest',
-        'astCopilotHelper.reviewCode'
+        "astCopilotHelper.startServer",
+        "astCopilotHelper.stopServer",
+        "astCopilotHelper.restartServer",
+        "astCopilotHelper.showStatus",
+        "astCopilotHelper.openSettings",
+        "astCopilotHelper.parseWorkspace",
+        "astCopilotHelper.clearIndex",
+        "astCopilotHelper.showLogs",
+        "astCopilotHelper.validateConfiguration",
+        "astCopilotHelper.analyzeIssue",
+        "astCopilotHelper.generateCode",
+        "astCopilotHelper.createPullRequest",
+        "astCopilotHelper.reviewCode",
       ];
-      
-      expectedCommands.forEach(command => {
+
+      expectedCommands.forEach((command) => {
         expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
           command,
-          expect.any(Function)
+          expect.any(Function),
         );
       });
     });
-    
-    it('should handle activation errors gracefully', async () => {
+
+    it("should handle activation errors gracefully", async () => {
       // Mock output channel creation to throw error
       vi.mocked(vscode.window.createOutputChannel).mockImplementation(() => {
-        throw new Error('Mock activation error');
+        throw new Error("Mock activation error");
       });
-      
-      const { activate } = await import('../extension');
-      
+
+      const { activate } = await import("../extension");
+
       expect(() => activate(mockContext)).not.toThrow();
       expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-        expect.stringContaining('AST MCP Helper activation failed')
+        expect.stringContaining("AST MCP Helper activation failed"),
       );
     });
   });
-  
-  describe('Extension Deactivation', () => {
-    it('should deactivate extension cleanly', async () => {
-      const { activate, deactivate } = await import('../extension');
-      
+
+  describe("Extension Deactivation", () => {
+    it("should deactivate extension cleanly", async () => {
+      const { activate, deactivate } = await import("../extension");
+
       // First activate the extension
       activate(mockContext);
-      
+
       // Then deactivate it
       expect(() => deactivate()).not.toThrow();
     });
   });
-  
-  describe('Configuration Management', () => {
-    it('should read configuration on initialization', async () => {
+
+  describe("Configuration Management", () => {
+    it("should read configuration on initialization", async () => {
       const mockConfig = {
         get: vi.fn().mockReturnValue(false), // auto-start disabled
       };
-      vi.mocked(vscode.workspace.getConfiguration).mockReturnValue(mockConfig as any);
-      
-      const { activate } = await import('../extension');
-      
+      vi.mocked(vscode.workspace.getConfiguration).mockReturnValue(
+        mockConfig as any,
+      );
+
+      const { activate } = await import("../extension");
+
       activate(mockContext);
-      
+
       // Verify configuration was read
-      expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith('astCopilotHelper');
+      expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith(
+        "astCopilotHelper",
+      );
       expect(mockConfig.get).toHaveBeenCalled(); // ConfigManager loads many config properties
     });
-    
-    it('should handle auto-start configuration', async () => {
+
+    it("should handle auto-start configuration", async () => {
       const mockConfig = {
         get: vi.fn().mockReturnValue(true), // auto-start enabled
       };
-      vi.mocked(vscode.workspace.getConfiguration).mockReturnValue(mockConfig as any);
-      
-      const { activate } = await import('../extension');
-      
+      vi.mocked(vscode.workspace.getConfiguration).mockReturnValue(
+        mockConfig as any,
+      );
+
+      const { activate } = await import("../extension");
+
       activate(mockContext);
-      
+
       expect(mockConfig.get).toHaveBeenCalled(); // ConfigManager loads auto-start and other properties
     });
   });
-  
-  describe('Command Handlers', () => {
-    it('should handle showLogs command', async () => {
-      const { activate } = await import('../extension');
-      
+
+  describe("Command Handlers", () => {
+    it("should handle showLogs command", async () => {
+      const { activate } = await import("../extension");
+
       activate(mockContext);
-      
+
       // Get the registered showLogs command handler
-      const registerCommandCalls = vi.mocked(vscode.commands.registerCommand).mock.calls;
-      const showLogsCall = registerCommandCalls.find(call => call[0] === 'astCopilotHelper.showLogs');
-      
+      const registerCommandCalls = vi.mocked(vscode.commands.registerCommand)
+        .mock.calls;
+      const showLogsCall = registerCommandCalls.find(
+        (call) => call[0] === "astCopilotHelper.showLogs",
+      );
+
       expect(showLogsCall).toBeDefined();
-      
+
       if (showLogsCall) {
         const handler = showLogsCall[1] as () => void;
         expect(() => handler()).not.toThrow();
       }
     });
-    
-    it('should handle openSettings command', async () => {
-      const { activate } = await import('../extension');
-      
+
+    it("should handle openSettings command", async () => {
+      const { activate } = await import("../extension");
+
       activate(mockContext);
-      
+
       // Get the registered openSettings command handler
-      const registerCommandCalls = vi.mocked(vscode.commands.registerCommand).mock.calls;
-      const openSettingsCall = registerCommandCalls.find(call => call[0] === 'astCopilotHelper.openSettings');
-      
+      const registerCommandCalls = vi.mocked(vscode.commands.registerCommand)
+        .mock.calls;
+      const openSettingsCall = registerCommandCalls.find(
+        (call) => call[0] === "astCopilotHelper.openSettings",
+      );
+
       expect(openSettingsCall).toBeDefined();
-      
+
       if (openSettingsCall) {
         const handler = openSettingsCall[1] as () => Promise<void>;
         await handler();
-        
+
         // Verify settings command was executed
         expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
-          'workbench.action.openSettings',
-          'astCopilotHelper'
+          "workbench.action.openSettings",
+          "astCopilotHelper",
         );
       }
     });
-    
-    it('should handle server management commands gracefully', async () => {
-      const { activate } = await import('../extension');
-      
+
+    it("should handle server management commands gracefully", async () => {
+      const { activate } = await import("../extension");
+
       activate(mockContext);
-      
-      const serverCommands = ['astCopilotHelper.startServer', 'astCopilotHelper.stopServer', 'astCopilotHelper.restartServer'];
-      const registerCommandCalls = vi.mocked(vscode.commands.registerCommand).mock.calls;
-      
+
+      const serverCommands = [
+        "astCopilotHelper.startServer",
+        "astCopilotHelper.stopServer",
+        "astCopilotHelper.restartServer",
+      ];
+      const registerCommandCalls = vi.mocked(vscode.commands.registerCommand)
+        .mock.calls;
+
       for (const commandName of serverCommands) {
-        const commandCall = registerCommandCalls.find(call => call[0] === commandName);
+        const commandCall = registerCommandCalls.find(
+          (call) => call[0] === commandName,
+        );
         expect(commandCall).toBeDefined();
-        
+
         if (commandCall) {
           const handler = commandCall[1] as () => Promise<void>;
           await handler();
-          
+
           // Should show server error messages
           expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-            expect.stringContaining('Server error')
+            expect.stringContaining("Server error"),
           );
         }
       }
     });
   });
-  
-  describe('Status Bar Integration', () => {
-    it('should create and configure status bar item', async () => {
+
+  describe("Status Bar Integration", () => {
+    it("should create and configure status bar item", async () => {
       const mockStatusBarItem = {
-        command: '',
-        tooltip: '',
-        text: '',
+        command: "",
+        tooltip: "",
+        text: "",
         backgroundColor: undefined,
         color: undefined,
         show: vi.fn(),
         dispose: vi.fn(),
       };
-      
-      vi.mocked(vscode.window.createStatusBarItem).mockReturnValue(mockStatusBarItem as any);
-      
-      const { activate } = await import('../extension');
-      
+
+      vi.mocked(vscode.window.createStatusBarItem).mockReturnValue(
+        mockStatusBarItem as any,
+      );
+
+      const { activate } = await import("../extension");
+
       activate(mockContext);
-      
+
       expect(vscode.window.createStatusBarItem).toHaveBeenCalledWith(
         vscode.StatusBarAlignment.Right,
-        100
+        100,
       );
-      
-      expect(mockStatusBarItem.command).toBe('astCopilotHelper.showStatus');
-      expect(mockStatusBarItem.tooltip).toBe('AST MCP Server Status - Click for details');
+
+      expect(mockStatusBarItem.command).toBe("astCopilotHelper.showStatus");
+      expect(mockStatusBarItem.tooltip).toBe(
+        "AST MCP Server Status - Click for details",
+      );
       expect(mockStatusBarItem.show).toHaveBeenCalled();
     });
   });
-  
-  describe('Error Handling', () => {
-    it('should handle command execution errors', async () => {
-      const { activate } = await import('../extension');
-      
+
+  describe("Error Handling", () => {
+    it("should handle command execution errors", async () => {
+      const { activate } = await import("../extension");
+
       activate(mockContext);
-      
+
       // Get a command handler and make it throw
-      const registerCommandCalls = vi.mocked(vscode.commands.registerCommand).mock.calls;
-      const startServerCall = registerCommandCalls.find(call => call[0] === 'astCopilotHelper.startServer');
-      
+      const registerCommandCalls = vi.mocked(vscode.commands.registerCommand)
+        .mock.calls;
+      const startServerCall = registerCommandCalls.find(
+        (call) => call[0] === "astCopilotHelper.startServer",
+      );
+
       expect(startServerCall).toBeDefined();
-      
+
       if (startServerCall) {
         const wrappedHandler = startServerCall[1] as () => void;
-        
+
         // The wrapped handler should catch errors and not throw
         expect(() => wrappedHandler()).not.toThrow();
       }

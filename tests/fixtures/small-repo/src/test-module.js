@@ -27,7 +27,7 @@ class JavaScriptTestClass {
       const response = await fetch(url);
       return await response.json();
     } catch (error) {
-      console.error('Fetch failed:', error);
+      console.error("Fetch failed:", error);
       return null;
     }
   }
@@ -54,10 +54,10 @@ class JavaScriptTestClass {
 // Utility functions
 function createProcessor(multiplier = 1) {
   return (value, index) => {
-    if (typeof value === 'number') {
+    if (typeof value === "number") {
       return value * multiplier;
     }
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return value.repeat(multiplier);
     }
     return undefined;

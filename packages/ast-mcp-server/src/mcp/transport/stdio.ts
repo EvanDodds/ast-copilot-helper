@@ -1,7 +1,7 @@
-import { createInterface } from 'readline';
-import type { TransportConfig, TransportMessage, ConnectionInfo } from './base';
-import { Transport, TransportError } from './base';
-import { logger } from '../../logging/logger';
+import { createInterface } from "readline";
+import type { TransportConfig, TransportMessage, ConnectionInfo } from "./base";
+import { Transport, TransportError } from "./base";
+import { logger } from "../../logging/logger";
 
 /**
  * STDIO transport configuration
@@ -28,40 +28,43 @@ export class StdioTransport extends Transport {
   private readonly maxLineLength: number;
   private readline?: ReturnType<typeof createInterface>;
   private connection?: ConnectionInfo;
-  private readonly connectionId = 'stdio-main';
+  private readonly connectionId = "stdio-main";
 
   constructor(config: StdioTransportConfig = {}) {
     super(config);
-    
+
     this.input = config.input || process.stdin;
     this.output = config.output || process.stdout;
     this.lineBuffering = config.lineBuffering ?? true;
     this.maxLineLength = config.maxLineLength ?? 1024 * 1024; // 1MB max line
 
-    logger.info('STDIO Transport initialized', {
+    logger.info("STDIO Transport initialized", {
       lineBuffering: this.lineBuffering,
       maxLineLength: this.maxLineLength,
-      hasCustomStreams: !!(config.input || config.output)
+      hasCustomStreams: !!(config.input || config.output),
     });
   }
 
   getTransportType(): string {
-    return 'stdio';
+    return "stdio";
   }
 
   async start(): Promise<void> {
-    if (this.state === 'connected' || this.state === 'connecting') {
-      throw new TransportError('connection-failed', 'STDIO transport already started');
+    if (this.state === "connected" || this.state === "connecting") {
+      throw new TransportError(
+        "connection-failed",
+        "STDIO transport already started",
+      );
     }
 
-    this.state = 'connecting';
-    
+    this.state = "connecting";
+
     try {
       // Register the main STDIO connection
       this.connection = this.registerConnection(this.connectionId, {
-        name: 'stdio-client',
-        version: '1.0.0',
-        userAgent: 'stdio'
+        name: "stdio-client",
+        version: "1.0.0",
+        userAgent: "stdio",
       });
 
       // Set up error handlers first to catch initialization errors
@@ -70,13 +73,13 @@ export class StdioTransport extends Transport {
       // Test stream availability and catch immediate errors
       await new Promise<void>((resolve, reject) => {
         const errorTimeout = setTimeout(() => {
-          reject(new Error('Stream initialization timeout'));
+          reject(new Error("Stream initialization timeout"));
         }, 1000);
 
         const cleanup = () => {
           clearTimeout(errorTimeout);
-          this.input.off('error', handleError);
-          this.output.off('error', handleError);
+          this.input.off("error", handleError);
+          this.output.off("error", handleError);
         };
 
         const handleError = (error: Error) => {
@@ -85,14 +88,14 @@ export class StdioTransport extends Transport {
         };
 
         // Listen for immediate errors during initialization
-        this.input.once('error', handleError);
-        this.output.once('error', handleError);
+        this.input.once("error", handleError);
+        this.output.once("error", handleError);
 
         // Try to access the streams - this may trigger errors in faulty streams
         process.nextTick(() => {
           try {
             // For readable streams that might error on read attempt
-            if (typeof (this.input as any)._read === 'function') {
+            if (typeof (this.input as any)._read === "function") {
               // Force a read attempt to trigger potential errors
               (this.input as any)._read(0);
             }
@@ -112,40 +115,39 @@ export class StdioTransport extends Transport {
         this.setupRawInput();
       }
 
-      this.updateConnectionState(this.connectionId, 'connected');
-      this.state = 'connected';
+      this.updateConnectionState(this.connectionId, "connected");
+      this.state = "connected";
 
       // Start heartbeat monitoring
       this.startHeartbeat();
 
-      this.emit('transport-started');
-      
-      logger.info('STDIO transport started successfully', {
-        connectionId: this.connectionId
-      });
+      this.emit("transport-started");
 
+      logger.info("STDIO transport started successfully", {
+        connectionId: this.connectionId,
+      });
     } catch (error) {
-      this.state = 'error';
-      
+      this.state = "error";
+
       const transportError = new TransportError(
-        'connection-failed',
+        "connection-failed",
         `Failed to start STDIO transport: ${error instanceof Error ? error.message : String(error)}`,
         this.connectionId,
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
 
-      this.emit('transport-error', transportError);
+      this.emit("transport-error", transportError);
       throw transportError;
     }
   }
 
   async stop(): Promise<void> {
-    if (this.state === 'disconnected' || this.state === 'disconnecting') {
+    if (this.state === "disconnected" || this.state === "disconnecting") {
       return;
     }
 
-    this.state = 'disconnecting';
-    
+    this.state = "disconnecting";
+
     try {
       // Clean up readline interface
       if (this.readline) {
@@ -158,40 +160,42 @@ export class StdioTransport extends Transport {
 
       // Update connection state
       if (this.connection) {
-        this.updateConnectionState(this.connectionId, 'disconnected');
+        this.updateConnectionState(this.connectionId, "disconnected");
         this.unregisterConnection(this.connectionId);
         this.connection = undefined;
       }
 
-      this.state = 'disconnected';
-      
-      this.emit('transport-stopped');
-      
-      logger.info('STDIO transport stopped gracefully');
+      this.state = "disconnected";
 
+      this.emit("transport-stopped");
+
+      logger.info("STDIO transport stopped gracefully");
     } catch (error) {
-      logger.error('Error stopping STDIO transport', {
-        error: error instanceof Error ? error.message : String(error)
+      logger.error("Error stopping STDIO transport", {
+        error: error instanceof Error ? error.message : String(error),
       });
     } finally {
       this.cleanup();
     }
   }
 
-  async sendMessage(connectionId: string, message: TransportMessage): Promise<void> {
+  async sendMessage(
+    connectionId: string,
+    message: TransportMessage,
+  ): Promise<void> {
     if (connectionId !== this.connectionId) {
       throw new TransportError(
-        'connection-failed',
+        "connection-failed",
         `Invalid connection ID: ${connectionId}`,
-        connectionId
+        connectionId,
       );
     }
 
-    if (this.state !== 'connected' || !this.connection) {
+    if (this.state !== "connected" || !this.connection) {
       throw new TransportError(
-        'connection-failed',
-        'STDIO transport not connected',
-        connectionId
+        "connection-failed",
+        "STDIO transport not connected",
+        connectionId,
       );
     }
 
@@ -201,17 +205,17 @@ export class StdioTransport extends Transport {
         id: message.id,
         type: message.type,
         method: message.method,
-        ...message.payload
+        ...message.payload,
       };
 
       const serialized = JSON.stringify(messageData);
-      
+
       // Check message size
       if (serialized.length > this.maxLineLength) {
         throw new TransportError(
-          'message-too-large',
+          "message-too-large",
           `Message exceeds maximum length of ${this.maxLineLength} bytes`,
-          connectionId
+          connectionId,
         );
       }
 
@@ -226,7 +230,7 @@ export class StdioTransport extends Transport {
         };
 
         if (this.lineBuffering) {
-          this.output.write(serialized + '\n', writeCallback);
+          this.output.write(serialized + "\n", writeCallback);
         } else {
           this.output.write(serialized, writeCallback);
         }
@@ -237,36 +241,35 @@ export class StdioTransport extends Transport {
       this.connection.stats.bytesSent += serialized.length;
       this.connection.lastActivity = new Date();
 
-      this.emit('message-sent', connectionId, message);
-      
-      logger.debug('Message sent via STDIO', {
+      this.emit("message-sent", connectionId, message);
+
+      logger.debug("Message sent via STDIO", {
         connectionId,
         messageType: message.type,
         method: message.method,
         messageId: message.id,
-        size: serialized.length
+        size: serialized.length,
       });
-
     } catch (error) {
       if (this.connection) {
         this.connection.stats.errors++;
       }
 
       const transportError = new TransportError(
-        'protocol-error',
+        "protocol-error",
         `Failed to send message: ${error instanceof Error ? error.message : String(error)}`,
         connectionId,
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
 
-      this.emit('transport-error', transportError);
+      this.emit("transport-error", transportError);
       throw transportError;
     }
   }
 
   async closeConnection(connectionId: string): Promise<void> {
     if (connectionId !== this.connectionId) {
-      logger.warn('Attempt to close unknown connection', { connectionId });
+      logger.warn("Attempt to close unknown connection", { connectionId });
       return;
     }
 
@@ -280,31 +283,34 @@ export class StdioTransport extends Transport {
     this.readline = createInterface({
       input: this.input,
       output: undefined, // Don't echo
-      crlfDelay: Infinity
+      crlfDelay: Infinity,
     });
 
-    this.readline.on('line', (line: string) => {
+    this.readline.on("line", (line: string) => {
       if (line.trim()) {
         this.handleIncomingMessage(line);
       }
     });
 
-    this.readline.on('close', () => {
-      logger.debug('STDIO readline interface closed');
-      this.handleConnectionError(this.connectionId, new Error('Input stream closed'));
+    this.readline.on("close", () => {
+      logger.debug("STDIO readline interface closed");
+      this.handleConnectionError(
+        this.connectionId,
+        new Error("Input stream closed"),
+      );
     });
 
-    logger.debug('Line-buffered input setup completed');
+    logger.debug("Line-buffered input setup completed");
   }
 
   /**
    * Set up raw input processing
    */
   private setupRawInput(): void {
-    let currentMessage = '';
+    let currentMessage = "";
 
-    this.input.on('data', (chunk: Buffer) => {
-      const data = chunk.toString('utf8');
+    this.input.on("data", (chunk: Buffer) => {
+      const data = chunk.toString("utf8");
       currentMessage += data;
 
       // Try to parse complete JSON messages
@@ -321,7 +327,7 @@ export class StdioTransport extends Transport {
           continue;
         }
 
-        if (char === '\\' && inString) {
+        if (char === "\\" && inString) {
           escaped = true;
           continue;
         }
@@ -332,11 +338,11 @@ export class StdioTransport extends Transport {
         }
 
         if (!inString) {
-          if (char === '{') {
+          if (char === "{") {
             braceCount++;
-          } else if (char === '}') {
+          } else if (char === "}") {
             braceCount--;
-            
+
             if (braceCount === 0) {
               // Complete message found
               const messageJson = currentMessage.substring(messageStart, i + 1);
@@ -351,51 +357,54 @@ export class StdioTransport extends Transport {
       if (messageStart < currentMessage.length) {
         currentMessage = currentMessage.substring(messageStart);
       } else {
-        currentMessage = '';
+        currentMessage = "";
       }
 
       // Prevent memory issues with very long incomplete messages
       if (currentMessage.length > this.maxLineLength) {
         this.handleConnectionError(
           this.connectionId,
-          new Error('Message buffer overflow')
+          new Error("Message buffer overflow"),
         );
-        currentMessage = '';
+        currentMessage = "";
       }
     });
 
-    this.input.on('end', () => {
-      logger.debug('STDIO input stream ended');
-      this.handleConnectionError(this.connectionId, new Error('Input stream ended'));
+    this.input.on("end", () => {
+      logger.debug("STDIO input stream ended");
+      this.handleConnectionError(
+        this.connectionId,
+        new Error("Input stream ended"),
+      );
     });
 
-    logger.debug('Raw input setup completed');
+    logger.debug("Raw input setup completed");
   }
 
   /**
    * Set up error handlers for streams
    */
   private setupErrorHandlers(): void {
-    this.input.on('error', (error) => {
-      logger.error('STDIO input stream error', { error: error.message });
+    this.input.on("error", (error) => {
+      logger.error("STDIO input stream error", { error: error.message });
       this.handleConnectionError(this.connectionId, error);
     });
 
-    this.output.on('error', (error) => {
-      logger.error('STDIO output stream error', { error: error.message });
+    this.output.on("error", (error) => {
+      logger.error("STDIO output stream error", { error: error.message });
       this.handleConnectionError(this.connectionId, error);
     });
 
     // Handle process signals for graceful shutdown
     const handleShutdown = (signal: string) => {
       logger.info(`Received ${signal}, shutting down STDIO transport`);
-      this.stop().catch(error => {
-        logger.error('Error during shutdown', { error: error.message });
+      this.stop().catch((error) => {
+        logger.error("Error during shutdown", { error: error.message });
       });
     };
 
-    process.once('SIGINT', () => handleShutdown('SIGINT'));
-    process.once('SIGTERM', () => handleShutdown('SIGTERM'));
+    process.once("SIGINT", () => handleShutdown("SIGINT"));
+    process.once("SIGTERM", () => handleShutdown("SIGTERM"));
   }
 
   /**
@@ -405,9 +414,9 @@ export class StdioTransport extends Transport {
     try {
       this.handleMessage(this.connectionId, rawMessage);
     } catch (error) {
-      logger.error('Failed to handle incoming message', {
+      logger.error("Failed to handle incoming message", {
         error: error instanceof Error ? error.message : String(error),
-        messagePreview: rawMessage.substring(0, 200)
+        messagePreview: rawMessage.substring(0, 200),
       });
     }
   }
@@ -422,10 +431,10 @@ export class StdioTransport extends Transport {
     outputType: string;
   } {
     return {
-      isConnected: this.state === 'connected',
+      isConnected: this.state === "connected",
       connection: this.connection,
       inputType: this.input.constructor.name,
-      outputType: this.output.constructor.name
+      outputType: this.output.constructor.name,
     };
   }
 
@@ -440,20 +449,20 @@ export class StdioTransport extends Transport {
    * Override heartbeat for STDIO - use ping/pong pattern
    */
   protected override async performHeartbeat(): Promise<void> {
-    if (!this.connection || this.connection.state !== 'connected') {
+    if (!this.connection || this.connection.state !== "connected") {
       return;
     }
 
     try {
       await this.sendMessage(this.connectionId, {
-        type: 'notification',
-        method: 'ping',
+        type: "notification",
+        method: "ping",
         payload: { timestamp: new Date().toISOString() },
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     } catch (error) {
-      logger.debug('STDIO heartbeat failed', {
-        error: error instanceof Error ? error.message : String(error)
+      logger.debug("STDIO heartbeat failed", {
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }

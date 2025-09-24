@@ -433,7 +433,7 @@ describe("QueryEngine", () => {
       expect(mockDatabase.searchBySimilarity).toHaveBeenCalledWith(
         queryEmbedding,
         0.7,
-        10
+        10,
       );
       expect(results).toHaveLength(2);
       expect(results[0].name).toBe("authenticateUser");
@@ -528,20 +528,20 @@ describe("QueryEngine", () => {
     it("should handle embedding generation errors", async () => {
       // Arrange
       mockEmbeddingGenerator.generate.mockRejectedValue(
-        new Error("API rate limit exceeded")
+        new Error("API rate limit exceeded"),
       );
       mockDatabase.searchByText.mockResolvedValue([]);
 
       // Act & Assert
       await expect(queryEngine.query("test query")).rejects.toThrow(
-        "API rate limit exceeded"
+        "API rate limit exceeded",
       );
     });
 
     it("should fall back to text search on embedding errors", async () => {
       // Arrange
       mockEmbeddingGenerator.generate.mockRejectedValue(
-        new Error("Network error")
+        new Error("Network error"),
       );
       mockDatabase.searchByText.mockResolvedValue([]);
 
@@ -783,7 +783,7 @@ describe("CLI Parse Command Integration", () => {
     expect(existsSync(join(testProjectDir, ".ast-helper.json"))).toBe(true);
 
     const config = JSON.parse(
-      readFileSync(join(testProjectDir, ".ast-helper.json"), "utf8")
+      readFileSync(join(testProjectDir, ".ast-helper.json"), "utf8"),
     );
     expect(config).toHaveProperty("parser");
     expect(config).toHaveProperty("ai");
@@ -809,7 +809,7 @@ describe("CLI Parse Command Integration", () => {
           success: boolean;
           user: User | null;
         }
-      `
+      `,
     );
 
     // Initialize project
@@ -847,7 +847,7 @@ describe("CLI Parse Command Integration", () => {
         function invalidSyntax() {
           return // missing value
         }
-      `
+      `,
     );
 
     execSync(`node ${cliPath} init --yes`, {
@@ -874,7 +874,7 @@ describe("CLI Parse Command Integration", () => {
           export function ${file.replace(".ts", "")}Function(): void {
             console.log('${file}');
           }
-        `
+        `,
       );
     }
 
@@ -928,7 +928,7 @@ describe("MCP Server Protocol Integration", () => {
     // Arrange
     const serverPath = join(
       __dirname,
-      "../../../packages/ast-mcp-server/bin/mcp-server.js"
+      "../../../packages/ast-mcp-server/bin/mcp-server.js",
     );
     serverProcess = spawn("node", [serverPath, "--transport", "stdio"], {
       cwd: testProjectDir,
@@ -1035,7 +1035,7 @@ describe("MCP Server Protocol Integration", () => {
 
     // Act
     const responses = await Promise.all(
-      requests.map((req) => sendMCPRequest(serverProcess, req))
+      requests.map((req) => sendMCPRequest(serverProcess, req)),
     );
 
     // Assert
@@ -1059,7 +1059,7 @@ describe("MCP Server Protocol Integration", () => {
         export function validateToken(token: string): boolean {
           return token.length > 10;
         }
-      `
+      `,
     );
 
     await writeFile(
@@ -1082,14 +1082,14 @@ describe("MCP Server Protocol Integration", () => {
           name: string;
           email: string;
         }
-      `
+      `,
     );
 
     // Initialize and parse project
     const { execSync } = require("child_process");
     const cliPath = join(
       __dirname,
-      "../../../packages/ast-helper/bin/ast-helper.js"
+      "../../../packages/ast-helper/bin/ast-helper.js",
     );
 
     execSync(`node ${cliPath} init --yes`, { cwd: projectDir });
@@ -1099,7 +1099,7 @@ describe("MCP Server Protocol Integration", () => {
   function startMCPServer(projectDir: string): ChildProcess {
     const serverPath = join(
       __dirname,
-      "../../../packages/ast-mcp-server/bin/mcp-server.js"
+      "../../../packages/ast-mcp-server/bin/mcp-server.js",
     );
     return spawn("node", [serverPath, "--transport", "stdio"], {
       cwd: projectDir,
@@ -1200,7 +1200,7 @@ describe("New Project Setup E2E Workflow", () => {
       {
         cwd: projectDir,
         encoding: "utf8",
-      }
+      },
     );
 
     const authResults = JSON.parse(authQuery);
@@ -1213,7 +1213,7 @@ describe("New Project Setup E2E Workflow", () => {
       {
         cwd: projectDir,
         encoding: "utf8",
-      }
+      },
     );
 
     const classResults = JSON.parse(classQuery);
@@ -1237,7 +1237,7 @@ describe("New Project Setup E2E Workflow", () => {
       {
         cwd: projectDir,
         stdio: ["pipe", "pipe", "pipe"],
-      }
+      },
     );
 
     try {
@@ -1258,7 +1258,7 @@ describe("New Project Setup E2E Workflow", () => {
       const response = await new Promise((resolve, reject) => {
         const timeout = setTimeout(
           () => reject(new Error("Server timeout")),
-          5000
+          5000,
         );
 
         serverProcess.stdout?.once("data", (data) => {
@@ -1298,8 +1298,8 @@ describe("New Project Setup E2E Workflow", () => {
           },
         },
         null,
-        2
-      )
+        2,
+      ),
     );
 
     // TypeScript config
@@ -1319,8 +1319,8 @@ describe("New Project Setup E2E Workflow", () => {
           exclude: ["node_modules", "dist"],
         },
         null,
-        2
-      )
+        2,
+      ),
     );
 
     // Auth module
@@ -1382,7 +1382,7 @@ describe("New Project Setup E2E Workflow", () => {
           id: string;
           username: string;
         }
-      `
+      `,
     );
 
     // User module
@@ -1468,7 +1468,7 @@ describe("New Project Setup E2E Workflow", () => {
             return Math.random().toString(36).substring(2) + Date.now().toString(36);
           }
         }
-      `
+      `,
     );
 
     // User types
@@ -1514,7 +1514,7 @@ describe("New Project Setup E2E Workflow", () => {
           email?: string;
           profile?: Partial<UserProfile>;
         }
-      `
+      `,
     );
 
     // Utils
@@ -1565,7 +1565,7 @@ describe("New Project Setup E2E Workflow", () => {
           valid: boolean;
           errors: string[];
         }
-      `
+      `,
     );
 
     // Main application file
@@ -1660,7 +1660,7 @@ describe("New Project Setup E2E Workflow", () => {
 
         const app = new App();
         app.start();
-      `
+      `,
     );
   }
 });
@@ -1686,7 +1686,7 @@ describe("Large File Parsing Benchmarks", () => {
       const source = generateLargeTypeScriptFile(1000);
       await parser.parse(source);
     },
-    { iterations: 5 }
+    { iterations: 5 },
   );
 
   bench(
@@ -1695,7 +1695,7 @@ describe("Large File Parsing Benchmarks", () => {
       const source = generateLargeTypeScriptFile(5000);
       await parser.parse(source);
     },
-    { iterations: 3 }
+    { iterations: 3 },
   );
 
   bench(
@@ -1704,7 +1704,7 @@ describe("Large File Parsing Benchmarks", () => {
       const source = generateLargeTypeScriptFile(10000);
       await parser.parse(source);
     },
-    { iterations: 1 }
+    { iterations: 1 },
   );
 });
 
@@ -1738,7 +1738,7 @@ import {
 } from "../../packages/ast-helper/src/types";
 
 export function createMockAnnotation(
-  overrides: Partial<ASTAnnotation> = {}
+  overrides: Partial<ASTAnnotation> = {},
 ): ASTAnnotation {
   return {
     id: "mock_id_" + Math.random().toString(36).substring(2),
@@ -1754,14 +1754,14 @@ export function createMockAnnotation(
 }
 
 export function createMockAnnotations(
-  configs: Array<Partial<ASTAnnotation>>
+  configs: Array<Partial<ASTAnnotation>>,
 ): ASTAnnotation[] {
   return configs.map((config) => createMockAnnotation(config));
 }
 
 export function createMockQueryResult(
   annotation: Partial<ASTAnnotation> = {},
-  score: number = 0.8
+  score: number = 0.8,
 ): QueryResult {
   return {
     ...createMockAnnotation(annotation),
@@ -1832,8 +1832,8 @@ export class TestProject {
           },
         },
         null,
-        2
-      )
+        2,
+      ),
     );
   }
 

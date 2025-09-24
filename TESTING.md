@@ -98,25 +98,21 @@ npx vitest tests/benchmarks/performance.test.ts --reporter=verbose
 Our performance tests validate critical acceptance criteria:
 
 1. **Large Repository Parsing**
-
    - Creates synthetic repository with 15,000+ AST nodes
    - Measures parsing time and memory usage
    - **Target**: Complete parsing < 10 minutes
 
 2. **MCP Query Latency**
-
    - Simulates realistic database queries
    - Tests both simple and complex query patterns
    - **Target**: Average response < 200ms
 
 3. **CLI Query Performance**
-
    - Tests command-line query operations
    - Includes file system and processing overhead
    - **Target**: Average response < 500ms
 
 4. **Concurrent Load Testing**
-
    - Simulates multiple simultaneous operations
    - Tests resource utilization under load
    - **Target**: Maintain performance under 10 concurrent operations
@@ -172,13 +168,11 @@ Performance test output includes:
    ```
 
 2. **Implement Feature**
-
    - Write minimal code to make test pass
    - Run tests continuously in watch mode
    - Refactor while maintaining green tests
 
 3. **Add Integration Tests**
-
    - Test feature integration with existing components
    - Verify end-to-end workflows work correctly
 
@@ -409,13 +403,11 @@ yarn run test:coverage -- --reporter=text-summary
 ### Performance Test Failures
 
 1. **Check System Resources**
-
    - Ensure adequate RAM (8GB+ recommended)
    - Close resource-intensive applications
    - Run on a consistent environment
 
 2. **Review Test Expectations**
-
    - Performance criteria are based on reasonable hardware
    - CI environment may be slower than development machine
    - Consider adjusting timeouts for specific environments

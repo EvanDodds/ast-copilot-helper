@@ -1,5 +1,5 @@
 // Global test setup
-import { afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach } from "vitest";
 
 // Global setup for all tests
 beforeEach(() => {
@@ -11,4 +11,4 @@ afterEach(() => {
 });
 
 // Set up global test environment
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = "test";

@@ -5,22 +5,22 @@
  * Addresses acceptance criteria 29-30: Monitoring dashboards and metrics collection
  */
 
-import { execSync } from 'child_process';
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
-import * as path from 'path';
-import { PerformanceMetric } from './performance-monitor';
-import { Alert } from './alerting-system';
+import { execSync } from "child_process";
+import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
+import * as path from "path";
+import { PerformanceMetric } from "./performance-monitor";
+import { Alert } from "./alerting-system";
 
 interface DashboardMetric {
   id: string;
   name: string;
   description: string;
-  type: 'gauge' | 'line' | 'bar' | 'pie' | 'table';
+  type: "gauge" | "line" | "bar" | "pie" | "table";
   unit: string;
   value: number;
   target?: number;
   threshold?: { warning: number; critical: number };
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
   trendPercentage: number;
   history: { timestamp: string; value: number }[];
 }
@@ -39,7 +39,7 @@ interface DashboardConfig {
   refreshIntervalMinutes: number;
   historyRetentionDays: number;
   autoRefresh: boolean;
-  theme: 'light' | 'dark';
+  theme: "light" | "dark";
   enableRealTimeUpdates: boolean;
   customMetrics: CustomMetric[];
 }
@@ -48,8 +48,8 @@ interface CustomMetric {
   id: string;
   name: string;
   query: string;
-  type: 'count' | 'average' | 'sum' | 'percentage';
-  displayType: 'gauge' | 'line' | 'bar';
+  type: "count" | "average" | "sum" | "percentage";
+  displayType: "gauge" | "line" | "bar";
 }
 
 class MonitoringDashboard {
@@ -60,13 +60,13 @@ class MonitoringDashboard {
   private logPath: string;
 
   constructor() {
-    this.dashboardPath = path.join(process.cwd(), 'monitoring-dashboard.html');
-    this.metricsPath = path.join(process.cwd(), 'metrics-history.json');
-    this.configPath = path.join(process.cwd(), 'dashboard-config.json');
-    this.logPath = path.join(process.cwd(), 'dashboard.log');
-    
+    this.dashboardPath = path.join(process.cwd(), "monitoring-dashboard.html");
+    this.metricsPath = path.join(process.cwd(), "metrics-history.json");
+    this.configPath = path.join(process.cwd(), "dashboard-config.json");
+    this.logPath = path.join(process.cwd(), "dashboard.log");
+
     // Ensure monitoring directory exists
-    const monitoringDir = path.join(process.cwd(), 'monitoring');
+    const monitoringDir = path.join(process.cwd(), "monitoring");
     if (!existsSync(monitoringDir)) {
       mkdirSync(monitoringDir, { recursive: true });
     }
@@ -76,21 +76,29 @@ class MonitoringDashboard {
 
   private loadConfig(): DashboardConfig {
     const defaultConfig: DashboardConfig = {
-      refreshIntervalMinutes: parseInt(process.env.DASHBOARD_REFRESH_INTERVAL || '5', 10),
-      historyRetentionDays: parseInt(process.env.METRICS_RETENTION_DAYS || '30', 10),
-      autoRefresh: process.env.DASHBOARD_AUTO_REFRESH !== 'false',
-      theme: (process.env.DASHBOARD_THEME as 'light' | 'dark') || 'light',
-      enableRealTimeUpdates: process.env.DASHBOARD_REALTIME === 'true',
-      customMetrics: []
+      refreshIntervalMinutes: parseInt(
+        process.env.DASHBOARD_REFRESH_INTERVAL || "5",
+        10,
+      ),
+      historyRetentionDays: parseInt(
+        process.env.METRICS_RETENTION_DAYS || "30",
+        10,
+      ),
+      autoRefresh: process.env.DASHBOARD_AUTO_REFRESH !== "false",
+      theme: (process.env.DASHBOARD_THEME as "light" | "dark") || "light",
+      enableRealTimeUpdates: process.env.DASHBOARD_REALTIME === "true",
+      customMetrics: [],
     };
 
     try {
       if (existsSync(this.configPath)) {
-        const savedConfig = JSON.parse(readFileSync(this.configPath, 'utf8'));
+        const savedConfig = JSON.parse(readFileSync(this.configPath, "utf8"));
         return { ...defaultConfig, ...savedConfig };
       }
     } catch (error) {
-      this.log(`Warning: Could not load dashboard config, using defaults: ${error}`);
+      this.log(
+        `Warning: Could not load dashboard config, using defaults: ${error}`,
+      );
     }
 
     return defaultConfig;
@@ -100,18 +108,18 @@ class MonitoringDashboard {
     const timestamp = new Date().toISOString();
     const logEntry = `[${timestamp}] ${message}\n`;
     console.log(message);
-    
+
     try {
-      writeFileSync(this.logPath, logEntry, { flag: 'a' });
+      writeFileSync(this.logPath, logEntry, { flag: "a" });
     } catch (error) {
-      console.warn('Warning: Could not write to dashboard log:', error);
+      console.warn("Warning: Could not write to dashboard log:", error);
     }
   }
 
   private getMetricsHistory(): PerformanceMetric[] {
     try {
       if (existsSync(this.metricsPath)) {
-        return JSON.parse(readFileSync(this.metricsPath, 'utf8'));
+        return JSON.parse(readFileSync(this.metricsPath, "utf8"));
       }
     } catch (error) {
       this.log(`Warning: Could not load metrics history: ${error}`);
@@ -119,219 +127,261 @@ class MonitoringDashboard {
     return [];
   }
 
-  private calculateTrend(history: { timestamp: string; value: number }[]): { trend: 'up' | 'down' | 'stable'; percentage: number } {
+  private calculateTrend(history: { timestamp: string; value: number }[]): {
+    trend: "up" | "down" | "stable";
+    percentage: number;
+  } {
     if (history.length < 2) {
-      return { trend: 'stable', percentage: 0 };
+      return { trend: "stable", percentage: 0 };
     }
 
     const recent = history.slice(-5); // Last 5 data points
     if (recent.length < 2) {
-      return { trend: 'stable', percentage: 0 };
+      return { trend: "stable", percentage: 0 };
     }
 
     const firstValue = recent[0].value;
     const lastValue = recent[recent.length - 1].value;
 
     if (firstValue === 0) {
-      return { trend: 'stable', percentage: 0 };
+      return { trend: "stable", percentage: 0 };
     }
 
     const percentage = ((lastValue - firstValue) / firstValue) * 100;
     const threshold = 5; // 5% threshold for stable
 
     if (percentage > threshold) {
-      return { trend: 'up', percentage: Math.round(percentage * 10) / 10 };
+      return { trend: "up", percentage: Math.round(percentage * 10) / 10 };
     } else if (percentage < -threshold) {
-      return { trend: 'down', percentage: Math.round(Math.abs(percentage) * 10) / 10 };
+      return {
+        trend: "down",
+        percentage: Math.round(Math.abs(percentage) * 10) / 10,
+      };
     } else {
-      return { trend: 'stable', percentage: Math.round(Math.abs(percentage) * 10) / 10 };
+      return {
+        trend: "stable",
+        percentage: Math.round(Math.abs(percentage) * 10) / 10,
+      };
     }
   }
 
   private createBuildTimeMetric(history: PerformanceMetric[]): DashboardMetric {
-    const values = history.map(h => ({
+    const values = history.map((h) => ({
       timestamp: h.timestamp,
-      value: h.metrics.totalTime
+      value: h.metrics.totalTime,
     }));
 
-    const currentValue = values.length > 0 ? values[values.length - 1].value : 0;
+    const currentValue =
+      values.length > 0 ? values[values.length - 1].value : 0;
     const trendData = this.calculateTrend(values);
 
     return {
-      id: 'build-time',
-      name: 'Build Time',
-      description: 'Total time for complete CI/CD pipeline execution',
-      type: 'gauge',
-      unit: 'seconds',
+      id: "build-time",
+      name: "Build Time",
+      description: "Total time for complete CI/CD pipeline execution",
+      type: "gauge",
+      unit: "seconds",
       value: Math.round(currentValue / 1000),
       target: 300, // 5 minutes target
       threshold: { warning: 900, critical: 1800 }, // 15 and 30 minutes
       trend: trendData.trend,
       trendPercentage: trendData.percentage,
-      history: values.slice(-20) // Last 20 builds
+      history: values.slice(-20), // Last 20 builds
     };
   }
 
-  private createTestCoverageMetric(history: PerformanceMetric[]): DashboardMetric {
+  private createTestCoverageMetric(
+    history: PerformanceMetric[],
+  ): DashboardMetric {
     // Simulate test coverage data (in real implementation, this would come from coverage reports)
     const coverage = this.getTestCoverage();
     const values = history.map((h, index) => ({
       timestamp: h.timestamp,
-      value: Math.max(75, coverage - (Math.random() * 10)) // Simulate some variation
+      value: Math.max(75, coverage - Math.random() * 10), // Simulate some variation
     }));
 
     const trendData = this.calculateTrend(values);
 
     return {
-      id: 'test-coverage',
-      name: 'Test Coverage',
-      description: 'Percentage of code covered by automated tests',
-      type: 'gauge',
-      unit: '%',
+      id: "test-coverage",
+      name: "Test Coverage",
+      description: "Percentage of code covered by automated tests",
+      type: "gauge",
+      unit: "%",
       value: coverage,
       target: 80,
       threshold: { warning: 70, critical: 60 },
       trend: trendData.trend,
       trendPercentage: trendData.percentage,
-      history: values.slice(-20)
+      history: values.slice(-20),
     };
   }
 
-  private createSuccessRateMetric(history: PerformanceMetric[]): DashboardMetric {
-    const successfulBuilds = history.filter(h => 
-      h.stages.every(stage => stage.status === 'success')
+  private createSuccessRateMetric(
+    history: PerformanceMetric[],
+  ): DashboardMetric {
+    const successfulBuilds = history.filter((h) =>
+      h.stages.every((stage) => stage.status === "success"),
     ).length;
-    
-    const successRate = history.length > 0 ? (successfulBuilds / history.length) * 100 : 100;
-    
+
+    const successRate =
+      history.length > 0 ? (successfulBuilds / history.length) * 100 : 100;
+
     const values = history.map((h, index) => {
       const recentHistory = history.slice(0, index + 1);
-      const recentSuccessful = recentHistory.filter(rh => 
-        rh.stages.every(stage => stage.status === 'success')
+      const recentSuccessful = recentHistory.filter((rh) =>
+        rh.stages.every((stage) => stage.status === "success"),
       ).length;
       return {
         timestamp: h.timestamp,
-        value: recentHistory.length > 0 ? (recentSuccessful / recentHistory.length) * 100 : 100
+        value:
+          recentHistory.length > 0
+            ? (recentSuccessful / recentHistory.length) * 100
+            : 100,
       };
     });
 
     const trendData = this.calculateTrend(values);
 
     return {
-      id: 'success-rate',
-      name: 'Build Success Rate',
-      description: 'Percentage of successful builds over time',
-      type: 'line',
-      unit: '%',
+      id: "success-rate",
+      name: "Build Success Rate",
+      description: "Percentage of successful builds over time",
+      type: "line",
+      unit: "%",
       value: Math.round(successRate * 10) / 10,
       target: 95,
       threshold: { warning: 85, critical: 75 },
       trend: trendData.trend,
       trendPercentage: trendData.percentage,
-      history: values.slice(-20)
+      history: values.slice(-20),
     };
   }
 
-  private createDeploymentFrequencyMetric(history: PerformanceMetric[]): DashboardMetric {
+  private createDeploymentFrequencyMetric(
+    history: PerformanceMetric[],
+  ): DashboardMetric {
     // Calculate deployments per day
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    const recentBuilds = history.filter(h => new Date(h.timestamp) >= sevenDaysAgo);
-    const deployments = recentBuilds.filter(h => h.branch === 'main' || h.branch === 'master');
+
+    const recentBuilds = history.filter(
+      (h) => new Date(h.timestamp) >= sevenDaysAgo,
+    );
+    const deployments = recentBuilds.filter(
+      (h) => h.branch === "main" || h.branch === "master",
+    );
     const deploymentsPerDay = deployments.length / 7;
 
     const values = history.map((h, index) => {
       const buildDate = new Date(h.timestamp);
       const weekStart = new Date(buildDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const weekBuilds = history.slice(0, index + 1).filter(wb => 
-        new Date(wb.timestamp) >= weekStart && new Date(wb.timestamp) <= buildDate
+      const weekBuilds = history
+        .slice(0, index + 1)
+        .filter(
+          (wb) =>
+            new Date(wb.timestamp) >= weekStart &&
+            new Date(wb.timestamp) <= buildDate,
+        );
+      const weekDeployments = weekBuilds.filter(
+        (wb) => wb.branch === "main" || wb.branch === "master",
       );
-      const weekDeployments = weekBuilds.filter(wb => wb.branch === 'main' || wb.branch === 'master');
-      
+
       return {
         timestamp: h.timestamp,
-        value: weekDeployments.length / 7
+        value: weekDeployments.length / 7,
       };
     });
 
     const trendData = this.calculateTrend(values);
 
     return {
-      id: 'deployment-frequency',
-      name: 'Deployment Frequency',
-      description: 'Average number of deployments per day',
-      type: 'bar',
-      unit: 'per day',
+      id: "deployment-frequency",
+      name: "Deployment Frequency",
+      description: "Average number of deployments per day",
+      type: "bar",
+      unit: "per day",
       value: Math.round(deploymentsPerDay * 10) / 10,
       target: 1,
       threshold: { warning: 0.5, critical: 0.2 },
       trend: trendData.trend,
       trendPercentage: trendData.percentage,
-      history: values.slice(-20)
+      history: values.slice(-20),
     };
   }
 
-  private createResourceUtilizationMetric(history: PerformanceMetric[]): DashboardMetric {
-    const avgMemoryUsage = history.length > 0 
-      ? history.reduce((sum, h) => sum + h.metrics.memoryUsage.average, 0) / history.length
-      : 0;
+  private createResourceUtilizationMetric(
+    history: PerformanceMetric[],
+  ): DashboardMetric {
+    const avgMemoryUsage =
+      history.length > 0
+        ? history.reduce((sum, h) => sum + h.metrics.memoryUsage.average, 0) /
+          history.length
+        : 0;
 
-    const values = history.map(h => ({
+    const values = history.map((h) => ({
       timestamp: h.timestamp,
-      value: h.metrics.memoryUsage.average
+      value: h.metrics.memoryUsage.average,
     }));
 
     const trendData = this.calculateTrend(values);
 
     return {
-      id: 'resource-utilization',
-      name: 'Resource Utilization',
-      description: 'Average memory usage during builds',
-      type: 'line',
-      unit: 'MB',
+      id: "resource-utilization",
+      name: "Resource Utilization",
+      description: "Average memory usage during builds",
+      type: "line",
+      unit: "MB",
       value: Math.round(avgMemoryUsage),
       target: 2000,
       threshold: { warning: 4000, critical: 6000 },
       trend: trendData.trend,
       trendPercentage: trendData.percentage,
-      history: values.slice(-20)
+      history: values.slice(-20),
     };
   }
 
-  private createCacheEfficiencyMetric(history: PerformanceMetric[]): DashboardMetric {
-    const avgCacheHitRate = history.length > 0 
-      ? history.reduce((sum, h) => sum + h.metrics.cacheHitRate, 0) / history.length
-      : 0;
+  private createCacheEfficiencyMetric(
+    history: PerformanceMetric[],
+  ): DashboardMetric {
+    const avgCacheHitRate =
+      history.length > 0
+        ? history.reduce((sum, h) => sum + h.metrics.cacheHitRate, 0) /
+          history.length
+        : 0;
 
-    const values = history.map(h => ({
+    const values = history.map((h) => ({
       timestamp: h.timestamp,
-      value: h.metrics.cacheHitRate
+      value: h.metrics.cacheHitRate,
     }));
 
     const trendData = this.calculateTrend(values);
 
     return {
-      id: 'cache-efficiency',
-      name: 'Cache Efficiency',
-      description: 'Percentage of cache hits vs. total cache requests',
-      type: 'gauge',
-      unit: '%',
+      id: "cache-efficiency",
+      name: "Cache Efficiency",
+      description: "Percentage of cache hits vs. total cache requests",
+      type: "gauge",
+      unit: "%",
       value: Math.round(avgCacheHitRate),
       target: 85,
       threshold: { warning: 70, critical: 50 },
       trend: trendData.trend,
       trendPercentage: trendData.percentage,
-      history: values.slice(-20)
+      history: values.slice(-20),
     };
   }
 
   private getTestCoverage(): number {
     try {
       // Try to get actual test coverage from coverage reports
-      const coveragePath = path.join(process.cwd(), 'coverage', 'coverage-summary.json');
+      const coveragePath = path.join(
+        process.cwd(),
+        "coverage",
+        "coverage-summary.json",
+      );
       if (existsSync(coveragePath)) {
-        const coverage = JSON.parse(readFileSync(coveragePath, 'utf8'));
+        const coverage = JSON.parse(readFileSync(coveragePath, "utf8"));
         return Math.round(coverage.total.lines.pct || 0);
       }
     } catch (error) {
@@ -340,29 +390,34 @@ class MonitoringDashboard {
 
     // Estimate coverage based on test files
     try {
-      const testFiles = execSync('find . -name "*.test.*" -o -name "*.spec.*" | wc -l', { 
-        encoding: 'utf8',
-        timeout: 5000
-      });
-      const sourceFiles = execSync('find ./src -name "*.ts" -o -name "*.js" | wc -l', { 
-        encoding: 'utf8',
-        timeout: 5000
-      });
-      
+      const testFiles = execSync(
+        'find . -name "*.test.*" -o -name "*.spec.*" | wc -l',
+        {
+          encoding: "utf8",
+          timeout: 5000,
+        },
+      );
+      const sourceFiles = execSync(
+        'find ./src -name "*.ts" -o -name "*.js" | wc -l',
+        {
+          encoding: "utf8",
+          timeout: 5000,
+        },
+      );
+
       const testCount = parseInt(testFiles.trim(), 10) || 0;
       const sourceCount = parseInt(sourceFiles.trim(), 10) || 1;
-      
+
       // Rough estimation: assume good coverage if we have reasonable test-to-source ratio
       const ratio = testCount / sourceCount;
       return Math.min(Math.round(ratio * 100), 85); // Cap at 85% for estimation
-      
     } catch (error) {
       return 75; // Default estimation
     }
   }
 
   async generateDashboard(): Promise<Dashboard> {
-    this.log('📊 Generating monitoring dashboard...');
+    this.log("📊 Generating monitoring dashboard...");
 
     const history = this.getMetricsHistory();
     const alerts: Alert[] = []; // In real implementation, this would come from alerting system
@@ -373,23 +428,26 @@ class MonitoringDashboard {
       this.createSuccessRateMetric(history),
       this.createDeploymentFrequencyMetric(history),
       this.createResourceUtilizationMetric(history),
-      this.createCacheEfficiencyMetric(history)
+      this.createCacheEfficiencyMetric(history),
     ];
 
     const dashboard: Dashboard = {
       id: `dashboard-${Date.now()}`,
-      title: 'CI/CD Pipeline Dashboard',
-      description: 'Comprehensive monitoring and metrics for the CI/CD pipeline',
+      title: "CI/CD Pipeline Dashboard",
+      description:
+        "Comprehensive monitoring and metrics for the CI/CD pipeline",
       lastUpdated: new Date().toISOString(),
       metrics,
       alerts,
-      buildHistory: history.slice(-50) // Last 50 builds
+      buildHistory: history.slice(-50), // Last 50 builds
     };
 
     await this.generateHTMLDashboard(dashboard);
     await this.generateJSONDashboard(dashboard);
 
-    this.log(`Dashboard generated with ${metrics.length} metrics and ${alerts.length} active alerts`);
+    this.log(
+      `Dashboard generated with ${metrics.length} metrics and ${alerts.length} active alerts`,
+    );
     return dashboard;
   }
 
@@ -681,11 +739,15 @@ class MonitoringDashboard {
 </head>
 <body>
     <div class="container">
-        ${this.config.autoRefresh ? `
+        ${
+          this.config.autoRefresh
+            ? `
         <div class="auto-refresh">
             🔄 Auto-refresh: ${this.config.refreshIntervalMinutes}m
         </div>
-        ` : ''}
+        `
+            : ""
+        }
         
         <div class="header">
             <h1>${dashboard.title}</h1>
@@ -697,7 +759,7 @@ class MonitoringDashboard {
 
         <div class="status-bar">
             <div class="status-item">
-                <div class="status-value" style="color: #2ed573;">${dashboard.buildHistory.filter(b => b.stages.every(s => s.status === 'success')).length}</div>
+                <div class="status-value" style="color: #2ed573;">${dashboard.buildHistory.filter((b) => b.stages.every((s) => s.status === "success")).length}</div>
                 <div class="status-label">Successful Builds</div>
             </div>
             <div class="status-item">
@@ -715,57 +777,74 @@ class MonitoringDashboard {
         </div>
 
         <div class="metrics-grid">
-            ${dashboard.metrics.map(metric => this.generateMetricCardHTML(metric)).join('')}
+            ${dashboard.metrics.map((metric) => this.generateMetricCardHTML(metric)).join("")}
         </div>
 
-        ${dashboard.alerts.length > 0 ? `
+        ${
+          dashboard.alerts.length > 0
+            ? `
         <div class="alerts-section">
             <div class="alerts-header">🚨 Active Alerts</div>
-            ${dashboard.alerts.map(alert => `
+            ${dashboard.alerts
+              .map(
+                (alert) => `
                 <div class="alert-item alert-${alert.severity}">
                     <strong>${alert.title}</strong><br>
-                    <span style="font-size: 0.9em;">${alert.message.split('\\n')[0]}</span>
+                    <span style="font-size: 0.9em;">${alert.message.split("\\n")[0]}</span>
                     <div style="margin-top: 8px; font-size: 0.8em; color: #57606f;">
                         ${alert.branch} • ${alert.commit.slice(0, 8)} • ${new Date(alert.timestamp).toLocaleString()}
                     </div>
                 </div>
-            `).join('')}
+            `,
+              )
+              .join("")}
         </div>
-        ` : ''}
+        `
+            : ""
+        }
 
         <div class="build-history">
             <h2>📈 Recent Build History</h2>
-            ${dashboard.buildHistory.slice(-10).reverse().map(build => `
+            ${dashboard.buildHistory
+              .slice(-10)
+              .reverse()
+              .map(
+                (build) => `
                 <div class="build-item">
                     <div class="build-info">
-                        <div class="build-status ${build.stages.every(s => s.status === 'success') ? 'status-success' : 'status-failure'}"></div>
+                        <div class="build-status ${build.stages.every((s) => s.status === "success") ? "status-success" : "status-failure"}"></div>
                         <span class="build-branch">${build.branch}</span>
                         <span>${build.commit.slice(0, 8)}</span>
                         <span>${Math.round(build.metrics.totalTime / 1000)}s</span>
                     </div>
                     <div class="build-time">${new Date(build.timestamp).toLocaleString()}</div>
                 </div>
-            `).join('')}
+            `,
+              )
+              .join("")}
         </div>
 
         <div class="refresh-info">
-            Dashboard will ${this.config.autoRefresh ? `auto-refresh every ${this.config.refreshIntervalMinutes} minutes` : 'refresh manually'}
+            Dashboard will ${this.config.autoRefresh ? `auto-refresh every ${this.config.refreshIntervalMinutes} minutes` : "refresh manually"}
         </div>
     </div>
 
     <script>
         // Initialize charts for metrics with history
         document.addEventListener('DOMContentLoaded', function() {
-            ${dashboard.metrics.filter(m => m.type === 'line' && m.history.length > 0).map(metric => `
-                const ctx${metric.id.replace(/-/g, '')} = document.getElementById('chart-${metric.id}')?.getContext('2d');
-                if (ctx${metric.id.replace(/-/g, '')}) {
-                    new Chart(ctx${metric.id.replace(/-/g, '')}, {
+            ${dashboard.metrics
+              .filter((m) => m.type === "line" && m.history.length > 0)
+              .map(
+                (metric) => `
+                const ctx${metric.id.replace(/-/g, "")} = document.getElementById('chart-${metric.id}')?.getContext('2d');
+                if (ctx${metric.id.replace(/-/g, "")}) {
+                    new Chart(ctx${metric.id.replace(/-/g, "")}, {
                         type: 'line',
                         data: {
-                            labels: ${JSON.stringify(metric.history.slice(-10).map(h => new Date(h.timestamp).toLocaleDateString()))},
+                            labels: ${JSON.stringify(metric.history.slice(-10).map((h) => new Date(h.timestamp).toLocaleDateString()))},
                             datasets: [{
                                 label: '${metric.name}',
-                                data: ${JSON.stringify(metric.history.slice(-10).map(h => metric.unit === 'seconds' ? h.value / 1000 : h.value))},
+                                data: ${JSON.stringify(metric.history.slice(-10).map((h) => (metric.unit === "seconds" ? h.value / 1000 : h.value)))},
                                 borderColor: '#3742fa',
                                 backgroundColor: 'rgba(55, 66, 250, 0.1)',
                                 tension: 0.4,
@@ -790,14 +869,20 @@ class MonitoringDashboard {
                         }
                     });
                 }
-            `).join('')}
+            `,
+              )
+              .join("")}
 
-            ${this.config.autoRefresh ? `
+            ${
+              this.config.autoRefresh
+                ? `
             // Auto-refresh functionality
             setTimeout(() => {
                 window.location.reload();
             }, ${this.config.refreshIntervalMinutes * 60 * 1000});
-            ` : ''}
+            `
+                : ""
+            }
         });
     </script>
 </body>
@@ -809,11 +894,15 @@ class MonitoringDashboard {
   }
 
   private generateMetricCardHTML(metric: DashboardMetric): string {
-    const progressPercentage = metric.target ? Math.min((metric.value / metric.target) * 100, 100) : 0;
+    const progressPercentage = metric.target
+      ? Math.min((metric.value / metric.target) * 100, 100)
+      : 0;
     const progressClass = this.getProgressClass(metric);
-    
-    const trendIcon = metric.trend === 'up' ? '↗' : metric.trend === 'down' ? '↘' : '→';
-    const trendText = metric.trend === 'stable' ? 'Stable' : `${metric.trendPercentage}%`;
+
+    const trendIcon =
+      metric.trend === "up" ? "↗" : metric.trend === "down" ? "↘" : "→";
+    const trendText =
+      metric.trend === "stable" ? "Stable" : `${metric.trendPercentage}%`;
 
     return `
         <div class="metric-card">
@@ -831,49 +920,61 @@ class MonitoringDashboard {
                 <span class="metric-unit">${metric.unit}</span>
             </div>
             
-            ${metric.target ? `
+            ${
+              metric.target
+                ? `
             <div class="progress-bar">
                 <div class="progress-fill ${progressClass}" style="width: ${progressPercentage}%"></div>
             </div>
             <div style="font-size: 0.85em; color: #57606f;">
                 Target: ${this.formatMetricValue(metric.target, metric.unit)} ${metric.unit}
             </div>
-            ` : ''}
+            `
+                : ""
+            }
             
-            ${metric.type === 'line' && metric.history.length > 0 ? `
+            ${
+              metric.type === "line" && metric.history.length > 0
+                ? `
             <div class="chart-container">
                 <canvas id="chart-${metric.id}"></canvas>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
         </div>
     `;
   }
 
   private formatMetricValue(value: number, unit: string): string {
-    if (unit === 'seconds' || unit === 'MB') {
+    if (unit === "seconds" || unit === "MB") {
       return Math.round(value).toLocaleString();
     }
-    if (unit === '%' || unit === 'per day') {
+    if (unit === "%" || unit === "per day") {
       return (Math.round(value * 10) / 10).toString();
     }
     return Math.round(value).toString();
   }
 
   private getProgressClass(metric: DashboardMetric): string {
-    if (!metric.threshold) return 'progress-good';
-    
-    if (metric.value >= metric.threshold.critical) return 'progress-critical';
-    if (metric.value >= metric.threshold.warning) return 'progress-warning';
-    return 'progress-good';
+    if (!metric.threshold) return "progress-good";
+
+    if (metric.value >= metric.threshold.critical) return "progress-critical";
+    if (metric.value >= metric.threshold.warning) return "progress-warning";
+    return "progress-good";
   }
 
   private async generateJSONDashboard(dashboard: Dashboard): Promise<void> {
-    const jsonPath = path.join(process.cwd(), 'monitoring', 'dashboard-data.json');
-    
+    const jsonPath = path.join(
+      process.cwd(),
+      "monitoring",
+      "dashboard-data.json",
+    );
+
     const jsonData = {
       ...dashboard,
       config: this.config,
-      generated: new Date().toISOString()
+      generated: new Date().toISOString(),
     };
 
     writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
@@ -884,25 +985,31 @@ class MonitoringDashboard {
 // Main execution
 async function main(): Promise<void> {
   const dashboard = new MonitoringDashboard();
-  
+
   try {
     const result = await dashboard.generateDashboard();
-    
+
     console.log(`\n📊 Dashboard Summary:`);
     console.log(`Title: ${result.title}`);
     console.log(`Metrics: ${result.metrics.length}`);
     console.log(`Active Alerts: ${result.alerts.length}`);
     console.log(`Build History: ${result.buildHistory.length} builds`);
-    console.log(`Last Updated: ${new Date(result.lastUpdated).toLocaleString()}`);
-    
-    console.log(`\n🎯 Key Metrics:`);
-    result.metrics.forEach(metric => {
-      const status = metric.threshold && metric.value > metric.threshold.warning ? '⚠️' : '✅';
-      console.log(`${status} ${metric.name}: ${metric.value}${metric.unit} (${metric.trend} ${metric.trendPercentage}%)`);
-    });
+    console.log(
+      `Last Updated: ${new Date(result.lastUpdated).toLocaleString()}`,
+    );
 
+    console.log(`\n🎯 Key Metrics:`);
+    result.metrics.forEach((metric) => {
+      const status =
+        metric.threshold && metric.value > metric.threshold.warning
+          ? "⚠️"
+          : "✅";
+      console.log(
+        `${status} ${metric.name}: ${metric.value}${metric.unit} (${metric.trend} ${metric.trendPercentage}%)`,
+      );
+    });
   } catch (error: any) {
-    console.error('Dashboard generation failed:', error.message);
+    console.error("Dashboard generation failed:", error.message);
     process.exit(1);
   }
 }
@@ -911,7 +1018,7 @@ async function main(): Promise<void> {
 // ES module equivalent of require.main === module
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    console.error('Unhandled error:', error);
+    console.error("Unhandled error:", error);
     process.exit(1);
   });
 }

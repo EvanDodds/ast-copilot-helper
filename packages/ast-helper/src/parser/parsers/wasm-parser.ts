@@ -3,10 +3,15 @@
  * Provides AST parsing using WebAssembly grammars for universal compatibility
  */
 
-import { BaseParser } from './base-parser.js';
-import type { ASTNode, LanguageConfig, ParserRuntime, ParseResult } from '../types.js';
-import { generateNodeId } from '../types.js';
-import type { TreeSitterGrammarManager } from '../grammar-manager.js';
+import { BaseParser } from "./base-parser.js";
+import type {
+  ASTNode,
+  LanguageConfig,
+  ParserRuntime,
+  ParseResult,
+} from "../types.js";
+import { generateNodeId } from "../types.js";
+import type { TreeSitterGrammarManager } from "../grammar-manager.js";
 
 /**
  * WASM Tree-sitter parser implementation
@@ -18,7 +23,10 @@ export class WASMTreeSitterParser extends BaseParser {
   private languages: Map<string, any> = new Map();
   private initializedLanguages: Map<string, any> = new Map();
 
-  constructor(runtime: ParserRuntime, grammarManager: TreeSitterGrammarManager) {
+  constructor(
+    runtime: ParserRuntime,
+    grammarManager: TreeSitterGrammarManager,
+  ) {
     super(runtime);
     this.grammarManager = grammarManager;
   }
@@ -31,8 +39,8 @@ export class WASMTreeSitterParser extends BaseParser {
     return {
       nodes: [],
       errors: [],
-      language: '',
-      parseTime: 0
+      language: "",
+      parseTime: 0,
     };
   }
 
@@ -46,11 +54,13 @@ export class WASMTreeSitterParser extends BaseParser {
 
     try {
       // Dynamic import of web-tree-sitter (WASM)
-      const Parser = (await import('web-tree-sitter')).default;
+      const Parser = (await import("web-tree-sitter")).default;
       await Parser.init();
       this.TreeSitter = Parser;
     } catch (error) {
-      throw new Error(`Failed to initialize WASM tree-sitter: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to initialize WASM tree-sitter: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -76,7 +86,9 @@ export class WASMTreeSitterParser extends BaseParser {
     try {
       parser.setLanguage(language);
     } catch (error) {
-      throw new Error(`Failed to set language ${config.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to set language ${config.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
 
     // Cache the parser and language
@@ -102,24 +114,33 @@ export class WASMTreeSitterParser extends BaseParser {
 
     try {
       // Download and cache the grammar
-      const grammarPath = await this.grammarManager.downloadGrammar(config.name);
-      
+      const grammarPath = await this.grammarManager.downloadGrammar(
+        config.name,
+      );
+
       // Load the WASM language
       const language = await this.TreeSitter.Language.load(grammarPath);
-      
+
       // Cache the language
       this.languages.set(config.name, language);
-      
+
       return language;
     } catch (error) {
-      throw new Error(`Failed to load WASM grammar for ${config.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to load WASM grammar for ${config.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
   /**
    * Convert Tree-sitter tree to AST nodes array
    */
-  protected treeToASTNodes(tree: any, sourceCode: string, filePath: string, language: string): ASTNode[] {
+  protected treeToASTNodes(
+    tree: any,
+    sourceCode: string,
+    filePath: string,
+    language: string,
+  ): ASTNode[] {
     const nodes: ASTNode[] = [];
     const nodeMap = new Map<number, ASTNode>(); // Tree node ID -> AST node mapping
 
@@ -141,17 +162,22 @@ export class WASMTreeSitterParser extends BaseParser {
 
       const startPos = node.startPosition;
       const endPos = node.endPosition;
-      
+
       // Generate node ID
-      const id = generateNodeId(filePath, startPos.row + 1, startPos.column + 1, node.type);
-      
+      const id = generateNodeId(
+        filePath,
+        startPos.row + 1,
+        startPos.column + 1,
+        node.type,
+      );
+
       // Extract node name if available
       const name = this.extractNodeName(node, sourceCode);
-      
+
       // Determine modifiers and scope
       const modifiers = this.extractModifiers(node);
       const nodeScope = [...scopeStack];
-      
+
       // Update scope for container nodes
       if (this.isContainerNode(node.type)) {
         if (name) {
@@ -167,7 +193,11 @@ export class WASMTreeSitterParser extends BaseParser {
       }
 
       // Pop scope for container nodes
-      if (this.isContainerNode(node.type) && name && scopeStack[scopeStack.length - 1] === name) {
+      if (
+        this.isContainerNode(node.type) &&
+        name &&
+        scopeStack[scopeStack.length - 1] === name
+      ) {
         scopeStack.pop();
       }
 
@@ -208,32 +238,56 @@ export class WASMTreeSitterParser extends BaseParser {
   private isSignificantNode(nodeType: string): boolean {
     const significantTypes = new Set([
       // Common significant node types across languages
-      'function', 'function_definition', 'function_declaration',
-      'class', 'class_definition', 'class_declaration',
-      'method', 'method_definition', 'method_declaration',
-      'interface', 'interface_declaration',
-      'variable', 'variable_declaration', 'variable_declarator',
-      'import', 'import_statement', 'import_declaration',
-      'export', 'export_statement', 'export_declaration',
-      'if_statement', 'for_statement', 'while_statement', 'try_statement',
-      'block', 'statement_block',
-      'identifier', 'property_identifier',
-      'call_expression', 'assignment_expression',
-      'module', 'program', 'source_file',
+      "function",
+      "function_definition",
+      "function_declaration",
+      "class",
+      "class_definition",
+      "class_declaration",
+      "method",
+      "method_definition",
+      "method_declaration",
+      "interface",
+      "interface_declaration",
+      "variable",
+      "variable_declaration",
+      "variable_declarator",
+      "import",
+      "import_statement",
+      "import_declaration",
+      "export",
+      "export_statement",
+      "export_declaration",
+      "if_statement",
+      "for_statement",
+      "while_statement",
+      "try_statement",
+      "block",
+      "statement_block",
+      "identifier",
+      "property_identifier",
+      "call_expression",
+      "assignment_expression",
+      "module",
+      "program",
+      "source_file",
       // TypeScript specific
-      'type_alias_declaration', 'enum_declaration',
+      "type_alias_declaration",
+      "enum_declaration",
       // Python specific
-      'async_function_definition', 'with_statement',
+      "async_function_definition",
+      "with_statement",
       // JavaScript specific
-      'arrow_function', 'generator_function',
+      "arrow_function",
+      "generator_function",
     ]);
 
     return (
-      significantTypes.has(nodeType) || 
-      nodeType.includes('_statement') || 
-      nodeType.includes('_expression') ||
-      nodeType.includes('_declaration') ||
-      nodeType.includes('_definition')
+      significantTypes.has(nodeType) ||
+      nodeType.includes("_statement") ||
+      nodeType.includes("_expression") ||
+      nodeType.includes("_declaration") ||
+      nodeType.includes("_definition")
     );
   }
 
@@ -242,12 +296,23 @@ export class WASMTreeSitterParser extends BaseParser {
    */
   private isContainerNode(nodeType: string): boolean {
     const containerTypes = new Set([
-      'function', 'function_definition', 'function_declaration',
-      'class', 'class_definition', 'class_declaration',
-      'interface', 'interface_declaration',
-      'method', 'method_definition', 'method_declaration',
-      'module', 'namespace', 'namespace_declaration',
-      'async_function_definition', 'arrow_function', 'generator_function',
+      "function",
+      "function_definition",
+      "function_declaration",
+      "class",
+      "class_definition",
+      "class_declaration",
+      "interface",
+      "interface_declaration",
+      "method",
+      "method_definition",
+      "method_declaration",
+      "module",
+      "namespace",
+      "namespace_declaration",
+      "async_function_definition",
+      "arrow_function",
+      "generator_function",
     ]);
 
     return containerTypes.has(nodeType);
@@ -260,17 +325,20 @@ export class WASMTreeSitterParser extends BaseParser {
     // Check direct children for identifier
     for (let i = 0; i < node.childCount; i++) {
       const child = node.child(i);
-      if (child.type === 'identifier' || child.type === 'property_identifier') {
+      if (child.type === "identifier" || child.type === "property_identifier") {
         return sourceCode.slice(child.startIndex, child.endIndex);
       }
     }
 
     // For some node types, check specific child positions
-    if (node.type === 'function_declaration' || node.type === 'function_definition') {
+    if (
+      node.type === "function_declaration" ||
+      node.type === "function_definition"
+    ) {
       // Function name is usually the second child (after 'function' keyword)
       for (let i = 0; i < node.childCount; i++) {
         const child = node.child(i);
-        if (child.type === 'identifier') {
+        if (child.type === "identifier") {
           return sourceCode.slice(child.startIndex, child.endIndex);
         }
       }
@@ -293,7 +361,7 @@ export class WASMTreeSitterParser extends BaseParser {
    */
   private extractModifiers(node: any): string[] {
     const modifiers: string[] = [];
-    
+
     // Look for modifier nodes in children
     for (let i = 0; i < node.childCount; i++) {
       const child = node.child(i);
@@ -303,8 +371,11 @@ export class WASMTreeSitterParser extends BaseParser {
     }
 
     // Check for async functions
-    if (node.type === 'async_function_definition' || node.type === 'async_function') {
-      modifiers.push('async');
+    if (
+      node.type === "async_function_definition" ||
+      node.type === "async_function"
+    ) {
+      modifiers.push("async");
     }
 
     return modifiers;
@@ -315,11 +386,21 @@ export class WASMTreeSitterParser extends BaseParser {
    */
   private isModifier(nodeType: string): boolean {
     const modifierTypes = new Set([
-      'public', 'private', 'protected',
-      'static', 'abstract', 'final',
-      'async', 'await', 'const', 'readonly',
-      'export', 'default', 'declare',
-      'override', 'virtual',
+      "public",
+      "private",
+      "protected",
+      "static",
+      "abstract",
+      "final",
+      "async",
+      "await",
+      "const",
+      "readonly",
+      "export",
+      "default",
+      "declare",
+      "override",
+      "virtual",
     ]);
 
     return modifierTypes.has(nodeType);
@@ -330,22 +411,22 @@ export class WASMTreeSitterParser extends BaseParser {
    */
   private normalizeNodeType(nodeType: string): string {
     const normalizations: Record<string, string> = {
-      'function_definition': 'function',
-      'function_declaration': 'function',
-      'async_function_definition': 'function',
-      'method_definition': 'method',
-      'method_declaration': 'method',
-      'class_definition': 'class',
-      'class_declaration': 'class',
-      'interface_declaration': 'interface',
-      'variable_declaration': 'variable',
-      'variable_declarator': 'variable',
-      'import_declaration': 'import',
-      'import_statement': 'import',
-      'export_declaration': 'export',
-      'export_statement': 'export',
-      'arrow_function': 'function',
-      'generator_function': 'function',
+      function_definition: "function",
+      function_declaration: "function",
+      async_function_definition: "function",
+      method_definition: "method",
+      method_declaration: "method",
+      class_definition: "class",
+      class_declaration: "class",
+      interface_declaration: "interface",
+      variable_declaration: "variable",
+      variable_declarator: "variable",
+      import_declaration: "import",
+      import_statement: "import",
+      export_declaration: "export",
+      export_statement: "export",
+      arrow_function: "function",
+      generator_function: "function",
     };
 
     return normalizations[nodeType] || nodeType;
@@ -357,13 +438,29 @@ export class WASMTreeSitterParser extends BaseParser {
   private calculateComplexity(node: any): number {
     let complexity = 0;
     const complexityNodes = new Set([
-      'if_statement', 'elif_clause', 'else_clause',
-      'for_statement', 'for_in_statement', 'while_statement', 'do_statement',
-      'switch_statement', 'case', 'default_case',
-      'try_statement', 'catch_clause', 'except_clause',
-      'conditional_expression', 'ternary_expression',
-      'logical_and', 'logical_or', '&&', '||', 'and', 'or',
-      'with_statement', 'async_with_statement',
+      "if_statement",
+      "elif_clause",
+      "else_clause",
+      "for_statement",
+      "for_in_statement",
+      "while_statement",
+      "do_statement",
+      "switch_statement",
+      "case",
+      "default_case",
+      "try_statement",
+      "catch_clause",
+      "except_clause",
+      "conditional_expression",
+      "ternary_expression",
+      "logical_and",
+      "logical_or",
+      "&&",
+      "||",
+      "and",
+      "or",
+      "with_statement",
+      "async_with_statement",
     ]);
 
     /**

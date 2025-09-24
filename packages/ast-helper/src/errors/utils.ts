@@ -3,8 +3,8 @@
  * Provides helper functions for error handling, recovery, and retry logic
  */
 
-import type { ErrorRecoveryInfo} from './types.js';
-import { ErrorRecoveryStrategy } from './types.js';
+import type { ErrorRecoveryInfo } from "./types.js";
+import { ErrorRecoveryStrategy } from "./types.js";
 
 /**
  * Retry configuration
@@ -32,12 +32,17 @@ export const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxDelay: 5000,
   shouldRetry: (error: Error, _attempt: number) => {
     // Don't retry validation errors or permission errors
-    if (error.message.includes('validation') || error.message.includes('permission')) {
+    if (
+      error.message.includes("validation") ||
+      error.message.includes("permission")
+    ) {
       return false;
     }
     // Retry network and timeout errors
-    return error.message.includes('timeout') || error.message.includes('network');
-  }
+    return (
+      error.message.includes("timeout") || error.message.includes("network")
+    );
+  },
 };
 
 /**
@@ -45,12 +50,13 @@ export const DEFAULT_RETRY_CONFIG: RetryConfig = {
  */
 export async function withRetry<T>(
   operation: () => Promise<T>,
-  config: Partial<RetryConfig> = {}
+  config: Partial<RetryConfig> = {},
 ): Promise<T> {
-  const { maxRetries, initialDelay, backoffMultiplier, maxDelay, shouldRetry } = {
-    ...DEFAULT_RETRY_CONFIG,
-    ...config
-  };
+  const { maxRetries, initialDelay, backoffMultiplier, maxDelay, shouldRetry } =
+    {
+      ...DEFAULT_RETRY_CONFIG,
+      ...config,
+    };
 
   let lastError: Error | undefined;
   let delay = initialDelay;
@@ -85,12 +91,12 @@ export async function withRetry<T>(
  */
 export async function withFallback<T>(
   operation: () => Promise<T>,
-  fallbackValue: T | (() => T | Promise<T>)
+  fallbackValue: T | (() => T | Promise<T>),
 ): Promise<T> {
   try {
     return await operation();
   } catch (error) {
-    if (typeof fallbackValue === 'function') {
+    if (typeof fallbackValue === "function") {
       const fallbackFn = fallbackValue as () => T | Promise<T>;
       return await fallbackFn();
     }
@@ -104,11 +110,13 @@ export async function withFallback<T>(
 export async function withTimeout<T>(
   operation: () => Promise<T>,
   timeoutMs: number,
-  timeoutError?: Error
+  timeoutError?: Error,
 ): Promise<T> {
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
-      reject(timeoutError || new Error(`Operation timed out after ${timeoutMs}ms`));
+      reject(
+        timeoutError || new Error(`Operation timed out after ${timeoutMs}ms`),
+      );
     }, timeoutMs);
   });
 
@@ -120,7 +128,7 @@ export async function withTimeout<T>(
  */
 export function withErrorHandling<T extends any[], R>(
   operation: (...args: T) => Promise<R>,
-  recovery?: ErrorRecoveryInfo
+  recovery?: ErrorRecoveryInfo,
 ): (...args: T) => Promise<R> {
   return async (...args: T): Promise<R> => {
     try {
@@ -130,7 +138,9 @@ export function withErrorHandling<T extends any[], R>(
         throw error;
       }
 
-      return await handleErrorWithRecovery(error as Error, recovery, () => operation(...args));
+      return await handleErrorWithRecovery(error as Error, recovery, () =>
+        operation(...args),
+      );
     }
   };
 }
@@ -141,25 +151,25 @@ export function withErrorHandling<T extends any[], R>(
 export async function handleErrorWithRecovery<T>(
   error: Error,
   recovery: ErrorRecoveryInfo,
-  retryOperation?: () => Promise<T>
+  retryOperation?: () => Promise<T>,
 ): Promise<T> {
   switch (recovery.strategy) {
     case ErrorRecoveryStrategy.RETRY:
       if (!retryOperation) {
-        throw new Error('Retry strategy requires a retry operation function');
+        throw new Error("Retry strategy requires a retry operation function");
       }
       return await withRetry(retryOperation, {
         maxRetries: recovery.maxRetries || DEFAULT_RETRY_CONFIG.maxRetries,
         initialDelay: recovery.retryDelay || DEFAULT_RETRY_CONFIG.initialDelay,
         backoffMultiplier: DEFAULT_RETRY_CONFIG.backoffMultiplier,
-        maxDelay: DEFAULT_RETRY_CONFIG.maxDelay
+        maxDelay: DEFAULT_RETRY_CONFIG.maxDelay,
       });
 
     case ErrorRecoveryStrategy.FALLBACK:
       if (recovery.fallbackValue === undefined) {
-        throw new Error('Fallback strategy requires a fallback value');
+        throw new Error("Fallback strategy requires a fallback value");
       }
-      if (typeof recovery.fallbackValue === 'function') {
+      if (typeof recovery.fallbackValue === "function") {
         return await recovery.fallbackValue();
       }
       return recovery.fallbackValue;
@@ -169,7 +179,7 @@ export async function handleErrorWithRecovery<T>(
 
     case ErrorRecoveryStrategy.PROMPT_USER:
       // In a real implementation, this would prompt the user
-      console.warn('User prompt required for error recovery:', error.message);
+      console.warn("User prompt required for error recovery:", error.message);
       throw error;
 
     case ErrorRecoveryStrategy.FAIL_FAST:
@@ -182,7 +192,7 @@ export async function handleErrorWithRecovery<T>(
  * Sleep for specified milliseconds
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -191,7 +201,7 @@ export function sleep(ms: number): Promise<void> {
 export class CircuitBreaker<T extends any[], R> {
   private failureCount = 0;
   private lastFailureTime = 0;
-  private state: 'closed' | 'open' | 'half-open' = 'closed';
+  private state: "closed" | "open" | "half-open" = "closed";
 
   constructor(
     private operation: (...args: T) => Promise<R>,
@@ -202,49 +212,49 @@ export class CircuitBreaker<T extends any[], R> {
     } = {
       failureThreshold: 5,
       timeoutMs: 10000,
-      resetTimeoutMs: 60000
-    }
+      resetTimeoutMs: 60000,
+    },
   ) {}
 
   async execute(...args: T): Promise<R> {
-    if (this.state === 'open') {
+    if (this.state === "open") {
       if (Date.now() - this.lastFailureTime >= this.options.resetTimeoutMs) {
-        this.state = 'half-open';
+        this.state = "half-open";
       } else {
-        throw new Error('Circuit breaker is open - operation not allowed');
+        throw new Error("Circuit breaker is open - operation not allowed");
       }
     }
 
     try {
       const result = await withTimeout(
         () => this.operation(...args),
-        this.options.timeoutMs
+        this.options.timeoutMs,
       );
 
       // Success - reset failure count and close circuit
       this.failureCount = 0;
-      this.state = 'closed';
+      this.state = "closed";
       return result;
     } catch (error) {
       this.failureCount++;
       this.lastFailureTime = Date.now();
 
       if (this.failureCount >= this.options.failureThreshold) {
-        this.state = 'open';
+        this.state = "open";
       }
 
       throw error;
     }
   }
 
-  getState(): 'closed' | 'open' | 'half-open' {
+  getState(): "closed" | "open" | "half-open" {
     return this.state;
   }
 
   reset(): void {
     this.failureCount = 0;
     this.lastFailureTime = 0;
-    this.state = 'closed';
+    this.state = "closed";
   }
 }
 
@@ -256,12 +266,12 @@ export class AggregateError extends Error {
 
   constructor(errors: Error[], message = `${errors.length} errors occurred`) {
     super(message);
-    this.name = 'AggregateError';
+    this.name = "AggregateError";
     this.errors = errors;
   }
 
   override toString(): string {
-    return `${this.message}\n${this.errors.map((e, i) => `  ${i + 1}. ${e.message}`).join('\n')}`;
+    return `${this.message}\n${this.errors.map((e, i) => `  ${i + 1}. ${e.message}`).join("\n")}`;
   }
 }
 
@@ -273,7 +283,7 @@ export async function executeWithErrorCollection<T>(
   options: {
     continueOnError?: boolean;
     maxConcurrency?: number;
-  } = {}
+  } = {},
 ): Promise<{ results: (T | undefined)[]; errors: Error[] }> {
   const { continueOnError = false, maxConcurrency = 5 } = options;
   const results: (T | undefined)[] = new Array(operations.length);
@@ -315,7 +325,7 @@ export async function executeWithErrorCollection<T>(
  */
 export function createSafeWrapper<T extends any[], R>(
   operation: (...args: T) => Promise<R>,
-  logger?: (error: Error, args: T) => void
+  logger?: (error: Error, args: T) => void,
 ): (...args: T) => Promise<R | undefined> {
   return async (...args: T): Promise<R | undefined> => {
     try {
@@ -324,7 +334,7 @@ export function createSafeWrapper<T extends any[], R>(
       if (logger) {
         logger(error as Error, args);
       } else {
-        console.error('Operation failed:', error);
+        console.error("Operation failed:", error);
       }
       return undefined;
     }

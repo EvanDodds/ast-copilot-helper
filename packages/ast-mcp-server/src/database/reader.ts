@@ -1,25 +1,25 @@
 /**
  * AST Database Integration
- * 
+ *
  * Implements the DatabaseReader interface to provide MCP server access
  * to the .astdb/ directory structure with hot reload detection
  */
 
-import { join, resolve } from 'node:path';
-import { readdir, stat, readFile } from 'node:fs/promises';
-import { watch } from 'node:fs';
-import { EventEmitter } from 'node:events';
+import { join, resolve } from "node:path";
+import { readdir, stat, readFile } from "node:fs/promises";
+import { watch } from "node:fs";
+import { EventEmitter } from "node:events";
 
-import { ASTDatabaseManager } from '../../../ast-helper/src/database/manager.js';
-import { FileSystemManager } from '../../../ast-helper/src/filesystem/manager.js';
-import { createLogger } from '../../../ast-helper/src/logging/index.js';
+import { ASTDatabaseManager } from "../../../ast-helper/src/database/manager.js";
+import { FileSystemManager } from "../../../ast-helper/src/filesystem/manager.js";
+import { createLogger } from "../../../ast-helper/src/logging/index.js";
 
 import type {
   DatabaseReader,
   ASTNode,
   ASTNodeMatch,
-  QueryOptions
-} from '../types.js';
+  QueryOptions,
+} from "../types.js";
 
 /**
  * Hot reload detection configuration
@@ -35,40 +35,49 @@ interface HotReloadConfig {
 
 /**
  * AST Database Reader Implementation
- * 
+ *
  * Provides read-only access to .astdb/ directory with hot reload detection,
  * text search capabilities, and MCP-optimized query performance
  */
 export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
   private dbManager: ASTDatabaseManager;
   private fs: FileSystemManager;
-  private logger = createLogger({ operation: 'mcp-database' });
+  private logger = createLogger({ operation: "mcp-database" });
 
   // State management
   private isInitialized = false;
   private isReady = false;
-  
+
   // Hot reload detection
   private watchers: Map<string, any> = new Map();
   private hotReloadConfig: HotReloadConfig;
   private lastIndexUpdate: Date | null = null;
-  
+
   // Performance optimization
-  private queryCache: Map<string, { result: any; timestamp: number }> = new Map();
+  private queryCache: Map<string, { result: any; timestamp: number }> =
+    new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-  constructor(workspacePath: string, hotReloadConfig?: Partial<HotReloadConfig>) {
+  constructor(
+    workspacePath: string,
+    hotReloadConfig?: Partial<HotReloadConfig>,
+  ) {
     super();
-    
+
     this.dbManager = new ASTDatabaseManager(resolve(workspacePath));
     this.fs = new FileSystemManager();
-    
+
     // Hot reload configuration
     this.hotReloadConfig = {
       enabled: true,
       debounceMs: 500,
-      watchPatterns: ['**/*.bin', '**/*.json', '**/config.json', '**/version.json'],
-      ...hotReloadConfig
+      watchPatterns: [
+        "**/*.bin",
+        "**/*.json",
+        "**/config.json",
+        "**/version.json",
+      ],
+      ...hotReloadConfig,
     };
   }
 
@@ -81,26 +90,30 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
     }
 
     try {
-      this.logger.info('Initializing AST database reader', {
-        workspace: this.dbManager.astdbPath
+      this.logger.info("Initializing AST database reader", {
+        workspace: this.dbManager.astdbPath,
       });
 
       // Check if database exists
       const initialized = await this.dbManager.isInitialized();
       if (!initialized) {
-        throw new Error('AST database not found. Please run ast-helper init first.');
+        throw new Error(
+          "AST database not found. Please run ast-helper init first.",
+        );
       }
 
       // Validate database structure
       const validation = await this.dbManager.validateDatabaseStructure();
       if (!validation.isValid) {
-        this.logger.warn('Database validation issues found', {
+        this.logger.warn("Database validation issues found", {
           errors: validation.errors,
-          warnings: validation.warnings
+          warnings: validation.warnings,
         });
-        
+
         if (validation.errors.length > 0) {
-          throw new Error(`Database validation failed: ${validation.errors.join(', ')}`);
+          throw new Error(
+            `Database validation failed: ${validation.errors.join(", ")}`,
+          );
         }
       }
 
@@ -114,16 +127,17 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
       this.isReady = await this.checkIndexReadiness();
       this.lastIndexUpdate = await this.getLastIndexUpdate();
 
-      this.logger.info('AST database reader initialized successfully', {
+      this.logger.info("AST database reader initialized successfully", {
         ready: this.isReady,
-        hotReload: this.hotReloadConfig.enabled
+        hotReload: this.hotReloadConfig.enabled,
       });
 
-      this.emit('ready');
-
+      this.emit("ready");
     } catch (error) {
-      this.logger.error('Failed to initialize database reader', { error });
-      throw new Error(`Database initialization failed: ${(error as Error).message}`);
+      this.logger.error("Failed to initialize database reader", { error });
+      throw new Error(
+        `Database initialization failed: ${(error as Error).message}`,
+      );
     }
   }
 
@@ -148,11 +162,10 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
       this.isInitialized = false;
       this.isReady = false;
 
-      this.logger.info('Database reader closed');
-      this.emit('closed');
-
+      this.logger.info("Database reader closed");
+      this.emit("closed");
     } catch (error) {
-      this.logger.error('Error closing database reader', { error });
+      this.logger.error("Error closing database reader", { error });
       throw error;
     }
   }
@@ -160,7 +173,10 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
   /**
    * Query AST nodes by natural language intent using text search
    */
-  async queryByIntent(intent: string, options: QueryOptions = {}): Promise<ASTNodeMatch[]> {
+  async queryByIntent(
+    intent: string,
+    options: QueryOptions = {},
+  ): Promise<ASTNodeMatch[]> {
     this.ensureInitialized();
 
     const cacheKey = `intent:${intent}:${JSON.stringify(options)}`;
@@ -176,19 +192,18 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
       const results = await this.textSearch(intent, options);
 
       const duration = performance.now() - startTime;
-      this.logger.debug('Intent query completed', {
+      this.logger.debug("Intent query completed", {
         intent: intent.substring(0, 100),
         results: results.length,
-        duration: `${duration.toFixed(1)}ms`
+        duration: `${duration.toFixed(1)}ms`,
       });
 
       // Cache results
       this.setCachedResult(cacheKey, results);
 
       return results;
-
     } catch (error) {
-      this.logger.error('Intent query failed', { intent, error });
+      this.logger.error("Intent query failed", { intent, error });
       return [];
     }
   }
@@ -207,15 +222,14 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
     try {
       const node = await this.loadASTNode(nodeId);
-      
+
       if (node) {
         this.setCachedResult(cacheKey, node);
       }
 
       return node;
-
     } catch (error) {
-      this.logger.error('Failed to get node by ID', { nodeId, error });
+      this.logger.error("Failed to get node by ID", { nodeId, error });
       return null;
     }
   }
@@ -238,9 +252,8 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
       this.setCachedResult(cacheKey, children);
       return children;
-
     } catch (error) {
-      this.logger.error('Failed to get child nodes', { nodeId, error });
+      this.logger.error("Failed to get child nodes", { nodeId, error });
       return [];
     }
   }
@@ -265,23 +278,25 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
       }
 
       // Look for AST files in the asts directory
-      const astPath = join(structure.asts, filePath.replace(/\//g, '_') + '.json');
-      
+      const astPath = join(
+        structure.asts,
+        filePath.replace(/\//g, "_") + ".json",
+      );
+
       if (!(await this.fs.exists(astPath))) {
         return [];
       }
 
-      const astData = await readFile(astPath, 'utf-8');
+      const astData = await readFile(astPath, "utf-8");
       const ast = JSON.parse(astData);
-      
+
       // Extract all nodes from AST
       const nodes = this.extractAllNodes(ast, filePath);
-      
+
       this.setCachedResult(cacheKey, nodes);
       return nodes;
-
     } catch (error) {
-      this.logger.error('Failed to get file nodes', { filePath, error });
+      this.logger.error("Failed to get file nodes", { filePath, error });
       return [];
     }
   }
@@ -289,7 +304,10 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
   /**
    * Search AST nodes using text-based queries
    */
-  async searchNodes(query: string, options: QueryOptions = {}): Promise<ASTNodeMatch[]> {
+  async searchNodes(
+    query: string,
+    options: QueryOptions = {},
+  ): Promise<ASTNodeMatch[]> {
     this.ensureInitialized();
 
     const cacheKey = `search:${query}:${JSON.stringify(options)}`;
@@ -300,12 +318,11 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
     try {
       const results = await this.textSearch(query, options);
-      
+
       this.setCachedResult(cacheKey, results);
       return results;
-
     } catch (error) {
-      this.logger.error('Search query failed', { query, error });
+      this.logger.error("Search query failed", { query, error });
       return [];
     }
   }
@@ -313,7 +330,10 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
   /**
    * Search AST nodes using vector similarity search
    */
-  async vectorSearch(query: string, options: { maxResults?: number; ef?: number } = {}): Promise<ASTNodeMatch[]> {
+  async vectorSearch(
+    query: string,
+    options: { maxResults?: number; ef?: number } = {},
+  ): Promise<ASTNodeMatch[]> {
     this.ensureInitialized();
 
     const cacheKey = `vector:${query}:${JSON.stringify(options)}`;
@@ -326,16 +346,15 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
       // For now, delegate to text search - this would be replaced with actual vector search
       const queryOptions: QueryOptions = {
         maxResults: options.maxResults,
-        minScore: 0.3 // Default min score for vector search
+        minScore: 0.3, // Default min score for vector search
       };
-      
+
       const results = await this.textSearch(query, queryOptions);
-      
+
       this.setCachedResult(cacheKey, results);
       return results;
-
     } catch (error) {
-      this.logger.error('Vector search failed', { query, error });
+      this.logger.error("Vector search failed", { query, error });
       return [];
     }
   }
@@ -343,10 +362,13 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
   /**
    * Get recent changes since a specific date
    */
-  async getRecentChanges(since: Date | string, options: QueryOptions = {}): Promise<ASTNode[]> {
+  async getRecentChanges(
+    since: Date | string,
+    options: QueryOptions = {},
+  ): Promise<ASTNode[]> {
     this.ensureInitialized();
 
-    const sinceDate = typeof since === 'string' ? new Date(since) : since;
+    const sinceDate = typeof since === "string" ? new Date(since) : since;
     const cacheKey = `changes:${sinceDate.toISOString()}:${JSON.stringify(options)}`;
     const cached = this.getCachedResult(cacheKey);
     if (cached) {
@@ -364,40 +386,44 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
       // Read all AST files and check modification times
       const files = await readdir(astsDir);
-      
+
       for (const file of files) {
-        if (!file.endsWith('.json')) {
-continue;
-}
-        
+        if (!file.endsWith(".json")) {
+          continue;
+        }
+
         const filePath = join(astsDir, file);
         const stats = await stat(filePath);
-        
+
         if (stats.mtime > sinceDate) {
-          const astData = await readFile(filePath, 'utf-8');
+          const astData = await readFile(filePath, "utf-8");
           const ast = JSON.parse(astData);
-          const originalPath = file.replace('.json', '').replace(/_/g, '/');
-          
+          const originalPath = file.replace(".json", "").replace(/_/g, "/");
+
           nodes.push(...this.extractAllNodes(ast, originalPath));
         }
       }
 
       // Apply options
       let results = nodes;
-      
+
       if (options.maxResults) {
         results = results.slice(0, options.maxResults);
       }
 
       if (options.filePattern) {
-        results = results.filter(node => this.matchesPattern(node.filePath, options.filePattern!));
+        results = results.filter((node) =>
+          this.matchesPattern(node.filePath, options.filePattern!),
+        );
       }
 
       this.setCachedResult(cacheKey, results);
       return results;
-
     } catch (error) {
-      this.logger.error('Failed to get recent changes', { since: sinceDate, error });
+      this.logger.error("Failed to get recent changes", {
+        since: sinceDate,
+        error,
+      });
       return [];
     }
   }
@@ -407,27 +433,26 @@ continue;
    */
   async isIndexReady(): Promise<boolean> {
     this.ensureInitialized();
-    
+
     try {
       const structure = this.dbManager.getDatabaseStructure();
       if (!structure) {
-return false;
-}
+        return false;
+      }
 
       // Check if AST files exist
       const astsExists = await this.fs.exists(structure.asts);
       if (!astsExists) {
-return false;
-}
+        return false;
+      }
 
       // Check if there are any AST files
       const files = await readdir(structure.asts);
-      const astFiles = files.filter(f => f.endsWith('.json'));
+      const astFiles = files.filter((f) => f.endsWith(".json"));
 
       return astFiles.length > 0;
-
     } catch (error) {
-      this.logger.debug('Error checking index readiness', { error });
+      this.logger.debug("Error checking index readiness", { error });
       return false;
     }
   }
@@ -435,7 +460,11 @@ return false;
   /**
    * Get index statistics and metadata
    */
-  async getIndexStats(): Promise<{ nodeCount: number; fileCount: number; lastUpdated: Date }> {
+  async getIndexStats(): Promise<{
+    nodeCount: number;
+    fileCount: number;
+    lastUpdated: Date;
+  }> {
     this.ensureInitialized();
 
     try {
@@ -444,25 +473,25 @@ return false;
       let lastUpdated = new Date(0);
 
       const structure = this.dbManager.getDatabaseStructure();
-      if (structure && await this.fs.exists(structure.asts)) {
+      if (structure && (await this.fs.exists(structure.asts))) {
         const files = await readdir(structure.asts);
-        fileCount = files.filter(f => f.endsWith('.json')).length;
+        fileCount = files.filter((f) => f.endsWith(".json")).length;
 
         // Count nodes by reading AST files
         for (const file of files) {
-          if (!file.endsWith('.json')) {
-continue;
-}
-          
+          if (!file.endsWith(".json")) {
+            continue;
+          }
+
           const filePath = join(structure.asts, file);
           const stats = await stat(filePath);
-          
+
           if (stats.mtime > lastUpdated) {
             lastUpdated = stats.mtime;
           }
 
           try {
-            const astData = await readFile(filePath, 'utf-8');
+            const astData = await readFile(filePath, "utf-8");
             const ast = JSON.parse(astData);
             nodeCount += this.countNodes(ast);
           } catch {
@@ -474,15 +503,14 @@ continue;
       return {
         nodeCount,
         fileCount,
-        lastUpdated: lastUpdated.getTime() > 0 ? lastUpdated : new Date()
+        lastUpdated: lastUpdated.getTime() > 0 ? lastUpdated : new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Failed to get index stats', { error });
+      this.logger.error("Failed to get index stats", { error });
       return {
         nodeCount: 0,
         fileCount: 0,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
     }
   }
@@ -491,38 +519,40 @@ continue;
 
   private ensureInitialized(): void {
     if (!this.isInitialized) {
-      throw new Error('Database reader not initialized. Call initialize() first.');
+      throw new Error(
+        "Database reader not initialized. Call initialize() first.",
+      );
     }
   }
 
   private async setupHotReloadDetection(): Promise<void> {
     const structure = this.dbManager.getDatabaseStructure();
     if (!structure || !this.hotReloadConfig.enabled) {
-return;
-}
+      return;
+    }
 
     try {
-      const watchPaths = [
-        structure.config,
-        structure.asts
-      ];
+      const watchPaths = [structure.config, structure.asts];
 
       for (const path of watchPaths) {
         if (await this.fs.exists(path)) {
-          const watcher = watch(path, { recursive: true }, (eventType, filename) => {
-            this.handleFileChange(eventType, filename, path);
-          });
+          const watcher = watch(
+            path,
+            { recursive: true },
+            (eventType, filename) => {
+              this.handleFileChange(eventType, filename, path);
+            },
+          );
 
           this.watchers.set(path, watcher);
         }
       }
 
-      this.logger.debug('Hot reload detection setup complete', {
-        watchedPaths: watchPaths.length
+      this.logger.debug("Hot reload detection setup complete", {
+        watchedPaths: watchPaths.length,
       });
-
     } catch (error) {
-      this.logger.warn('Failed to setup hot reload detection', { error });
+      this.logger.warn("Failed to setup hot reload detection", { error });
     }
   }
 
@@ -536,24 +566,30 @@ return;
 
       debounceTimer = setTimeout(async () => {
         try {
-          this.logger.debug('File change detected', { eventType, filename, watchPath });
+          this.logger.debug("File change detected", {
+            eventType,
+            filename,
+            watchPath,
+          });
 
           // Clear cache on changes
           this.queryCache.clear();
 
           // Check if index was updated
           const newIndexUpdate = await this.getLastIndexUpdate();
-          if (newIndexUpdate && (!this.lastIndexUpdate || newIndexUpdate > this.lastIndexUpdate)) {
+          if (
+            newIndexUpdate &&
+            (!this.lastIndexUpdate || newIndexUpdate > this.lastIndexUpdate)
+          ) {
             this.lastIndexUpdate = newIndexUpdate;
             this.isReady = await this.checkIndexReadiness();
-            this.emit('indexUpdated', { lastUpdated: newIndexUpdate });
+            this.emit("indexUpdated", { lastUpdated: newIndexUpdate });
           }
 
           // Emit change event
-          this.emit('fileChanged', { eventType, filename, watchPath });
-
+          this.emit("fileChanged", { eventType, filename, watchPath });
         } catch (error) {
-          this.logger.error('Error handling file change', { error });
+          this.logger.error("Error handling file change", { error });
         }
       }, this.hotReloadConfig.debounceMs);
     };
@@ -571,19 +607,19 @@ return;
     try {
       const structure = this.dbManager.getDatabaseStructure();
       if (!structure) {
-return null;
-}
+        return null;
+      }
 
       const astsDir = structure.asts;
       if (!(await this.fs.exists(astsDir))) {
-return null;
-}
+        return null;
+      }
 
       const files = await readdir(astsDir);
       let latest: Date | null = null;
 
       for (const file of files) {
-        if (file.endsWith('.json')) {
+        if (file.endsWith(".json")) {
           const filePath = join(astsDir, file);
           const stats = await stat(filePath);
           if (!latest || stats.mtime > latest) {
@@ -601,53 +637,63 @@ return null;
   private async loadASTNode(nodeId: string): Promise<ASTNode | null> {
     try {
       // Node IDs typically contain file path information
-      const parts = nodeId.split(':');
+      const parts = nodeId.split(":");
       if (parts.length < 2) {
-return null;
-}
+        return null;
+      }
 
       const filePath = parts[0];
       if (!filePath) {
-return null;
-}
+        return null;
+      }
 
       const structure = this.dbManager.getDatabaseStructure();
       if (!structure) {
-return null;
-}
+        return null;
+      }
 
-      const astPath = join(structure.asts, filePath.replace(/\//g, '_') + '.json');
+      const astPath = join(
+        structure.asts,
+        filePath.replace(/\//g, "_") + ".json",
+      );
 
       if (!(await this.fs.exists(astPath))) {
         return null;
       }
 
-      const astData = await readFile(astPath, 'utf-8');
+      const astData = await readFile(astPath, "utf-8");
       const ast = JSON.parse(astData);
 
       // Find the specific node
       return this.findNodeInAST(ast, nodeId, filePath);
-
     } catch {
       return null;
     }
   }
 
-  private findNodeInAST(ast: any, nodeId: string, filePath: string): ASTNode | null {
+  private findNodeInAST(
+    ast: any,
+    nodeId: string,
+    filePath: string,
+  ): ASTNode | null {
     // Recursive search for node in AST
     const search = (node: any, path: string[] = []): ASTNode | null => {
-      const currentNodeId = `${filePath}:${path.join('.')}`;
-      
+      const currentNodeId = `${filePath}:${path.join(".")}`;
+
       if (currentNodeId === nodeId) {
         return this.astNodeToASTNode(node, filePath, path);
       }
 
       if (node.children && Array.isArray(node.children)) {
         for (let i = 0; i < node.children.length; i++) {
-          const result = search(node.children[i], [...path, 'children', i.toString()]);
+          const result = search(node.children[i], [
+            ...path,
+            "children",
+            i.toString(),
+          ]);
           if (result) {
-return result;
-}
+            return result;
+          }
         }
       }
 
@@ -663,23 +709,23 @@ return result;
     try {
       const structure = this.dbManager.getDatabaseStructure();
       if (!structure) {
-return children;
-}
+        return children;
+      }
 
       const astsDir = structure.asts;
       const files = await readdir(astsDir);
 
       for (const file of files) {
-        if (!file.endsWith('.json')) {
-continue;
-}
+        if (!file.endsWith(".json")) {
+          continue;
+        }
 
         const filePath = join(astsDir, file);
-        const originalPath = file.replace('.json', '').replace(/_/g, '/');
+        const originalPath = file.replace(".json", "").replace(/_/g, "/");
 
-        const astData = await readFile(filePath, 'utf-8');
+        const astData = await readFile(filePath, "utf-8");
         const ast = JSON.parse(astData);
-        
+
         const fileNodes = this.extractAllNodes(ast, originalPath);
         for (const node of fileNodes) {
           if (node.parentId === parentId) {
@@ -687,9 +733,8 @@ continue;
           }
         }
       }
-
     } catch (error) {
-      this.logger.error('Error finding child nodes', { parentId, error });
+      this.logger.error("Error finding child nodes", { parentId, error });
     }
 
     return children;
@@ -698,15 +743,23 @@ continue;
   private extractAllNodes(ast: any, filePath: string): ASTNode[] {
     const nodes: ASTNode[] = [];
 
-    const traverse = (node: any, path: string[] = [], parentId?: string): void => {
+    const traverse = (
+      node: any,
+      path: string[] = [],
+      parentId?: string,
+    ): void => {
       const astNode = this.astNodeToASTNode(node, filePath, path, parentId);
       if (astNode) {
         nodes.push(astNode);
-        
+
         // Process children with this node as parent
         if (node.children && Array.isArray(node.children)) {
           for (let i = 0; i < node.children.length; i++) {
-            traverse(node.children[i], [...path, 'children', i.toString()], astNode.nodeId);
+            traverse(
+              node.children[i],
+              [...path, "children", i.toString()],
+              astNode.nodeId,
+            );
           }
         }
       }
@@ -732,12 +785,17 @@ continue;
     return count;
   }
 
-  private astNodeToASTNode(node: any, filePath: string, path: string[], parentId?: string): ASTNode | null {
+  private astNodeToASTNode(
+    node: any,
+    filePath: string,
+    path: string[],
+    parentId?: string,
+  ): ASTNode | null {
     if (!node || !node.type) {
-return null;
-}
+      return null;
+    }
 
-    const nodeId = `${filePath}:${path.join('.')}`;
+    const nodeId = `${filePath}:${path.join(".")}`;
     const now = new Date();
 
     return {
@@ -748,73 +806,79 @@ return null;
       nodeType: node.type,
       startLine: node.startPosition?.row || 0,
       endLine: node.endPosition?.row || 0,
-      sourceSnippet: node.text || '',
+      sourceSnippet: node.text || "",
       parentId,
       metadata: {
-        path: path.join('.'),
+        path: path.join("."),
         depth: Math.floor(path.length / 2), // Approximate depth
         startColumn: node.startPosition?.column || 0,
-        endColumn: node.endPosition?.column || 0
+        endColumn: node.endPosition?.column || 0,
       },
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
   }
 
   private extractSignature(node: any): string {
     // Extract meaningful signature based on node type
-    if (node.type === 'function' || node.type === 'method') {
-      return node.text?.split('\n')[0] || node.type;
+    if (node.type === "function" || node.type === "method") {
+      return node.text?.split("\n")[0] || node.type;
     }
-    if (node.type === 'class') {
+    if (node.type === "class") {
       const match = node.text?.match(/class\s+(\w+)/);
-      return match ? `class ${match[1]}` : 'class';
+      return match ? `class ${match[1]}` : "class";
     }
-    if (node.type === 'variable' || node.type === 'identifier') {
+    if (node.type === "variable" || node.type === "identifier") {
       return node.text?.trim() || node.type;
     }
-    
+
     return node.type;
   }
 
   private extractSummary(node: any): string {
     // Generate brief summary of the node
-    const text = node.text || '';
+    const text = node.text || "";
     if (text.length <= 100) {
       return text.trim();
     }
-    
-    return text.substring(0, 97).trim() + '...';
+
+    return text.substring(0, 97).trim() + "...";
   }
 
-  private async textSearch(query: string, options: QueryOptions): Promise<ASTNodeMatch[]> {
+  private async textSearch(
+    query: string,
+    options: QueryOptions,
+  ): Promise<ASTNodeMatch[]> {
     const matches: ASTNodeMatch[] = [];
 
     try {
       const structure = this.dbManager.getDatabaseStructure();
       if (!structure) {
-return matches;
-}
+        return matches;
+      }
 
       const astsDir = structure.asts;
       const files = await readdir(astsDir);
       const queryLower = query.toLowerCase();
 
       for (const file of files) {
-        if (!file.endsWith('.json')) {
-continue;
-}
+        if (!file.endsWith(".json")) {
+          continue;
+        }
 
         const filePath = join(astsDir, file);
-        const originalPath = file.replace('.json', '').replace(/_/g, '/');
+        const originalPath = file.replace(".json", "").replace(/_/g, "/");
 
         // Apply file pattern filter
-        if (options.filePattern && !this.matchesPattern(originalPath, options.filePattern)) {
+        if (
+          options.filePattern &&
+          !this.matchesPattern(originalPath, options.filePattern)
+        ) {
           continue;
         }
 
         try {
-          const astData = await readFile(filePath, 'utf-8');
+          const astData = await readFile(filePath, "utf-8");
           const ast = JSON.parse(astData);
           const nodes = this.extractAllNodes(ast, originalPath);
 
@@ -823,14 +887,15 @@ continue;
             const summary = node.summary.toLowerCase();
             const nodeType = node.nodeType.toLowerCase();
             const snippet = node.sourceSnippet.toLowerCase();
-            
-            if (signature.includes(queryLower) || 
-                summary.includes(queryLower) || 
-                nodeType.includes(queryLower) ||
-                snippet.includes(queryLower)) {
-              
+
+            if (
+              signature.includes(queryLower) ||
+              summary.includes(queryLower) ||
+              nodeType.includes(queryLower) ||
+              snippet.includes(queryLower)
+            ) {
               const score = this.calculateTextScore(query, node);
-              
+
               if (options.minScore && score < options.minScore) {
                 continue;
               }
@@ -838,7 +903,7 @@ continue;
               const match: ASTNodeMatch = {
                 ...node,
                 score,
-                matchReason: this.getMatchReason(query, node)
+                matchReason: this.getMatchReason(query, node),
               };
 
               matches.push(match);
@@ -856,9 +921,8 @@ continue;
       if (options.maxResults) {
         matches.splice(options.maxResults);
       }
-
     } catch (error) {
-      this.logger.error('Text search failed', { error });
+      this.logger.error("Text search failed", { error });
     }
 
     return matches;
@@ -871,26 +935,26 @@ continue;
     const nodeType = node.nodeType.toLowerCase();
 
     let score = 0;
-    
+
     // Exact matches get higher scores
     if (signature === queryLower) {
-score += 1.0;
-} else if (signature.includes(queryLower)) {
-score += 0.7;
-}
-    
+      score += 1.0;
+    } else if (signature.includes(queryLower)) {
+      score += 0.7;
+    }
+
     if (nodeType === queryLower) {
-score += 0.8;
-} else if (nodeType.includes(queryLower)) {
-score += 0.5;
-}
+      score += 0.8;
+    } else if (nodeType.includes(queryLower)) {
+      score += 0.5;
+    }
 
     if (summary.includes(queryLower)) {
-score += 0.3;
-}
+      score += 0.3;
+    }
 
     // Bonus for important node types
-    if (['function', 'class', 'method', 'variable'].includes(nodeType)) {
+    if (["function", "class", "method", "variable"].includes(nodeType)) {
       score += 0.2;
     }
 
@@ -902,16 +966,16 @@ score += 0.3;
     const reasons: string[] = [];
 
     if (node.signature.toLowerCase().includes(queryLower)) {
-      reasons.push('signature');
+      reasons.push("signature");
     }
     if (node.nodeType.toLowerCase().includes(queryLower)) {
-      reasons.push('type');
+      reasons.push("type");
     }
     if (node.summary.toLowerCase().includes(queryLower)) {
-      reasons.push('content');
+      reasons.push("content");
     }
-    
-    return reasons.join(', ') || 'text match';
+
+    return reasons.join(", ") || "text match";
   }
 
   private matchesPattern(filePath: string, pattern: string): boolean {
@@ -927,8 +991,8 @@ score += 0.3;
   private getCachedResult(key: string): any | null {
     const cached = this.queryCache.get(key);
     if (!cached) {
-return null;
-}
+      return null;
+    }
 
     if (Date.now() - cached.timestamp > this.CACHE_TTL) {
       this.queryCache.delete(key);
@@ -950,7 +1014,7 @@ return null;
 
     this.queryCache.set(key, {
       result,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 }

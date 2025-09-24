@@ -6,57 +6,57 @@
 /**
  * Deployment validation categories
  */
-export type DeploymentCategory = 
-  | 'build-verification'
-  | 'package-distribution'
-  | 'health-checks'
-  | 'rollback-testing'
-  | 'monitoring-setup'
-  | 'documentation-validation'
-  | 'production-approval';
+export type DeploymentCategory =
+  | "build-verification"
+  | "package-distribution"
+  | "health-checks"
+  | "rollback-testing"
+  | "monitoring-setup"
+  | "documentation-validation"
+  | "production-approval";
 
 /**
  * Deployment environment types
  */
-export type DeploymentEnvironment = 
-  | 'development'
-  | 'staging'
-  | 'pre-production'
-  | 'production'
-  | 'canary'
-  | 'blue-green';
+export type DeploymentEnvironment =
+  | "development"
+  | "staging"
+  | "pre-production"
+  | "production"
+  | "canary"
+  | "blue-green";
 
 /**
  * Deployment status types
  */
-export type DeploymentStatus = 
-  | 'pending'
-  | 'in-progress'
-  | 'validating'
-  | 'certified'
-  | 'failed'
-  | 'rolled-back'
-  | 'approved';
+export type DeploymentStatus =
+  | "pending"
+  | "in-progress"
+  | "validating"
+  | "certified"
+  | "failed"
+  | "rolled-back"
+  | "approved";
 
 /**
  * Release certification level
  */
-export type CertificationLevel = 
-  | 'basic'
-  | 'standard'
-  | 'premium'
-  | 'enterprise'
-  | 'critical';
+export type CertificationLevel =
+  | "basic"
+  | "standard"
+  | "premium"
+  | "enterprise"
+  | "critical";
 
 /**
  * Deployment priority levels
  */
-export type DeploymentPriority = 
-  | 'low'
-  | 'medium'
-  | 'high'
-  | 'critical'
-  | 'emergency';
+export type DeploymentPriority =
+  | "low"
+  | "medium"
+  | "high"
+  | "critical"
+  | "emergency";
 
 /**
  * Build verification configuration
@@ -105,7 +105,7 @@ export interface PackageDistributionConfig {
   };
   rollback: {
     enabled: boolean;
-    strategy: 'immediate' | 'gradual' | 'manual';
+    strategy: "immediate" | "gradual" | "manual";
     timeout: number;
   };
 }
@@ -119,7 +119,7 @@ export interface HealthCheckConfig {
   endpoints: Array<{
     name: string;
     url: string;
-    method: 'GET' | 'POST' | 'HEAD';
+    method: "GET" | "POST" | "HEAD";
     expectedStatus: number[];
     timeout: number;
     retries: number;
@@ -301,8 +301,8 @@ export interface DeploymentScenarioResult {
   endTime: string;
   steps: CertificationStepResult[];
   errors: Array<{
-    type: 'validation' | 'system' | 'network' | 'timeout';
-    severity: 'low' | 'medium' | 'high' | 'critical';
+    type: "validation" | "system" | "network" | "timeout";
+    severity: "low" | "medium" | "high" | "critical";
     message: string;
     timestamp: string;
     resolved: boolean;
@@ -350,8 +350,8 @@ export interface DeploymentSummary {
   averageDuration: number;
   certificationLevel: CertificationLevel;
   readinessScore: number;
-  deploymentRisk: 'low' | 'medium' | 'high' | 'critical';
-  recommendedAction: 'proceed' | 'fix-issues' | 'rollback' | 'hold';
+  deploymentRisk: "low" | "medium" | "high" | "critical";
+  recommendedAction: "proceed" | "fix-issues" | "rollback" | "hold";
 }
 
 /**
@@ -406,7 +406,7 @@ export interface DeploymentEnvironmentStatus {
   uptime: number;
   services: Array<{
     name: string;
-    status: 'running' | 'stopped' | 'error' | 'unknown';
+    status: "running" | "stopped" | "error" | "unknown";
     version: string;
     healthy: boolean;
     lastCheck: string;
@@ -441,10 +441,10 @@ export interface DeploymentRecommendation {
   description: string;
   action: string;
   impact: {
-    risk: 'low' | 'medium' | 'high' | 'critical';
-    effort: 'low' | 'medium' | 'high';
+    risk: "low" | "medium" | "high" | "critical";
+    effort: "low" | "medium" | "high";
     timeline: string;
-    cost: 'low' | 'medium' | 'high';
+    cost: "low" | "medium" | "high";
   };
   implementation: {
     steps: string[];
@@ -480,15 +480,15 @@ export interface DeploymentCertificationResult {
       name: string;
       role: string;
       timestamp: string;
-      decision: 'approved' | 'rejected' | 'pending';
+      decision: "approved" | "rejected" | "pending";
       notes?: string;
     }>;
-    finalDecision: 'approved' | 'rejected' | 'pending';
+    finalDecision: "approved" | "rejected" | "pending";
     decisionTimestamp?: string;
     conditions: string[];
   };
   deployment: {
-    strategy: 'blue-green' | 'canary' | 'rolling' | 'recreate';
+    strategy: "blue-green" | "canary" | "rolling" | "recreate";
     rollbackPlan: {
       enabled: boolean;
       triggers: string[];

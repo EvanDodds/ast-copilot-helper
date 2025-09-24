@@ -3,8 +3,8 @@
  * Handles MCP communication via standard input/output streams
  */
 
-import type { JSONRPCResponse, JSONRPCNotification } from './protocol';
-import { MCPTransport, BaseTransportStats } from './transport';
+import type { JSONRPCResponse, JSONRPCNotification } from "./protocol";
+import { MCPTransport, BaseTransportStats } from "./transport";
 
 /**
  * Statistics for stdio transport
@@ -38,7 +38,7 @@ class StdioTransportStats extends BaseTransportStats {
  */
 export class StdioTransport extends MCPTransport {
   private stats: StdioTransportStats;
-  private inputBuffer = '';
+  private inputBuffer = "";
 
   constructor() {
     super();
@@ -47,25 +47,27 @@ export class StdioTransport extends MCPTransport {
 
   async start(): Promise<void> {
     if (this.isRunning) {
-      throw new Error('Stdio transport is already running');
+      throw new Error("Stdio transport is already running");
     }
 
     try {
       // Set up stdin handling
-      process.stdin.setEncoding('utf8');
-      process.stdin.on('data', this.handleInput.bind(this));
-      process.stdin.on('end', this.handleEnd.bind(this));
-      process.stdin.on('error', this.handleError.bind(this));
+      process.stdin.setEncoding("utf8");
+      process.stdin.on("data", this.handleInput.bind(this));
+      process.stdin.on("end", this.handleEnd.bind(this));
+      process.stdin.on("error", this.handleError.bind(this));
 
       // Set up stdout error handling
-      process.stdout.on('error', this.handleError.bind(this));
+      process.stdout.on("error", this.handleError.bind(this));
 
       this.isRunning = true;
       this.stats.recordConnectionEvent();
-      this.emit('connect');
+      this.emit("connect");
     } catch (error) {
       this.stats.recordErrorEvent();
-      throw new Error(`Failed to start stdio transport: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to start stdio transport: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -76,23 +78,27 @@ export class StdioTransport extends MCPTransport {
 
     try {
       // Remove all listeners
-      process.stdin.removeAllListeners('data');
-      process.stdin.removeAllListeners('end');
-      process.stdin.removeAllListeners('error');
-      process.stdout.removeAllListeners('error');
+      process.stdin.removeAllListeners("data");
+      process.stdin.removeAllListeners("end");
+      process.stdin.removeAllListeners("error");
+      process.stdout.removeAllListeners("error");
 
       this.isRunning = false;
-      this.inputBuffer = '';
-      this.emit('close');
+      this.inputBuffer = "";
+      this.emit("close");
     } catch (error) {
       this.stats.recordErrorEvent();
-      throw new Error(`Failed to stop stdio transport: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to stop stdio transport: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
-  async sendMessage(message: JSONRPCResponse | JSONRPCNotification): Promise<void> {
+  async sendMessage(
+    message: JSONRPCResponse | JSONRPCNotification,
+  ): Promise<void> {
     if (!this.isRunning) {
-      throw new Error('Stdio transport is not running');
+      throw new Error("Stdio transport is not running");
     }
 
     try {
@@ -101,12 +107,14 @@ export class StdioTransport extends MCPTransport {
       this.stats.recordMessageSentEvent();
     } catch (error) {
       this.stats.recordErrorEvent();
-      throw new Error(`Failed to send message: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to send message: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   getType(): string {
-    return 'stdio';
+    return "stdio";
   }
 
   getStats(): BaseTransportStats {
@@ -119,10 +127,10 @@ export class StdioTransport extends MCPTransport {
   private async handleInput(data: string): Promise<void> {
     try {
       this.inputBuffer += data;
-      
+
       // Process complete lines (messages end with \n)
-      const lines = this.inputBuffer.split('\n');
-      this.inputBuffer = lines.pop() || ''; // Keep incomplete line in buffer
+      const lines = this.inputBuffer.split("\n");
+      this.inputBuffer = lines.pop() || ""; // Keep incomplete line in buffer
 
       for (const line of lines) {
         if (line.trim()) {
@@ -131,7 +139,10 @@ export class StdioTransport extends MCPTransport {
       }
     } catch (error) {
       this.stats.recordErrorEvent();
-      this.emit('error', error instanceof Error ? error : new Error(String(error)));
+      this.emit(
+        "error",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 
@@ -147,7 +158,12 @@ export class StdioTransport extends MCPTransport {
       }
     } catch (error) {
       this.stats.recordErrorEvent();
-      this.emit('error', error instanceof Error ? error : new Error(`Failed to process line: ${String(error)}`));
+      this.emit(
+        "error",
+        error instanceof Error
+          ? error
+          : new Error(`Failed to process line: ${String(error)}`),
+      );
     }
   }
 
@@ -157,7 +173,7 @@ export class StdioTransport extends MCPTransport {
   private handleEnd(): void {
     if (this.isRunning) {
       this.isRunning = false;
-      this.emit('close');
+      this.emit("close");
     }
   }
 
@@ -166,7 +182,7 @@ export class StdioTransport extends MCPTransport {
    */
   private handleError(error: Error): void {
     this.stats.recordErrorEvent();
-    this.emit('error', error);
+    this.emit("error", error);
   }
 
   /**

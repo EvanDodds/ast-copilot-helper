@@ -3,16 +3,16 @@
  * Provides configurable logging with multiple outputs and performance tracking
  */
 
-import type { 
-  Logger, 
-  LoggerOptions, 
-  LogEntry, 
-  LogOutput, 
-  LogLevel, 
-  PerformanceMetrics 
-} from './types.js';
-import { LogLevel as LL } from './types.js';
-import { ConsoleOutput } from './console-output.js';
+import type {
+  Logger,
+  LoggerOptions,
+  LogEntry,
+  LogOutput,
+  LogLevel,
+  PerformanceMetrics,
+} from "./types.js";
+import { LogLevel as LL } from "./types.js";
+import { ConsoleOutput } from "./console-output.js";
 
 export class AstLogger implements Logger {
   private readonly level: LogLevel;
@@ -24,10 +24,12 @@ export class AstLogger implements Logger {
   private readonly childContext: Record<string, any>;
   private readonly performanceThresholdMs: number;
 
-  constructor(options: LoggerOptions & { 
-    childContext?: Record<string, any>;
-    performanceThresholdMs?: number;
-  } = { level: LL.INFO }) {
+  constructor(
+    options: LoggerOptions & {
+      childContext?: Record<string, any>;
+      performanceThresholdMs?: number;
+    } = { level: LL.INFO },
+  ) {
     this.level = options.level;
     this.includeTimestamp = options.includeTimestamp ?? true;
     this.includeContext = options.includeContext ?? true;
@@ -35,7 +37,7 @@ export class AstLogger implements Logger {
     this.operation = options.operation;
     this.childContext = options.childContext ?? {};
     this.performanceThresholdMs = options.performanceThresholdMs ?? 1000;
-    
+
     // Set up outputs
     this.outputs = options.outputs ?? [new ConsoleOutput()];
   }
@@ -60,16 +62,23 @@ export class AstLogger implements Logger {
     this.log(LL.TRACE, message, context);
   }
 
-  startPerformance(operation: string, context?: Record<string, any>): PerformanceMetrics {
+  startPerformance(
+    operation: string,
+    context?: Record<string, any>,
+  ): PerformanceMetrics {
     return {
       operation,
       startTime: performance.now(),
       success: false,
-      context: { ...this.childContext, ...context }
+      context: { ...this.childContext, ...context },
     };
   }
 
-  endPerformance(metrics: PerformanceMetrics, success = true, error?: Error): void {
+  endPerformance(
+    metrics: PerformanceMetrics,
+    success = true,
+    error?: Error,
+  ): void {
     metrics.endTime = performance.now();
     metrics.duration = metrics.endTime - metrics.startTime;
     metrics.success = success;
@@ -78,20 +87,22 @@ export class AstLogger implements Logger {
     // Log performance metrics if above threshold
     if (metrics.duration >= this.performanceThresholdMs) {
       const level = success ? LL.INFO : LL.WARN;
-      const status = success ? 'completed' : 'failed';
+      const status = success ? "completed" : "failed";
       const message = `Operation ${metrics.operation} ${status}`;
-      
+
       const context: Record<string, any> = {
         ...metrics.context,
         duration: Math.round(metrics.duration),
-        success: metrics.success
+        success: metrics.success,
       };
 
       if (error) {
         context.error = {
           name: error.name,
           message: error.message,
-          ...(error instanceof Error && 'code' in error ? { code: (error as any).code } : {})
+          ...(error instanceof Error && "code" in error
+            ? { code: (error as any).code }
+            : {}),
         };
       }
 
@@ -108,30 +119,30 @@ export class AstLogger implements Logger {
       operation: this.operation,
       outputs: this.outputs,
       childContext: { ...this.childContext, ...context },
-      performanceThresholdMs: this.performanceThresholdMs
+      performanceThresholdMs: this.performanceThresholdMs,
     });
   }
 
   async flush(): Promise<void> {
-    const flushPromises = this.outputs.map(output => 
-      output.flush ? output.flush() : Promise.resolve()
+    const flushPromises = this.outputs.map((output) =>
+      output.flush ? output.flush() : Promise.resolve(),
     );
     await Promise.all(flushPromises);
   }
 
   async close(): Promise<void> {
-    const closePromises = this.outputs.map(output => 
-      output.close ? output.close() : Promise.resolve()
+    const closePromises = this.outputs.map((output) =>
+      output.close ? output.close() : Promise.resolve(),
     );
     await Promise.all(closePromises);
   }
 
   private log(
-    level: LogLevel, 
-    message: string, 
+    level: LogLevel,
+    message: string,
     context?: Record<string, any>,
     duration?: number,
-    error?: Error
+    error?: Error,
   ): void {
     // Check if level should be logged
     if (level > this.level) {
@@ -139,10 +150,12 @@ export class AstLogger implements Logger {
     }
 
     // Combine contexts
-    const combinedContext = this.includeContext ? {
-      ...this.childContext,
-      ...context
-    } : undefined;
+    const combinedContext = this.includeContext
+      ? {
+          ...this.childContext,
+          ...context,
+        }
+      : undefined;
 
     // Create log entry
     const entry: LogEntry = {
@@ -150,21 +163,27 @@ export class AstLogger implements Logger {
       level,
       levelName: this.getLevelName(level),
       message,
-      ...(combinedContext && Object.keys(combinedContext).length > 0 ? { 
-        context: this.sanitizeContext(combinedContext) 
-      } : {}),
+      ...(combinedContext && Object.keys(combinedContext).length > 0
+        ? {
+            context: this.sanitizeContext(combinedContext),
+          }
+        : {}),
       ...(this.operation ? { operation: this.operation } : {}),
       ...(duration !== undefined ? { duration } : {}),
-      ...(error ? {
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          ...(error instanceof Error && 'code' in error ? { 
-            code: (error as any).code 
-          } : {})
-        }
-      } : {})
+      ...(error
+        ? {
+            error: {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+              ...(error instanceof Error && "code" in error
+                ? {
+                    code: (error as any).code,
+                  }
+                : {}),
+            },
+          }
+        : {}),
     };
 
     // Write to all outputs
@@ -172,25 +191,34 @@ export class AstLogger implements Logger {
       try {
         output.write(entry);
       } catch (outputError) {
-        console.error('Failed to write to log output:', outputError);
+        console.error("Failed to write to log output:", outputError);
       }
     }
   }
 
   private getLevelName(level: LogLevel): string {
     switch (level) {
-      case LL.ERROR: return 'ERROR';
-      case LL.WARN:  return 'WARN';
-      case LL.INFO:  return 'INFO';
-      case LL.DEBUG: return 'DEBUG';
-      case LL.TRACE: return 'TRACE';
-      default: return 'UNKNOWN';
+      case LL.ERROR:
+        return "ERROR";
+      case LL.WARN:
+        return "WARN";
+      case LL.INFO:
+        return "INFO";
+      case LL.DEBUG:
+        return "DEBUG";
+      case LL.TRACE:
+        return "TRACE";
+      default:
+        return "UNKNOWN";
     }
   }
 
-  private sanitizeContext(context: Record<string, any>, depth = 0): Record<string, any> {
+  private sanitizeContext(
+    context: Record<string, any>,
+    depth = 0,
+  ): Record<string, any> {
     if (depth >= this.maxContextDepth) {
-      return { '[max depth]': true };
+      return { "[max depth]": true };
     }
 
     const sanitized: Record<string, any> = {};
@@ -198,7 +226,11 @@ export class AstLogger implements Logger {
     for (const [key, value] of Object.entries(context)) {
       if (value === null || value === undefined) {
         sanitized[key] = value;
-      } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      } else if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+      ) {
         sanitized[key] = value;
       } else if (value instanceof Date) {
         sanitized[key] = value.toISOString();
@@ -206,19 +238,21 @@ export class AstLogger implements Logger {
         sanitized[key] = {
           name: value.name,
           message: value.message,
-          ...(value.stack ? { stack: value.stack.split('\n').slice(0, 5) } : {})
+          ...(value.stack
+            ? { stack: value.stack.split("\n").slice(0, 5) }
+            : {}),
         };
       } else if (Array.isArray(value)) {
         if (value.length <= 10) {
-          sanitized[key] = value.map(item => 
-            typeof item === 'object' && item !== null ? 
-              this.sanitizeContext({ item }, depth + 1).item : 
-              item
+          sanitized[key] = value.map((item) =>
+            typeof item === "object" && item !== null
+              ? this.sanitizeContext({ item }, depth + 1).item
+              : item,
           );
         } else {
           sanitized[key] = `[Array of ${value.length} items]`;
         }
-      } else if (typeof value === 'object') {
+      } else if (typeof value === "object") {
         const keys = Object.keys(value);
         if (keys.length <= 20) {
           sanitized[key] = this.sanitizeContext(value, depth + 1);

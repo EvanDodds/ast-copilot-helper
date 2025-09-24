@@ -1,37 +1,37 @@
 /**
  * File watching implementation using chokidar for file system monitoring
- * 
+ *
  * This module provides a robust file watching system that can monitor directories
  * for changes and emit events when files are added, modified, moved, or deleted.
  * It supports include/exclude patterns, recursive directory watching, and proper
  * resource cleanup.
  */
 
-import { EventEmitter } from 'node:events';
-import type { Stats } from 'node:fs';
-import { resolve, relative } from 'node:path';
-import * as chokidar from 'chokidar';
-import { minimatch } from 'minimatch';
-import { createModuleLogger } from '../logging';
+import { EventEmitter } from "node:events";
+import type { Stats } from "node:fs";
+import { resolve, relative } from "node:path";
+import * as chokidar from "chokidar";
+import { minimatch } from "minimatch";
+import { createModuleLogger } from "../logging";
 import type {
   FileWatcher,
   FileWatchConfig,
   FileChangeEvent,
-  WatchStats
-} from './types';
+  WatchStats,
+} from "./types";
 
-const logger = createModuleLogger('file-watcher');
+const logger = createModuleLogger("file-watcher");
 
 /**
  * Default configuration for file watching
  */
 const DEFAULT_CONFIG: Partial<FileWatchConfig> = {
-  includePatterns: ['**/*'],
-  excludePatterns: ['**/node_modules/**', '**/.git/**', '**/.*/**'],
+  includePatterns: ["**/*"],
+  excludePatterns: ["**/node_modules/**", "**/.git/**", "**/.*/**"],
   enableRecursive: true,
   debounceMs: 100,
   batchSize: 50,
-  followSymlinks: false
+  followSymlinks: false,
 };
 
 /**
@@ -40,20 +40,20 @@ const DEFAULT_CONFIG: Partial<FileWatchConfig> = {
 interface ExtendedWatchStats extends WatchStats {
   /** Number of files being watched */
   filesWatched: number;
-  
+
   /** Number of errors encountered */
   errors: number;
-  
+
   /** When watching started */
   watchStartTime: number | null;
-  
+
   /** Last time an event was processed */
   lastEventTime: number | null;
 }
 
 /**
  * Implementation of FileWatcher using chokidar for file system monitoring
- * 
+ *
  * This class provides comprehensive file watching capabilities with support for:
  * - Recursive directory monitoring
  * - Include/exclude pattern matching
@@ -72,7 +72,7 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
 
   constructor() {
     super();
-    
+
     // Initialize stats
     this.stats = {
       watchedFiles: 0,
@@ -83,7 +83,7 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
       filesWatched: 0,
       errors: 0,
       watchStartTime: null,
-      lastEventTime: null
+      lastEventTime: null,
     };
 
     this.setupProcessHandlers();
@@ -94,11 +94,11 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
    */
   async initialize(config: FileWatchConfig): Promise<void> {
     if (this.disposed) {
-      throw new Error('Cannot initialize a disposed file watcher');
+      throw new Error("Cannot initialize a disposed file watcher");
     }
 
     if (this.initialized) {
-      logger.warn('File watcher is already initialized');
+      logger.warn("File watcher is already initialized");
       return;
     }
 
@@ -106,15 +106,15 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
     this.config = {
       ...DEFAULT_CONFIG,
       ...config,
-      watchPaths: config.watchPaths.map(path => resolve(path))
+      watchPaths: config.watchPaths.map((path) => resolve(path)),
     };
 
     this.initialized = true;
 
-    logger.info('File watcher initialized', {
+    logger.info("File watcher initialized", {
       watchPaths: this.config.watchPaths,
       includePatterns: this.config.includePatterns,
-      excludePatterns: this.config.excludePatterns
+      excludePatterns: this.config.excludePatterns,
     });
   }
 
@@ -123,17 +123,17 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
    */
   async start(): Promise<void> {
     if (!this.initialized) {
-      throw new Error('File watcher must be initialized before starting');
+      throw new Error("File watcher must be initialized before starting");
     }
 
     if (this.isWatching) {
-      logger.warn('File watcher is already watching');
+      logger.warn("File watcher is already watching");
       return;
     }
 
     try {
-      logger.info('Starting file watcher', {
-        watchPaths: this.config.watchPaths
+      logger.info("Starting file watcher", {
+        watchPaths: this.config.watchPaths,
       });
 
       // Create chokidar watcher with configuration
@@ -145,8 +145,8 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
         depth: this.config.enableRecursive ? undefined : 0,
         awaitWriteFinish: {
           stabilityThreshold: this.config.debounceMs,
-          pollInterval: 25
-        }
+          pollInterval: 25,
+        },
       });
 
       // Set up event listeners
@@ -155,28 +155,27 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
       // Wait for ready event
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('File watcher start timeout'));
+          reject(new Error("File watcher start timeout"));
         }, 10000);
 
-        this.watcher!.once('ready', () => {
+        this.watcher!.once("ready", () => {
           clearTimeout(timeout);
           this.isWatching = true;
           this.stats.watchStartTime = Date.now();
-          logger.info('File watcher started successfully', {
-            filesWatched: this.stats.filesWatched
+          logger.info("File watcher started successfully", {
+            filesWatched: this.stats.filesWatched,
           });
           resolve();
         });
 
-        this.watcher!.once('error', (error) => {
+        this.watcher!.once("error", (error) => {
           clearTimeout(timeout);
           reject(error);
         });
       });
-
     } catch (error) {
       this.stats.errors++;
-      logger.error('Failed to start file watcher', { error });
+      logger.error("Failed to start file watcher", { error });
       throw error;
     }
   }
@@ -186,11 +185,11 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
    */
   async stop(): Promise<void> {
     if (!this.isWatching) {
-      logger.warn('File watcher is not currently watching');
+      logger.warn("File watcher is not currently watching");
       return;
     }
 
-    logger.info('Stopping file watcher');
+    logger.info("Stopping file watcher");
 
     try {
       if (this.watcher) {
@@ -201,10 +200,10 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
       this.watchedPaths.clear();
       this.isWatching = false;
 
-      logger.info('File watcher stopped successfully');
+      logger.info("File watcher stopped successfully");
     } catch (error) {
       this.stats.errors++;
-      logger.error('Error stopping file watcher', { error });
+      logger.error("Error stopping file watcher", { error });
       throw error;
     }
   }
@@ -214,25 +213,25 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
    */
   async addWatchPath(path: string): Promise<void> {
     if (!this.isWatching) {
-      throw new Error('File watcher must be started before adding paths');
+      throw new Error("File watcher must be started before adding paths");
     }
 
     const resolvedPath = resolve(path);
-    
+
     if (this.watchedPaths.has(resolvedPath)) {
-      logger.warn('Path is already being watched', { path: resolvedPath });
+      logger.warn("Path is already being watched", { path: resolvedPath });
       return;
     }
 
     try {
       this.watcher!.add(resolvedPath);
       this.watchedPaths.add(resolvedPath);
-      
-      logger.info('Added watch path', { path: resolvedPath });
-      this.emit('pathAdded', resolvedPath);
+
+      logger.info("Added watch path", { path: resolvedPath });
+      this.emit("pathAdded", resolvedPath);
     } catch (error) {
       this.stats.errors++;
-      logger.error('Failed to add watch path', { path: resolvedPath, error });
+      logger.error("Failed to add watch path", { path: resolvedPath, error });
       throw error;
     }
   }
@@ -242,25 +241,28 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
    */
   async removeWatchPath(path: string): Promise<void> {
     if (!this.isWatching) {
-      throw new Error('File watcher must be started before removing paths');
+      throw new Error("File watcher must be started before removing paths");
     }
 
     const resolvedPath = resolve(path);
 
     if (!this.watchedPaths.has(resolvedPath)) {
-      logger.warn('Path is not being watched', { path: resolvedPath });
+      logger.warn("Path is not being watched", { path: resolvedPath });
       return;
     }
 
     try {
       this.watcher!.unwatch(resolvedPath);
       this.watchedPaths.delete(resolvedPath);
-      
-      logger.info('Removed watch path', { path: resolvedPath });
-      this.emit('pathRemoved', resolvedPath);
+
+      logger.info("Removed watch path", { path: resolvedPath });
+      this.emit("pathRemoved", resolvedPath);
     } catch (error) {
       this.stats.errors++;
-      logger.error('Failed to remove watch path', { path: resolvedPath, error });
+      logger.error("Failed to remove watch path", {
+        path: resolvedPath,
+        error,
+      });
       throw error;
     }
   }
@@ -289,7 +291,7 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
       totalEvents: this.stats.totalEvents,
       processedChanges: this.stats.processedChanges,
       lastProcessedAt: this.stats.lastProcessedAt,
-      averageProcessingTime: this.stats.averageProcessingTime
+      averageProcessingTime: this.stats.averageProcessingTime,
     };
   }
 
@@ -301,17 +303,17 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
       return;
     }
 
-    logger.info('Disposing file watcher');
+    logger.info("Disposing file watcher");
 
     try {
       await this.stop();
       this.disposed = true;
       this.removeAllListeners();
 
-      logger.info('File watcher disposed successfully');
+      logger.info("File watcher disposed successfully");
     } catch (error) {
       this.stats.errors++;
-      logger.error('Error disposing file watcher', { error });
+      logger.error("Error disposing file watcher", { error });
       throw error;
     }
   }
@@ -321,15 +323,15 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
    */
   private setupProcessHandlers(): void {
     // Handle process termination
-    process.on('SIGTERM', () => {
-      this.dispose().catch(error => {
-        logger.error('Error disposing file watcher on SIGTERM', { error });
+    process.on("SIGTERM", () => {
+      this.dispose().catch((error) => {
+        logger.error("Error disposing file watcher on SIGTERM", { error });
       });
     });
 
-    process.on('SIGINT', () => {
-      this.dispose().catch(error => {
-        logger.error('Error disposing file watcher on SIGINT', { error });
+    process.on("SIGINT", () => {
+      this.dispose().catch((error) => {
+        logger.error("Error disposing file watcher on SIGINT", { error });
       });
     });
   }
@@ -343,57 +345,63 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
     }
 
     // File added
-    this.watcher.on('add', (filePath: string, stats?: Stats) => {
-      this.handleFileChange('add', filePath, stats);
+    this.watcher.on("add", (filePath: string, stats?: Stats) => {
+      this.handleFileChange("add", filePath, stats);
     });
 
     // File changed
-    this.watcher.on('change', (filePath: string, stats?: Stats) => {
-      this.handleFileChange('change', filePath, stats);
+    this.watcher.on("change", (filePath: string, stats?: Stats) => {
+      this.handleFileChange("change", filePath, stats);
     });
 
     // File removed
-    this.watcher.on('unlink', (filePath: string) => {
-      this.handleFileChange('unlink', filePath);
+    this.watcher.on("unlink", (filePath: string) => {
+      this.handleFileChange("unlink", filePath);
     });
 
     // Directory added
-    this.watcher.on('addDir', (dirPath: string, stats?: Stats) => {
-      this.handleFileChange('addDir', dirPath, stats);
+    this.watcher.on("addDir", (dirPath: string, stats?: Stats) => {
+      this.handleFileChange("addDir", dirPath, stats);
     });
 
     // Directory removed
-    this.watcher.on('unlinkDir', (dirPath: string) => {
-      this.handleFileChange('unlinkDir', dirPath);
+    this.watcher.on("unlinkDir", (dirPath: string) => {
+      this.handleFileChange("unlinkDir", dirPath);
     });
 
     // Error handling
-    this.watcher.on('error', (err: unknown) => {
+    this.watcher.on("error", (err: unknown) => {
       this.stats.errors++;
       const error = err instanceof Error ? err : new Error(String(err));
-      logger.error('File watcher error', { error });
-      this.emit('error', error);
+      logger.error("File watcher error", { error });
+      this.emit("error", error);
     });
 
     // Ready event
-    this.watcher.on('ready', () => {
+    this.watcher.on("ready", () => {
       const watched = this.watcher!.getWatched();
-      this.stats.filesWatched = Object.values(watched)
-        .reduce((total, files) => total + files.length, 0);
-      
+      this.stats.filesWatched = Object.values(watched).reduce(
+        (total, files) => total + files.length,
+        0,
+      );
+
       // Update watched paths
-      Object.keys(watched).forEach(dir => {
+      Object.keys(watched).forEach((dir) => {
         this.watchedPaths.add(dir);
       });
 
-      this.emit('ready');
+      this.emit("ready");
     });
   }
 
   /**
    * Handle file change events and emit appropriate events
    */
-  private handleFileChange(type: FileChangeEvent['type'], filePath: string, stats?: Stats): void {
+  private handleFileChange(
+    type: FileChangeEvent["type"],
+    filePath: string,
+    stats?: Stats,
+  ): void {
     // Check if file should be included based on patterns
     if (!this.shouldIncludeFile(filePath)) {
       return;
@@ -403,7 +411,7 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
       type,
       filePath: resolve(filePath),
       stats,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     this.stats.totalEvents++;
@@ -414,13 +422,13 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
     // Update watched files count
     this.stats.watchedFiles = this.stats.filesWatched;
 
-    logger.debug('File change detected', {
+    logger.debug("File change detected", {
       type: event.type,
-      filePath: event.filePath
+      filePath: event.filePath,
     });
 
     // Emit file change event
-    this.emit('fileChange', event);
+    this.emit("fileChange", event);
   }
 
   /**
@@ -429,7 +437,7 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
   private createIgnoreFunction() {
     return (path: string): boolean => {
       const relativePath = relative(process.cwd(), path);
-      
+
       // Check exclude patterns first
       for (const pattern of this.config.excludePatterns || []) {
         if (minimatch(relativePath, pattern, { dot: true })) {
@@ -438,7 +446,10 @@ export class ChokidarFileWatcher extends EventEmitter implements FileWatcher {
       }
 
       // Check include patterns
-      if (this.config.includePatterns && this.config.includePatterns.length > 0) {
+      if (
+        this.config.includePatterns &&
+        this.config.includePatterns.length > 0
+      ) {
         for (const pattern of this.config.includePatterns) {
           if (minimatch(relativePath, pattern, { dot: true })) {
             return false;

@@ -3,8 +3,13 @@
  * Defines the contract for MCP message transport mechanisms
  */
 
-import { EventEmitter } from 'events';
-import type { JSONRPCRequest, JSONRPCResponse, JSONRPCNotification, MCPMessage } from './protocol';
+import { EventEmitter } from "events";
+import type {
+  JSONRPCRequest,
+  JSONRPCResponse,
+  JSONRPCNotification,
+  MCPMessage,
+} from "./protocol";
 
 /**
  * Message handler function type
@@ -15,11 +20,11 @@ export type MessageHandler = (message: JSONRPCRequest) => Promise<void>;
  * Transport event types
  */
 export interface TransportEvents {
-  'message': [JSONRPCRequest];
-  'notification': [JSONRPCNotification];
-  'error': [Error];
-  'close': [];
-  'connect': [];
+  message: [JSONRPCRequest];
+  notification: [JSONRPCNotification];
+  error: [Error];
+  close: [];
+  connect: [];
 }
 
 /**
@@ -42,7 +47,9 @@ export abstract class MCPTransport extends EventEmitter {
   /**
    * Send a message (response or notification)
    */
-  abstract sendMessage(message: JSONRPCResponse | JSONRPCNotification): Promise<void>;
+  abstract sendMessage(
+    message: JSONRPCResponse | JSONRPCNotification,
+  ): Promise<void>;
 
   /**
    * Register message handler
@@ -76,7 +83,12 @@ export abstract class MCPTransport extends EventEmitter {
       const parsed = JSON.parse(data.trim());
       return parsed;
     } catch (error) {
-      this.emit('error', new Error(`Failed to parse message: ${error instanceof Error ? error.message : String(error)}`));
+      this.emit(
+        "error",
+        new Error(
+          `Failed to parse message: ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
       return null;
     }
   }
@@ -84,22 +96,24 @@ export abstract class MCPTransport extends EventEmitter {
   /**
    * Serialize message for sending
    */
-  protected serializeMessage(message: JSONRPCResponse | JSONRPCNotification): string {
-    return JSON.stringify(message) + '\n';
+  protected serializeMessage(
+    message: JSONRPCResponse | JSONRPCNotification,
+  ): string {
+    return JSON.stringify(message) + "\n";
   }
 
   /**
    * Handle incoming parsed message
    */
   protected async handleParsedMessage(message: MCPMessage): Promise<void> {
-    if ('id' in message && message.id !== undefined) {
+    if ("id" in message && message.id !== undefined) {
       // This is a request
       if (this.messageHandler) {
         await this.messageHandler(message as JSONRPCRequest);
       }
     } else {
       // This is a notification
-      this.emit('notification', message as JSONRPCNotification);
+      this.emit("notification", message as JSONRPCNotification);
     }
   }
 }
@@ -119,7 +133,7 @@ export interface TransportStats {
  * Transport configuration
  */
 export interface TransportConfig {
-  type: 'stdio' | 'tcp';
+  type: "stdio" | "tcp";
   messageTimeout?: number;
   maxMessageSize?: number;
   // TCP-specific options

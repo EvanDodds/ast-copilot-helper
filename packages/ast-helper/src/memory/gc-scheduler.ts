@@ -1,9 +1,5 @@
-import { EventEmitter } from 'events';
-import type {
-  GCResult,
-  GCStats,
-  MemorySnapshot
-} from './types.js';
+import { EventEmitter } from "events";
+import type { GCResult, GCStats, MemorySnapshot } from "./types.js";
 
 export interface GCSchedulerConfig {
   /** Enable automatic GC scheduling */
@@ -23,7 +19,7 @@ export interface GCSchedulerConfig {
 }
 
 export interface MemoryPressure {
-  level: 'low' | 'medium' | 'high' | 'critical';
+  level: "low" | "medium" | "high" | "critical";
   score: number; // 0-1
   factors: {
     heapUtilization: number;
@@ -31,14 +27,14 @@ export interface MemoryPressure {
     gcEffectiveness: number;
     availableMemory: number;
   };
-  recommendation: 'none' | 'schedule' | 'immediate' | 'aggressive';
+  recommendation: "none" | "schedule" | "immediate" | "aggressive";
 }
 
 export interface GCSchedule {
   nextGC: Date;
   reason: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  mode: 'normal' | 'aggressive';
+  priority: "low" | "medium" | "high" | "critical";
+  mode: "normal" | "aggressive";
 }
 
 /**
@@ -70,13 +66,13 @@ export class GCScheduler extends EventEmitter {
     }
 
     if (!this.config.enabled) {
-      this.emit('info', 'GC scheduler is disabled');
+      this.emit("info", "GC scheduler is disabled");
       return;
     }
 
     this.isRunning = true;
-    this.emit('started');
-    
+    this.emit("started");
+
     // Start monitoring and scheduling cycle
     await this.scheduleNext();
   }
@@ -90,21 +86,23 @@ export class GCScheduler extends EventEmitter {
     }
 
     this.isRunning = false;
-    
+
     if (this.schedulerTimer) {
       clearTimeout(this.schedulerTimer);
       this.schedulerTimer = null;
     }
 
-    this.emit('stopped');
+    this.emit("stopped");
   }
 
   /**
    * Force immediate garbage collection
    */
-  async forceGC(reason = 'manual'): Promise<GCResult> {
+  async forceGC(reason = "manual"): Promise<GCResult> {
     if (!global.gc) {
-      throw new Error('Garbage collection is not exposed. Run with --expose-gc flag.');
+      throw new Error(
+        "Garbage collection is not exposed. Run with --expose-gc flag.",
+      );
     }
 
     const beforeMemory = process.memoryUsage();
@@ -121,14 +119,14 @@ export class GCScheduler extends EventEmitter {
       beforeMemory: beforeMemory.heapUsed,
       afterMemory: afterMemory.heapUsed,
       memoryCleaned: beforeMemory.heapUsed - afterMemory.heapUsed,
-      timestamp: new Date(startTime)
+      timestamp: new Date(startTime),
     };
 
     // Update statistics
     this.updateGCStats(result);
     this.lastGCTime = startTime;
 
-    this.emit('gc-completed', result, reason);
+    this.emit("gc-completed", result, reason);
     return result;
   }
 
@@ -138,21 +136,21 @@ export class GCScheduler extends EventEmitter {
   analyzeMemoryPressure(currentMemory: MemorySnapshot): MemoryPressure {
     // Calculate heap utilization
     const heapUtilization = currentMemory.heapUsed / currentMemory.heapTotal;
-    
+
     // Calculate memory growth rate
     const growthRate = this.calculateGrowthRate();
-    
+
     // Calculate GC effectiveness
     const gcEffectiveness = this.calculateGCEffectiveness();
-    
+
     // Calculate available memory ratio
-    const availableMemory = 1 - (currentMemory.rss / (4 * 1024 * 1024 * 1024)); // Assume 4GB limit
+    const availableMemory = 1 - currentMemory.rss / (4 * 1024 * 1024 * 1024); // Assume 4GB limit
 
     const factors = {
       heapUtilization,
       growthRate,
       gcEffectiveness,
-      availableMemory
+      availableMemory,
     };
 
     // Calculate pressure score (weighted average)
@@ -160,39 +158,38 @@ export class GCScheduler extends EventEmitter {
       heapUtilization: 0.3,
       growthRate: 0.25,
       gcEffectiveness: 0.25,
-      availableMemory: 0.2
+      availableMemory: 0.2,
     };
 
-    const score = (
+    const score =
       factors.heapUtilization * weights.heapUtilization +
       (1 - factors.growthRate) * weights.growthRate + // Higher growth = higher pressure
       (1 - factors.gcEffectiveness) * weights.gcEffectiveness + // Lower effectiveness = higher pressure
-      (1 - factors.availableMemory) * weights.availableMemory
-    );
+      (1 - factors.availableMemory) * weights.availableMemory;
 
     // Determine pressure level
-    let level: MemoryPressure['level'];
-    let recommendation: MemoryPressure['recommendation'];
+    let level: MemoryPressure["level"];
+    let recommendation: MemoryPressure["recommendation"];
 
     if (score < 0.4) {
-      level = 'low';
-      recommendation = 'none';
+      level = "low";
+      recommendation = "none";
     } else if (score < 0.55) {
-      level = 'medium';
-      recommendation = 'schedule';
+      level = "medium";
+      recommendation = "schedule";
     } else if (score < 0.75) {
-      level = 'high';
-      recommendation = 'immediate';
+      level = "high";
+      recommendation = "immediate";
     } else {
-      level = 'critical';
-      recommendation = 'aggressive';
+      level = "critical";
+      recommendation = "aggressive";
     }
 
     const pressure: MemoryPressure = {
       level,
       score,
       factors,
-      recommendation
+      recommendation,
     };
 
     // Store in history
@@ -210,40 +207,40 @@ export class GCScheduler extends EventEmitter {
   createSchedule(pressure: MemoryPressure): GCSchedule {
     const now = new Date();
     let delay: number;
-    let priority: GCSchedule['priority'];
-    let mode: GCSchedule['mode'] = 'normal';
+    let priority: GCSchedule["priority"];
+    let mode: GCSchedule["mode"] = "normal";
     let reason: string;
 
     switch (pressure.recommendation) {
-      case 'none':
+      case "none":
         delay = this.config.maxInterval;
-        priority = 'low';
-        reason = 'Routine maintenance';
+        priority = "low";
+        reason = "Routine maintenance";
         break;
-        
-      case 'schedule':
+
+      case "schedule":
         delay = this.calculateAdaptiveDelay(pressure);
-        priority = 'medium';
-        reason = 'Memory pressure detected';
+        priority = "medium";
+        reason = "Memory pressure detected";
         break;
-        
-      case 'immediate':
+
+      case "immediate":
         delay = Math.max(1000, this.config.minInterval); // At least 1 second
-        priority = 'high';
-        reason = 'High memory pressure';
+        priority = "high";
+        reason = "High memory pressure";
         break;
-        
-      case 'aggressive':
+
+      case "aggressive":
         delay = this.config.minInterval;
-        priority = 'critical';
-        mode = this.config.aggressiveMode ? 'aggressive' : 'normal';
-        reason = 'Critical memory pressure';
+        priority = "critical";
+        mode = this.config.aggressiveMode ? "aggressive" : "normal";
+        reason = "Critical memory pressure";
         break;
-        
+
       default:
         delay = this.config.maxInterval;
-        priority = 'low';
-        reason = 'Default schedule';
+        priority = "low";
+        reason = "Default schedule";
     }
 
     // Ensure minimum interval since last GC
@@ -256,7 +253,7 @@ export class GCScheduler extends EventEmitter {
       nextGC: new Date(now.getTime() + delay),
       reason,
       priority,
-      mode
+      mode,
     };
   }
 
@@ -292,7 +289,7 @@ export class GCScheduler extends EventEmitter {
       pressureThreshold: config.pressureThreshold ?? 0.7,
       adaptiveScheduling: config.adaptiveScheduling ?? true,
       growthRateThreshold: config.growthRateThreshold ?? 10, // 10 MB/s
-      aggressiveMode: config.aggressiveMode ?? true
+      aggressiveMode: config.aggressiveMode ?? true,
     };
   }
 
@@ -303,7 +300,7 @@ export class GCScheduler extends EventEmitter {
       totalMemoryCleaned: 0,
       averageGCTime: 0,
       averageMemoryCleaned: 0,
-      lastGC: null
+      lastGC: null,
     };
   }
 
@@ -322,7 +319,7 @@ export class GCScheduler extends EventEmitter {
         external: memoryUsage.external,
         rss: memoryUsage.rss,
         arrayBuffers: memoryUsage.arrayBuffers,
-        heapUtilization: memoryUsage.heapUsed / memoryUsage.heapTotal
+        heapUtilization: memoryUsage.heapUsed / memoryUsage.heapTotal,
       };
 
       // Update memory history
@@ -330,15 +327,15 @@ export class GCScheduler extends EventEmitter {
 
       // Analyze memory pressure
       const pressure = this.analyzeMemoryPressure(currentMemory);
-      
+
       // Create schedule
       const schedule = this.createSchedule(pressure);
 
       // Emit pressure analysis
-      this.emit('pressure-analysis', pressure, schedule);
+      this.emit("pressure-analysis", pressure, schedule);
 
       // Handle immediate or critical cases
-      if (schedule.priority === 'critical' || schedule.priority === 'high') {
+      if (schedule.priority === "critical" || schedule.priority === "high") {
         await this.executeScheduledGC(schedule);
       } else {
         // Schedule for later
@@ -348,18 +345,21 @@ export class GCScheduler extends EventEmitter {
         }, delay);
       }
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
       // Fallback to maximum interval
-      this.schedulerTimer = setTimeout(() => this.scheduleNext(), this.config.maxInterval);
+      this.schedulerTimer = setTimeout(
+        () => this.scheduleNext(),
+        this.config.maxInterval,
+      );
     }
   }
 
   private async executeScheduledGC(schedule: GCSchedule): Promise<void> {
     try {
       const result = await this.forceGC(schedule.reason);
-      this.emit('scheduled-gc', result, schedule);
+      this.emit("scheduled-gc", result, schedule);
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
     } finally {
       // Schedule next cycle
       await this.scheduleNext();
@@ -392,11 +392,11 @@ export class GCScheduler extends EventEmitter {
     // Calculate effectiveness based on average memory cleaned vs time spent
     const avgCleaned = this.gcStats.averageMemoryCleaned / (1024 * 1024); // MB
     const avgTime = this.gcStats.averageGCTime; // ms
-    
+
     if (avgTime === 0) {
-return 1.0;
-}
-    
+      return 1.0;
+    }
+
     // Effectiveness = MB cleaned per ms (normalized)
     const efficiency = avgCleaned / avgTime;
     return Math.min(1.0, efficiency * 1000); // Scale to 0-1 range
@@ -410,16 +410,21 @@ return 1.0;
     // Adaptive delay based on pressure score
     const baseDelay = this.config.maxInterval - this.config.minInterval;
     const adaptiveDelay = baseDelay * (1 - pressure.score);
-    
-    return Math.max(this.config.minInterval, this.config.minInterval + adaptiveDelay);
+
+    return Math.max(
+      this.config.minInterval,
+      this.config.minInterval + adaptiveDelay,
+    );
   }
 
   private updateGCStats(result: GCResult): void {
     this.gcStats.totalGCs++;
     this.gcStats.totalTimeMS += result.duration;
     this.gcStats.totalMemoryCleaned += result.memoryCleaned;
-    this.gcStats.averageGCTime = this.gcStats.totalTimeMS / this.gcStats.totalGCs;
-    this.gcStats.averageMemoryCleaned = this.gcStats.totalMemoryCleaned / this.gcStats.totalGCs;
+    this.gcStats.averageGCTime =
+      this.gcStats.totalTimeMS / this.gcStats.totalGCs;
+    this.gcStats.averageMemoryCleaned =
+      this.gcStats.totalMemoryCleaned / this.gcStats.totalGCs;
     this.gcStats.lastGC = result.timestamp;
   }
 }

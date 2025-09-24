@@ -3,23 +3,23 @@
  */
 
 // Base transport classes and types
-export { Transport, TransportError } from './base';
-export type { TransportConfig, TransportMessage, ConnectionInfo } from './base';
+export { Transport, TransportError } from "./base";
+export type { TransportConfig, TransportMessage, ConnectionInfo } from "./base";
 
 // STDIO transport for VS Code integration
-export { StdioTransport } from './stdio';
-export type { StdioTransportConfig } from './stdio';
+export { StdioTransport } from "./stdio";
+export type { StdioTransportConfig } from "./stdio";
 
 // WebSocket transport for network communication
-export { WebSocketTransport } from './websocket';
-export type { WebSocketTransportConfig } from './websocket';
+export { WebSocketTransport } from "./websocket";
+export type { WebSocketTransportConfig } from "./websocket";
 
 // Import all needed classes for factory
-import type { Transport, TransportConfig } from './base';
-import type { StdioTransportConfig } from './stdio';
-import { StdioTransport } from './stdio';
-import type { WebSocketTransportConfig } from './websocket';
-import { WebSocketTransport } from './websocket';
+import type { Transport, TransportConfig } from "./base";
+import type { StdioTransportConfig } from "./stdio";
+import { StdioTransport } from "./stdio";
+import type { WebSocketTransportConfig } from "./websocket";
+import { WebSocketTransport } from "./websocket";
 
 /**
  * Transport factory for creating appropriate transport instances
@@ -35,7 +35,9 @@ export class TransportFactory {
   /**
    * Create a WebSocket transport for network communication
    */
-  static createWebSocket(config?: WebSocketTransportConfig): WebSocketTransport {
+  static createWebSocket(
+    config?: WebSocketTransportConfig,
+  ): WebSocketTransport {
     return new WebSocketTransport(config);
   }
 
@@ -44,10 +46,10 @@ export class TransportFactory {
    */
   static createAuto(config?: TransportConfig): Transport {
     // Auto-detect based on configuration
-    if ('url' in (config || {}) || 'port' in (config || {})) {
+    if ("url" in (config || {}) || "port" in (config || {})) {
       return new WebSocketTransport(config as WebSocketTransportConfig);
     }
-    
+
     // Default to STDIO for command-line/VS Code integration
     return new StdioTransport(config as StdioTransportConfig);
   }
@@ -60,59 +62,66 @@ export class TransportUtils {
   /**
    * Validate transport configuration
    */
-  static validateConfig(config: TransportConfig): { valid: boolean; errors: string[] } {
+  static validateConfig(config: TransportConfig): {
+    valid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (config.heartbeatInterval !== undefined) {
       if (config.heartbeatInterval < 1000) {
-        errors.push('Heartbeat interval must be at least 1000ms');
+        errors.push("Heartbeat interval must be at least 1000ms");
       }
       if (config.heartbeatInterval > 300000) {
-        errors.push('Heartbeat interval must be at most 300000ms (5 minutes)');
+        errors.push("Heartbeat interval must be at most 300000ms (5 minutes)");
       }
     }
 
     if (config.connectionTimeout !== undefined) {
       if (config.connectionTimeout < 1000) {
-        errors.push('Connection timeout must be at least 1000ms');
+        errors.push("Connection timeout must be at least 1000ms");
       }
       if (config.connectionTimeout > 60000) {
-        errors.push('Connection timeout must be at most 60000ms (1 minute)');
+        errors.push("Connection timeout must be at most 60000ms (1 minute)");
       }
     }
 
     if (config.maxReconnectAttempts !== undefined) {
       if (config.maxReconnectAttempts < 0) {
-        errors.push('Max reconnect attempts cannot be negative');
+        errors.push("Max reconnect attempts cannot be negative");
       }
       if (config.maxReconnectAttempts > 100) {
-        errors.push('Max reconnect attempts should not exceed 100');
+        errors.push("Max reconnect attempts should not exceed 100");
       }
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
   /**
    * Get transport type from configuration
    */
-  static getTransportType(config: any): 'stdio' | 'websocket' | 'unknown' {
-    if (config && typeof config === 'object') {
+  static getTransportType(config: any): "stdio" | "websocket" | "unknown" {
+    if (config && typeof config === "object") {
       // Check for WebSocket-specific properties
-      if ('port' in config || 'url' in config || 'host' in config) {
-        return 'websocket';
+      if ("port" in config || "url" in config || "host" in config) {
+        return "websocket";
       }
-      
+
       // Check for STDIO-specific properties
-      if ('input' in config || 'output' in config || 'lineBuffering' in config) {
-        return 'stdio';
+      if (
+        "input" in config ||
+        "output" in config ||
+        "lineBuffering" in config
+      ) {
+        return "stdio";
       }
     }
-    
-    return 'unknown';
+
+    return "unknown";
   }
 
   /**
@@ -142,14 +151,14 @@ export class TransportUtils {
       totalConnections: connections.length,
       totalMessages: {
         sent: 0,
-        received: 0
+        received: 0,
       },
       totalBytes: {
         sent: 0,
-        received: 0
+        received: 0,
       },
       totalErrors: 0,
-      uptime: undefined as number | undefined
+      uptime: undefined as number | undefined,
     };
 
     // Aggregate statistics from all connections
@@ -164,7 +173,9 @@ export class TransportUtils {
     // Calculate uptime if we have connection information
     const oldestConnection = connections
       .filter((c: any) => c.connectedAt)
-      .sort((a: any, b: any) => a.connectedAt!.getTime() - b.connectedAt!.getTime())[0];
+      .sort(
+        (a: any, b: any) => a.connectedAt!.getTime() - b.connectedAt!.getTime(),
+      )[0];
 
     if (oldestConnection?.connectedAt) {
       stats.uptime = Date.now() - oldestConnection.connectedAt.getTime();

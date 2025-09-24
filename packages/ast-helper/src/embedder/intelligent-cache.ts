@@ -3,9 +3,9 @@
  * content-based invalidation, and performance monitoring
  */
 
-import crypto from 'crypto';
-import type { EmbeddingResult, Annotation } from './types.js';
-import { createLogger } from '../logging/index.js';
+import crypto from "crypto";
+import type { EmbeddingResult, Annotation } from "./types.js";
+import { createLogger } from "../logging/index.js";
 
 export interface CacheEntry {
   /** Cached embedding result */
@@ -97,7 +97,7 @@ export class IntelligentEmbeddingCache {
     accessTimeMs: number;
     sizeBytes: number;
   }> = [];
-  private logger = createLogger({ operation: 'IntelligentEmbeddingCache' });
+  private logger = createLogger({ operation: "IntelligentEmbeddingCache" });
 
   constructor(config: Partial<CacheConfig> = {}) {
     this.config = { ...DEFAULT_CACHE_CONFIG, ...config };
@@ -157,19 +157,19 @@ export class IntelligentEmbeddingCache {
       entry.accessCount++;
       entry.lastAccess = Date.now();
       this.stats.hits++;
-      
+
       const accessTime = performance.now() - startTime;
       this.recordAccess(cacheKey, accessTime);
 
-      this.logger.debug('Cache hit', {
-        cacheKey: cacheKey.substring(0, 16) + '...',
+      this.logger.debug("Cache hit", {
+        cacheKey: cacheKey.substring(0, 16) + "...",
         accessCount: entry.accessCount,
-        accessTime: `${accessTime.toFixed(2)}ms`
+        accessTime: `${accessTime.toFixed(2)}ms`,
       });
 
       return { ...entry.result }; // Return a copy to prevent mutations
     } catch (error: any) {
-      this.logger.error('Cache access error', { error: error.message });
+      this.logger.error("Cache access error", { error: error.message });
       this.stats.misses++;
       return null;
     } finally {
@@ -202,13 +202,13 @@ export class IntelligentEmbeddingCache {
       this.stats.currentEntries = this.cache.size;
       this.stats.currentSizeBytes += resultSize;
 
-      this.logger.debug('Cache entry stored', {
-        cacheKey: cacheKey.substring(0, 16) + '...',
+      this.logger.debug("Cache entry stored", {
+        cacheKey: cacheKey.substring(0, 16) + "...",
         size: `${(resultSize / 1024).toFixed(2)}KB`,
-        totalEntries: this.cache.size
+        totalEntries: this.cache.size,
       });
     } catch (error: any) {
-      this.logger.error('Cache storage error', { error: error.message });
+      this.logger.error("Cache storage error", { error: error.message });
     }
   }
 
@@ -220,7 +220,7 @@ export class IntelligentEmbeddingCache {
     this.accessTimes.clear();
     this.stats.currentEntries = 0;
     this.stats.currentSizeBytes = 0;
-    this.logger.info('Cache cleared');
+    this.logger.info("Cache cleared");
   }
 
   /**
@@ -235,10 +235,14 @@ export class IntelligentEmbeddingCache {
    */
   getPerformanceMetrics(): CachePerformanceMetrics {
     const recentSamples = this.performanceSamples.slice(-100); // Last 100 samples
-    
-    const memoryEfficiency = this.config.maxSizeBytes > 0 
-      ? Math.max(0, 1 - (this.stats.currentSizeBytes / this.config.maxSizeBytes))
-      : 1;
+
+    const memoryEfficiency =
+      this.config.maxSizeBytes > 0
+        ? Math.max(
+            0,
+            1 - this.stats.currentSizeBytes / this.config.maxSizeBytes,
+          )
+        : 1;
 
     const performanceScore = (this.stats.hitRatio + memoryEfficiency) / 2;
 
@@ -254,12 +258,12 @@ export class IntelligentEmbeddingCache {
    * Optimize cache by removing least valuable entries
    */
   async optimize(): Promise<void> {
-    this.logger.info('Starting cache optimization');
+    this.logger.info("Starting cache optimization");
 
     // Remove expired entries
     const now = Date.now();
     let expiredCount = 0;
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > this.config.ttlMs) {
         this.cache.delete(key);
@@ -269,17 +273,17 @@ export class IntelligentEmbeddingCache {
     }
 
     if (expiredCount > 0) {
-      this.logger.debug('Expired entries removed', { count: expiredCount });
+      this.logger.debug("Expired entries removed", { count: expiredCount });
     }
 
     // Update statistics
     this.stats.currentEntries = this.cache.size;
     this.updateStats();
 
-    this.logger.info('Cache optimization completed', {
+    this.logger.info("Cache optimization completed", {
       entriesRemoved: expiredCount,
       currentEntries: this.stats.currentEntries,
-      currentSize: `${(this.stats.currentSizeBytes / 1024 / 1024).toFixed(2)}MB`
+      currentSize: `${(this.stats.currentSizeBytes / 1024 / 1024).toFixed(2)}MB`,
     });
   }
 
@@ -291,13 +295,14 @@ export class IntelligentEmbeddingCache {
       nodeId: annotation.nodeId,
       signature: annotation.signature,
       summary: annotation.summary,
-      sourceSnippet: annotation.sourceSnippet || '',
+      sourceSnippet: annotation.sourceSnippet || "",
       metadata: JSON.stringify(annotation.metadata || {}),
     };
-    
-    return crypto.createHash('sha256')
+
+    return crypto
+      .createHash("sha256")
       .update(JSON.stringify(keyData))
-      .digest('hex');
+      .digest("hex");
   }
 
   /**
@@ -307,12 +312,13 @@ export class IntelligentEmbeddingCache {
     const contentData = {
       signature: annotation.signature,
       summary: annotation.summary,
-      sourceSnippet: annotation.sourceSnippet || '',
+      sourceSnippet: annotation.sourceSnippet || "",
     };
-    
-    return crypto.createHash('sha256')
+
+    return crypto
+      .createHash("sha256")
       .update(JSON.stringify(contentData))
-      .digest('hex')
+      .digest("hex")
       .substring(0, 16);
   }
 
@@ -321,7 +327,7 @@ export class IntelligentEmbeddingCache {
    */
   private calculateResultSize(result: EmbeddingResult): number {
     const jsonString = JSON.stringify(result);
-    return Buffer.byteLength(jsonString, 'utf8');
+    return Buffer.byteLength(jsonString, "utf8");
   }
 
   /**
@@ -329,19 +335,22 @@ export class IntelligentEmbeddingCache {
    */
   private async ensureCapacity(newEntrySize: number): Promise<void> {
     // Check size limits
-    while (this.stats.currentSizeBytes + newEntrySize > this.config.maxSizeBytes) {
+    while (
+      this.stats.currentSizeBytes + newEntrySize >
+      this.config.maxSizeBytes
+    ) {
       const evicted = this.evictLeastValuable();
       if (!evicted) {
-break;
-} // No more entries to evict
+        break;
+      } // No more entries to evict
     }
 
     // Check entry count limits
     while (this.cache.size >= this.config.maxEntries) {
       const evicted = this.evictLeastValuable();
       if (!evicted) {
-break;
-} // No more entries to evict
+        break;
+      } // No more entries to evict
     }
   }
 
@@ -350,8 +359,8 @@ break;
    */
   private evictLeastValuable(): boolean {
     if (this.cache.size === 0) {
-return false;
-}
+      return false;
+    }
 
     let leastValuableKey: string | null = null;
     let lowestScore = Infinity;
@@ -363,7 +372,7 @@ return false;
       const recencyScore = (now - entry.lastAccess) / this.config.ttlMs;
       const frequencyScore = 1 / Math.max(1, entry.accessCount);
       const ageScore = (now - entry.timestamp) / this.config.ttlMs;
-      
+
       const totalScore = recencyScore + frequencyScore + ageScore;
 
       if (totalScore < lowestScore) {
@@ -391,10 +400,10 @@ return false;
     if (!this.accessTimes.has(key)) {
       this.accessTimes.set(key, []);
     }
-    
+
     const times = this.accessTimes.get(key)!;
     times.push(timeMs);
-    
+
     // Keep only recent access times
     if (times.length > 10) {
       times.shift();
@@ -405,20 +414,23 @@ return false;
    * Update cache statistics
    */
   private updateStats(): void {
-    this.stats.hitRatio = this.stats.totalRequests > 0 
-      ? this.stats.hits / this.stats.totalRequests 
-      : 0;
-    
+    this.stats.hitRatio =
+      this.stats.totalRequests > 0
+        ? this.stats.hits / this.stats.totalRequests
+        : 0;
+
     this.stats.currentEntries = this.cache.size;
-    this.stats.utilization = this.config.maxEntries > 0 
-      ? this.stats.currentEntries / this.config.maxEntries 
-      : 0;
+    this.stats.utilization =
+      this.config.maxEntries > 0
+        ? this.stats.currentEntries / this.config.maxEntries
+        : 0;
 
     // Calculate average access time
     const allTimes = Array.from(this.accessTimes.values()).flat();
-    this.stats.avgAccessTimeMs = allTimes.length > 0 
-      ? allTimes.reduce((sum, time) => sum + time, 0) / allTimes.length 
-      : 0;
+    this.stats.avgAccessTimeMs =
+      allTimes.length > 0
+        ? allTimes.reduce((sum, time) => sum + time, 0) / allTimes.length
+        : 0;
 
     // Record performance sample
     this.performanceSamples.push({
@@ -434,10 +446,13 @@ return false;
     }
 
     // Warn if hit ratio is below threshold
-    if (this.stats.totalRequests > 100 && this.stats.hitRatio < this.config.hitRatioThreshold) {
-      this.logger.warn('Cache hit ratio below threshold', {
-        hitRatio: (this.stats.hitRatio * 100).toFixed(1) + '%',
-        threshold: (this.config.hitRatioThreshold * 100).toFixed(1) + '%'
+    if (
+      this.stats.totalRequests > 100 &&
+      this.stats.hitRatio < this.config.hitRatioThreshold
+    ) {
+      this.logger.warn("Cache hit ratio below threshold", {
+        hitRatio: (this.stats.hitRatio * 100).toFixed(1) + "%",
+        threshold: (this.config.hitRatioThreshold * 100).toFixed(1) + "%",
       });
     }
   }
@@ -446,9 +461,12 @@ return false;
    * Start periodic maintenance tasks
    */
   private startPeriodicMaintenance(): void {
-    setInterval(async () => {
-      await this.optimize();
-    }, 5 * 60 * 1000); // Every 5 minutes
+    setInterval(
+      async () => {
+        await this.optimize();
+      },
+      5 * 60 * 1000,
+    ); // Every 5 minutes
 
     setInterval(() => {
       this.updateStats();
@@ -464,7 +482,9 @@ let globalCache: IntelligentEmbeddingCache | null = null;
 /**
  * Get or create global embedding cache instance
  */
-export function getEmbeddingCache(config?: Partial<CacheConfig>): IntelligentEmbeddingCache {
+export function getEmbeddingCache(
+  config?: Partial<CacheConfig>,
+): IntelligentEmbeddingCache {
   if (!globalCache) {
     globalCache = new IntelligentEmbeddingCache(config);
   }

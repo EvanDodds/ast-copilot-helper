@@ -3,7 +3,7 @@
  * @module @ast-copilot-helper/ast-helper/error-reporting/privacy/secure-transmission
  */
 
-import type { ErrorReport, SecurityConfig } from '../types.js';
+import type { ErrorReport, SecurityConfig } from "../types.js";
 
 /**
  * Transmission result interface
@@ -23,7 +23,7 @@ interface TransmissionResult {
 interface TransmissionOptions {
   encrypt?: boolean;
   compress?: boolean;
-  priority?: 'low' | 'normal' | 'high' | 'critical';
+  priority?: "low" | "normal" | "high" | "critical";
   maxRetries?: number;
   timeout?: number; // milliseconds
   validateSsl?: boolean;
@@ -36,7 +36,7 @@ class RateLimiter {
   private requests: Map<string, number[]> = new Map();
   private blacklist: Set<string> = new Set();
 
-  constructor(private config: SecurityConfig['rateLimiting']) {}
+  constructor(private config: SecurityConfig["rateLimiting"]) {}
 
   /**
    * Check if request is allowed based on rate limiting
@@ -52,17 +52,20 @@ class RateLimiter {
 
     const now = Date.now();
     const windowStart = now - 60 * 1000; // 1 minute window
-    
+
     let requests = this.requests.get(identifier) || [];
-    requests = requests.filter(timestamp => timestamp > windowStart);
-    
+    requests = requests.filter((timestamp) => timestamp > windowStart);
+
     if (requests.length >= this.config.maxRequestsPerMinute) {
       // Add to blacklist temporarily
       this.blacklist.add(identifier);
-      setTimeout(() => {
-        this.blacklist.delete(identifier);
-      }, this.config.blacklistDuration * 60 * 1000);
-      
+      setTimeout(
+        () => {
+          this.blacklist.delete(identifier);
+        },
+        this.config.blacklistDuration * 60 * 1000,
+      );
+
       return false;
     }
 
@@ -78,7 +81,7 @@ class RateLimiter {
     const now = Date.now();
     const windowStart = now - 60 * 1000;
     const requests = this.requests.get(identifier) || [];
-    return requests.filter(timestamp => timestamp > windowStart).length;
+    return requests.filter((timestamp) => timestamp > windowStart).length;
   }
 }
 
@@ -92,10 +95,14 @@ export class SecureTransmissionManager {
   constructor(config: SecurityConfig) {
     this.config = config;
     this.rateLimiter = new RateLimiter(config.rateLimiting);
-    
-    console.log('🔐 Secure Transmission Manager initialized');
-    console.log(`   Encryption: ${config.enableEncryption ? 'Enabled' : 'Disabled'}`);
-    console.log(`   Rate Limiting: ${config.rateLimiting.enabled ? 'Enabled' : 'Disabled'}`);
+
+    console.log("🔐 Secure Transmission Manager initialized");
+    console.log(
+      `   Encryption: ${config.enableEncryption ? "Enabled" : "Disabled"}`,
+    );
+    console.log(
+      `   Rate Limiting: ${config.rateLimiting.enabled ? "Enabled" : "Disabled"}`,
+    );
   }
 
   /**
@@ -104,21 +111,23 @@ export class SecureTransmissionManager {
   async sendErrorReport(
     errorReport: ErrorReport,
     endpoint: string,
-    options: TransmissionOptions = {}
+    options: TransmissionOptions = {},
   ): Promise<TransmissionResult> {
     const transmissionId = this.generateTransmissionId();
     const clientId = this.getClientIdentifier(errorReport);
 
-    console.log(`📡 Preparing to send error report ${errorReport.id} to ${endpoint}`);
+    console.log(
+      `📡 Preparing to send error report ${errorReport.id} to ${endpoint}`,
+    );
 
     // Check rate limiting
     if (!this.rateLimiter.isAllowed(clientId)) {
       return {
         success: false,
-        error: 'Rate limit exceeded',
+        error: "Rate limit exceeded",
         timestamp: new Date(),
         retryCount: 0,
-        encryptionUsed: false
+        encryptionUsed: false,
       };
     }
 
@@ -130,14 +139,14 @@ export class SecureTransmissionManager {
       options: {
         encrypt: this.config.enableEncryption,
         compress: true,
-        priority: 'normal',
+        priority: "normal",
         maxRetries: 3,
         timeout: 30000,
         validateSsl: true,
-        ...options
+        ...options,
       },
       retryCount: 0,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     return this.processTransmission(job);
@@ -146,11 +155,13 @@ export class SecureTransmissionManager {
   /**
    * Process transmission job with retry logic
    */
-  private async processTransmission(job: TransmissionJob): Promise<TransmissionResult> {
+  private async processTransmission(
+    job: TransmissionJob,
+  ): Promise<TransmissionResult> {
     try {
       // Prepare payload
       let payload = await this.preparePayload(job.errorReport, job.options);
-      
+
       // Apply encryption if enabled
       if (job.options.encrypt && this.config.enableEncryption) {
         payload = await this.encryptPayload(payload);
@@ -163,43 +174,45 @@ export class SecureTransmissionManager {
 
       // Validate endpoint
       if (!this.isAllowedOrigin(job.endpoint)) {
-        throw new Error('Endpoint not in allowed origins list');
+        throw new Error("Endpoint not in allowed origins list");
       }
 
       // Send request
       const result = await this.sendRequest(job.endpoint, payload, job.options);
-      
+
       console.log(`✅ Error report ${job.errorReport.id} sent successfully`);
-      
+
       return {
         success: true,
         messageId: result.messageId,
         timestamp: new Date(),
         retryCount: job.retryCount,
-        encryptionUsed: job.options.encrypt || false
+        encryptionUsed: job.options.encrypt || false,
       };
-
     } catch (error) {
-      console.error(`❌ Failed to send error report ${job.errorReport.id}:`, error);
-      
+      console.error(
+        `❌ Failed to send error report ${job.errorReport.id}:`,
+        error,
+      );
+
       // Retry logic
       if (job.retryCount < (job.options.maxRetries || 3)) {
         job.retryCount++;
         console.log(`🔄 Retrying transmission (attempt ${job.retryCount})`);
-        
+
         // Exponential backoff
         const delay = Math.pow(2, job.retryCount - 1) * 1000;
         await this.delay(delay);
-        
+
         return this.processTransmission(job);
       }
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date(),
         retryCount: job.retryCount,
-        encryptionUsed: job.options.encrypt || false
+        encryptionUsed: job.options.encrypt || false,
       };
     }
   }
@@ -207,17 +220,20 @@ export class SecureTransmissionManager {
   /**
    * Prepare payload for transmission
    */
-  private async preparePayload(errorReport: ErrorReport, options: TransmissionOptions): Promise<string> {
+  private async preparePayload(
+    errorReport: ErrorReport,
+    options: TransmissionOptions,
+  ): Promise<string> {
     const payload = {
-      version: '1.0',
+      version: "1.0",
       timestamp: new Date().toISOString(),
       errorReport,
       metadata: {
         transmissionId: this.generateTransmissionId(),
         priority: options.priority,
         compressed: options.compress,
-        encrypted: options.encrypt
-      }
+        encrypted: options.encrypt,
+      },
     };
 
     return JSON.stringify(payload);
@@ -229,16 +245,16 @@ export class SecureTransmissionManager {
   private async encryptPayload(payload: string): Promise<string> {
     // This is a placeholder implementation
     // In production, use proper encryption libraries like Node's crypto module
-    console.log('🔐 Encrypting payload...');
-    
+    console.log("🔐 Encrypting payload...");
+
     // Simulate encryption
-    const encrypted = Buffer.from(payload, 'utf8').toString('base64');
-    
+    const encrypted = Buffer.from(payload, "utf8").toString("base64");
+
     return JSON.stringify({
       encrypted: true,
       algorithm: this.config.encryptionAlgorithm,
       data: encrypted,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -248,16 +264,16 @@ export class SecureTransmissionManager {
   private async compressPayload(payload: string): Promise<string> {
     // This is a placeholder implementation
     // In production, use proper compression libraries like zlib
-    console.log('📦 Compressing payload...');
-    
+    console.log("📦 Compressing payload...");
+
     // Simulate compression by removing whitespace
     const compressed = JSON.stringify(JSON.parse(payload));
-    
+
     return JSON.stringify({
       compressed: true,
       originalSize: payload.length,
       compressedSize: compressed.length,
-      data: compressed
+      data: compressed,
     });
   }
 
@@ -267,35 +283,36 @@ export class SecureTransmissionManager {
   private async sendRequest(
     endpoint: string,
     _payload: string,
-    _options: TransmissionOptions
+    _options: TransmissionOptions,
   ): Promise<{ messageId: string }> {
     console.log(`📤 Sending secure request to ${endpoint}`);
-    
+
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-Error-Report-Version': '1.0',
-      'X-Transmission-Time': new Date().toISOString()
+      "Content-Type": "application/json",
+      "X-Error-Report-Version": "1.0",
+      "X-Transmission-Time": new Date().toISOString(),
     };
 
     // Add authentication if required
     if (this.config.authentication.required) {
-      headers['Authorization'] = await this.getAuthHeader();
+      headers["Authorization"] = await this.getAuthHeader();
     }
 
     // Add security headers
-    headers['X-Content-Security-Policy'] = 'default-src \'none\'';
-    headers['X-Frame-Options'] = 'DENY';
+    headers["X-Content-Security-Policy"] = "default-src 'none'";
+    headers["X-Frame-Options"] = "DENY";
 
     // Simulate HTTP request
     // In production, use fetch() or axios with proper SSL validation
     await this.delay(100); // Simulate network delay
-    
+
     if (Math.random() < 0.1) {
-      throw new Error('Network error: Connection timeout');
+      throw new Error("Network error: Connection timeout");
     }
 
-    const messageId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    
+    const messageId =
+      "msg-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+
     return { messageId };
   }
 
@@ -304,14 +321,14 @@ export class SecureTransmissionManager {
    */
   private async getAuthHeader(): Promise<string> {
     switch (this.config.authentication.method) {
-      case 'apiKey':
-        return 'Bearer ' + this.generateApiKey();
-      case 'oauth':
-        return 'Bearer ' + await this.getOAuthToken();
-      case 'jwt':
-        return 'Bearer ' + await this.getJwtToken();
+      case "apiKey":
+        return "Bearer " + this.generateApiKey();
+      case "oauth":
+        return "Bearer " + (await this.getOAuthToken());
+      case "jwt":
+        return "Bearer " + (await this.getJwtToken());
       default:
-        throw new Error('Unknown authentication method');
+        throw new Error("Unknown authentication method");
     }
   }
 
@@ -319,7 +336,7 @@ export class SecureTransmissionManager {
    * Generate API key for authentication
    */
   private generateApiKey(): string {
-    return 'ak_' + Math.random().toString(36).substr(2, 32);
+    return "ak_" + Math.random().toString(36).substr(2, 32);
   }
 
   /**
@@ -327,7 +344,7 @@ export class SecureTransmissionManager {
    */
   private async getOAuthToken(): Promise<string> {
     // Placeholder for OAuth implementation
-    return 'oauth_' + Math.random().toString(36).substr(2, 32);
+    return "oauth_" + Math.random().toString(36).substr(2, 32);
   }
 
   /**
@@ -335,7 +352,7 @@ export class SecureTransmissionManager {
    */
   private async getJwtToken(): Promise<string> {
     // Placeholder for JWT implementation
-    return 'jwt_' + Math.random().toString(36).substr(2, 32);
+    return "jwt_" + Math.random().toString(36).substr(2, 32);
   }
 
   /**
@@ -349,12 +366,12 @@ export class SecureTransmissionManager {
     try {
       const url = new URL(endpoint);
       const origin = `${url.protocol}//${url.host}`;
-      
-      return this.config.allowedOrigins.some(allowed => {
-        if (allowed === '*') {
-return true;
-}
-        if (allowed.startsWith('*.')) {
+
+      return this.config.allowedOrigins.some((allowed) => {
+        if (allowed === "*") {
+          return true;
+        }
+        if (allowed.startsWith("*.")) {
           const domain = allowed.substring(2);
           return url.hostname.endsWith(domain);
         }
@@ -369,23 +386,25 @@ return true;
    * Get client identifier for rate limiting
    */
   private getClientIdentifier(errorReport: ErrorReport): string {
-    return errorReport.context?.sessionId || 
-           errorReport.context?.userId || 
-           'anonymous';
+    return (
+      errorReport.context?.sessionId ||
+      errorReport.context?.userId ||
+      "anonymous"
+    );
   }
 
   /**
    * Generate unique transmission ID
    */
   private generateTransmissionId(): string {
-    return 'tx-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    return "tx-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
   }
 
   /**
    * Delay utility for retry backoff
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -400,7 +419,7 @@ return true;
       rateLimitHits: 0,
       encryptionUsage: 0,
       compressionUsage: 0,
-      lastTransmission: new Date()
+      lastTransmission: new Date(),
     };
   }
 
@@ -409,20 +428,19 @@ return true;
    */
   async testConnection(endpoint: string): Promise<boolean> {
     console.log(`🔗 Testing connection to ${endpoint}`);
-    
+
     try {
       // Simulate connection test
       await this.delay(500);
-      
+
       if (!this.isAllowedOrigin(endpoint)) {
-        throw new Error('Endpoint not allowed');
+        throw new Error("Endpoint not allowed");
       }
 
-      console.log('✅ Connection test successful');
+      console.log("✅ Connection test successful");
       return true;
-      
     } catch (error) {
-      console.error('❌ Connection test failed:', error);
+      console.error("❌ Connection test failed:", error);
       return false;
     }
   }
@@ -454,4 +472,8 @@ interface TransmissionStats {
   lastTransmission: Date;
 }
 
-export { type TransmissionResult, type TransmissionOptions, type TransmissionStats };
+export {
+  type TransmissionResult,
+  type TransmissionOptions,
+  type TransmissionStats,
+};

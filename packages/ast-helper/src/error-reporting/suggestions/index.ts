@@ -3,11 +3,11 @@
  */
 
 // Main suggestion engine
-export { SuggestionEngine } from './suggestion-engine.js';
+export { SuggestionEngine } from "./suggestion-engine.js";
 
 // Built-in generators
-export { PatternBasedSuggestionGenerator } from './pattern-generator.js';
-export { StaticAnalysisGenerator } from './static-analysis-generator.js';
+export { PatternBasedSuggestionGenerator } from "./pattern-generator.js";
+export { StaticAnalysisGenerator } from "./static-analysis-generator.js";
 
 // Types
 export type {
@@ -17,16 +17,16 @@ export type {
   SuggestionContext,
   SuggestionEngineConfig,
   SuggestionEngineResult,
-  
+
   // Suggestion types
   SuggestionType,
   SuggestionSource,
   SuggestionConfidence,
   SuggestionAction,
-  
+
   // Pattern and analysis types
   ErrorPattern,
   MLPrediction,
   CommunitySuggestion,
-  SuggestionEvaluation
-} from './types.js';
+  SuggestionEvaluation,
+} from "./types.js";

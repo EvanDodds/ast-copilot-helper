@@ -3,7 +3,7 @@ export class BrokenClass {
   constructor() {
     // Fixed closing brace
   }
-  
+
   public method1() {
     return "test";
   }

@@ -4,30 +4,24 @@
  */
 
 // Types
-export * from './types.js';
+export * from "./types.js";
 
 // Database implementation
-export {
-  SqliteTelemetryStorage,
-  StorageFactory
-} from './database.js';
+export { SqliteTelemetryStorage, StorageFactory } from "./database.js";
 
 // Queue implementation
-export {
-  SqliteEventQueue,
-  QueueFactory
-} from './queue.js';
+export { SqliteEventQueue, QueueFactory } from "./queue.js";
 
 // Storage manager for coordinating storage and queue operations
-export { StorageManager, StorageManagerFactory } from './manager';
+export { StorageManager, StorageManagerFactory } from "./manager";
 
 // Import for internal function implementations
-import type { StorageManager} from './manager';
-import { StorageManagerFactory } from './manager';
+import type { StorageManager } from "./manager";
+import { StorageManagerFactory } from "./manager";
 
 /**
  * Create a development storage manager
- * 
+ *
  * @returns Configured storage system for development
  */
 export function createDevelopmentStorage(): StorageManager {
@@ -36,17 +30,19 @@ export function createDevelopmentStorage(): StorageManager {
 
 /**
  * Create a production storage manager
- * 
+ *
  * @param databasePath - Path to database file
  * @returns Configured storage system for production
  */
-export function createProductionStorage(databasePath = './telemetry'): StorageManager {
+export function createProductionStorage(
+  databasePath = "./telemetry",
+): StorageManager {
   return StorageManagerFactory.createProduction(databasePath);
 }
 
 /**
  * Create a custom storage manager
- * 
+ *
  * @param config - Partial storage configuration
  * @returns Configured storage system
  */

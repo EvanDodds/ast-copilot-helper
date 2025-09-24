@@ -3,13 +3,13 @@
  * Comprehensive error reporting with automatic detection, categorization, and context collection
  */
 
-import { randomUUID } from 'crypto';
-import * as os from 'os';
-import * as process from 'process';
-import * as path from 'path';
-import { performance } from 'perf_hooks';
+import { randomUUID } from "crypto";
+import * as os from "os";
+import * as process from "process";
+import * as path from "path";
+import { performance } from "perf_hooks";
 
-import { AstError } from '../errors/types.js';
+import { AstError } from "../errors/types.js";
 import type {
   ErrorReportingManager,
   ErrorReportingConfig,
@@ -29,73 +29,78 @@ import type {
   PerformanceDiagnostics,
   DependencyDiagnostics,
   ProcessInfo,
-  MemoryDump
-} from './types.js';
+  MemoryDump,
+} from "./types.js";
 
 // Import comprehensive suggestion system
-import { SuggestionEngine } from './suggestions/suggestion-engine.js';
-import type { 
-  SuggestionContext, 
-  ResolutionSuggestion, 
+import { SuggestionEngine } from "./suggestions/suggestion-engine.js";
+import type {
+  SuggestionContext,
+  ResolutionSuggestion,
   SuggestionEngineResult,
   SuggestionType,
-  SuggestionConfidence
-} from './suggestions/types.js';
+  SuggestionConfidence,
+} from "./suggestions/types.js";
 
 // Import crash reporting system
-import { CrashDetector, CrashAnalyticsEngine } from './crash/index.js';
-import type { CrashReport as CrashReportType } from './crash/types.js';
+import { CrashDetector, CrashAnalyticsEngine } from "./crash/index.js";
+import type { CrashReport as CrashReportType } from "./crash/types.js";
 
 // Import analytics system
-import { ErrorAnalyticsManager } from './analytics/error-analytics.js';
+import { ErrorAnalyticsManager } from "./analytics/error-analytics.js";
 
 // Import privacy and security systems
-import { PrivacyManager } from './privacy/privacy-manager.js';
-import { SecureTransmissionManager } from './privacy/secure-transmission.js';
-import { ComplianceChecker } from './privacy/compliance-checker.js';
-import type { 
-  ConsentData, 
-  PrivacySettings, 
-  SecurityConfig
-} from './types.js';
-import type { TransmissionResult } from './privacy/secure-transmission.js';
-import type { ErrorAnalytics, SystemHealthMetrics, ErrorFrequencyPoint, ErrorCorrelation } from './types.js';
+import { PrivacyManager } from "./privacy/privacy-manager.js";
+import { SecureTransmissionManager } from "./privacy/secure-transmission.js";
+import { ComplianceChecker } from "./privacy/compliance-checker.js";
+import type { ConsentData, PrivacySettings, SecurityConfig } from "./types.js";
+import type { TransmissionResult } from "./privacy/secure-transmission.js";
+import type {
+  ErrorAnalytics,
+  SystemHealthMetrics,
+  ErrorFrequencyPoint,
+  ErrorCorrelation,
+} from "./types.js";
 
 /**
  * Comprehensive Error Reporting Manager
  * Main implementation of the error reporting system
  */
-export class ComprehensiveErrorReportingManager implements ErrorReportingManager {
+export class ComprehensiveErrorReportingManager
+  implements ErrorReportingManager {
   private config?: ErrorReportingConfig;
   // private initialized: boolean = false;
   private sessionId: string;
-  private currentOperation = 'unknown';
+  private currentOperation = "unknown";
   private operationHistory: string[] = [];
   private errorHistory: ErrorHistoryEntry[] = [];
   // private reportQueue: ErrorReport[] = [];
   private suggestionEngine: SuggestionEngine;
-  
+
   // Advanced analytics
   private analyticsManager: ErrorAnalyticsManager;
-  
+
   // Crash reporting components
   private crashDetector?: CrashDetector;
   private crashAnalytics?: CrashAnalyticsEngine;
   private crashReports: CrashReport[] = [];
-  
+
   // Privacy components
   private privacyManager?: PrivacyManager;
   // private telemetryManager?: TelemetryManager;
-  
+
   // Additional components for compliance and secure transmission
   private secureTransmission?: any;
   private complianceChecker?: any;
-  
+
   // Event handler references for cleanup
   private uncaughtExceptionHandler?: (error: Error) => void;
-  private unhandledRejectionHandler?: (reason: any, promise: Promise<any>) => void;
+  private unhandledRejectionHandler?: (
+    reason: any,
+    promise: Promise<any>,
+  ) => void;
   private warningHandler?: (warning: Error) => void;
-  
+
   constructor() {
     this.sessionId = randomUUID();
     this.suggestionEngine = new SuggestionEngine({
@@ -105,9 +110,9 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       enableMLIntegration: false, // Disabled for now
       enableCommunityData: false, // Disabled for now
       parallelGeneration: true,
-      adaptiveLearning: false
+      adaptiveLearning: false,
     });
-    
+
     // Initialize analytics manager
     this.analyticsManager = new ErrorAnalyticsManager({
       maxHistorySize: 10000,
@@ -115,9 +120,9 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       trendAnalysisWindow: 24,
       patternDetectionThreshold: 3,
       enableRealTimeAnalytics: true,
-      storageBackend: 'memory',
+      storageBackend: "memory",
       enableMLAnalysis: false,
-      retentionPolicyDays: 90
+      retentionPolicyDays: 90,
     });
   }
 
@@ -125,8 +130,8 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
    * Initialize the error reporting system
    */
   async initialize(config: ErrorReportingConfig): Promise<void> {
-    console.log('🔧 Initializing comprehensive error reporting system...');
-    
+    console.log("🔧 Initializing comprehensive error reporting system...");
+
     // Set defaults and merge with provided config
     this.config = {
       enabled: config.enabled ?? true,
@@ -147,10 +152,13 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
         configuration: config.diagnosticDataCollection?.configuration ?? true,
         performance: config.diagnosticDataCollection?.performance ?? true,
         dependencies: config.diagnosticDataCollection?.dependencies ?? true,
-        maxCollectionTimeMs: config.diagnosticDataCollection?.maxCollectionTimeMs ?? 10000,
-        includeEnvironmentVars: config.diagnosticDataCollection?.includeEnvironmentVars ?? true,
-        includeProcessInfo: config.diagnosticDataCollection?.includeProcessInfo ?? true
-      }
+        maxCollectionTimeMs:
+          config.diagnosticDataCollection?.maxCollectionTimeMs ?? 10000,
+        includeEnvironmentVars:
+          config.diagnosticDataCollection?.includeEnvironmentVars ?? true,
+        includeProcessInfo:
+          config.diagnosticDataCollection?.includeProcessInfo ?? true,
+      },
     };
 
     // Set up crash reporting system if enabled
@@ -165,17 +173,23 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
     // Initialize error history
     await this.loadErrorHistory();
 
-    console.log('✅ Error reporting system initialized successfully');
-    console.log(`   - Crash reporting: ${this.config.enableCrashReporting ? 'enabled' : 'disabled'}`);
-    console.log(`   - Automatic reporting: ${this.config.enableAutomaticReporting ? 'enabled' : 'disabled'}`);
-    console.log(`   - Privacy mode: ${this.config.privacyMode ? 'enabled' : 'disabled'}`);
-    
+    console.log("✅ Error reporting system initialized successfully");
+    console.log(
+      `   - Crash reporting: ${this.config.enableCrashReporting ? "enabled" : "disabled"}`,
+    );
+    console.log(
+      `   - Automatic reporting: ${this.config.enableAutomaticReporting ? "enabled" : "disabled"}`,
+    );
+    console.log(
+      `   - Privacy mode: ${this.config.privacyMode ? "enabled" : "disabled"}`,
+    );
+
     if (this.crashDetector) {
-      console.log('   - Advanced crash detection: enabled');
+      console.log("   - Advanced crash detection: enabled");
     }
-    
+
     if (this.privacyManager) {
-      console.log('   - Privacy controls: enabled');
+      console.log("   - Privacy controls: enabled");
     }
   }
 
@@ -184,42 +198,44 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
    */
   async reportError(error: ErrorReport): Promise<ReportResult> {
     console.log(`📊 Reporting error: ${error.type} - ${error.category}`);
-    
+
     try {
       // Add error to history
       await this.addToHistory(error);
-      
+
       // Add error to analytics manager
       await this.analyticsManager.addError(error);
-      
+
       // Generate suggestions if not provided
       if (!error.suggestions || error.suggestions.length === 0) {
-        console.log('🧠 Generating error resolution suggestions...');
+        console.log("🧠 Generating error resolution suggestions...");
         error.suggestions = await this.provideSuggestions(error);
       }
-      
+
       // Display error to user with suggestions
       await this.displayErrorToUser(error);
-      
+
       // Log detailed error information for debugging
       await this.logDetailedError(error);
-      
+
       return {
         success: true,
         errorId: error.id,
         suggestions: error.suggestions,
         serverReported: error.reportedToServer,
-        message: 'Error reported successfully'
+        message: "Error reported successfully",
       };
-      
     } catch (reportingError) {
-      console.error('❌ Failed to report error:', reportingError);
-      
+      console.error("❌ Failed to report error:", reportingError);
+
       return {
         success: false,
         errorId: error.id,
         message: `Failed to report error: ${reportingError instanceof Error ? reportingError.message : String(reportingError)}`,
-        error: reportingError instanceof Error ? reportingError : new Error(String(reportingError))
+        error:
+          reportingError instanceof Error
+            ? reportingError
+            : new Error(String(reportingError)),
       };
     }
   }
@@ -228,16 +244,18 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
    * Report a crash with memory and process information
    */
   async reportCrash(crashReport: CrashReport): Promise<ReportResult> {
-    console.log(`🚨 Reporting crash: ${crashReport.type} - ${crashReport.error.message}`);
-    
+    console.log(
+      `🚨 Reporting crash: ${crashReport.type} - ${crashReport.error.message}`,
+    );
+
     try {
       // Convert crash report to error report format
       const errorReport: ErrorReport = {
         id: crashReport.id,
         timestamp: crashReport.timestamp,
-        type: 'crash',
-        severity: 'critical',
-        category: 'system-crash',
+        type: "crash",
+        severity: "critical",
+        category: "system-crash",
         operation: this.currentOperation,
         message: `System crash: ${crashReport.error.message}`,
         originalError: crashReport.error,
@@ -249,11 +267,11 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
           timestamp: crashReport.timestamp,
           includeSystemInfo: true,
           includeRuntimeInfo: true,
-          includeCodebaseInfo: true
+          includeCodebaseInfo: true,
         }),
         userProvided: false,
         reportedToServer: false,
-        suggestions: []
+        suggestions: [],
       };
 
       // Generate crash-specific suggestions using the main suggestion system
@@ -261,15 +279,17 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
 
       // Report as regular error
       return await this.reportError(errorReport);
-      
     } catch (reportingError) {
-      console.error('❌ Failed to report crash:', reportingError);
-      
+      console.error("❌ Failed to report crash:", reportingError);
+
       return {
         success: false,
         errorId: crashReport.id,
         message: `Failed to report crash: ${reportingError instanceof Error ? reportingError.message : String(reportingError)}`,
-        error: reportingError instanceof Error ? reportingError : new Error(String(reportingError))
+        error:
+          reportingError instanceof Error
+            ? reportingError
+            : new Error(String(reportingError)),
       };
     }
   }
@@ -277,10 +297,12 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
   /**
    * Collect comprehensive diagnostic data
    */
-  async collectDiagnostics(context: DiagnosticContext): Promise<DiagnosticData> {
-    console.log('🔍 Collecting comprehensive diagnostic data...');
+  async collectDiagnostics(
+    context: DiagnosticContext,
+  ): Promise<DiagnosticData> {
+    console.log("🔍 Collecting comprehensive diagnostic data...");
     const startTime = performance.now();
-    
+
     try {
       const diagnostics: DiagnosticData = {
         system: await this.collectSystemDiagnostics(),
@@ -288,7 +310,7 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
         codebase: await this.collectCodebaseDiagnostics(context),
         configuration: await this.collectConfigurationDiagnostics(),
         performance: await this.collectPerformanceDiagnostics(),
-        dependencies: await this.collectDependencyDiagnostics()
+        dependencies: await this.collectDependencyDiagnostics(),
       };
 
       // Apply privacy filters if enabled
@@ -297,15 +319,18 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       }
 
       const duration = performance.now() - startTime;
-      console.log(`✅ Diagnostic data collected successfully in ${duration.toFixed(2)}ms`);
-      
+      console.log(
+        `✅ Diagnostic data collected successfully in ${duration.toFixed(2)}ms`,
+      );
+
       return diagnostics;
-      
     } catch (error) {
-      console.error('❌ Failed to collect diagnostics:', error);
-      
+      console.error("❌ Failed to collect diagnostics:", error);
+
       // Return minimal diagnostics on error
-      return this.createMinimalDiagnostics(error instanceof Error ? error : new Error(String(error)));
+      return this.createMinimalDiagnostics(
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 
@@ -315,16 +340,16 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
   async generateErrorReport(error: Error, context?: any): Promise<ErrorReport> {
     const errorId = this.generateErrorId();
     const timestamp = new Date();
-    
+
     console.log(`🔨 Generating comprehensive error report: ${errorId}`);
-    
+
     try {
       // Categorize the error
       const category = await this.categorizeError(error);
-      
+
       // Collect environmental information
       const environment = await this.collectEnvironmentInfo();
-      
+
       // Collect diagnostic data with error context
       const diagnosticContext: DiagnosticContext = {
         error,
@@ -333,13 +358,13 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
         timestamp,
         includeSystemInfo: this.config?.collectSystemInfo || false,
         includeRuntimeInfo: true,
-        includeCodebaseInfo: this.config?.collectCodebaseInfo || false
+        includeCodebaseInfo: this.config?.collectCodebaseInfo || false,
       };
       const diagnostics = await this.collectDiagnostics(diagnosticContext);
-      
+
       // Build error context
       const errorContext = await this.buildErrorContext(error, context);
-      
+
       const errorReport: ErrorReport = {
         id: errorId,
         timestamp,
@@ -355,15 +380,14 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
         diagnostics,
         userProvided: false,
         reportedToServer: false,
-        suggestions: []
+        suggestions: [],
       };
-      
+
       console.log(`✅ Error report generated: ${errorId}`);
       return errorReport;
-      
     } catch (generationError) {
-      console.error('❌ Failed to generate error report:', generationError);
-      
+      console.error("❌ Failed to generate error report:", generationError);
+
       // Return minimal error report
       return this.createMinimalErrorReport(error, errorId, timestamp);
     }
@@ -375,38 +399,44 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
   async provideSuggestions(error: ErrorReport): Promise<SuggestionResult[]> {
     try {
       console.log(`🧠 Generating suggestions for error: ${error.category}`);
-      
+
       // Convert ErrorReport to SuggestionContext for the new engine
-      const suggestionContext: SuggestionContext = await this.createSuggestionContext(error);
-      
+      const suggestionContext: SuggestionContext =
+        await this.createSuggestionContext(error);
+
       // Use the comprehensive suggestion engine
-      const engineResult: SuggestionEngineResult = await this.suggestionEngine.generateSuggestions(suggestionContext);
-      
+      const engineResult: SuggestionEngineResult =
+        await this.suggestionEngine.generateSuggestions(suggestionContext);
+
       // Convert ResolutionSuggestion[] to SuggestionResult[] for backward compatibility
-      const suggestions: SuggestionResult[] = engineResult.suggestions.map(suggestion => 
-        this.convertToSuggestionResult(suggestion)
+      const suggestions: SuggestionResult[] = engineResult.suggestions.map(
+        (suggestion) => this.convertToSuggestionResult(suggestion),
       );
-      
-      console.log(`✅ Generated ${suggestions.length} suggestions using ${engineResult.generatorsUsed.length} generators`);
-      console.log(`📊 Processing time: ${engineResult.totalProcessingTime}ms, Cache hit: ${engineResult.cacheHit}`);
-      
+
+      console.log(
+        `✅ Generated ${suggestions.length} suggestions using ${engineResult.generatorsUsed.length} generators`,
+      );
+      console.log(
+        `📊 Processing time: ${engineResult.totalProcessingTime}ms, Cache hit: ${engineResult.cacheHit}`,
+      );
+
       // Return results, already sorted by the engine
       return suggestions.slice(0, 5); // Return top 5 suggestions
-      
     } catch (suggestionError) {
-      console.error('❌ Failed to generate suggestions:', suggestionError);
-      
+      console.error("❌ Failed to generate suggestions:", suggestionError);
+
       // Return basic fallback suggestions
       return [
         {
-          id: 'fallback-1',
-          title: 'Check Error Details',
-          description: 'Carefully examine the error message and stack trace for specific clues',
-          severity: 'low',
-          category: 'information',
+          id: "fallback-1",
+          title: "Check Error Details",
+          description:
+            "Carefully examine the error message and stack trace for specific clues",
+          severity: "low",
+          category: "information",
           confidence: 0.5,
-          estimatedTime: '5 minutes'
-        }
+          estimatedTime: "5 minutes",
+        },
       ];
     }
   }
@@ -414,7 +444,9 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
   /**
    * Create suggestion context from error report
    */
-  private async createSuggestionContext(error: ErrorReport): Promise<SuggestionContext> {    
+  private async createSuggestionContext(
+    error: ErrorReport,
+  ): Promise<SuggestionContext> {
     // Get current file from stack trace or operation context
     let currentFile: string | undefined;
     if (error.stackTrace) {
@@ -428,48 +460,50 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
         stack: error.stackTrace,
         type: error.type.toUpperCase(),
         category: error.category,
-        operation: error.operation
+        operation: error.operation,
       },
       environment: {
         nodeVersion: error.environment.nodeVersion || process.version,
         platform: error.environment.platform || os.platform(),
-        projectType: 'ast-helper', // Could be made dynamic
+        projectType: "ast-helper", // Could be made dynamic
         dependencies: (error.diagnostics.runtime?.modules?.loaded || []).reduce(
           (deps: Record<string, string>, module: string) => {
-            deps[module] = 'loaded';
+            deps[module] = "loaded";
             return deps;
           },
-          {}
+          {},
         ),
-        configFiles: this.extractConfigFiles(error.diagnostics)
+        configFiles: this.extractConfigFiles(error.diagnostics),
       },
       codebase: {
         languages: this.detectLanguagesFromContext(error.diagnostics),
         frameworks: this.detectFrameworksFromContext(error.diagnostics),
         currentFile,
         recentChanges: [], // Could be populated from git or file system monitoring
-        relatedFiles: error.context.files || []
+        relatedFiles: error.context.files || [],
       },
       history: {
         similarErrors: this.countSimilarErrors(error),
         recentPatterns: this.extractRecentPatterns(),
-        successfulResolutions: this.extractSuccessfulResolutions(error)
+        successfulResolutions: this.extractSuccessfulResolutions(error),
       },
       user: {
-        experienceLevel: 'intermediate', // Could be configurable or learned
+        experienceLevel: "intermediate", // Could be configurable or learned
         preferences: {
           automated: true,
           detailed: false,
-          conservative: false
-        }
-      }
+          conservative: false,
+        },
+      },
     };
   }
 
   /**
    * Convert ResolutionSuggestion to SuggestionResult for backward compatibility
    */
-  private convertToSuggestionResult(suggestion: ResolutionSuggestion): SuggestionResult {
+  private convertToSuggestionResult(
+    suggestion: ResolutionSuggestion,
+  ): SuggestionResult {
     return {
       id: suggestion.id,
       title: suggestion.title,
@@ -478,16 +512,19 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
       category: this.mapSuggestionTypeToCategory(suggestion.type),
       confidence: this.mapConfidenceToNumber(suggestion.confidence),
       commands: suggestion.actions
-        .filter(action => action.type === 'command-run')
-        .map(action => action.command)
+        .filter((action) => action.type === "command-run")
+        .map((action) => action.command)
         .filter((cmd): cmd is string => cmd !== undefined),
       links: suggestion.actions
-        .filter(action => action.type === 'file-create' || action.type === 'config-update')
-        .map(action => action.target)
+        .filter(
+          (action) =>
+            action.type === "file-create" || action.type === "config-update",
+        )
+        .map((action) => action.target)
         .filter((target): target is string => target !== undefined),
       estimatedTime: this.estimateTimeFromDifficulty(suggestion.difficulty),
       prerequisites: suggestion.prerequisites,
-      steps: suggestion.actions.map(action => action.description)
+      steps: suggestion.actions.map((action) => action.description),
     };
   }
 
@@ -496,74 +533,76 @@ export class ComprehensiveErrorReportingManager implements ErrorReportingManager
    */
   private extractConfigFiles(diagnostics: DiagnosticData): string[] {
     const files: string[] = [];
-    
+
     // Add common config files that might be relevant
     if (diagnostics.codebase?.packages?.packageJson) {
-      files.push('package.json');
+      files.push("package.json");
     }
-    if (diagnostics.configuration?.configFiles?.found?.includes('tsconfig.json')) {
-      files.push('tsconfig.json');
+    if (
+      diagnostics.configuration?.configFiles?.found?.includes("tsconfig.json")
+    ) {
+      files.push("tsconfig.json");
     }
-    
+
     return files;
   }
 
   private detectLanguagesFromContext(diagnostics: DiagnosticData): string[] {
     const languages = new Set<string>();
-    
+
     // Default to JavaScript/TypeScript for AST helper
-    languages.add('javascript');
-    languages.add('typescript');
-    
+    languages.add("javascript");
+    languages.add("typescript");
+
     // Use language data from diagnostics if available
     if (diagnostics.codebase?.structure?.languages) {
-      Object.keys(diagnostics.codebase.structure.languages).forEach(lang => 
-        languages.add(lang.toLowerCase())
+      Object.keys(diagnostics.codebase.structure.languages).forEach((lang) =>
+        languages.add(lang.toLowerCase()),
       );
     }
-    
+
     return Array.from(languages);
   }
 
   private detectFrameworksFromContext(diagnostics: DiagnosticData): string[] {
     const frameworks: string[] = [];
-    
+
     // Check for common frameworks based on codebase structure
     const languages = diagnostics.codebase?.structure?.languages || {};
-    
-    if (languages['TypeScript'] || languages['JavaScript']) {
+
+    if (languages["TypeScript"] || languages["JavaScript"]) {
       // Check for common JS/TS frameworks (this is basic detection)
       const packageJson = diagnostics.codebase?.packages?.packageJson;
       if (packageJson) {
         const dependencies = JSON.stringify(packageJson);
-        if (dependencies.includes('react')) {
-frameworks.push('React');
-}
-        if (dependencies.includes('vue')) {
-frameworks.push('Vue');
-}
-        if (dependencies.includes('angular')) {
-frameworks.push('Angular');
-}
-        if (dependencies.includes('express')) {
-frameworks.push('Express');
-}
-        if (dependencies.includes('nestjs')) {
-frameworks.push('NestJS');
-}
-        if (dependencies.includes('next')) {
-frameworks.push('Next.js');
-}
+        if (dependencies.includes("react")) {
+          frameworks.push("React");
+        }
+        if (dependencies.includes("vue")) {
+          frameworks.push("Vue");
+        }
+        if (dependencies.includes("angular")) {
+          frameworks.push("Angular");
+        }
+        if (dependencies.includes("express")) {
+          frameworks.push("Express");
+        }
+        if (dependencies.includes("nestjs")) {
+          frameworks.push("NestJS");
+        }
+        if (dependencies.includes("next")) {
+          frameworks.push("Next.js");
+        }
       }
     }
-    
+
     return frameworks;
   }
 
   private countSimilarErrors(error: ErrorReport): number {
-    return this.errorHistory.filter(entry => 
-      entry.error.id === error.id || 
-      entry.error.category === error.category
+    return this.errorHistory.filter(
+      (entry) =>
+        entry.error.id === error.id || entry.error.category === error.category,
     ).length;
   }
 
@@ -571,7 +610,7 @@ frameworks.push('Next.js');
     // Extract patterns from recent errors
     return this.errorHistory
       .slice(-10) // Last 10 errors
-      .map(entry => entry.error.category || 'unknown')
+      .map((entry) => entry.error.category || "unknown")
       .filter((category, index, arr) => arr.indexOf(category) === index); // Unique categories
   }
 
@@ -580,83 +619,89 @@ frameworks.push('Next.js');
     return [];
   }
 
-  private mapSuggestionTypeToCategory(suggestionType: SuggestionType): 'fix' | 'workaround' | 'information' {
+  private mapSuggestionTypeToCategory(
+    suggestionType: SuggestionType,
+  ): "fix" | "workaround" | "information" {
     switch (suggestionType) {
-      case 'code-fix':
-      case 'configuration':
-      case 'dependency':
-        return 'fix';
-      case 'debugging':
-      case 'alternative-approach':
-        return 'workaround';
-      case 'documentation':
-      case 'environment':
+      case "code-fix":
+      case "configuration":
+      case "dependency":
+        return "fix";
+      case "debugging":
+      case "alternative-approach":
+        return "workaround";
+      case "documentation":
+      case "environment":
       default:
-        return 'information';
+        return "information";
     }
   }
 
-  private mapConfidenceToSeverity(confidence: SuggestionConfidence): 'low' | 'medium' | 'high' {
+  private mapConfidenceToSeverity(
+    confidence: SuggestionConfidence,
+  ): "low" | "medium" | "high" {
     switch (confidence) {
-      case 'low':
-        return 'low';
-      case 'medium':
-        return 'medium';
-      case 'high':
-      case 'critical':
-        return 'high';
+      case "low":
+        return "low";
+      case "medium":
+        return "medium";
+      case "high":
+      case "critical":
+        return "high";
       default:
-        return 'medium';
+        return "medium";
     }
   }
 
   private mapConfidenceToNumber(confidence: SuggestionConfidence): number {
     switch (confidence) {
-      case 'low':
+      case "low":
         return 0.25;
-      case 'medium':
+      case "medium":
         return 0.5;
-      case 'high':
+      case "high":
         return 0.75;
-      case 'critical':
+      case "critical":
         return 0.9;
       default:
         return 0.5;
     }
   }
 
-  private estimateTimeFromDifficulty(difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert'): string {
+  private estimateTimeFromDifficulty(
+    difficulty: "beginner" | "intermediate" | "advanced" | "expert",
+  ): string {
     switch (difficulty) {
-      case 'beginner':
-        return '5-15 minutes';
-      case 'intermediate':
-        return '15-30 minutes';
-      case 'advanced':
-        return '30-60 minutes';
-      case 'expert':
-        return '1+ hours';
+      case "beginner":
+        return "5-15 minutes";
+      case "intermediate":
+        return "15-30 minutes";
+      case "advanced":
+        return "30-60 minutes";
+      case "expert":
+        return "1+ hours";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   }
-  async exportDiagnostics(format: 'json' | 'text'): Promise<string> {
+  async exportDiagnostics(format: "json" | "text"): Promise<string> {
     console.log(`📄 Exporting diagnostics in ${format} format...`);
-    
+
     try {
       const diagnostics = await this.collectDiagnostics({
         timestamp: new Date(),
         includeSystemInfo: true,
         includeRuntimeInfo: true,
-        includeCodebaseInfo: true
+        includeCodebaseInfo: true,
       });
-      
-      if (format === 'json') {
+
+      if (format === "json") {
         return JSON.stringify(diagnostics, null, 2);
       } else {
         return this.formatDiagnosticsAsText(diagnostics);
       }
     } catch (error) {
-      console.error('❌ Failed to export diagnostics:', error);
+      console.error("❌ Failed to export diagnostics:", error);
       throw error;
     }
   }
@@ -672,9 +717,9 @@ frameworks.push('Next.js');
    * Clear error history
    */
   async clearErrorHistory(): Promise<void> {
-    console.log('🗑️ Clearing error history...');
+    console.log("🗑️ Clearing error history...");
     this.errorHistory = [];
-    console.log('✅ Error history cleared');
+    console.log("✅ Error history cleared");
   }
 
   /**
@@ -683,7 +728,7 @@ frameworks.push('Next.js');
   setCurrentOperation(operation: string): void {
     this.currentOperation = operation;
     this.operationHistory.unshift(operation);
-    
+
     // Keep only last 10 operations
     if (this.operationHistory.length > 10) {
       this.operationHistory = this.operationHistory.slice(0, 10);
@@ -699,52 +744,68 @@ frameworks.push('Next.js');
   private async setupGlobalErrorHandlers(): Promise<void> {
     // Handle uncaught exceptions
     this.uncaughtExceptionHandler = async (error) => {
-      console.error('🚨 Uncaught Exception:', error);
-      
-      const crashReport = await this.createCrashReportFromError(error, 'uncaughtException');
+      console.error("🚨 Uncaught Exception:", error);
+
+      const crashReport = await this.createCrashReportFromError(
+        error,
+        "uncaughtException",
+      );
       await this.reportCrash(crashReport);
-      
+
       // Give time for report to be sent
       setTimeout(() => {
         process.exit(1);
       }, 5000);
     };
-    process.on('uncaughtException', this.uncaughtExceptionHandler);
-    
+    process.on("uncaughtException", this.uncaughtExceptionHandler);
+
     // Handle unhandled promise rejections
     this.unhandledRejectionHandler = async (reason, promise) => {
-      console.error('🚨 Unhandled Promise Rejection at:', promise, 'reason:', reason);
-      
-      const error = reason instanceof Error ? reason : new Error(String(reason));
-      const errorReport = await this.generateErrorReport(error, { 
-        type: 'unhandledRejection',
-        promise: promise.toString()
+      console.error(
+        "🚨 Unhandled Promise Rejection at:",
+        promise,
+        "reason:",
+        reason,
+      );
+
+      const error =
+        reason instanceof Error ? reason : new Error(String(reason));
+      const errorReport = await this.generateErrorReport(error, {
+        type: "unhandledRejection",
+        promise: promise.toString(),
       });
-      
+
       await this.reportError(errorReport);
     };
-    process.on('unhandledRejection', this.unhandledRejectionHandler);
-    
+    process.on("unhandledRejection", this.unhandledRejectionHandler);
+
     // Handle memory warnings
     this.warningHandler = async (warning) => {
-      if (warning.name === 'MaxListenersExceededWarning' || 
-          warning.name === 'DeprecationWarning' ||
-          warning.message.includes('memory')) {
-        
-        const errorReport = await this.generateErrorReport(new Error(warning.message), {
-          type: 'warning',
-          warningName: warning.name,
-          warningCode: (warning as any).code
-        });
-        
-        errorReport.severity = 'medium';
+      if (
+        warning.name === "MaxListenersExceededWarning" ||
+        warning.name === "DeprecationWarning" ||
+        warning.message.includes("memory")
+      ) {
+        const errorReport = await this.generateErrorReport(
+          new Error(warning.message),
+          {
+            type: "warning",
+            warningName: warning.name,
+            warningCode: (warning as any).code,
+          },
+        );
+
+        errorReport.severity = "medium";
         await this.reportError(errorReport);
       }
     };
-    process.on('warning', this.warningHandler);
+    process.on("warning", this.warningHandler);
   }
 
-  private async createCrashReportFromError(error: Error, type: CrashReport['type']): Promise<CrashReport> {
+  private async createCrashReportFromError(
+    error: Error,
+    type: CrashReport["type"],
+  ): Promise<CrashReport> {
     return {
       id: this.generateErrorId(),
       timestamp: new Date(),
@@ -753,8 +814,8 @@ frameworks.push('Next.js');
       context: await this.buildErrorContext(error),
       processInfo: this.collectProcessInfo(),
       lastOperations: [...this.operationHistory],
-      stackTrace: error.stack || 'No stack trace available',
-      memoryDump: this.collectMemoryDump()
+      stackTrace: error.stack || "No stack trace available",
+      memoryDump: this.collectMemoryDump(),
     };
   }
 
@@ -772,8 +833,11 @@ frameworks.push('Next.js');
       arch: process.arch,
       version: process.version,
       versions: Object.fromEntries(
-        Object.entries(process.versions).map(([key, value]) => [key, value || 'unknown'])
-      )
+        Object.entries(process.versions).map(([key, value]) => [
+          key,
+          value || "unknown",
+        ]),
+      ),
     };
   }
 
@@ -786,7 +850,7 @@ frameworks.push('Next.js');
       arrayBuffers: memUsage.arrayBuffers,
       rss: memUsage.rss,
       objectCounts: {},
-      largestObjects: []
+      largestObjects: [],
     };
   }
 
@@ -797,7 +861,7 @@ frameworks.push('Next.js');
       nodeVersion: process.version,
       npmVersion: undefined, // Could be detected from package.json or npm -v
       osVersion: os.release(),
-      cpuModel: os.cpus()[0]?.model || 'Unknown',
+      cpuModel: os.cpus()[0]?.model || "Unknown",
       cpuCores: os.cpus().length,
       totalMemory: os.totalmem(),
       freeMemory: os.freemem(),
@@ -805,20 +869,28 @@ frameworks.push('Next.js');
       homeDirectory: os.homedir(),
       tempDirectory: os.tmpdir(),
       pathSeparator: path.sep,
-      environmentVars: this.config?.privacyMode ? {} : Object.fromEntries(
-        Object.entries(process.env).map(([key, value]) => [key, value || ''])
-      ),
+      environmentVars: this.config?.privacyMode
+        ? {}
+        : Object.fromEntries(
+            Object.entries(process.env).map(([key, value]) => [
+              key,
+              value || "",
+            ]),
+          ),
       processArgs: process.argv,
-      processEnv: process.env.NODE_ENV || 'unknown'
+      processEnv: process.env.NODE_ENV || "unknown",
     };
   }
 
-  private async buildErrorContext(_error: Error, context?: any): Promise<ErrorContext> {
+  private async buildErrorContext(
+    _error: Error,
+    context?: any,
+  ): Promise<ErrorContext> {
     const memUsage = process.memoryUsage();
-    
+
     return {
       operation: this.currentOperation,
-      component: 'ast-copilot-helper',
+      component: "ast-copilot-helper",
       sessionId: this.sessionId,
       timestamp: new Date(),
       parameters: context,
@@ -827,7 +899,7 @@ frameworks.push('Next.js');
       nodeVersion: process.version,
       processId: process.pid,
       memoryUsage: memUsage,
-      uptime: process.uptime()
+      uptime: process.uptime(),
     };
   }
 
@@ -835,135 +907,188 @@ frameworks.push('Next.js');
     if (error instanceof AstError) {
       return error.code;
     }
-    
+
     const message = error.message.toLowerCase();
     // const stack = error.stack?.toLowerCase() || '';
-    
+
     // Network errors
-    if (message.includes('network') || message.includes('fetch') || 
-        message.includes('connection') || message.includes('timeout')) {
-      return 'network-error';
+    if (
+      message.includes("network") ||
+      message.includes("fetch") ||
+      message.includes("connection") ||
+      message.includes("timeout")
+    ) {
+      return "network-error";
     }
-    
+
     // File system errors
-    if (message.includes('enoent') || message.includes('file') || 
-        message.includes('directory') || message.includes('path')) {
-      return 'filesystem-error';
+    if (
+      message.includes("enoent") ||
+      message.includes("file") ||
+      message.includes("directory") ||
+      message.includes("path")
+    ) {
+      return "filesystem-error";
     }
-    
+
     // Permission errors
-    if (message.includes('permission') || message.includes('access') || 
-        message.includes('eacces') || message.includes('eperm')) {
-      return 'permission-error';
+    if (
+      message.includes("permission") ||
+      message.includes("access") ||
+      message.includes("eacces") ||
+      message.includes("eperm")
+    ) {
+      return "permission-error";
     }
-    
+
     // Memory errors
-    if (message.includes('memory') || message.includes('heap') || 
-        message.includes('allocation')) {
-      return 'memory-error';
+    if (
+      message.includes("memory") ||
+      message.includes("heap") ||
+      message.includes("allocation")
+    ) {
+      return "memory-error";
     }
-    
+
     // Parse errors (check before validation errors to avoid false positives)
-    if (message.includes('parse') || message.includes('syntax') || 
-        message.includes('unexpected token') || message.includes('malformed')) {
-      return 'parse-error';
+    if (
+      message.includes("parse") ||
+      message.includes("syntax") ||
+      message.includes("unexpected token") ||
+      message.includes("malformed")
+    ) {
+      return "parse-error";
     }
-    
+
     // Validation errors
-    if (message.includes('validation') || message.includes('invalid') || 
-        message.includes('required') || message.includes('expected')) {
-      return 'validation-error';
+    if (
+      message.includes("validation") ||
+      message.includes("invalid") ||
+      message.includes("required") ||
+      message.includes("expected")
+    ) {
+      return "validation-error";
     }
-    
-    return 'unknown-error';
+
+    return "unknown-error";
   }
 
-  private determineErrorType(error: Error): 'error' | 'crash' | 'warning' | 'performance' {
+  private determineErrorType(
+    error: Error,
+  ): "error" | "crash" | "warning" | "performance" {
     const message = error.message.toLowerCase();
-    
-    if (message.includes('crash') || message.includes('fatal') || 
-        message.includes('segmentation fault')) {
-      return 'crash';
+
+    if (
+      message.includes("crash") ||
+      message.includes("fatal") ||
+      message.includes("segmentation fault")
+    ) {
+      return "crash";
     }
-    
-    if (message.includes('warn') || message.includes('deprecated')) {
-      return 'warning';
+
+    if (message.includes("warn") || message.includes("deprecated")) {
+      return "warning";
     }
-    
-    if (message.includes('slow') || message.includes('performance') || 
-        message.includes('timeout')) {
-      return 'performance';
+
+    if (
+      message.includes("slow") ||
+      message.includes("performance") ||
+      message.includes("timeout")
+    ) {
+      return "performance";
     }
-    
-    return 'error';
+
+    return "error";
   }
 
-  private determineSeverity(error: Error): 'low' | 'medium' | 'high' | 'critical' {
+  private determineSeverity(
+    error: Error,
+  ): "low" | "medium" | "high" | "critical" {
     const message = error.message.toLowerCase();
     // const stack = error.stack?.toLowerCase() || '';
-    
+
     // Critical errors
-    if (message.includes('crash') || message.includes('fatal') || 
-        message.includes('segmentation fault') || message.includes('out of memory')) {
-      return 'critical';
+    if (
+      message.includes("crash") ||
+      message.includes("fatal") ||
+      message.includes("segmentation fault") ||
+      message.includes("out of memory")
+    ) {
+      return "critical";
     }
-    
+
     // High severity errors
-    if (message.includes('permission denied') || message.includes('access denied') ||
-        message.includes('authentication') || message.includes('authorization') ||
-        message.includes('security') || message.includes('corruption')) {
-      return 'high';
+    if (
+      message.includes("permission denied") ||
+      message.includes("access denied") ||
+      message.includes("authentication") ||
+      message.includes("authorization") ||
+      message.includes("security") ||
+      message.includes("corruption")
+    ) {
+      return "high";
     }
-    
+
     // Medium severity errors
-    if (message.includes('network') || message.includes('timeout') ||
-        message.includes('validation') || message.includes('configuration')) {
-      return 'medium';
+    if (
+      message.includes("network") ||
+      message.includes("timeout") ||
+      message.includes("validation") ||
+      message.includes("configuration")
+    ) {
+      return "medium";
     }
-    
+
     // Low severity (warnings, deprecation, etc.)
-    if (message.includes('warn') || message.includes('deprecated') ||
-        message.includes('suggestion')) {
-      return 'low';
+    if (
+      message.includes("warn") ||
+      message.includes("deprecated") ||
+      message.includes("suggestion")
+    ) {
+      return "low";
     }
-    
-    return 'medium'; // default
+
+    return "medium"; // default
   }
 
   // Additional helper methods would be implemented here...
   // (collectSystemDiagnostics, collectRuntimeDiagnostics, etc.)
-  
+
   private async collectSystemDiagnostics(): Promise<SystemDiagnostics> {
     // Implementation placeholder - would collect actual system metrics
     return {} as SystemDiagnostics;
   }
-  
+
   private async collectRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
     // Implementation placeholder - would collect runtime metrics
     return {} as RuntimeDiagnostics;
   }
-  
-  private async collectCodebaseDiagnostics(_context: DiagnosticContext): Promise<CodebaseDiagnostics> {
+
+  private async collectCodebaseDiagnostics(
+    _context: DiagnosticContext,
+  ): Promise<CodebaseDiagnostics> {
     // Implementation placeholder - would analyze codebase
     return {} as CodebaseDiagnostics;
   }
-  
+
   private async collectConfigurationDiagnostics(): Promise<ConfigurationDiagnostics> {
     // Implementation placeholder - would analyze configuration
     return {} as ConfigurationDiagnostics;
   }
-  
+
   private async collectPerformanceDiagnostics(): Promise<PerformanceDiagnostics> {
     // Implementation placeholder - would collect performance metrics
     return {} as PerformanceDiagnostics;
   }
-  
+
   private async collectDependencyDiagnostics(): Promise<DependencyDiagnostics> {
     // Implementation placeholder - would analyze dependencies
     return {} as DependencyDiagnostics;
   }
 
-  private async applyPrivacyFilters(diagnostics: DiagnosticData): Promise<DiagnosticData> {
+  private async applyPrivacyFilters(
+    diagnostics: DiagnosticData,
+  ): Promise<DiagnosticData> {
     // Implementation placeholder - would filter sensitive data
     return diagnostics;
   }
@@ -973,14 +1098,18 @@ frameworks.push('Next.js');
     return {} as DiagnosticData;
   }
 
-  private createMinimalErrorReport(error: Error, errorId: string, timestamp: Date): ErrorReport {
+  private createMinimalErrorReport(
+    error: Error,
+    errorId: string,
+    timestamp: Date,
+  ): ErrorReport {
     // Return minimal error report on generation failure
     return {
       id: errorId,
       timestamp,
-      type: 'error',
-      severity: 'medium',
-      category: 'unknown-error',
+      type: "error",
+      severity: "medium",
+      category: "unknown-error",
       operation: this.currentOperation,
       message: error.message,
       originalError: error,
@@ -990,7 +1119,7 @@ frameworks.push('Next.js');
       diagnostics: {} as DiagnosticData,
       userProvided: false,
       reportedToServer: false,
-      suggestions: []
+      suggestions: [],
     };
   }
 
@@ -999,14 +1128,17 @@ frameworks.push('Next.js');
       id: error.id,
       timestamp: error.timestamp,
       error,
-      resolved: false
+      resolved: false,
     };
 
     this.errorHistory.unshift(historyEntry);
 
     // Keep only the configured number of entries
     if (this.errorHistory.length > (this.config?.maxHistoryEntries || 1000)) {
-      this.errorHistory = this.errorHistory.slice(0, this.config?.maxHistoryEntries || 1000);
+      this.errorHistory = this.errorHistory.slice(
+        0,
+        this.config?.maxHistoryEntries || 1000,
+      );
     }
   }
 
@@ -1017,24 +1149,24 @@ frameworks.push('Next.js');
 
   private async displayErrorToUser(error: ErrorReport): Promise<void> {
     const displayMessage = this.formatUserErrorMessage(error);
-    
-    console.error('\n' + '='.repeat(60));
+
+    console.error("\n" + "=".repeat(60));
     console.error(`❌ ERROR: ${error.category.toUpperCase()}`);
-    console.error('='.repeat(60));
+    console.error("=".repeat(60));
     console.error(displayMessage);
-    
+
     if (error.suggestions && error.suggestions.length > 0) {
-      console.error('\n💡 SUGGESTED SOLUTIONS:');
+      console.error("\n💡 SUGGESTED SOLUTIONS:");
       error.suggestions.forEach((suggestion, index) => {
         console.error(`${index + 1}. ${suggestion.title}`);
         console.error(`   ${suggestion.description}`);
         if (suggestion.commands && suggestion.commands.length > 0) {
-          console.error(`   Try: ${suggestion.commands.join(' or ')}`);
+          console.error(`   Try: ${suggestion.commands.join(" or ")}`);
         }
       });
     }
-    
-    console.error('\n' + '='.repeat(60) + '\n');
+
+    console.error("\n" + "=".repeat(60) + "\n");
   }
 
   private formatUserErrorMessage(error: ErrorReport): string {
@@ -1048,7 +1180,7 @@ frameworks.push('Next.js');
       severity: error.severity,
       category: error.category,
       operation: error.operation,
-      suggestionsCount: error.suggestions.length
+      suggestionsCount: error.suggestions.length,
     });
   }
 
@@ -1070,7 +1202,7 @@ frameworks.push('Next.js');
     categories?: string[];
     severities?: string[];
   }): Promise<ErrorAnalytics> {
-    console.log('📈 Retrieving error analytics...');
+    console.log("📈 Retrieving error analytics...");
     return await this.analyticsManager.generateAnalytics(options);
   }
 
@@ -1078,7 +1210,7 @@ frameworks.push('Next.js');
    * Get system health metrics
    */
   async getSystemHealthMetrics(): Promise<SystemHealthMetrics> {
-    console.log('🏥 Retrieving system health metrics...');
+    console.log("🏥 Retrieving system health metrics...");
     return await this.analyticsManager.generateSystemHealth();
   }
 
@@ -1086,25 +1218,28 @@ frameworks.push('Next.js');
    * Get error frequency trends
    */
   async getErrorFrequencyTrends(
-    timeWindow: 'hour' | 'day' | 'week' | 'month' = 'day',
-    limit = 30
+    timeWindow: "hour" | "day" | "week" | "month" = "day",
+    limit = 30,
   ): Promise<ErrorFrequencyPoint[]> {
     console.log(`📊 Retrieving error frequency trends (${timeWindow})`);
-    return await this.analyticsManager.getErrorFrequencyTrends(timeWindow, limit);
+    return await this.analyticsManager.getErrorFrequencyTrends(
+      timeWindow,
+      limit,
+    );
   }
 
   /**
    * Find error correlations
    */
   async getErrorCorrelations(): Promise<ErrorCorrelation[]> {
-    console.log('🔗 Finding error correlations...');
+    console.log("🔗 Finding error correlations...");
     return await this.analyticsManager.findErrorCorrelations();
   }
 
   /**
    * Export analytics data
    */
-  async exportErrorAnalytics(format: 'json' | 'csv' = 'json'): Promise<string> {
+  async exportErrorAnalytics(format: "json" | "csv" = "json"): Promise<string> {
     console.log(`📤 Exporting error analytics as ${format}...`);
     return await this.analyticsManager.exportAnalytics(format);
   }
@@ -1114,14 +1249,14 @@ frameworks.push('Next.js');
    */
   async resolveError(errorId: string): Promise<void> {
     console.log(`✅ Marking error ${errorId} as resolved...`);
-    
+
     // Update main error history
-    const historyEntry = this.errorHistory.find(e => e.id === errorId);
+    const historyEntry = this.errorHistory.find((e) => e.id === errorId);
     if (historyEntry) {
       historyEntry.resolved = true;
       historyEntry.resolvedAt = new Date();
     }
-    
+
     // Update analytics
     await this.analyticsManager.resolveError(errorId);
   }
@@ -1130,7 +1265,7 @@ frameworks.push('Next.js');
    * Set up crash reporting system
    */
   private async setupCrashReporting(): Promise<void> {
-    console.log('🛡️ Setting up advanced crash reporting...');
+    console.log("🛡️ Setting up advanced crash reporting...");
 
     try {
       // Initialize crash detector
@@ -1141,7 +1276,7 @@ frameworks.push('Next.js');
         monitoringInterval: 5000,
         memoryThreshold: 90, // 90% memory usage threshold
         eventLoopLagThreshold: 1000, // 1 second event loop lag
-        fileDescriptorThreshold: 1000
+        fileDescriptorThreshold: 1000,
       });
 
       // Initialize crash analytics
@@ -1149,7 +1284,7 @@ frameworks.push('Next.js');
         analysisWindow: 24 * 60 * 60 * 1000, // 24 hours
         trendSamplingInterval: 15 * 60 * 1000, // 15 minutes
         patternDetectionMinOccurrences: 3,
-        enableRealTimeAnalysis: true
+        enableRealTimeAnalysis: true,
       });
 
       // Set up crash handler
@@ -1160,9 +1295,9 @@ frameworks.push('Next.js');
       // Start crash monitoring
       this.crashDetector.startMonitoring();
 
-      console.log('✅ Advanced crash reporting system ready');
+      console.log("✅ Advanced crash reporting system ready");
     } catch (error) {
-      console.warn('⚠️ Failed to initialize crash reporting system:', error);
+      console.warn("⚠️ Failed to initialize crash reporting system:", error);
       // Continue without crash reporting
       this.crashDetector = undefined;
       this.crashAnalytics = undefined;
@@ -1185,22 +1320,23 @@ frameworks.push('Next.js');
       }
 
       // Create a simplified error report for logging
-      console.error('💥 CRASH REPORT:');
+      console.error("💥 CRASH REPORT:");
       console.error(`   Type: ${crash.type}`);
       console.error(`   Severity: ${crash.severity}`);
       console.error(`   Message: ${crash.error.message}`);
       console.error(`   Recovery Attempted: ${crash.recovery.attempted}`);
       console.error(`   Final State: ${crash.recovery.finalState}`);
-      
+
       if (crash.error.stackFrames && crash.error.stackFrames.length > 0) {
-        console.error('   Stack Trace:');
+        console.error("   Stack Trace:");
         crash.error.stackFrames.slice(0, 5).forEach((frame, i) => {
-          console.error(`     ${i + 1}. ${frame.function || 'anonymous'} at ${frame.file}:${frame.line}:${frame.column}`);
+          console.error(
+            `     ${i + 1}. ${frame.function || "anonymous"} at ${frame.file}:${frame.line}:${frame.column}`,
+          );
         });
       }
-
     } catch (error) {
-      console.error('❌ Failed to handle crash:', error);
+      console.error("❌ Failed to handle crash:", error);
     }
   }
 
@@ -1210,19 +1346,22 @@ frameworks.push('Next.js');
   async getCrashAnalytics(options?: {
     startDate?: Date;
     endDate?: Date;
-    crashTypes?: CrashReportType['type'][];
-    severities?: CrashReportType['severity'][];
+    crashTypes?: CrashReportType["type"][];
+    severities?: CrashReportType["severity"][];
   }) {
     if (!this.crashAnalytics || this.crashReports.length === 0) {
       return null;
     }
 
-    return await this.crashAnalytics.generateAnalytics(this.crashReports as any, {
-      startDate: options?.startDate,
-      endDate: options?.endDate,
-      crashTypes: options?.crashTypes,
-      severity: options?.severities
-    });
+    return await this.crashAnalytics.generateAnalytics(
+      this.crashReports as any,
+      {
+        startDate: options?.startDate,
+        endDate: options?.endDate,
+        crashTypes: options?.crashTypes,
+        severity: options?.severities,
+      },
+    );
   }
 
   /**
@@ -1234,7 +1373,9 @@ frameworks.push('Next.js');
     }
 
     // Return null for now - would need full SystemStateSnapshot implementation
-    console.log('📊 Crash prediction not available - requires full system state implementation');
+    console.log(
+      "📊 Crash prediction not available - requires full system state implementation",
+    );
     return null;
   }
 
@@ -1244,9 +1385,9 @@ frameworks.push('Next.js');
   async cleanupCrashReporting(): Promise<void> {
     if (this.crashDetector) {
       this.crashDetector.stopMonitoring();
-      console.log('🛑 Crash detection monitoring stopped');
+      console.log("🛑 Crash detection monitoring stopped");
     }
-    
+
     await this.finalizeCrashCleanup();
   }
 
@@ -1254,44 +1395,54 @@ frameworks.push('Next.js');
    * Initialize privacy and security systems
    */
   private async initializePrivacySystems(): Promise<void> {
-    console.log('🔒 Initializing privacy and security systems...');
+    console.log("🔒 Initializing privacy and security systems...");
 
     // Initialize Privacy Manager
     this.privacyManager = new PrivacyManager({
       requireConsent: true,
       retentionDays: 30,
-      anonymizationLevel: this.config?.privacyMode ? 'strict' : 'basic',
+      anonymizationLevel: this.config?.privacyMode ? "strict" : "basic",
       enablePiiScrubbing: true,
       allowedCategories: [
-        'error', 'crash', 'performance', 'warning',
+        "error",
+        "crash",
+        "performance",
+        "warning",
         // Specific error categories
-        'parse-error', 'analysis-error', 'system-error', 'unknown-error',
-        'syntax-error', 'memory-error', 'network-error', 'configuration-error', 'filesystem-error'
+        "parse-error",
+        "analysis-error",
+        "system-error",
+        "unknown-error",
+        "syntax-error",
+        "memory-error",
+        "network-error",
+        "configuration-error",
+        "filesystem-error",
       ],
       enableEncryption: true,
       enableAuditLog: true,
       gdprCompliance: true,
       ccpaCompliance: true,
-      customFilters: []
+      customFilters: [],
     });
 
     // Initialize Secure Transmission Manager
     if (this.config?.endpoint) {
       const securityConfig: SecurityConfig = {
         enableEncryption: true,
-        encryptionAlgorithm: 'AES-256-GCM',
+        encryptionAlgorithm: "AES-256-GCM",
         keyRotationInterval: 30,
         enableTransmissionSecurity: true,
         allowedOrigins: [],
         rateLimiting: {
           enabled: true,
           maxRequestsPerMinute: 60,
-          blacklistDuration: 15
+          blacklistDuration: 15,
         },
         authentication: {
           required: !!this.config?.apiKey,
-          method: 'apiKey'
-        }
+          method: "apiKey",
+        },
       };
 
       this.secureTransmission = new SecureTransmissionManager(securityConfig);
@@ -1303,15 +1454,18 @@ frameworks.push('Next.js');
       this.complianceChecker = new ComplianceChecker(privacySettings);
     }
 
-    console.log('✅ Privacy and security systems initialized');
+    console.log("✅ Privacy and security systems initialized");
   }
 
   /**
    * Set user consent for data collection
    */
-  async setUserConsent(userId: string, consentData: ConsentData): Promise<void> {
+  async setUserConsent(
+    userId: string,
+    consentData: ConsentData,
+  ): Promise<void> {
     if (!this.privacyManager) {
-      throw new Error('Privacy manager not initialized');
+      throw new Error("Privacy manager not initialized");
     }
 
     await this.privacyManager.setUserConsent(userId, consentData);
@@ -1334,7 +1488,7 @@ frameworks.push('Next.js');
    */
   async revokeUserConsent(userId: string): Promise<void> {
     if (!this.privacyManager) {
-      throw new Error('Privacy manager not initialized');
+      throw new Error("Privacy manager not initialized");
     }
 
     await this.privacyManager.revokeUserConsent(userId);
@@ -1346,7 +1500,7 @@ frameworks.push('Next.js');
    */
   async exportUserData(userId: string): Promise<any> {
     if (!this.privacyManager) {
-      throw new Error('Privacy manager not initialized');
+      throw new Error("Privacy manager not initialized");
     }
 
     return this.privacyManager.exportUserData(userId);
@@ -1368,22 +1522,25 @@ frameworks.push('Next.js');
    */
   async performComplianceCheck(): Promise<any> {
     if (!this.complianceChecker || !this.privacyManager) {
-      throw new Error('Compliance system not initialized');
+      throw new Error("Compliance system not initialized");
     }
 
     const consentRecords = new Map<string, ConsentData>();
     // In a real implementation, you'd load actual consent records
-    
+
     return this.complianceChecker.performComplianceCheck(
-      this.errorHistory.map(entry => entry.error),
-      consentRecords
+      this.errorHistory.map((entry) => entry.error),
+      consentRecords,
     );
   }
 
   /**
    * Send error report securely if transmission is configured
    */
-  async sendSecureErrorReport(errorReport: ErrorReport, userId?: string): Promise<TransmissionResult | null> {
+  async sendSecureErrorReport(
+    errorReport: ErrorReport,
+    userId?: string,
+  ): Promise<TransmissionResult | null> {
     if (!this.secureTransmission || !this.config?.endpoint) {
       return null;
     }
@@ -1391,7 +1548,10 @@ frameworks.push('Next.js');
     // Filter report through privacy controls first
     let filteredReport = errorReport;
     if (this.privacyManager) {
-      filteredReport = await this.privacyManager.filterErrorReport(errorReport, userId);
+      filteredReport = await this.privacyManager.filterErrorReport(
+        errorReport,
+        userId,
+      );
     }
 
     return this.secureTransmission.sendErrorReport(
@@ -1400,8 +1560,8 @@ frameworks.push('Next.js');
       {
         encrypt: true,
         compress: true,
-        priority: errorReport.severity === 'critical' ? 'critical' : 'normal'
-      }
+        priority: errorReport.severity === "critical" ? "critical" : "normal",
+      },
     );
   }
 
@@ -1411,14 +1571,14 @@ frameworks.push('Next.js');
   async cleanup(): Promise<void> {
     // Remove global event handlers
     this.cleanupGlobalErrorHandlers();
-    
+
     await this.cleanupCrashReporting();
-    
+
     if (this.privacyManager) {
       await this.privacyManager.cleanupExpiredData();
     }
-    
-    console.log('🧹 Error reporting system cleaned up');
+
+    console.log("🧹 Error reporting system cleaned up");
   }
 
   /**
@@ -1426,17 +1586,23 @@ frameworks.push('Next.js');
    */
   private cleanupGlobalErrorHandlers(): void {
     if (this.uncaughtExceptionHandler) {
-      process.removeListener('uncaughtException', this.uncaughtExceptionHandler);
+      process.removeListener(
+        "uncaughtException",
+        this.uncaughtExceptionHandler,
+      );
       this.uncaughtExceptionHandler = undefined;
     }
-    
+
     if (this.unhandledRejectionHandler) {
-      process.removeListener('unhandledRejection', this.unhandledRejectionHandler);
+      process.removeListener(
+        "unhandledRejection",
+        this.unhandledRejectionHandler,
+      );
       this.unhandledRejectionHandler = undefined;
     }
-    
+
     if (this.warningHandler) {
-      process.removeListener('warning', this.warningHandler);
+      process.removeListener("warning", this.warningHandler);
       this.warningHandler = undefined;
     }
   }
@@ -1445,8 +1611,8 @@ frameworks.push('Next.js');
     if (this.crashDetector) {
       this.crashDetector = undefined;
     }
-    
+
     this.crashAnalytics = undefined;
-    console.log('🧹 Crash reporting system cleaned up');
+    console.log("🧹 Crash reporting system cleaned up");
   }
 }

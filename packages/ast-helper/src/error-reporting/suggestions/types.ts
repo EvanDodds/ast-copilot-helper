@@ -6,43 +6,49 @@
 /**
  * Confidence levels for suggestions
  */
-export type SuggestionConfidence = 'low' | 'medium' | 'high' | 'critical';
+export type SuggestionConfidence = "low" | "medium" | "high" | "critical";
 
 /**
  * Categories of suggestion sources
  */
-export type SuggestionSource = 
-  | 'static-analysis'
-  | 'pattern-matching'
-  | 'ml-model' 
-  | 'community'
-  | 'documentation'
-  | 'history'
-  | 'context-aware';
+export type SuggestionSource =
+  | "static-analysis"
+  | "pattern-matching"
+  | "ml-model"
+  | "community"
+  | "documentation"
+  | "history"
+  | "context-aware";
 
 /**
  * Types of suggestions
  */
-export type SuggestionType = 
-  | 'code-fix'
-  | 'configuration'
-  | 'dependency'
-  | 'environment'
-  | 'documentation'
-  | 'debugging'
-  | 'alternative-approach';
+export type SuggestionType =
+  | "code-fix"
+  | "configuration"
+  | "dependency"
+  | "environment"
+  | "documentation"
+  | "debugging"
+  | "alternative-approach";
 
 /**
  * Suggestion action types
  */
 export interface SuggestionAction {
-  type: 'code-change' | 'file-create' | 'file-delete' | 'command-run' | 'config-update' | 'install-package';
+  type:
+    | "code-change"
+    | "file-create"
+    | "file-delete"
+    | "command-run"
+    | "config-update"
+    | "install-package";
   description: string;
   target?: string;
   content?: string;
   command?: string;
   automated: boolean;
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: "low" | "medium" | "high";
 }
 
 /**
@@ -56,17 +62,17 @@ export interface ResolutionSuggestion {
   source: SuggestionSource;
   confidence: SuggestionConfidence;
   priority: number;
-  
+
   // Matching information
   relevanceScore: number;
   matchedPatterns: string[];
   contextualFactors: string[];
-  
+
   // Actions to resolve
   actions: SuggestionAction[];
   prerequisites?: string[];
   sideEffects?: string[];
-  
+
   // Evidence and sources
   evidence: {
     errorPatterns: string[];
@@ -74,17 +80,17 @@ export interface ResolutionSuggestion {
     similarCases: number;
     successRate: number;
   };
-  
+
   // Metadata
   tags: string[];
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  difficulty: "beginner" | "intermediate" | "advanced" | "expert";
   estimatedTime: string;
   resources: Array<{
-    type: 'documentation' | 'tutorial' | 'example' | 'tool';
+    type: "documentation" | "tutorial" | "example" | "tool";
     url: string;
     title: string;
   }>;
-  
+
   // Tracking
   createdAt: string;
   updatedAt: string;
@@ -118,7 +124,7 @@ export interface SuggestionContext {
     currentFile?: string;
     recentChanges?: Array<{
       file: string;
-      type: 'modified' | 'added' | 'deleted';
+      type: "modified" | "added" | "deleted";
       timestamp: string;
     }>;
     relatedFiles?: string[];
@@ -133,7 +139,7 @@ export interface SuggestionContext {
     }>;
   };
   user: {
-    experienceLevel?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+    experienceLevel?: "beginner" | "intermediate" | "advanced" | "expert";
     preferences?: {
       automated: boolean;
       detailed: boolean;
@@ -159,7 +165,9 @@ export interface SuggestionGenerator {
   /**
    * Generate suggestions for the given context
    */
-  generateSuggestions(context: SuggestionContext): Promise<ResolutionSuggestion[]>;
+  generateSuggestions(
+    context: SuggestionContext,
+  ): Promise<ResolutionSuggestion[]>;
 
   /**
    * Get confidence score for a specific error pattern
@@ -175,7 +183,7 @@ export interface SuggestionFilters {
   maxResults?: number;
   preferredSources?: SuggestionSource[];
   excludedTypes?: SuggestionType[];
-  userExperience?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  userExperience?: "beginner" | "intermediate" | "advanced" | "expert";
   automatedOnly?: boolean;
   includeExperimental?: boolean;
 }
@@ -187,7 +195,7 @@ export interface SuggestionEvaluation {
   suggestionId: string;
   applied: boolean;
   success: boolean;
-  feedback: 'helpful' | 'partially-helpful' | 'not-helpful' | 'harmful';
+  feedback: "helpful" | "partially-helpful" | "not-helpful" | "harmful";
   userNotes?: string;
   timeToResolve?: number;
   automaticallyApplied: boolean;
@@ -200,8 +208,8 @@ export interface SuggestionEvaluation {
 export interface ErrorPattern {
   id: string;
   pattern: RegExp | string;
-  type: 'regex' | 'substring' | 'exact' | 'fuzzy';
-  scope: 'message' | 'stack' | 'code' | 'all';
+  type: "regex" | "substring" | "exact" | "fuzzy";
+  scope: "message" | "stack" | "code" | "all";
   weight: number;
   category: string;
   tags: string[];
@@ -229,7 +237,10 @@ export interface MLPrediction {
 export interface CommunitySuggestion {
   id: string;
   errorPattern: string;
-  suggestion: Omit<ResolutionSuggestion, 'id' | 'createdAt' | 'updatedAt' | 'usageCount' | 'successCount'>;
+  suggestion: Omit<
+    ResolutionSuggestion,
+    "id" | "createdAt" | "updatedAt" | "usageCount" | "successCount"
+  >;
   submittedBy: string;
   votes: number;
   verified: boolean;

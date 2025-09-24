@@ -2,17 +2,17 @@
  * Incremental update manager for coordinating file changes with database updates
  */
 
-import { EventEmitter } from 'node:events';
+import { EventEmitter } from "node:events";
 import type {
   FileChangeEvent,
   IncrementalUpdateManager,
   FileWatcher,
-  ConsistencyReport
-} from './types.js';
-import type { ASTDatabaseManager } from '../database/manager.js';
-import type { EmbeddingDatabaseManager } from '../database/embedding-manager.js';
-import { createModuleLogger } from '../logging/index.js';
-import type { Config } from '../types.js';
+  ConsistencyReport,
+} from "./types.js";
+import type { ASTDatabaseManager } from "../database/manager.js";
+import type { EmbeddingDatabaseManager } from "../database/embedding-manager.js";
+import { createModuleLogger } from "../logging/index.js";
+import type { Config } from "../types.js";
 
 /**
  * Update batch result containing processed changes and metadata
@@ -20,27 +20,27 @@ import type { Config } from '../types.js';
 export interface UpdateBatchResult {
   /** Successfully processed changes */
   processedChanges: FileChangeEvent[];
-  
+
   /** Failed changes with error information */
   failedChanges: Array<{
     change: FileChangeEvent;
     error: Error;
   }>;
-  
+
   /** Processing statistics */
   stats: {
     /** Total processing time in milliseconds */
     processingTime: number;
-    
+
     /** Number of files added to database */
     filesAdded: number;
-    
+
     /** Number of files updated in database */
     filesUpdated: number;
-    
+
     /** Number of files removed from database */
     filesRemoved: number;
-    
+
     /** Number of embeddings generated/updated */
     embeddingsProcessed: number;
   };
@@ -52,13 +52,13 @@ export interface UpdateBatchResult {
 interface ChangeTracker {
   /** Most recent change for each file path */
   latestChange: Map<string, FileChangeEvent>;
-  
+
   /** Queue of changes to process */
   pendingChanges: FileChangeEvent[];
-  
+
   /** Set of files currently being processed */
   processing: Set<string>;
-  
+
   /** Timestamp of last batch processing */
   lastBatchTime: number;
 }
@@ -67,33 +67,35 @@ interface ChangeTracker {
  * Incremental update manager implementation
  * Handles batching, conflict resolution, and coordination with database systems
  */
-export class IncementalUpdateManagerImpl extends EventEmitter implements IncrementalUpdateManager {
-  private readonly logger = createModuleLogger('incremental-update');
-  
+export class IncementalUpdateManagerImpl
+  extends EventEmitter
+  implements IncrementalUpdateManager {
+  private readonly logger = createModuleLogger("incremental-update");
+
   private readonly dbManager: ASTDatabaseManager;
   private readonly embeddingManager: EmbeddingDatabaseManager; // Will be used in full implementation
   private readonly config: Config;
-  
+
   private readonly changeTracker: ChangeTracker = {
     latestChange: new Map(),
     pendingChanges: [],
     processing: new Set(),
-    lastBatchTime: 0
+    lastBatchTime: 0,
   };
-  
+
   private batchTimer: NodeJS.Timeout | null = null;
   private isProcessing = false;
   private stats = {
     totalChangesProcessed: 0,
     totalBatchesProcessed: 0,
     totalProcessingTime: 0,
-    averageBatchSize: 0
+    averageBatchSize: 0,
   };
 
   constructor(
     dbManager: ASTDatabaseManager,
     embeddingManager: EmbeddingDatabaseManager,
-    config: Config
+    config: Config,
   ) {
     super();
     this.dbManager = dbManager;
@@ -104,12 +106,14 @@ export class IncementalUpdateManagerImpl extends EventEmitter implements Increme
   /**
    * Process a batch of file changes with conflict resolution and deduplication
    */
-  async processChangeBatch(changes: FileChangeEvent[]): Promise<UpdateBatchResult> {
+  async processChangeBatch(
+    changes: FileChangeEvent[],
+  ): Promise<UpdateBatchResult> {
     const startTime = Date.now();
-    
-    this.logger.info('Processing change batch', {
+
+    this.logger.info("Processing change batch", {
       changeCount: changes.length,
-      batchSize: this.config.fileWatching?.batchSize || 50
+      batchSize: this.config.fileWatching?.batchSize || 50,
     });
 
     const optimizedChanges = this.optimizeUpdateBatch(changes);
@@ -121,8 +125,8 @@ export class IncementalUpdateManagerImpl extends EventEmitter implements Increme
         filesAdded: 0,
         filesUpdated: 0,
         filesRemoved: 0,
-        embeddingsProcessed: 0
-      }
+        embeddingsProcessed: 0,
+      },
     };
 
     // Mark files as processing
@@ -133,33 +137,32 @@ export class IncementalUpdateManagerImpl extends EventEmitter implements Increme
     try {
       // Process changes by type for better efficiency
       const changesByType = this.groupChangesByType(optimizedChanges);
-      
+
       // Process deletions first to free up resources
       if (changesByType.deletions.length > 0) {
         await this.processDeletions(changesByType.deletions, result);
       }
-      
+
       // Process additions and modifications
       if (changesByType.modifications.length > 0) {
         await this.processModifications(changesByType.modifications, result);
       }
-      
+
       result.stats.processingTime = Date.now() - startTime;
-      
+
       // Update tracking statistics
       this.updateStats(result);
-      
-      this.logger.info('Change batch processed', {
+
+      this.logger.info("Change batch processed", {
         processed: result.processedChanges.length,
         failed: result.failedChanges.length,
-        processingTime: result.stats.processingTime
+        processingTime: result.stats.processingTime,
       });
-      
+
       // Emit processing completion event
-      this.emit('batchProcessed', result);
-      
+      this.emit("batchProcessed", result);
+
       return result;
-      
     } finally {
       // Clean up processing tracking
       for (const change of optimizedChanges) {
@@ -173,24 +176,24 @@ export class IncementalUpdateManagerImpl extends EventEmitter implements Increme
    */
   optimizeUpdateBatch(changes: FileChangeEvent[]): FileChangeEvent[] {
     if (changes.length === 0) {
-return [];
-}
+      return [];
+    }
 
-    this.logger.debug('Optimizing update batch', {
-      originalCount: changes.length
+    this.logger.debug("Optimizing update batch", {
+      originalCount: changes.length,
     });
 
     // Sort changes by timestamp to ensure proper ordering
-    const sortedChanges = [...changes].sort((a, b) => 
-      a.timestamp.getTime() - b.timestamp.getTime()
+    const sortedChanges = [...changes].sort(
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
     );
 
     // Track the latest change for each file path
     const latestChanges = new Map<string, FileChangeEvent>();
-    
+
     for (const change of sortedChanges) {
       const existing = latestChanges.get(change.filePath);
-      
+
       if (!existing || change.timestamp >= existing.timestamp) {
         latestChanges.set(change.filePath, change);
       }
@@ -198,14 +201,14 @@ return [];
 
     // Apply conflict resolution rules
     const optimizedChanges: FileChangeEvent[] = [];
-    
+
     latestChanges.forEach((change, filePath) => {
       // Skip if file is currently being processed
       if (this.changeTracker.processing.has(filePath)) {
-        this.logger.debug('Skipping file already in processing', { filePath });
+        this.logger.debug("Skipping file already in processing", { filePath });
         return; // Use return instead of continue in forEach
       }
-      
+
       // Apply optimization rules
       const optimizedChange = this.applyOptimizationRules(change);
       if (optimizedChange) {
@@ -213,9 +216,9 @@ return [];
       }
     });
 
-    this.logger.debug('Batch optimization complete', {
+    this.logger.debug("Batch optimization complete", {
       originalCount: changes.length,
-      optimizedCount: optimizedChanges.length
+      optimizedCount: optimizedChanges.length,
     });
 
     return optimizedChanges;
@@ -225,28 +228,30 @@ return [];
    * Initialize change tracking and start batch processing
    * @param fileWatcher - File watcher instance that supports events
    */
-  async startBatchProcessing(fileWatcher: FileWatcher & EventEmitter): Promise<void> {
-    this.logger.info('Starting incremental update batch processing', {
+  async startBatchProcessing(
+    fileWatcher: FileWatcher & EventEmitter,
+  ): Promise<void> {
+    this.logger.info("Starting incremental update batch processing", {
       debounceMs: this.config.fileWatching?.debounceMs || 100,
-      batchSize: this.config.fileWatching?.batchSize || 50
+      batchSize: this.config.fileWatching?.batchSize || 50,
     });
 
     // Listen for file changes
-    fileWatcher.on('fileChange', (change: FileChangeEvent) => {
+    fileWatcher.on("fileChange", (change: FileChangeEvent) => {
       this.queueChange(change);
     });
 
     // Set up batch processing timer
     this.scheduleBatchProcessing();
-    
-    this.emit('started');
+
+    this.emit("started");
   }
 
   /**
    * Stop batch processing and clear queues
    */
   async stopBatchProcessing(): Promise<void> {
-    this.logger.info('Stopping incremental update batch processing');
+    this.logger.info("Stopping incremental update batch processing");
 
     if (this.batchTimer) {
       clearTimeout(this.batchTimer);
@@ -258,35 +263,37 @@ return [];
       await this.processPendingChanges();
     }
 
-    this.emit('stopped');
+    this.emit("stopped");
   }
 
   /**
    * Determine if a file should be fully reparsed based on change type and history
    */
-  async shouldFullReparse(filePath: string, change: FileChangeEvent): Promise<boolean> {
+  async shouldFullReparse(
+    filePath: string,
+    change: FileChangeEvent,
+  ): Promise<boolean> {
     // For new files, always do full parsing
-    if (change.type === 'add' || change.type === 'addDir') {
+    if (change.type === "add" || change.type === "addDir") {
       return true;
     }
-    
+
     // For deletions, no parsing needed
-    if (change.type === 'unlink' || change.type === 'unlinkDir') {
+    if (change.type === "unlink" || change.type === "unlinkDir") {
       return false;
     }
-    
+
     // For changes, check if it's a significant modification
     try {
       // Here would be logic to check file size changes, modification patterns, etc.
       // For now, always reparse changed files
       return true;
-      
     } catch (error) {
-      this.logger.error('Error determining reparse necessity', {
+      this.logger.error("Error determining reparse necessity", {
         filePath,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       });
-      
+
       // Default to full reparse on error
       return true;
     }
@@ -296,21 +303,21 @@ return [];
    * Validate consistency between file system and indexes
    */
   async validateIndexConsistency(): Promise<ConsistencyReport> {
-    this.logger.info('Validating index consistency');
+    this.logger.info("Validating index consistency");
 
     const report: ConsistencyReport = {
       inconsistentFiles: [],
       orphanedVectors: [],
       missingVectors: [],
       totalChecked: 0,
-      issuesFound: 0
+      issuesFound: 0,
     };
 
     try {
       // Check database state
       const isInitialized = await this.dbManager.isInitialized();
       if (!isInitialized) {
-        this.logger.warn('Database not initialized during consistency check');
+        this.logger.warn("Database not initialized during consistency check");
         return report;
       }
 
@@ -322,25 +329,25 @@ return [];
       // 2. Check for orphaned embeddings
       // 3. Check for missing embeddings
       // 4. Validate index integrity
-      
+
       // For now, return empty report
       report.totalChecked = this.changeTracker.latestChange.size;
-      report.issuesFound = report.inconsistentFiles.length + 
-                          report.orphanedVectors.length + 
-                          report.missingVectors.length;
+      report.issuesFound =
+        report.inconsistentFiles.length +
+        report.orphanedVectors.length +
+        report.missingVectors.length;
 
-      this.logger.info('Index consistency validation complete', {
+      this.logger.info("Index consistency validation complete", {
         totalChecked: report.totalChecked,
-        issuesFound: report.issuesFound
+        issuesFound: report.issuesFound,
       });
 
       return report;
-      
     } catch (error) {
-      this.logger.error('Failed to validate index consistency', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+      this.logger.error("Failed to validate index consistency", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
-      
+
       return report;
     }
   }
@@ -351,20 +358,20 @@ return [];
   private queueChange(change: FileChangeEvent): void {
     // Update latest change tracker
     this.changeTracker.latestChange.set(change.filePath, change);
-    
+
     // Add to pending queue if not already queued
     const isAlreadyQueued = this.changeTracker.pendingChanges.some(
-      c => c.filePath === change.filePath
+      (c) => c.filePath === change.filePath,
     );
-    
+
     if (!isAlreadyQueued) {
       this.changeTracker.pendingChanges.push(change);
     }
 
-    this.logger.debug('Change queued for processing', {
+    this.logger.debug("Change queued for processing", {
       filePath: change.filePath,
       type: change.type,
-      queueLength: this.changeTracker.pendingChanges.length
+      queueLength: this.changeTracker.pendingChanges.length,
     });
 
     // Schedule batch processing if not already scheduled
@@ -380,13 +387,13 @@ return [];
     }
 
     const debounceMs = this.config.fileWatching?.debounceMs || 100;
-    
+
     this.batchTimer = setTimeout(() => {
-      this.processPendingChanges().catch(error => {
-        this.logger.error('Batch processing failed', {
-          error: error instanceof Error ? error.message : 'Unknown error'
+      this.processPendingChanges().catch((error) => {
+        this.logger.error("Batch processing failed", {
+          error: error instanceof Error ? error.message : "Unknown error",
         });
-        this.emit('error', error);
+        this.emit("error", error);
       });
     }, debounceMs);
   }
@@ -405,18 +412,17 @@ return [];
     try {
       const changes = [...this.changeTracker.pendingChanges];
       this.changeTracker.pendingChanges = [];
-      
+
       const batchSize = this.config.fileWatching?.batchSize || 50;
-      
+
       // Process in batches
       for (let i = 0; i < changes.length; i += batchSize) {
         const batch = changes.slice(i, i + batchSize);
         await this.processChangeBatch(batch);
       }
-      
     } finally {
       this.isProcessing = false;
-      
+
       // Schedule next batch if more changes arrived
       if (this.changeTracker.pendingChanges.length > 0) {
         this.scheduleBatchProcessing();
@@ -433,42 +439,46 @@ return [];
   } {
     const deletions: FileChangeEvent[] = [];
     const modifications: FileChangeEvent[] = [];
-    
+
     for (const change of changes) {
-      if (change.type === 'unlink' || change.type === 'unlinkDir') {
+      if (change.type === "unlink" || change.type === "unlinkDir") {
         deletions.push(change);
       } else {
         modifications.push(change);
       }
     }
-    
+
     return { deletions, modifications };
   }
 
   /**
    * Process file deletions
    */
-  private async processDeletions(deletions: FileChangeEvent[], result: UpdateBatchResult): Promise<void> {
-    this.logger.debug('Processing deletions', { count: deletions.length });
-    
+  private async processDeletions(
+    deletions: FileChangeEvent[],
+    result: UpdateBatchResult,
+  ): Promise<void> {
+    this.logger.debug("Processing deletions", { count: deletions.length });
+
     for (const change of deletions) {
       try {
         // Here would be integration with actual database deletion
         // For now, we'll just track the operation
         result.processedChanges.push(change);
         result.stats.filesRemoved++;
-        
-        this.logger.debug('File deletion processed', { filePath: change.filePath });
-        
-      } catch (error) {
-        this.logger.error('Failed to process deletion', {
+
+        this.logger.debug("File deletion processed", {
           filePath: change.filePath,
-          error: error instanceof Error ? error.message : 'Unknown error'
         });
-        
+      } catch (error) {
+        this.logger.error("Failed to process deletion", {
+          filePath: change.filePath,
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+
         result.failedChanges.push({
           change,
-          error: error instanceof Error ? error : new Error(String(error))
+          error: error instanceof Error ? error : new Error(String(error)),
         });
       }
     }
@@ -477,43 +487,52 @@ return [];
   /**
    * Process file modifications (additions and changes)
    */
-  private async processModifications(modifications: FileChangeEvent[], result: UpdateBatchResult): Promise<void> {
-    this.logger.debug('Processing modifications', { count: modifications.length });
-    
+  private async processModifications(
+    modifications: FileChangeEvent[],
+    result: UpdateBatchResult,
+  ): Promise<void> {
+    this.logger.debug("Processing modifications", {
+      count: modifications.length,
+    });
+
     for (const change of modifications) {
       try {
         // Here would be integration with actual AST parsing and embedding generation
         // Initialize embeddings for new files
-        if (change.type === 'add' && await this.shouldFullReparse(change.filePath, change)) {
-          this.logger.debug('Initializing embeddings for new file', { filePath: change.filePath });
+        if (
+          change.type === "add" &&
+          (await this.shouldFullReparse(change.filePath, change))
+        ) {
+          this.logger.debug("Initializing embeddings for new file", {
+            filePath: change.filePath,
+          });
           // Would call embeddingManager.storeEmbeddings() here in full implementation
         }
-        
+
         result.processedChanges.push(change);
-        
-        if (change.type === 'add' || change.type === 'addDir') {
+
+        if (change.type === "add" || change.type === "addDir") {
           result.stats.filesAdded++;
         } else {
           result.stats.filesUpdated++;
         }
-        
+
         // Simulate embedding processing
         result.stats.embeddingsProcessed++;
-        
-        this.logger.debug('File modification processed', {
+
+        this.logger.debug("File modification processed", {
           filePath: change.filePath,
-          type: change.type
+          type: change.type,
         });
-        
       } catch (error) {
-        this.logger.error('Failed to process modification', {
+        this.logger.error("Failed to process modification", {
           filePath: change.filePath,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : "Unknown error",
         });
-        
+
         result.failedChanges.push({
           change,
-          error: error instanceof Error ? error : new Error(String(error))
+          error: error instanceof Error ? error : new Error(String(error)),
         });
       }
     }
@@ -522,27 +541,33 @@ return [];
   /**
    * Apply optimization rules to individual changes
    */
-  private applyOptimizationRules(change: FileChangeEvent): FileChangeEvent | null {
+  private applyOptimizationRules(
+    change: FileChangeEvent,
+  ): FileChangeEvent | null {
     // Skip files that don't match include patterns
     const includePatterns = this.config.fileWatching?.includePatterns || [];
     const excludePatterns = this.config.fileWatching?.excludePatterns || [];
-    
+
     // Simple pattern matching (in real implementation would use minimatch)
-    const shouldInclude = includePatterns.length === 0 || 
-      includePatterns.some(pattern => this.matchesPattern(change.filePath, pattern));
-    
-    const shouldExclude = excludePatterns.some(pattern => 
-      this.matchesPattern(change.filePath, pattern));
-    
+    const shouldInclude =
+      includePatterns.length === 0 ||
+      includePatterns.some((pattern) =>
+        this.matchesPattern(change.filePath, pattern),
+      );
+
+    const shouldExclude = excludePatterns.some((pattern) =>
+      this.matchesPattern(change.filePath, pattern),
+    );
+
     if (!shouldInclude || shouldExclude) {
-      this.logger.debug('Change filtered out by patterns', {
+      this.logger.debug("Change filtered out by patterns", {
         filePath: change.filePath,
         shouldInclude,
-        shouldExclude
+        shouldExclude,
       });
       return null;
     }
-    
+
     return change;
   }
 
@@ -552,10 +577,10 @@ return [];
   private matchesPattern(filePath: string, pattern: string): boolean {
     // Convert glob pattern to regex (simplified)
     const regexPattern = pattern
-      .replace(/\*\*/g, '.*')
-      .replace(/\*/g, '[^/]*')
-      .replace(/\?/g, '.');
-    
+      .replace(/\*\*/g, ".*")
+      .replace(/\*/g, "[^/]*")
+      .replace(/\?/g, ".");
+
     const regex = new RegExp(regexPattern);
     return regex.test(filePath);
   }
@@ -567,8 +592,9 @@ return [];
     this.stats.totalChangesProcessed += result.processedChanges.length;
     this.stats.totalBatchesProcessed++;
     this.stats.totalProcessingTime += result.stats.processingTime;
-    this.stats.averageBatchSize = this.stats.totalChangesProcessed / this.stats.totalBatchesProcessed;
-    
+    this.stats.averageBatchSize =
+      this.stats.totalChangesProcessed / this.stats.totalBatchesProcessed;
+
     this.changeTracker.lastBatchTime = Date.now();
   }
 }
@@ -579,7 +605,7 @@ return [];
 export function createIncrementalUpdateManager(
   dbManager: ASTDatabaseManager,
   embeddingManager: EmbeddingDatabaseManager,
-  config: Config
+  config: Config,
 ): IncrementalUpdateManager {
   return new IncementalUpdateManagerImpl(dbManager, embeddingManager, config);
 }

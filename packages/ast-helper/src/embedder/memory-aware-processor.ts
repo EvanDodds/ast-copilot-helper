@@ -3,8 +3,8 @@
  * and resource-conscious batch management
  */
 
-import os from 'os';
-import { createLogger } from '../logging/index.js';
+import os from "os";
+import { createLogger } from "../logging/index.js";
 
 export interface MemoryMetrics {
   /** Total system memory in bytes */
@@ -42,7 +42,7 @@ export interface ProcessingStrategy {
   /** Maximum batch size for this strategy */
   maxBatchSize: number;
   /** Processing approach */
-  approach: 'sequential' | 'parallel' | 'streaming' | 'chunked';
+  approach: "sequential" | "parallel" | "streaming" | "chunked";
   /** Memory overhead factor */
   memoryOverhead: number;
   /** CPU overhead factor */
@@ -76,7 +76,10 @@ export interface ProcessingContext<T> {
   /** Memory warning callback */
   onMemoryWarning?: (usage: MemoryMetrics) => void;
   /** Strategy change callback */
-  onStrategyChange?: (oldStrategy: ProcessingStrategy, newStrategy: ProcessingStrategy) => void;
+  onStrategyChange?: (
+    oldStrategy: ProcessingStrategy,
+    newStrategy: ProcessingStrategy,
+  ) => void;
 }
 
 export interface ProcessingResult<T> {
@@ -103,39 +106,39 @@ export interface ProcessingResult<T> {
 const DEFAULT_CONFIG: AdaptiveProcessingConfig = {
   memoryThresholds: {
     critical: 90, // 90% memory usage
-    high: 75,     // 75% memory usage
-    normal: 60,   // 60% memory usage
-    low: 40,      // 40% memory usage
+    high: 75, // 75% memory usage
+    normal: 60, // 60% memory usage
+    low: 40, // 40% memory usage
   },
   strategies: [
     {
-      name: 'emergency',
+      name: "emergency",
       maxBatchSize: 1,
-      approach: 'sequential',
+      approach: "sequential",
       memoryOverhead: 0.1,
       cpuOverhead: 0.2,
       cleanupFrequency: 1, // Cleanup after every batch
     },
     {
-      name: 'conservative',
+      name: "conservative",
       maxBatchSize: 8,
-      approach: 'sequential',
+      approach: "sequential",
       memoryOverhead: 0.3,
       cpuOverhead: 0.5,
       cleanupFrequency: 3,
     },
     {
-      name: 'balanced',
+      name: "balanced",
       maxBatchSize: 32,
-      approach: 'parallel',
+      approach: "parallel",
       memoryOverhead: 0.6,
       cpuOverhead: 1.0,
       cleanupFrequency: 5,
     },
     {
-      name: 'aggressive',
+      name: "aggressive",
       maxBatchSize: 128,
-      approach: 'parallel',
+      approach: "parallel",
       memoryOverhead: 1.2,
       cpuOverhead: 1.5,
       cleanupFrequency: 10,
@@ -155,22 +158,23 @@ export class MemoryAwareProcessor {
   private currentStrategy: ProcessingStrategy;
   private memoryHistory: MemoryMetrics[] = [];
   private monitoringTimer?: NodeJS.Timeout;
-  private logger = createLogger({ operation: 'MemoryAwareProcessor' });
+  private logger = createLogger({ operation: "MemoryAwareProcessor" });
 
   constructor(config: Partial<AdaptiveProcessingConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    
+
     // Ensure we have at least one strategy
     if (this.config.strategies.length === 0) {
-      throw new Error('At least one processing strategy must be configured');
+      throw new Error("At least one processing strategy must be configured");
     }
-    
-    this.currentStrategy = this.config.strategies.find(s => s.name === 'balanced') 
-      || this.config.strategies[0]!;
-    
-    this.logger.info('Memory-aware processor initialized', {
+
+    this.currentStrategy =
+      this.config.strategies.find((s) => s.name === "balanced") ||
+      this.config.strategies[0]!;
+
+    this.logger.info("Memory-aware processor initialized", {
       initialStrategy: this.currentStrategy.name,
-      memoryThresholds: this.config.memoryThresholds
+      memoryThresholds: this.config.memoryThresholds,
     });
 
     // Start memory monitoring
@@ -181,7 +185,7 @@ export class MemoryAwareProcessor {
    * Process items with memory-aware adaptive strategies
    */
   async processWithMemoryAwareness<T, R>(
-    context: ProcessingContext<T>
+    context: ProcessingContext<T>,
   ): Promise<ProcessingResult<R>> {
     const startTime = Date.now();
     const results: R[] = [];
@@ -193,40 +197,42 @@ export class MemoryAwareProcessor {
     let totalMemoryUsage = 0;
     let memoryMeasurements = 0;
 
-    this.logger.info('Starting memory-aware processing', {
+    this.logger.info("Starting memory-aware processing", {
       totalItems: context.items.length,
-      initialStrategy: this.currentStrategy.name
+      initialStrategy: this.currentStrategy.name,
     });
 
     try {
       const batches = this.createAdaptiveBatches(context.items);
-      
+
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
         if (!batch) {
-continue;
-} // Skip undefined batches
-        
+          continue;
+        } // Skip undefined batches
+
         const memoryBefore = this.getCurrentMemoryMetrics();
-        
+
         // Check if strategy needs to change
         const newStrategy = this.selectOptimalStrategy(memoryBefore);
         if (newStrategy.name !== this.currentStrategy.name) {
-          this.logger.info('Strategy changed', {
+          this.logger.info("Strategy changed", {
             from: this.currentStrategy.name,
             to: newStrategy.name,
-            memoryUsage: `${memoryBefore.memoryUsagePercent.toFixed(1)}%`
+            memoryUsage: `${memoryBefore.memoryUsagePercent.toFixed(1)}%`,
           });
-          
+
           if (context.onStrategyChange) {
             context.onStrategyChange(this.currentStrategy, newStrategy);
           }
-          
+
           this.currentStrategy = newStrategy;
           strategyChanges++;
 
           // Recreate remaining batches with new strategy
-          const remainingItems = context.items.slice(i * this.currentStrategy.maxBatchSize);
+          const remainingItems = context.items.slice(
+            i * this.currentStrategy.maxBatchSize,
+          );
           const newBatches = this.createAdaptiveBatches(remainingItems);
           batches.splice(i, batches.length - i, ...newBatches);
         }
@@ -236,32 +242,36 @@ continue;
           const batchResults = await this.processBatchWithStrategy(
             batch,
             context.processor,
-            this.currentStrategy
+            this.currentStrategy,
           );
-          
+
           results.push(...batchResults);
           successfulItems += batchResults.length;
-          
         } catch (error: any) {
-          this.logger.error('Batch processing failed', {
+          this.logger.error("Batch processing failed", {
             batchSize: batch.length,
             strategy: this.currentStrategy.name,
-            error: error.message
+            error: error.message,
           });
-          
+
           failedItems += batch.length;
         }
 
         // Memory monitoring and cleanup
         const memoryAfter = this.getCurrentMemoryMetrics();
         this.memoryHistory.push(memoryAfter);
-        
-        peakMemoryUsage = Math.max(peakMemoryUsage, memoryAfter.memoryUsagePercent);
+
+        peakMemoryUsage = Math.max(
+          peakMemoryUsage,
+          memoryAfter.memoryUsagePercent,
+        );
         totalMemoryUsage += memoryAfter.memoryUsagePercent;
         memoryMeasurements++;
 
         // Check for memory warnings
-        if (memoryAfter.memoryUsagePercent > this.config.memoryThresholds.high) {
+        if (
+          memoryAfter.memoryUsagePercent > this.config.memoryThresholds.high
+        ) {
           if (context.onMemoryWarning) {
             context.onMemoryWarning(memoryAfter);
           }
@@ -275,26 +285,29 @@ continue;
 
         // Report progress
         if (context.onProgress) {
-          const completed = Math.min((i + 1) * this.currentStrategy.maxBatchSize, context.items.length);
+          const completed = Math.min(
+            (i + 1) * this.currentStrategy.maxBatchSize,
+            context.items.length,
+          );
           context.onProgress(completed, context.items.length);
         }
 
-        this.logger.debug('Batch completed', {
+        this.logger.debug("Batch completed", {
           batchIndex: i + 1,
           totalBatches: batches.length,
           batchSize: batch.length,
           memoryUsage: `${memoryAfter.memoryUsagePercent.toFixed(1)}%`,
-          strategy: this.currentStrategy.name
+          strategy: this.currentStrategy.name,
         });
       }
-
     } catch (error: any) {
-      this.logger.error('Processing failed', { error: error.message });
+      this.logger.error("Processing failed", { error: error.message });
       throw error;
     }
 
     const totalTime = Date.now() - startTime;
-    const averageMemoryUsage = memoryMeasurements > 0 ? totalMemoryUsage / memoryMeasurements : 0;
+    const averageMemoryUsage =
+      memoryMeasurements > 0 ? totalMemoryUsage / memoryMeasurements : 0;
 
     const result: ProcessingResult<R> = {
       results,
@@ -311,14 +324,14 @@ continue;
       memoryHistory: [...this.memoryHistory],
     };
 
-    this.logger.info('Processing completed', {
+    this.logger.info("Processing completed", {
       totalItems: context.items.length,
       successful: successfulItems,
       failed: failedItems,
       totalTime: `${totalTime}ms`,
       strategyChanges,
       memoryCleanups,
-      peakMemoryUsage: `${peakMemoryUsage.toFixed(1)}%`
+      peakMemoryUsage: `${peakMemoryUsage.toFixed(1)}%`,
     });
 
     return result;
@@ -332,8 +345,10 @@ continue;
     const freeMemory = os.freemem();
     const availableMemory = freeMemory;
     const processMemory = process.memoryUsage();
-    const memoryUsagePercent = ((totalMemory - availableMemory) / totalMemory) * 100;
-    const availableForProcessing = availableMemory * (1 - this.config.memoryBuffer);
+    const memoryUsagePercent =
+      ((totalMemory - availableMemory) / totalMemory) * 100;
+    const availableForProcessing =
+      availableMemory * (1 - this.config.memoryBuffer);
 
     return {
       totalMemory,
@@ -351,17 +366,25 @@ continue;
     const usage = memoryMetrics.memoryUsagePercent;
 
     if (usage >= this.config.memoryThresholds.critical) {
-      return this.config.strategies.find(s => s.name === 'emergency') 
-        || this.config.strategies[0]!;
+      return (
+        this.config.strategies.find((s) => s.name === "emergency") ||
+        this.config.strategies[0]!
+      );
     } else if (usage >= this.config.memoryThresholds.high) {
-      return this.config.strategies.find(s => s.name === 'conservative') 
-        || this.config.strategies[0]!;
+      return (
+        this.config.strategies.find((s) => s.name === "conservative") ||
+        this.config.strategies[0]!
+      );
     } else if (usage >= this.config.memoryThresholds.normal) {
-      return this.config.strategies.find(s => s.name === 'balanced') 
-        || this.config.strategies[Math.min(1, this.config.strategies.length - 1)]!;
+      return (
+        this.config.strategies.find((s) => s.name === "balanced") ||
+        this.config.strategies[Math.min(1, this.config.strategies.length - 1)]!
+      );
     } else {
-      return this.config.strategies.find(s => s.name === 'aggressive') 
-        || this.config.strategies[Math.min(2, this.config.strategies.length - 1)]!;
+      return (
+        this.config.strategies.find((s) => s.name === "aggressive") ||
+        this.config.strategies[Math.min(2, this.config.strategies.length - 1)]!
+      );
     }
   }
 
@@ -376,24 +399,38 @@ continue;
   } {
     const memoryMetrics = this.getCurrentMemoryMetrics();
     const recommendations: string[] = [];
-    
-    if (memoryMetrics.memoryUsagePercent > this.config.memoryThresholds.critical) {
-      recommendations.push('CRITICAL: Memory usage is very high, consider emergency cleanup');
-      recommendations.push('Switch to sequential processing with batch size 1');
-      recommendations.push('Enable aggressive garbage collection');
-    } else if (memoryMetrics.memoryUsagePercent > this.config.memoryThresholds.high) {
-      recommendations.push('HIGH: Memory usage is elevated, reduce batch sizes');
-      recommendations.push('Increase cleanup frequency');
-      recommendations.push('Monitor for memory leaks');
-    } else if (memoryMetrics.memoryUsagePercent < this.config.memoryThresholds.low) {
-      recommendations.push('LOW: Memory usage is low, can increase batch sizes');
-      recommendations.push('Consider parallel processing strategies');
-      recommendations.push('Opportunity for performance optimization');
+
+    if (
+      memoryMetrics.memoryUsagePercent > this.config.memoryThresholds.critical
+    ) {
+      recommendations.push(
+        "CRITICAL: Memory usage is very high, consider emergency cleanup",
+      );
+      recommendations.push("Switch to sequential processing with batch size 1");
+      recommendations.push("Enable aggressive garbage collection");
+    } else if (
+      memoryMetrics.memoryUsagePercent > this.config.memoryThresholds.high
+    ) {
+      recommendations.push(
+        "HIGH: Memory usage is elevated, reduce batch sizes",
+      );
+      recommendations.push("Increase cleanup frequency");
+      recommendations.push("Monitor for memory leaks");
+    } else if (
+      memoryMetrics.memoryUsagePercent < this.config.memoryThresholds.low
+    ) {
+      recommendations.push(
+        "LOW: Memory usage is low, can increase batch sizes",
+      );
+      recommendations.push("Consider parallel processing strategies");
+      recommendations.push("Opportunity for performance optimization");
     }
 
     // Estimate processing capacity
     const estimatedItemSize = 1024; // Rough estimate per item in bytes
-    const estimatedCapacity = Math.floor(memoryMetrics.availableForProcessing / estimatedItemSize);
+    const estimatedCapacity = Math.floor(
+      memoryMetrics.availableForProcessing / estimatedItemSize,
+    );
 
     return {
       currentStrategy: this.currentStrategy,
@@ -411,7 +448,7 @@ continue;
       clearInterval(this.monitoringTimer);
       this.monitoringTimer = undefined;
     }
-    this.logger.info('Memory-aware processor stopped');
+    this.logger.info("Memory-aware processor stopped");
   }
 
   /**
@@ -434,16 +471,16 @@ continue;
   private async processBatchWithStrategy<T, R>(
     batch: T[],
     processor: (batch: T[]) => Promise<R[]>,
-    strategy: ProcessingStrategy
+    strategy: ProcessingStrategy,
   ): Promise<R[]> {
     switch (strategy.approach) {
-      case 'sequential':
+      case "sequential":
         return await this.processSequentially(batch, processor);
-      case 'parallel':
+      case "parallel":
         return await this.processParallel(batch, processor);
-      case 'streaming':
+      case "streaming":
         return await this.processStreaming(batch, processor);
-      case 'chunked':
+      case "chunked":
         return await this.processChunked(batch, processor);
       default:
         return await processor(batch);
@@ -455,26 +492,26 @@ continue;
    */
   private async processSequentially<T, R>(
     batch: T[],
-    processor: (batch: T[]) => Promise<R[]>
+    processor: (batch: T[]) => Promise<R[]>,
   ): Promise<R[]> {
     const results: R[] = [];
-    
+
     for (let i = 0; i < batch.length; i++) {
       const item = batch[i];
       if (item === undefined) {
-continue;
-} // Skip undefined items
-      
+        continue;
+      } // Skip undefined items
+
       const singleItem = [item];
       const singleResult = await processor(singleItem);
       results.push(...singleResult);
-      
+
       // Memory cleanup for very small batches
       if (i % 5 === 0 && this.config.enableGcHints && global.gc) {
         global.gc();
       }
     }
-    
+
     return results;
   }
 
@@ -483,19 +520,19 @@ continue;
    */
   private async processParallel<T, R>(
     batch: T[],
-    processor: (batch: T[]) => Promise<R[]>
+    processor: (batch: T[]) => Promise<R[]>,
   ): Promise<R[]> {
     // Split into smaller parallel chunks if batch is large
     const chunkSize = Math.max(1, Math.floor(batch.length / os.cpus().length));
     const chunks: T[][] = [];
-    
+
     for (let i = 0; i < batch.length; i += chunkSize) {
       chunks.push(batch.slice(i, i + chunkSize));
     }
-    
-    const chunkPromises = chunks.map(chunk => processor(chunk));
+
+    const chunkPromises = chunks.map((chunk) => processor(chunk));
     const chunkResults = await Promise.all(chunkPromises);
-    
+
     return chunkResults.flat();
   }
 
@@ -504,21 +541,21 @@ continue;
    */
   private async processStreaming<T, R>(
     batch: T[],
-    processor: (batch: T[]) => Promise<R[]>
+    processor: (batch: T[]) => Promise<R[]>,
   ): Promise<R[]> {
     // Process in small streaming chunks
     const streamingChunkSize = 4;
     const results: R[] = [];
-    
+
     for (let i = 0; i < batch.length; i += streamingChunkSize) {
       const chunk = batch.slice(i, i + streamingChunkSize);
       const chunkResults = await processor(chunk);
       results.push(...chunkResults);
-      
+
       // Allow event loop to process other tasks
-      await new Promise(resolve => setImmediate(resolve));
+      await new Promise((resolve) => setImmediate(resolve));
     }
-    
+
     return results;
   }
 
@@ -527,26 +564,31 @@ continue;
    */
   private async processChunked<T, R>(
     batch: T[],
-    processor: (batch: T[]) => Promise<R[]>
+    processor: (batch: T[]) => Promise<R[]>,
   ): Promise<R[]> {
     const chunkSize = Math.max(1, Math.floor(batch.length / 4));
     const results: R[] = [];
-    
+
     for (let i = 0; i < batch.length; i += chunkSize) {
       const chunk = batch.slice(i, i + chunkSize);
       const chunkResults = await processor(chunk);
       results.push(...chunkResults);
     }
-    
+
     return results;
   }
 
   /**
    * Check if memory cleanup should be performed
    */
-  private shouldPerformCleanup(batchIndex: number, memoryMetrics: MemoryMetrics): boolean {
+  private shouldPerformCleanup(
+    batchIndex: number,
+    memoryMetrics: MemoryMetrics,
+  ): boolean {
     // Emergency cleanup
-    if (memoryMetrics.memoryUsagePercent >= this.config.emergencyCleanupThreshold) {
+    if (
+      memoryMetrics.memoryUsagePercent >= this.config.emergencyCleanupThreshold
+    ) {
       return true;
     }
 
@@ -567,7 +609,7 @@ continue;
    * Perform memory cleanup
    */
   private async performMemoryCleanup(): Promise<void> {
-    this.logger.debug('Performing memory cleanup');
+    this.logger.debug("Performing memory cleanup");
 
     // Trigger garbage collection if available
     if (this.config.enableGcHints && global.gc) {
@@ -575,7 +617,7 @@ continue;
     }
 
     // Allow event loop to process
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     // Clear old memory history
     if (this.memoryHistory.length > 100) {
@@ -598,9 +640,9 @@ continue;
 
       // Log warnings for high memory usage
       if (metrics.memoryUsagePercent > this.config.memoryThresholds.critical) {
-        this.logger.warn('Critical memory usage detected', {
+        this.logger.warn("Critical memory usage detected", {
           usage: `${metrics.memoryUsagePercent.toFixed(1)}%`,
-          strategy: this.currentStrategy.name
+          strategy: this.currentStrategy.name,
         });
       }
     }, this.config.monitoringInterval);

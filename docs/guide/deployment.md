@@ -21,12 +21,14 @@ Our automated CI/CD pipeline handles everything once secrets are configured:
 - ✅ **Quality Gates**: Includes linting, testing, and security scans
 - ✅ **Notifications**: Slack/Teams integration for deployment status
 
-**Prerequisites**: 
+**Prerequisites**:
+
 - Configure [GitHub Secrets](../deployment/GITHUB_SECRETS.md)
 - Fork/clone the repository
 - Push changes to trigger deployment
 
 **Workflows**:
+
 - `ci-cd.yml` - Main deployment pipeline
 - `release.yml` - Release management
 - `distribution.yml` - Package distribution
@@ -39,7 +41,7 @@ For development or testing purposes:
 # Install dependencies
 npm install
 
-# Build all packages  
+# Build all packages
 npm run build
 
 # Run tests
@@ -70,7 +72,7 @@ npm run dev
 - Automated deployment on feature branch pushes
 - Full CI/CD pipeline testing
 
-### Production Environment  
+### Production Environment
 
 - Multi-instance health checks: Configure `PRODUCTION_HEALTH_CHECK_URLS`
 - Blue-green deployment support: Configure `BLUE_GREEN_DEPLOYMENT`
@@ -83,7 +85,7 @@ npm run dev
 The system includes comprehensive health checks:
 
 - API endpoint health
-- Database connectivity  
+- Database connectivity
 - External service availability
 - Performance benchmarks
 
@@ -101,24 +103,27 @@ Post-deployment monitoring includes:
 ### Common Issues
 
 **"Secrets not found" errors**:
+
 - Review the [GitHub Secrets guide](../deployment/GITHUB_SECRETS.md)
 - Verify all required secrets are configured
 - Check secret names match exactly (case-sensitive)
 
 **Build failures**:
+
 - Check Node.js version compatibility (>=18.0.0)
 - Verify all dependencies are installed
 - Review build logs for specific errors
 
 **Deployment failures**:
+
 - Validate health check endpoints are accessible
-- Check network connectivity and firewall rules  
+- Check network connectivity and firewall rules
 - Verify deployment target permissions
 
 ### Getting Help
 
 - 📚 [Troubleshooting Guide](../troubleshooting.md)
-- 🔧 [CI/CD Pipeline Documentation](../CI-CD-PIPELINE.md) 
+- 🔧 [CI/CD Pipeline Documentation](../CI-CD-PIPELINE.md)
 - 🐛 [GitHub Issues](https://github.com/yourusername/ast-copilot-helper/issues)
 - 💬 [Discussion Forum](https://github.com/yourusername/ast-copilot-helper/discussions)
 
@@ -144,7 +149,8 @@ The deployment system supports:
 
 ---
 
-**Next Steps**: 
+**Next Steps**:
+
 1. 🔑 [Configure GitHub Secrets](../deployment/GITHUB_SECRETS.md) (Required)
 2. 🚀 Push code changes to trigger deployment
 3. 📊 Monitor deployment status and health checks

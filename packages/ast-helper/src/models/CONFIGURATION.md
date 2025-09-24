@@ -40,7 +40,7 @@ AST_MODEL_CLEANUP_STRATEGY="lru"            # Cleanup strategy: lru, ttl, size
 AST_MODEL_CACHE_TTL="604800"                # TTL in seconds (7 days)
 AST_MODEL_CACHE_COMPRESSION="true"          # Enable compression
 
-# Download Configuration  
+# Download Configuration
 AST_MODEL_DOWNLOAD_RETRIES="3"              # Retry attempts
 AST_MODEL_DOWNLOAD_TIMEOUT="300000"         # Timeout in milliseconds
 AST_MODEL_DOWNLOAD_CHUNK_SIZE="1048576"     # Chunk size in bytes (1MB)
@@ -282,41 +282,41 @@ AST_MODEL_CACHE_SIZE="50GB"
 ### YAML Configuration (`models.config.yaml`)
 
 ```yaml
-version: '1.0'
+version: "1.0"
 
 cache:
-  directory: './models'
-  maxSize: '10GB'
-  cleanupStrategy: 'lru'
+  directory: "./models"
+  maxSize: "10GB"
+  cleanupStrategy: "lru"
   compressionEnabled: true
-  maxAge: 604800  # 7 days
+  maxAge: 604800 # 7 days
 
 downloads:
   retryAttempts: 3
-  timeout: 300000  # 5 minutes
-  chunkSize: 1048576  # 1MB
-  bandwidthLimit: '50MB/s'
+  timeout: 300000 # 5 minutes
+  chunkSize: 1048576 # 1MB
+  bandwidthLimit: "50MB/s"
   enableResume: true
 
 performance:
   maxConcurrentDownloads: 3
-  memoryLimit: '2GB'
+  memoryLimit: "2GB"
   enableParallelChunks: true
   enableCompression: true
 
 security:
   verifyChecksums: true
-  quarantineDirectory: './quarantine'
+  quarantineDirectory: "./quarantine"
   strictValidation: false
   allowedFormats:
-    - 'onnx'
-    - 'pytorch'
-    - 'tensorflow'
+    - "onnx"
+    - "pytorch"
+    - "tensorflow"
 
 logging:
-  level: 'info'
+  level: "info"
   enableFile: true
-  filePath: './logs/models.log'
+  filePath: "./logs/models.log"
   enableConsole: true
 
 network:
@@ -331,7 +331,7 @@ network:
 ### ModelDownloader Configuration
 
 ```typescript
-import { ModelDownloader } from '@ast-copilot-helper/ast-helper';
+import { ModelDownloader } from "@ast-copilot-helper/ast-helper";
 
 const downloader = new ModelDownloader({
   // Basic settings
@@ -345,8 +345,8 @@ const downloader = new ModelDownloader({
   },
 
   // Network settings
-  bandwidthLimit: '50MB/s',
-  userAgent: 'AST-Helper/1.0',
+  bandwidthLimit: "50MB/s",
+  userAgent: "AST-Helper/1.0",
   keepAlive: true,
   maxSockets: 10,
 
@@ -356,145 +356,145 @@ const downloader = new ModelDownloader({
 
   // Headers
   headers: {
-    'Accept': 'application/octet-stream',
-    'Cache-Control': 'no-cache'
+    Accept: "application/octet-stream",
+    "Cache-Control": "no-cache",
   },
 
   // Proxy settings
   proxy: {
-    host: 'proxy.company.com',
+    host: "proxy.company.com",
     port: 8080,
     auth: {
-      username: 'user',
-      password: 'pass'
-    }
+      username: "user",
+      password: "pass",
+    },
   },
 
   // SSL settings
   tls: {
     rejectUnauthorized: true,
-    ca: '/path/to/ca.pem'
-  }
+    ca: "/path/to/ca.pem",
+  },
 });
 ```
 
 ### ModelCache Configuration
 
 ```typescript
-import { ModelCache } from '@ast-copilot-helper/ast-helper';
+import { ModelCache } from "@ast-copilot-helper/ast-helper";
 
 const cache = new ModelCache({
   // Basic settings
-  cacheDir: './models',
-  maxSize: '10GB',
-  
+  cacheDir: "./models",
+  maxSize: "10GB",
+
   // Cleanup strategy
-  cleanupStrategy: 'lru', // 'lru', 'ttl', 'size'
+  cleanupStrategy: "lru", // 'lru', 'ttl', 'size'
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (for TTL strategy)
   cleanupInterval: 60 * 60 * 1000, // 1 hour
-  
+
   // Compression
   compressionEnabled: true,
   compressionLevel: 6, // 1-9, higher = better compression
-  
+
   // Performance
   enableIndexing: true,
   indexingInterval: 5 * 60 * 1000, // 5 minutes
-  
+
   // File system
   enableWatchdog: true, // Monitor file changes
-  syncOnWrite: true,    // Sync writes to disk
-  
+  syncOnWrite: true, // Sync writes to disk
+
   // Concurrency
   maxConcurrentOperations: 5,
   lockTimeout: 30000, // 30 seconds
-  
+
   // Validation
   validateOnAccess: true,
-  checksumValidation: true
+  checksumValidation: true,
 });
 ```
 
 ### FileVerifier Configuration
 
 ```typescript
-import { FileVerifier } from '@ast-copilot-helper/ast-helper';
+import { FileVerifier } from "@ast-copilot-helper/ast-helper";
 
-const verifier = new FileVerifier('./quarantine', {
+const verifier = new FileVerifier("./quarantine", {
   // Basic validation
   verifyChecksums: true,
   verifyFileSize: true,
   verifyFormat: true,
-  
+
   // Strict validation
   strictValidation: false,
-  allowedFormats: ['onnx', 'pytorch', 'tensorflow'],
+  allowedFormats: ["onnx", "pytorch", "tensorflow"],
   maxFileSize: 5 * 1024 * 1024 * 1024, // 5GB
-  
+
   // Security scanning
   scanMalware: false,
   scannerTimeout: 30000,
-  
+
   // Quarantine settings
   quarantineOnFailure: true,
   quarantineRetention: 30 * 24 * 60 * 60 * 1000, // 30 days
-  
+
   // Custom validators
   customValidators: [
     {
-      name: 'custom-format-check',
+      name: "custom-format-check",
       validate: async (filePath: string, config: ModelConfig) => {
         // Custom validation logic
         return { valid: true, errors: [] };
-      }
-    }
-  ]
+      },
+    },
+  ],
 });
 ```
 
 ### PerformanceOptimizer Configuration
 
 ```typescript
-import { PerformanceOptimizer } from '@ast-copilot-helper/ast-helper';
+import { PerformanceOptimizer } from "@ast-copilot-helper/ast-helper";
 
 const optimizer = new PerformanceOptimizer({
   // Download limits
   maxConcurrentDownloads: 3,
-  bandwidthLimit: '50MB/s',
-  
+  bandwidthLimit: "50MB/s",
+
   // Memory management
-  memoryLimit: '2GB',
+  memoryLimit: "2GB",
   memoryThreshold: 0.8, // 80% of limit
-  
+
   // CPU management
   cpuThrottling: true,
   cpuThreshold: 0.9, // 90% usage
-  
+
   // Chunk settings
   enableParallelChunks: true,
   minChunkSize: 1024 * 1024, // 1MB
   maxChunkSize: 10 * 1024 * 1024, // 10MB
   chunkCount: 4,
-  
+
   // Compression
   enableCompression: true,
   compressionThreshold: 1024 * 1024, // 1MB minimum for compression
-  
+
   // Monitoring
   enableMetrics: true,
   metricsInterval: 1000, // 1 second
-  
+
   // Adaptive settings
   adaptiveBandwidth: true,
   adaptiveChunking: true,
-  adaptiveConcurrency: true
+  adaptiveConcurrency: true,
 });
 ```
 
 ### ErrorHandler Configuration
 
 ```typescript
-import { ErrorHandler } from '@ast-copilot-helper/ast-helper';
+import { ErrorHandler } from "@ast-copilot-helper/ast-helper";
 
 const errorHandler = new ErrorHandler({
   // Retry settings
@@ -502,43 +502,40 @@ const errorHandler = new ErrorHandler({
   retryDelay: 1000,
   retryMultiplier: 2, // Exponential backoff
   maxRetryDelay: 30000,
-  
+
   // Retry conditions
   retryOnNetworkError: true,
   retryOnTimeout: true,
   retryOnServerError: true,
   retryOn: [408, 429, 502, 503, 504], // HTTP status codes
-  
+
   // Fallback settings
   fallbackEnabled: true,
   fallbackModels: {
-    'code-embedding-v1': 'code-embedding-v0'
+    "code-embedding-v1": "code-embedding-v0",
   },
-  
+
   // Degraded mode
   degradedMode: true,
   degradedModeThreshold: 3, // Failures before entering degraded mode
-  
+
   // Connectivity monitoring
   connectivityCheck: true,
   connectivityInterval: 30000, // 30 seconds
-  connectivityEndpoints: [
-    'https://api.github.com',
-    'https://huggingface.co'
-  ],
-  
+  connectivityEndpoints: ["https://api.github.com", "https://huggingface.co"],
+
   // Logging
-  logLevel: 'info',
+  logLevel: "info",
   logErrors: true,
   logRetries: true,
-  
+
   // Circuit breaker
   circuitBreaker: {
     enabled: true,
     failureThreshold: 5,
     recoveryTime: 60000, // 1 minute
-    monitoringPeriod: 300000 // 5 minutes
-  }
+    monitoringPeriod: 300000, // 5 minutes
+  },
 });
 ```
 
@@ -553,12 +550,12 @@ const config = {
     maxConcurrentDownloads: Math.min(2, os.cpus().length),
     enableCompression: false, // Disable CPU-intensive compression
     cpuThrottling: true,
-    enableParallelChunks: false
+    enableParallelChunks: false,
   },
   cache: {
     compressionEnabled: false,
-    indexingInterval: 300000 // Reduce indexing frequency
-  }
+    indexingInterval: 300000, // Reduce indexing frequency
+  },
 };
 ```
 
@@ -568,18 +565,18 @@ const config = {
 // For memory-constrained environments
 const config = {
   performance: {
-    memoryLimit: '512MB',
+    memoryLimit: "512MB",
     maxConcurrentDownloads: 1,
-    enableStreaming: true
+    enableStreaming: true,
   },
   downloads: {
     chunkSize: 256 * 1024, // 256KB chunks
-    enableResume: false // Reduce memory overhead
+    enableResume: false, // Reduce memory overhead
   },
   cache: {
     compressionEnabled: true, // Trade CPU for memory
-    maxSize: '2GB'
-  }
+    maxSize: "2GB",
+  },
 };
 ```
 
@@ -589,20 +586,20 @@ const config = {
 // For bandwidth-constrained environments
 const config = {
   performance: {
-    bandwidthLimit: '5MB/s',
+    bandwidthLimit: "5MB/s",
     maxConcurrentDownloads: 1,
     enableCompression: true,
-    enableParallelChunks: false
+    enableParallelChunks: false,
   },
   downloads: {
     retryAttempts: 5,
     timeout: 900000, // 15 minutes
-    chunkSize: 512 * 1024 // 512KB chunks
+    chunkSize: 512 * 1024, // 512KB chunks
   },
   network: {
     keepAlive: true,
-    maxSockets: 2
-  }
+    maxSockets: 2,
+  },
 };
 ```
 
@@ -613,24 +610,24 @@ const config = {
 const config = {
   performance: {
     maxConcurrentDownloads: 8,
-    bandwidthLimit: '500MB/s',
-    memoryLimit: '8GB',
+    bandwidthLimit: "500MB/s",
+    memoryLimit: "8GB",
     enableParallelChunks: true,
-    chunkCount: 8
+    chunkCount: 8,
   },
   downloads: {
     chunkSize: 10 * 1024 * 1024, // 10MB chunks
-    enableResume: true
+    enableResume: true,
   },
   cache: {
-    maxSize: '100GB',
+    maxSize: "100GB",
     compressionEnabled: true,
-    enableIndexing: true
+    enableIndexing: true,
   },
   network: {
     maxSockets: 20,
-    keepAlive: true
-  }
+    keepAlive: true,
+  },
 };
 ```
 
@@ -644,46 +641,46 @@ const secureConfig = {
     verifyChecksums: true,
     strictValidation: true,
     scanMalware: true,
-    allowedFormats: ['onnx'], // Restrict formats
-    maxFileSize: '1GB',
-    
+    allowedFormats: ["onnx"], // Restrict formats
+    maxFileSize: "1GB",
+
     // File permissions
     fileMode: 0o644,
     dirMode: 0o755,
-    
+
     // Quarantine settings
     quarantineOnFailure: true,
     quarantineRetention: 90 * 24 * 60 * 60 * 1000, // 90 days
-    
+
     // Network security
-    tlsMinVersion: 'TLSv1.2',
+    tlsMinVersion: "TLSv1.2",
     validateCertificates: true,
-    
+
     // Custom security checks
     customValidators: [
       {
-        name: 'size-validator',
+        name: "size-validator",
         validate: async (filePath, config) => {
           const stats = await fs.stat(filePath);
           if (stats.size !== config.size) {
-            return { valid: false, errors: ['Size mismatch'] };
+            return { valid: false, errors: ["Size mismatch"] };
           }
           return { valid: true, errors: [] };
-        }
-      }
-    ]
+        },
+      },
+    ],
   },
-  
+
   network: {
     proxy: {
       enabled: true,
-      validateCertificates: true
+      validateCertificates: true,
     },
     tls: {
       rejectUnauthorized: true,
-      checkServerIdentity: true
-    }
-  }
+      checkServerIdentity: true,
+    },
+  },
 };
 ```
 
@@ -695,12 +692,12 @@ const devConfig = {
     verifyChecksums: false, // Speed up development
     strictValidation: false,
     scanMalware: false,
-    allowedFormats: ['onnx', 'pytorch', 'tensorflow', 'bin'], // Allow more formats
-    
+    allowedFormats: ["onnx", "pytorch", "tensorflow", "bin"], // Allow more formats
+
     // Relaxed settings
     quarantineOnFailure: false,
-    validateCertificates: false
-  }
+    validateCertificates: false,
+  },
 };
 ```
 
@@ -773,24 +770,26 @@ spec:
 ```javascript
 // ecosystem.config.js
 module.exports = {
-  apps: [{
-    name: 'ast-helper',
-    script: './dist/index.js',
-    env: {
-      NODE_ENV: 'production',
-      AST_MODEL_CACHE_DIR: './data/models',
-      AST_MODEL_CACHE_SIZE: '20GB',
-      AST_MODEL_LOG_LEVEL: 'warn',
-      AST_MODEL_MAX_CONCURRENT: '4'
+  apps: [
+    {
+      name: "ast-helper",
+      script: "./dist/index.js",
+      env: {
+        NODE_ENV: "production",
+        AST_MODEL_CACHE_DIR: "./data/models",
+        AST_MODEL_CACHE_SIZE: "20GB",
+        AST_MODEL_LOG_LEVEL: "warn",
+        AST_MODEL_MAX_CONCURRENT: "4",
+      },
+      env_production: {
+        NODE_ENV: "production",
+        AST_MODEL_CACHE_DIR: "/var/lib/ast-helper/models",
+        AST_MODEL_CACHE_SIZE: "100GB",
+        AST_MODEL_LOG_LEVEL: "error",
+        AST_MODEL_MAX_CONCURRENT: "8",
+      },
     },
-    env_production: {
-      NODE_ENV: 'production',
-      AST_MODEL_CACHE_DIR: '/var/lib/ast-helper/models',
-      AST_MODEL_CACHE_SIZE: '100GB',
-      AST_MODEL_LOG_LEVEL: 'error',
-      AST_MODEL_MAX_CONCURRENT: '8'
-    }
-  }]
+  ],
 };
 ```
 

@@ -1,12 +1,12 @@
-import type * as vscode from 'vscode';
-import { EventEmitter } from 'events';
-import type { ServerProcessManager } from './ServerProcessManager';
+import type * as vscode from "vscode";
+import { EventEmitter } from "events";
+import type { ServerProcessManager } from "./ServerProcessManager";
 
 // Mock MCP Client interfaces until full SDK is available
 
 interface MCPCapabilities {
   experimental?: Record<string, unknown>;
-  logging?: { level?: 'error' | 'warn' | 'info' | 'debug' };
+  logging?: { level?: "error" | "warn" | "info" | "debug" };
   prompts?: { listChanged?: boolean };
   resources?: { subscribe?: boolean; listChanged?: boolean };
   tools?: { listChanged?: boolean };
@@ -31,7 +31,10 @@ interface MCPClient {
   close(): Promise<void>;
   ping(): Promise<void>;
   listTools(): Promise<{ tools: MCPTool[] }>;
-  callTool(request: { name: string; arguments: Record<string, unknown> }): Promise<unknown>;
+  callTool(request: {
+    name: string;
+    arguments: Record<string, unknown>;
+  }): Promise<unknown>;
   listResources(): Promise<{ resources: MCPResource[] }>;
   readResource(request: { uri: string }): Promise<unknown>;
   onError?: (error: Error) => void;
@@ -74,7 +77,10 @@ class MockClient implements MCPClient {
     return { tools: [] };
   }
 
-  async callTool(_request: { name: string; arguments: Record<string, unknown> }): Promise<unknown> {
+  async callTool(_request: {
+    name: string;
+    arguments: Record<string, unknown>;
+  }): Promise<unknown> {
     return {};
   }
 
@@ -99,7 +105,12 @@ class MockTransport implements MCPTransport {
 /**
  * MCP client connection states
  */
-export type ClientState = 'disconnected' | 'connecting' | 'connected' | 'error' | 'reconnecting';
+export type ClientState =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "error"
+  | "reconnecting";
 
 /**
  * MCP client connection information
@@ -129,13 +140,13 @@ export interface ClientConfig {
  * Events emitted by MCPClientManager
  */
 export interface MCPClientEvents {
-  'stateChanged': (state: ClientState, previousState: ClientState) => void;
-  'connected': (info: ClientConnectionInfo) => void;
-  'disconnected': (info: ClientConnectionInfo) => void;
-  'error': (error: Error, info: ClientConnectionInfo) => void;
-  'reconnecting': (attempt: number, maxAttempts: number) => void;
-  'serverCapabilities': (capabilities: MCPCapabilities) => void;
-  'notification': (method: string, params: unknown) => void;
+  stateChanged: (state: ClientState, previousState: ClientState) => void;
+  connected: (info: ClientConnectionInfo) => void;
+  disconnected: (info: ClientConnectionInfo) => void;
+  error: (error: Error, info: ClientConnectionInfo) => void;
+  reconnecting: (attempt: number, maxAttempts: number) => void;
+  serverCapabilities: (capabilities: MCPCapabilities) => void;
+  notification: (method: string, params: unknown) => void;
 }
 
 /**
@@ -145,7 +156,7 @@ export class MCPClientManager extends EventEmitter {
   private client: MCPClient | null = null;
   private transport: MCPTransport | null = null;
   private config: ClientConfig;
-  private state: ClientState = 'disconnected';
+  private state: ClientState = "disconnected";
   private connectTime: Date | null = null;
   private lastError: string | null = null;
   private reconnectAttempts = 0;
@@ -159,16 +170,16 @@ export class MCPClientManager extends EventEmitter {
   constructor(
     serverProcessManager: ServerProcessManager,
     config: Partial<ClientConfig>,
-    outputChannel: vscode.OutputChannel
+    outputChannel: vscode.OutputChannel,
   ) {
     super();
-    
+
     this.serverProcessManager = serverProcessManager;
     this.outputChannel = outputChannel;
     this.config = this.normalizeConfig(config);
-    
-    this.outputChannel.appendLine('MCP Client Manager initialized');
-    
+
+    this.outputChannel.appendLine("MCP Client Manager initialized");
+
     // Set up server process manager event handlers
     this.setupServerProcessHandlers();
   }
@@ -191,27 +202,37 @@ export class MCPClientManager extends EventEmitter {
    * Set up event handlers for server process manager
    */
   private setupServerProcessHandlers(): void {
-    this.serverProcessManager.on('started', () => {
+    this.serverProcessManager.on("started", () => {
       if (this.config.autoConnect) {
-        this.outputChannel.appendLine('Server started, attempting to connect MCP client...');
-        this.connect().catch(error => {
-          this.outputChannel.appendLine(`Failed to auto-connect MCP client: ${error.message}`);
+        this.outputChannel.appendLine(
+          "Server started, attempting to connect MCP client...",
+        );
+        this.connect().catch((error) => {
+          this.outputChannel.appendLine(
+            `Failed to auto-connect MCP client: ${error.message}`,
+          );
         });
       }
     });
 
-    this.serverProcessManager.on('stopped', () => {
+    this.serverProcessManager.on("stopped", () => {
       if (this.isConnected()) {
-        this.outputChannel.appendLine('Server stopped, disconnecting MCP client...');
-        this.disconnect().catch(error => {
-          this.outputChannel.appendLine(`Error disconnecting MCP client: ${error.message}`);
+        this.outputChannel.appendLine(
+          "Server stopped, disconnecting MCP client...",
+        );
+        this.disconnect().catch((error) => {
+          this.outputChannel.appendLine(
+            `Error disconnecting MCP client: ${error.message}`,
+          );
         });
       }
     });
 
-    this.serverProcessManager.on('crashed', () => {
+    this.serverProcessManager.on("crashed", () => {
       if (this.isConnected()) {
-        this.outputChannel.appendLine('Server crashed, handling MCP client disconnection...');
+        this.outputChannel.appendLine(
+          "Server crashed, handling MCP client disconnection...",
+        );
         this.handleServerCrash();
       }
     });
@@ -221,20 +242,20 @@ export class MCPClientManager extends EventEmitter {
    * Connect to the MCP server
    */
   public async connect(): Promise<void> {
-    if (this.state === 'connected' || this.state === 'connecting') {
+    if (this.state === "connected" || this.state === "connecting") {
       throw new Error(`Client is already ${this.state}`);
     }
 
     if (this.isDisposed) {
-      throw new Error('MCPClientManager has been disposed');
+      throw new Error("MCPClientManager has been disposed");
     }
 
     if (!this.serverProcessManager.isRunning()) {
-      throw new Error('Server process is not running');
+      throw new Error("Server process is not running");
     }
 
-    this.outputChannel.appendLine('Connecting to MCP server...');
-    this.setState('connecting');
+    this.outputChannel.appendLine("Connecting to MCP server...");
+    this.setState("connecting");
 
     try {
       // Clear any previous error state
@@ -249,7 +270,7 @@ export class MCPClientManager extends EventEmitter {
 
       // Set connection timeout
       this.connectionTimeout = setTimeout(() => {
-        if (this.state === 'connecting') {
+        if (this.state === "connecting") {
           this.handleConnectionTimeout();
         }
       }, this.config.connectionTimeout);
@@ -259,23 +280,26 @@ export class MCPClientManager extends EventEmitter {
 
       // Initialize the connection
       const initResult = await this.client.initialize();
-      
+
       this.connectTime = new Date();
-      this.setState('connected');
+      this.setState("connected");
       this.reconnectAttempts = 0;
-      
+
       this.outputChannel.appendLine(`MCP client connected successfully`);
-      this.outputChannel.appendLine(`Server capabilities: ${JSON.stringify(initResult.capabilities, null, 2)}`);
-      
+      this.outputChannel.appendLine(
+        `Server capabilities: ${JSON.stringify(initResult.capabilities, null, 2)}`,
+      );
+
       // Start heartbeat monitoring
       this.startHeartbeat();
-      
-      const connectionInfo = this.getConnectionInfo();
-      this.emit('connected', connectionInfo);
-      this.emit('serverCapabilities', initResult.capabilities);
 
+      const connectionInfo = this.getConnectionInfo();
+      this.emit("connected", connectionInfo);
+      this.emit("serverCapabilities", initResult.capabilities);
     } catch (error) {
-      this.handleConnectionError(error instanceof Error ? error : new Error(String(error)));
+      this.handleConnectionError(
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     } finally {
       this.clearConnectionTimeout();
@@ -286,12 +310,12 @@ export class MCPClientManager extends EventEmitter {
    * Disconnect from the MCP server
    */
   public async disconnect(): Promise<void> {
-    if (this.state === 'disconnected') {
+    if (this.state === "disconnected") {
       return;
     }
 
-    this.outputChannel.appendLine('Disconnecting from MCP server...');
-    this.setState('disconnected');
+    this.outputChannel.appendLine("Disconnecting from MCP server...");
+    this.setState("disconnected");
 
     // Clear timers
     this.clearTimers();
@@ -306,30 +330,29 @@ export class MCPClientManager extends EventEmitter {
         await this.transport.close();
         this.transport = null;
       }
-
     } catch (error) {
       this.outputChannel.appendLine(`Error during disconnection: ${error}`);
     }
 
     this.connectTime = null;
-    this.outputChannel.appendLine('MCP client disconnected');
-    
-    this.emit('disconnected', this.getConnectionInfo());
+    this.outputChannel.appendLine("MCP client disconnected");
+
+    this.emit("disconnected", this.getConnectionInfo());
   }
 
   /**
    * Reconnect to the MCP server
    */
   public async reconnect(): Promise<void> {
-    this.outputChannel.appendLine('Reconnecting to MCP server...');
-    
-    if (this.state !== 'disconnected') {
+    this.outputChannel.appendLine("Reconnecting to MCP server...");
+
+    if (this.state !== "disconnected") {
       await this.disconnect();
     }
-    
+
     // Add a small delay before reconnect
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     await this.connect();
   }
 
@@ -344,7 +367,7 @@ export class MCPClientManager extends EventEmitter {
    * Check if client is connected
    */
   public isConnected(): boolean {
-    return this.state === 'connected';
+    return this.state === "connected";
   }
 
   /**
@@ -358,8 +381,8 @@ export class MCPClientManager extends EventEmitter {
       reconnectAttempts: this.reconnectAttempts,
       serverCapabilities: this.client ? {} : undefined, // Will be populated with actual capabilities
       clientInfo: {
-        name: 'ast-copilot-helper-vscode',
-        version: '0.1.0',
+        name: "ast-copilot-helper-vscode",
+        version: "0.1.0",
       },
     };
   }
@@ -376,7 +399,7 @@ export class MCPClientManager extends EventEmitter {
    */
   public async listTools(): Promise<MCPTool[]> {
     if (!this.client || !this.isConnected()) {
-      throw new Error('MCP client is not connected');
+      throw new Error("MCP client is not connected");
     }
 
     try {
@@ -391,15 +414,25 @@ export class MCPClientManager extends EventEmitter {
   /**
    * Call a tool on the server
    */
-  public async callTool(name: string, arguments_: Record<string, unknown> = {}): Promise<unknown> {
+  public async callTool(
+    name: string,
+    arguments_: Record<string, unknown> = {},
+  ): Promise<unknown> {
     if (!this.client || !this.isConnected()) {
-      throw new Error('MCP client is not connected');
+      throw new Error("MCP client is not connected");
     }
 
     try {
-      this.outputChannel.appendLine(`Calling tool: ${name} with args: ${JSON.stringify(arguments_)}`);
-      const result = await this.client.callTool({ name, arguments: arguments_ });
-      this.outputChannel.appendLine(`Tool result: ${JSON.stringify(result, null, 2)}`);
+      this.outputChannel.appendLine(
+        `Calling tool: ${name} with args: ${JSON.stringify(arguments_)}`,
+      );
+      const result = await this.client.callTool({
+        name,
+        arguments: arguments_,
+      });
+      this.outputChannel.appendLine(
+        `Tool result: ${JSON.stringify(result, null, 2)}`,
+      );
       return result;
     } catch (error) {
       this.outputChannel.appendLine(`Failed to call tool ${name}: ${error}`);
@@ -412,7 +445,7 @@ export class MCPClientManager extends EventEmitter {
    */
   public async listResources(): Promise<MCPResource[]> {
     if (!this.client || !this.isConnected()) {
-      throw new Error('MCP client is not connected');
+      throw new Error("MCP client is not connected");
     }
 
     try {
@@ -429,7 +462,7 @@ export class MCPClientManager extends EventEmitter {
    */
   public async readResource(uri: string): Promise<unknown> {
     if (!this.client || !this.isConnected()) {
-      throw new Error('MCP client is not connected');
+      throw new Error("MCP client is not connected");
     }
 
     try {
@@ -448,19 +481,25 @@ export class MCPClientManager extends EventEmitter {
   public updateConfig(newConfig: Partial<ClientConfig>): void {
     const oldConfig = { ...this.config };
     this.config = this.normalizeConfig({ ...this.config, ...newConfig });
-    
-    this.outputChannel.appendLine('MCP client configuration updated');
-    
+
+    this.outputChannel.appendLine("MCP client configuration updated");
+
     // If critical settings changed and client is connected, reconnect
-    const criticalSettings = ['connectionTimeout', 'heartbeatInterval'];
-    const criticalChanged = criticalSettings.some(key => 
-      oldConfig[key as keyof ClientConfig] !== this.config[key as keyof ClientConfig]
+    const criticalSettings = ["connectionTimeout", "heartbeatInterval"];
+    const criticalChanged = criticalSettings.some(
+      (key) =>
+        oldConfig[key as keyof ClientConfig] !==
+        this.config[key as keyof ClientConfig],
     );
-    
+
     if (criticalChanged && this.isConnected()) {
-      this.outputChannel.appendLine('Critical settings changed, reconnecting client...');
-      this.reconnect().catch(error => {
-        this.outputChannel.appendLine(`Failed to reconnect after config change: ${error}`);
+      this.outputChannel.appendLine(
+        "Critical settings changed, reconnecting client...",
+      );
+      this.reconnect().catch((error) => {
+        this.outputChannel.appendLine(
+          `Failed to reconnect after config change: ${error}`,
+        );
       });
     }
   }
@@ -474,12 +513,12 @@ export class MCPClientManager extends EventEmitter {
     }
 
     this.isDisposed = true;
-    this.outputChannel.appendLine('Disposing MCPClientManager...');
+    this.outputChannel.appendLine("Disposing MCPClientManager...");
 
     // Disconnect if connected
-    if (this.state !== 'disconnected') {
-      this.disconnect().catch(error => {
-        console.error('Error disconnecting during disposal:', error);
+    if (this.state !== "disconnected") {
+      this.disconnect().catch((error) => {
+        console.error("Error disconnecting during disposal:", error);
       });
     }
 
@@ -496,10 +535,12 @@ export class MCPClientManager extends EventEmitter {
   private setState(newState: ClientState): void {
     const previousState = this.state;
     this.state = newState;
-    
+
     if (previousState !== newState) {
-      this.outputChannel.appendLine(`MCP client state changed: ${previousState} → ${newState}`);
-      this.emit('stateChanged', newState, previousState);
+      this.outputChannel.appendLine(
+        `MCP client state changed: ${previousState} → ${newState}`,
+      );
+      this.emit("stateChanged", newState, previousState);
     }
   }
 
@@ -508,8 +549,8 @@ export class MCPClientManager extends EventEmitter {
    */
   private setupClientHandlers(): void {
     if (!this.client) {
-return;
-}
+      return;
+    }
 
     // Handle client errors
     this.client.onError = (error: Error) => {
@@ -524,7 +565,7 @@ return;
     // Handle notifications from server
     this.client.onNotification = (method: string, params: unknown) => {
       this.outputChannel.appendLine(`Received notification: ${method}`);
-      this.emit('notification', method, params);
+      this.emit("notification", method, params);
     };
   }
 
@@ -532,26 +573,32 @@ return;
    * Handle connection timeout
    */
   private handleConnectionTimeout(): void {
-    this.outputChannel.appendLine('MCP client connection timeout');
-    this.setState('error');
-    this.lastError = 'Connection timeout';
-    
+    this.outputChannel.appendLine("MCP client connection timeout");
+    this.setState("error");
+    this.lastError = "Connection timeout";
+
     this.cleanup();
-    
-    this.emit('error', new Error('Connection timeout'), this.getConnectionInfo());
+
+    this.emit(
+      "error",
+      new Error("Connection timeout"),
+      this.getConnectionInfo(),
+    );
   }
 
   /**
    * Handle connection error
    */
   private handleConnectionError(error: Error): void {
-    this.outputChannel.appendLine(`MCP client connection error: ${error.message}`);
-    this.setState('error');
+    this.outputChannel.appendLine(
+      `MCP client connection error: ${error.message}`,
+    );
+    this.setState("error");
     this.lastError = error.message;
-    
+
     this.cleanup();
-    
-    this.emit('error', error, this.getConnectionInfo());
+
+    this.emit("error", error, this.getConnectionInfo());
   }
 
   /**
@@ -559,11 +606,11 @@ return;
    */
   private handleClientError(error: Error): void {
     this.outputChannel.appendLine(`MCP client error: ${error.message}`);
-    this.setState('error');
+    this.setState("error");
     this.lastError = error.message;
-    
-    this.emit('error', error, this.getConnectionInfo());
-    
+
+    this.emit("error", error, this.getConnectionInfo());
+
     // Attempt reconnect if auto-reconnect is enabled
     this.scheduleReconnect();
   }
@@ -572,17 +619,17 @@ return;
    * Handle client close
    */
   private handleClientClose(): void {
-    if (this.state === 'disconnected') {
+    if (this.state === "disconnected") {
       return; // Expected close
     }
-    
-    this.outputChannel.appendLine('MCP client connection closed unexpectedly');
-    this.setState('disconnected');
-    
+
+    this.outputChannel.appendLine("MCP client connection closed unexpectedly");
+    this.setState("disconnected");
+
     this.cleanup();
-    
-    this.emit('disconnected', this.getConnectionInfo());
-    
+
+    this.emit("disconnected", this.getConnectionInfo());
+
     // Attempt reconnect if auto-reconnect is enabled
     this.scheduleReconnect();
   }
@@ -591,12 +638,14 @@ return;
    * Handle server crash
    */
   private handleServerCrash(): void {
-    this.outputChannel.appendLine('Handling server crash, cleaning up MCP client...');
-    this.setState('disconnected');
-    
+    this.outputChannel.appendLine(
+      "Handling server crash, cleaning up MCP client...",
+    );
+    this.setState("disconnected");
+
     this.cleanup();
-    
-    this.emit('disconnected', this.getConnectionInfo());
+
+    this.emit("disconnected", this.getConnectionInfo());
   }
 
   /**
@@ -604,24 +653,34 @@ return;
    */
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
-      this.outputChannel.appendLine('Maximum reconnect attempts reached');
+      this.outputChannel.appendLine("Maximum reconnect attempts reached");
       return;
     }
 
     this.reconnectAttempts++;
-    this.outputChannel.appendLine(`Scheduling reconnect attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts}...`);
-    
-    this.setState('reconnecting');
-    this.emit('reconnecting', this.reconnectAttempts, this.config.maxReconnectAttempts);
-    
+    this.outputChannel.appendLine(
+      `Scheduling reconnect attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts}...`,
+    );
+
+    this.setState("reconnecting");
+    this.emit(
+      "reconnecting",
+      this.reconnectAttempts,
+      this.config.maxReconnectAttempts,
+    );
+
     this.reconnectTimer = setTimeout(() => {
       if (!this.serverProcessManager.isRunning()) {
-        this.outputChannel.appendLine('Server not running, skipping reconnect attempt');
+        this.outputChannel.appendLine(
+          "Server not running, skipping reconnect attempt",
+        );
         return;
       }
-      
-      this.connect().catch(error => {
-        this.outputChannel.appendLine(`Reconnect attempt failed: ${error.message}`);
+
+      this.connect().catch((error) => {
+        this.outputChannel.appendLine(
+          `Reconnect attempt failed: ${error.message}`,
+        );
       });
     }, this.config.reconnectDelay);
   }
@@ -633,18 +692,22 @@ return;
     if (this.config.heartbeatInterval <= 0) {
       return;
     }
-    
+
     this.heartbeatTimer = setInterval(async () => {
       if (!this.isConnected() || !this.client) {
         return;
       }
-      
+
       try {
         // Simple ping to check if connection is alive
         await this.client.ping();
       } catch (error) {
-        this.outputChannel.appendLine('Heartbeat failed, connection may be lost');
-        this.handleClientError(error instanceof Error ? error : new Error(String(error)));
+        this.outputChannel.appendLine(
+          "Heartbeat failed, connection may be lost",
+        );
+        this.handleClientError(
+          error instanceof Error ? error : new Error(String(error)),
+        );
       }
     }, this.config.heartbeatInterval);
   }
@@ -654,7 +717,7 @@ return;
    */
   private cleanup(): void {
     this.clearTimers();
-    
+
     if (this.client) {
       try {
         this.client.close();
@@ -663,7 +726,7 @@ return;
       }
       this.client = null;
     }
-    
+
     if (this.transport) {
       try {
         this.transport.close();
@@ -672,7 +735,7 @@ return;
       }
       this.transport = null;
     }
-    
+
     this.connectTime = null;
   }
 
@@ -684,12 +747,12 @@ return;
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
     }
-    
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    
+
     this.clearConnectionTimeout();
   }
 
@@ -708,6 +771,12 @@ return;
  * MCP client manager events interface (for TypeScript typing)
  */
 export declare interface MCPClientManagerEvents {
-  on<K extends keyof MCPClientEvents>(event: K, listener: MCPClientEvents[K]): this;
-  emit<K extends keyof MCPClientEvents>(event: K, ...args: Parameters<MCPClientEvents[K]>): boolean;
+  on<K extends keyof MCPClientEvents>(
+    event: K,
+    listener: MCPClientEvents[K],
+  ): this;
+  emit<K extends keyof MCPClientEvents>(
+    event: K,
+    ...args: Parameters<MCPClientEvents[K]>
+  ): boolean;
 }

@@ -6,35 +6,35 @@
 /**
  * Crash types categorization
  */
-export type CrashType = 
-  | 'uncaught-exception'
-  | 'unhandled-rejection' 
-  | 'segmentation-fault'
-  | 'memory-error'
-  | 'stack-overflow'
-  | 'timeout-error'
-  | 'resource-exhaustion'
-  | 'external-signal'
-  | 'assertion-failure'
-  | 'unknown';
+export type CrashType =
+  | "uncaught-exception"
+  | "unhandled-rejection"
+  | "segmentation-fault"
+  | "memory-error"
+  | "stack-overflow"
+  | "timeout-error"
+  | "resource-exhaustion"
+  | "external-signal"
+  | "assertion-failure"
+  | "unknown";
 
 /**
  * Crash severity levels
  */
-export type CrashSeverity = 'critical' | 'high' | 'medium' | 'low';
+export type CrashSeverity = "critical" | "high" | "medium" | "low";
 
 /**
  * Recovery action types
  */
-export type RecoveryActionType = 
-  | 'restart-service'
-  | 'cleanup-resources'
-  | 'reset-state'
-  | 'graceful-shutdown'
-  | 'emergency-save'
-  | 'notify-user'
-  | 'fallback-mode'
-  | 'isolate-component';
+export type RecoveryActionType =
+  | "restart-service"
+  | "cleanup-resources"
+  | "reset-state"
+  | "graceful-shutdown"
+  | "emergency-save"
+  | "notify-user"
+  | "fallback-mode"
+  | "isolate-component";
 
 /**
  * Recovery action definition
@@ -146,7 +146,7 @@ export interface CrashReport {
   timestamp: Date;
   type: CrashType;
   severity: CrashSeverity;
-  
+
   // Error details
   error: {
     name: string;
@@ -157,10 +157,10 @@ export interface CrashReport {
     signal?: string;
     errno?: number;
   };
-  
+
   // System state at crash
   systemState: SystemStateSnapshot;
-  
+
   // Context information
   context: {
     operation?: string;
@@ -170,15 +170,19 @@ export interface CrashReport {
     componentPath?: string[];
     executionContext?: string;
   };
-  
+
   // Recovery information
   recovery: {
     attempted: boolean;
     actions: RecoveryResult[];
-    finalState: 'recovered' | 'partial-recovery' | 'failed' | 'graceful-shutdown';
+    finalState:
+      | "recovered"
+      | "partial-recovery"
+      | "failed"
+      | "graceful-shutdown";
     recoveryDuration: number;
   };
-  
+
   // Analytics data
   analytics: {
     timeToFailure: number; // ms since start
@@ -187,7 +191,7 @@ export interface CrashReport {
     correlatedEvents: string[];
     resourceLeakDetected: boolean;
   };
-  
+
   // Metadata
   metadata: {
     version: string;
@@ -265,27 +269,27 @@ export interface CrashDetectorConfig {
   enableUnhandledRejection: boolean;
   enableMemoryThresholds: boolean;
   enableResourceMonitoring: boolean;
-  
+
   // Thresholds
   memoryThreshold: number; // percentage
   heapThreshold: number; // bytes
   eventLoopLagThreshold: number; // milliseconds
   fileDescriptorThreshold: number; // count
-  
+
   // Monitoring intervals
   monitoringInterval: number; // milliseconds
   analyticsInterval: number; // milliseconds
-  
+
   // Recovery settings
   enableAutoRecovery: boolean;
   maxRecoveryAttempts: number;
   recoveryTimeout: number; // milliseconds
   gracefulShutdownTimeout: number; // milliseconds
-  
+
   // Data retention
   maxCrashReports: number;
   retentionPeriod: number; // milliseconds
-  
+
   // Privacy settings
   captureEnvironmentVars: boolean;
   captureStackTraces: boolean;
@@ -300,7 +304,7 @@ export interface CoreDumpAnalysis {
   dumpId: string;
   analysisTimestamp: Date;
   fileSize: number;
-  
+
   // Memory analysis
   memoryRegions: Array<{
     address: string;
@@ -309,7 +313,7 @@ export interface CoreDumpAnalysis {
     mapping?: string;
     corrupted: boolean;
   }>;
-  
+
   // Thread analysis
   threads: Array<{
     id: number;
@@ -318,7 +322,7 @@ export interface CoreDumpAnalysis {
     registers?: Record<string, string>;
     faultingThread: boolean;
   }>;
-  
+
   // Heap analysis
   heapAnalysis: {
     totalSize: number;
@@ -336,7 +340,7 @@ export interface CoreDumpAnalysis {
       reason: string;
     }>;
   };
-  
+
   // Root cause analysis
   rootCause: {
     primaryCause: string;
@@ -353,20 +357,20 @@ export interface CrashReportingManager {
   // Configuration
   configure(config: Partial<CrashDetectorConfig>): void;
   getConfiguration(): CrashDetectorConfig;
-  
+
   // Detection and monitoring
   startMonitoring(): void;
   stopMonitoring(): void;
   isMonitoring(): boolean;
-  
+
   // Manual crash reporting
   reportCrash(error: Error, context?: any): Promise<CrashReport>;
-  
+
   // Recovery management
   addRecoveryAction(action: RecoveryAction): void;
   removeRecoveryAction(actionId: string): boolean;
   listRecoveryActions(): RecoveryAction[];
-  
+
   // Analytics and reporting
   getCrashAnalytics(options?: {
     startDate?: Date;
@@ -374,16 +378,16 @@ export interface CrashReportingManager {
     severity?: CrashSeverity[];
     crashTypes?: CrashType[];
   }): Promise<CrashAnalytics>;
-  
+
   getCrashHistory(): Promise<CrashReport[]>;
-  exportCrashData(format: 'json' | 'csv'): Promise<string>;
-  
+  exportCrashData(format: "json" | "csv"): Promise<string>;
+
   // Core dump analysis
   analyzeCoredumps(): Promise<CoreDumpAnalysis[]>;
-  
+
   // Health monitoring
   getSystemHealth(): Promise<{
-    status: 'healthy' | 'warning' | 'critical';
+    status: "healthy" | "warning" | "critical";
     metrics: SystemStateSnapshot;
     alerts: string[];
   }>;

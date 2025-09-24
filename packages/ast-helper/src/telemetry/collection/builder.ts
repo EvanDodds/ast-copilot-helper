@@ -3,33 +3,33 @@
  * @description Utility classes for constructing telemetry events
  */
 
-import type { PrivacyLevel } from '../types.js';
-import type { 
+import type { PrivacyLevel } from "../types.js";
+import type {
   TelemetryEvent,
   FeatureUsageEvent,
   CommandExecutionEvent,
   PerformanceEvent,
   ErrorEvent,
   SystemMetricsEvent,
-  TelemetryEventType
-} from './types.js';
+  TelemetryEventType,
+} from "./types.js";
 
 /**
  * Base event builder with common functionality
  */
 abstract class BaseEventBuilder<T extends TelemetryEvent> {
   protected event: Partial<T>;
-  
+
   constructor(eventType: TelemetryEventType, category: string) {
     this.event = {
       id: this.generateEventId(),
-      sessionId: '', // Will be set by data collector
+      sessionId: "", // Will be set by data collector
       userId: undefined, // Will be set by data collector
       timestamp: new Date(),
       eventType,
       category: category as any,
-      privacyLevel: 'balanced' as PrivacyLevel,
-      metadata: {}
+      privacyLevel: "balanced" as PrivacyLevel,
+      metadata: {},
     } as Partial<T>;
   }
 
@@ -89,9 +89,9 @@ abstract class BaseEventBuilder<T extends TelemetryEvent> {
    * Validate required fields are present
    */
   protected validateRequired(fields: (keyof T)[]): void {
-    const missing = fields.filter(field => !this.event[field]);
+    const missing = fields.filter((field) => !this.event[field]);
     if (missing.length > 0) {
-      throw new Error(`Missing required fields: ${missing.join(', ')}`);
+      throw new Error(`Missing required fields: ${missing.join(", ")}`);
     }
   }
 }
@@ -101,12 +101,12 @@ abstract class BaseEventBuilder<T extends TelemetryEvent> {
  */
 export class FeatureUsageEventBuilder extends BaseEventBuilder<FeatureUsageEvent> {
   constructor() {
-    super('usage', 'feature');
+    super("usage", "feature");
     // Initialize data structure according to FeatureUsageEvent interface
     (this.event as any).data = {
-      feature: '',
-      action: '',
-      success: false
+      feature: "",
+      action: "",
+      success: false,
     };
   }
 
@@ -153,7 +153,11 @@ export class FeatureUsageEventBuilder extends BaseEventBuilder<FeatureUsageEvent
   /**
    * Set usage context
    */
-  withContext(context: { fileType?: string; projectSize?: number; astNodeCount?: number }): this {
+  withContext(context: {
+    fileType?: string;
+    projectSize?: number;
+    astNodeCount?: number;
+  }): this {
     (this.event as any).data.context = context;
     return this;
   }
@@ -162,11 +166,11 @@ export class FeatureUsageEventBuilder extends BaseEventBuilder<FeatureUsageEvent
    * Build the feature usage event
    */
   build(): FeatureUsageEvent {
-    this.validateRequired(['sessionId', 'timestamp'] as any[]);
-    
+    this.validateRequired(["sessionId", "timestamp"] as any[]);
+
     const data = (this.event as any).data;
     if (!data?.feature || !data?.action) {
-      throw new Error('Feature name and action are required');
+      throw new Error("Feature name and action are required");
     }
 
     return this.event as FeatureUsageEvent;
@@ -178,12 +182,12 @@ export class FeatureUsageEventBuilder extends BaseEventBuilder<FeatureUsageEvent
  */
 export class CommandExecutionEventBuilder extends BaseEventBuilder<CommandExecutionEvent> {
   constructor() {
-    super('usage', 'command');
+    super("usage", "command");
     // Initialize data structure according to CommandExecutionEvent interface
     (this.event as any).data = {
-      command: '',
+      command: "",
       executionTime: 0,
-      success: false
+      success: false,
     };
   }
 
@@ -255,11 +259,11 @@ export class CommandExecutionEventBuilder extends BaseEventBuilder<CommandExecut
    * Build the command execution event
    */
   build(): CommandExecutionEvent {
-    this.validateRequired(['sessionId', 'timestamp'] as any[]);
-    
+    this.validateRequired(["sessionId", "timestamp"] as any[]);
+
     const data = (this.event as any).data;
     if (!data?.command) {
-      throw new Error('Command name is required');
+      throw new Error("Command name is required");
     }
 
     return this.event as CommandExecutionEvent;
@@ -271,11 +275,11 @@ export class CommandExecutionEventBuilder extends BaseEventBuilder<CommandExecut
  */
 export class PerformanceEventBuilder extends BaseEventBuilder<PerformanceEvent> {
   constructor() {
-    super('performance', 'metrics');
+    super("performance", "metrics");
     // Initialize data structure according to PerformanceEvent interface
     (this.event as any).data = {
-      operation: '',
-      duration: 0
+      operation: "",
+      duration: 0,
     };
   }
 
@@ -298,7 +302,11 @@ export class PerformanceEventBuilder extends BaseEventBuilder<PerformanceEvent> 
   /**
    * Set memory usage metrics
    */
-  withMemoryUsage(memoryUsage: { heapUsed: number; heapTotal: number; external: number }): this {
+  withMemoryUsage(memoryUsage: {
+    heapUsed: number;
+    heapTotal: number;
+    external: number;
+  }): this {
     (this.event as any).data.memoryUsage = memoryUsage;
     return this;
   }
@@ -314,7 +322,11 @@ export class PerformanceEventBuilder extends BaseEventBuilder<PerformanceEvent> 
   /**
    * Set file metrics
    */
-  withFileMetrics(fileMetrics: { filesProcessed: number; linesOfCode: number; astNodes: number }): this {
+  withFileMetrics(fileMetrics: {
+    filesProcessed: number;
+    linesOfCode: number;
+    astNodes: number;
+  }): this {
     (this.event as any).data.fileMetrics = fileMetrics;
     return this;
   }
@@ -322,7 +334,11 @@ export class PerformanceEventBuilder extends BaseEventBuilder<PerformanceEvent> 
   /**
    * Set network metrics
    */
-  withNetworkMetrics(networkMetrics: { requestCount: number; totalBytes: number; avgResponseTime: number }): this {
+  withNetworkMetrics(networkMetrics: {
+    requestCount: number;
+    totalBytes: number;
+    avgResponseTime: number;
+  }): this {
     (this.event as any).data.networkMetrics = networkMetrics;
     return this;
   }
@@ -331,11 +347,11 @@ export class PerformanceEventBuilder extends BaseEventBuilder<PerformanceEvent> 
    * Build the performance event
    */
   build(): PerformanceEvent {
-    this.validateRequired(['sessionId', 'timestamp'] as any[]);
-    
+    this.validateRequired(["sessionId", "timestamp"] as any[]);
+
     const data = (this.event as any).data;
     if (!data?.operation || data?.duration === undefined) {
-      throw new Error('Operation name and duration are required');
+      throw new Error("Operation name and duration are required");
     }
 
     return this.event as PerformanceEvent;
@@ -347,16 +363,16 @@ export class PerformanceEventBuilder extends BaseEventBuilder<PerformanceEvent> 
  */
 export class ErrorEventBuilder extends BaseEventBuilder<ErrorEvent> {
   constructor() {
-    super('error', 'application');
+    super("error", "application");
     // Initialize data structure according to ErrorEvent interface
     (this.event as any).data = {
-      errorType: '',
-      message: '',
-      severity: 'medium',
+      errorType: "",
+      message: "",
+      severity: "medium",
       context: {},
       recoverable: false,
       handled: false,
-      userImpact: 'low'
+      userImpact: "low",
     };
   }
 
@@ -379,7 +395,7 @@ export class ErrorEventBuilder extends BaseEventBuilder<ErrorEvent> {
   /**
    * Set error severity
    */
-  withSeverity(severity: 'low' | 'medium' | 'high' | 'critical'): this {
+  withSeverity(severity: "low" | "medium" | "high" | "critical"): this {
     (this.event as any).data.severity = severity;
     return this;
   }
@@ -395,11 +411,11 @@ export class ErrorEventBuilder extends BaseEventBuilder<ErrorEvent> {
   /**
    * Set error context
    */
-  withContext(context: { 
-    operation?: string; 
-    fileName?: string; 
-    lineNumber?: number; 
-    columnNumber?: number; 
+  withContext(context: {
+    operation?: string;
+    fileName?: string;
+    lineNumber?: number;
+    columnNumber?: number;
   }): this {
     (this.event as any).data.context = context;
     return this;
@@ -424,7 +440,7 @@ export class ErrorEventBuilder extends BaseEventBuilder<ErrorEvent> {
   /**
    * Set user impact level
    */
-  withUserImpact(userImpact: 'none' | 'low' | 'medium' | 'high'): this {
+  withUserImpact(userImpact: "none" | "low" | "medium" | "high"): this {
     (this.event as any).data.userImpact = userImpact;
     return this;
   }
@@ -433,11 +449,11 @@ export class ErrorEventBuilder extends BaseEventBuilder<ErrorEvent> {
    * Build the error event
    */
   build(): ErrorEvent {
-    this.validateRequired(['sessionId', 'timestamp'] as any[]);
-    
+    this.validateRequired(["sessionId", "timestamp"] as any[]);
+
     const data = (this.event as any).data;
     if (!data?.message || !data?.errorType || !data?.severity) {
-      throw new Error('Message, error type, and severity are required');
+      throw new Error("Message, error type, and severity are required");
     }
 
     return this.event as ErrorEvent;
@@ -449,14 +465,14 @@ export class ErrorEventBuilder extends BaseEventBuilder<ErrorEvent> {
  */
 export class SystemMetricsEventBuilder extends BaseEventBuilder<SystemMetricsEvent> {
   constructor() {
-    super('system', 'metrics');
+    super("system", "metrics");
     // Initialize data structure according to SystemMetricsEvent interface
     (this.event as any).data = {
       platform: process.platform,
       nodeVersion: process.version,
       memoryTotal: 0,
       memoryFree: 0,
-      cpuCount: 0
+      cpuCount: 0,
     };
   }
 
@@ -504,7 +520,11 @@ export class SystemMetricsEventBuilder extends BaseEventBuilder<SystemMetricsEve
   /**
    * Set disk space metrics
    */
-  withDiskSpace(diskSpace: { total: number; free: number; used: number }): this {
+  withDiskSpace(diskSpace: {
+    total: number;
+    free: number;
+    used: number;
+  }): this {
     (this.event as any).data.diskSpace = diskSpace;
     return this;
   }
@@ -513,11 +533,11 @@ export class SystemMetricsEventBuilder extends BaseEventBuilder<SystemMetricsEve
    * Build the system metrics event
    */
   build(): SystemMetricsEvent {
-    this.validateRequired(['sessionId', 'timestamp'] as any[]);
-    
+    this.validateRequired(["sessionId", "timestamp"] as any[]);
+
     const data = (this.event as any).data;
     if (!data?.nodeVersion || !data?.platform) {
-      throw new Error('Node version and platform are required');
+      throw new Error("Node version and platform are required");
     }
 
     return this.event as SystemMetricsEvent;
@@ -566,15 +586,17 @@ export class EventBuilderFactory {
   /**
    * Create a builder based on event type
    */
-  static createBuilder(eventType: TelemetryEventType): BaseEventBuilder<TelemetryEvent> {
+  static createBuilder(
+    eventType: TelemetryEventType,
+  ): BaseEventBuilder<TelemetryEvent> {
     switch (eventType) {
-      case 'usage':
+      case "usage":
         return new FeatureUsageEventBuilder() as any;
-      case 'performance':
+      case "performance":
         return new PerformanceEventBuilder() as any;
-      case 'error':
+      case "error":
         return new ErrorEventBuilder() as any;
-      case 'system':
+      case "system":
         return new SystemMetricsEventBuilder() as any;
       default:
         throw new Error(`Unknown event type: ${eventType}`);
@@ -597,9 +619,13 @@ export class EventBuilderUtils {
       success?: boolean;
       duration?: number;
       parameters?: Record<string, any>;
-      context?: { fileType?: string; projectSize?: number; astNodeCount?: number };
+      context?: {
+        fileType?: string;
+        projectSize?: number;
+        astNodeCount?: number;
+      };
       privacyLevel?: PrivacyLevel;
-    }
+    },
   ): FeatureUsageEvent {
     const builder = EventBuilderFactory.createFeatureUsageBuilder()
       .withSessionId(sessionId)
@@ -636,20 +662,20 @@ export class EventBuilderUtils {
     sessionId: string,
     message: string,
     errorType: string,
-    severity: 'low' | 'medium' | 'high' | 'critical',
+    severity: "low" | "medium" | "high" | "critical",
     options?: {
       stackTrace?: string;
-      context?: { 
-        operation?: string; 
-        fileName?: string; 
-        lineNumber?: number; 
-        columnNumber?: number; 
+      context?: {
+        operation?: string;
+        fileName?: string;
+        lineNumber?: number;
+        columnNumber?: number;
       };
       recoverable?: boolean;
       handled?: boolean;
-      userImpact?: 'none' | 'low' | 'medium' | 'high';
+      userImpact?: "none" | "low" | "medium" | "high";
       privacyLevel?: PrivacyLevel;
-    }
+    },
   ): ErrorEvent {
     const builder = EventBuilderFactory.createErrorBuilder()
       .withSessionId(sessionId)
@@ -694,10 +720,18 @@ export class EventBuilderUtils {
     options?: {
       memoryUsage?: { heapUsed: number; heapTotal: number; external: number };
       cpuUsage?: { user: number; system: number };
-      fileMetrics?: { filesProcessed: number; linesOfCode: number; astNodes: number };
-      networkMetrics?: { requestCount: number; totalBytes: number; avgResponseTime: number };
+      fileMetrics?: {
+        filesProcessed: number;
+        linesOfCode: number;
+        astNodes: number;
+      };
+      networkMetrics?: {
+        requestCount: number;
+        totalBytes: number;
+        avgResponseTime: number;
+      };
       privacyLevel?: PrivacyLevel;
-    }
+    },
   ): PerformanceEvent {
     const builder = EventBuilderFactory.createPerformanceBuilder()
       .withSessionId(sessionId)
@@ -739,12 +773,15 @@ export class EventBuilderUtils {
       loadAverage?: number[];
       diskSpace?: { total: number; free: number; used: number };
       privacyLevel?: PrivacyLevel;
-    }
+    },
   ): SystemMetricsEvent {
-    const builder = EventBuilderFactory.createSystemMetricsBuilder()
-      .withSessionId(sessionId);
+    const builder =
+      EventBuilderFactory.createSystemMetricsBuilder().withSessionId(sessionId);
 
-    if (options?.memoryTotal !== undefined && options?.memoryFree !== undefined) {
+    if (
+      options?.memoryTotal !== undefined &&
+      options?.memoryFree !== undefined
+    ) {
       builder.withMemoryMetrics(options.memoryTotal, options.memoryFree);
     }
 
