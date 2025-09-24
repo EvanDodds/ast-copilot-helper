@@ -38,6 +38,8 @@ __metadata:
     vitest: "npm:^3.2.4"
     web-tree-sitter: "npm:^0.21.0"
   dependenciesMeta:
+    onnxruntime-node:
+      optional: true
     tree-sitter:
       optional: true
     tree-sitter-javascript:
@@ -4636,7 +4638,6 @@ __metadata:
     adm-zip: "npm:^0.5.16"
     global-agent: "npm:^3.0.0"
     onnxruntime-common: "npm:1.22.0"
-  checksum: 10c9/b7a7d899fa7a46633b792b764c60858f74396866808a223666bb3d6ddfe0fb01bca4eed212b0cd4c6a0135c25354258b3003020f7d28801bfc7e9383eb737693
   conditions: (os=win32 | os=darwin | os=linux)
   languageName: node
   linkType: hard

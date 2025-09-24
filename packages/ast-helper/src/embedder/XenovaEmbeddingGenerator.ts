@@ -57,6 +57,12 @@ export class XenovaEmbeddingGenerator implements EmbeddingGenerator {
       env.localModelPath = path.dirname(modelPath);
       env.backends.onnx.wasm.wasmPaths = path.join(path.dirname(modelPath), 'wasm/');
       
+      // Force WASM backend and disable native ONNX runtime to avoid compilation issues
+      env.backends.onnx.wasm.numThreads = 1;
+      if (env.backends.onnx.wasm.proxy !== undefined) {
+        env.backends.onnx.wasm.proxy = false;
+      }
+      
       // Validate model path exists
       if (!await this.validateModelPath(modelPath)) {
         throw new ModelInitializationError(

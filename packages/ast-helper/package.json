@@ -86,10 +86,10 @@
     "chokidar": "^4.0.3",
     "commander": "^14.0.1",
     "hnswlib-node": "^3.0.0",
-    "minimatch": "^10.0.3",
-    "onnxruntime-node": "^1.22.0-rev"
+    "minimatch": "^10.0.3"
   },
   "optionalDependencies": {
+    "onnxruntime-node": "^1.22.0-rev",
     "tree-sitter": "^0.21.0",
     "tree-sitter-javascript": "^0.20.1",
     "tree-sitter-python": "^0.20.4",

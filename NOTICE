@@ -42,6 +42,10 @@ License text not available
 
 ## MIT
 
+### @eslint/js v^9.0.0
+Source: https://github.com/eslint/eslint.git
+License: MIT License
+
 ### @types/js-yaml v^4.0.9
 Copyright: Bart van der Schoor, Sebastian Clausen, ExE Boss, Armaan Tobaccowalla, Linus Unnebäck
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
@@ -57,6 +61,16 @@ Copyright: Jared Klopper, Gyusun Yeom, Alan Plum, Carsten Klein, BendingBender
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
+### @typescript-eslint/eslint-plugin v^8.0.0
+Copyright: typescript-eslint and other contributors
+Source: https://github.com/typescript-eslint/typescript-eslint.git
+License: MIT License
+
+### @typescript-eslint/parser v^8.0.0
+Copyright: typescript-eslint and other contributors
+Source: https://github.com/typescript-eslint/typescript-eslint.git
+License: MIT License
+
 ### @vitest/coverage-v8 v^3.2.4
 Copyright: Anthony Fu <anthonyfu117@hotmail.com>
 Source: git+https://github.com/vitest-dev/vitest.git
@@ -66,12 +80,25 @@ License: MIT License
 Source: git+https://github.com/vitest-dev/vitest.git
 License: MIT License
 
+### eslint v^9.0.0
+Copyright: Nicholas C. Zakas <nicholas+npm@nczconsulting.com>
+License: MIT License
+
+### globals v^16.4.0
+Copyright: Sindre Sorhus
+License: MIT License
+
 ### husky v^8.0.3
 Copyright: Typicode <typicode@gmail.com>, typicode
 License: MIT License
 
 ### js-yaml v^4.1.0
 Copyright: Vladimir Zapparov <dervus.grim@gmail.com>, Aleksey V Zapparov <ixti@member.fsf.org> (http://www.ixti.net/), Vitaly Puzrin <vitaly@rcdesign.ru> (https://github.com/puzrin), Martin Grenfell <martin.grenfell@gmail.com> (http://got-ravings.blogspot.com), by Vitaly Puzrin
+License: MIT License
+
+### lint-staged v^16.2.0
+Copyright: Andrey Okonetchnikov <andrey@okonet.ru>, Andrey Okonetchnikov
+Source: git+https://github.com/lint-staged/lint-staged.git
 License: MIT License
 
 ### tmp v^0.2.3
@@ -85,6 +112,11 @@ License: MIT License
 
 ### tsx v^4.20.5
 Copyright: Hiroki Osame
+License: MIT License
+
+### typescript-eslint v^8.0.0
+Copyright: typescript-eslint and other contributors
+Source: https://github.com/typescript-eslint/typescript-eslint.git
 License: MIT License
 
 ### vitest v^3.2.4
@@ -110,11 +142,6 @@ License: MIT License
 ### commander v^14.0.1
 Copyright: TJ Holowaychuk <tj@vision-media.ca>
 Source: git+https://github.com/tj/commander.js.git
-License: MIT License
-
-### onnxruntime-node v^1.22.0-rev
-Copyright: fs-eire
-Source: https://github.com/Microsoft/onnxruntime.git
 License: MIT License
 
 ### @types/better-sqlite3 v^7.6.11
@@ -261,5 +288,5 @@ ISC License...
 ---
 
 
-Generated on: 2025-09-23T20:36:32.954Z
+Generated on: 2025-09-24T02:29:09.818Z
 By: ast-copilot-helper legal compliance system

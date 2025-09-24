@@ -3,7 +3,7 @@ CREDITS
 
 This software is made possible by the following open source contributors:
 
-## Contributors (81 total)
+## Contributors (85 total)
 
 - >
 - Alan Plum
@@ -13,6 +13,8 @@ This software is made possible by the following open source contributors:
 - Andrew Bradley
 - Andrew Kaiser
 - Andrew Makarov
+- Andrey Okonetchnikov
+- Andrey Okonetchnikov <andrey@okonet.ru>
 - Anna Henningsen
 - Anthony Fu <anthonyfu117@hotmail.com>
 - Anthony Fu <https://github.com/antfu>
@@ -59,6 +61,7 @@ This software is made possible by the following open source contributors:
 - Microsoft Corporation
 - Microsoft TypeScript
 - Mohsen Azimi
+- Nicholas C. Zakas <nicholas+npm@nczconsulting.com>
 - Nikita Galkin
 - NodeJS Contributors
 - Paul Miller (https://paulmillr.com)
@@ -69,6 +72,7 @@ This software is made possible by the following open source contributors:
 - Sebastian Clausen
 - Sebastian Silbermann
 - Shant Marouti
+- Sindre Sorhus
 - TJ Holowaychuk <tj@vision-media.ca>
 - Terkel Gjervig Nielsen
 - Trivikram Kamat
@@ -82,7 +86,7 @@ This software is made possible by the following open source contributors:
 - Xenova
 - by Vitaly Puzrin
 - by various contributors (see AUTHORS)
-- fs-eire
+- typescript-eslint and other contributors
 - typicode
 - vvakame
 - wafuwafu13
@@ -215,6 +219,12 @@ This software is made possible by the following open source contributors:
 ### @types/vscode
 - Visual Studio Code Team, Microsoft
 
+### @typescript-eslint/eslint-plugin
+- typescript-eslint and other contributors
+
+### @typescript-eslint/parser
+- typescript-eslint and other contributors
+
 ### @vitest/coverage-v8
 - Anthony Fu <anthonyfu117@hotmail.com>
 
@@ -241,6 +251,12 @@ This software is made possible by the following open source contributors:
 ### commander
 - TJ Holowaychuk <tj@vision-media.ca>
 
+### eslint
+- Nicholas C. Zakas <nicholas+npm@nczconsulting.com>
+
+### globals
+- Sindre Sorhus
+
 ### hnswlib-node
 - Atsushi Tatsuma
 
@@ -255,12 +271,13 @@ This software is made possible by the following open source contributors:
 - Martin Grenfell <martin.grenfell@gmail.com> (http://got-ravings.blogspot.com)
 - by Vitaly Puzrin
 
+### lint-staged
+- Andrey Okonetchnikov <andrey@okonet.ru>
+- Andrey Okonetchnikov
+
 ### minimatch
 - Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)
 - Isaac Z. Schlueter and Contributors
-
-### onnxruntime-node
-- fs-eire
 
 ### tmp
 - KARASZI István <github@spam.raszi.hu>
@@ -289,6 +306,9 @@ This software is made possible by the following open source contributors:
 - Microsoft Corp.
 - Microsoft Corp.
 - Microsoft Corp.
+
+### typescript-eslint
+- typescript-eslint and other contributors
 
 ### vitest
 - Anthony Fu <anthonyfu117@hotmail.com>
@@ -333,5 +353,5 @@ This software is made possible by the following open source contributors:
 - Luigi Pinca and contributors
 
 
-Generated on: 2025-09-23T20:36:32.954Z
+Generated on: 2025-09-24T02:29:09.819Z
 By: ast-copilot-helper legal compliance system

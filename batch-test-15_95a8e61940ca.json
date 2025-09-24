@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "filePath": "/tmp/ast-integration-test-1758680955476/batch-test-15.ts",
+    "relativePath": "../batch-test-15.ts",
+    "language": "typescript",
+    "size": 172,
+    "mtime": "2025-09-24T02:29:15.481Z",
+    "hash": "95a8e61940cad8cf805074910d6394c3aaab67f47212daa9f39a48818b1ef94b",
+    "processedAt": "2025-09-24T02:29:15.507Z"
+  },
+  "parseResult": {
+    "nodes": [],
+    "errors": [],
+    "language": "",
+    "parseTime": 0
+  },
+  "statistics": {
+    "nodeCount": 0,
+    "errorCount": 0,
+    "hasErrors": false
+  }
+}

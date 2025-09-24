@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2025-09-23T20:36:32.954Z",
+  "generatedAt": "2025-09-24T02:29:09.819Z",
   "generator": "ast-copilot-helper-legal-compliance",
-  "totalDependencies": 48,
+  "totalDependencies": 54,
   "dependencies": [
     {
       "name": "vue",
@@ -35,6 +35,19 @@
       },
       "copyrightHolders": [],
       "attributionRequired": true
+    },
+    {
+      "name": "@eslint/js",
+      "version": "^9.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [],
+      "sourceUrl": "https://github.com/eslint/eslint.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@eslint/js/LICENSE"
     },
     {
       "name": "@types/js-yaml",
@@ -111,6 +124,36 @@
       "licenseFile": "node_modules/@types/tmp/LICENSE"
     },
     {
+      "name": "@typescript-eslint/eslint-plugin",
+      "version": "^8.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "typescript-eslint and other contributors"
+      ],
+      "sourceUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@typescript-eslint/eslint-plugin/LICENSE"
+    },
+    {
+      "name": "@typescript-eslint/parser",
+      "version": "^8.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "typescript-eslint and other contributors"
+      ],
+      "sourceUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@typescript-eslint/parser/LICENSE"
+    },
+    {
       "name": "@vitest/coverage-v8",
       "version": "^3.2.4",
       "license": {
@@ -137,6 +180,33 @@
       "sourceUrl": "git+https://github.com/vitest-dev/vitest.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@vitest/ui/LICENSE"
+    },
+    {
+      "name": "eslint",
+      "version": "^9.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Nicholas C. Zakas <nicholas+npm@nczconsulting.com>"
+      ],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/eslint/LICENSE"
+    },
+    {
+      "name": "globals",
+      "version": "^16.4.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Sindre Sorhus"
+      ],
+      "attributionRequired": true
     },
     {
       "name": "husky",
@@ -170,6 +240,22 @@
       ],
       "attributionRequired": true,
       "licenseFile": "node_modules/js-yaml/LICENSE"
+    },
+    {
+      "name": "lint-staged",
+      "version": "^16.2.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Andrey Okonetchnikov <andrey@okonet.ru>",
+        "Andrey Okonetchnikov"
+      ],
+      "sourceUrl": "git+https://github.com/lint-staged/lint-staged.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/lint-staged/LICENSE"
     },
     {
       "name": "tmp",
@@ -232,6 +318,21 @@
       "sourceUrl": "https://github.com/microsoft/TypeScript.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/typescript/LICENSE.txt"
+    },
+    {
+      "name": "typescript-eslint",
+      "version": "^8.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "typescript-eslint and other contributors"
+      ],
+      "sourceUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/typescript-eslint/LICENSE"
     },
     {
       "name": "vitest",
@@ -384,20 +485,6 @@
       "sourceUrl": "git://github.com/isaacs/minimatch.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/minimatch/LICENSE"
-    },
-    {
-      "name": "onnxruntime-node",
-      "version": "^1.22.0-rev",
-      "license": {
-        "spdxId": "MIT",
-        "name": "MIT License",
-        "url": "https://opensource.org/licenses/MIT"
-      },
-      "copyrightHolders": [
-        "fs-eire"
-      ],
-      "sourceUrl": "https://github.com/Microsoft/onnxruntime.git",
-      "attributionRequired": true
     },
     {
       "name": "@types/better-sqlite3",
@@ -833,12 +920,12 @@
   ],
   "licenseSummary": {
     "UNKNOWN": 10,
-    "MIT": 31,
+    "MIT": 37,
     "Apache-2.0": 6,
     "ISC": 1
   },
   "complianceInfo": {
-    "attributionRequiredCount": 48,
+    "attributionRequiredCount": 54,
     "uniqueLicenses": [
       "UNKNOWN",
       "MIT",

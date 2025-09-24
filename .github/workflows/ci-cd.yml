@@ -30,6 +30,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
+      - name: Setup build tools for native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev
+        
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
