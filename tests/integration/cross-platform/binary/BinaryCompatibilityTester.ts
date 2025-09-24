@@ -322,17 +322,31 @@ export class BinaryCompatibilityTester {
       let version: string | undefined;
       let functionality = false;
 
-      // Attempt to load the module
+      // Attempt to load the module with defensive error handling
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        moduleInstance = require(module.name);
-        loadSuccess = true;
+        // Validate module name before attempting require
+        if (!module.name || typeof module.name !== 'string') {
+          throw new Error(`Invalid module name: ${module.name}`);
+        }
+
+        // Use dynamic import instead of require for better error handling
+        try {
+          moduleInstance = await import(module.name);
+          loadSuccess = true;
+        } catch (_importError) {
+          // Fallback to require for CommonJS modules with additional safety
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          moduleInstance = require(module.name);
+          loadSuccess = true;
+        }
 
         // Get version if available
-        if (moduleInstance.version) {
-          version = moduleInstance.version;
-        } else if (moduleInstance.VERSION) {
-          version = moduleInstance.VERSION;
+        if (moduleInstance && typeof moduleInstance === 'object') {
+          if (moduleInstance.version) {
+            version = moduleInstance.version;
+          } else if (moduleInstance.VERSION) {
+            version = moduleInstance.VERSION;
+          }
         }
       } catch (loadError) {
         return {

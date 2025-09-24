@@ -2,7 +2,7 @@
   "name": "ast-copilot-helper-extension",
   "displayName": "AST Copilot Helper",
   "description": "VS Code extension for managing AST-based code analysis server with MCP protocol support",
-  "version": "0.1.0",
+  "version": "1.5.0",
   "publisher": "ast-copilot-helper",
   "main": "./dist/extension.js",
   "icon": "resources/icon.png",

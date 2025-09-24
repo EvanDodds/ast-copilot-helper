@@ -6,7 +6,7 @@
  */
 
 import Database from "better-sqlite3";
-import { promises as fs } from "fs";
+import { promises as fs, mkdirSync } from "fs";
 import { dirname } from "path";
 import type {
   VectorMetadata,
@@ -89,6 +89,15 @@ export class SQLiteVectorStorage {
 
   constructor(config: VectorDBConfig) {
     this.config = config;
+    
+    // Ensure directory exists before opening database
+    const dir = dirname(config.storageFile);
+    try {
+      mkdirSync(dir, { recursive: true });
+    } catch (_error) {
+      // Directory might already exist, that's okay
+    }
+    
     this.db = new Database(config.storageFile);
 
     // Configure SQLite for performance
