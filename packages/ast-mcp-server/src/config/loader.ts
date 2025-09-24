@@ -208,9 +208,10 @@ export class ConfigManager extends EventEmitter {
       if (error instanceof Error) {
         if (
           error.message.includes("ENOENT") ||
-          error.message.includes("no such file or directory")
+          error.message.includes("no such file or directory") ||
+          (error as any).code === "ENOENT"
         ) {
-          throw new Error(`Configuration file not found: ${filePath}`);
+          throw new Error("Configuration file not found");
         } else if (
           error instanceof SyntaxError ||
           error.message.includes("Unexpected token") ||
@@ -219,7 +220,8 @@ export class ConfigManager extends EventEmitter {
           throw new Error(`Invalid JSON in configuration file: ${filePath}`);
         } else if (
           error.message.includes("Permission denied") ||
-          error.message.includes("EACCES")
+          error.message.includes("EACCES") ||
+          (error as any).code === "EACCES"
         ) {
           throw new Error(
             `Permission denied reading configuration file: ${filePath}`,

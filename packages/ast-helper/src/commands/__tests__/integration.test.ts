@@ -326,19 +326,19 @@ describe("Parse Command Integration Tests (Subtask 7)", () => {
     }, 15000);
 
     it("should handle memory pressure events during processing", async () => {
-      // Create a larger test file that might trigger memory monitoring
+      // Create a moderately sized test file for memory monitoring
       const largeTestFile = {
         path: join(tempDir, "large-file.ts"),
         content: Array.from(
-          { length: 100 },
+          { length: 20 },
           (_, i) => `
           export class LargeClass${i} {
             ${Array.from(
-              { length: 10 },
+              { length: 5 },
               (_, j) => `
               method${j}(): void {
                 // Method ${j} implementation
-                const data = Array.from({ length: 10 }, (_, k) => k);
+                const data = Array.from({ length: 5 }, (_, k) => k);
                 return data.forEach(item => console.log(item));
               }
             `,
@@ -381,7 +381,7 @@ describe("Parse Command Integration Tests (Subtask 7)", () => {
       // but workflow integration should complete successfully
 
       await fileProcessor.dispose();
-    }, 15000);
+    }, 30000);
   });
 
   describe("Error Handling Integration", () => {

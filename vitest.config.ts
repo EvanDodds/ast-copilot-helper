@@ -38,12 +38,12 @@ export default defineConfig({
     testTimeout: 30000, // 30s for integration tests
     hookTimeout: 10000, // 10s for setup/teardown
     // Force sequential execution to reduce memory pressure
-    pool: "threads",
+    pool: "vmThreads",
     poolOptions: {
-      threads: {
+      vmThreads: {
         maxThreads: 1,
         minThreads: 1,
-        isolate: false, // Share context to reduce memory usage
+        memoryLimit: "512MB",
       },
     },
     // Memory management configuration

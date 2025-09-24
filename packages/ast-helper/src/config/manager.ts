@@ -34,7 +34,9 @@ export class ConfigManager {
 
       // 4. User config and 3. Project config
       const fileConfigs = await loadConfigFiles(workspacePath);
-      sources.push(...fileConfigs.reverse()); // Reverse to get user config first, then project
+      if (fileConfigs && Array.isArray(fileConfigs)) {
+        sources.push(...fileConfigs.reverse()); // Reverse to get user config first, then project
+      }
 
       // 2. Environment variables
       const envConfig = parseEnvironmentConfig();

@@ -158,7 +158,11 @@ describe("ASTDatabaseReader", () => {
 
       expect(stats.nodeCount).toBeGreaterThan(0);
       expect(stats.fileCount).toBe(1);
-      expect(stats.lastUpdated).toBeInstanceOf(Date);
+      // Check that lastUpdated is a valid date by trying alternative assertions
+      expect(stats.lastUpdated).toBeDefined();
+      expect(typeof stats.lastUpdated).toBe("object");
+      expect(stats.lastUpdated.constructor.name).toBe("Date");
+      expect(stats.lastUpdated.getTime()).toBeGreaterThan(0);
     });
 
     it("should return false for empty index", async () => {

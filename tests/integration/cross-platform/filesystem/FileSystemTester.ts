@@ -1,5 +1,5 @@
-import { promises as fs, constants as fsConstants } from "fs";
-import { join, sep, normalize, resolve, basename, dirname } from "path";
+import { promises as fs, watchFile, unwatchFile } from "fs";
+import { join, sep, normalize, basename, dirname } from "path";
 import { platform, tmpdir } from "os";
 import { FileSystemTestResult, TestResult } from "../types";
 
@@ -705,12 +705,14 @@ export class FileSystemTester {
         stats.mtime instanceof Date && stats.ctime instanceof Date;
       const hasValidMode = typeof stats.mode === "number";
 
+      const testPassed = hasValidSize && hasValidDates && hasValidMode;
       results.push({
         name: testName,
         category: "filesystem",
-        passed: hasValidSize && hasValidDates && hasValidMode,
+        passed: testPassed,
         platform: this.platform,
         duration: Date.now() - startTime,
+        error: testPassed ? undefined : "File attributes validation failed - invalid size, dates, or mode",
         details: {
           size: stats.size,
           mode: stats.mode.toString(8),
@@ -819,10 +821,10 @@ export class FileSystemTester {
       await fs.writeFile(testFile, "initial content");
 
       let watchTriggered = false;
-      const watcher = fs.watch(this.testDir, (eventType, filename) => {
-        if (filename === basename(testFile) && eventType === "change") {
-          watchTriggered = true;
-        }
+      
+      // Use watchFile instead for better cross-platform compatibility
+      watchFile(testFile, () => {
+        watchTriggered = true;
       });
 
       // Give watcher time to initialize
@@ -832,9 +834,9 @@ export class FileSystemTester {
       await fs.writeFile(testFile, "modified content");
 
       // Wait for watch event
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      watcher.close();
+      unwatchFile(testFile);
 
       results.push({
         name: testName,
@@ -842,6 +844,7 @@ export class FileSystemTester {
         passed: watchTriggered,
         platform: this.platform,
         duration: Date.now() - startTime,
+        error: watchTriggered ? undefined : "File watching did not trigger when file was modified",
         details: { watchTriggered, filename: basename(testFile) },
       });
     } catch (error) {
@@ -887,6 +890,7 @@ export class FileSystemTester {
         passed: allSuccessful,
         platform: this.platform,
         duration: Date.now() - startTime,
+        error: allSuccessful ? undefined : "Concurrent file operations did not all complete successfully",
         details: {
           operationCount: operations.length,
           allSuccessful,
