@@ -51,7 +51,7 @@ class StagingDeployment {
   private getLatestCommit(): string {
     try {
       return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
-    } catch (error) {
+    } catch (_error) {
       return `local-${Date.now()}`;
     }
   }
@@ -266,8 +266,8 @@ async function main(): Promise<void> {
   }
 }
 
-// Run only if this file is executed directly
-if (require.main === module) {
+// Run only if this file is executed directly (ES module equivalent)
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
     console.error('Unhandled error:', error);
     process.exit(1);

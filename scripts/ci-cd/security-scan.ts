@@ -77,7 +77,7 @@ class SecurityScanner {
       if (error.stdout) {
         try {
           return JSON.parse(error.stdout);
-        } catch (parseError) {
+        } catch (_parseError) {
           console.warn('⚠️  Could not parse npm audit output');
           return { vulnerabilities: {} };
         }
@@ -134,7 +134,7 @@ class SecurityScanner {
       
       return { score: Math.max(0, score), issues };
       
-    } catch (error) {
+    } catch (_error) {
       return { score: 0, issues: ['Could not parse package.json'] };
     }
   }
@@ -158,7 +158,7 @@ class SecurityScanner {
       
       return { score: Math.max(0, score), dependencyCount: depCount };
       
-    } catch (error) {
+    } catch (_error) {
       return { score: 5, dependencyCount: -1, error: 'Could not analyze dependencies' };
     }
   }
@@ -166,7 +166,7 @@ class SecurityScanner {
   private checkLicenseSecurity(): any {
     // Check for license compatibility issues
     try {
-      const output = execSync('npm list --json', {
+      const _output = execSync('npm list --json', {
         encoding: 'utf8',
         stdio: ['pipe', 'pipe', 'pipe']
       });
@@ -174,7 +174,7 @@ class SecurityScanner {
       // This is a simplified check - in production you'd want more sophisticated license analysis
       return { score: 10, issues: [] };
       
-    } catch (error) {
+    } catch (_error) {
       return { score: 5, issues: ['Could not check licenses'] };
     }
   }
@@ -268,7 +268,8 @@ async function main() {
   process.exit(result.score >= threshold ? 0 : 1);
 }
 
-if (require.main === module) {
+// ES module equivalent of require.main === module
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(error => {
     console.error('❌ Security scan failed:', error);
     process.exit(1);

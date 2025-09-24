@@ -308,6 +308,12 @@ export class PerformanceBenchmarkRunner extends EventEmitter {
       case 'cli-memory-usage-basic':
       case 'cli-memory-usage-large':
         return this.simulateCliMemoryUsage(benchmark.name.includes('large'));
+      case 'passing-test':
+        // For test that should pass: return value close to target with acceptable deviation
+        return benchmark.target.value * 0.8; // 80% of target, well within tolerance
+      case 'failing-test':
+        // For test that should fail: return value that exceeds tolerance significantly
+        return benchmark.target.value * 10; // 10x the target, way beyond tolerance
       default:
         return Math.random() * 1000;
     }
