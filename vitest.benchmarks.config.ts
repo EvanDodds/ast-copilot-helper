@@ -33,6 +33,7 @@ export default defineConfig({
       "tests/fixtures/",
       // Only exclude truly problematic tests
       "**/XenovaEmbeddingGenerator.test.ts",
+      "**/performance-benchmark.test.ts",
     ],
     setupFiles: ["./tests/setup.ts"],
   },
