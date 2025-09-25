@@ -18,5 +18,12 @@ export { PhpExtractor } from "./php-extractor.js";
 export { RubyExtractor } from "./ruby-extractor.js";
 export { KotlinExtractor } from "./kotlin-extractor.js";
 
+// Tier 3 extractors (Specialized Priority)
+export { SwiftExtractor } from "./swift-extractor.js";
+export { DartExtractor } from "./dart-extractor.js";
+export { ScalaExtractor } from "./scala-extractor.js";
+export { LuaExtractor } from "./lua-extractor.js";
+export { BashExtractor } from "./bash-extractor.js";
+
 // Utilities
 export { ExtractionUtils } from "./extraction-utils.js";

@@ -119,6 +119,52 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     parserModule: "tree-sitter-kotlin",
     wasmPath: "tree-sitter-kotlin.wasm",
   },
+
+  // Tier 3 Languages (Specialized Priority)
+  {
+    name: "swift",
+    extensions: [".swift"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-swift@0.4.0/tree-sitter-swift.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-swift",
+    wasmPath: "tree-sitter-swift.wasm",
+  },
+  {
+    name: "dart",
+    extensions: [".dart"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-dart@0.0.1/tree-sitter-dart.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-dart",
+    wasmPath: "tree-sitter-dart.wasm",
+  },
+  {
+    name: "scala",
+    extensions: [".scala", ".sc"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-scala@0.20.2/tree-sitter-scala.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-scala",
+    wasmPath: "tree-sitter-scala.wasm",
+  },
+  {
+    name: "lua",
+    extensions: [".lua"],
+    grammarUrl: "https://unpkg.com/tree-sitter-lua@0.0.19/tree-sitter-lua.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-lua",
+    wasmPath: "tree-sitter-lua.wasm",
+  },
+  {
+    name: "bash",
+    extensions: [".sh", ".bash", ".zsh", ".fish"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-bash@0.20.4/tree-sitter-bash.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-bash",
+    wasmPath: "tree-sitter-bash.wasm",
+  },
 ];
 
 /**
@@ -339,6 +385,54 @@ export class LanguageDetector {
       { pattern: /class\s+\w+(\s*:\s*\w+)?/, language: "kotlin" },
       { pattern: /val\s+\w+\s*=|var\s+\w+\s*=/, language: "kotlin" },
       { pattern: /println\s*\(/, language: "kotlin" },
+
+      // Swift-specific patterns
+      { pattern: /^import\s+\w+/m, language: "swift" },
+      { pattern: /func\s+\w+\s*\([^)]*\)/, language: "swift" },
+      { pattern: /class\s+\w+(\s*:\s*\w+)?/, language: "swift" },
+      { pattern: /struct\s+\w+(\s*:\s*\w+)?/, language: "swift" },
+      { pattern: /var\s+\w+\s*:\s*\w+|let\s+\w+\s*:\s*\w+/, language: "swift" },
+      { pattern: /protocol\s+\w+/, language: "swift" },
+      { pattern: /@\w+\s*$/, language: "swift" },
+
+      // Dart-specific patterns
+      { pattern: /^import\s+['"]dart:.*['"];?/m, language: "dart" },
+      { pattern: /^library\s+[\w.]+\s*;?/m, language: "dart" },
+      { pattern: /class\s+\w+(\s+extends\s+\w+)?/, language: "dart" },
+      { pattern: /void\s+main\s*\(\s*\)/, language: "dart" },
+      { pattern: /var\s+\w+\s*=|final\s+\w+\s*=/, language: "dart" },
+      { pattern: /print\s*\(/, language: "dart" },
+      { pattern: /Future<.*>|Stream<.*>/, language: "dart" },
+
+      // Scala-specific patterns
+      { pattern: /^package\s+[\w.]+/m, language: "scala" },
+      { pattern: /^import\s+[\w.]+/m, language: "scala" },
+      { pattern: /object\s+\w+(\s+extends\s+\w+)?/, language: "scala" },
+      {
+        pattern: /class\s+\w+(\s*\([^)]*\))?(\s+extends\s+\w+)?/,
+        language: "scala",
+      },
+      { pattern: /def\s+\w+\s*\([^)]*\)\s*:\s*\w+/, language: "scala" },
+      { pattern: /val\s+\w+\s*:\s*\w+|var\s+\w+\s*:\s*\w+/, language: "scala" },
+      { pattern: /trait\s+\w+/, language: "scala" },
+
+      // Lua-specific patterns
+      { pattern: /^require\s*\(?['"].*['"]\)?/m, language: "lua" },
+      { pattern: /function\s+\w+\s*\([^)]*\)/, language: "lua" },
+      { pattern: /local\s+function\s+\w+/, language: "lua" },
+      { pattern: /local\s+\w+\s*=/, language: "lua" },
+      { pattern: /print\s*\(/, language: "lua" },
+      { pattern: /--\[\[.*\]\]/, language: "lua" },
+      { pattern: /end\s*$/, language: "lua" },
+
+      // Bash-specific patterns
+      { pattern: /^#!\/bin\/(bash|sh)/m, language: "bash" },
+      { pattern: /^#!.*\/(bash|sh|zsh|fish)/m, language: "bash" },
+      { pattern: /function\s+\w+\s*\(\s*\)/, language: "bash" },
+      { pattern: /\w+\s*\(\s*\)\s*{/, language: "bash" },
+      { pattern: /if\s+\[.*\]\s*;\s*then/, language: "bash" },
+      { pattern: /echo\s+/, language: "bash" },
+      { pattern: /\$\{\w+\}|\$\w+/, language: "bash" },
     ];
 
     // Check content against patterns

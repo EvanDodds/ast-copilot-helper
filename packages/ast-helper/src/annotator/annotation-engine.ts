@@ -17,6 +17,11 @@ import {
   PhpExtractor,
   RubyExtractor,
   KotlinExtractor,
+  SwiftExtractor,
+  DartExtractor,
+  ScalaExtractor,
+  LuaExtractor,
+  BashExtractor,
 } from "./extractors/index.js";
 import { ComplexityAnalyzer } from "./complexity-analyzer.js";
 import { DependencyAnalyzer } from "./dependency-analyzer.js";
@@ -59,6 +64,13 @@ export class AnnotationEngine {
     this.extractors.set("php", new PhpExtractor());
     this.extractors.set("ruby", new RubyExtractor());
     this.extractors.set("kotlin", new KotlinExtractor());
+
+    // Tier 3 extractors (Specialized Priority)
+    this.extractors.set("swift", new SwiftExtractor());
+    this.extractors.set("dart", new DartExtractor());
+    this.extractors.set("scala", new ScalaExtractor());
+    this.extractors.set("lua", new LuaExtractor());
+    this.extractors.set("bash", new BashExtractor());
 
     // Initialize analysis components
     this.complexityAnalyzer = new ComplexityAnalyzer({

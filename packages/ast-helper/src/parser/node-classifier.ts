@@ -803,6 +803,256 @@ export class NodeClassifier {
       ],
       defaultFallback: NodeType.VARIABLE,
     },
+
+    // Tier 3 Languages
+    swift: {
+      directMappings: {
+        // Top-level constructs
+        source_file: NodeType.FILE,
+        import_declaration: NodeType.IMPORT,
+
+        // Class-related
+        class_declaration: NodeType.CLASS,
+        struct_declaration: NodeType.CLASS,
+        protocol_declaration: NodeType.INTERFACE,
+        enum_declaration: NodeType.ENUM,
+        extension_declaration: NodeType.CLASS,
+
+        // Function-related
+        function_declaration: NodeType.FUNCTION,
+        init_declaration: NodeType.CONSTRUCTOR,
+        closure_expression: NodeType.ARROW_FUNCTION,
+
+        // Variable-related
+        property_declaration: NodeType.PROPERTY,
+        parameter: NodeType.PARAMETER,
+        variable_declaration: NodeType.VARIABLE,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        switch_statement: NodeType.SWITCH_STATEMENT,
+        guard_statement: NodeType.IF_STATEMENT,
+        do_statement: NodeType.TRY_CATCH,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        string_literal: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*func.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        { pattern: /^.*struct.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        {
+          pattern: /^.*protocol.*$/,
+          nodeType: NodeType.INTERFACE,
+          priority: 1,
+        },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "simple_identifier" &&
+            context.parent?.type === "function_declaration",
+          nodeType: NodeType.FUNCTION,
+          priority: 10,
+          description: "Swift function name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    dart: {
+      directMappings: {
+        // Top-level constructs
+        program: NodeType.FILE,
+        import_specification: NodeType.IMPORT,
+        library_name: NodeType.NAMESPACE,
+
+        // Class-related
+        class_definition: NodeType.CLASS,
+        mixin_declaration: NodeType.CLASS,
+        enum_declaration: NodeType.ENUM,
+        extension_declaration: NodeType.CLASS,
+
+        // Function-related
+        function_signature: NodeType.FUNCTION,
+        method_signature: NodeType.METHOD,
+        getter_signature: NodeType.PROPERTY,
+        setter_signature: NodeType.PROPERTY,
+        constructor_signature: NodeType.CONSTRUCTOR,
+
+        // Variable-related
+        initialized_variable_definition: NodeType.VARIABLE,
+        final_variable_declaration: NodeType.VARIABLE,
+        formal_parameter: NodeType.PARAMETER,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        switch_statement: NodeType.SWITCH_STATEMENT,
+        try_statement: NodeType.TRY_CATCH,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        string_literal: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*function.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*method.*$/, nodeType: NodeType.METHOD, priority: 1 },
+        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "function_signature",
+          nodeType: NodeType.FUNCTION,
+          priority: 10,
+          description: "Dart function name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    scala: {
+      directMappings: {
+        // Top-level constructs
+        compilation_unit: NodeType.FILE,
+        package_clause: NodeType.NAMESPACE,
+        import_declaration: NodeType.IMPORT,
+
+        // Class-related
+        class_definition: NodeType.CLASS,
+        object_definition: NodeType.CLASS,
+        trait_definition: NodeType.INTERFACE,
+        case_class_definition: NodeType.CLASS,
+
+        // Function-related
+        function_definition: NodeType.FUNCTION,
+        function_declaration: NodeType.FUNCTION,
+        lambda_expression: NodeType.ARROW_FUNCTION,
+
+        // Variable-related
+        val_definition: NodeType.VARIABLE,
+        var_definition: NodeType.VARIABLE,
+        parameter: NodeType.PARAMETER,
+
+        // Control flow
+        if_expression: NodeType.IF_STATEMENT,
+        for_expression: NodeType.FOR_LOOP,
+        while_expression: NodeType.WHILE_LOOP,
+        match_expression: NodeType.SWITCH_STATEMENT,
+        try_expression: NodeType.TRY_CATCH,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        string: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*def.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        { pattern: /^.*object.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        { pattern: /^.*trait.*$/, nodeType: NodeType.INTERFACE, priority: 1 },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "function_definition",
+          nodeType: NodeType.FUNCTION,
+          priority: 10,
+          description: "Scala function name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    lua: {
+      directMappings: {
+        // Top-level constructs
+        chunk: NodeType.FILE,
+
+        // Function-related
+        function_statement: NodeType.FUNCTION,
+        local_function: NodeType.FUNCTION,
+        function_call: NodeType.FUNCTION,
+
+        // Variable-related
+        local_variable: NodeType.VARIABLE,
+        variable_list: NodeType.VARIABLE,
+        parameter_list: NodeType.PARAMETER,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        repeat_statement: NodeType.WHILE_LOOP,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        string: NodeType.STRING_LITERAL,
+        number: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*function.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*local.*$/, nodeType: NodeType.VARIABLE, priority: 1 },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "function_statement",
+          nodeType: NodeType.FUNCTION,
+          priority: 10,
+          description: "Lua function name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    bash: {
+      directMappings: {
+        // Top-level constructs
+        program: NodeType.FILE,
+
+        // Function-related
+        function_definition: NodeType.FUNCTION,
+        command: NodeType.FUNCTION,
+
+        // Variable-related
+        variable_assignment: NodeType.VARIABLE,
+        variable_name: NodeType.VARIABLE,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        case_statement: NodeType.SWITCH_STATEMENT,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        string: NodeType.STRING_LITERAL,
+        raw_string: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*function.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*command.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "word" &&
+            context.parent?.type === "function_definition",
+          nodeType: NodeType.FUNCTION,
+          priority: 10,
+          description: "Bash function name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
   };
 
   private stats: ClassificationStats = {
