@@ -7,6 +7,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { createHash } from "crypto";
 import type { LanguageConfig, GrammarManager } from "./types.js";
+import { getLanguageConfig } from "./languages.js";
 
 interface GrammarMetadata {
   version: string;
@@ -271,35 +272,17 @@ export class TreeSitterGrammarManager implements GrammarManager {
    * Get language configuration for a specific language
    */
   private getLanguageConfig(language: string): LanguageConfig {
-    // This will eventually come from the languages.ts file
-    // For now, hard-coded configs
-    const configs: Record<string, LanguageConfig> = {
-      typescript: {
-        name: "typescript",
-        extensions: [".ts", ".tsx"],
-        grammarUrl:
-          "https://unpkg.com/tree-sitter-typescript@0.20.4/tree-sitter-typescript.wasm",
-        grammarHash: "mock_typescript_hash_for_testing", // Kept for test mode compatibility
-      },
-      javascript: {
-        name: "javascript",
-        extensions: [".js", ".jsx", ".mjs"],
-        grammarUrl:
-          "https://unpkg.com/tree-sitter-javascript@0.21.4/tree-sitter-javascript.wasm",
-        grammarHash: "mock_javascript_hash_for_testing", // Kept for test mode compatibility
-      },
-      python: {
-        name: "python",
-        extensions: [".py", ".pyi"],
-        grammarUrl:
-          "https://unpkg.com/tree-sitter-python@0.20.4/tree-sitter-python.wasm",
-        grammarHash: "mock_python_hash_for_testing", // Kept for test mode compatibility
-      },
-    };
-
-    const config = configs[language];
+    const config = getLanguageConfig(language);
     if (!config) {
       throw new Error(`Unsupported language: ${language}`);
+    }
+
+    // For test compatibility, override hash if in test mode
+    if (process.env.NODE_ENV === "test") {
+      return {
+        ...config,
+        grammarHash: `mock_${language}_hash_for_testing`,
+      };
     }
 
     return config;

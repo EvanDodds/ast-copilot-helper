@@ -1,102 +1,346 @@
-# CLI Examples
+# CLI Examples - Multi-Language Support
 
-This page provides practical examples of using the ast-copilot-helper CLI tool for various tasks.
+This page provides comprehensive examples of using the ast-copilot-helper CLI tool across all 15 supported languages.
 
-## Basic Usage
+## Multi-Language Overview
 
-### Parsing a Single File
+AST Copilot Helper supports 15 programming languages organized in 3 performance tiers:
+
+- **Tier 1 (Enterprise)**: TypeScript, JavaScript, Python, Java, C++, C#
+- **Tier 2 (Developer)**: Go, Rust, PHP, Ruby, Swift  
+- **Tier 3 (Specialized)**: Kotlin, Scala, Dart, Lua
+
+## Basic Multi-Language Usage
+
+### Parsing Single Files by Language
 
 ```bash
-# Parse a TypeScript file and output AST
-ast-helper parse src/main.ts
+# Enterprise Tier Languages
+ast-helper parse main.ts                    # TypeScript
+ast-helper parse app.js                     # JavaScript  
+ast-helper parse main.py                    # Python
+ast-helper parse Main.java                  # Java
+ast-helper parse main.cpp                   # C++
+ast-helper parse Program.cs                 # C#
 
-# Parse with specific output format
-ast-helper parse src/main.ts --format json
+# Developer Tier Languages
+ast-helper parse main.go                    # Go
+ast-helper parse main.rs                    # Rust
+ast-helper parse index.php                  # PHP
+ast-helper parse app.rb                     # Ruby
+ast-helper parse ViewController.swift       # Swift
 
-# Parse and save to file
-ast-helper parse src/main.ts --output ast-output.json
+# Specialized Tier Languages
+ast-helper parse MainActivity.kt            # Kotlin
+ast-helper parse Main.scala                 # Scala
+ast-helper parse main.dart                  # Dart
+ast-helper parse script.lua                 # Lua
 ```
 
-### Parsing Multiple Files
+### Multi-Language Project Analysis
 
 ```bash
-# Parse all TypeScript files in a directory
-ast-helper parse src/ --recursive --include "*.ts"
+# Parse entire polyglot project
+ast-helper parse ./ --languages "typescript,python,go,rust"
 
-# Parse specific file types
-ast-helper parse src/ --include "*.ts,*.js" --exclude "*.test.ts"
+# Parse with automatic language detection
+ast-helper parse ./ --auto-detect --exclude "**/node_modules/**,**/.git/**"
 
-# Parse with glob patterns
-ast-helper parse "src/**/*.{ts,js}" --exclude "**/node_modules/**"
+# Parse specific language tiers
+ast-helper parse ./ --tier 1                # Enterprise languages only
+ast-helper parse ./ --tier 1,2              # Enterprise + Developer tiers
+ast-helper parse ./ --tier all               # All supported languages
+
+# Parse with language-specific output
+ast-helper parse ./ --output-per-language --format json
 ```
 
-## Advanced Queries
-
-### Finding Functions
+### Language-Specific File Patterns
 
 ```bash
-# Find all function declarations
-ast-helper query src/ --type "FunctionDeclaration"
+# Parse all supported file types
+ast-helper parse ./ --pattern "**/*.{ts,tsx,js,jsx,py,java,cpp,hpp,cs,go,rs,php,rb,swift,kt,scala,dart,lua}"
 
-# Find functions with specific names
-ast-helper query src/ --type "FunctionDeclaration" --name "handleError"
+# Parse web development stack
+ast-helper parse ./ --pattern "**/*.{ts,tsx,js,jsx,php,py}"
+
+# Parse system programming languages
+ast-helper parse ./ --pattern "**/*.{cpp,hpp,c,h,rs,go,cs}"
+
+# Parse mobile development languages
+ast-helper parse ./ --pattern "**/*.{swift,kt,dart,java}"
+```
+
+## Language-Specific Query Examples
+
+### TypeScript/JavaScript Analysis
+
+```bash
+# Find React components
+ast-helper query src/ --language typescript --type "FunctionDeclaration" --pattern ".*Component$"
+
+# Find async/await usage
+ast-helper query src/ --language javascript --type "AwaitExpression"
+
+# Find interface definitions
+ast-helper query src/ --language typescript --type "TSInterfaceDeclaration"
+
+# Find import statements
+ast-helper query src/ --language typescript --type "ImportDeclaration" --source "@/*"
+```
+
+### Python Analysis
+
+```bash
+# Find class definitions with inheritance
+ast-helper query src/ --language python --type "ClassDef" --bases
 
 # Find async functions
-ast-helper query src/ --type "FunctionDeclaration" --async
+ast-helper query src/ --language python --type "AsyncFunctionDef"
+
+# Find decorator usage
+ast-helper query src/ --language python --type "FunctionDef" --decorator "@*"
+
+# Find exception handling
+ast-helper query src/ --language python --type "Try"
 ```
 
-### Finding Classes and Methods
+### Java Analysis
 
 ```bash
-# Find all class declarations
-ast-helper query src/ --type "ClassDeclaration"
+# Find public classes
+ast-helper query src/ --language java --type "class_declaration" --modifier "public"
 
-# Find methods in a specific class
-ast-helper query src/ --type "MethodDefinition" --class "DatabaseManager"
+# Find annotation usage
+ast-helper query src/ --language java --type "annotation"
 
-# Find private methods
-ast-helper query src/ --type "MethodDefinition" --visibility "private"
+# Find interface implementations
+ast-helper query src/ --language java --type "class_declaration" --implements
+
+# Find method overrides
+ast-helper query src/ --language java --type "method_declaration" --annotation "@Override"
 ```
 
-### Finding Imports and Dependencies
+### C++ Analysis
 
 ```bash
-# Find all import statements
-ast-helper query src/ --type "ImportDeclaration"
+# Find template definitions
+ast-helper query src/ --language cpp --type "template_declaration"
 
-# Find imports from specific modules
-ast-helper query src/ --type "ImportDeclaration" --module "lodash"
+# Find namespace usage
+ast-helper query src/ --language cpp --type "namespace_definition"
 
-# Find dynamic imports
-ast-helper query src/ --type "ImportExpression"
+# Find class inheritance
+ast-helper query src/ --language cpp --type "class_specifier" --base_clause
+
+# Find virtual functions
+ast-helper query src/ --language cpp --type "function_definition" --virtual
 ```
 
-## Code Analysis Examples
-
-### Security Analysis
+### Go Analysis
 
 ```bash
-# Find potential security issues
-ast-helper analyze src/ --security-check
+# Find interface definitions
+ast-helper query src/ --language go --type "interface_type"
 
-# Find eval usage (potential security risk)
-ast-helper query src/ --type "CallExpression" --callee "eval"
+# Find goroutine usage
+ast-helper query src/ --language go --type "go_statement"
 
-# Find direct DOM manipulation
-ast-helper query src/ --type "MemberExpression" --property "innerHTML"
+# Find channel operations
+ast-helper query src/ --language go --type "send_statement,receive_expression"
+
+# Find struct methods
+ast-helper query src/ --language go --type "method_declaration"
 ```
 
-### Performance Analysis
+### Rust Analysis
 
 ```bash
-# Find performance anti-patterns
-ast-helper analyze src/ --performance-check
+# Find trait definitions
+ast-helper query src/ --language rust --type "trait_item"
 
-# Find synchronous operations that could be async
-ast-helper query src/ --type "CallExpression" --sync-in-async
+# Find impl blocks
+ast-helper query src/ --language rust --type "impl_item"
 
-# Find potential memory leaks
-ast-helper query src/ --type "EventListener" --no-cleanup
+# Find unsafe blocks
+ast-helper query src/ --language rust --type "unsafe_block"
+
+# Find macro usage
+ast-helper query src/ --language rust --type "macro_invocation"
+```
+
+## Cross-Language Analysis
+
+### Find Similar Patterns Across Languages
+
+```bash
+# Find function definitions across all languages
+ast-helper query ./ --cross-language --pattern "function|def|func|fn" --type "function"
+
+# Find class definitions across OOP languages
+ast-helper query ./ --languages "typescript,python,java,cpp,cs,swift,kotlin,scala,dart" --type "class"
+
+# Find error handling across languages
+ast-helper query ./ --cross-language --pattern "try|catch|except|Result|Error" --type "error_handling"
+```
+
+### Compare Implementation Patterns
+
+```bash
+# Compare async patterns across languages
+ast-helper compare ./ --pattern "async" --languages "typescript,python,cs,rust,dart"
+
+# Compare interface/trait patterns
+ast-helper compare ./ --pattern "interface|trait|protocol" --languages "typescript,go,rust,swift"
+
+# Compare dependency injection patterns
+ast-helper compare ./ --pattern "inject|dependency" --languages "typescript,java,cs,swift,kotlin"
+```
+
+## Performance-Optimized Commands
+
+### Tier-Based Processing
+
+```bash
+# Process high-performance languages first
+ast-helper parse ./ --tier-priority --parallel 4
+
+# Process with memory optimization
+ast-helper parse ./ --memory-limit 512MB --batch-size auto
+
+# Process with streaming for large codebases
+ast-helper parse ./ --streaming --progress
+```
+
+### Language-Specific Batch Processing
+
+```bash
+# Process enterprise languages with larger batches
+ast-helper parse ./ --tier 1 --batch-size 50 --parallel 4
+
+# Process specialized languages with smaller batches  
+ast-helper parse ./ --tier 3 --batch-size 10 --parallel 2
+
+# Mixed processing with adaptive batching
+ast-helper parse ./ --adaptive-batching --memory-limit 1GB
+```
+
+## Multi-Language Reporting
+
+### Generate Language Statistics
+
+```bash
+# Generate comprehensive language report
+ast-helper stats ./ --languages all --output stats-report.json
+
+# Generate tier-based statistics
+ast-helper stats ./ --group-by-tier --format table
+
+# Generate file distribution by language
+ast-helper stats ./ --file-distribution --chart
+```
+
+### Language Complexity Analysis
+
+```bash
+# Analyze complexity across languages
+ast-helper complexity ./ --languages all --metric cyclomatic
+
+# Compare complexity between languages
+ast-helper complexity ./ --compare-languages --threshold 10
+
+# Generate complexity heatmap
+ast-helper complexity ./ --heatmap --output complexity-map.html
+```
+
+## Security Analysis Across Languages
+
+### Language-Specific Security Checks
+
+```bash
+# JavaScript/TypeScript security checks
+ast-helper security ./ --languages "typescript,javascript" --check "xss,injection,eval"
+
+# Python security analysis
+ast-helper security ./ --language python --check "injection,pickle,yaml"
+
+# Java security scanning
+ast-helper security ./ --language java --check "deserialization,injection,path_traversal"
+
+# C++ vulnerability detection
+ast-helper security ./ --language cpp --check "buffer_overflow,memory_leak,null_pointer"
+
+# Cross-language security report
+ast-helper security ./ --cross-language --severity high --report security-audit.html
+```
+
+## Migration and Refactoring
+
+### Cross-Language Code Migration
+
+```bash
+# Analyze migration from JavaScript to TypeScript
+ast-helper migrate ./ --from javascript --to typescript --dry-run
+
+# Find Python 2 to 3 migration issues
+ast-helper migrate ./ --language python --version-upgrade "2->3" --report
+
+# Analyze Java version compatibility
+ast-helper migrate ./ --language java --target-version 17 --compatibility-check
+```
+
+### API Usage Analysis
+
+```bash
+# Find deprecated API usage across languages
+ast-helper api-usage ./ --deprecated --languages all
+
+# Track library dependency versions
+ast-helper dependencies ./ --outdated --security-check
+
+# Analyze breaking changes impact
+ast-helper breaking-changes ./ --from-version "1.0" --to-version "2.0"
+```
+
+## Advanced Multi-Language Examples
+
+### Microservices Analysis
+
+```bash
+# Analyze polyglot microservices
+ast-helper microservices ./ --services-config services.yml --cross-service-calls
+
+# Find inter-service dependencies
+ast-helper dependencies ./ --cross-language --service-boundaries
+
+# Generate architecture diagram
+ast-helper architecture ./ --polyglot --output architecture.svg
+```
+
+### Code Quality Metrics
+
+```bash
+# Multi-language quality assessment
+ast-helper quality ./ --languages all --metrics "complexity,maintainability,testability"
+
+# Generate quality report
+ast-helper quality ./ --report --format html --output quality-report.html
+
+# Compare quality between language implementations
+ast-helper quality ./ --compare-implementations --pattern ".*Service$"
+```
+
+### Documentation Generation
+
+```bash
+# Generate API documentation for all languages
+ast-helper docs ./ --api --languages all --format markdown
+
+# Create cross-reference documentation
+ast-helper docs ./ --cross-references --output docs/
+
+# Generate language-specific style guides
+ast-helper style-guide ./ --per-language --output style-guides/
 ```
 
 ### Code Quality Checks
