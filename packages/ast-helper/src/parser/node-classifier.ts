@@ -489,6 +489,320 @@ export class NodeClassifier {
       ],
       defaultFallback: NodeType.VARIABLE,
     },
+
+    // Tier 2 Developer Priority Languages
+    rust: {
+      directMappings: {
+        // Top-level constructs
+        source_file: NodeType.FILE,
+        mod_item: NodeType.MODULE,
+        use_declaration: NodeType.IMPORT,
+
+        // Type-related
+        struct_item: NodeType.CLASS,
+        union_item: NodeType.CLASS,
+        enum_item: NodeType.ENUM,
+        trait_item: NodeType.INTERFACE,
+        impl_item: NodeType.CLASS,
+        type_item: NodeType.TYPE_ALIAS,
+
+        // Function-related
+        function_item: NodeType.FUNCTION,
+        closure_expression: NodeType.ARROW_FUNCTION,
+
+        // Variable-related
+        let_declaration: NodeType.VARIABLE,
+        const_item: NodeType.VARIABLE,
+        static_item: NodeType.VARIABLE,
+        parameter: NodeType.PARAMETER,
+        field_declaration: NodeType.FIELD,
+
+        // Control flow
+        if_expression: NodeType.IF_STATEMENT,
+        for_expression: NodeType.FOR_LOOP,
+        while_expression: NodeType.WHILE_LOOP,
+        loop_expression: NodeType.WHILE_LOOP,
+        match_expression: NodeType.SWITCH_STATEMENT,
+
+        // Other constructs
+        attribute_item: NodeType.DECORATOR,
+        macro_invocation: NodeType.FUNCTION,
+        line_comment: NodeType.COMMENT,
+        block_comment: NodeType.COMMENT,
+        string_literal: NodeType.STRING_LITERAL,
+        raw_string_literal: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*fn.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*struct.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        { pattern: /^.*enum.*$/, nodeType: NodeType.ENUM, priority: 1 },
+        { pattern: /^.*trait.*$/, nodeType: NodeType.INTERFACE, priority: 1 },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "function_item",
+          nodeType: NodeType.FUNCTION,
+          priority: 10,
+          description: "Rust function name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    c: {
+      directMappings: {
+        // Top-level constructs
+        translation_unit: NodeType.FILE,
+        preproc_include: NodeType.IMPORT,
+        preproc_define: NodeType.VARIABLE,
+
+        // Type-related
+        struct_specifier: NodeType.CLASS,
+        union_specifier: NodeType.CLASS,
+        enum_specifier: NodeType.ENUM,
+        typedef_statement: NodeType.TYPE_ALIAS,
+
+        // Function-related
+        function_definition: NodeType.FUNCTION,
+        function_declarator: NodeType.FUNCTION,
+
+        // Variable-related
+        declaration: NodeType.VARIABLE,
+        parameter_declaration: NodeType.PARAMETER,
+        field_declaration: NodeType.FIELD,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        do_statement: NodeType.WHILE_LOOP,
+        switch_statement: NodeType.SWITCH_STATEMENT,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        string_literal: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*function.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*struct.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        { pattern: /^.*enum.*$/, nodeType: NodeType.ENUM, priority: 1 },
+      ],
+      contextRules: [],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    cpp: {
+      directMappings: {
+        // Top-level constructs
+        translation_unit: NodeType.FILE,
+        preproc_include: NodeType.IMPORT,
+        preproc_define: NodeType.VARIABLE,
+        namespace_definition: NodeType.NAMESPACE,
+        using_declaration: NodeType.IMPORT,
+
+        // Class-related
+        class_specifier: NodeType.CLASS,
+        struct_specifier: NodeType.CLASS,
+        union_specifier: NodeType.CLASS,
+        enum_specifier: NodeType.ENUM,
+
+        // Function-related
+        function_definition: NodeType.FUNCTION,
+        function_declarator: NodeType.FUNCTION,
+        template_function: NodeType.FUNCTION,
+
+        // Variable-related
+        declaration: NodeType.VARIABLE,
+        parameter_declaration: NodeType.PARAMETER,
+        field_declaration: NodeType.FIELD,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        for_range_loop: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        do_statement: NodeType.WHILE_LOOP,
+        switch_statement: NodeType.SWITCH_STATEMENT,
+        try_statement: NodeType.TRY_CATCH,
+
+        // Other constructs
+        template_declaration: NodeType.INTERFACE,
+        comment: NodeType.COMMENT,
+        string_literal: NodeType.STRING_LITERAL,
+        raw_string_literal: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*function.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        {
+          pattern: /^.*template.*$/,
+          nodeType: NodeType.INTERFACE,
+          priority: 1,
+        },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "class_specifier",
+          nodeType: NodeType.CLASS,
+          priority: 10,
+          description: "C++ class name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    php: {
+      directMappings: {
+        // Top-level constructs
+        program: NodeType.FILE,
+        namespace_definition: NodeType.NAMESPACE,
+        namespace_use_declaration: NodeType.IMPORT,
+
+        // Class-related
+        class_declaration: NodeType.CLASS,
+        interface_declaration: NodeType.INTERFACE,
+        trait_declaration: NodeType.INTERFACE,
+        enum_declaration: NodeType.ENUM,
+
+        // Function-related
+        function_definition: NodeType.FUNCTION,
+        method_declaration: NodeType.METHOD,
+        anonymous_function_creation_expression: NodeType.ARROW_FUNCTION,
+
+        // Variable-related
+        simple_parameter: NodeType.PARAMETER,
+        property_declaration: NodeType.PROPERTY,
+        class_constant_declaration: NodeType.FIELD,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        foreach_statement: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        do_statement: NodeType.WHILE_LOOP,
+        switch_statement: NodeType.SWITCH_STATEMENT,
+        try_statement: NodeType.TRY_CATCH,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        string: NodeType.STRING_LITERAL,
+        heredoc: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*function.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*method.*$/, nodeType: NodeType.METHOD, priority: 1 },
+        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+      ],
+      contextRules: [],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    ruby: {
+      directMappings: {
+        // Top-level constructs
+        program: NodeType.FILE,
+
+        // Class-related
+        class: NodeType.CLASS,
+        singleton_class: NodeType.CLASS,
+        module: NodeType.MODULE,
+
+        // Function-related
+        method: NodeType.METHOD,
+        singleton_method: NodeType.METHOD,
+        lambda: NodeType.ARROW_FUNCTION,
+        block: NodeType.ARROW_FUNCTION,
+
+        // Variable-related
+        assignment: NodeType.VARIABLE,
+        instance_variable: NodeType.FIELD,
+        class_variable: NodeType.FIELD,
+        global_variable: NodeType.VARIABLE,
+        constant: NodeType.VARIABLE,
+
+        // Control flow
+        if: NodeType.IF_STATEMENT,
+        unless: NodeType.IF_STATEMENT,
+        for: NodeType.FOR_LOOP,
+        while: NodeType.WHILE_LOOP,
+        until: NodeType.WHILE_LOOP,
+        case: NodeType.SWITCH_STATEMENT,
+        begin: NodeType.TRY_CATCH,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        string: NodeType.STRING_LITERAL,
+        symbol: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*method.*$/, nodeType: NodeType.METHOD, priority: 1 },
+        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        { pattern: /^.*module.*$/, nodeType: NodeType.MODULE, priority: 1 },
+      ],
+      contextRules: [],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    kotlin: {
+      directMappings: {
+        // Top-level constructs
+        source_file: NodeType.FILE,
+        package_header: NodeType.NAMESPACE,
+        import_header: NodeType.IMPORT,
+
+        // Class-related
+        class_declaration: NodeType.CLASS,
+        interface_declaration: NodeType.INTERFACE,
+        object_declaration: NodeType.CLASS,
+        enum_class_declaration: NodeType.ENUM,
+
+        // Function-related
+        function_declaration: NodeType.FUNCTION,
+        anonymous_function: NodeType.ARROW_FUNCTION,
+        lambda_literal: NodeType.ARROW_FUNCTION,
+
+        // Variable-related
+        property_declaration: NodeType.PROPERTY,
+        parameter: NodeType.PARAMETER,
+
+        // Control flow
+        if_expression: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        do_while_statement: NodeType.WHILE_LOOP,
+        when_expression: NodeType.SWITCH_STATEMENT,
+        try_expression: NodeType.TRY_CATCH,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        string_literal: NodeType.STRING_LITERAL,
+        character_literal: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*fun.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        {
+          pattern: /^.*interface.*$/,
+          nodeType: NodeType.INTERFACE,
+          priority: 1,
+        },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "function_declaration",
+          nodeType: NodeType.FUNCTION,
+          priority: 10,
+          description: "Kotlin function name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
   };
 
   private stats: ClassificationStats = {

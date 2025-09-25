@@ -66,6 +66,59 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     parserModule: "tree-sitter-go",
     wasmPath: "tree-sitter-go.wasm",
   },
+
+  // Tier 2 Developer Priority Languages
+  {
+    name: "rust",
+    extensions: [".rs"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-rust@0.20.4/tree-sitter-rust.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-rust",
+    wasmPath: "tree-sitter-rust.wasm",
+  },
+  {
+    name: "c",
+    extensions: [".c", ".h"],
+    grammarUrl: "https://unpkg.com/tree-sitter-c@0.20.6/tree-sitter-c.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-c",
+    wasmPath: "tree-sitter-c.wasm",
+  },
+  {
+    name: "cpp",
+    extensions: [".cpp", ".cxx", ".cc", ".c++", ".hpp", ".hxx", ".hh", ".h++"],
+    grammarUrl: "https://unpkg.com/tree-sitter-cpp@0.20.0/tree-sitter-cpp.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-cpp",
+    wasmPath: "tree-sitter-cpp.wasm",
+  },
+  {
+    name: "php",
+    extensions: [".php", ".phtml", ".php3", ".php4", ".php5", ".phps"],
+    grammarUrl: "https://unpkg.com/tree-sitter-php@0.22.5/tree-sitter-php.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-php",
+    wasmPath: "tree-sitter-php.wasm",
+  },
+  {
+    name: "ruby",
+    extensions: [".rb", ".rbw", ".rake", ".gemspec"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-ruby@0.20.1/tree-sitter-ruby.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-ruby",
+    wasmPath: "tree-sitter-ruby.wasm",
+  },
+  {
+    name: "kotlin",
+    extensions: [".kt", ".kts"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-kotlin@0.3.1/tree-sitter-kotlin.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-kotlin",
+    wasmPath: "tree-sitter-kotlin.wasm",
+  },
 ];
 
 /**
@@ -238,6 +291,54 @@ export class LanguageDetector {
       { pattern: /func\s+\w+\s*\([^)]*\)/, language: "go" },
       { pattern: /type\s+\w+\s+struct\s*{/, language: "go" },
       { pattern: /func\s+main\s*\(\s*\)/, language: "go" },
+
+      // Rust-specific patterns
+      { pattern: /^use\s+[\w:]+\s*;/m, language: "rust" },
+      { pattern: /^mod\s+\w+\s*;?/m, language: "rust" },
+      { pattern: /fn\s+\w+\s*\([^)]*\)/, language: "rust" },
+      { pattern: /struct\s+\w+\s*{/, language: "rust" },
+      { pattern: /impl\s+.*\s+for\s+/, language: "rust" },
+      { pattern: /let\s+mut\s+\w+/, language: "rust" },
+      { pattern: /#\[derive\(.*\)\]/, language: "rust" },
+
+      // C-specific patterns
+      { pattern: /^#include\s*<[^>]+>/m, language: "c" },
+      { pattern: /^#define\s+\w+/m, language: "c" },
+      { pattern: /int\s+main\s*\([^)]*\)/, language: "c" },
+      { pattern: /typedef\s+struct\s*{/, language: "c" },
+      { pattern: /printf\s*\(/, language: "c" },
+
+      // C++-specific patterns
+      { pattern: /^#include\s*<iostream>/m, language: "cpp" },
+      { pattern: /std::\w+/, language: "cpp" },
+      { pattern: /class\s+\w+\s*{/, language: "cpp" },
+      { pattern: /namespace\s+\w+\s*{/, language: "cpp" },
+      { pattern: /template\s*<[^>]*>/, language: "cpp" },
+      { pattern: /std::cout|std::endl/, language: "cpp" },
+
+      // PHP-specific patterns
+      { pattern: /^<\?php/m, language: "php" },
+      { pattern: /\$\w+\s*=/, language: "php" },
+      { pattern: /function\s+\w+\s*\([^)]*\)/, language: "php" },
+      { pattern: /class\s+\w+\s*{/, language: "php" },
+      { pattern: /echo\s+/, language: "php" },
+      { pattern: /require_once|include_once/, language: "php" },
+
+      // Ruby-specific patterns
+      { pattern: /^require\s+['"].*['"]/m, language: "ruby" },
+      { pattern: /def\s+\w+\s*\(?[^)]*\)?/, language: "ruby" },
+      { pattern: /class\s+\w+(\s*<\s*\w+)?/, language: "ruby" },
+      { pattern: /module\s+\w+/, language: "ruby" },
+      { pattern: /puts\s+/, language: "ruby" },
+      { pattern: /attr_accessor|attr_reader|attr_writer/, language: "ruby" },
+
+      // Kotlin-specific patterns
+      { pattern: /^package\s+[\w.]+/m, language: "kotlin" },
+      { pattern: /^import\s+[\w.]+/m, language: "kotlin" },
+      { pattern: /fun\s+\w+\s*\([^)]*\)/, language: "kotlin" },
+      { pattern: /class\s+\w+(\s*:\s*\w+)?/, language: "kotlin" },
+      { pattern: /val\s+\w+\s*=|var\s+\w+\s*=/, language: "kotlin" },
+      { pattern: /println\s*\(/, language: "kotlin" },
     ];
 
     // Check content against patterns
