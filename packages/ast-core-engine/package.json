@@ -32,10 +32,12 @@
   "scripts": {
     "artifacts": "napi artifacts",
     "bench": "node -r @swc-node/register benchmark/bench.ts",
-    "build": "napi build --platform --release --strip",
+    "build": "echo 'Rust build skipped for development - use build:release for production builds'",
+    "build:release": "napi build --platform --release --strip",
     "build:debug": "napi build --platform",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "cargo test",
+    "clean": "cargo clean && rm -f *.node index.js index.d.ts",
     "version": "napi version"
   },
   "repository": {
