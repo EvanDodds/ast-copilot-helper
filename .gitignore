@@ -133,3 +133,16 @@ valid_*.json
 invalid_*.json
 output-test_*.json
 file[0-9]*_*.json
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+*.pdb
+
+# Cargo files
+Cargo.lock
+
+# NAPI-RS build artifacts
+*.node
+index.js
+index.d.ts
