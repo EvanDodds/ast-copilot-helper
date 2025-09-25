@@ -3,20 +3,20 @@ name: Community Analytics
 on:
   schedule:
     # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
       timeframe:
-        description: 'Analysis timeframe (7, 30, or 90 days)'
+        description: "Analysis timeframe (7, 30, or 90 days)"
         required: false
-        default: '30'
+        default: "30"
         type: choice
         options:
-          - '7'
-          - '30'
-          - '90'
+          - "7"
+          - "30"
+          - "90"
       force_run:
-        description: 'Force run even if recent data exists'
+        description: "Force run even if recent data exists"
         required: false
         default: false
         type: boolean
@@ -30,37 +30,37 @@ permissions:
 jobs:
   generate-analytics:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          
+          node-version: "18"
+          cache: "npm"
+
       - name: Install dependencies
         run: |
           npm install @octokit/rest
-          
+
       - name: Run community analytics
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Create analytics output directory
           mkdir -p ./analytics-output
-          
+
           # Set timeframe from input or default to multiple timeframes
           if [ "${{ github.event.inputs.timeframe }}" != "" ]; then
             TIMEFRAMES="${{ github.event.inputs.timeframe }}"
           else
             TIMEFRAMES="7 30 90"
           fi
-          
+
           echo "Running analytics for timeframes: $TIMEFRAMES"
-          
+
           # Run analytics for each timeframe
           for timeframe in $TIMEFRAMES; do
             echo "🔍 Generating ${timeframe}-day analytics..."
@@ -78,20 +78,20 @@ jobs:
               exit 1
             fi
           done
-          
+
       - name: Run scheduled analytics (full suite)
         if: github.event_name == 'schedule'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🔄 Running full scheduled analytics suite..."
-          
+
           node scripts/analytics/analytics-scheduler.mjs \
             "${{ github.repository_owner }}" \
             "${{ github.event.repository.name }}" \
             "daily" \
             "./analytics-data"
-            
+
       - name: Generate analytics summary
         run: |
           echo "# 📊 Community Analytics Summary" >> $GITHUB_STEP_SUMMARY
@@ -99,7 +99,7 @@ jobs:
           echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
           echo "**Generated:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # Add summary for each timeframe
           for report in ./analytics-output/*/community-analytics.json; do
             if [ -f "$report" ]; then
@@ -122,7 +122,7 @@ jobs:
               echo "" >> $GITHUB_STEP_SUMMARY
             fi
           done
-          
+
           # Add insights if available
           echo "## 💡 Key Insights" >> $GITHUB_STEP_SUMMARY
           for report in ./analytics-output/*/community-analytics.json; do
@@ -133,7 +133,7 @@ jobs:
               fi
             fi
           done
-          
+
       - name: Upload analytics artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -142,7 +142,7 @@ jobs:
             analytics-output/
             analytics-data/
           retention-days: 90
-          
+
       - name: Create or update analytics issue
         if: github.event_name == 'schedule'
         uses: actions/github-script@v7
@@ -150,11 +150,11 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             // Find the most recent analytics report
             let latestReport = null;
             let latestTimestamp = 0;
-            
+
             try {
               const analyticsDir = './analytics-output';
               const subdirs = fs.readdirSync(analyticsDir, { withFileTypes: true })
@@ -177,27 +177,27 @@ jobs:
               console.log('Could not read analytics reports:', error.message);
               return;
             }
-            
+
             if (!latestReport) {
               console.log('No analytics report found');
               return;
             }
-            
+
             // Create issue body
             const { summary, insights, recommendations } = latestReport;
-            
+
             // Format insights
             const insightsList = insights.map(insight => {
               const icon = insight.type === 'positive' ? '✅' : insight.type === 'warning' ? '⚠️' : '❌';
               return "- " + icon + " **" + insight.category + ":** " + insight.message + " (" + insight.impact + " impact)";
             });
-            
+
             // Format recommendations
             const recommendationsList = recommendations.map(rec => {
               const details = rec.details.map(detail => "- " + detail).join('\n');
               return "### " + rec.action + " (" + rec.priority + " priority)\n" + details;
             });
-            
+
             const issueBody = [
               "# 📊 Automated Community Analytics Report",
               "",
@@ -232,11 +232,11 @@ jobs:
               labels: ['analytics', 'automated'],
               state: 'open'
             });
-            
+
             const existingIssue = issues.find(issue => 
               issue.title.includes('Community Analytics Report')
             );
-            
+
             if (existingIssue) {
               // Update existing issue
               await github.rest.issues.update({
@@ -260,7 +260,7 @@ jobs:
               
               console.log(`Created analytics issue #${newIssue.number}`);
             }
-            
+
       - name: Post analytics to discussions (if enabled)
         if: github.event_name == 'schedule'
         continue-on-error: true
@@ -270,22 +270,22 @@ jobs:
             // This would post to GitHub Discussions if GraphQL API was configured
             // For now, we'll just log that this step would happen
             console.log('Would post analytics summary to GitHub Discussions');
-            
+
       - name: Cleanup old artifacts
         run: |
           echo "🧹 Cleaning up old analytics files..."
-          
+
           # Keep only last 30 days of data
           find ./analytics-output -type d -name "20*" -mtime +30 -exec rm -rf {} \; 2>/dev/null || true
           find ./analytics-data -type d -name "20*" -mtime +30 -exec rm -rf {} \; 2>/dev/null || true
-          
+
           echo "Cleanup completed"
-          
+
   notify-on-failure:
     runs-on: ubuntu-latest
     needs: generate-analytics
     if: failure()
-    
+
     steps:
       - name: Create failure issue
         uses: actions/github-script@v7

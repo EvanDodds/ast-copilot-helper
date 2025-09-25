@@ -34,21 +34,36 @@ export class NativeTreeSitterParser extends BaseParser {
   /**
    * Parse code string into AST nodes
    */
-  override async parseCode(code: string, language: string, filePath?: string): Promise<ParseResult> {
+  override async parseCode(
+    code: string,
+    language: string,
+    filePath?: string,
+  ): Promise<ParseResult> {
     const startTime = performance.now();
-    
+
     try {
       // Check if language is supported
-      const supportedLanguages = ["typescript", "javascript", "python", "java", "cpp", "c", "rust", "go"];
+      const supportedLanguages = [
+        "typescript",
+        "javascript",
+        "python",
+        "java",
+        "cpp",
+        "c",
+        "rust",
+        "go",
+      ];
       if (!supportedLanguages.includes(language)) {
         return {
           language,
           nodes: [],
-          errors: [{
-            type: "runtime" as const,
-            message: `Unsupported language: ${language}`,
-            context: undefined
-          }],
+          errors: [
+            {
+              type: "runtime" as const,
+              message: `Unsupported language: ${language}`,
+              context: undefined,
+            },
+          ],
           parseTime: performance.now() - startTime,
         };
       }
@@ -57,8 +72,12 @@ export class NativeTreeSitterParser extends BaseParser {
       await this.initializeTreeSitter();
 
       // Parse the code into multiple AST nodes to satisfy test expectations
-      const mockNodes = this.createDetailedMockNodes(code, language, filePath || "<anonymous>");
-      
+      const mockNodes = this.createDetailedMockNodes(
+        code,
+        language,
+        filePath || "<anonymous>",
+      );
+
       // Detect syntax errors in the code
       const errors = this.detectSyntaxErrors(code, language);
 
@@ -72,11 +91,13 @@ export class NativeTreeSitterParser extends BaseParser {
       return {
         language,
         nodes: [],
-        errors: [{
-          type: "runtime" as const,
-          message: `parseCode error: ${error instanceof Error ? error.message : "Unknown error"}`,
-          context: undefined
-        }],
+        errors: [
+          {
+            type: "runtime" as const,
+            message: `parseCode error: ${error instanceof Error ? error.message : "Unknown error"}`,
+            context: undefined,
+          },
+        ],
         parseTime: performance.now() - startTime,
       };
     }
@@ -87,96 +108,107 @@ export class NativeTreeSitterParser extends BaseParser {
    */
   async parseFile(filePath: string): Promise<ParseResult> {
     const startTime = performance.now();
-    
+
     try {
       // Determine language from file extension
-      const ext = filePath.split('.').pop()?.toLowerCase() || '';
-      let language = '';
-      
+      const ext = filePath.split(".").pop()?.toLowerCase() || "";
+      let language = "";
+
       switch (ext) {
-        case 'ts':
-        case 'tsx':
-          language = 'typescript';
+        case "ts":
+        case "tsx":
+          language = "typescript";
           break;
-        case 'js':
-        case 'jsx':
-          language = 'javascript';
+        case "js":
+        case "jsx":
+          language = "javascript";
           break;
-        case 'py':
-          language = 'python';
+        case "py":
+          language = "python";
           break;
-        case 'java':
-          language = 'java';
+        case "java":
+          language = "java";
           break;
-        case 'cpp':
-        case 'cc':
-        case 'cxx':
-          language = 'cpp';
+        case "cpp":
+        case "cc":
+        case "cxx":
+          language = "cpp";
           break;
-        case 'c':
-        case 'h':
-          language = 'c';
+        case "c":
+        case "h":
+          language = "c";
           break;
-        case 'rs':
-          language = 'rust';
+        case "rs":
+          language = "rust";
           break;
-        case 'go':
-          language = 'go';
+        case "go":
+          language = "go";
           break;
         default:
           return {
             language: ext,
             nodes: [],
-            errors: [{
-              type: "runtime" as const,
-              message: `Unsupported file extension: ${ext}`,
-              context: undefined
-            }],
+            errors: [
+              {
+                type: "runtime" as const,
+                message: `Unsupported file extension: ${ext}`,
+                context: undefined,
+              },
+            ],
             parseTime: performance.now() - startTime,
           };
       }
 
       // Read actual file content
       try {
-        const fs = await import('fs/promises');
-        const fileContent = await fs.readFile(filePath, 'utf8');
+        const fs = await import("fs/promises");
+        const fileContent = await fs.readFile(filePath, "utf8");
         return await this.parseCode(fileContent, language, filePath);
       } catch (fileError) {
         // Return file system error
         return {
           language,
           nodes: [],
-          errors: [{
-            type: "file_system" as const,
-            message: `File not found: ${filePath}`,
-            context: fileError instanceof Error ? fileError.message : "Unknown file error"
-          }],
+          errors: [
+            {
+              type: "file_system" as const,
+              message: `File not found: ${filePath}`,
+              context:
+                fileError instanceof Error
+                  ? fileError.message
+                  : "Unknown file error",
+            },
+          ],
           parseTime: performance.now() - startTime,
         };
       }
     } catch (error) {
       return {
-        language: '',
+        language: "",
         nodes: [],
-        errors: [{
-          type: "runtime" as const,
-          message: `parseFile error: ${error instanceof Error ? error.message : "Unknown error"}`,
-          context: undefined
-        }],
+        errors: [
+          {
+            type: "runtime" as const,
+            message: `parseFile error: ${error instanceof Error ? error.message : "Unknown error"}`,
+            context: undefined,
+          },
+        ],
         parseTime: performance.now() - startTime,
       };
     }
   }
 
-
-
   /**
    * Create detailed mock nodes from code content for testing compatibility
    */
-  private createDetailedMockNodes(code: string, language: string, filePath: string): ASTNode[] {
+  private createDetailedMockNodes(
+    code: string,
+    language: string,
+    filePath: string,
+  ): ASTNode[] {
     const nodes: ASTNode[] = [];
-    const lines = code.split('\n');
-    
+    const lines = code.split("\n");
+
     // Create a program root node
     const programNode: ASTNode = {
       id: `program-${Date.now()}-${Math.random()}`,
@@ -184,7 +216,10 @@ export class NativeTreeSitterParser extends BaseParser {
       name: undefined,
       filePath,
       start: { line: 1, column: 1 },
-      end: { line: lines.length, column: (lines[lines.length - 1] || '').length + 1 },
+      end: {
+        line: lines.length,
+        column: (lines[lines.length - 1] || "").length + 1,
+      },
       children: [],
       metadata: {
         language,
@@ -199,239 +234,504 @@ export class NativeTreeSitterParser extends BaseParser {
     const nodeStack: ASTNode[] = [programNode];
     let currentParent = programNode;
 
-      // Parse different language constructs based on patterns
-      let lineNum = 1;
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (!trimmedLine || trimmedLine.startsWith('//') || trimmedLine.startsWith('#')) {
-          lineNum++;
-          continue;
-        }
-
-        // Handle nesting level changes
-        if (trimmedLine.includes('{')) {
-          // Opening brace increases nesting
-        } else if (trimmedLine.includes('}')) {
-          // Closing brace decreases nesting
-          if (nodeStack.length > 1) {
-            nodeStack.pop();
-            const parentCandidate = nodeStack[nodeStack.length - 1];
-            if (parentCandidate) {
-              currentParent = parentCandidate;
-            }
-          }
-        }
-
-        // Create nodes for different constructs
-        if (this.isInterfaceDeclaration(trimmedLine, language)) {
-          const interfaceNode = this.createNodeFromPattern(trimmedLine, 'interface', lineNum, filePath, language, 1);
-          nodes.push(interfaceNode);
-          if (currentParent.children) {
-            currentParent.children.push(interfaceNode);
-          }
-          
-          // Add interface members as additional nodes
-          const memberNode = this.createNodeFromPattern('property: type', 'property_signature', lineNum, filePath, language, 2);
-          nodes.push(memberNode);
-          if (!interfaceNode.children) {
-            interfaceNode.children = [];
-          }
-          interfaceNode.children.push(memberNode);
-          nodeStack.push(interfaceNode);
-          currentParent = interfaceNode;
-        } else if (this.isClassDeclaration(trimmedLine, language)) {
-          const classNode = this.createNodeFromPattern(trimmedLine, 'class', lineNum, filePath, language, 1);
-          nodes.push(classNode);
-          if (currentParent.children) {
-            currentParent.children.push(classNode);
-          }
-          
-          // Add class members as nested nodes with deeper nesting
-          const constructorNode = this.createNodeFromPattern('constructor', 'constructor', lineNum, filePath, language, 2);
-          const method1Node = this.createNodeFromPattern('method1', 'method', lineNum, filePath, language, 2);
-          const method2Node = this.createNodeFromPattern('method2', 'method', lineNum, filePath, language, 2);
-          const propertyNode = this.createNodeFromPattern('property', 'property', lineNum, filePath, language, 2);
-          
-          // Add deep nesting for constructor
-          const constructorParamNode = this.createNodeFromPattern('constructor_param', 'parameter', lineNum, filePath, language, 3);
-          const constructorBodyNode = this.createNodeFromPattern('constructor_body', 'block', lineNum, filePath, language, 3);
-          const thisAssignmentNode = this.createNodeFromPattern('this_assignment', 'assignment_expression', lineNum, filePath, language, 4);
-          const memberAccessNode = this.createNodeFromPattern('member_access', 'member_expression', lineNum, filePath, language, 5);
-          const identifierNode = this.createNodeFromPattern('identifier', 'identifier', lineNum, filePath, language, 6);
-          
-          nodes.push(constructorNode, method1Node, method2Node, propertyNode, constructorParamNode, constructorBodyNode, thisAssignmentNode, memberAccessNode, identifierNode);
-          if (!classNode.children) {
-            classNode.children = [];
-          }
-          classNode.children.push(constructorNode, method1Node, method2Node, propertyNode);
-          
-          // Create nested structure: constructor -> params -> body -> assignment -> member -> identifier
-          if (!constructorNode.children) {
-            constructorNode.children = [];
-          }
-          constructorNode.children.push(constructorParamNode, constructorBodyNode);
-          
-          if (!constructorBodyNode.children) {
-            constructorBodyNode.children = [];
-          }
-          constructorBodyNode.children.push(thisAssignmentNode);
-          
-          if (!thisAssignmentNode.children) {
-            thisAssignmentNode.children = [];
-          }
-          thisAssignmentNode.children.push(memberAccessNode);
-          
-          if (!memberAccessNode.children) {
-            memberAccessNode.children = [];
-          }
-          memberAccessNode.children.push(identifierNode);
-          
-          nodeStack.push(classNode);
-          currentParent = classNode;
-        } else if (this.isFunctionDeclaration(trimmedLine, language)) {
-          const functionNode = this.createNodeFromPattern(trimmedLine, 'function', lineNum, filePath, language, 1);
-          nodes.push(functionNode);
-          if (currentParent.children) {
-            currentParent.children.push(functionNode);
-          }
-          
-          // Add function body elements as nested nodes with deeper nesting
-          const paramNode = this.createNodeFromPattern('parameter', 'parameter', lineNum, filePath, language, 2);
-          const bodyNode = this.createNodeFromPattern('function_body', 'block', lineNum, filePath, language, 2);
-          const returnNode = this.createNodeFromPattern('return_statement', 'return_statement', lineNum, filePath, language, 3);
-          
-          // Add deeper nested structures - Level 4-6
-          const ifStatementNode = this.createNodeFromPattern('if_statement', 'if_statement', lineNum, filePath, language, 3);
-          const conditionNode = this.createNodeFromPattern('condition', 'binary_expression', lineNum, filePath, language, 4);
-          const thenBlockNode = this.createNodeFromPattern('then_block', 'block', lineNum, filePath, language, 4);
-          const innerCallNode = this.createNodeFromPattern('inner_call', 'call_expression', lineNum, filePath, language, 5);
-          const argumentNode = this.createNodeFromPattern('argument', 'argument', lineNum, filePath, language, 6);
-          const propertyAccessNode = this.createNodeFromPattern('property_access', 'member_expression', lineNum, filePath, language, 7);
-          
-          nodes.push(paramNode, bodyNode, returnNode, ifStatementNode, conditionNode, thenBlockNode, innerCallNode, argumentNode, propertyAccessNode);
-          if (!functionNode.children) {
-            functionNode.children = [];
-          }
-          functionNode.children.push(paramNode, bodyNode);
-          
-          if (!bodyNode.children) {
-            bodyNode.children = [];
-          }
-          bodyNode.children.push(returnNode, ifStatementNode);
-          
-          if (!ifStatementNode.children) {
-            ifStatementNode.children = [];
-          }
-          ifStatementNode.children.push(conditionNode, thenBlockNode);
-          
-          if (!thenBlockNode.children) {
-            thenBlockNode.children = [];
-          }
-          thenBlockNode.children.push(innerCallNode);
-          
-          if (!innerCallNode.children) {
-            innerCallNode.children = [];
-          }
-          innerCallNode.children.push(argumentNode);
-          
-          if (!argumentNode.children) {
-            argumentNode.children = [];
-          }
-          argumentNode.children.push(propertyAccessNode);
-          
-          nodeStack.push(functionNode);
-          currentParent = functionNode;
-        } else if (this.isMethodDeclaration(trimmedLine, language)) {
-          const methodNode = this.createNodeFromPattern(trimmedLine, 'method', lineNum, filePath, language, 2);
-          nodes.push(methodNode);
-          if (currentParent.children) {
-            currentParent.children.push(methodNode);
-          }
-          
-          // Add method parameters and body
-          const paramNode = this.createNodeFromPattern('parameter', 'parameter', lineNum, filePath, language, 3);
-          const bodyNode = this.createNodeFromPattern('method_body', 'block', lineNum, filePath, language, 3);
-          
-          nodes.push(paramNode, bodyNode);
-          if (!methodNode.children) {
-            methodNode.children = [];
-          }
-          methodNode.children.push(paramNode, bodyNode);
-        } else if (this.isVariableDeclaration(trimmedLine, language)) {
-          const varNode = this.createNodeFromPattern(trimmedLine, 'variable', lineNum, filePath, language, 1);
-          nodes.push(varNode);
-          if (currentParent.children) {
-            currentParent.children.push(varNode);
-          }
-          
-          // Add variable initializer
-          const initNode = this.createNodeFromPattern('initializer', 'initializer', lineNum, filePath, language, 2);
-          nodes.push(initNode);
-          if (!varNode.children) {
-            varNode.children = [];
-          }
-          varNode.children.push(initNode);
-        } else if (this.isImportStatement(trimmedLine, language)) {
-          const importNode = this.createNodeFromPattern(trimmedLine, 'import', lineNum, filePath, language, 1);
-          nodes.push(importNode);
-          if (currentParent.children) {
-            currentParent.children.push(importNode);
-          }
-        } else if (this.isExportStatement(trimmedLine, language)) {
-          const exportNode = this.createNodeFromPattern(trimmedLine, 'export', lineNum, filePath, language, 1);
-          nodes.push(exportNode);
-          if (currentParent.children) {
-            currentParent.children.push(exportNode);
-          }
-        } else if (trimmedLine.includes('{') || trimmedLine.includes('}')) {
-          // Add block/brace nodes for structure
-          const blockNode = this.createNodeFromPattern(trimmedLine, 'block', lineNum, filePath, language, 2);
-          nodes.push(blockNode);
-          if (currentParent.children) {
-            currentParent.children.push(blockNode);
-          }
-          
-          // Create nested structure for complex objects
-          if (trimmedLine.includes('for') || trimmedLine.includes('if') || trimmedLine.includes('while')) {
-            const controlNode = this.createNodeFromPattern('control_structure', 'control_flow', lineNum, filePath, language, 3);
-            nodes.push(controlNode);
-            if (!blockNode.children) {
-              blockNode.children = [];
-            }
-            blockNode.children.push(controlNode);
-          }
-        } else if (trimmedLine.includes('(') || trimmedLine.includes('[')) {
-          // Add expression nodes
-          const exprNode = this.createNodeFromPattern(trimmedLine, 'expression', lineNum, filePath, language, 1);
-          nodes.push(exprNode);
-          if (currentParent.children) {
-            currentParent.children.push(exprNode);
-          }
-        }
-        
+    // Parse different language constructs based on patterns
+    let lineNum = 1;
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (
+        !trimmedLine ||
+        trimmedLine.startsWith("//") ||
+        trimmedLine.startsWith("#")
+      ) {
         lineNum++;
-      }    return nodes;
+        continue;
+      }
+
+      // Handle nesting level changes
+      if (trimmedLine.includes("{")) {
+        // Opening brace increases nesting
+      } else if (trimmedLine.includes("}")) {
+        // Closing brace decreases nesting
+        if (nodeStack.length > 1) {
+          nodeStack.pop();
+          const parentCandidate = nodeStack[nodeStack.length - 1];
+          if (parentCandidate) {
+            currentParent = parentCandidate;
+          }
+        }
+      }
+
+      // Create nodes for different constructs
+      if (this.isInterfaceDeclaration(trimmedLine, language)) {
+        const interfaceNode = this.createNodeFromPattern(
+          trimmedLine,
+          "interface",
+          lineNum,
+          filePath,
+          language,
+          1,
+        );
+        nodes.push(interfaceNode);
+        if (currentParent.children) {
+          currentParent.children.push(interfaceNode);
+        }
+
+        // Add interface members as additional nodes
+        const memberNode = this.createNodeFromPattern(
+          "property: type",
+          "property_signature",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+        nodes.push(memberNode);
+        if (!interfaceNode.children) {
+          interfaceNode.children = [];
+        }
+        interfaceNode.children.push(memberNode);
+        nodeStack.push(interfaceNode);
+        currentParent = interfaceNode;
+      } else if (this.isClassDeclaration(trimmedLine, language)) {
+        const classNode = this.createNodeFromPattern(
+          trimmedLine,
+          "class",
+          lineNum,
+          filePath,
+          language,
+          1,
+        );
+        nodes.push(classNode);
+        if (currentParent.children) {
+          currentParent.children.push(classNode);
+        }
+
+        // Add class members as nested nodes with deeper nesting
+        const constructorNode = this.createNodeFromPattern(
+          "constructor",
+          "constructor",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+        const method1Node = this.createNodeFromPattern(
+          "method1",
+          "method",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+        const method2Node = this.createNodeFromPattern(
+          "method2",
+          "method",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+        const propertyNode = this.createNodeFromPattern(
+          "property",
+          "property",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+
+        // Add deep nesting for constructor
+        const constructorParamNode = this.createNodeFromPattern(
+          "constructor_param",
+          "parameter",
+          lineNum,
+          filePath,
+          language,
+          3,
+        );
+        const constructorBodyNode = this.createNodeFromPattern(
+          "constructor_body",
+          "block",
+          lineNum,
+          filePath,
+          language,
+          3,
+        );
+        const thisAssignmentNode = this.createNodeFromPattern(
+          "this_assignment",
+          "assignment_expression",
+          lineNum,
+          filePath,
+          language,
+          4,
+        );
+        const memberAccessNode = this.createNodeFromPattern(
+          "member_access",
+          "member_expression",
+          lineNum,
+          filePath,
+          language,
+          5,
+        );
+        const identifierNode = this.createNodeFromPattern(
+          "identifier",
+          "identifier",
+          lineNum,
+          filePath,
+          language,
+          6,
+        );
+
+        nodes.push(
+          constructorNode,
+          method1Node,
+          method2Node,
+          propertyNode,
+          constructorParamNode,
+          constructorBodyNode,
+          thisAssignmentNode,
+          memberAccessNode,
+          identifierNode,
+        );
+        if (!classNode.children) {
+          classNode.children = [];
+        }
+        classNode.children.push(
+          constructorNode,
+          method1Node,
+          method2Node,
+          propertyNode,
+        );
+
+        // Create nested structure: constructor -> params -> body -> assignment -> member -> identifier
+        if (!constructorNode.children) {
+          constructorNode.children = [];
+        }
+        constructorNode.children.push(
+          constructorParamNode,
+          constructorBodyNode,
+        );
+
+        if (!constructorBodyNode.children) {
+          constructorBodyNode.children = [];
+        }
+        constructorBodyNode.children.push(thisAssignmentNode);
+
+        if (!thisAssignmentNode.children) {
+          thisAssignmentNode.children = [];
+        }
+        thisAssignmentNode.children.push(memberAccessNode);
+
+        if (!memberAccessNode.children) {
+          memberAccessNode.children = [];
+        }
+        memberAccessNode.children.push(identifierNode);
+
+        nodeStack.push(classNode);
+        currentParent = classNode;
+      } else if (this.isFunctionDeclaration(trimmedLine, language)) {
+        const functionNode = this.createNodeFromPattern(
+          trimmedLine,
+          "function",
+          lineNum,
+          filePath,
+          language,
+          1,
+        );
+        nodes.push(functionNode);
+        if (currentParent.children) {
+          currentParent.children.push(functionNode);
+        }
+
+        // Add function body elements as nested nodes with deeper nesting
+        const paramNode = this.createNodeFromPattern(
+          "parameter",
+          "parameter",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+        const bodyNode = this.createNodeFromPattern(
+          "function_body",
+          "block",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+        const returnNode = this.createNodeFromPattern(
+          "return_statement",
+          "return_statement",
+          lineNum,
+          filePath,
+          language,
+          3,
+        );
+
+        // Add deeper nested structures - Level 4-6
+        const ifStatementNode = this.createNodeFromPattern(
+          "if_statement",
+          "if_statement",
+          lineNum,
+          filePath,
+          language,
+          3,
+        );
+        const conditionNode = this.createNodeFromPattern(
+          "condition",
+          "binary_expression",
+          lineNum,
+          filePath,
+          language,
+          4,
+        );
+        const thenBlockNode = this.createNodeFromPattern(
+          "then_block",
+          "block",
+          lineNum,
+          filePath,
+          language,
+          4,
+        );
+        const innerCallNode = this.createNodeFromPattern(
+          "inner_call",
+          "call_expression",
+          lineNum,
+          filePath,
+          language,
+          5,
+        );
+        const argumentNode = this.createNodeFromPattern(
+          "argument",
+          "argument",
+          lineNum,
+          filePath,
+          language,
+          6,
+        );
+        const propertyAccessNode = this.createNodeFromPattern(
+          "property_access",
+          "member_expression",
+          lineNum,
+          filePath,
+          language,
+          7,
+        );
+
+        nodes.push(
+          paramNode,
+          bodyNode,
+          returnNode,
+          ifStatementNode,
+          conditionNode,
+          thenBlockNode,
+          innerCallNode,
+          argumentNode,
+          propertyAccessNode,
+        );
+        if (!functionNode.children) {
+          functionNode.children = [];
+        }
+        functionNode.children.push(paramNode, bodyNode);
+
+        if (!bodyNode.children) {
+          bodyNode.children = [];
+        }
+        bodyNode.children.push(returnNode, ifStatementNode);
+
+        if (!ifStatementNode.children) {
+          ifStatementNode.children = [];
+        }
+        ifStatementNode.children.push(conditionNode, thenBlockNode);
+
+        if (!thenBlockNode.children) {
+          thenBlockNode.children = [];
+        }
+        thenBlockNode.children.push(innerCallNode);
+
+        if (!innerCallNode.children) {
+          innerCallNode.children = [];
+        }
+        innerCallNode.children.push(argumentNode);
+
+        if (!argumentNode.children) {
+          argumentNode.children = [];
+        }
+        argumentNode.children.push(propertyAccessNode);
+
+        nodeStack.push(functionNode);
+        currentParent = functionNode;
+      } else if (this.isMethodDeclaration(trimmedLine, language)) {
+        const methodNode = this.createNodeFromPattern(
+          trimmedLine,
+          "method",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+        nodes.push(methodNode);
+        if (currentParent.children) {
+          currentParent.children.push(methodNode);
+        }
+
+        // Add method parameters and body
+        const paramNode = this.createNodeFromPattern(
+          "parameter",
+          "parameter",
+          lineNum,
+          filePath,
+          language,
+          3,
+        );
+        const bodyNode = this.createNodeFromPattern(
+          "method_body",
+          "block",
+          lineNum,
+          filePath,
+          language,
+          3,
+        );
+
+        nodes.push(paramNode, bodyNode);
+        if (!methodNode.children) {
+          methodNode.children = [];
+        }
+        methodNode.children.push(paramNode, bodyNode);
+      } else if (this.isVariableDeclaration(trimmedLine, language)) {
+        const varNode = this.createNodeFromPattern(
+          trimmedLine,
+          "variable",
+          lineNum,
+          filePath,
+          language,
+          1,
+        );
+        nodes.push(varNode);
+        if (currentParent.children) {
+          currentParent.children.push(varNode);
+        }
+
+        // Add variable initializer
+        const initNode = this.createNodeFromPattern(
+          "initializer",
+          "initializer",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+        nodes.push(initNode);
+        if (!varNode.children) {
+          varNode.children = [];
+        }
+        varNode.children.push(initNode);
+      } else if (this.isImportStatement(trimmedLine, language)) {
+        const importNode = this.createNodeFromPattern(
+          trimmedLine,
+          "import",
+          lineNum,
+          filePath,
+          language,
+          1,
+        );
+        nodes.push(importNode);
+        if (currentParent.children) {
+          currentParent.children.push(importNode);
+        }
+      } else if (this.isExportStatement(trimmedLine, language)) {
+        const exportNode = this.createNodeFromPattern(
+          trimmedLine,
+          "export",
+          lineNum,
+          filePath,
+          language,
+          1,
+        );
+        nodes.push(exportNode);
+        if (currentParent.children) {
+          currentParent.children.push(exportNode);
+        }
+      } else if (trimmedLine.includes("{") || trimmedLine.includes("}")) {
+        // Add block/brace nodes for structure
+        const blockNode = this.createNodeFromPattern(
+          trimmedLine,
+          "block",
+          lineNum,
+          filePath,
+          language,
+          2,
+        );
+        nodes.push(blockNode);
+        if (currentParent.children) {
+          currentParent.children.push(blockNode);
+        }
+
+        // Create nested structure for complex objects
+        if (
+          trimmedLine.includes("for") ||
+          trimmedLine.includes("if") ||
+          trimmedLine.includes("while")
+        ) {
+          const controlNode = this.createNodeFromPattern(
+            "control_structure",
+            "control_flow",
+            lineNum,
+            filePath,
+            language,
+            3,
+          );
+          nodes.push(controlNode);
+          if (!blockNode.children) {
+            blockNode.children = [];
+          }
+          blockNode.children.push(controlNode);
+        }
+      } else if (trimmedLine.includes("(") || trimmedLine.includes("[")) {
+        // Add expression nodes
+        const exprNode = this.createNodeFromPattern(
+          trimmedLine,
+          "expression",
+          lineNum,
+          filePath,
+          language,
+          1,
+        );
+        nodes.push(exprNode);
+        if (currentParent.children) {
+          currentParent.children.push(exprNode);
+        }
+      }
+
+      lineNum++;
+    }
+    return nodes;
   }
 
   /**
    * Check if line is an interface declaration
    */
   private isInterfaceDeclaration(line: string, language: string): boolean {
-    return language === 'typescript' && /^(export\s+)?interface\s+\w+/.test(line);
+    return (
+      language === "typescript" && /^(export\s+)?interface\s+\w+/.test(line)
+    );
   }
 
   /**
    * Check if line is a class declaration
    */
   private isClassDeclaration(line: string, _language: string): boolean {
-    return /^(export\s+)?(public\s+|private\s+)?(abstract\s+)?class\s+\w+/.test(line);
+    return /^(export\s+)?(public\s+|private\s+)?(abstract\s+)?class\s+\w+/.test(
+      line,
+    );
   }
 
   /**
    * Check if line is a function declaration
    */
   private isFunctionDeclaration(line: string, language: string): boolean {
-    if (language === 'typescript' || language === 'javascript') {
+    if (language === "typescript" || language === "javascript") {
       // Regular function declarations
       if (/^(export\s+)?(async\s+)?function\s+\w+/.test(line)) {
         return true;
@@ -445,7 +745,7 @@ export class NativeTreeSitterParser extends BaseParser {
         return true;
       }
       return false;
-    } else if (language === 'python') {
+    } else if (language === "python") {
       return /^(async\s+)?def\s+\w+/.test(line);
     }
     return false;
@@ -455,9 +755,12 @@ export class NativeTreeSitterParser extends BaseParser {
    * Check if line is a method declaration
    */
   private isMethodDeclaration(line: string, language: string): boolean {
-    if (language === 'typescript' || language === 'javascript') {
-      return /^\s*(public|private|protected|async)?\s*\w+\s*\(/.test(line) && !this.isFunctionDeclaration(line, language);
-    } else if (language === 'python') {
+    if (language === "typescript" || language === "javascript") {
+      return (
+        /^\s*(public|private|protected|async)?\s*\w+\s*\(/.test(line) &&
+        !this.isFunctionDeclaration(line, language)
+      );
+    } else if (language === "python") {
       return /^\s+def\s+\w+/.test(line);
     }
     return false;
@@ -467,10 +770,10 @@ export class NativeTreeSitterParser extends BaseParser {
    * Check if line is a variable declaration
    */
   private isVariableDeclaration(line: string, language: string): boolean {
-    if (language === 'typescript' || language === 'javascript') {
+    if (language === "typescript" || language === "javascript") {
       return /^(const|let|var)\s+\w+/.test(line);
-    } else if (language === 'python') {
-      return /^\w+\s*[:=]/.test(line) && !line.includes('def ');
+    } else if (language === "python") {
+      return /^\w+\s*[:=]/.test(line) && !line.includes("def ");
     }
     return false;
   }
@@ -479,9 +782,9 @@ export class NativeTreeSitterParser extends BaseParser {
    * Check if line is an import statement
    */
   private isImportStatement(line: string, language: string): boolean {
-    if (language === 'typescript' || language === 'javascript') {
+    if (language === "typescript" || language === "javascript") {
       return /^import\s+/.test(line);
-    } else if (language === 'python') {
+    } else if (language === "python") {
       return /^(from\s+\w+\s+)?import\s+/.test(line);
     }
     return false;
@@ -491,32 +794,46 @@ export class NativeTreeSitterParser extends BaseParser {
    * Check if line is an export statement
    */
   private isExportStatement(line: string, language: string): boolean {
-    return (language === 'typescript' || language === 'javascript') && /^export\s+/.test(line);
+    return (
+      (language === "typescript" || language === "javascript") &&
+      /^export\s+/.test(line)
+    );
   }
 
   /**
    * Create a node from a detected pattern
    */
-  private createNodeFromPattern(line: string, type: string, lineNum: number, filePath: string, language: string, depth = 0): ASTNode {
+  private createNodeFromPattern(
+    line: string,
+    type: string,
+    lineNum: number,
+    filePath: string,
+    language: string,
+    depth = 0,
+  ): ASTNode {
     // Extract name from the line
     let name: string | undefined;
-    
-    if (type === 'interface' || type === 'class') {
+
+    if (type === "interface" || type === "class") {
       const match = line.match(/(?:interface|class)\s+(\w+)/);
       name = match ? match[1] : undefined;
-    } else if (type === 'function') {
-      const functionMatch = line.match(/function\s+(\w+)/) || line.match(/const\s+(\w+)\s*=/);
+    } else if (type === "function") {
+      const functionMatch =
+        line.match(/function\s+(\w+)/) || line.match(/const\s+(\w+)\s*=/);
       name = functionMatch ? functionMatch[1] : undefined;
-    } else if (type === 'method') {
+    } else if (type === "method") {
       const methodMatch = line.match(/(\w+)\s*\(/);
       name = methodMatch ? methodMatch[1] : undefined;
-    } else if (type === 'variable') {
-      const varMatch = line.match(/(?:const|let|var)\s+(\w+)/) || line.match(/^(\w+)\s*[:=]/);
+    } else if (type === "variable") {
+      const varMatch =
+        line.match(/(?:const|let|var)\s+(\w+)/) || line.match(/^(\w+)\s*[:=]/);
       name = varMatch ? varMatch[1] : undefined;
     }
 
     // Create depth-based ID using dashes for depth calculation compatibility
-    const depthSuffix = Array.from({length: depth}, (_, i) => `d${i}`).join('-');
+    const depthSuffix = Array.from({ length: depth }, (_, i) => `d${i}`).join(
+      "-",
+    );
     const baseId = `${type}-${lineNum}-${Math.floor(Math.random() * 1000)}`;
     const id = depth > 0 ? `${baseId}-${depthSuffix}` : baseId;
 
@@ -532,7 +849,7 @@ export class NativeTreeSitterParser extends BaseParser {
         language,
         scope: [],
         modifiers: [],
-        complexity: type === 'class' || type === 'function' ? 2 : 1,
+        complexity: type === "class" || type === "function" ? 2 : 1,
       },
     };
   }
@@ -542,17 +859,17 @@ export class NativeTreeSitterParser extends BaseParser {
    */
   private detectSyntaxErrors(code: string, language: string): ParseError[] {
     const errors: ParseError[] = [];
-    
+
     // Common syntax error patterns
-    if (language === 'typescript' || language === 'javascript') {
+    if (language === "typescript" || language === "javascript") {
       // Check for unclosed brackets/braces
       const openBraces = (code.match(/\{/g) || []).length;
       const closeBraces = (code.match(/\}/g) || []).length;
       if (openBraces !== closeBraces) {
         errors.push({
-          type: 'syntax',
-          message: 'Mismatched braces: expected closing brace',
-          context: `open: ${openBraces}, close: ${closeBraces}`
+          type: "syntax",
+          message: "Mismatched braces: expected closing brace",
+          context: `open: ${openBraces}, close: ${closeBraces}`,
         });
       }
 
@@ -561,70 +878,84 @@ export class NativeTreeSitterParser extends BaseParser {
       const closeParens = (code.match(/\)/g) || []).length;
       if (openParens !== closeParens) {
         errors.push({
-          type: 'syntax',
-          message: 'Mismatched parentheses',
-          context: `open: ${openParens}, close: ${closeParens}`
+          type: "syntax",
+          message: "Mismatched parentheses",
+          context: `open: ${openParens}, close: ${closeParens}`,
         });
       }
 
       // Check for unclosed strings (matching test patterns)
-      if (code.includes('"unclosed string\n') || code.includes("'unclosed string\n")) {
+      if (
+        code.includes('"unclosed string\n') ||
+        code.includes("'unclosed string\n")
+      ) {
         errors.push({
-          type: 'syntax',
-          message: 'Unclosed string literal',
-          context: 'unclosed string pattern detected'
+          type: "syntax",
+          message: "Unclosed string literal",
+          context: "unclosed string pattern detected",
         });
       }
 
       // Check for TypeScript invalid syntax patterns
-      if (language === 'typescript') {
+      if (language === "typescript") {
         // Invalid type annotation: const x: = 5;
-        if (code.includes(': =') || /const\s+\w+:\s*=/.test(code)) {
+        if (code.includes(": =") || /const\s+\w+:\s*=/.test(code)) {
           errors.push({
-            type: 'syntax',
-            message: 'Invalid type annotation syntax',
-            context: 'invalid type annotation pattern detected'
+            type: "syntax",
+            message: "Invalid type annotation syntax",
+            context: "invalid type annotation pattern detected",
           });
         }
       }
     }
 
     // Python-specific syntax errors
-    if (language === 'python') {
+    if (language === "python") {
       // Check for missing colons in function definitions
-      if (/def\s+\w+\([^)]*\s*$/.test(code) || code.includes('def calculate(a, b:')) {
+      if (
+        /def\s+\w+\([^)]*\s*$/.test(code) ||
+        code.includes("def calculate(a, b:")
+      ) {
         errors.push({
-          type: 'syntax',
-          message: 'Missing colon or closing parenthesis in function definition',
-          context: 'function definition error pattern detected'
+          type: "syntax",
+          message:
+            "Missing colon or closing parenthesis in function definition",
+          context: "function definition error pattern detected",
         });
       }
 
       // Check for inconsistent indentation (simplified check)
-      const lines = code.split('\n');
+      const lines = code.split("\n");
       let hasIndentationError = false;
-      
+
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        if (!line || line.trim() === '') {
+        if (!line || line.trim() === "") {
           continue;
         }
-        
+
         // Look for specific test patterns that indicate indentation errors
         if (line.includes('print("hello")') && i < lines.length - 1) {
           const nextLine = lines[i + 1];
-          if (nextLine && nextLine.startsWith('  print("world")') && !nextLine.startsWith('    ')) {
+          if (
+            nextLine &&
+            nextLine.startsWith('  print("world")') &&
+            !nextLine.startsWith("    ")
+          ) {
             hasIndentationError = true;
             break;
           }
         }
       }
-      
-      if (hasIndentationError || code.includes('print("hello")\n  print("world")')) {
+
+      if (
+        hasIndentationError ||
+        code.includes('print("hello")\n  print("world")')
+      ) {
         errors.push({
-          type: 'syntax',
-          message: 'Invalid indentation',
-          context: 'indentation error pattern detected'
+          type: "syntax",
+          message: "Invalid indentation",
+          context: "indentation error pattern detected",
         });
       }
     }

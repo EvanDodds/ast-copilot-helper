@@ -83,7 +83,7 @@ export default defineConfig({
       "**/comprehensive-integration.test.ts", // Cross-platform integration timeouts
       "tests/integration/database-integration.test.ts", // Large database integration test causing memory leaks (~1300 lines)
       "tests/integration/end-to-end-workflow.test.ts", // Massive end-to-end test causing memory exhaustion (~1761 lines)
-      "tests/integration/mcp-protocol-compliance.test.ts", // Large MCP protocol test suite (~1687 lines)  
+      "tests/integration/mcp-protocol-compliance.test.ts", // Large MCP protocol test suite (~1687 lines)
       "tests/integration/query-processing-integration.test.ts", // Large query processing integration (~1598 lines)
       "tests/integration/ast-parsing-integration.test.ts", // Large AST parsing integration (~1037 lines)
       "tests/integration/performance-scalability.test.ts", // Performance scalability tests (~842 lines)

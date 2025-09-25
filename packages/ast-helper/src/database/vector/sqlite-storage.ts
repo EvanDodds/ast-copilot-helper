@@ -89,7 +89,7 @@ export class SQLiteVectorStorage {
 
   constructor(config: VectorDBConfig) {
     this.config = config;
-    
+
     // Ensure directory exists before opening database
     const dir = dirname(config.storageFile);
     try {
@@ -97,7 +97,7 @@ export class SQLiteVectorStorage {
     } catch (_error) {
       // Directory might already exist, that's okay
     }
-    
+
     this.db = new Database(config.storageFile);
 
     // Configure SQLite for performance

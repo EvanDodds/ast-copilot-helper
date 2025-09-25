@@ -19,17 +19,23 @@ export abstract class BaseParser implements ASTParser {
   abstract parseFile(filePath: string): Promise<ParseResult>;
 
   // Default implementation of parseCode - can be overridden by subclasses
-  async parseCode(_code: string, language: string, filePath?: string): Promise<ParseResult> {
+  async parseCode(
+    _code: string,
+    language: string,
+    filePath?: string,
+  ): Promise<ParseResult> {
     // Default stub implementation
     return {
       nodes: [],
-      errors: [{
-        type: 'runtime',
-        message: `parseCode not implemented for ${language}`,
-        context: filePath
-      }],
+      errors: [
+        {
+          type: "runtime",
+          message: `parseCode not implemented for ${language}`,
+          context: filePath,
+        },
+      ],
       language: language,
-      parseTime: 0
+      parseTime: 0,
     };
   }
 
@@ -38,15 +44,19 @@ export abstract class BaseParser implements ASTParser {
     files: string[],
     options?: {
       concurrency?: number;
-      onProgress?: (completed: number, total: number, currentFile: string) => void;
+      onProgress?: (
+        completed: number,
+        total: number,
+        currentFile: string,
+      ) => void;
       continueOnError?: boolean;
-    }
+    },
   ): Promise<Map<string, ParseResult>> {
     const results = new Map<string, ParseResult>();
     const { onProgress, continueOnError = false } = options || {};
-    
+
     let completed = 0;
-    
+
     for (const file of files) {
       try {
         const result = await this.parseFile(file);
@@ -56,16 +66,18 @@ export abstract class BaseParser implements ASTParser {
       } catch (error) {
         const errorResult: ParseResult = {
           nodes: [],
-          errors: [{
-            type: 'runtime',
-            message: error instanceof Error ? error.message : 'Unknown error',
-            context: file
-          }],
-          language: '',
-          parseTime: 0
+          errors: [
+            {
+              type: "runtime",
+              message: error instanceof Error ? error.message : "Unknown error",
+              context: file,
+            },
+          ],
+          language: "",
+          parseTime: 0,
         };
         results.set(file, errorResult);
-        
+
         if (!continueOnError) {
           break;
         }
@@ -73,7 +85,7 @@ export abstract class BaseParser implements ASTParser {
         onProgress?.(completed, files.length, file);
       }
     }
-    
+
     return results;
   }
 

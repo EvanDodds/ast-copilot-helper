@@ -420,13 +420,13 @@ describe("PerformanceMetricsCollector", () => {
         collector.once("error", () => {
           errorReceived = true;
         });
-        
+
         collector.on("metrics-collected", () => {
           if (errorReceived) {
             resolve(undefined);
           }
         });
-        
+
         // Fallback timeout
         setTimeout(resolve, 300);
       });

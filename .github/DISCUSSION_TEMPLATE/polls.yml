@@ -4,13 +4,13 @@ body:
     attributes:
       value: |
         Use this template for community polls and decisions that benefit from broader input.
-        
+
         Polls are great for:
         - Feature prioritization
         - Design decisions
         - Community preferences
         - Roadmap input
-        
+
   - type: input
     id: poll-title
     attributes:
@@ -19,7 +19,7 @@ body:
       placeholder: e.g., "Which language support should we prioritize next?"
     validations:
       required: true
-      
+
   - type: textarea
     id: context
     attributes:
@@ -31,7 +31,7 @@ body:
         What factors should be considered?
     validations:
       required: true
-      
+
   - type: dropdown
     id: poll-type
     attributes:
@@ -47,7 +47,7 @@ body:
         - Other
     validations:
       required: true
-      
+
   - type: textarea
     id: options
     attributes:
@@ -57,12 +57,12 @@ body:
         1. **Option A**: Description and pros/cons
         2. **Option B**: Description and pros/cons  
         3. **Option C**: Description and pros/cons
-        
+
         Or describe how people should indicate their preference...
       render: markdown
     validations:
       required: true
-      
+
   - type: dropdown
     id: scope
     attributes:
@@ -73,7 +73,7 @@ body:
         - Medium (affects some users)
         - High (major feature/direction)
         - Critical (affects all users)
-        
+
   - type: dropdown
     id: timeline
     attributes:
@@ -84,7 +84,7 @@ body:
         - Soon (1-2 weeks)
         - Urgent (within 1 week)
         - ASAP (few days)
-        
+
   - type: textarea
     id: additional-info
     attributes:
@@ -95,7 +95,7 @@ body:
         Technical constraints
         User feedback received
         Research or analysis done
-        
+
   - type: checkboxes
     id: poll-format
     attributes:
@@ -105,14 +105,14 @@ body:
         - label: 👍/👎 reactions on options in this discussion
         - label: Comment with preference and reasoning
         - label: Separate poll tool/service (specify in additional info)
-        
+
   - type: input
     id: closing-date
     attributes:
       label: Poll Closing Date
       description: When should voting close? (optional)
       placeholder: e.g., "January 15, 2024" or "2 weeks from now"
-      
+
   - type: checkboxes
     id: poll-commitment
     attributes:
@@ -123,7 +123,7 @@ body:
         - label: Results are advisory input for maintainers
         - label: Community consensus will determine outcome
         - label: Will document decision rationale after voting
-        
+
   - type: checkboxes
     id: terms
     attributes:

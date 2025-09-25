@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 // Import the CLI class from the compiled JavaScript
-import { AstHelperCli } from '../dist/cli.js';
+import { AstHelperCli } from "../dist/cli.js";
 
 // Create and run the CLI
 const cli = new AstHelperCli();
 cli.run().catch((error) => {
-  console.error('Fatal error:', error);
+  console.error("Fatal error:", error);
   process.exit(1);
 });

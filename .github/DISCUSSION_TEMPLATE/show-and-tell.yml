@@ -4,9 +4,9 @@ body:
     attributes:
       value: |
         Built something cool with ast-copilot-helper? Share it with the community!
-        
+
         This is the place to showcase your projects, share examples, tutorials, or demonstrations of how you're using ast-copilot-helper.
-        
+
   - type: input
     id: title
     attributes:
@@ -15,7 +15,7 @@ body:
       placeholder: e.g., "Custom AST Analyzer for React Components"
     validations:
       required: true
-      
+
   - type: textarea
     id: description
     attributes:
@@ -27,7 +27,7 @@ body:
         What makes it interesting or unique?
     validations:
       required: true
-      
+
   - type: dropdown
     id: type
     attributes:
@@ -44,7 +44,7 @@ body:
         - Other
     validations:
       required: true
-      
+
   - type: textarea
     id: technologies
     attributes:
@@ -56,14 +56,14 @@ body:
         - Node.js
         - Other libraries...
       render: markdown
-      
+
   - type: input
     id: repository
     attributes:
       label: Repository/Link
       description: Link to your project repository or demo (if public)
       placeholder: https://github.com/yourusername/your-project
-      
+
   - type: textarea
     id: code-example
     attributes:
@@ -74,7 +74,7 @@ body:
         // Your interesting code here
         ```
       render: markdown
-      
+
   - type: textarea
     id: results
     attributes:
@@ -82,10 +82,10 @@ body:
       description: Share results, screenshots, or output from your project
       placeholder: |
         ![Screenshot](url-to-image)
-        
+
         Or describe the results you achieved...
       render: markdown
-      
+
   - type: textarea
     id: challenges
     attributes:
@@ -94,10 +94,10 @@ body:
       placeholder: |
         Challenge 1: ...
         Solution: ...
-        
+
         Challenge 2: ...
         Solution: ...
-        
+
   - type: textarea
     id: feedback
     attributes:
@@ -107,7 +107,7 @@ body:
         What worked well?
         What could be improved?
         Any feature requests?
-        
+
   - type: checkboxes
     id: sharing
     attributes:
@@ -118,7 +118,7 @@ body:
         - label: Feel free to reference this in documentation
         - label: OK to share in project showcases
         - label: Available for collaboration
-        
+
   - type: checkboxes
     id: terms
     attributes:

@@ -49,87 +49,104 @@ class MockParser extends BaseParser {
     super(runtime);
   }
 
-  async parseCode(code: string, language: string, filePath?: string): Promise<ParseResult> {
+  async parseCode(
+    code: string,
+    language: string,
+    filePath?: string,
+  ): Promise<ParseResult> {
     try {
       // Try to get parser first to allow mocking errors
-      const parser = await this.getParserForLanguage({ 
-        name: language, 
-        extensions: ['.ts'], 
-        grammarUrl: 'mock://grammar', 
-        grammarHash: 'mock-hash' 
+      const parser = await this.getParserForLanguage({
+        name: language,
+        extensions: [".ts"],
+        grammarUrl: "mock://grammar",
+        grammarHash: "mock-hash",
       });
 
       if (language === "unsupported") {
         return {
           nodes: [],
-          errors: [{
-            type: 'runtime',
-            message: 'Unsupported language: unsupported',
-            context: filePath
-          }],
+          errors: [
+            {
+              type: "runtime",
+              message: "Unsupported language: unsupported",
+              context: filePath,
+            },
+          ],
           language,
-          parseTime: 10
+          parseTime: 10,
         };
       }
 
       // Parse with the mock parser
       const tree = parser.parse(code);
-      
+
       // Check for syntax errors in the tree
       const hasError = tree.rootNode.hasError || tree.rootNode.type === "ERROR";
-      
+
       if (hasError) {
         return {
           nodes: [],
-          errors: [{
-            type: 'syntax',
-            message: 'Syntax error detected in parsed tree',
-            context: filePath
-          }],
+          errors: [
+            {
+              type: "syntax",
+              message: "Syntax error detected in parsed tree",
+              context: filePath,
+            },
+          ],
           language,
-          parseTime: 10
+          parseTime: 10,
         };
       }
 
       // Success case - return mock nodes
-      const nodes = this.treeToASTNodes(tree, code, filePath || "test.ts", language);
+      const nodes = this.treeToASTNodes(
+        tree,
+        code,
+        filePath || "test.ts",
+        language,
+      );
       return {
         nodes,
         errors: [],
         language,
-        parseTime: 10
+        parseTime: 10,
       };
     } catch (error) {
       return {
         nodes: [],
-        errors: [{
-          type: 'runtime',
-          message: error instanceof Error ? error.message : 'Unknown error',
-          context: filePath
-        }],
+        errors: [
+          {
+            type: "runtime",
+            message: error instanceof Error ? error.message : "Unknown error",
+            context: filePath,
+          },
+        ],
         language,
-        parseTime: 0
+        parseTime: 0,
       };
     }
   }
 
   async parseFile(filePath: string): Promise<ParseResult> {
     // Handle unsupported file types
-    if (!filePath.endsWith('.ts') && !filePath.endsWith('.js')) {
+    if (!filePath.endsWith(".ts") && !filePath.endsWith(".js")) {
       return {
         nodes: [],
-        errors: [{
-          type: 'runtime',
-          message: `Unsupported file type: ${filePath}`,
-          context: filePath
-        }],
-        language: '',
-        parseTime: 0
+        errors: [
+          {
+            type: "runtime",
+            message: `Unsupported file type: ${filePath}`,
+            context: filePath,
+          },
+        ],
+        language: "",
+        parseTime: 0,
       };
     }
-    
-    const language = filePath.endsWith('.ts') ? 'typescript' : 'javascript';
-    return this.parseCode('mock file content', language, filePath);
+
+    const language = filePath.endsWith(".ts") ? "typescript" : "javascript";
+    return this.parseCode("mock file content", language, filePath);
   }
 
   protected async getParserForLanguage(config: LanguageConfig): Promise<any> {

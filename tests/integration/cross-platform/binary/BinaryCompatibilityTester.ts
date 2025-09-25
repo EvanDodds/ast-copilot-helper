@@ -325,7 +325,7 @@ export class BinaryCompatibilityTester {
       // Attempt to load the module with defensive error handling
       try {
         // Validate module name before attempting require
-        if (!module.name || typeof module.name !== 'string') {
+        if (!module.name || typeof module.name !== "string") {
           throw new Error(`Invalid module name: ${module.name}`);
         }
 
@@ -341,7 +341,7 @@ export class BinaryCompatibilityTester {
         }
 
         // Get version if available
-        if (moduleInstance && typeof moduleInstance === 'object') {
+        if (moduleInstance && typeof moduleInstance === "object") {
           if (moduleInstance.version) {
             version = moduleInstance.version;
           } else if (moduleInstance.VERSION) {

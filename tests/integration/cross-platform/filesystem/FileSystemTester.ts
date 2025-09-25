@@ -712,7 +712,9 @@ export class FileSystemTester {
         passed: testPassed,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: testPassed ? undefined : "File attributes validation failed - invalid size, dates, or mode",
+        error: testPassed
+          ? undefined
+          : "File attributes validation failed - invalid size, dates, or mode",
         details: {
           size: stats.size,
           mode: stats.mode.toString(8),
@@ -821,7 +823,7 @@ export class FileSystemTester {
       await fs.writeFile(testFile, "initial content");
 
       let watchTriggered = false;
-      
+
       // Use watchFile instead for better cross-platform compatibility
       watchFile(testFile, () => {
         watchTriggered = true;
@@ -844,7 +846,9 @@ export class FileSystemTester {
         passed: watchTriggered,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: watchTriggered ? undefined : "File watching did not trigger when file was modified",
+        error: watchTriggered
+          ? undefined
+          : "File watching did not trigger when file was modified",
         details: { watchTriggered, filename: basename(testFile) },
       });
     } catch (error) {
@@ -890,7 +894,9 @@ export class FileSystemTester {
         passed: allSuccessful,
         platform: this.platform,
         duration: Date.now() - startTime,
-        error: allSuccessful ? undefined : "Concurrent file operations did not all complete successfully",
+        error: allSuccessful
+          ? undefined
+          : "Concurrent file operations did not all complete successfully",
         details: {
           operationCount: operations.length,
           allSuccessful,

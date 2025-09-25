@@ -12,7 +12,7 @@ vi.mock("../../../logging/logger.js", () => ({
 }));
 
 // Suppress unhandled rejection errors during tests
-if (typeof process !== 'undefined' && typeof process.listeners === 'function') {
+if (typeof process !== "undefined" && typeof process.listeners === "function") {
   process.removeAllListeners("unhandledRejection");
   process.on("unhandledRejection", () => {}); // Silently handle unhandled rejections
 }

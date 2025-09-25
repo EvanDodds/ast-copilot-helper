@@ -1,164 +1,236 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CI/CD Resource Optimization Report</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1, h2, h3 { color: #2c3e50; }
-        h1 { text-align: center; margin-bottom: 30px; }
-        .metric { display: inline-block; margin: 10px 15px; padding: 15px; background: #ecf0f1; border-radius: 6px; text-align: center; }
-        .metric-value { font-size: 24px; font-weight: bold; color: #3498db; }
-        .metric-label { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
-        .recommendation { margin: 15px 0; padding: 15px; border-left: 4px solid #27ae60; background: #f8f9fa; }
-        .chart-container { width: 100%; max-width: 600px; margin: 20px auto; }
-        .cost-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .cost-section { padding: 20px; border-radius: 6px; }
-        .current-costs { background: #ffebee; }
-        .optimized-costs { background: #e8f5e8; }
-        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1; color: #7f8c8d; }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1,
+      h2,
+      h3 {
+        color: #2c3e50;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .metric {
+        display: inline-block;
+        margin: 10px 15px;
+        padding: 15px;
+        background: #ecf0f1;
+        border-radius: 6px;
+        text-align: center;
+      }
+      .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #3498db;
+      }
+      .metric-label {
+        font-size: 14px;
+        color: #7f8c8d;
+        margin-top: 5px;
+      }
+      .recommendation {
+        margin: 15px 0;
+        padding: 15px;
+        border-left: 4px solid #27ae60;
+        background: #f8f9fa;
+      }
+      .chart-container {
+        width: 100%;
+        max-width: 600px;
+        margin: 20px auto;
+      }
+      .cost-comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .cost-section {
+        padding: 20px;
+        border-radius: 6px;
+      }
+      .current-costs {
+        background: #ffebee;
+      }
+      .optimized-costs {
+        background: #e8f5e8;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ecf0f1;
+        color: #7f8c8d;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>⚡ CI/CD Resource Optimization Report</h1>
-        
-        <div style="text-align: center; margin: 20px 0;">
-            <div class="metric">
-                <div class="metric-value">-100%</div>
-                <div class="metric-label">Cost Savings</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value">55%</div>
-                <div class="metric-label">Time Reduction</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value">50%</div>
-                <div class="metric-label">Efficiency Gain</div>
-            </div>
-        </div>
+      <h1>⚡ CI/CD Resource Optimization Report</h1>
 
-        <h2>💰 Cost Analysis</h2>
-        <div class="cost-comparison">
-            <div class="cost-section current-costs">
-                <h3>Current Costs</h3>
-                <div style="font-size: 36px; color: #e74c3c; font-weight: bold;">$0.168</div>
-                <p>Across all jobs per workflow run</p>
-            </div>
-            <div class="cost-section optimized-costs">
-                <h3>Optimized Costs</h3>
-                <div style="font-size: 36px; color: #27ae60; font-weight: bold;">$0.336</div>
-                <p>Savings: $-0.168 (-100.0%)</p>
-            </div>
+      <div style="text-align: center; margin: 20px 0">
+        <div class="metric">
+          <div class="metric-value">-100%</div>
+          <div class="metric-label">Cost Savings</div>
         </div>
-
-        <h2>📊 Resource Utilization</h2>
-        <div class="chart-container">
-            <canvas id="utilizationChart"></canvas>
+        <div class="metric">
+          <div class="metric-value">55%</div>
+          <div class="metric-label">Time Reduction</div>
         </div>
-
-        <h2>🎯 Optimization Recommendations</h2>
-        
-            <div class="recommendation">
-                <h3>validate-code</h3>
-                <p><strong>Current:</strong> ubuntu-latest</p>
-                <p><strong>Recommended:</strong> ubuntu-latest-4-cores</p>
-                <p><strong>Expected Savings:</strong></p>
-                <ul>
-                    <li>Time: 55.0%</li>
-                    <li>Cost: -100.0%</li>
-                    <li>Efficiency: 95.0%</li>
-                </ul>
-                <p><strong>Reason:</strong> Memory over-provisioned, Better resource allocation match</p>
-            </div>
-        
-            <div class="recommendation">
-                <h3>build-and-test</h3>
-                <p><strong>Current:</strong> ubuntu-latest</p>
-                <p><strong>Recommended:</strong> ubuntu-latest-4-cores</p>
-                <p><strong>Expected Savings:</strong></p>
-                <ul>
-                    <li>Time: 55.0%</li>
-                    <li>Cost: -100.0%</li>
-                    <li>Efficiency: 95.0%</li>
-                </ul>
-                <p><strong>Reason:</strong> Better resource allocation match</p>
-            </div>
-        
-            <div class="recommendation">
-                <h3>performance-benchmarks</h3>
-                <p><strong>Current:</strong> ubuntu-latest</p>
-                <p><strong>Recommended:</strong> ubuntu-latest-4-cores</p>
-                <p><strong>Expected Savings:</strong></p>
-                <ul>
-                    <li>Time: 55.0%</li>
-                    <li>Cost: -100.0%</li>
-                    <li>Efficiency: 95.0%</li>
-                </ul>
-                <p><strong>Reason:</strong> Better resource allocation match</p>
-            </div>
-        
-            <div class="recommendation">
-                <h3>deploy-staging</h3>
-                <p><strong>Current:</strong> ubuntu-latest</p>
-                <p><strong>Recommended:</strong> ubuntu-latest-4-cores</p>
-                <p><strong>Expected Savings:</strong></p>
-                <ul>
-                    <li>Time: 55.0%</li>
-                    <li>Cost: -100.0%</li>
-                    <li>Efficiency: 88.9%</li>
-                </ul>
-                <p><strong>Reason:</strong> CPU under-utilized, Memory over-provisioned, Better resource allocation match</p>
-            </div>
-        
-
-        <div class="footer">
-            <p>Report generated on 9/23/2025, 10:17:01 PM</p>
-            <p>AST Copilot Helper CI/CD Resource Optimization System</p>
+        <div class="metric">
+          <div class="metric-value">50%</div>
+          <div class="metric-label">Efficiency Gain</div>
         </div>
+      </div>
+
+      <h2>💰 Cost Analysis</h2>
+      <div class="cost-comparison">
+        <div class="cost-section current-costs">
+          <h3>Current Costs</h3>
+          <div style="font-size: 36px; color: #e74c3c; font-weight: bold">
+            $0.168
+          </div>
+          <p>Across all jobs per workflow run</p>
+        </div>
+        <div class="cost-section optimized-costs">
+          <h3>Optimized Costs</h3>
+          <div style="font-size: 36px; color: #27ae60; font-weight: bold">
+            $0.336
+          </div>
+          <p>Savings: $-0.168 (-100.0%)</p>
+        </div>
+      </div>
+
+      <h2>📊 Resource Utilization</h2>
+      <div class="chart-container">
+        <canvas id="utilizationChart"></canvas>
+      </div>
+
+      <h2>🎯 Optimization Recommendations</h2>
+
+      <div class="recommendation">
+        <h3>validate-code</h3>
+        <p><strong>Current:</strong> ubuntu-latest</p>
+        <p><strong>Recommended:</strong> ubuntu-latest-4-cores</p>
+        <p><strong>Expected Savings:</strong></p>
+        <ul>
+          <li>Time: 55.0%</li>
+          <li>Cost: -100.0%</li>
+          <li>Efficiency: 95.0%</li>
+        </ul>
+        <p>
+          <strong>Reason:</strong> Memory over-provisioned, Better resource
+          allocation match
+        </p>
+      </div>
+
+      <div class="recommendation">
+        <h3>build-and-test</h3>
+        <p><strong>Current:</strong> ubuntu-latest</p>
+        <p><strong>Recommended:</strong> ubuntu-latest-4-cores</p>
+        <p><strong>Expected Savings:</strong></p>
+        <ul>
+          <li>Time: 55.0%</li>
+          <li>Cost: -100.0%</li>
+          <li>Efficiency: 95.0%</li>
+        </ul>
+        <p><strong>Reason:</strong> Better resource allocation match</p>
+      </div>
+
+      <div class="recommendation">
+        <h3>performance-benchmarks</h3>
+        <p><strong>Current:</strong> ubuntu-latest</p>
+        <p><strong>Recommended:</strong> ubuntu-latest-4-cores</p>
+        <p><strong>Expected Savings:</strong></p>
+        <ul>
+          <li>Time: 55.0%</li>
+          <li>Cost: -100.0%</li>
+          <li>Efficiency: 95.0%</li>
+        </ul>
+        <p><strong>Reason:</strong> Better resource allocation match</p>
+      </div>
+
+      <div class="recommendation">
+        <h3>deploy-staging</h3>
+        <p><strong>Current:</strong> ubuntu-latest</p>
+        <p><strong>Recommended:</strong> ubuntu-latest-4-cores</p>
+        <p><strong>Expected Savings:</strong></p>
+        <ul>
+          <li>Time: 55.0%</li>
+          <li>Cost: -100.0%</li>
+          <li>Efficiency: 88.9%</li>
+        </ul>
+        <p>
+          <strong>Reason:</strong> CPU under-utilized, Memory over-provisioned,
+          Better resource allocation match
+        </p>
+      </div>
+
+      <div class="footer">
+        <p>Report generated on 9/23/2025, 10:17:01 PM</p>
+        <p>AST Copilot Helper CI/CD Resource Optimization System</p>
+      </div>
     </div>
 
     <script>
-        // Resource Utilization Chart
-        const ctx = document.getElementById('utilizationChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['CPU', 'Memory', 'Storage'],
-                datasets: [{
-                    label: 'Current Efficiency (%)',
-                    data: [65, 45, 12],
-                    backgroundColor: '#e74c3c'
-                }, {
-                    label: 'Optimized Efficiency (%)',
-                    data: [85, 75, 25],
-                    backgroundColor: '#27ae60'
-                }]
+      // Resource Utilization Chart
+      const ctx = document.getElementById("utilizationChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["CPU", "Memory", "Storage"],
+          datasets: [
+            {
+              label: "Current Efficiency (%)",
+              data: [65, 45, 12],
+              backgroundColor: "#e74c3c",
             },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        title: {
-                            display: true,
-                            text: 'Efficiency (%)'
-                        }
-                    }
-                },
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Resource Efficiency Comparison'
-                    }
-                }
-            }
-        });
+            {
+              label: "Optimized Efficiency (%)",
+              data: [85, 75, 25],
+              backgroundColor: "#27ae60",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              title: {
+                display: true,
+                text: "Efficiency (%)",
+              },
+            },
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: "Resource Efficiency Comparison",
+            },
+          },
+        },
+      });
     </script>
-</body>
+  </body>
 </html>

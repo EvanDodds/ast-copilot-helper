@@ -31,13 +31,13 @@ export class StdioTransport extends Transport {
   private readonly connectionId = "stdio-main";
 
   constructor(config: StdioTransportConfig = {}) {
-    // Disable auto-reconnection for STDIO transport by default since 
+    // Disable auto-reconnection for STDIO transport by default since
     // STDIO connections are typically one-time and reconnection doesn't make sense
     const stdioConfig = {
       autoReconnect: false,
       ...config,
     };
-    
+
     super(stdioConfig);
 
     this.input = config.input || process.stdin;
@@ -478,8 +478,12 @@ export class StdioTransport extends Transport {
    * Override attemptReconnect for STDIO transport
    * STDIO connections cannot be reconnected, so this is a no-op
    */
-  protected override async attemptReconnect(connectionId: string): Promise<void> {
-    logger.warn("STDIO transport does not support reconnection", { connectionId });
+  protected override async attemptReconnect(
+    connectionId: string,
+  ): Promise<void> {
+    logger.warn("STDIO transport does not support reconnection", {
+      connectionId,
+    });
     // STDIO connections are typically one-time and cannot be reconnected
     // If reconnection is needed, the entire transport should be restarted
     throw new Error("STDIO transport does not support reconnection");
