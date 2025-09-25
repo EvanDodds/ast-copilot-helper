@@ -90,7 +90,8 @@ export default tseslint.config(
       "no-var": "error",
       eqeqeq: ["error", "always"],
       curly: ["error", "all"],
-      "brace-style": ["error", "1tbs"],
+      // Disable brace-style since prettier handles formatting
+      // "brace-style": ["error", "1tbs"],
 
       // Relaxed rules for development
       "@typescript-eslint/no-empty-function": "warn",
@@ -137,7 +138,8 @@ export default tseslint.config(
       "no-var": "error",
       eqeqeq: ["error", "always"],
       curly: ["error", "all"],
-      "brace-style": ["error", "1tbs"],
+      // Disable brace-style since prettier handles formatting
+      // "brace-style": ["error", "1tbs"],
 
       // Relaxed rules for test files
       "@typescript-eslint/no-empty-function": "warn",

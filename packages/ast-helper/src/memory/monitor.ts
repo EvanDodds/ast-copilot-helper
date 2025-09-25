@@ -57,7 +57,8 @@ interface MonitoringState {
  */
 export class AdvancedMemoryMonitor
   extends EventEmitter
-  implements MemoryMonitor {
+  implements MemoryMonitor
+{
   private config: ResourceConfig;
   private thresholds: MemoryThresholds;
   private history: MemoryUsageHistory;
