@@ -318,6 +318,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@ast-helper/core-engine@workspace:packages/ast-core-engine":
+  version: 0.0.0-use.local
+  resolution: "@ast-helper/core-engine@workspace:packages/ast-core-engine"
+  dependencies:
+    "@napi-rs/cli": "npm:^2.18.4"
+  languageName: unknown
+  linkType: soft
+
 "@azu/format-text@npm:^1.0.1, @azu/format-text@npm:^1.0.2":
   version: 1.0.2
   resolution: "@azu/format-text@npm:1.0.2"
@@ -1044,6 +1052,15 @@ __metadata:
     zod: "npm:^3.23.8"
     zod-to-json-schema: "npm:^3.24.1"
   checksum: 10c9/f8907faacb6272a6b88d616c35bce76b126d5e554d592a249dfc897e105a1bdaef2084ec7472661803d4439e99eaa95e5fba74ef238f0246e70984b051ba23bc
+  languageName: node
+  linkType: hard
+
+"@napi-rs/cli@npm:^2.18.4":
+  version: 2.18.4
+  resolution: "@napi-rs/cli@npm:2.18.4"
+  bin:
+    napi: scripts/index.js
+  checksum: 10c9/b9bdb0e0f96328315a5ad7846df5c72f5f00c707aa58bf2e8b753ad419c4a45989ba6967c8a27acf1552051d2693ae43a9be9ab2c173671040c1861e6d920ac6
   languageName: node
   linkType: hard
 
