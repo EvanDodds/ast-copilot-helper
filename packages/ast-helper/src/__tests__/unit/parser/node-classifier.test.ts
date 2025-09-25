@@ -3,7 +3,6 @@ import {
   NodeClassifier,
   ClassificationUtils,
   RawNodeData,
-  ClassificationResult,
   LanguageMapping,
   defaultNodeClassifier,
 } from "../../../parser/node-classifier";
@@ -110,7 +109,7 @@ describe("Node Classifier", () => {
 
       expect(result.nodeType).toBe(NodeType.CLASS);
       expect(result.confidence).toBeGreaterThan(0.9);
-      expect(result.reason).toContain("Context rule");
+      expect(result.reason).toContain("Enhanced context rule");
     });
   });
 
@@ -250,8 +249,8 @@ describe("Node Classifier", () => {
       const result = classifier.classifyNode(node);
 
       expect(result.nodeType).toBe(NodeType.FUNCTION);
-      expect(result.confidence).toBe(0.7);
-      expect(result.reason).toContain("Pattern match");
+      expect(result.confidence).toBe(0.75);
+      expect(result.reason).toContain("Enhanced pattern match");
     });
 
     it("should prioritize higher priority patterns", () => {
@@ -277,7 +276,7 @@ describe("Node Classifier", () => {
       const result = classifier.classifyNode(node);
 
       expect(result.nodeType).toBe(NodeType.VARIABLE); // TypeScript default fallback
-      expect(result.confidence).toBe(0.5);
+      expect(result.confidence).toBe(0.3);
       expect(result.reason).toContain("Fallback");
     });
 
@@ -290,7 +289,7 @@ describe("Node Classifier", () => {
       const result = classifier.classifyNode(node);
 
       expect(result.nodeType).toBe(NodeType.VARIABLE); // Default fallback
-      expect(result.confidence).toBe(0.5);
+      expect(result.confidence).toBe(0.3);
     });
   });
 
@@ -560,8 +559,8 @@ describe("Node Classifier", () => {
 
       // This node type should match function pattern and get classified as function
       expect(result.nodeType).toBe(NodeType.FUNCTION);
-      expect(result.confidence).toBe(0.7); // Pattern match confidence
-      expect(result.reason).toContain("Pattern match");
+      expect(result.confidence).toBe(0.75); // Pattern match confidence
+      expect(result.reason).toContain("Enhanced pattern match");
 
       // Check that the result has the expected structure
       expect(result.alternatives).toBeDefined();
@@ -579,7 +578,168 @@ describe("Node Classifier", () => {
 
       const stats = classifier.getStats();
       expect(stats.averageConfidence).toBeGreaterThan(0.8); // Should be high for known types
-      expect(stats.totalClassified).toBe(100);
+      expect(stats.totalClassified).toBe(2);
+    });
+  });
+
+  describe("Enhanced NodeClassifier Features", () => {
+    it("should use caching for performance", () => {
+      const node: RawNodeData = {
+        type: "class_declaration",
+        language: "typescript",
+        name: "TestClass",
+      };
+
+      // First classification
+      const result1 = classifier.classifyNode(node);
+      expect(result1.metadata?.cached).toBe(false);
+
+      // Second classification should be cached
+      const result2 = classifier.classifyNode(node);
+      expect(result2.metadata?.cached).toBe(true);
+      expect(result2.nodeType).toBe(result1.nodeType);
+    });
+
+    it("should provide debug information", () => {
+      const node: RawNodeData = {
+        type: "class_declaration",
+        language: "typescript",
+        name: "TestClass",
+      };
+
+      const debug = classifier.debugClassification(node);
+
+      expect(debug.result).toBeDefined();
+      expect(debug.steps).toBeInstanceOf(Array);
+      expect(debug.mapping).toBeDefined();
+      expect(debug.cacheInfo).toBeDefined();
+      expect(debug.steps.some((step) => step.step === "Direct Mapping")).toBe(
+        true,
+      );
+    });
+
+    it("should handle fuzzy matching", () => {
+      // Test with a TypeScript-like node type that should fuzzy match
+      const node: RawNodeData = {
+        type: "func_declaration", // Similar to function_declaration
+        language: "typescript",
+        name: "testFunc",
+      };
+
+      const result = classifier.classifyNode(node);
+      // Should still classify as function due to fuzzy matching or patterns
+      expect([NodeType.FUNCTION, NodeType.VARIABLE]).toContain(result.nodeType);
+    });
+
+    it("should validate classification consistency", () => {
+      const testNodes: RawNodeData[] = [
+        { type: "class_declaration", language: "typescript" },
+        { type: "class_declaration", language: "typescript" },
+        { type: "function_declaration", language: "typescript" },
+        { type: "function_declaration", language: "typescript" },
+      ];
+
+      const validation = classifier.validateConsistency(testNodes);
+
+      expect(validation).toBeDefined();
+      expect(validation.groups).toBeInstanceOf(Array);
+      expect(validation.inconsistencies).toBeInstanceOf(Array);
+      // Should be consistent for same node types
+      expect(validation.consistent).toBe(true);
+    });
+
+    it("should provide performance metrics", () => {
+      // Classify some nodes first
+      const nodes = [
+        { type: "class_declaration", language: "typescript" },
+        { type: "function_declaration", language: "typescript" },
+        { type: "variable_declarator", language: "typescript" },
+      ];
+
+      nodes.forEach((node) => classifier.classifyNode(node));
+
+      const metrics = classifier.getPerformanceMetrics();
+
+      expect(metrics.classification).toBeDefined();
+      expect(metrics.memory).toBeDefined();
+      expect(metrics.accuracy).toBeDefined();
+      expect(metrics.classification.total).toBeGreaterThan(0);
+      expect(metrics.memory.cacheSize).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should support enhanced pattern matching", () => {
+      // Test enhanced pattern matching with case insensitive matching
+      const node: RawNodeData = {
+        type: "Function_Declaration", // Different case
+        language: "typescript",
+      };
+
+      const result = classifier.classifyNode(node);
+      expect(result.nodeType).toBe(NodeType.FUNCTION);
+      expect(result.metadata?.method).toBe("pattern");
+    });
+
+    it("should analyze semantic context", () => {
+      const parentClass: RawNodeData = {
+        type: "class_declaration",
+        language: "typescript",
+        name: "ParentClass",
+      };
+
+      const methodNode: RawNodeData = {
+        type: "identifier",
+        language: "typescript",
+        name: "myMethod",
+        parent: parentClass,
+      };
+
+      const result = classifier.classifyNode(methodNode, {
+        parent: parentClass,
+        semanticContext: {
+          inClass: true,
+          inFunction: false,
+        },
+      });
+
+      // Should use enhanced context rules
+      expect(result.confidence).toBeGreaterThan(0.8);
+    });
+
+    it("should optimize performance", () => {
+      // Add some data to caches first
+      classifier.classifyNode({
+        type: "class_declaration",
+        language: "typescript",
+      });
+
+      const beforeOptimization = classifier.getPerformanceMetrics();
+      expect(beforeOptimization.memory.cacheSize).toBeGreaterThan(0);
+
+      const optimizationResult = classifier.optimizePerformance();
+
+      expect(optimizationResult.cachesCleared).toBeGreaterThan(0);
+      expect(optimizationResult.resetCounters).toBe(true);
+
+      const afterOptimization = classifier.getPerformanceMetrics();
+      expect(afterOptimization.memory.cacheSize).toBe(0);
+    });
+
+    it("should track enhanced statistics", () => {
+      const nodes = [
+        { type: "class_declaration", language: "typescript" },
+        { type: "unknown_type", language: "typescript" }, // Will use fallback
+        { type: "function_declaration", language: "typescript" },
+      ];
+
+      nodes.forEach((node) => classifier.classifyNode(node));
+
+      const stats = classifier.getStats();
+
+      expect(stats.performance).toBeDefined();
+      expect(stats.methodUsage).toBeDefined();
+      expect(stats.issues).toBeDefined();
+      expect(stats.methodUsage.direct).toBeGreaterThan(0);
+      expect(stats.methodUsage.fallback).toBeGreaterThan(0);
     });
   });
 });

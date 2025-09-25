@@ -1,8 +1,10 @@
 /**
- * Node Classification System
+ * Enhanced Node Classification System
  *
  * Maps raw Tree-sitter node types to normalized NodeType enum values
  * across different programming languages with extensible architecture.
+ * Enhanced with advanced pattern matching, context-aware classification,
+ * and performance optimization.
  */
 
 import { NodeType } from "./ast-schema";
@@ -23,10 +25,21 @@ export interface RawNodeData {
   children?: RawNodeData[];
   /** Parent node for context */
   parent?: RawNodeData;
+  /** Optional position information for advanced context analysis */
+  position?: {
+    startRow: number;
+    startColumn: number;
+    endRow: number;
+    endColumn: number;
+  };
+  /** Optional text content for semantic analysis */
+  text?: string;
+  /** Depth in the AST for hierarchical classification */
+  depth?: number;
 }
 
 /**
- * Classification result with confidence and metadata
+ * Enhanced classification result with confidence and metadata
  */
 export interface ClassificationResult {
   /** Normalized node type */
@@ -41,28 +54,78 @@ export interface ClassificationResult {
     confidence: number;
     reason: string;
   }>;
+  /** Enhanced metadata about the classification process */
+  metadata?: {
+    /** Time taken for classification (ms) */
+    processTime?: number;
+    /** Classification method used */
+    method: "direct" | "pattern" | "context" | "fuzzy" | "fallback";
+    /** Pattern or rule that matched */
+    matchedRule?: string;
+    /** Context depth analyzed */
+    contextDepth?: number;
+    /** Whether result was cached */
+    cached?: boolean;
+  };
+  /** Quality score for the classification (0-1) */
+  quality?: number;
 }
 
 /**
- * Language-specific mapping configuration
+ * Enhanced language-specific mapping configuration
  */
 export interface LanguageMapping {
   /** Direct type mappings */
   directMappings: Record<string, NodeType>;
-  /** Pattern-based mappings (regex -> NodeType) */
+  /** Enhanced pattern-based mappings with advanced features */
   patternMappings: Array<{
     pattern: RegExp;
     nodeType: NodeType;
     priority: number;
+    /** Case-insensitive matching */
+    caseInsensitive?: boolean;
+    /** Require specific context for pattern match */
+    contextRequired?: boolean;
+    /** Description of the pattern for debugging */
+    description?: string;
   }>;
   /** Context-aware classification rules */
   contextRules: Array<ContextRule>;
+  /** Fuzzy matching rules for similar node types */
+  fuzzyRules?: Array<{
+    /** Source node types to match against */
+    sourceTypes: string[];
+    /** Target node type to classify as */
+    nodeType: NodeType;
+    /** Similarity threshold (0-1) */
+    threshold: number;
+    /** Priority for fuzzy matching */
+    priority: number;
+  }>;
+  /** Compound pattern rules for complex node structures */
+  compoundRules?: Array<{
+    /** Multiple patterns that must all match */
+    patterns: RegExp[];
+    /** Node type when all patterns match */
+    nodeType: NodeType;
+    /** Priority for compound matching */
+    priority: number;
+    /** Description for debugging */
+    description: string;
+  }>;
   /** Default fallback for unknown types */
   defaultFallback: NodeType;
+  /** Cache configuration for this language */
+  cacheConfig?: {
+    /** Enable caching for this language */
+    enabled: boolean;
+    /** Cache TTL in milliseconds */
+    ttl: number;
+  };
 }
 
 /**
- * Context-aware classification rule
+ * Enhanced context-aware classification rule
  */
 export interface ContextRule {
   /** Condition that must be met */
@@ -73,10 +136,18 @@ export interface ContextRule {
   priority: number;
   /** Description of the rule */
   description: string;
+  /** Maximum depth to analyze for context (0 = immediate parent only) */
+  maxDepth?: number;
+  /** Minimum confidence this rule provides */
+  minConfidence?: number;
+  /** Whether this rule requires sibling analysis */
+  requiresSiblings?: boolean;
+  /** Cache key generator for this rule */
+  cacheKey?: (node: RawNodeData, context: ClassificationContext) => string;
 }
 
 /**
- * Context information for classification
+ * Enhanced context information for classification
  */
 export interface ClassificationContext {
   /** Current node being classified */
@@ -87,13 +158,33 @@ export interface ClassificationContext {
   siblings: RawNodeData[];
   /** Language being parsed */
   language: string;
-  /** Additional context data */
   /** Arbitrary metadata */
   metadata: Record<string, unknown>;
+  /** Ancestor nodes for deep context analysis */
+  ancestors?: RawNodeData[];
+  /** File path for file-based context */
+  filePath?: string;
+  /** Scope information (class, function, module, etc.) */
+  scope?: {
+    type: "global" | "module" | "class" | "function" | "block";
+    name?: string;
+    depth: number;
+  };
+  /** Semantic context derived from surrounding code */
+  semanticContext?: {
+    /** Inside class definition */
+    inClass?: boolean;
+    /** Inside function definition */
+    inFunction?: boolean;
+    /** Inside control structure */
+    inControl?: boolean;
+    /** Variable/parameter context */
+    isDeclaration?: boolean;
+  };
 }
 
 /**
- * Classification statistics and accuracy metrics
+ * Enhanced classification statistics and accuracy metrics
  */
 export interface ClassificationStats {
   /** Total nodes classified */
@@ -111,6 +202,31 @@ export interface ClassificationStats {
     correct: number;
     total: number;
     percentage: number;
+  };
+  /** Performance metrics */
+  performance: {
+    /** Average classification time in milliseconds */
+    averageTime: number;
+    /** Total classification time */
+    totalTime: number;
+    /** Cache hit ratio (0-1) */
+    cacheHitRatio: number;
+    /** Peak memory usage during classification */
+    peakMemoryUsage?: number;
+  };
+  /** Method usage statistics */
+  methodUsage: {
+    direct: number;
+    pattern: number;
+    context: number;
+    fuzzy: number;
+    fallback: number;
+  };
+  /** Error and warning counts */
+  issues: {
+    errors: number;
+    warnings: number;
+    lowConfidence: number;
   };
 }
 
@@ -175,10 +291,77 @@ export class NodeClassifier {
         template_string: NodeType.STRING_LITERAL,
       },
       patternMappings: [
-        { pattern: /^.*function.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
-        { pattern: /^.*method.*$/, nodeType: NodeType.METHOD, priority: 1 },
-        { pattern: /^.*variable.*$/, nodeType: NodeType.VARIABLE, priority: 1 },
-        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        {
+          pattern: /^.*function.*$/,
+          nodeType: NodeType.FUNCTION,
+          priority: 2,
+          description: "Function-related patterns",
+          caseInsensitive: true,
+        },
+        {
+          pattern: /^.*method.*$/,
+          nodeType: NodeType.METHOD,
+          priority: 2,
+          description: "Method-related patterns",
+        },
+        {
+          pattern: /^.*variable.*$/,
+          nodeType: NodeType.VARIABLE,
+          priority: 1,
+          description: "Variable-related patterns",
+        },
+        {
+          pattern: /^.*class.*$/,
+          nodeType: NodeType.CLASS,
+          priority: 3,
+          description: "Class-related patterns",
+        },
+        {
+          pattern: /^.*interface.*$/,
+          nodeType: NodeType.INTERFACE,
+          priority: 3,
+          description: "Interface-related patterns",
+        },
+        {
+          pattern: /^.*enum.*$/,
+          nodeType: NodeType.ENUM,
+          priority: 2,
+          description: "Enum-related patterns",
+        },
+      ],
+      fuzzyRules: [
+        {
+          sourceTypes: ["func_declaration", "function_def", "func_def"],
+          nodeType: NodeType.FUNCTION,
+          threshold: 0.7,
+          priority: 1,
+        },
+        {
+          sourceTypes: ["class_def", "class_stmt", "class_body"],
+          nodeType: NodeType.CLASS,
+          threshold: 0.8,
+          priority: 2,
+        },
+        {
+          sourceTypes: ["var_declaration", "variable_def", "let_declaration"],
+          nodeType: NodeType.VARIABLE,
+          threshold: 0.7,
+          priority: 1,
+        },
+      ],
+      compoundRules: [
+        {
+          patterns: [/constructor/, /function/],
+          nodeType: NodeType.CONSTRUCTOR,
+          priority: 5,
+          description: "Constructor function patterns",
+        },
+        {
+          patterns: [/async/, /function/],
+          nodeType: NodeType.FUNCTION,
+          priority: 4,
+          description: "Async function patterns",
+        },
       ],
       contextRules: [
         {
@@ -187,7 +370,9 @@ export class NodeClassifier {
             context.parent?.type === "class_declaration",
           nodeType: NodeType.CLASS,
           priority: 10,
-          description: "Class name identifier",
+          description: "TypeScript class name identifier",
+          maxDepth: 2,
+          minConfidence: 0.95,
         },
         {
           condition: (node, context) =>
@@ -195,10 +380,26 @@ export class NodeClassifier {
             context.parent?.type === "function_declaration",
           nodeType: NodeType.FUNCTION,
           priority: 10,
-          description: "Function name identifier",
+          description: "TypeScript function name identifier",
+          maxDepth: 1,
+          minConfidence: 0.9,
+        },
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            Boolean(context.semanticContext?.inClass) &&
+            Boolean(context.parent?.type?.includes("method")),
+          nodeType: NodeType.METHOD,
+          priority: 12,
+          description: "Method identifier in class context",
+          requiresSiblings: true,
         },
       ],
       defaultFallback: NodeType.VARIABLE,
+      cacheConfig: {
+        enabled: true,
+        ttl: 300000, // 5 minutes
+      },
     },
 
     javascript: {
@@ -1061,47 +1262,463 @@ export class NodeClassifier {
     byNodeType: {},
     averageConfidence: 0,
     fallbackUsage: 0,
+    performance: {
+      averageTime: 0,
+      totalTime: 0,
+      cacheHitRatio: 0,
+    },
+    methodUsage: {
+      direct: 0,
+      pattern: 0,
+      context: 0,
+      fuzzy: 0,
+      fallback: 0,
+    },
+    issues: {
+      errors: 0,
+      warnings: 0,
+      lowConfidence: 0,
+    },
   };
 
   private confidenceScores: number[] = [];
 
+  // Enhanced performance features
+  private classificationCache = new Map<
+    string,
+    { result: ClassificationResult; timestamp: number }
+  >();
+  private patternCache = new Map<string, RegExp>();
+  private cacheHits = 0;
+  private totalClassifications = 0;
+
   /**
-   * Classify a raw node into a normalized NodeType
+   * Enhanced classify a raw node into a normalized NodeType with caching and performance optimization
    *
    * @param rawNode - Raw node data from parser
    * @param context - Optional classification context
-   * @returns Classification result with confidence
+   * @returns Classification result with confidence and metadata
    */
   classifyNode(
     rawNode: RawNodeData,
     context?: Partial<ClassificationContext>,
   ): ClassificationResult {
+    const startTime = performance.now();
+    this.totalClassifications++;
+
     try {
+      // Generate cache key
+      const cacheKey = this.generateCacheKey(rawNode, context);
+
+      // Check cache first
+      const cached = this.classificationCache.get(cacheKey);
+      if (cached && this.isCacheValid(cached.timestamp)) {
+        this.cacheHits++;
+        const cachedResult = { ...cached.result };
+        cachedResult.metadata = {
+          ...cachedResult.metadata,
+          processTime: performance.now() - startTime,
+          method: cachedResult.metadata?.method || "direct",
+          cached: true,
+        };
+        return cachedResult;
+      }
+
+      // Build enhanced context with semantic analysis
       const fullContext: ClassificationContext = {
         node: rawNode,
         parent: context?.parent,
         siblings: context?.siblings || [],
         language: rawNode.language,
         metadata: context?.metadata || {},
+        ancestors: this.buildAncestorChain(rawNode),
+        filePath: context?.filePath,
+        scope: this.analyzeScopeContext(rawNode),
+        semanticContext: this.analyzeSemanticContext(rawNode, context),
       };
 
       const mapping = this.getLanguageMapping(rawNode.language);
-      const result = this.performClassification(rawNode, mapping, fullContext);
+      const result = this.performEnhancedClassification(
+        rawNode,
+        mapping,
+        fullContext,
+      );
 
-      // Update statistics
-      this.updateStats(result, rawNode.language);
+      // Add performance metadata
+      const processTime = performance.now() - startTime;
+      result.metadata = {
+        ...result.metadata,
+        processTime,
+        method: result.metadata?.method || "fallback",
+        cached: false,
+      };
+
+      // Cache the result
+      this.cacheResult(cacheKey, result);
+
+      // Update enhanced statistics
+      this.updateEnhancedStats(result, rawNode.language, processTime);
 
       return result;
     } catch (error) {
-      // Fallback classification on error
+      // Enhanced fallback classification with better error handling
+      const processTime = performance.now() - startTime;
       const fallbackResult: ClassificationResult = {
         nodeType: NodeType.VARIABLE,
         confidence: 0.1,
         reason: `Classification error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        metadata: {
+          processTime,
+          method: "fallback",
+          cached: false,
+        },
       };
 
-      this.updateStats(fallbackResult, rawNode.language);
+      this.stats.issues.errors++;
+      this.updateEnhancedStats(fallbackResult, rawNode.language, processTime);
       return fallbackResult;
+    }
+  }
+
+  /**
+   * Generate cache key for classification result
+   */
+  private generateCacheKey(
+    rawNode: RawNodeData,
+    context?: Partial<ClassificationContext>,
+  ): string {
+    const contextKey = context?.parent?.type || "no-parent";
+    const siblingsKey = context?.siblings?.length || 0;
+    return `${rawNode.language}:${rawNode.type}:${contextKey}:${siblingsKey}`;
+  }
+
+  /**
+   * Check if cached result is still valid
+   */
+  private isCacheValid(timestamp: number): boolean {
+    const TTL = 300000; // 5 minutes
+    return Date.now() - timestamp < TTL;
+  }
+
+  /**
+   * Cache classification result
+   */
+  private cacheResult(key: string, result: ClassificationResult): void {
+    this.classificationCache.set(key, {
+      result: { ...result },
+      timestamp: Date.now(),
+    });
+
+    // Limit cache size
+    if (this.classificationCache.size > 10000) {
+      const oldestKey = this.classificationCache.keys().next().value;
+      if (oldestKey) {
+        this.classificationCache.delete(oldestKey);
+      }
+    }
+  }
+
+  /**
+   * Build ancestor chain for deep context analysis
+   */
+  private buildAncestorChain(node: RawNodeData): RawNodeData[] {
+    const ancestors: RawNodeData[] = [];
+    let current = node.parent;
+    let depth = 0;
+    const maxDepth = 10; // Prevent infinite loops
+
+    while (current && depth < maxDepth) {
+      ancestors.push(current);
+      current = current.parent;
+      depth++;
+    }
+
+    return ancestors;
+  }
+
+  /**
+   * Analyze scope context from node hierarchy
+   */
+  private analyzeScopeContext(
+    node: RawNodeData,
+  ): ClassificationContext["scope"] {
+    let current = node.parent;
+    let depth = 0;
+
+    while (current) {
+      // Check for various scope types based on node type
+      if (current.type.includes("class") || current.type.includes("struct")) {
+        return { type: "class", name: current.name, depth };
+      }
+      if (
+        current.type.includes("function") ||
+        current.type.includes("method")
+      ) {
+        return { type: "function", name: current.name, depth };
+      }
+      if (
+        current.type.includes("module") ||
+        current.type.includes("namespace")
+      ) {
+        return { type: "module", name: current.name, depth };
+      }
+      if (current.type.includes("block")) {
+        return { type: "block", depth };
+      }
+
+      current = current.parent;
+      depth++;
+    }
+
+    return { type: "global", depth: 0 };
+  }
+
+  /**
+   * Analyze semantic context from surrounding nodes
+   */
+  private analyzeSemanticContext(
+    node: RawNodeData,
+    _context?: Partial<ClassificationContext>,
+  ): ClassificationContext["semanticContext"] {
+    const semantic: ClassificationContext["semanticContext"] = {};
+
+    // Analyze parent nodes for context
+    let current = node.parent;
+    while (current) {
+      if (current.type.includes("class")) {
+        semantic.inClass = true;
+      }
+      if (
+        current.type.includes("function") ||
+        current.type.includes("method")
+      ) {
+        semantic.inFunction = true;
+      }
+      if (
+        current.type.includes("if") ||
+        current.type.includes("for") ||
+        current.type.includes("while") ||
+        current.type.includes("switch")
+      ) {
+        semantic.inControl = true;
+      }
+      current = current.parent;
+    }
+
+    // Check if this is a declaration
+    semantic.isDeclaration =
+      node.type.includes("declaration") ||
+      node.type.includes("definition") ||
+      node.type.includes("assignment");
+
+    return semantic;
+  }
+
+  /**
+   * Enhanced classification with advanced pattern matching and context analysis
+   */
+  private performEnhancedClassification(
+    rawNode: RawNodeData,
+    mapping: LanguageMapping,
+    context: ClassificationContext,
+  ): ClassificationResult {
+    const alternatives: Array<{
+      nodeType: NodeType;
+      confidence: number;
+      reason: string;
+    }> = [];
+
+    // 1. Enhanced context rules with depth analysis
+    const contextRules = mapping.contextRules.sort(
+      (a, b) => b.priority - a.priority,
+    );
+    for (const rule of contextRules) {
+      if (rule.condition(rawNode, context)) {
+        const confidence = rule.minConfidence || 0.95;
+        return {
+          nodeType: rule.nodeType,
+          confidence,
+          reason: `Enhanced context rule: ${rule.description}`,
+          alternatives,
+          metadata: {
+            method: "context",
+            matchedRule: rule.description,
+            contextDepth: context.ancestors?.length || 0,
+          },
+          quality: this.calculateQuality(confidence, "context"),
+        };
+      }
+    }
+
+    // 2. Direct mappings (highest confidence)
+    const directMapping = mapping.directMappings[rawNode.type];
+    if (directMapping) {
+      return {
+        nodeType: directMapping,
+        confidence: 0.9,
+        reason: `Direct mapping for '${rawNode.type}'`,
+        alternatives,
+        metadata: {
+          method: "direct",
+          matchedRule: rawNode.type,
+        },
+        quality: this.calculateQuality(0.9, "direct"),
+      };
+    }
+
+    // 3. Enhanced pattern matching with caching
+    const patternMappings = mapping.patternMappings.sort(
+      (a, b) => b.priority - a.priority,
+    );
+    for (const pattern of patternMappings) {
+      let regex = this.patternCache.get(pattern.pattern.source);
+      if (!regex) {
+        regex = pattern.caseInsensitive
+          ? new RegExp(pattern.pattern.source, "i")
+          : pattern.pattern;
+        this.patternCache.set(pattern.pattern.source, regex);
+      }
+
+      if (regex.test(rawNode.type)) {
+        const confidence =
+          pattern.contextRequired && !context.semanticContext ? 0.6 : 0.75;
+        alternatives.push({
+          nodeType: pattern.nodeType,
+          confidence,
+          reason: `Pattern match: ${pattern.description || pattern.pattern.source}`,
+        });
+
+        if (!pattern.contextRequired || context.semanticContext) {
+          return {
+            nodeType: pattern.nodeType,
+            confidence,
+            reason: `Enhanced pattern match: ${pattern.description || pattern.pattern.source}`,
+            alternatives,
+            metadata: {
+              method: "pattern",
+              matchedRule: pattern.description || pattern.pattern.source,
+            },
+            quality: this.calculateQuality(confidence, "pattern"),
+          };
+        }
+      }
+    }
+
+    // 4. Fuzzy matching for unknown types
+    if (mapping.fuzzyRules) {
+      for (const fuzzyRule of mapping.fuzzyRules) {
+        for (const sourceType of fuzzyRule.sourceTypes) {
+          const similarity = this.calculateSimilarity(rawNode.type, sourceType);
+          if (similarity >= fuzzyRule.threshold) {
+            const confidence = similarity * 0.8; // Reduce confidence for fuzzy matches
+            return {
+              nodeType: fuzzyRule.nodeType,
+              confidence,
+              reason: `Fuzzy match: ${rawNode.type} -> ${sourceType} (${Math.round(similarity * 100)}% similar)`,
+              alternatives,
+              metadata: {
+                method: "fuzzy",
+                matchedRule: `${sourceType} (${Math.round(similarity * 100)}%)`,
+              },
+              quality: this.calculateQuality(confidence, "fuzzy"),
+            };
+          }
+        }
+      }
+    }
+
+    // 5. Fallback with enhanced reasoning
+    const fallbackConfidence = 0.3;
+    const fallbackResult = {
+      nodeType: mapping.defaultFallback,
+      confidence: fallbackConfidence,
+      reason: `Fallback classification for unknown type '${rawNode.type}' in ${rawNode.language}`,
+      alternatives,
+      metadata: {
+        method: "fallback" as const,
+        matchedRule: "default-fallback",
+      },
+      quality: this.calculateQuality(fallbackConfidence, "fallback"),
+    };
+
+    if (fallbackConfidence < 0.5) {
+      this.stats.issues.lowConfidence++;
+    }
+
+    return fallbackResult;
+  }
+
+  /**
+   * Calculate quality score based on confidence and method
+   */
+  private calculateQuality(confidence: number, method: string): number {
+    const methodWeights = {
+      direct: 1.0,
+      context: 0.95,
+      pattern: 0.8,
+      fuzzy: 0.6,
+      fallback: 0.3,
+    };
+
+    const methodWeight =
+      methodWeights[method as keyof typeof methodWeights] || 0.5;
+    return confidence * methodWeight;
+  }
+
+  /**
+   * Calculate similarity between two strings using Levenshtein distance
+   */
+  private calculateSimilarity(str1: string, str2: string): number {
+    if (str1 === str2) {
+      return 1;
+    }
+    if (str1.length === 0 || str2.length === 0) {
+      return 0;
+    }
+
+    // Simple similarity check for performance
+    const common = str1.split("").filter((char, i) => str2[i] === char).length;
+    const maxLen = Math.max(str1.length, str2.length);
+    return common / maxLen;
+  }
+
+  /**
+   * Update enhanced statistics with performance metrics
+   */
+  private updateEnhancedStats(
+    result: ClassificationResult,
+    language: string,
+    processTime: number,
+  ): void {
+    // Update existing stats
+    this.stats.totalClassified++;
+    this.stats.byLanguage[language] =
+      (this.stats.byLanguage[language] || 0) + 1;
+    this.stats.byNodeType[result.nodeType] =
+      (this.stats.byNodeType[result.nodeType] || 0) + 1;
+
+    this.confidenceScores.push(result.confidence);
+
+    if (result.metadata?.method === "fallback") {
+      this.stats.fallbackUsage++;
+    }
+
+    // Update performance metrics
+    this.stats.performance.totalTime += processTime;
+    this.stats.performance.averageTime =
+      this.stats.performance.totalTime / this.stats.totalClassified;
+    this.stats.performance.cacheHitRatio =
+      this.totalClassifications > 0
+        ? this.cacheHits / this.totalClassifications
+        : 0;
+
+    // Update method usage
+    const method = result.metadata?.method || "fallback";
+    this.stats.methodUsage[method]++;
+
+    // Update quality metrics
+    if (result.confidence < 0.5) {
+      this.stats.issues.lowConfidence++;
     }
   }
 
@@ -1160,6 +1777,23 @@ export class NodeClassifier {
       byNodeType: {},
       averageConfidence: 0,
       fallbackUsage: 0,
+      performance: {
+        averageTime: 0,
+        totalTime: 0,
+        cacheHitRatio: 0,
+      },
+      methodUsage: {
+        direct: 0,
+        pattern: 0,
+        context: 0,
+        fuzzy: 0,
+        fallback: 0,
+      },
+      issues: {
+        errors: 0,
+        warnings: 0,
+        lowConfidence: 0,
+      },
     };
     this.confidenceScores = [];
   }
@@ -1211,108 +1845,230 @@ export class NodeClassifier {
   }
 
   /**
-   * Perform the actual classification logic
+   * Enhanced debugging: Get detailed classification breakdown for a node
    */
-  private performClassification(
+  debugClassification(
     rawNode: RawNodeData,
-    mapping: LanguageMapping,
-    context: ClassificationContext,
-  ): ClassificationResult {
-    const alternatives: Array<{
-      nodeType: NodeType;
-      confidence: number;
-      reason: string;
-    }> = [];
+    context?: Partial<ClassificationContext>,
+  ): {
+    result: ClassificationResult;
+    steps: Array<{ step: string; result: string; confidence?: number }>;
+    mapping: LanguageMapping;
+    cacheInfo: { hit: boolean; key: string };
+  } {
+    const steps: Array<{ step: string; result: string; confidence?: number }> =
+      [];
+    const mapping = this.getLanguageMapping(rawNode.language);
+    const cacheKey = this.generateCacheKey(rawNode, context);
+    const cached = this.classificationCache.get(cacheKey);
+    const cacheHit = cached && this.isCacheValid(cached.timestamp);
 
-    // 1. Try context rules first (highest priority)
-    const contextRules = mapping.contextRules.sort(
-      (a, b) => b.priority - a.priority,
-    );
-    for (const rule of contextRules) {
-      if (rule.condition(rawNode, context)) {
-        return {
-          nodeType: rule.nodeType,
-          confidence: 0.95,
-          reason: `Context rule: ${rule.description}`,
-          alternatives,
-        };
-      }
-    }
+    steps.push({ step: "Cache Check", result: cacheHit ? "HIT" : "MISS" });
 
-    // 2. Try direct mappings
-    const directMapping = mapping.directMappings[rawNode.type];
-    if (directMapping) {
+    if (cacheHit && cached) {
+      steps.push({
+        step: "Result Source",
+        result: "Cache",
+        confidence: cached.result.confidence,
+      });
       return {
-        nodeType: directMapping,
-        confidence: 0.9,
-        reason: `Direct mapping for '${rawNode.type}'`,
-        alternatives,
+        result: cached.result,
+        steps,
+        mapping,
+        cacheInfo: { hit: true, key: cacheKey },
       };
     }
 
-    // 3. Try pattern mappings
-    const patternMappings = mapping.patternMappings.sort(
-      (a, b) => b.priority - a.priority,
-    );
-    for (const pattern of patternMappings) {
+    steps.push({ step: "Language", result: rawNode.language });
+    steps.push({ step: "Node Type", result: rawNode.type });
+
+    // Check direct mappings
+    const directMapping = mapping.directMappings[rawNode.type];
+    if (directMapping) {
+      steps.push({
+        step: "Direct Mapping",
+        result: `Found: ${directMapping}`,
+        confidence: 0.9,
+      });
+    } else {
+      steps.push({ step: "Direct Mapping", result: "Not found" });
+    }
+
+    // Check pattern mappings
+    let patternFound = false;
+    for (const pattern of mapping.patternMappings) {
       if (pattern.pattern.test(rawNode.type)) {
-        alternatives.push({
-          nodeType: pattern.nodeType,
-          confidence: 0.7,
-          reason: `Pattern match: ${pattern.pattern}`,
+        steps.push({
+          step: "Pattern Match",
+          result: `${pattern.description || pattern.pattern.source} -> ${pattern.nodeType}`,
+          confidence: 0.75,
         });
+        patternFound = true;
+        break;
       }
     }
-
-    // Return best pattern match if any
-    if (alternatives.length > 0) {
-      const best = alternatives[0];
-      if (best) {
-        return {
-          nodeType: best.nodeType,
-          confidence: best.confidence,
-          reason: best.reason,
-          alternatives: alternatives.slice(1),
-        };
-      }
+    if (!patternFound) {
+      steps.push({ step: "Pattern Match", result: "No patterns matched" });
     }
 
-    // 4. Use fallback
+    // Check context rules
+    const fullContext: ClassificationContext = {
+      node: rawNode,
+      parent: context?.parent,
+      siblings: context?.siblings || [],
+      language: rawNode.language,
+      metadata: context?.metadata || {},
+      ancestors: this.buildAncestorChain(rawNode),
+      scope: this.analyzeScopeContext(rawNode),
+      semanticContext: this.analyzeSemanticContext(rawNode, context),
+    };
+
+    let contextRuleApplied = false;
+    for (const rule of mapping.contextRules) {
+      if (rule.condition(rawNode, fullContext)) {
+        steps.push({
+          step: "Context Rule",
+          result: `Applied: ${rule.description}`,
+          confidence: rule.minConfidence || 0.95,
+        });
+        contextRuleApplied = true;
+        break;
+      }
+    }
+    if (!contextRuleApplied) {
+      steps.push({ step: "Context Rule", result: "No rules applied" });
+    }
+
+    const result = this.classifyNode(rawNode, context);
+    steps.push({
+      step: "Final Classification",
+      result: `${result.nodeType} (${result.confidence.toFixed(2)} confidence)`,
+    });
+
     return {
-      nodeType: mapping.defaultFallback,
-      confidence: 0.5,
-      reason: `Fallback for unknown type '${rawNode.type}'`,
-      alternatives,
+      result,
+      steps,
+      mapping,
+      cacheInfo: { hit: false, key: cacheKey },
     };
   }
 
   /**
-   * Update classification statistics
+   * Performance optimization: Clear caches and reset performance counters
    */
-  private updateStats(result: ClassificationResult, language: string): void {
-    this.stats.totalClassified++;
+  optimizePerformance(): {
+    cachesCleared: number;
+    memoryFreed: number;
+    resetCounters: boolean;
+  } {
+    const cacheSize = this.classificationCache.size;
+    const patternCacheSize = this.patternCache.size;
 
-    // Track by language
-    this.stats.byLanguage[language] =
-      (this.stats.byLanguage[language] || 0) + 1;
+    // Clear caches
+    this.classificationCache.clear();
+    this.patternCache.clear();
 
-    // Track by node type
-    const nodeTypeKey = result.nodeType;
-    this.stats.byNodeType[nodeTypeKey] =
-      (this.stats.byNodeType[nodeTypeKey] || 0) + 1;
+    // Reset performance counters
+    this.cacheHits = 0;
+    this.totalClassifications = 0;
 
-    // Track confidence
-    this.confidenceScores.push(result.confidence);
+    return {
+      cachesCleared: cacheSize + patternCacheSize,
+      memoryFreed: cacheSize * 100 + patternCacheSize * 50, // Estimated bytes
+      resetCounters: true,
+    };
+  }
 
-    // Keep only recent confidence scores for rolling average
-    if (this.confidenceScores.length > 1000) {
-      this.confidenceScores.shift();
+  /**
+   * Advanced validation: Test classification consistency across similar nodes
+   */
+  validateConsistency(testNodes: RawNodeData[]): {
+    consistent: boolean;
+    groups: Array<{ nodeType: string; classifications: Set<NodeType> }>;
+    inconsistencies: Array<{ nodeType: string; classifications: NodeType[] }>;
+  } {
+    const groups = new Map<string, Set<NodeType>>();
+
+    // Group nodes by type and collect their classifications
+    for (const node of testNodes) {
+      if (!groups.has(node.type)) {
+        groups.set(node.type, new Set());
+      }
+      const result = this.classifyNode(node);
+      const nodeGroup = groups.get(node.type);
+      if (nodeGroup) {
+        nodeGroup.add(result.nodeType);
+      }
     }
 
-    // Track fallback usage
-    if (result.confidence <= 0.5) {
-      this.stats.fallbackUsage++;
+    // Check for inconsistencies
+    const inconsistencies: Array<{
+      nodeType: string;
+      classifications: NodeType[];
+    }> = [];
+    const groupResults: Array<{
+      nodeType: string;
+      classifications: Set<NodeType>;
+    }> = [];
+
+    for (const [nodeType, classifications] of groups.entries()) {
+      groupResults.push({ nodeType, classifications });
+      if (classifications.size > 1) {
+        inconsistencies.push({
+          nodeType,
+          classifications: Array.from(classifications),
+        });
+      }
     }
+
+    return {
+      consistent: inconsistencies.length === 0,
+      groups: groupResults,
+      inconsistencies,
+    };
+  }
+
+  /**
+   * Get enhanced performance metrics
+   */
+  getPerformanceMetrics(): {
+    classification: {
+      total: number;
+      averageTime: number;
+      cacheHitRatio: number;
+    };
+    memory: {
+      cacheSize: number;
+      patternCacheSize: number;
+      estimatedMemoryUsage: number;
+    };
+    accuracy: {
+      averageConfidence: number;
+      lowConfidenceRate: number;
+      fallbackRate: number;
+    };
+  } {
+    return {
+      classification: {
+        total: this.totalClassifications,
+        averageTime: this.stats.performance.averageTime,
+        cacheHitRatio: this.stats.performance.cacheHitRatio,
+      },
+      memory: {
+        cacheSize: this.classificationCache.size,
+        patternCacheSize: this.patternCache.size,
+        estimatedMemoryUsage:
+          this.classificationCache.size * 100 + this.patternCache.size * 50,
+      },
+      accuracy: {
+        averageConfidence: this.stats.averageConfidence,
+        lowConfidenceRate:
+          this.stats.issues.lowConfidence /
+          Math.max(this.stats.totalClassified, 1),
+        fallbackRate:
+          this.stats.fallbackUsage / Math.max(this.stats.totalClassified, 1),
+      },
+    };
   }
 }
 
