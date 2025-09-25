@@ -8,6 +8,10 @@ beforeEach(() => {
 
 afterEach(() => {
   // Cleanup after each test
+  // Force garbage collection if available to prevent memory leaks
+  if (typeof global !== 'undefined' && global.gc) {
+    global.gc();
+  }
 });
 
 // Set up global test environment
