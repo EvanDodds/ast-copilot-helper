@@ -18,7 +18,7 @@ export interface RawNodeData {
   /** Language being parsed */
   language: string;
   /** Any additional parser-specific properties */
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   /** Child nodes for context-aware classification */
   children?: RawNodeData[];
   /** Parent node for context */
@@ -88,7 +88,8 @@ export interface ClassificationContext {
   /** Language being parsed */
   language: string;
   /** Additional context data */
-  metadata: Record<string, any>;
+  /** Arbitrary metadata */
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -302,6 +303,188 @@ export class NodeClassifier {
           nodeType: NodeType.FIELD,
           priority: 8,
           description: "Class attribute assignment",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    // Tier 1 Enterprise Languages
+    java: {
+      directMappings: {
+        // Top-level constructs
+        program: NodeType.FILE,
+        compilation_unit: NodeType.FILE,
+        package_declaration: NodeType.NAMESPACE,
+
+        // Class-related
+        class_declaration: NodeType.CLASS,
+        interface_declaration: NodeType.INTERFACE,
+        enum_declaration: NodeType.ENUM,
+        annotation_type_declaration: NodeType.INTERFACE,
+
+        // Method-related
+        method_declaration: NodeType.METHOD,
+        constructor_declaration: NodeType.CONSTRUCTOR,
+
+        // Variable-related
+        local_variable_declaration: NodeType.VARIABLE,
+        field_declaration: NodeType.FIELD,
+        formal_parameter: NodeType.PARAMETER,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        enhanced_for_statement: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        do_statement: NodeType.WHILE_LOOP,
+        switch_statement: NodeType.SWITCH_STATEMENT,
+        try_statement: NodeType.TRY_CATCH,
+
+        // Imports and packages
+        import_declaration: NodeType.IMPORT,
+
+        // Other constructs
+        annotation: NodeType.DECORATOR,
+        comment: NodeType.COMMENT,
+        string_literal: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*method.*$/, nodeType: NodeType.METHOD, priority: 1 },
+        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        {
+          pattern: /^.*interface.*$/,
+          nodeType: NodeType.INTERFACE,
+          priority: 1,
+        },
+        { pattern: /^.*field.*$/, nodeType: NodeType.FIELD, priority: 1 },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "class_declaration",
+          nodeType: NodeType.CLASS,
+          priority: 10,
+          description: "Java class name identifier",
+        },
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "method_declaration",
+          nodeType: NodeType.METHOD,
+          priority: 10,
+          description: "Java method name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    csharp: {
+      directMappings: {
+        // Top-level constructs
+        compilation_unit: NodeType.FILE,
+        namespace_declaration: NodeType.NAMESPACE,
+        using_directive: NodeType.IMPORT,
+
+        // Class-related
+        class_declaration: NodeType.CLASS,
+        interface_declaration: NodeType.INTERFACE,
+        struct_declaration: NodeType.CLASS,
+        enum_declaration: NodeType.ENUM,
+
+        // Method-related
+        method_declaration: NodeType.METHOD,
+        constructor_declaration: NodeType.CONSTRUCTOR,
+        property_declaration: NodeType.PROPERTY,
+        accessor_declaration: NodeType.GETTER,
+
+        // Variable-related
+        variable_declaration: NodeType.VARIABLE,
+        field_declaration: NodeType.FIELD,
+        parameter: NodeType.PARAMETER,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        foreach_statement: NodeType.FOR_LOOP,
+        while_statement: NodeType.WHILE_LOOP,
+        do_statement: NodeType.WHILE_LOOP,
+        switch_statement: NodeType.SWITCH_STATEMENT,
+        try_statement: NodeType.TRY_CATCH,
+
+        // Other constructs
+        attribute: NodeType.DECORATOR,
+        comment: NodeType.COMMENT,
+        string_literal: NodeType.STRING_LITERAL,
+        interpolated_string_expression: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*method.*$/, nodeType: NodeType.METHOD, priority: 1 },
+        { pattern: /^.*class.*$/, nodeType: NodeType.CLASS, priority: 1 },
+        { pattern: /^.*property.*$/, nodeType: NodeType.PROPERTY, priority: 1 },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "class_declaration",
+          nodeType: NodeType.CLASS,
+          priority: 10,
+          description: "C# class name identifier",
+        },
+      ],
+      defaultFallback: NodeType.VARIABLE,
+    },
+
+    go: {
+      directMappings: {
+        // Top-level constructs
+        source_file: NodeType.FILE,
+        package_clause: NodeType.NAMESPACE,
+
+        // Type-related
+        type_declaration: NodeType.CLASS,
+        struct_type: NodeType.CLASS,
+        interface_type: NodeType.INTERFACE,
+
+        // Function-related
+        function_declaration: NodeType.FUNCTION,
+        method_declaration: NodeType.METHOD,
+
+        // Variable-related
+        var_declaration: NodeType.VARIABLE,
+        const_declaration: NodeType.VARIABLE,
+        parameter_declaration: NodeType.PARAMETER,
+        field_declaration: NodeType.FIELD,
+
+        // Control flow
+        if_statement: NodeType.IF_STATEMENT,
+        for_statement: NodeType.FOR_LOOP,
+        range_clause: NodeType.FOR_LOOP,
+        switch_statement: NodeType.SWITCH_STATEMENT,
+        type_switch_statement: NodeType.SWITCH_STATEMENT,
+
+        // Imports and packages
+        import_declaration: NodeType.IMPORT,
+
+        // Other constructs
+        comment: NodeType.COMMENT,
+        raw_string_literal: NodeType.STRING_LITERAL,
+        interpreted_string_literal: NodeType.STRING_LITERAL,
+      },
+      patternMappings: [
+        { pattern: /^.*func.*$/, nodeType: NodeType.FUNCTION, priority: 1 },
+        { pattern: /^.*method.*$/, nodeType: NodeType.METHOD, priority: 1 },
+        { pattern: /^.*struct.*$/, nodeType: NodeType.CLASS, priority: 1 },
+      ],
+      contextRules: [
+        {
+          condition: (node, context) =>
+            node.type === "identifier" &&
+            context.parent?.type === "function_declaration",
+          nodeType: NodeType.FUNCTION,
+          priority: 10,
+          description: "Go function name identifier",
         },
       ],
       defaultFallback: NodeType.VARIABLE,

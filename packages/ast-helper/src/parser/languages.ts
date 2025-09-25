@@ -38,6 +38,34 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     parserModule: "tree-sitter-python",
     wasmPath: "tree-sitter-python.wasm",
   },
+
+  // Tier 1 Enterprise Languages
+  {
+    name: "java",
+    extensions: [".java"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-java@0.20.2/tree-sitter-java.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-java",
+    wasmPath: "tree-sitter-java.wasm",
+  },
+  {
+    name: "csharp",
+    extensions: [".cs", ".csx"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-c-sharp@0.20.0/tree-sitter-c-sharp.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-c-sharp",
+    wasmPath: "tree-sitter-c-sharp.wasm",
+  },
+  {
+    name: "go",
+    extensions: [".go"],
+    grammarUrl: "https://unpkg.com/tree-sitter-go@0.20.0/tree-sitter-go.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-go",
+    wasmPath: "tree-sitter-go.wasm",
+  },
 ];
 
 /**
@@ -189,6 +217,27 @@ export class LanguageDetector {
       { pattern: /def\s+\w+\s*\([^)]*\)\s*:/, language: "python" },
       { pattern: /class\s+\w+\s*(\([^)]*\))?\s*:/, language: "python" },
       { pattern: /if\s+__name__\s*==\s*['"]__main__['"]/, language: "python" },
+
+      // Java-specific patterns
+      { pattern: /^package\s+[\w.]+\s*;/m, language: "java" },
+      { pattern: /^import\s+[\w.]+\s*;/m, language: "java" },
+      { pattern: /public\s+class\s+\w+/, language: "java" },
+      { pattern: /public\s+static\s+void\s+main\s*\(/, language: "java" },
+      { pattern: /@Override|@Deprecated|@SuppressWarnings/, language: "java" },
+
+      // C#-specific patterns
+      { pattern: /^using\s+[\w.]+\s*;/m, language: "csharp" },
+      { pattern: /^namespace\s+[\w.]+\s*{?/m, language: "csharp" },
+      { pattern: /public\s+class\s+\w+/, language: "csharp" },
+      { pattern: /static\s+void\s+Main\s*\(/, language: "csharp" },
+      { pattern: /\[.*\]\s*$/, language: "csharp" },
+
+      // Go-specific patterns
+      { pattern: /^package\s+\w+$/m, language: "go" },
+      { pattern: /^import\s+\(/, language: "go" },
+      { pattern: /func\s+\w+\s*\([^)]*\)/, language: "go" },
+      { pattern: /type\s+\w+\s+struct\s*{/, language: "go" },
+      { pattern: /func\s+main\s*\(\s*\)/, language: "go" },
     ];
 
     // Check content against patterns

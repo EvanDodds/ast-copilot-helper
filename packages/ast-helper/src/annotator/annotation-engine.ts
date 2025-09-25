@@ -9,6 +9,9 @@ import {
   TypeScriptExtractor,
   JavaScriptExtractor,
   PythonExtractor,
+  JavaExtractor,
+  CSharpExtractor,
+  GoExtractor,
 } from "./extractors/index.js";
 import { ComplexityAnalyzer } from "./complexity-analyzer.js";
 import { DependencyAnalyzer } from "./dependency-analyzer.js";
@@ -39,6 +42,9 @@ export class AnnotationEngine {
     this.extractors.set("typescript", new TypeScriptExtractor());
     this.extractors.set("javascript", new JavaScriptExtractor());
     this.extractors.set("python", new PythonExtractor());
+    this.extractors.set("java", new JavaExtractor());
+    this.extractors.set("csharp", new CSharpExtractor());
+    this.extractors.set("go", new GoExtractor());
 
     // Initialize analysis components
     this.complexityAnalyzer = new ComplexityAnalyzer({
