@@ -174,8 +174,11 @@ describe("Performance Optimization System", () => {
         name: `model${i + 1}`,
       }));
 
-      vi.mocked(fetch).mockImplementation(() =>
-        Promise.resolve(createMockResponse()),
+      vi.mocked(fetch).mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve(createMockResponse()), 10),
+          ),
       );
       vi.mocked(fs.rename).mockResolvedValue(undefined as any);
 

@@ -5,21 +5,21 @@ This software includes third-party software subject to the following licenses:
 
 ## MIT
 
-### vue v^3.3.0
+### vue v^3.5.22
 Copyright: Evan You
 Source: git+https://github.com/vuejs/core.git
 License: MIT License
 
-### @vue/theme v^2.0.0
+### @vue/theme v^2.3.0
 Copyright: Evan You
 Source: git+https://github.com/vuejs/theme.git
 License: MIT License
 
-### vitepress v^1.0.0
+### vitepress v^1.6.4
 Copyright: Evan You
 License: MIT License
 
-### @eslint/js v^9.0.0
+### @eslint/js v^9.36.0
 Source: https://github.com/eslint/eslint.git
 License: MIT License
 
@@ -28,8 +28,8 @@ Copyright: Bart van der Schoor, Sebastian Clausen, ExE Boss, Armaan Tobaccowalla
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
-### @types/node v^20.0.0
-Copyright: Microsoft TypeScript, Alberto Schiabel, Andrew Makarov, Benjamin Toueg, David Junger, Mohsen Azimi, Nikita Galkin, Sebastian Silbermann, Wilco Bakker, Marcin Kopacz, Trivikram Kamat, Junxiao Shi, Ilia Baryshnikov, ExE Boss, Piotr Błażejewicz, Anna Henningsen, Victor Perin, NodeJS Contributors, Linus Unnebäck, wafuwafu13, Matteo Collina, Dmitry Semigradsky
+### @types/node v^24.5.2
+Copyright: Microsoft TypeScript, Alberto Schiabel, Andrew Makarov, Benjamin Toueg, David Junger, Mohsen Azimi, Nikita Galkin, Sebastian Silbermann, Wilco Bakker, Marcin Kopacz, Trivikram Kamat, Junxiao Shi, Ilia Baryshnikov, ExE Boss, Piotr Błażejewicz, Anna Henningsen, Victor Perin, NodeJS Contributors, Linus Unnebäck, wafuwafu13, Matteo Collina, Dmitry Semigradsky, René, Yagiz Nizipli
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
@@ -38,12 +38,12 @@ Copyright: Jared Klopper, Gyusun Yeom, Alan Plum, Carsten Klein, BendingBender
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
-### @typescript-eslint/eslint-plugin v^8.0.0
+### @typescript-eslint/eslint-plugin v^8.44.1
 Copyright: typescript-eslint and other contributors
 Source: https://github.com/typescript-eslint/typescript-eslint.git
 License: MIT License
 
-### @typescript-eslint/parser v^8.0.0
+### @typescript-eslint/parser v^8.44.1
 Copyright: typescript-eslint and other contributors
 Source: https://github.com/typescript-eslint/typescript-eslint.git
 License: MIT License
@@ -57,7 +57,7 @@ License: MIT License
 Source: git+https://github.com/vitest-dev/vitest.git
 License: MIT License
 
-### eslint v^9.0.0
+### eslint v^9.36.0
 Copyright: Nicholas C. Zakas <nicholas+npm@nczconsulting.com>
 License: MIT License
 
@@ -65,8 +65,9 @@ License: MIT License
 Copyright: Sindre Sorhus
 License: MIT License
 
-### husky v^8.0.3
-Copyright: Typicode <typicode@gmail.com>, typicode
+### husky v^9.1.7
+Copyright: typicode
+Source: git+https://github.com/typicode/husky.git
 License: MIT License
 
 ### js-yaml v^4.1.0
@@ -78,7 +79,7 @@ Copyright: Andrey Okonetchnikov <andrey@okonet.ru>, Andrey Okonetchnikov
 Source: git+https://github.com/lint-staged/lint-staged.git
 License: MIT License
 
-### tmp v^0.2.3
+### tmp v^0.2.5
 Copyright: KARASZI István <github@spam.raszi.hu>, Carsten Klein <trancesilken@gmail.com> (https://github.com/silkentrance), KARASZI István
 License: MIT License
 
@@ -91,7 +92,7 @@ License: MIT License
 Copyright: Hiroki Osame
 License: MIT License
 
-### typescript-eslint v^8.0.0
+### typescript-eslint v^8.44.1
 Copyright: typescript-eslint and other contributors
 Source: https://github.com/typescript-eslint/typescript-eslint.git
 License: MIT License
@@ -101,12 +102,17 @@ Copyright: Anthony Fu <anthonyfu117@hotmail.com>, Anthony Fu <https://github.com
 Source: git+https://github.com/vitest-dev/vitest.git
 License: MIT License
 
-### @types/node v^20.0.0
-Copyright: Microsoft TypeScript, Alberto Schiabel, Andrew Makarov, Benjamin Toueg, David Junger, Mohsen Azimi, Nikita Galkin, Sebastian Silbermann, Wilco Bakker, Marcin Kopacz, Trivikram Kamat, Junxiao Shi, Ilia Baryshnikov, ExE Boss, Piotr Błażejewicz, Anna Henningsen, Victor Perin, NodeJS Contributors, Linus Unnebäck, wafuwafu13, Matteo Collina, Dmitry Semigradsky
+### @napi-rs/cli v^2.18.4
+Copyright: LongYinan <lynweklm@gmail.com>, LongYinan
+Source: git+https://github.com/napi-rs/napi-rs.git
+License: MIT License
+
+### @types/node v^24.5.2
+Copyright: Microsoft TypeScript, Alberto Schiabel, Andrew Makarov, Benjamin Toueg, David Junger, Mohsen Azimi, Nikita Galkin, Sebastian Silbermann, Wilco Bakker, Marcin Kopacz, Trivikram Kamat, Junxiao Shi, Ilia Baryshnikov, ExE Boss, Piotr Błażejewicz, Anna Henningsen, Victor Perin, NodeJS Contributors, Linus Unnebäck, wafuwafu13, Matteo Collina, Dmitry Semigradsky, René, Yagiz Nizipli
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
-### better-sqlite3 v^12.1.0
+### better-sqlite3 v^12.4.1
 Copyright: Joshua Wise <joshuathomaswise@gmail.com>, Joshua Wise
 Source: git://github.com/WiseLibs/better-sqlite3.git
 License: MIT License
@@ -121,13 +127,26 @@ Copyright: TJ Holowaychuk <tj@vision-media.ca>
 Source: git+https://github.com/tj/commander.js.git
 License: MIT License
 
-### @types/better-sqlite3 v^7.6.11
+### @types/better-sqlite3 v^7.6.13
 Copyright: Ben Davies, Mathew Rumsey, Santiago Aguilar, Alessandro Vergani, Andrew Kaiser, Mark Stewart, Florian Stamer, Beeno Tung
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
-### @types/minimatch v^5.1.2
-Copyright: vvakame, Shant Marouti, BendingBender
+### @types/minimatch v^6.0.0
+License: MIT License
+
+### ts-node v^10.9.2
+Copyright: Blake Embrey, Andrew Bradley, Blake Embrey (hello@blakeembrey.com)
+Source: git://github.com/TypeStrong/ts-node.git
+License: MIT License
+
+### vitest v^3.2.4
+Copyright: Anthony Fu <anthonyfu117@hotmail.com>, Anthony Fu <https://github.com/antfu>, by various contributors (see AUTHORS), >, Robert Kieffer, Terkel Gjervig Nielsen, Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com), Einar Otto Stangvik <einaros@gmail.com>, Arnout Kazemier and contributors, Luigi Pinca and contributors
+Source: git+https://github.com/vitest-dev/vitest.git
+License: MIT License
+
+### @types/node v^24.5.2
+Copyright: Microsoft TypeScript, Alberto Schiabel, Andrew Makarov, Benjamin Toueg, David Junger, Mohsen Azimi, Nikita Galkin, Sebastian Silbermann, Wilco Bakker, Marcin Kopacz, Trivikram Kamat, Junxiao Shi, Ilia Baryshnikov, ExE Boss, Piotr Błażejewicz, Anna Henningsen, Victor Perin, NodeJS Contributors, Linus Unnebäck, wafuwafu13, Matteo Collina, Dmitry Semigradsky, René, Yagiz Nizipli
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
@@ -141,46 +160,32 @@ Copyright: Anthony Fu <anthonyfu117@hotmail.com>, Anthony Fu <https://github.com
 Source: git+https://github.com/vitest-dev/vitest.git
 License: MIT License
 
-### @types/node v^20.0.0
-Copyright: Microsoft TypeScript, Alberto Schiabel, Andrew Makarov, Benjamin Toueg, David Junger, Mohsen Azimi, Nikita Galkin, Sebastian Silbermann, Wilco Bakker, Marcin Kopacz, Trivikram Kamat, Junxiao Shi, Ilia Baryshnikov, ExE Boss, Piotr Błażejewicz, Anna Henningsen, Victor Perin, NodeJS Contributors, Linus Unnebäck, wafuwafu13, Matteo Collina, Dmitry Semigradsky
+### @modelcontextprotocol/sdk v^1.18.1
+Copyright: Anthropic, PBC (https://anthropic.com), Anthropic, PBC
+Source: git+https://github.com/modelcontextprotocol/typescript-sdk.git
+License: MIT License
+
+### @types/node v^24.5.2
+Copyright: Microsoft TypeScript, Alberto Schiabel, Andrew Makarov, Benjamin Toueg, David Junger, Mohsen Azimi, Nikita Galkin, Sebastian Silbermann, Wilco Bakker, Marcin Kopacz, Trivikram Kamat, Junxiao Shi, Ilia Baryshnikov, ExE Boss, Piotr Błażejewicz, Anna Henningsen, Victor Perin, NodeJS Contributors, Linus Unnebäck, wafuwafu13, Matteo Collina, Dmitry Semigradsky, René, Yagiz Nizipli
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
-### ts-node v^10.9.2
-Copyright: Blake Embrey, Andrew Bradley, Blake Embrey (hello@blakeembrey.com)
-Source: git://github.com/TypeStrong/ts-node.git
-License: MIT License
-
-### vitest v^3.2.4
-Copyright: Anthony Fu <anthonyfu117@hotmail.com>, Anthony Fu <https://github.com/antfu>, by various contributors (see AUTHORS), >, Robert Kieffer, Terkel Gjervig Nielsen, Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com), Einar Otto Stangvik <einaros@gmail.com>, Arnout Kazemier and contributors, Luigi Pinca and contributors
-Source: git+https://github.com/vitest-dev/vitest.git
-License: MIT License
-
-### @modelcontextprotocol/sdk v^0.5.0
-Copyright: Anthropic, PBC (https://anthropic.com), Anthropic, PBC.
-License: MIT License
-
-### @types/node v^20.0.0
-Copyright: Microsoft TypeScript, Alberto Schiabel, Andrew Makarov, Benjamin Toueg, David Junger, Mohsen Azimi, Nikita Galkin, Sebastian Silbermann, Wilco Bakker, Marcin Kopacz, Trivikram Kamat, Junxiao Shi, Ilia Baryshnikov, ExE Boss, Piotr Błażejewicz, Anna Henningsen, Victor Perin, NodeJS Contributors, Linus Unnebäck, wafuwafu13, Matteo Collina, Dmitry Semigradsky
-Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
-License: MIT License
-
-### @types/vscode v^1.80.0
+### @types/vscode v^1.104.0
 Copyright: Visual Studio Code Team, Microsoft
 Source: https://github.com/DefinitelyTyped/DefinitelyTyped.git
 License: MIT License
 
-### @vscode/test-cli v^0.0.4
+### @vscode/test-cli v^0.0.11
 Copyright: Connor Peet <connor@peet.io>
 Source: git+https://github.com/Microsoft/vscode-test-cli.git
 License: MIT License
 
-### @vscode/test-electron v^2.3.6
+### @vscode/test-electron v^2.5.2
 Copyright: Visual Studio Code Team
 Source: https://github.com/Microsoft/vscode-test.git
 License: MIT License
 
-### @vscode/vsce v^2.21.1
+### @vscode/vsce v^3.6.1
 Copyright: Microsoft Corporation
 Source: https://github.com/Microsoft/vsce
 License: MIT License
@@ -193,6 +198,14 @@ License: MIT License
 ### vitest v^3.2.4
 Copyright: Anthony Fu <anthonyfu117@hotmail.com>, Anthony Fu <https://github.com/antfu>, by various contributors (see AUTHORS), >, Robert Kieffer, Terkel Gjervig Nielsen, Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com), Einar Otto Stangvik <einaros@gmail.com>, Arnout Kazemier and contributors, Luigi Pinca and contributors
 Source: git+https://github.com/vitest-dev/vitest.git
+License: MIT License
+
+### express v^4.18.0
+Copyright: TJ Holowaychuk <tj@vision-media.ca>, Aaron Heckmann <aaron.heckmann+github@gmail.com>, Ciaran Jessup <ciaranj@gmail.com>, Douglas Christopher Wilson <doug@somethingdoug.com>, Guillermo Rauch <rauchg@gmail.com>, Jonathan Ong <me@jongleberry.com>, Roman Shtylman <shtylman+expressjs@gmail.com>, Young Jae Sim <hanul@hanul.me>
+License: MIT License
+
+### lodash v^4.17.21
+Copyright: John-David Dalton <john.david.dalton@gmail.com>, Mathias Bynens <mathias@qiwi.be>
 License: MIT License
 
 License Text:
@@ -218,7 +231,7 @@ SOFTWARE.
 
 ## Apache-2.0
 
-### typescript v^5.5.0
+### typescript v^5.9.2
 Copyright: Microsoft Corp.
 Source: https://github.com/microsoft/TypeScript.git
 License: Apache License 2.0
@@ -232,17 +245,17 @@ License: Apache License 2.0
 Copyright: Atsushi Tatsuma
 License: Apache License 2.0
 
-### typescript v^5.5.0
+### typescript v^5.9.2
 Copyright: Microsoft Corp.
 Source: https://github.com/microsoft/TypeScript.git
 License: Apache License 2.0
 
-### typescript v^5.5.0
+### typescript v^5.9.2
 Copyright: Microsoft Corp.
 Source: https://github.com/microsoft/TypeScript.git
 License: Apache License 2.0
 
-### typescript v^5.5.0
+### typescript v^5.9.2
 Copyright: Microsoft Corp.
 Source: https://github.com/microsoft/TypeScript.git
 License: Apache License 2.0
@@ -266,12 +279,6 @@ ISC License...
 
 ## UNKNOWN
 
-### express v^4.18.0
-License: UNKNOWN
-
-### lodash v^4.17.21
-License: UNKNOWN
-
 ### moment v^2.29.4
 License: UNKNOWN
 
@@ -293,5 +300,5 @@ License text not available
 ---
 
 
-Generated on: 2025-09-25T02:27:42.337Z
+Generated on: 2025-09-25T18:55:47.316Z
 By: ast-copilot-helper legal compliance system

@@ -427,7 +427,7 @@ describe("Deployment Automation Tests", () => {
         mockExecSync.mockImplementation((command: string) => {
           if (command.includes("yarn run build")) {
             attemptCount++;
-            if (attemptCount < 2) {
+            if (attemptCount === 1) {
               throw new Error("Build failed");
             }
           }

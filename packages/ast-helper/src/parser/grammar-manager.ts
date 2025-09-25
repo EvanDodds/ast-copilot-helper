@@ -104,21 +104,34 @@ export class TreeSitterGrammarManager implements GrammarManager {
    */
   async verifyGrammarIntegrity(language: string): Promise<boolean> {
     try {
-      const config = this.getLanguageConfig(language);
       const grammarPath = path.join(
         this.grammarDir,
         language,
         `tree-sitter-${language}.wasm`,
+      );
+      const metadataPath = path.join(
+        this.grammarDir,
+        language,
+        "metadata.json",
       );
 
       if (!(await this.fileExists(grammarPath))) {
         return false;
       }
 
-      return await this.verifyDownloadedGrammar(
-        grammarPath,
-        config.grammarHash,
-      );
+      // Read hash from metadata file (what was actually saved during download)
+      let expectedHash: string;
+      try {
+        const metadataContent = await fs.readFile(metadataPath, "utf-8");
+        const metadata: GrammarMetadata = JSON.parse(metadataContent);
+        expectedHash = metadata.hash;
+      } catch (error) {
+        // If no metadata file, fall back to language config hash
+        const config = this.getLanguageConfig(language);
+        expectedHash = config.grammarHash;
+      }
+
+      return await this.verifyDownloadedGrammar(grammarPath, expectedHash);
     } catch (error) {
       return false;
     }

@@ -108,8 +108,8 @@ describe("Language Support Configuration", () => {
       });
 
       it("should return null for unsupported languages", () => {
-        expect(LanguageDetector.getLanguageConfig("ruby")).toBe(null);
-        expect(LanguageDetector.getLanguageConfig("go")).toBe(null);
+        expect(LanguageDetector.getLanguageConfig("cobol")).toBe(null);
+        expect(LanguageDetector.getLanguageConfig("fortran")).toBe(null);
       });
 
       it("should be case-insensitive", () => {
@@ -143,8 +143,8 @@ describe("Language Support Configuration", () => {
       });
 
       it("should return false for unsupported languages", () => {
-        expect(LanguageDetector.isLanguageSupported("ruby")).toBe(false);
-        expect(LanguageDetector.isLanguageSupported("go")).toBe(false);
+        expect(LanguageDetector.isLanguageSupported("cobol")).toBe(false);
+        expect(LanguageDetector.isLanguageSupported("fortran")).toBe(false);
       });
 
       it("should be case-insensitive", () => {
@@ -406,7 +406,7 @@ describe("Language Support Configuration", () => {
 
     it("should provide isLanguageSupported function", () => {
       expect(isLanguageSupported("typescript")).toBe(true);
-      expect(isLanguageSupported("ruby")).toBe(false);
+      expect(isLanguageSupported("cobol")).toBe(false);
     });
 
     it("should provide getLanguageConfig function", () => {
