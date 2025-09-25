@@ -3,17 +3,23 @@
  * @module @ast-copilot-helper/ast-helper/error-reporting/diagnostics/types
  */
 
-import { 
-  DiagnosticData, 
+import type {
+  DiagnosticData,
   SystemDiagnostics as BaseSystemDiagnostics,
   RuntimeDiagnostics as BaseRuntimeDiagnostics,
-  CodebaseDiagnostics as BaseCodebaseDiagnostics
-} from '../types.js';
+  CodebaseDiagnostics as BaseCodebaseDiagnostics,
+} from "../types.js";
 
 /**
  * Diagnostic scope types
  */
-export type DiagnosticScope = 'system' | 'runtime' | 'codebase' | 'configuration' | 'performance' | 'dependencies';
+export type DiagnosticScope =
+  | "system"
+  | "runtime"
+  | "codebase"
+  | "configuration"
+  | "performance"
+  | "dependencies";
 
 /**
  * Base interface for diagnostic collectors
@@ -63,7 +69,7 @@ export interface DiagnosticCollectorConfig {
   timeout: number;
   retryAttempts: number;
   cacheTTL: number;
-  privacyLevel: 'minimal' | 'standard' | 'full';
+  privacyLevel: "minimal" | "standard" | "full";
   includeEnvironment: boolean;
   includeFileSystem: boolean;
   includeGitInfo: boolean;
@@ -89,14 +95,14 @@ export interface DiagnosticCacheEntry {
  * Collection context and metadata
  */
 export interface DiagnosticCollectionContext {
-  triggeredBy: 'error' | 'manual' | 'scheduled' | 'crash';
+  triggeredBy: "error" | "manual" | "scheduled" | "crash";
   timestamp: number;
   sessionId: string;
   userId?: string;
   errorId?: string;
   requestId?: string;
   timeout: number;
-  privacyLevel: 'minimal' | 'standard' | 'full';
+  privacyLevel: "minimal" | "standard" | "full";
   includeCache: boolean;
   forceRefresh: boolean;
   collectors: string[];
@@ -153,18 +159,18 @@ export interface CollectorPerformanceMetrics {
  * Privacy filter interface
  */
 export interface PrivacyFilter {
-  level: 'minimal' | 'standard' | 'full';
-  
+  level: "minimal" | "standard" | "full";
+
   /**
    * Filter diagnostic data based on privacy level
    */
   filter(data: Partial<DiagnosticData>): Partial<DiagnosticData>;
-  
+
   /**
    * Check if field should be included
    */
   shouldIncludeField(fieldPath: string, value: any): boolean;
-  
+
   /**
    * Anonymize sensitive data
    */
@@ -175,50 +181,50 @@ export interface PrivacyFilter {
  * Events emitted by diagnostic collectors
  */
 export interface DiagnosticCollectorEvents {
-  'collection:start': {
+  "collection:start": {
     context: DiagnosticCollectionContext;
     collectors: string[];
   };
-  
-  'collection:complete': {
+
+  "collection:complete": {
     result: DiagnosticCollectionResult;
   };
-  
-  'collection:error': {
+
+  "collection:error": {
     collector: string;
     error: Error;
     context: DiagnosticCollectionContext;
   };
-  
-  'collector:start': {
+
+  "collector:start": {
     collector: string;
     context: DiagnosticCollectionContext;
   };
-  
-  'collector:complete': {
+
+  "collector:complete": {
     collector: string;
     data: Partial<DiagnosticData>;
     duration: number;
     cached: boolean;
   };
-  
-  'collector:error': {
+
+  "collector:error": {
     collector: string;
     error: Error;
     duration: number;
   };
-  
-  'cache:hit': {
+
+  "cache:hit": {
     collector: string;
     age: number;
   };
-  
-  'cache:miss': {
+
+  "cache:miss": {
     collector: string;
     reason: string;
   };
-  
-  'cache:clear': {
+
+  "cache:clear": {
     collector?: string;
     count: number;
   };

@@ -3,18 +3,18 @@
  * Tests native modules, binaries, and WebAssembly across platforms
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
-import os from 'os';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import type { TestResult, BinaryTestResult } from '../types';
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
+import { exec } from "child_process";
+import { promisify } from "util";
+import type { TestResult, BinaryTestResult } from "../types";
 
 const execAsync = promisify(exec);
 
 export interface BinaryModule {
   name: string;
-  type: 'native' | 'wasm' | 'tree-sitter' | 'node-addon';
+  type: "native" | "wasm" | "tree-sitter" | "node-addon";
   path?: string;
   required: boolean;
   platformSpecific: boolean;
@@ -43,53 +43,53 @@ export class BinaryCompatibilityTester {
   // Define critical binary modules to test
   private readonly binaryModules: BinaryModule[] = [
     {
-      name: 'better-sqlite3',
-      type: 'native',
+      name: "better-sqlite3",
+      type: "native",
       required: true,
       platformSpecific: true,
-      architectures: ['x64', 'arm64', 'ia32'],
-      nodeVersions: ['18.x', '20.x', '22.x']
+      architectures: ["x64", "arm64", "ia32"],
+      nodeVersions: ["18.x", "20.x", "22.x"],
     },
     {
-      name: 'tree-sitter',
-      type: 'native',
+      name: "tree-sitter",
+      type: "native",
       required: true,
       platformSpecific: true,
-      architectures: ['x64', 'arm64', 'ia32'],
-      nodeVersions: ['18.x', '20.x', '22.x']
+      architectures: ["x64", "arm64", "ia32"],
+      nodeVersions: ["18.x", "20.x", "22.x"],
     },
     {
-      name: 'tree-sitter-javascript',
-      type: 'tree-sitter',
+      name: "tree-sitter-javascript",
+      type: "tree-sitter",
       required: true,
       platformSpecific: true,
-      architectures: ['x64', 'arm64', 'ia32'],
-      nodeVersions: ['18.x', '20.x', '22.x']
+      architectures: ["x64", "arm64", "ia32"],
+      nodeVersions: ["18.x", "20.x", "22.x"],
     },
     {
-      name: 'tree-sitter-typescript',
-      type: 'tree-sitter',
+      name: "tree-sitter-typescript",
+      type: "tree-sitter",
       required: true,
       platformSpecific: true,
-      architectures: ['x64', 'arm64', 'ia32'],
-      nodeVersions: ['18.x', '20.x', '22.x']
+      architectures: ["x64", "arm64", "ia32"],
+      nodeVersions: ["18.x", "20.x", "22.x"],
     },
     {
-      name: 'tree-sitter-python',
-      type: 'tree-sitter',
+      name: "tree-sitter-python",
+      type: "tree-sitter",
       required: true,
       platformSpecific: true,
-      architectures: ['x64', 'arm64', 'ia32'],
-      nodeVersions: ['18.x', '20.x', '22.x']
+      architectures: ["x64", "arm64", "ia32"],
+      nodeVersions: ["18.x", "20.x", "22.x"],
     },
     {
-      name: 'onnxruntime-node',
-      type: 'native',
+      name: "onnxruntime-node",
+      type: "native",
       required: false,
       platformSpecific: true,
-      architectures: ['x64', 'arm64'],
-      nodeVersions: ['18.x', '20.x', '22.x']
-    }
+      architectures: ["x64", "arm64"],
+      nodeVersions: ["18.x", "20.x", "22.x"],
+    },
   ];
 
   constructor() {
@@ -97,7 +97,7 @@ export class BinaryCompatibilityTester {
     this.architecture = process.arch;
     this.nodeVersion = process.version;
     this.projectRoot = process.cwd();
-    this.testDir = path.join(this.projectRoot, 'test-output', 'binary-tests');
+    this.testDir = path.join(this.projectRoot, "test-output", "binary-tests");
   }
 
   /**
@@ -111,7 +111,9 @@ export class BinaryCompatibilityTester {
       // Ensure test directory exists
       await fs.mkdir(this.testDir, { recursive: true });
 
-      console.log(`🔧 Testing binary compatibility on ${this.platform}/${this.architecture}`);
+      console.log(
+        `🔧 Testing binary compatibility on ${this.platform}/${this.architecture}`,
+      );
       console.log(`📦 Node.js version: ${this.nodeVersion}`);
 
       // Test 1: Platform and architecture detection
@@ -121,12 +123,16 @@ export class BinaryCompatibilityTester {
       testResults.push(await this.testNodeAddonLoading());
 
       // Test 3: Native module compatibility
-      for (const module of this.binaryModules.filter(m => m.type === 'native')) {
+      for (const module of this.binaryModules.filter(
+        (m) => m.type === "native",
+      )) {
         testResults.push(await this.testNativeModule(module));
       }
 
       // Test 4: Tree-sitter grammar loading
-      for (const module of this.binaryModules.filter(m => m.type === 'tree-sitter')) {
+      for (const module of this.binaryModules.filter(
+        (m) => m.type === "tree-sitter",
+      )) {
         testResults.push(await this.testTreeSitterGrammar(module));
       }
 
@@ -149,10 +155,12 @@ export class BinaryCompatibilityTester {
       testResults.push(await this.testErrorHandling());
 
       const duration = Date.now() - startTime;
-      const passedCount = testResults.filter(t => t.passed).length;
-      const failedCount = testResults.filter(t => !t.passed).length;
+      const passedCount = testResults.filter((t) => t.passed).length;
+      const failedCount = testResults.filter((t) => !t.passed).length;
 
-      console.log(`✅ Binary compatibility testing completed: ${passedCount}/${testResults.length} tests passed`);
+      console.log(
+        `✅ Binary compatibility testing completed: ${passedCount}/${testResults.length} tests passed`,
+      );
 
       return {
         platform: this.platform,
@@ -164,23 +172,22 @@ export class BinaryCompatibilityTester {
           passed: passedCount,
           failed: failedCount,
           duration,
-          compatibility: passedCount / testResults.length
-        }
+          compatibility: passedCount / testResults.length,
+        },
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
       const errorResult: TestResult = {
-        name: 'binary_compatibility_suite',
-        category: 'binary',
+        name: "binary_compatibility_suite",
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration,
         error: error instanceof Error ? error.message : String(error),
         details: {
           testSuite: true,
-          fatalError: true
-        }
+          fatalError: true,
+        },
       };
 
       testResults.push(errorResult);
@@ -195,8 +202,8 @@ export class BinaryCompatibilityTester {
           passed: 0,
           failed: 1,
           duration,
-          compatibility: 0
-        }
+          compatibility: 0,
+        },
       };
     }
   }
@@ -206,23 +213,30 @@ export class BinaryCompatibilityTester {
    */
   private async testPlatformDetection(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       const detectedPlatform = process.platform;
       const detectedArch = process.arch;
       const nodeVersion = process.version;
 
       // Validate platform detection
-      const validPlatforms = ['win32', 'darwin', 'linux', 'freebsd', 'openbsd'];
-      const validArchitectures = ['x64', 'arm64', 'ia32', 'arm', 's390x', 'ppc64'];
+      const validPlatforms = ["win32", "darwin", "linux", "freebsd", "openbsd"];
+      const validArchitectures = [
+        "x64",
+        "arm64",
+        "ia32",
+        "arm",
+        "s390x",
+        "ppc64",
+      ];
 
       const isPlatformValid = validPlatforms.includes(detectedPlatform);
       const isArchValid = validArchitectures.includes(detectedArch);
       const isNodeVersionValid = /^v\d+\.\d+\.\d+/.test(nodeVersion);
 
       return {
-        name: 'platform_detection',
-        category: 'binary',
+        name: "platform_detection",
+        category: "binary",
         passed: isPlatformValid && isArchValid && isNodeVersionValid,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -232,21 +246,20 @@ export class BinaryCompatibilityTester {
           nodeVersion,
           validPlatform: isPlatformValid,
           validArchitecture: isArchValid,
-          validNodeVersion: isNodeVersionValid
-        }
+          validNodeVersion: isNodeVersionValid,
+        },
       };
-
     } catch (error) {
       return {
-        name: 'platform_detection',
-        category: 'binary',
+        name: "platform_detection",
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
         details: {
-          testType: 'platform_detection'
-        }
+          testType: "platform_detection",
+        },
       };
     }
   }
@@ -256,44 +269,43 @@ export class BinaryCompatibilityTester {
    */
   private async testNodeAddonLoading(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test loading a known Node.js addon (fs module uses native code)
-      const fs = require('fs');
-      const path = require('path');
-      const os = require('os');
-      
-      // Test basic addon functionality
-      const tempFile = path.join(this.testDir, 'addon-test.txt');
-      await require('fs').promises.writeFile(tempFile, 'test content');
-      const content = await require('fs').promises.readFile(tempFile, 'utf8');
-      await require('fs').promises.unlink(tempFile);
+      const _fs = await import("fs");
+      const _path = await import("path");
+      const _os = await import("os");
 
-      const success = content === 'test content';
+      // Test basic addon functionality
+      const tempFile = path.join(this.testDir, "addon-test.txt");
+      await _fs.promises.writeFile(tempFile, "test content");
+      const content = await _fs.promises.readFile(tempFile, "utf8");
+      await _fs.promises.unlink(tempFile);
+
+      const success = content === "test content";
 
       return {
-        name: 'node_addon_loading',
-        category: 'binary',
+        name: "node_addon_loading",
+        category: "binary",
         passed: success,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          testType: 'addon_loading',
-          nativeModulesSupported: true
-        }
+          testType: "addon_loading",
+          nativeModulesSupported: true,
+        },
       };
-
     } catch (error) {
       return {
-        name: 'node_addon_loading',
-        category: 'binary',
+        name: "node_addon_loading",
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
         details: {
-          testType: 'addon_loading'
-        }
+          testType: "addon_loading",
+        },
       };
     }
   }
@@ -303,67 +315,86 @@ export class BinaryCompatibilityTester {
    */
   private async testNativeModule(module: BinaryModule): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       let moduleInstance: any;
       let loadSuccess = false;
       let version: string | undefined;
       let functionality = false;
 
-      // Attempt to load the module
+      // Attempt to load the module with defensive error handling
       try {
-        moduleInstance = require(module.name);
-        loadSuccess = true;
-        
-        // Get version if available
-        if (moduleInstance.version) {
-          version = moduleInstance.version;
-        } else if (moduleInstance.VERSION) {
-          version = moduleInstance.VERSION;
+        // Validate module name before attempting require
+        if (!module.name || typeof module.name !== "string") {
+          throw new Error(`Invalid module name: ${module.name}`);
         }
 
+        // Use dynamic import instead of require for better error handling
+        try {
+          moduleInstance = await import(module.name);
+          loadSuccess = true;
+        } catch (_importError) {
+          // Fallback to require for CommonJS modules with additional safety
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          moduleInstance = require(module.name);
+          loadSuccess = true;
+        }
+
+        // Get version if available
+        if (moduleInstance && typeof moduleInstance === "object") {
+          if (moduleInstance.version) {
+            version = moduleInstance.version;
+          } else if (moduleInstance.VERSION) {
+            version = moduleInstance.VERSION;
+          }
+        }
       } catch (loadError) {
         return {
           name: `native_module_${module.name}`,
-          category: 'binary',
+          category: "binary",
           passed: !module.required, // Only fail if module is required
           platform: this.platform,
           duration: Date.now() - startTime,
-          error: loadError instanceof Error ? loadError.message : String(loadError),
+          error:
+            loadError instanceof Error ? loadError.message : String(loadError),
           details: {
             moduleName: module.name,
             moduleType: module.type,
             required: module.required,
             loadAttempted: true,
-            loadSuccessful: false
-          }
+            loadSuccessful: false,
+          },
         };
       }
 
       // Test specific module functionality
       try {
-        if (module.name === 'better-sqlite3') {
+        if (module.name === "better-sqlite3") {
           functionality = await this.testSqliteModule(moduleInstance);
-        } else if (module.name === 'tree-sitter') {
+        } else if (module.name === "tree-sitter") {
           functionality = await this.testTreeSitterModule(moduleInstance);
-        } else if (module.name === 'onnxruntime-node') {
+        } else if (module.name === "onnxruntime-node") {
           functionality = await this.testOnnxModule(moduleInstance);
         } else {
           // Basic functionality test - just check if module has expected properties
-          functionality = typeof moduleInstance === 'object' || typeof moduleInstance === 'function';
+          functionality =
+            typeof moduleInstance === "object" ||
+            typeof moduleInstance === "function";
         }
       } catch (funcError) {
         functionality = false;
       }
 
       const testPassed = loadSuccess && (functionality || !module.required);
-      const failureReason = !loadSuccess ? 'Module failed to load' : 
-                            !functionality && module.required ? 'Required module functionality test failed' : 
-                            null;
-      
+      const failureReason = !loadSuccess
+        ? "Module failed to load"
+        : !functionality && module.required
+          ? "Required module functionality test failed"
+          : null;
+
       return {
         name: `native_module_${module.name}`,
-        category: 'binary',
+        category: "binary",
         passed: testPassed,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -377,14 +408,13 @@ export class BinaryCompatibilityTester {
           version,
           supportedArchitectures: module.architectures,
           supportedNodeVersions: module.nodeVersions,
-          ...(failureReason ? {} : { expectedFailure: !module.required })
-        }
+          ...(failureReason ? {} : { expectedFailure: !module.required }),
+        },
       };
-
     } catch (error) {
       return {
         name: `native_module_${module.name}`,
-        category: 'binary',
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -392,8 +422,8 @@ export class BinaryCompatibilityTester {
         details: {
           moduleName: module.name,
           moduleType: module.type,
-          required: module.required
-        }
+          required: module.required,
+        },
       };
     }
   }
@@ -401,9 +431,11 @@ export class BinaryCompatibilityTester {
   /**
    * Test Tree-sitter grammar loading
    */
-  private async testTreeSitterGrammar(module: BinaryModule): Promise<TestResult> {
+  private async testTreeSitterGrammar(
+    module: BinaryModule,
+  ): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       let grammar: any;
       let loadSuccess = false;
@@ -411,22 +443,24 @@ export class BinaryCompatibilityTester {
 
       // Attempt to load the grammar
       try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         grammar = require(module.name);
         loadSuccess = true;
       } catch (loadError) {
         return {
-          name: `tree_sitter_${module.name.replace('tree-sitter-', '')}`,
-          category: 'binary',
+          name: `tree_sitter_${module.name.replace("tree-sitter-", "")}`,
+          category: "binary",
           passed: !module.required,
           platform: this.platform,
           duration: Date.now() - startTime,
-          error: loadError instanceof Error ? loadError.message : String(loadError),
+          error:
+            loadError instanceof Error ? loadError.message : String(loadError),
           details: {
             grammarName: module.name,
             required: module.required,
             loadAttempted: true,
-            loadSuccessful: false
-          }
+            loadSuccessful: false,
+          },
         };
       }
 
@@ -434,9 +468,10 @@ export class BinaryCompatibilityTester {
       try {
         if (loadSuccess) {
           // Try to load tree-sitter parser
-          const Parser = require('tree-sitter');
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const Parser = require("tree-sitter");
           const parser = new Parser();
-          
+
           // Set language
           if (grammar.default) {
             parser.setLanguage(grammar.default);
@@ -445,32 +480,34 @@ export class BinaryCompatibilityTester {
           }
 
           // Test parsing with simple content
-          let testContent = '';
-          if (module.name.includes('javascript')) {
-            testContent = 'const x = 1;';
-          } else if (module.name.includes('typescript')) {
-            testContent = 'const x: number = 1;';
-          } else if (module.name.includes('python')) {
-            testContent = 'x = 1';
+          let testContent = "";
+          if (module.name.includes("javascript")) {
+            testContent = "const x = 1;";
+          } else if (module.name.includes("typescript")) {
+            testContent = "const x: number = 1;";
+          } else if (module.name.includes("python")) {
+            testContent = "x = 1";
           } else {
-            testContent = 'test';
+            testContent = "test";
           }
 
           const tree = parser.parse(testContent);
           parseSuccess = tree && tree.rootNode && tree.rootNode.childCount >= 0;
         }
-      } catch (parseError) {
+      } catch (_parseError) {
         parseSuccess = false;
       }
 
       const testPassed = loadSuccess && (parseSuccess || !module.required);
-      const failureReason = !loadSuccess ? 'Grammar failed to load' : 
-                            !parseSuccess && module.required ? 'Required grammar functionality test failed' : 
-                            null;
+      const failureReason = !loadSuccess
+        ? "Grammar failed to load"
+        : !parseSuccess && module.required
+          ? "Required grammar functionality test failed"
+          : null;
 
       return {
-        name: `tree_sitter_${module.name.replace('tree-sitter-', '')}`,
-        category: 'binary',
+        name: `tree_sitter_${module.name.replace("tree-sitter-", "")}`,
+        category: "binary",
         passed: testPassed,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -482,22 +519,21 @@ export class BinaryCompatibilityTester {
           parseSuccessful: parseSuccess,
           supportedArchitectures: module.architectures,
           supportedNodeVersions: module.nodeVersions,
-          ...(failureReason ? {} : { expectedFailure: !module.required })
-        }
+          ...(failureReason ? {} : { expectedFailure: !module.required }),
+        },
       };
-
     } catch (error) {
       return {
-        name: `tree_sitter_${module.name.replace('tree-sitter-', '')}`,
-        category: 'binary',
+        name: `tree_sitter_${module.name.replace("tree-sitter-", "")}`,
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
         details: {
           grammarName: module.name,
-          required: module.required
-        }
+          required: module.required,
+        },
       };
     }
   }
@@ -507,11 +543,11 @@ export class BinaryCompatibilityTester {
    */
   private async testWebAssemblySupport(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Check if WebAssembly is supported
-      const wasmSupported = typeof WebAssembly !== 'undefined';
-      
+      const wasmSupported = typeof WebAssembly !== "undefined";
+
       let instantiateSuccess = false;
       let executeSuccess = false;
 
@@ -519,11 +555,10 @@ export class BinaryCompatibilityTester {
         try {
           // Create a simple WASM module (adds two numbers)
           const wasmCode = new Uint8Array([
-            0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-            0x01, 0x07, 0x01, 0x60, 0x02, 0x7f, 0x7f, 0x01, 0x7f,
-            0x03, 0x02, 0x01, 0x00,
-            0x07, 0x07, 0x01, 0x03, 0x61, 0x64, 0x64, 0x00, 0x00,
-            0x0a, 0x09, 0x01, 0x07, 0x00, 0x20, 0x00, 0x20, 0x01, 0x6a, 0x0b
+            0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x07, 0x01,
+            0x60, 0x02, 0x7f, 0x7f, 0x01, 0x7f, 0x03, 0x02, 0x01, 0x00, 0x07,
+            0x07, 0x01, 0x03, 0x61, 0x64, 0x64, 0x00, 0x00, 0x0a, 0x09, 0x01,
+            0x07, 0x00, 0x20, 0x00, 0x20, 0x01, 0x6a, 0x0b,
           ]);
 
           const wasmModule = await WebAssembly.instantiate(wasmCode);
@@ -532,7 +567,6 @@ export class BinaryCompatibilityTester {
           // Test execution
           const result = (wasmModule.instance.exports as any).add(5, 3);
           executeSuccess = result === 8;
-
         } catch (wasmError) {
           instantiateSuccess = false;
           executeSuccess = false;
@@ -540,8 +574,8 @@ export class BinaryCompatibilityTester {
       }
 
       return {
-        name: 'webassembly_support',
-        category: 'binary',
+        name: "webassembly_support",
+        category: "binary",
         passed: wasmSupported && instantiateSuccess && executeSuccess,
         platform: this.platform,
         duration: Date.now() - startTime,
@@ -549,21 +583,20 @@ export class BinaryCompatibilityTester {
           wasmSupported,
           instantiateSuccessful: instantiateSuccess,
           executeSuccessful: executeSuccess,
-          testType: 'webassembly'
-        }
+          testType: "webassembly",
+        },
       };
-
     } catch (error) {
       return {
-        name: 'webassembly_support',
-        category: 'binary',
+        name: "webassembly_support",
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
         details: {
-          testType: 'webassembly'
-        }
+          testType: "webassembly",
+        },
       };
     }
   }
@@ -573,24 +606,24 @@ export class BinaryCompatibilityTester {
    */
   private async testBinaryArchitecture(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       const arch = process.arch;
       const platform = process.platform;
-      
+
       // Check if binaries match expected architecture
-      let architectureMatch = true;
+      const architectureMatch = true;
       const details: any = {
         processArchitecture: arch,
         processPlatform: platform,
-        testType: 'architecture_validation'
+        testType: "architecture_validation",
       };
 
       // Try to get system information
       try {
         const cpus = os.cpus();
         details.cpuCount = cpus.length;
-        details.cpuModel = cpus[0]?.model || 'unknown';
+        details.cpuModel = cpus[0]?.model || "unknown";
       } catch {
         // CPU info not available
       }
@@ -607,25 +640,24 @@ export class BinaryCompatibilityTester {
       }
 
       return {
-        name: 'binary_architecture',
-        category: 'binary',
+        name: "binary_architecture",
+        category: "binary",
         passed: architectureMatch,
         platform: this.platform,
         duration: Date.now() - startTime,
-        details
+        details,
       };
-
     } catch (error) {
       return {
-        name: 'binary_architecture',
-        category: 'binary',
+        name: "binary_architecture",
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
         details: {
-          testType: 'architecture_validation'
-        }
+          testType: "architecture_validation",
+        },
       };
     }
   }
@@ -635,7 +667,7 @@ export class BinaryCompatibilityTester {
    */
   private async testDynamicLibraryLoading(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // Test loading built-in dynamic libraries
       let loadSuccess = true;
@@ -643,10 +675,11 @@ export class BinaryCompatibilityTester {
       const failedModules: string[] = [];
 
       // Test core Node.js modules that use native code
-      const testModules = ['crypto', 'zlib', 'fs', 'path', 'os'];
-      
+      const testModules = ["crypto", "zlib", "fs", "path", "os"];
+
       for (const moduleName of testModules) {
         try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           require(moduleName);
           loadedModules.push(moduleName);
         } catch (error) {
@@ -656,31 +689,30 @@ export class BinaryCompatibilityTester {
       }
 
       return {
-        name: 'dynamic_library_loading',
-        category: 'binary',
+        name: "dynamic_library_loading",
+        category: "binary",
         passed: loadSuccess,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          testType: 'dynamic_library',
+          testType: "dynamic_library",
           loadedModules,
           failedModules,
           totalTested: testModules.length,
-          successRate: loadedModules.length / testModules.length
-        }
+          successRate: loadedModules.length / testModules.length,
+        },
       };
-
     } catch (error) {
       return {
-        name: 'dynamic_library_loading',
-        category: 'binary',
+        name: "dynamic_library_loading",
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
         details: {
-          testType: 'dynamic_library'
-        }
+          testType: "dynamic_library",
+        },
       };
     }
   }
@@ -690,15 +722,15 @@ export class BinaryCompatibilityTester {
    */
   private async testMemoryUsage(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       const beforeMemory = process.memoryUsage();
-      
+
       // Perform memory-intensive operations
       const testData = new Array(10000).fill(0).map((_, i) => ({
         id: i,
         data: `test-data-${i}`,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }));
 
       // Force garbage collection if available
@@ -707,7 +739,7 @@ export class BinaryCompatibilityTester {
       }
 
       const afterMemory = process.memoryUsage();
-      
+
       // Calculate memory usage differences
       const heapUsedDiff = afterMemory.heapUsed - beforeMemory.heapUsed;
       const rssUsedDiff = afterMemory.rss - beforeMemory.rss;
@@ -716,33 +748,32 @@ export class BinaryCompatibilityTester {
       const memoryReasonable = heapUsedDiff < 100 * 1024 * 1024; // 100MB
 
       return {
-        name: 'memory_usage',
-        category: 'binary',
+        name: "memory_usage",
+        category: "binary",
         passed: memoryReasonable,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          testType: 'memory_usage',
+          testType: "memory_usage",
           beforeMemory,
           afterMemory,
           heapUsedDiff,
           rssUsedDiff,
           testDataSize: testData.length,
-          memoryReasonable
-        }
+          memoryReasonable,
+        },
       };
-
     } catch (error) {
       return {
-        name: 'memory_usage',
-        category: 'binary',
+        name: "memory_usage",
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
         details: {
-          testType: 'memory_usage'
-        }
+          testType: "memory_usage",
+        },
       };
     }
   }
@@ -752,14 +783,15 @@ export class BinaryCompatibilityTester {
    */
   private async testPerformanceBenchmarks(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       const benchmarks: any = {};
-      
+
       // CPU intensive benchmark - reduced for CI stability
       const cpuStart = Date.now();
       let cpuResult = 0;
-      for (let i = 0; i < 100000; i++) { // Reduced from 1000000 to 100000
+      for (let i = 0; i < 100000; i++) {
+        // Reduced from 1000000 to 100000
         cpuResult += Math.sqrt(i);
       }
       benchmarks.cpuTime = Date.now() - cpuStart;
@@ -771,43 +803,42 @@ export class BinaryCompatibilityTester {
 
       // I/O benchmark
       const ioStart = Date.now();
-      const testFile = path.join(this.testDir, 'perf-test.txt');
-      await fs.writeFile(testFile, 'performance test data');
-      await fs.readFile(testFile, 'utf8');
+      const testFile = path.join(this.testDir, "perf-test.txt");
+      await fs.writeFile(testFile, "performance test data");
+      await fs.readFile(testFile, "utf8");
       await fs.unlink(testFile);
       benchmarks.ioTime = Date.now() - ioStart;
 
       // Performance should be reasonable
-      const performanceReasonable = 
-        benchmarks.cpuTime < 5000 &&    // Less than 5 seconds for CPU test
-        benchmarks.memoryTime < 1000 &&  // Less than 1 second for memory test
-        benchmarks.ioTime < 1000;        // Less than 1 second for I/O test
+      const performanceReasonable =
+        benchmarks.cpuTime < 5000 && // Less than 5 seconds for CPU test
+        benchmarks.memoryTime < 1000 && // Less than 1 second for memory test
+        benchmarks.ioTime < 1000; // Less than 1 second for I/O test
 
       return {
-        name: 'performance_benchmarks',
-        category: 'binary',
+        name: "performance_benchmarks",
+        category: "binary",
         passed: performanceReasonable,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          testType: 'performance',
+          testType: "performance",
           benchmarks,
           performanceReasonable,
-          cpuResult: Math.round(cpuResult)
-        }
+          cpuResult: Math.round(cpuResult),
+        },
       };
-
     } catch (error) {
       return {
-        name: 'performance_benchmarks',
-        category: 'binary',
+        name: "performance_benchmarks",
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
         details: {
-          testType: 'performance'
-        }
+          testType: "performance",
+        },
       };
     }
   }
@@ -817,14 +848,15 @@ export class BinaryCompatibilityTester {
    */
   private async testErrorHandling(): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       let errorHandlingWorks = true;
       const errorTests: any = {};
 
       // Test 1: Invalid module loading
       try {
-        require('nonexistent-module-12345');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        require("nonexistent-module-12345");
         errorHandlingWorks = false; // Should have thrown an error
       } catch (error) {
         errorTests.invalidModuleHandled = true;
@@ -832,7 +864,8 @@ export class BinaryCompatibilityTester {
 
       // Test 2: Invalid function calls
       try {
-        const fs = require('fs');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const fs = require("fs");
         (fs as any).nonexistentFunction();
         errorHandlingWorks = false; // Should have thrown an error
       } catch (error) {
@@ -849,29 +882,28 @@ export class BinaryCompatibilityTester {
       }
 
       return {
-        name: 'error_handling',
-        category: 'binary',
+        name: "error_handling",
+        category: "binary",
         passed: errorHandlingWorks,
         platform: this.platform,
         duration: Date.now() - startTime,
         details: {
-          testType: 'error_handling',
+          testType: "error_handling",
           errorTests,
-          errorHandlingWorks
-        }
+          errorHandlingWorks,
+        },
       };
-
     } catch (error) {
       return {
-        name: 'error_handling',
-        category: 'binary',
+        name: "error_handling",
+        category: "binary",
         passed: false,
         platform: this.platform,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
         details: {
-          testType: 'error_handling'
-        }
+          testType: "error_handling",
+        },
       };
     }
   }
@@ -881,10 +913,10 @@ export class BinaryCompatibilityTester {
    */
   private async testSqliteModule(sqlite: any): Promise<boolean> {
     try {
-      const db = new sqlite(':memory:');
-      db.exec('CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT)');
+      const db = new sqlite(":memory:");
+      db.exec("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT)");
       db.exec("INSERT INTO test (name) VALUES ('test')");
-      const result = db.prepare('SELECT COUNT(*) as count FROM test').get();
+      const result = db.prepare("SELECT COUNT(*) as count FROM test").get();
       db.close();
       return result && result.count === 1;
     } catch {
@@ -899,9 +931,11 @@ export class BinaryCompatibilityTester {
     try {
       const parser = new TreeSitter();
       // Basic instantiation test
-      return typeof parser === 'object' && 
-             typeof parser.parse === 'function' &&
-             typeof parser.setLanguage === 'function';
+      return (
+        typeof parser === "object" &&
+        typeof parser.parse === "function" &&
+        typeof parser.setLanguage === "function"
+      );
     } catch {
       return false;
     }
@@ -913,7 +947,7 @@ export class BinaryCompatibilityTester {
   private async testOnnxModule(onnx: any): Promise<boolean> {
     try {
       // Basic ONNX availability test
-      return typeof onnx === 'object' && onnx.InferenceSession;
+      return typeof onnx === "object" && onnx.InferenceSession;
     } catch {
       return false;
     }

@@ -3,524 +3,560 @@
  * Validates version tracking, compatibility checking, and migration planning
  */
 
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockedFunction } from 'vitest';
-import type { VersionInfo } from './types.js';
-import { CURRENT_SCHEMA_VERSION, DatabaseVersionManager, MIN_TOOL_VERSION } from './version.js';
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockedFunction,
+} from "vitest";
+import type { VersionInfo } from "./types.js";
+import {
+  CURRENT_SCHEMA_VERSION,
+  DatabaseVersionManager,
+  MIN_TOOL_VERSION,
+} from "./version.js";
 
 // Mock Node.js modules
-vi.mock('node:fs/promises');
-vi.mock('node:fs');
+vi.mock("node:fs/promises");
+vi.mock("node:fs");
 
 // Mock FileSystemManager
 const mockAtomicWriteFile = vi.fn().mockResolvedValue(undefined);
 const mockExists = vi.fn().mockResolvedValue(true);
 
-vi.mock('../filesystem/manager.js', () => {
-    return {
-        FileSystemManager: vi.fn().mockImplementation(() => ({
-            atomicWriteFile: mockAtomicWriteFile,
-            exists: mockExists
-        }))
-    };
+vi.mock("../filesystem/manager.js", () => {
+  return {
+    FileSystemManager: vi.fn().mockImplementation(() => ({
+      atomicWriteFile: mockAtomicWriteFile,
+      exists: mockExists,
+    })),
+  };
 });
 
 // Mock internal modules
-vi.mock('../logging/index.js', () => ({
+vi.mock("../logging/index.js", () => ({
   createLogger: vi.fn(() => ({
     warn: vi.fn(),
-    error: vi.fn(), 
+    error: vi.fn(),
     info: vi.fn(),
     debug: vi.fn(),
-    trace: vi.fn()
-  }))
+    trace: vi.fn(),
+  })),
 }));
 
 const mockReadFile = readFile as MockedFunction<typeof readFile>;
-const mockWriteFile = writeFile as MockedFunction<typeof writeFile>;
-const mockFs = vi.mocked(require('fs'));
+const _mockWriteFile = writeFile as MockedFunction<typeof writeFile>;
 
-describe('DatabaseVersionManager', () => {
-    let versionManager: DatabaseVersionManager;
-    
-    const testAstdbPath = '/test/workspace/.astdb';
-    const testVersionPath = join(testAstdbPath, 'version.json');
+// Import mocked functions
+import * as nodefs from "node:fs";
+const mockFs = vi.mocked(nodefs);
 
-    beforeEach(async () => {
-        // Clear all mocks
-        vi.clearAllMocks();
-        
-        // Mock fs.existsSync and fs.readFileSync for getToolVersion
-        mockFs.existsSync = vi.fn().mockReturnValue(false);
-        mockFs.readFileSync = vi.fn();
+describe("DatabaseVersionManager", () => {
+  let versionManager: DatabaseVersionManager;
 
-        // Reset module cache to ensure fresh mocks
-        vi.resetModules();
-        
-        // Re-import to get fresh mocked modules
-        const { DatabaseVersionManager: FreshDatabaseVersionManager } = await import('./version.js');
-        versionManager = new FreshDatabaseVersionManager();
+  const testAstdbPath = "/test/workspace/.astdb";
+  const testVersionPath = join(testAstdbPath, "version.json");
+
+  beforeEach(async () => {
+    // Clear all mocks
+    vi.clearAllMocks();
+
+    // Mock fs.existsSync and fs.readFileSync for getToolVersion
+    mockFs.existsSync = vi.fn().mockReturnValue(false);
+    mockFs.readFileSync = vi.fn();
+
+    // Reset module cache to ensure fresh mocks
+    vi.resetModules();
+
+    // Re-import to get fresh mocked modules
+    const { DatabaseVersionManager: FreshDatabaseVersionManager } =
+      await import("./version.js");
+    versionManager = new FreshDatabaseVersionManager();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe("getToolVersion", () => {
+    it("should return version from package.json when available", () => {
+      const mockPackageJson = { version: "1.2.3" };
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue(JSON.stringify(mockPackageJson));
+
+      const version = versionManager.getToolVersion();
+
+      expect(version).toBe("1.2.3");
+      expect(mockFs.readFileSync).toHaveBeenCalledWith(
+        expect.stringContaining("package.json"),
+        "utf8",
+      );
     });
 
-    afterEach(() => {
-        vi.restoreAllMocks();
+    it("should fallback to default version when package.json not found", () => {
+      mockFs.existsSync.mockReturnValue(false);
+
+      const version = versionManager.getToolVersion();
+
+      expect(version).toBe("0.1.0");
     });
 
-    describe('getToolVersion', () => {
-        it('should return version from package.json when available', () => {
-            const mockPackageJson = { version: '1.2.3' };
-            mockFs.existsSync.mockReturnValue(true);
-            mockFs.readFileSync.mockReturnValue(JSON.stringify(mockPackageJson));
+    it("should handle invalid JSON gracefully", () => {
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockImplementation(() => {
+        throw new Error("Invalid JSON");
+      });
 
-            const version = versionManager.getToolVersion();
+      const version = versionManager.getToolVersion();
 
-            expect(version).toBe('1.2.3');
-            expect(mockFs.readFileSync).toHaveBeenCalledWith(
-                expect.stringContaining('package.json'),
-                'utf8'
-            );
-        });
+      expect(version).toBe("0.1.0");
+    });
+  });
 
-        it('should fallback to default version when package.json not found', () => {
-            mockFs.existsSync.mockReturnValue(false);
+  describe("createDefaultVersionInfo", () => {
+    it("should create valid version info with current schema and tool versions", () => {
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue('{"version": "1.5.0"}');
 
-            const version = versionManager.getToolVersion();
+      const versionInfo = versionManager.createDefaultVersionInfo();
 
-            expect(version).toBe('0.1.0');
-        });
+      expect(versionInfo).toMatchObject({
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        toolVersion: "1.5.0",
+        compatibility: {
+          minToolVersion: MIN_TOOL_VERSION,
+          migrations: [],
+        },
+      });
 
-        it('should handle invalid JSON gracefully', () => {
-            mockFs.existsSync.mockReturnValue(true);
-            mockFs.readFileSync.mockImplementation(() => {
-                throw new Error('Invalid JSON');
-            });
-
-            const version = versionManager.getToolVersion();
-
-            expect(version).toBe('0.1.0');
-        });
+      expect(versionInfo.created).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/,
+      );
     });
 
-    describe('createDefaultVersionInfo', () => {
-        it('should create valid version info with current schema and tool versions', () => {
-            mockFs.existsSync.mockReturnValue(true);
-            mockFs.readFileSync.mockReturnValue('{"version": "1.5.0"}');
+    it("should use fallback version when tool version unavailable", () => {
+      mockFs.existsSync.mockReturnValue(false);
 
-            const versionInfo = versionManager.createDefaultVersionInfo();
+      const versionInfo = versionManager.createDefaultVersionInfo();
 
-            expect(versionInfo).toMatchObject({
-                schemaVersion: CURRENT_SCHEMA_VERSION,
-                toolVersion: '1.5.0',
-                compatibility: {
-                    minToolVersion: MIN_TOOL_VERSION,
-                    migrations: []
-                }
-            });
+      expect(versionInfo.toolVersion).toBe("0.1.0");
+    });
+  });
 
-            expect(versionInfo.created).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
-        });
+  describe("createVersionFile", () => {
+    it.skip("should create version file with default info", async () => {
+      // TODO: Fix FileSystemManager mock issue
+      // This test is temporarily skipped due to complex mocking requirements
+      mockFs.existsSync.mockReturnValue(false);
 
-        it('should use fallback version when tool version unavailable', () => {
-            mockFs.existsSync.mockReturnValue(false);
+      // Mock the atomicWriteFile method directly on the instance
+      vi.spyOn(versionManager["fs"], "atomicWriteFile").mockResolvedValue(
+        undefined,
+      );
 
-            const versionInfo = versionManager.createDefaultVersionInfo();
+      await versionManager.createVersionFile(testAstdbPath);
 
-            expect(versionInfo.toolVersion).toBe('0.1.0');
-        });
+      // Should call atomicWriteFile through the FileSystemManager instance
+      expect(versionManager["fs"].atomicWriteFile).toHaveBeenCalledWith(
+        testVersionPath,
+        expect.stringContaining(CURRENT_SCHEMA_VERSION),
+        { encoding: "utf8", mode: 0o644 },
+      );
     });
 
-    describe('createVersionFile', () => {
-        it.skip('should create version file with default info', async () => {
-            // TODO: Fix FileSystemManager mock issue
-            // This test is temporarily skipped due to complex mocking requirements
-            mockFs.existsSync.mockReturnValue(false);
-            
-            // Mock the atomicWriteFile method directly on the instance
-            vi.spyOn(versionManager['fs'], 'atomicWriteFile').mockResolvedValue(undefined);
+    it("should respect dry run option", async () => {
+      await versionManager.createVersionFile(testAstdbPath, { dryRun: true });
 
-            await versionManager.createVersionFile(testAstdbPath);
-
-            // Should call atomicWriteFile through the FileSystemManager instance
-            expect(versionManager['fs'].atomicWriteFile).toHaveBeenCalledWith(
-                testVersionPath,
-                expect.stringContaining(CURRENT_SCHEMA_VERSION),
-                { encoding: 'utf8', mode: 0o644 }
-            );
-        });
-
-        it('should respect dry run option', async () => {
-            await versionManager.createVersionFile(testAstdbPath, { dryRun: true });
-
-            expect(mockAtomicWriteFile).not.toHaveBeenCalled();
-        });
-
-        it.skip('should log verbose output when requested', async () => {
-            // TODO: Fix FileSystemManager mock issue
-            // This test is temporarily skipped due to complex mocking requirements
-            mockFs.existsSync.mockReturnValue(true);
-            mockFs.readFileSync.mockReturnValue('{"version": "2.0.0"}');
-
-            // Capture console output
-            const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-
-            await versionManager.createVersionFile(testAstdbPath, { verbose: true });
-
-            expect(consoleSpy).toHaveBeenCalledWith('  Creating version file: version.json');
-            expect(consoleSpy).toHaveBeenCalledWith('    Schema version: 1.0.0');
-            expect(consoleSpy).toHaveBeenCalledWith('    Tool version: 2.0.0');
-            expect(consoleSpy).toHaveBeenCalledWith('    ✅ Version file created successfully');
-
-            consoleSpy.mockRestore();
-        });
+      expect(mockAtomicWriteFile).not.toHaveBeenCalled();
     });
 
-    describe.skip('loadVersionInfo', () => {
-        // TODO: Fix FileSystemManager mock issue
-        // These tests are temporarily skipped due to complex mocking requirements
-        it('should load and validate version information', async () => {
-            const validVersionInfo: VersionInfo = {
-                schemaVersion: '1.0.0',
-                toolVersion: '1.5.0',
-                created: '2024-01-01T00:00:00.000Z',
-                compatibility: {
-                    minToolVersion: '0.1.0',
-                    migrations: ['migration-1']
-                }
-            };
+    it.skip("should log verbose output when requested", async () => {
+      // TODO: Fix FileSystemManager mock issue
+      // This test is temporarily skipped due to complex mocking requirements
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue('{"version": "2.0.0"}');
 
-            // Mock FileSystemManager
-            const mockFileSystemManager = {
-                exists: vi.fn().mockResolvedValue(true)
-            };
-            vi.doMock('../filesystem/manager.js', () => ({
-                FileSystemManager: vi.fn(() => mockFileSystemManager)
-            }));
+      // Capture console output
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-            mockReadFile.mockResolvedValue(JSON.stringify(validVersionInfo));
+      await versionManager.createVersionFile(testAstdbPath, { verbose: true });
 
-            const result = await versionManager.loadVersionInfo(testAstdbPath);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "  Creating version file: version.json",
+      );
+      expect(consoleSpy).toHaveBeenCalledWith("    Schema version: 1.0.0");
+      expect(consoleSpy).toHaveBeenCalledWith("    Tool version: 2.0.0");
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "    ✅ Version file created successfully",
+      );
 
-            expect(result).toEqual(validVersionInfo);
-            expect(mockReadFile).toHaveBeenCalledWith(testVersionPath, 'utf8');
-        });
+      consoleSpy.mockRestore();
+    });
+  });
 
-        it('should throw error when version file does not exist', async () => {
-            const mockFileSystemManager = {
-                exists: vi.fn().mockResolvedValue(false)
-            };
-            vi.doMock('../filesystem/manager.js', () => ({
-                FileSystemManager: vi.fn(() => mockFileSystemManager)
-            }));
+  describe.skip("loadVersionInfo", () => {
+    // TODO: Fix FileSystemManager mock issue
+    // These tests are temporarily skipped due to complex mocking requirements
+    it("should load and validate version information", async () => {
+      const validVersionInfo: VersionInfo = {
+        schemaVersion: "1.0.0",
+        toolVersion: "1.5.0",
+        created: "2024-01-01T00:00:00.000Z",
+        compatibility: {
+          minToolVersion: "0.1.0",
+          migrations: ["migration-1"],
+        },
+      };
 
-            await expect(versionManager.loadVersionInfo(testAstdbPath))
-                .rejects
-                .toThrow('Version file does not exist');
-        });
+      // Mock FileSystemManager
+      const mockFileSystemManager = {
+        exists: vi.fn().mockResolvedValue(true),
+      };
+      vi.doMock("../filesystem/manager.js", () => ({
+        FileSystemManager: vi.fn(() => mockFileSystemManager),
+      }));
 
-        it('should throw error for invalid JSON', async () => {
-            const mockFileSystemManager = {
-                exists: vi.fn().mockResolvedValue(true)
-            };
-            vi.doMock('../filesystem/manager.js', () => ({
-                FileSystemManager: vi.fn(() => mockFileSystemManager)
-            }));
+      mockReadFile.mockResolvedValue(JSON.stringify(validVersionInfo));
 
-            mockReadFile.mockResolvedValue('invalid json');
+      const result = await versionManager.loadVersionInfo(testAstdbPath);
 
-            await expect(versionManager.loadVersionInfo(testAstdbPath))
-                .rejects
-                .toThrow('Invalid JSON in version file');
-        });
+      expect(result).toEqual(validVersionInfo);
+      expect(mockReadFile).toHaveBeenCalledWith(testVersionPath, "utf8");
     });
 
-    describe.skip('saveVersionInfo', () => {
-        // TODO: Fix FileSystemManager mock issue
-        // These tests are temporarily skipped due to complex mocking requirements
-        it('should save valid version information', async () => {
-            const versionInfo: VersionInfo = {
-                schemaVersion: '1.0.0',
-                toolVersion: '1.5.0',
-                created: '2024-01-01T00:00:00.000Z',
-                compatibility: {
-                    minToolVersion: '0.1.0',
-                    migrations: []
-                }
-            };
+    it("should throw error when version file does not exist", async () => {
+      const mockFileSystemManager = {
+        exists: vi.fn().mockResolvedValue(false),
+      };
+      vi.doMock("../filesystem/manager.js", () => ({
+        FileSystemManager: vi.fn(() => mockFileSystemManager),
+      }));
 
-            const mockFileSystemManager = {
-                atomicWriteFile: vi.fn().mockResolvedValue(undefined)
-            };
-            vi.doMock('../filesystem/manager.js', () => ({
-                FileSystemManager: vi.fn(() => mockFileSystemManager)
-            }));
-
-            await versionManager.saveVersionInfo(testAstdbPath, versionInfo);
-
-            expect(mockFileSystemManager.atomicWriteFile).toHaveBeenCalledWith(
-                testVersionPath,
-                JSON.stringify(versionInfo, null, 2),
-                { encoding: 'utf8', mode: 0o644 }
-            );
-        });
-
-        it('should validate version info before saving', async () => {
-            const invalidVersionInfo = {
-                schemaVersion: '', // Invalid: empty string
-                toolVersion: '1.5.0',
-                created: '2024-01-01T00:00:00.000Z',
-                compatibility: {
-                    minToolVersion: '0.1.0',
-                    migrations: []
-                }
-            } as VersionInfo;
-
-            await expect(versionManager.saveVersionInfo(testAstdbPath, invalidVersionInfo))
-                .rejects
-                .toThrow("Field 'schemaVersion' must be a non-empty string");
-        });
+      await expect(
+        versionManager.loadVersionInfo(testAstdbPath),
+      ).rejects.toThrow("Version file does not exist");
     });
 
-    describe.skip('validateVersionCompatibility', () => {
-        // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
-        beforeEach(() => {
-            const mockFileSystemManager = {
-                exists: vi.fn().mockResolvedValue(true)
-            };
-            vi.doMock('../filesystem/manager.js', () => ({
-                FileSystemManager: vi.fn(() => mockFileSystemManager)
-            }));
-        });
+    it("should throw error for invalid JSON", async () => {
+      const mockFileSystemManager = {
+        exists: vi.fn().mockResolvedValue(true),
+      };
+      vi.doMock("../filesystem/manager.js", () => ({
+        FileSystemManager: vi.fn(() => mockFileSystemManager),
+      }));
 
-        it('should pass for compatible versions', async () => {
-            const compatibleVersionInfo: VersionInfo = {
-                schemaVersion: CURRENT_SCHEMA_VERSION,
-                toolVersion: '1.0.0',
-                created: '2024-01-01T00:00:00.000Z',
-                compatibility: {
-                    minToolVersion: '0.1.0',
-                    migrations: []
-                }
-            };
+      mockReadFile.mockResolvedValue("invalid json");
 
-            mockReadFile.mockResolvedValue(JSON.stringify(compatibleVersionInfo));
-            mockFs.existsSync.mockReturnValue(true);
-            mockFs.readFileSync.mockReturnValue('{"version": "1.0.0"}');
+      await expect(
+        versionManager.loadVersionInfo(testAstdbPath),
+      ).rejects.toThrow("Invalid JSON in version file");
+    });
+  });
 
-            await expect(versionManager.validateVersionCompatibility(testAstdbPath))
-                .resolves
-                .toBeUndefined();
-        });
+  describe.skip("saveVersionInfo", () => {
+    // TODO: Fix FileSystemManager mock issue
+    // These tests are temporarily skipped due to complex mocking requirements
+    it("should save valid version information", async () => {
+      const versionInfo: VersionInfo = {
+        schemaVersion: "1.0.0",
+        toolVersion: "1.5.0",
+        created: "2024-01-01T00:00:00.000Z",
+        compatibility: {
+          minToolVersion: "0.1.0",
+          migrations: [],
+        },
+      };
 
-        it('should throw error for incompatible tool version', async () => {
-            const incompatibleVersionInfo: VersionInfo = {
-                schemaVersion: '1.0.0',
-                toolVersion: '1.0.0',
-                created: '2024-01-01T00:00:00.000Z',
-                compatibility: {
-                    minToolVersion: '2.0.0', // Higher than current tool version
-                    migrations: []
-                }
-            };
+      const mockFileSystemManager = {
+        atomicWriteFile: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.doMock("../filesystem/manager.js", () => ({
+        FileSystemManager: vi.fn(() => mockFileSystemManager),
+      }));
 
-            mockReadFile.mockResolvedValue(JSON.stringify(incompatibleVersionInfo));
-            mockFs.existsSync.mockReturnValue(true);
-            mockFs.readFileSync.mockReturnValue('{"version": "1.0.0"}');
+      await versionManager.saveVersionInfo(testAstdbPath, versionInfo);
 
-            await expect(versionManager.validateVersionCompatibility(testAstdbPath))
-                .rejects
-                .toThrow('Database version mismatch');
-        });
-
-        it('should throw error for newer database schema', async () => {
-            const newerVersionInfo: VersionInfo = {
-                schemaVersion: '2.0.0', // Higher than current schema version
-                toolVersion: '1.0.0',
-                created: '2024-01-01T00:00:00.000Z',
-                compatibility: {
-                    minToolVersion: '0.1.0',
-                    migrations: []
-                }
-            };
-
-            mockReadFile.mockResolvedValue(JSON.stringify(newerVersionInfo));
-            mockFs.existsSync.mockReturnValue(true);
-            mockFs.readFileSync.mockReturnValue('{"version": "1.0.0"}');
-
-            await expect(versionManager.validateVersionCompatibility(testAstdbPath))
-                .rejects
-                .toThrow('Database version mismatch');
-        });
+      expect(mockFileSystemManager.atomicWriteFile).toHaveBeenCalledWith(
+        testVersionPath,
+        JSON.stringify(versionInfo, null, 2),
+        { encoding: "utf8", mode: 0o644 },
+      );
     });
 
-    describe.skip('updateVersionInfo', () => {
-        // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
-        it('should update version info with new tool version', async () => {
-            const originalVersionInfo: VersionInfo = {
-                schemaVersion: '1.0.0',
-                toolVersion: '1.0.0',
-                created: '2024-01-01T00:00:00.000Z',
-                compatibility: {
-                    minToolVersion: '0.1.0',
-                    migrations: []
-                }
-            };
+    it("should validate version info before saving", async () => {
+      const invalidVersionInfo = {
+        schemaVersion: "", // Invalid: empty string
+        toolVersion: "1.5.0",
+        created: "2024-01-01T00:00:00.000Z",
+        compatibility: {
+          minToolVersion: "0.1.0",
+          migrations: [],
+        },
+      } as VersionInfo;
 
-            const mockFileSystemManager = {
-                exists: vi.fn().mockResolvedValue(true),
-                atomicWriteFile: vi.fn().mockResolvedValue(undefined)
-            };
-            vi.doMock('../filesystem/manager.js', () => ({
-                FileSystemManager: vi.fn(() => mockFileSystemManager)
-            }));
+      await expect(
+        versionManager.saveVersionInfo(testAstdbPath, invalidVersionInfo),
+      ).rejects.toThrow("Field 'schemaVersion' must be a non-empty string");
+    });
+  });
 
-            mockReadFile.mockResolvedValue(JSON.stringify(originalVersionInfo));
-            mockFs.existsSync.mockReturnValue(true);
-            mockFs.readFileSync.mockReturnValue('{"version": "1.5.0"}');
-
-            await versionManager.updateVersionInfo(testAstdbPath, 'migration-123');
-
-            const savedData = mockFileSystemManager.atomicWriteFile.mock.calls[0][1] as string;
-            const updatedVersionInfo = JSON.parse(savedData);
-
-            expect(updatedVersionInfo.toolVersion).toBe('1.5.0');
-            expect(updatedVersionInfo.lastMigrated).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
-            expect(updatedVersionInfo.compatibility.migrations).toContain('migration-123');
-        });
+  describe.skip("validateVersionCompatibility", () => {
+    // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
+    beforeEach(() => {
+      const mockFileSystemManager = {
+        exists: vi.fn().mockResolvedValue(true),
+      };
+      vi.doMock("../filesystem/manager.js", () => ({
+        FileSystemManager: vi.fn(() => mockFileSystemManager),
+      }));
     });
 
-    describe.skip('planMigration', () => {
-        // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
-        beforeEach(() => {
-            const mockFileSystemManager = {
-                exists: vi.fn().mockResolvedValue(true)
-            };
-            vi.doMock('../filesystem/manager.js', () => ({
-                FileSystemManager: vi.fn(() => mockFileSystemManager)
-            }));
-        });
+    it("should pass for compatible versions", async () => {
+      const compatibleVersionInfo: VersionInfo = {
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        toolVersion: "1.0.0",
+        created: "2024-01-01T00:00:00.000Z",
+        compatibility: {
+          minToolVersion: "0.1.0",
+          migrations: [],
+        },
+      };
 
-        it('should return empty plan for current version', async () => {
-            const currentVersionInfo: VersionInfo = {
-                schemaVersion: CURRENT_SCHEMA_VERSION,
-                toolVersion: '1.0.0',
-                created: '2024-01-01T00:00:00.000Z',
-                compatibility: {
-                    minToolVersion: '0.1.0',
-                    migrations: []
-                }
-            };
+      mockReadFile.mockResolvedValue(JSON.stringify(compatibleVersionInfo));
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue('{"version": "1.0.0"}');
 
-            mockReadFile.mockResolvedValue(JSON.stringify(currentVersionInfo));
-
-            const plan = await versionManager.planMigration(testAstdbPath);
-
-            expect(plan).toEqual([]);
-        });
-
-        it('should return upgrade plan for older version', async () => {
-            const olderVersionInfo: VersionInfo = {
-                schemaVersion: '0.9.0',
-                toolVersion: '1.0.0',
-                created: '2024-01-01T00:00:00.000Z',
-                compatibility: {
-                    minToolVersion: '0.1.0',
-                    migrations: []
-                }
-            };
-
-            mockReadFile.mockResolvedValue(JSON.stringify(olderVersionInfo));
-
-            const plan = await versionManager.planMigration(testAstdbPath);
-
-            expect(plan).toContain('upgrade-from-0.9.0-to-1.0.0');
-        });
+      await expect(
+        versionManager.validateVersionCompatibility(testAstdbPath),
+      ).resolves.toBeUndefined();
     });
 
-    describe.skip('getDatabaseAge', () => {
-        // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
-        it('should calculate database age correctly', async () => {
-            const creationDate = new Date('2024-01-01T00:00:00.000Z');
-            const migrationDate = new Date('2024-01-15T00:00:00.000Z');
+    it("should throw error for incompatible tool version", async () => {
+      const incompatibleVersionInfo: VersionInfo = {
+        schemaVersion: "1.0.0",
+        toolVersion: "1.0.0",
+        created: "2024-01-01T00:00:00.000Z",
+        compatibility: {
+          minToolVersion: "2.0.0", // Higher than current tool version
+          migrations: [],
+        },
+      };
 
-            const versionInfo: VersionInfo = {
-                schemaVersion: '1.0.0',
-                toolVersion: '1.0.0',
-                created: creationDate.toISOString(),
-                lastMigrated: migrationDate.toISOString(),
-                compatibility: {
-                    minToolVersion: '0.1.0',
-                    migrations: []
-                }
-            };
+      mockReadFile.mockResolvedValue(JSON.stringify(incompatibleVersionInfo));
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue('{"version": "1.0.0"}');
 
-            const mockFileSystemManager = {
-                exists: vi.fn().mockResolvedValue(true)
-            };
-            vi.doMock('../filesystem/manager.js', () => ({
-                FileSystemManager: vi.fn(() => mockFileSystemManager)
-            }));
-
-            mockReadFile.mockResolvedValue(JSON.stringify(versionInfo));
-
-            // Mock current date to make test deterministic
-            const mockNow = new Date('2024-01-31T00:00:00.000Z');
-            vi.setSystemTime(mockNow);
-
-            const age = await versionManager.getDatabaseAge(testAstdbPath);
-
-            expect(age.ageInDays).toBe(30);
-            expect(age.created).toEqual(creationDate);
-            expect(age.lastMigrated).toEqual(migrationDate);
-        });
+      await expect(
+        versionManager.validateVersionCompatibility(testAstdbPath),
+      ).rejects.toThrow("Database version mismatch");
     });
 
-    describe.skip('validation methods', () => {
-        // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
-        it('should validate valid semver versions', () => {
-            const validVersions = ['1.0.0', '1.2.3', '10.0.0-alpha.1', '2.0.0+build.123'];
+    it("should throw error for newer database schema", async () => {
+      const newerVersionInfo: VersionInfo = {
+        schemaVersion: "2.0.0", // Higher than current schema version
+        toolVersion: "1.0.0",
+        created: "2024-01-01T00:00:00.000Z",
+        compatibility: {
+          minToolVersion: "0.1.0",
+          migrations: [],
+        },
+      };
 
-            for (const version of validVersions) {
-                expect(() => {
-                    (versionManager as any).validateVersionInfo({
-                        schemaVersion: version,
-                        toolVersion: '1.0.0',
-                        created: '2024-01-01T00:00:00.000Z',
-                        compatibility: {
-                            minToolVersion: '0.1.0',
-                            migrations: []
-                        }
-                    });
-                }).not.toThrow();
-            }
-        });
+      mockReadFile.mockResolvedValue(JSON.stringify(newerVersionInfo));
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue('{"version": "1.0.0"}');
 
-        it('should reject invalid version formats', () => {
-            const invalidVersions = ['1', '1.0', 'v1.0.0', 'invalid'];
-
-            for (const version of invalidVersions) {
-                expect(() => {
-                    (versionManager as any).validateVersionInfo({
-                        schemaVersion: version,
-                        toolVersion: '1.0.0',
-                        created: '2024-01-01T00:00:00.000Z',
-                        compatibility: {
-                            minToolVersion: '0.1.0',
-                            migrations: []
-                        }
-                    });
-                }).toThrow('must be in semver format');
-            }
-        });
-
-        it('should compare versions correctly', () => {
-            const compareVersions = (versionManager as any).compareVersions.bind(versionManager);
-
-            expect(compareVersions('1.0.0', '1.0.0')).toBe(0);
-            expect(compareVersions('1.0.1', '1.0.0')).toBe(1);
-            expect(compareVersions('1.0.0', '1.0.1')).toBe(-1);
-            expect(compareVersions('2.0.0', '1.9.9')).toBe(1);
-            expect(compareVersions('1.1.0', '1.0.9')).toBe(1);
-        });
+      await expect(
+        versionManager.validateVersionCompatibility(testAstdbPath),
+      ).rejects.toThrow("Database version mismatch");
     });
+  });
+
+  describe.skip("updateVersionInfo", () => {
+    // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
+    it("should update version info with new tool version", async () => {
+      const originalVersionInfo: VersionInfo = {
+        schemaVersion: "1.0.0",
+        toolVersion: "1.0.0",
+        created: "2024-01-01T00:00:00.000Z",
+        compatibility: {
+          minToolVersion: "0.1.0",
+          migrations: [],
+        },
+      };
+
+      const mockFileSystemManager = {
+        exists: vi.fn().mockResolvedValue(true),
+        atomicWriteFile: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.doMock("../filesystem/manager.js", () => ({
+        FileSystemManager: vi.fn(() => mockFileSystemManager),
+      }));
+
+      mockReadFile.mockResolvedValue(JSON.stringify(originalVersionInfo));
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue('{"version": "1.5.0"}');
+
+      await versionManager.updateVersionInfo(testAstdbPath, "migration-123");
+
+      const savedData = mockFileSystemManager.atomicWriteFile.mock
+        .calls[0][1] as string;
+      const updatedVersionInfo = JSON.parse(savedData);
+
+      expect(updatedVersionInfo.toolVersion).toBe("1.5.0");
+      expect(updatedVersionInfo.lastMigrated).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/,
+      );
+      expect(updatedVersionInfo.compatibility.migrations).toContain(
+        "migration-123",
+      );
+    });
+  });
+
+  describe.skip("planMigration", () => {
+    // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
+    beforeEach(() => {
+      const mockFileSystemManager = {
+        exists: vi.fn().mockResolvedValue(true),
+      };
+      vi.doMock("../filesystem/manager.js", () => ({
+        FileSystemManager: vi.fn(() => mockFileSystemManager),
+      }));
+    });
+
+    it("should return empty plan for current version", async () => {
+      const currentVersionInfo: VersionInfo = {
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        toolVersion: "1.0.0",
+        created: "2024-01-01T00:00:00.000Z",
+        compatibility: {
+          minToolVersion: "0.1.0",
+          migrations: [],
+        },
+      };
+
+      mockReadFile.mockResolvedValue(JSON.stringify(currentVersionInfo));
+
+      const plan = await versionManager.planMigration(testAstdbPath);
+
+      expect(plan).toEqual([]);
+    });
+
+    it("should return upgrade plan for older version", async () => {
+      const olderVersionInfo: VersionInfo = {
+        schemaVersion: "0.9.0",
+        toolVersion: "1.0.0",
+        created: "2024-01-01T00:00:00.000Z",
+        compatibility: {
+          minToolVersion: "0.1.0",
+          migrations: [],
+        },
+      };
+
+      mockReadFile.mockResolvedValue(JSON.stringify(olderVersionInfo));
+
+      const plan = await versionManager.planMigration(testAstdbPath);
+
+      expect(plan).toContain("upgrade-from-0.9.0-to-1.0.0");
+    });
+  });
+
+  describe.skip("getDatabaseAge", () => {
+    // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
+    it("should calculate database age correctly", async () => {
+      const creationDate = new Date("2024-01-01T00:00:00.000Z");
+      const migrationDate = new Date("2024-01-15T00:00:00.000Z");
+
+      const versionInfo: VersionInfo = {
+        schemaVersion: "1.0.0",
+        toolVersion: "1.0.0",
+        created: creationDate.toISOString(),
+        lastMigrated: migrationDate.toISOString(),
+        compatibility: {
+          minToolVersion: "0.1.0",
+          migrations: [],
+        },
+      };
+
+      const mockFileSystemManager = {
+        exists: vi.fn().mockResolvedValue(true),
+      };
+      vi.doMock("../filesystem/manager.js", () => ({
+        FileSystemManager: vi.fn(() => mockFileSystemManager),
+      }));
+
+      mockReadFile.mockResolvedValue(JSON.stringify(versionInfo));
+
+      // Mock current date to make test deterministic
+      const mockNow = new Date("2024-01-31T00:00:00.000Z");
+      vi.setSystemTime(mockNow);
+
+      const age = await versionManager.getDatabaseAge(testAstdbPath);
+
+      expect(age.ageInDays).toBe(30);
+      expect(age.created).toEqual(creationDate);
+      expect(age.lastMigrated).toEqual(migrationDate);
+    });
+  });
+
+  describe.skip("validation methods", () => {
+    // TODO: Skip due to FileSystemManager mocking complexity with constructor injection
+    it("should validate valid semver versions", () => {
+      const validVersions = [
+        "1.0.0",
+        "1.2.3",
+        "10.0.0-alpha.1",
+        "2.0.0+build.123",
+      ];
+
+      for (const version of validVersions) {
+        expect(() => {
+          (versionManager as any).validateVersionInfo({
+            schemaVersion: version,
+            toolVersion: "1.0.0",
+            created: "2024-01-01T00:00:00.000Z",
+            compatibility: {
+              minToolVersion: "0.1.0",
+              migrations: [],
+            },
+          });
+        }).not.toThrow();
+      }
+    });
+
+    it("should reject invalid version formats", () => {
+      const invalidVersions = ["1", "1.0", "v1.0.0", "invalid"];
+
+      for (const version of invalidVersions) {
+        expect(() => {
+          (versionManager as any).validateVersionInfo({
+            schemaVersion: version,
+            toolVersion: "1.0.0",
+            created: "2024-01-01T00:00:00.000Z",
+            compatibility: {
+              minToolVersion: "0.1.0",
+              migrations: [],
+            },
+          });
+        }).toThrow("must be in semver format");
+      }
+    });
+
+    it("should compare versions correctly", () => {
+      const compareVersions = (versionManager as any).compareVersions.bind(
+        versionManager,
+      );
+
+      expect(compareVersions("1.0.0", "1.0.0")).toBe(0);
+      expect(compareVersions("1.0.1", "1.0.0")).toBe(1);
+      expect(compareVersions("1.0.0", "1.0.1")).toBe(-1);
+      expect(compareVersions("2.0.0", "1.9.9")).toBe(1);
+      expect(compareVersions("1.1.0", "1.0.9")).toBe(1);
+    });
+  });
 });

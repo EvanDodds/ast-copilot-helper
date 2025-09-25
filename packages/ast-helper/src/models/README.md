@@ -17,27 +17,27 @@ The AST Copilot Helper model management system provides comprehensive infrastruc
 ## Quick Start
 
 ```typescript
-import { 
-  ModelRegistry, 
-  ModelDownloader, 
-  ModelCache, 
-  PerformanceOptimizer 
-} from '@ast-copilot-helper/ast-helper';
+import {
+  ModelRegistry,
+  ModelDownloader,
+  ModelCache,
+  PerformanceOptimizer,
+} from "@ast-copilot-helper/ast-helper";
 
 // Initialize the model management system
 const registry = ModelRegistry.getInstance();
 const downloader = new ModelDownloader();
 const cache = new ModelCache({
-  cacheDir: './models',
-  maxSize: '10GB'
+  cacheDir: "./models",
+  maxSize: "10GB",
 });
 
 // Download and cache a model
-const model = await registry.getModel('code-embedding-v1');
-const filePath = await downloader.downloadModel(model, './downloads/');
+const model = await registry.getModel("code-embedding-v1");
+const filePath = await downloader.downloadModel(model, "./downloads/");
 await cache.storeModel(model, filePath);
 
-console.log('Model ready for use!');
+console.log("Model ready for use!");
 ```
 
 ## Core Components
@@ -49,10 +49,11 @@ Central registry managing available models with automatic discovery and configur
 ```typescript
 const registry = ModelRegistry.getInstance();
 const availableModels = await registry.getAvailableModels();
-const model = await registry.getModel('code-embedding-v1');
+const model = await registry.getModel("code-embedding-v1");
 ```
 
 **Features:**
+
 - ✅ Centralized model configuration
 - ✅ Automatic model discovery
 - ✅ Version management
@@ -66,13 +67,14 @@ High-performance model download system with streaming, retry logic, and progress
 const downloader = new ModelDownloader({
   retryAttempts: 3,
   chunkSize: 1024 * 1024, // 1MB chunks
-  progressCallback: (progress) => console.log(`${progress}% complete`)
+  progressCallback: (progress) => console.log(`${progress}% complete`),
 });
 
-const filePath = await downloader.downloadModel(model, './downloads/');
+const filePath = await downloader.downloadModel(model, "./downloads/");
 ```
 
 **Features:**
+
 - ✅ HTTP streaming downloads
 - ✅ Automatic retry with exponential backoff
 - ✅ Real-time progress tracking
@@ -86,10 +88,10 @@ Intelligent caching system with size management, metadata tracking, and cleanup 
 
 ```typescript
 const cache = new ModelCache({
-  cacheDir: './models',
-  maxSize: '10GB',
-  cleanupStrategy: 'lru',
-  compressionEnabled: true
+  cacheDir: "./models",
+  maxSize: "10GB",
+  cleanupStrategy: "lru",
+  compressionEnabled: true,
 });
 
 await cache.initialize();
@@ -100,6 +102,7 @@ if (!cacheHit.hit) {
 ```
 
 **Features:**
+
 - ✅ Automatic size management
 - ✅ LRU and TTL cleanup strategies
 - ✅ Compression support
@@ -112,16 +115,17 @@ if (!cacheHit.hit) {
 Comprehensive security and integrity verification with quarantine system.
 
 ```typescript
-const verifier = new FileVerifier('./quarantine');
+const verifier = new FileVerifier("./quarantine");
 const result = await verifier.verifyModelFile(filePath, model);
 
 if (!result.valid) {
-  console.error('Verification failed:', result.errors);
+  console.error("Verification failed:", result.errors);
   // File automatically quarantined
 }
 ```
 
 **Features:**
+
 - ✅ SHA256 checksum verification
 - ✅ File format validation
 - ✅ Size validation
@@ -136,17 +140,18 @@ Advanced performance optimization with parallel processing and resource manageme
 ```typescript
 const optimizer = new PerformanceOptimizer({
   maxConcurrentDownloads: 3,
-  bandwidthLimit: '50MB/s',
-  memoryLimit: '2GB'
+  bandwidthLimit: "50MB/s",
+  memoryLimit: "2GB",
 });
 
 const result = await optimizer.optimizeDownload(model, {
   enableParallelChunks: true,
-  enableCompression: true
+  enableCompression: true,
 });
 ```
 
 **Features:**
+
 - ✅ Parallel chunk downloads
 - ✅ Memory-efficient streaming
 - ✅ Bandwidth throttling
@@ -162,7 +167,7 @@ Robust error handling with classification, recovery, and graceful degradation.
 const errorHandler = new ErrorHandler({
   maxRetries: 3,
   fallbackEnabled: true,
-  degradedMode: true
+  degradedMode: true,
 });
 
 try {
@@ -176,6 +181,7 @@ try {
 ```
 
 **Features:**
+
 - ✅ Comprehensive error classification
 - ✅ Automatic retry logic
 - ✅ Fallback mechanisms
@@ -245,24 +251,24 @@ Create `models.config.json`:
 ### Basic Model Download
 
 ```typescript
-import { ModelRegistry, ModelDownloader } from '@ast-copilot-helper/ast-helper';
+import { ModelRegistry, ModelDownloader } from "@ast-copilot-helper/ast-helper";
 
 async function downloadModel() {
   const registry = ModelRegistry.getInstance();
   const downloader = new ModelDownloader();
-  
+
   // Get model configuration
-  const model = await registry.getModel('code-embedding-v1');
-  
+  const model = await registry.getModel("code-embedding-v1");
+
   // Download with progress tracking
-  const filePath = await downloader.downloadModel(model, './downloads/', {
+  const filePath = await downloader.downloadModel(model, "./downloads/", {
     onProgress: (progress) => {
       console.log(`Download progress: ${progress.percentage}%`);
       console.log(`Speed: ${progress.speed} MB/s`);
       console.log(`ETA: ${progress.eta} seconds`);
-    }
+    },
   });
-  
+
   console.log(`Model downloaded to: ${filePath}`);
 }
 ```
@@ -270,30 +276,32 @@ async function downloadModel() {
 ### Advanced Caching Workflow
 
 ```typescript
-import { ModelCache, ModelConfig } from '@ast-copilot-helper/ast-helper';
+import { ModelCache, ModelConfig } from "@ast-copilot-helper/ast-helper";
 
 async function manageCachedModels() {
   const cache = new ModelCache({
-    cacheDir: './models',
-    maxSize: '5GB',
-    cleanupStrategy: 'lru'
+    cacheDir: "./models",
+    maxSize: "5GB",
+    cleanupStrategy: "lru",
   });
-  
+
   await cache.initialize();
-  
+
   // Check if model is cached
-  const model: ModelConfig = { /* model config */ };
+  const model: ModelConfig = {
+    /* model config */
+  };
   const cacheResult = await cache.checkCache(model);
-  
+
   if (cacheResult.hit) {
     console.log(`Cache hit! Model at: ${cacheResult.filePath}`);
   } else {
-    console.log('Cache miss, need to download');
+    console.log("Cache miss, need to download");
     // Download and store
     const filePath = await downloadModel(model);
     await cache.storeModel(model, filePath);
   }
-  
+
   // Get cache statistics
   const stats = await cache.getStats();
   console.log(`Cache usage: ${stats.usedSpace}/${stats.totalSpace}`);
@@ -304,27 +312,27 @@ async function manageCachedModels() {
 ### Performance Optimization
 
 ```typescript
-import { PerformanceOptimizer } from '@ast-copilot-helper/ast-helper';
+import { PerformanceOptimizer } from "@ast-copilot-helper/ast-helper";
 
 async function optimizedDownload() {
   const optimizer = new PerformanceOptimizer({
     maxConcurrentDownloads: 4,
-    bandwidthLimit: '100MB/s',
-    memoryLimit: '4GB'
+    bandwidthLimit: "100MB/s",
+    memoryLimit: "4GB",
   });
-  
+
   // Optimize multiple downloads
   const models = await registry.getAvailableModels();
-  const downloads = models.slice(0, 3).map(model => 
+  const downloads = models.slice(0, 3).map((model) =>
     optimizer.optimizeDownload(model, {
       enableParallelChunks: true,
       enableCompression: true,
-      priority: 'high'
-    })
+      priority: "high",
+    }),
   );
-  
+
   const results = await Promise.all(downloads);
-  
+
   // Get performance metrics
   const metrics = optimizer.getMetrics();
   console.log(`Average download speed: ${metrics.averageSpeed} MB/s`);
@@ -336,33 +344,38 @@ async function optimizedDownload() {
 ### Error Handling and Recovery
 
 ```typescript
-import { ErrorHandler, ModelDownloader } from '@ast-copilot-helper/ast-helper';
+import { ErrorHandler, ModelDownloader } from "@ast-copilot-helper/ast-helper";
 
 async function robustDownload(model: ModelConfig) {
   const errorHandler = new ErrorHandler({
     maxRetries: 5,
-    fallbackEnabled: true
+    fallbackEnabled: true,
   });
-  
+
   const downloader = new ModelDownloader();
-  
+
   try {
-    return await downloader.downloadModel(model, './downloads/');
+    return await downloader.downloadModel(model, "./downloads/");
   } catch (error) {
     const handled = await errorHandler.handleError(error);
-    
+
     if (handled.shouldRetry) {
       console.log(`Retrying download... (attempt ${handled.retryCount})`);
-      await new Promise(resolve => setTimeout(resolve, handled.retryDelay));
+      await new Promise((resolve) => setTimeout(resolve, handled.retryDelay));
       return robustDownload(model); // Recursive retry
     }
-    
+
     if (handled.fallbackAvailable) {
-      console.log('Using fallback model');
-      return await downloader.downloadModel(handled.fallbackModel, './downloads/');
+      console.log("Using fallback model");
+      return await downloader.downloadModel(
+        handled.fallbackModel,
+        "./downloads/",
+      );
     }
-    
-    throw new Error(`Download failed after ${handled.retryCount} attempts: ${error.message}`);
+
+    throw new Error(
+      `Download failed after ${handled.retryCount} attempts: ${error.message}`,
+    );
   }
 }
 ```
@@ -372,14 +385,14 @@ async function robustDownload(model: ModelConfig) {
 ```typescript
 async function batchModelOperations() {
   const registry = ModelRegistry.getInstance();
-  const cache = new ModelCache({ cacheDir: './models' });
+  const cache = new ModelCache({ cacheDir: "./models" });
   const optimizer = new PerformanceOptimizer();
-  
+
   await cache.initialize();
-  
+
   // Get all available models
   const models = await registry.getAvailableModels();
-  
+
   // Filter models that need downloading
   const modelsToDownload = [];
   for (const model of models) {
@@ -388,22 +401,24 @@ async function batchModelOperations() {
       modelsToDownload.push(model);
     }
   }
-  
+
   console.log(`Downloading ${modelsToDownload.length} models...`);
-  
+
   // Download with performance optimization
-  const downloads = modelsToDownload.map(model => 
-    optimizer.optimizeDownload(model)
+  const downloads = modelsToDownload.map((model) =>
+    optimizer.optimizeDownload(model),
   );
-  
+
   const results = await Promise.allSettled(downloads);
-  
+
   // Process results
   results.forEach((result, index) => {
-    if (result.status === 'fulfilled') {
+    if (result.status === "fulfilled") {
       console.log(`✅ ${modelsToDownload[index].name} downloaded successfully`);
     } else {
-      console.error(`❌ ${modelsToDownload[index].name} failed: ${result.reason}`);
+      console.error(
+        `❌ ${modelsToDownload[index].name} failed: ${result.reason}`,
+      );
     }
   });
 }
@@ -455,7 +470,7 @@ Intelligent model caching system.
 interface CacheOptions {
   cacheDir: string;
   maxSize?: string;
-  cleanupStrategy?: 'lru' | 'ttl' | 'size';
+  cleanupStrategy?: "lru" | "ttl" | "size";
   compressionEnabled?: boolean;
   maxAge?: number;
 }
@@ -518,7 +533,7 @@ interface ErrorHandlerOptions {
   maxRetries?: number;
   fallbackEnabled?: boolean;
   degradedMode?: boolean;
-  logLevel?: 'error' | 'warn' | 'info' | 'debug';
+  logLevel?: "error" | "warn" | "info" | "debug";
 }
 ```
 
@@ -541,7 +556,7 @@ interface ErrorHandlerOptions {
 const optimizer = new PerformanceOptimizer({
   maxConcurrentDownloads: 4,
   enableCompression: true,
-  memoryLimit: '2GB'
+  memoryLimit: "2GB",
 });
 ```
 
@@ -574,17 +589,17 @@ const optimizer = new PerformanceOptimizer({
 // Automatic retry with exponential backoff
 const errorHandler = new ErrorHandler({
   maxRetries: 3,
-  fallbackEnabled: true
+  fallbackEnabled: true,
 });
 
 // Network connectivity monitoring
 const connectivity = await errorHandler.checkConnectivity();
-if (connectivity.status === 'offline') {
+if (connectivity.status === "offline") {
   // Handle offline scenario
 }
 
 // Graceful degradation
-if (error.type === 'MODEL_UNAVAILABLE') {
+if (error.type === "MODEL_UNAVAILABLE") {
   const fallback = await registry.getFallbackModel();
   // Use fallback model
 }
@@ -599,6 +614,7 @@ if (error.type === 'MODEL_UNAVAILABLE') {
 **Problem**: Models fail to download consistently
 
 **Solutions**:
+
 1. Check network connectivity: `await errorHandler.checkConnectivity()`
 2. Verify model URLs are accessible
 3. Check disk space availability
@@ -607,7 +623,7 @@ if (error.type === 'MODEL_UNAVAILABLE') {
 ```typescript
 const downloader = new ModelDownloader({
   retryAttempts: 5,
-  timeout: 600000 // 10 minutes
+  timeout: 600000, // 10 minutes
 });
 ```
 
@@ -616,6 +632,7 @@ const downloader = new ModelDownloader({
 **Problem**: Cache not working correctly
 
 **Solutions**:
+
 1. Verify cache directory permissions
 2. Check available disk space
 3. Clear corrupted cache entries
@@ -634,6 +651,7 @@ await cache.rebuildMetadata();
 **Problem**: Slow download speeds
 
 **Solutions**:
+
 1. Enable parallel downloads
 2. Increase bandwidth limits
 3. Use compression
@@ -642,8 +660,8 @@ await cache.rebuildMetadata();
 ```typescript
 const optimizer = new PerformanceOptimizer({
   maxConcurrentDownloads: 6,
-  bandwidthLimit: '100MB/s',
-  enableCompression: true
+  bandwidthLimit: "100MB/s",
+  enableCompression: true,
 });
 ```
 
@@ -652,16 +670,17 @@ const optimizer = new PerformanceOptimizer({
 **Problem**: File verification keeps failing
 
 **Solutions**:
+
 1. Check checksum accuracy in model config
 2. Verify download completeness
 3. Check file corruption
 4. Disable strict validation temporarily
 
 ```typescript
-const verifier = new FileVerifier('./quarantine');
+const verifier = new FileVerifier("./quarantine");
 const result = await verifier.verifyModelFile(filePath, model, {
   skipChecksum: false,
-  strictValidation: false
+  strictValidation: false,
 });
 ```
 
@@ -671,12 +690,12 @@ Enable detailed logging for troubleshooting:
 
 ```typescript
 // Set environment variable
-process.env.AST_MODEL_DEBUG = 'true';
-process.env.AST_MODEL_LOG_LEVEL = 'debug';
+process.env.AST_MODEL_DEBUG = "true";
+process.env.AST_MODEL_LOG_LEVEL = "debug";
 
 // Or configure programmatically
 const errorHandler = new ErrorHandler({
-  logLevel: 'debug'
+  logLevel: "debug",
 });
 ```
 

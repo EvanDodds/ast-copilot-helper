@@ -3,16 +3,16 @@
  * @description Privacy-respecting event sanitization and filtering
  */
 
-import { PrivacyLevel } from '../types.js';
-import type { 
-  TelemetryEvent, 
+import type { PrivacyLevel } from "../types.js";
+import type {
+  TelemetryEvent,
   EventSanitizer as IEventSanitizer,
   CollectionConfig,
   ErrorEvent,
   PerformanceEvent,
   FeatureUsageEvent,
-  SystemMetricsEvent
-} from './types.js';
+  SystemMetricsEvent,
+} from "./types.js";
 
 /**
  * Privacy-respecting event sanitizer
@@ -21,22 +21,22 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
   private readonly sensitivePatterns = [
     // Personal identifiers
     /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, // Email addresses
-    /\b\d{3}-?\d{2}-?\d{4}\b/g,                               // SSN-like patterns
-    /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g,              // Credit card patterns
-    /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,                          // IP addresses
-    
+    /\b\d{3}-?\d{2}-?\d{4}\b/g, // SSN-like patterns
+    /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g, // Credit card patterns
+    /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, // IP addresses
+
     // File paths (common user paths)
-    /\/Users\/[^\/\s]+/g,                                     // macOS user paths
-    /\/home\/[^\/\s]+/g,                                      // Linux user paths
-    /C:\\Users\\[^\\:\s]+/g,                                  // Windows user paths
-    
+    /\/Users\/[^/\s]+/g, // macOS user paths
+    /\/home\/[^/\s]+/g, // Linux user paths
+    /C:\\Users\\[^\\:\s]+/g, // Windows user paths
+
     // API keys and tokens
-    /\b[A-Za-z0-9]{20,}\b/g,                                 // Long alphanumeric strings (potential tokens)
-    /\bBEARER\s+[A-Za-z0-9\-._~+\/]+=*/gi,                   // Bearer tokens
-    /\bAPIKEY\s*[=:]\s*[A-Za-z0-9\-._~+\/]+/gi,             // API keys
+    /\b[A-Za-z0-9]{20,}\b/g, // Long alphanumeric strings (potential tokens)
+    /\bBEARER\s+[A-Za-z0-9\-._~+/]+=*/gi, // Bearer tokens
+    /\bAPIKEY\s*[=:]\s*[A-Za-z0-9\-._~+/]+/gi, // API keys
   ];
 
-  private readonly filePathPattern = /([\/\\]?)([^\/\\]*[\/\\])*([^\/\\]+)$/;
+  private readonly filePathPattern = /([/\\]?)([^/\\]*[/\\])*([^/\\]+)$/;
 
   /**
    * Sanitize an event based on privacy settings
@@ -46,11 +46,11 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Apply privacy level specific sanitization
     switch (privacyLevel) {
-      case 'strict':
+      case "strict":
         return this.sanitizeStrict(sanitized);
-      case 'balanced':
+      case "balanced":
         return this.sanitizeBalanced(sanitized);
-      case 'permissive':
+      case "permissive":
         return this.sanitizePermissive(sanitized);
       default:
         return this.sanitizeStrict(sanitized);
@@ -68,20 +68,30 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Check event type filters
     switch (event.eventType) {
-      case 'usage':
-        if (!config.collectUsage) return false;
+      case "usage":
+        if (!config.collectUsage) {
+          return false;
+        }
         break;
-      case 'performance':
-        if (!config.collectPerformance) return false;
+      case "performance":
+        if (!config.collectPerformance) {
+          return false;
+        }
         break;
-      case 'error':
-        if (!config.collectErrors) return false;
+      case "error":
+        if (!config.collectErrors) {
+          return false;
+        }
         break;
-      case 'system':
-        if (!config.collectSystem) return false;
+      case "system":
+        if (!config.collectSystem) {
+          return false;
+        }
         break;
-      case 'custom':
-        if (!config.collectCustom) return false;
+      case "custom":
+        if (!config.collectCustom) {
+          return false;
+        }
         break;
     }
 
@@ -115,14 +125,22 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Handle specific event types
     switch (anonymized.eventType) {
-      case 'error':
-        return this.anonymizeErrorEvent(anonymized as ErrorEvent) as TelemetryEvent;
-      case 'performance':
-        return this.anonymizePerformanceEvent(anonymized as PerformanceEvent) as TelemetryEvent;
-      case 'usage':
-        return this.anonymizeUsageEvent(anonymized as FeatureUsageEvent) as TelemetryEvent;
-      case 'system':
-        return this.anonymizeSystemEvent(anonymized as SystemMetricsEvent) as TelemetryEvent;
+      case "error":
+        return this.anonymizeErrorEvent(
+          anonymized as ErrorEvent,
+        ) as TelemetryEvent;
+      case "performance":
+        return this.anonymizePerformanceEvent(
+          anonymized as PerformanceEvent,
+        ) as TelemetryEvent;
+      case "usage":
+        return this.anonymizeUsageEvent(
+          anonymized as FeatureUsageEvent,
+        ) as TelemetryEvent;
+      case "system":
+        return this.anonymizeSystemEvent(
+          anonymized as SystemMetricsEvent,
+        ) as TelemetryEvent;
       default:
         return anonymized;
     }
@@ -133,29 +151,44 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
    */
   validate(event: TelemetryEvent): boolean {
     // Check required fields
-    if (!event.id || !event.sessionId || !event.timestamp || !event.eventType || !event.category) {
+    if (
+      !event.id ||
+      !event.sessionId ||
+      !event.timestamp ||
+      !event.eventType ||
+      !event.category
+    ) {
       return false;
     }
 
     // Validate timestamp
-    if (!(event.timestamp instanceof Date) || isNaN(event.timestamp.getTime())) {
+    if (
+      !(event.timestamp instanceof Date) ||
+      isNaN(event.timestamp.getTime())
+    ) {
       return false;
     }
 
     // Validate event type
-    const validEventTypes = ['usage', 'performance', 'error', 'system', 'custom'];
+    const validEventTypes = [
+      "usage",
+      "performance",
+      "error",
+      "system",
+      "custom",
+    ];
     if (!validEventTypes.includes(event.eventType)) {
       return false;
     }
 
     // Validate privacy level
-    const validPrivacyLevels = ['strict', 'balanced', 'permissive'];
+    const validPrivacyLevels = ["strict", "balanced", "permissive"];
     if (!validPrivacyLevels.includes(event.privacyLevel)) {
       return false;
     }
 
     // Validate metadata
-    if (typeof event.metadata !== 'object' || event.metadata === null) {
+    if (typeof event.metadata !== "object" || event.metadata === null) {
       return false;
     }
 
@@ -178,14 +211,22 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Sanitize based on event type
     switch (event.eventType) {
-      case 'error':
-        return this.sanitizeErrorEventStrict(event as ErrorEvent) as TelemetryEvent;
-      case 'performance':
-        return this.sanitizePerformanceEventStrict(event as PerformanceEvent) as TelemetryEvent;
-      case 'usage':
-        return this.sanitizeUsageEventStrict(event as FeatureUsageEvent) as TelemetryEvent;
-      case 'system':
-        return this.sanitizeSystemEventStrict(event as SystemMetricsEvent) as TelemetryEvent;
+      case "error":
+        return this.sanitizeErrorEventStrict(
+          event as ErrorEvent,
+        ) as TelemetryEvent;
+      case "performance":
+        return this.sanitizePerformanceEventStrict(
+          event as PerformanceEvent,
+        ) as TelemetryEvent;
+      case "usage":
+        return this.sanitizeUsageEventStrict(
+          event as FeatureUsageEvent,
+        ) as TelemetryEvent;
+      case "system":
+        return this.sanitizeSystemEventStrict(
+          event as SystemMetricsEvent,
+        ) as TelemetryEvent;
       default:
         return event;
     }
@@ -205,14 +246,22 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Event-specific balanced sanitization
     switch (event.eventType) {
-      case 'error':
-        return this.sanitizeErrorEventBalanced(event as ErrorEvent) as TelemetryEvent;
-      case 'performance':
-        return this.sanitizePerformanceEventBalanced(event as PerformanceEvent) as TelemetryEvent;
-      case 'usage':
-        return this.sanitizeUsageEventBalanced(event as FeatureUsageEvent) as TelemetryEvent;
-      case 'system':
-        return this.sanitizeSystemEventBalanced(event as SystemMetricsEvent) as TelemetryEvent;
+      case "error":
+        return this.sanitizeErrorEventBalanced(
+          event as ErrorEvent,
+        ) as TelemetryEvent;
+      case "performance":
+        return this.sanitizePerformanceEventBalanced(
+          event as PerformanceEvent,
+        ) as TelemetryEvent;
+      case "usage":
+        return this.sanitizeUsageEventBalanced(
+          event as FeatureUsageEvent,
+        ) as TelemetryEvent;
+      case "system":
+        return this.sanitizeSystemEventBalanced(
+          event as SystemMetricsEvent,
+        ) as TelemetryEvent;
       default:
         return event;
     }
@@ -226,8 +275,10 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
     event.metadata = this.lightSanitizeObject(event.metadata);
 
     switch (event.eventType) {
-      case 'error':
-        return this.sanitizeErrorEventPermissive(event as ErrorEvent) as TelemetryEvent;
+      case "error":
+        return this.sanitizeErrorEventPermissive(
+          event as ErrorEvent,
+        ) as TelemetryEvent;
       default:
         return event;
     }
@@ -253,7 +304,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Remove file paths
     if (sanitized.data.context.fileName) {
-      sanitized.data.context.fileName = this.sanitizeFilePath(sanitized.data.context.fileName);
+      sanitized.data.context.fileName = this.sanitizeFilePath(
+        sanitized.data.context.fileName,
+      );
     }
 
     return sanitized;
@@ -267,7 +320,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Sanitize stack trace but keep structure
     if (sanitized.data.stackTrace) {
-      sanitized.data.stackTrace = this.sanitizeStackTrace(sanitized.data.stackTrace);
+      sanitized.data.stackTrace = this.sanitizeStackTrace(
+        sanitized.data.stackTrace,
+      );
     }
 
     // Sanitize error message
@@ -275,7 +330,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Sanitize file paths but preserve structure
     if (sanitized.data.context.fileName) {
-      sanitized.data.context.fileName = this.sanitizeFilePath(sanitized.data.context.fileName);
+      sanitized.data.context.fileName = this.sanitizeFilePath(
+        sanitized.data.context.fileName,
+      );
     }
 
     return sanitized;
@@ -292,7 +349,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Sanitize obvious PII in stack trace
     if (sanitized.data.stackTrace) {
-      sanitized.data.stackTrace = this.lightSanitizeString(sanitized.data.stackTrace);
+      sanitized.data.stackTrace = this.lightSanitizeString(
+        sanitized.data.stackTrace,
+      );
     }
 
     return sanitized;
@@ -301,7 +360,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
   /**
    * Sanitize performance events (strict mode)
    */
-  private sanitizePerformanceEventStrict(event: PerformanceEvent): PerformanceEvent {
+  private sanitizePerformanceEventStrict(
+    event: PerformanceEvent,
+  ): PerformanceEvent {
     const sanitized = { ...event };
 
     // Keep only aggregated metrics, remove specific values that might be identifying
@@ -316,7 +377,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
   /**
    * Sanitize performance events (balanced mode)
    */
-  private sanitizePerformanceEventBalanced(event: PerformanceEvent): PerformanceEvent {
+  private sanitizePerformanceEventBalanced(
+    event: PerformanceEvent,
+  ): PerformanceEvent {
     const sanitized = { ...event };
 
     // Light sanitization while preserving useful metrics
@@ -328,12 +391,16 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
   /**
    * Sanitize usage events (strict mode)
    */
-  private sanitizeUsageEventStrict(event: FeatureUsageEvent): FeatureUsageEvent {
+  private sanitizeUsageEventStrict(
+    event: FeatureUsageEvent,
+  ): FeatureUsageEvent {
     const sanitized = { ...event };
 
     // Remove parameters that might contain sensitive data
     if (sanitized.data.parameters) {
-      sanitized.data.parameters = this.removeSensitiveData(sanitized.data.parameters);
+      sanitized.data.parameters = this.removeSensitiveData(
+        sanitized.data.parameters,
+      );
     }
 
     // Remove file type information that might be identifying
@@ -347,12 +414,16 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
   /**
    * Sanitize usage events (balanced mode)
    */
-  private sanitizeUsageEventBalanced(event: FeatureUsageEvent): FeatureUsageEvent {
+  private sanitizeUsageEventBalanced(
+    event: FeatureUsageEvent,
+  ): FeatureUsageEvent {
     const sanitized = { ...event };
 
     // Sanitize parameters but preserve structure
     if (sanitized.data.parameters) {
-      sanitized.data.parameters = this.sanitizeObject(sanitized.data.parameters);
+      sanitized.data.parameters = this.sanitizeObject(
+        sanitized.data.parameters,
+      );
     }
 
     return sanitized;
@@ -361,11 +432,15 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
   /**
    * Sanitize system events (strict mode)
    */
-  private sanitizeSystemEventStrict(event: SystemMetricsEvent): SystemMetricsEvent {
+  private sanitizeSystemEventStrict(
+    event: SystemMetricsEvent,
+  ): SystemMetricsEvent {
     const sanitized = { ...event };
 
     // Remove specific version information that might be identifying
-    sanitized.data.nodeVersion = this.generalizeVersion(sanitized.data.nodeVersion);
+    sanitized.data.nodeVersion = this.generalizeVersion(
+      sanitized.data.nodeVersion,
+    );
 
     return sanitized;
   }
@@ -373,7 +448,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
   /**
    * Sanitize system events (balanced mode)
    */
-  private sanitizeSystemEventBalanced(event: SystemMetricsEvent): SystemMetricsEvent {
+  private sanitizeSystemEventBalanced(
+    event: SystemMetricsEvent,
+  ): SystemMetricsEvent {
     const sanitized = { ...event };
 
     // Light sanitization while preserving useful system info
@@ -395,12 +472,16 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Anonymize stack trace
     if (anonymized.data.stackTrace) {
-      anonymized.data.stackTrace = this.sanitizeStackTrace(anonymized.data.stackTrace);
+      anonymized.data.stackTrace = this.sanitizeStackTrace(
+        anonymized.data.stackTrace,
+      );
     }
 
     // Anonymize file path
     if (anonymized.data.context.fileName) {
-      anonymized.data.context.fileName = this.sanitizeFilePath(anonymized.data.context.fileName);
+      anonymized.data.context.fileName = this.sanitizeFilePath(
+        anonymized.data.context.fileName,
+      );
     }
 
     return anonymized;
@@ -426,7 +507,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
 
     // Sanitize parameters
     if (anonymized.data.parameters) {
-      anonymized.data.parameters = this.sanitizeObject(anonymized.data.parameters);
+      anonymized.data.parameters = this.sanitizeObject(
+        anonymized.data.parameters,
+      );
     }
 
     return anonymized;
@@ -439,7 +522,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
     const anonymized = { ...event };
 
     // Generalize version information
-    anonymized.data.nodeVersion = this.generalizeVersion(anonymized.data.nodeVersion);
+    anonymized.data.nodeVersion = this.generalizeVersion(
+      anonymized.data.nodeVersion,
+    );
 
     return anonymized;
   }
@@ -456,7 +541,7 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
       const char = userId.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
     return `user_${Math.abs(hash).toString(16)}`;
@@ -467,9 +552,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
    */
   private sanitizeString(str: string): string {
     let sanitized = str;
-    
-    this.sensitivePatterns.forEach(pattern => {
-      sanitized = sanitized.replace(pattern, '[REDACTED]');
+
+    this.sensitivePatterns.forEach((pattern) => {
+      sanitized = sanitized.replace(pattern, "[REDACTED]");
     });
 
     return sanitized;
@@ -481,8 +566,11 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
   private lightSanitizeString(str: string): string {
     // Only remove obvious PII like emails and credit cards
     return str
-      .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]')
-      .replace(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g, '[CARD]');
+      .replace(
+        /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+        "[EMAIL]",
+      )
+      .replace(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g, "[CARD]");
   }
 
   /**
@@ -492,14 +580,16 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
     const sanitized: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         sanitized[key] = this.sanitizeString(value);
-      } else if (typeof value === 'object' && value !== null) {
+      } else if (typeof value === "object" && value !== null) {
         if (Array.isArray(value)) {
-          sanitized[key] = value.map(item => 
-            typeof item === 'string' ? this.sanitizeString(item) :
-            typeof item === 'object' && item !== null ? this.sanitizeObject(item) :
-            item
+          sanitized[key] = value.map((item) =>
+            typeof item === "string"
+              ? this.sanitizeString(item)
+              : typeof item === "object" && item !== null
+                ? this.sanitizeObject(item)
+                : item,
           );
         } else {
           sanitized[key] = this.sanitizeObject(value);
@@ -519,9 +609,13 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
     const sanitized: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         sanitized[key] = this.lightSanitizeString(value);
-      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      } else if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         sanitized[key] = this.lightSanitizeObject(value);
       } else {
         sanitized[key] = value;
@@ -536,15 +630,28 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
    */
   private removeSensitiveData(obj: Record<string, any>): Record<string, any> {
     const sanitized: Record<string, any> = {};
-    const sensitiveKeys = ['password', 'token', 'apikey', 'secret', 'credential', 'auth'];
+    const sensitiveKeys = [
+      "password",
+      "token",
+      "apikey",
+      "secret",
+      "credential",
+      "auth",
+    ];
 
     for (const [key, value] of Object.entries(obj)) {
       const keyLower = key.toLowerCase();
-      const isSensitive = sensitiveKeys.some(sensitiveKey => keyLower.includes(sensitiveKey));
+      const isSensitive = sensitiveKeys.some((sensitiveKey) =>
+        keyLower.includes(sensitiveKey),
+      );
 
       if (isSensitive) {
-        sanitized[key] = '[REDACTED]';
-      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        sanitized[key] = "[REDACTED]";
+      } else if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         sanitized[key] = this.removeSensitiveData(value);
       } else {
         sanitized[key] = value;
@@ -561,9 +668,9 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
     const match = this.filePathPattern.exec(filePath);
     if (match) {
       const [, separator, , filename] = match;
-      return `${separator || ''}[PATH]${separator || '/'}${filename}`;
+      return `${separator || ""}[PATH]${separator || "/"}${filename}`;
     }
-    return '[PATH]';
+    return "[PATH]";
   }
 
   /**
@@ -571,19 +678,19 @@ export class PrivacyRespectingEventSanitizer implements IEventSanitizer {
    */
   private sanitizeStackTrace(stackTrace: string): string {
     return stackTrace
-      .split('\n')
-      .map(line => {
+      .split("\n")
+      .map((line) => {
         // Preserve function names and line numbers, sanitize file paths
-        return line.replace(/\([^)]*\)/g, '([SANITIZED])');
+        return line.replace(/\([^)]*\)/g, "([SANITIZED])");
       })
-      .join('\n');
+      .join("\n");
   }
 
   /**
    * Generalize version information
    */
   private generalizeVersion(version: string): string {
-    const parts = version.split('.');
+    const parts = version.split(".");
     if (parts.length >= 2) {
       return `${parts[0]}.${parts[1]}.x`;
     }

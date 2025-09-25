@@ -2,22 +2,16 @@
   "nodeModules": {
     "path": "~/.npm\nnode_modules",
     "key": "${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}",
-    "restoreKeys": [
-      "${{ runner.os }}-node-"
-    ]
+    "restoreKeys": ["${{ runner.os }}-node-"]
   },
   "buildArtifacts": {
     "path": "dist\npackages/*/dist",
     "key": "${{ runner.os }}-build-${{ github.sha }}",
-    "restoreKeys": [
-      "${{ runner.os }}-build-"
-    ]
+    "restoreKeys": ["${{ runner.os }}-build-"]
   },
   "testResults": {
     "path": "coverage\ntest-results",
     "key": "${{ runner.os }}-test-${{ github.sha }}",
-    "restoreKeys": [
-      "${{ runner.os }}-test-"
-    ]
+    "restoreKeys": ["${{ runner.os }}-test-"]
   }
 }

@@ -5,7 +5,7 @@
 /**
  * Supported model formats
  */
-export type ModelFormat = 'onnx' | 'pytorch' | 'tensorflow' | 'json';
+export type ModelFormat = "onnx" | "pytorch" | "tensorflow" | "json";
 
 /**
  * Model configuration interface
@@ -14,31 +14,31 @@ export type ModelFormat = 'onnx' | 'pytorch' | 'tensorflow' | 'json';
 export interface ModelConfig {
   /** Unique model identifier */
   name: string;
-  
+
   /** Model version (semantic versioning recommended) */
   version: string;
-  
+
   /** Download URL (must be HTTPS) */
   url: string;
-  
+
   /** SHA256 checksum for integrity verification */
   checksum: string;
-  
+
   /** File size in bytes for validation and progress tracking */
   size: number;
-  
+
   /** Model file format */
   format: ModelFormat;
-  
+
   /** Embedding dimensions (output vector size) */
   dimensions: number;
-  
+
   /** Optional tokenizer configuration for multi-file models */
   tokenizer?: ModelConfig;
-  
+
   /** Model description and usage notes */
   description?: string;
-  
+
   /** Compatibility requirements */
   requirements?: ModelRequirements;
 }
@@ -49,13 +49,13 @@ export interface ModelConfig {
 export interface ModelRequirements {
   /** Minimum Node.js version */
   nodeVersion?: string;
-  
+
   /** Required memory in MB */
   memoryMB?: number;
-  
+
   /** Architecture requirements (x64, arm64) */
   architecture?: string[];
-  
+
   /** Operating system compatibility */
   platforms?: string[];
 }
@@ -66,10 +66,10 @@ export interface ModelRequirements {
 export interface ValidationResult {
   /** Whether the configuration is valid */
   valid: boolean;
-  
+
   /** Error messages for invalid configurations */
   errors: string[];
-  
+
   /** Warning messages for potential issues */
   warnings: string[];
 }
@@ -80,21 +80,21 @@ export interface ValidationResult {
 export interface DownloadProgress {
   /** Bytes downloaded so far */
   bytesDownloaded: number;
-  
+
   /** Total bytes to download */
   totalBytes: number;
-  
+
   /** Percentage complete (0-100) */
   percentage: number;
-  
+
   /** Download speed in bytes per second */
   speed: number;
-  
+
   /** Estimated time remaining in seconds */
   eta: number;
-  
+
   /** Current phase of download */
-  phase: 'downloading' | 'verifying' | 'extracting' | 'complete';
+  phase: "downloading" | "verifying" | "extracting" | "complete";
 }
 
 /**
@@ -103,19 +103,19 @@ export interface DownloadProgress {
 export interface ModelMetadata {
   /** Model configuration */
   config: ModelConfig;
-  
+
   /** Download timestamp */
   downloadedAt: Date;
-  
+
   /** Last verification timestamp */
   lastVerified: Date;
-  
+
   /** Download duration in milliseconds */
   downloadDuration: number;
-  
+
   /** Verification status */
   verified: boolean;
-  
+
   /** Enhanced usage statistics for analytics */
   usageStats?: ModelUsageStats;
 }
@@ -126,43 +126,43 @@ export interface ModelMetadata {
 export interface ModelUsageStats {
   /** Total number of times model was loaded */
   loadCount: number;
-  
+
   /** Last time the model was used */
   lastUsed: Date;
-  
+
   /** First time the model was used */
   firstUsed: Date;
-  
+
   /** Total processing time in milliseconds */
   totalProcessingTime: number;
-  
+
   /** Number of embedding requests processed */
   embeddingRequests: number;
-  
+
   /** Average processing time per request in milliseconds */
   averageProcessingTime: number;
-  
+
   /** Peak memory usage during processing in bytes */
   peakMemoryUsage: number;
-  
+
   /** Total number of errors encountered */
   errorCount: number;
-  
+
   /** Success rate as percentage (0-100) */
   successRate: number;
-  
+
   /** Performance metrics over time */
   performanceHistory: ModelPerformanceEntry[];
-  
+
   /** Usage patterns by hour of day (0-23) */
   hourlyUsage: Record<number, number>;
-  
+
   /** Usage patterns by day of week (0-6, Sunday=0) */
   weeklyUsage: Record<number, number>;
-  
+
   /** Cache hit rate percentage (0-100) */
   cacheHitRate?: number;
-  
+
   /** Last performance optimization date */
   lastOptimized?: Date;
 }
@@ -173,22 +173,22 @@ export interface ModelUsageStats {
 export interface ModelPerformanceEntry {
   /** Timestamp of the performance measurement */
   timestamp: Date;
-  
+
   /** Processing time in milliseconds */
   processingTime: number;
-  
+
   /** Memory usage in bytes */
   memoryUsage: number;
-  
+
   /** Number of items processed in this session */
   itemsProcessed: number;
-  
+
   /** Whether this session completed successfully */
   success: boolean;
-  
+
   /** Error message if session failed */
   errorMessage?: string;
-  
+
   /** Cache hit rate for this session (0-100) */
   cacheHitRate?: number;
 }

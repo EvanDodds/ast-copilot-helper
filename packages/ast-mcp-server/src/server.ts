@@ -3,29 +3,33 @@
  * Core server class with lifecycle management and request routing
  */
 
-import { EventEmitter } from 'events';
-import {
+/* eslint-disable no-console -- Server logging is intentional */
+
+import { EventEmitter } from "events";
+import type {
   JSONRPCRequest,
   JSONRPCResponse,
   MCPHandler,
   MCPServerCapabilities,
+} from "./mcp/protocol";
+import {
   MCPErrorCode,
   createErrorResponse,
-  isValidMCPRequest
-} from './mcp/protocol';
-import { MCPTransport } from './mcp/transport';
-import { DatabaseReader, ServerStats } from './types';
-import { StandardHandlerFactory } from './mcp/standard-handlers.js';
+  isValidMCPRequest,
+} from "./mcp/protocol";
+import type { MCPTransport } from "./mcp/transport";
+import type { DatabaseReader, ServerStats } from "./types";
+import { StandardHandlerFactory } from "./mcp/standard-handlers.js";
 
 /**
  * Server events interface
  */
 export interface ServerEvents {
-  'started': [];
-  'stopped': [];
-  'error': [Error];
-  'request': [JSONRPCRequest];
-  'response': [JSONRPCResponse];
+  started: [];
+  stopped: [];
+  error: [Error];
+  request: [JSONRPCRequest];
+  response: [JSONRPCResponse];
 }
 
 /**
@@ -50,15 +54,16 @@ export class ASTMCPServer extends EventEmitter {
   private config: ServerConfig;
   private requestHandlers: Map<string, MCPHandler> = new Map();
   private handlerFactory: StandardHandlerFactory;
-  private isRunning: boolean = false;
-  private isInitialized: boolean = false;
+  private isRunning = false;
+  private isInitialized = false;
   private stats: ServerStats;
-  private activeRequests: Map<string | number, Promise<JSONRPCResponse>> = new Map();
+  private activeRequests: Map<string | number, Promise<JSONRPCResponse>> =
+    new Map();
 
   constructor(
     transport: MCPTransport,
     database: DatabaseReader,
-    config: ServerConfig
+    config: ServerConfig,
   ) {
     super();
     this.transport = transport;
@@ -66,7 +71,7 @@ export class ASTMCPServer extends EventEmitter {
     this.config = config;
     this.handlerFactory = new StandardHandlerFactory(database);
     this.stats = this.initializeStats();
-    
+
     this.setupTransportHandlers();
     this.registerDefaultHandlers();
   }
@@ -76,28 +81,32 @@ export class ASTMCPServer extends EventEmitter {
    */
   async start(): Promise<void> {
     if (this.isRunning) {
-      throw new Error('MCP Server is already running');
+      throw new Error("MCP Server is already running");
     }
 
     try {
       // Initialize database
       await this.database.initialize();
-      
+
       // Start transport
       await this.transport.start();
-      
+
       this.isRunning = true;
       this.stats.lastRequestAt = new Date();
-      
-      this.emit('started');
-      
+
+      this.emit("started");
+
       if (this.config.enableRequestLogging) {
-        console.log(`MCP Server started: ${this.config.serverName} v${this.config.serverVersion}`);
+        console.log(
+          `MCP Server started: ${this.config.serverName} v${this.config.serverVersion}`,
+        );
       }
     } catch (error) {
       this.stats.errorCount++;
-      const serverError = new Error(`Failed to start MCP server: ${error instanceof Error ? error.message : String(error)}`);
-      this.emit('error', serverError);
+      const serverError = new Error(
+        `Failed to start MCP server: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      this.emit("error", serverError);
       throw serverError;
     }
   }
@@ -113,26 +122,28 @@ export class ASTMCPServer extends EventEmitter {
     try {
       // Wait for active requests to complete (with timeout)
       await this.waitForActiveRequests(5000);
-      
+
       // Stop transport
       await this.transport.stop();
-      
+
       // Close database
       await this.database.close();
-      
+
       this.isRunning = false;
       this.isInitialized = false;
       this.activeRequests.clear();
-      
-      this.emit('stopped');
-      
+
+      this.emit("stopped");
+
       if (this.config.enableRequestLogging) {
-        console.log('MCP Server stopped');
+        console.log("MCP Server stopped");
       }
     } catch (error) {
       this.stats.errorCount++;
-      const serverError = new Error(`Failed to stop MCP server: ${error instanceof Error ? error.message : String(error)}`);
-      this.emit('error', serverError);
+      const serverError = new Error(
+        `Failed to stop MCP server: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      this.emit("error", serverError);
       throw serverError;
     }
   }
@@ -157,8 +168,10 @@ export class ASTMCPServer extends EventEmitter {
   getStats(): ServerStats {
     return {
       ...this.stats,
-      uptime: this.isRunning ? Date.now() - (this.stats.lastRequestAt?.getTime() || Date.now()) : 0,
-      activeConnections: this.transport.isActive() ? 1 : 0
+      uptime: this.isRunning
+        ? Date.now() - (this.stats.lastRequestAt?.getTime() || Date.now())
+        : 0,
+      activeConnections: this.transport.isActive() ? 1 : 0,
     };
   }
 
@@ -168,18 +181,18 @@ export class ASTMCPServer extends EventEmitter {
   getCapabilities(): MCPServerCapabilities {
     return {
       tools: {
-        listChanged: true
+        listChanged: true,
       },
       resources: {
         subscribe: false, // Not implemented in this version
-        listChanged: true
+        listChanged: true,
       },
       prompts: {
-        listChanged: false // Not used for AST server
+        listChanged: false, // Not used for AST server
       },
       logging: {
-        level: 'info'
-      }
+        level: "info",
+      },
     };
   }
 
@@ -202,14 +215,14 @@ export class ASTMCPServer extends EventEmitter {
    */
   private setupTransportHandlers(): void {
     this.transport.onMessage(this.handleRequest.bind(this));
-    this.transport.on('error', (error: Error) => {
+    this.transport.on("error", (error: Error) => {
       this.stats.errorCount++;
-      this.emit('error', error);
+      this.emit("error", error);
     });
-    this.transport.on('close', () => {
+    this.transport.on("close", () => {
       if (this.isRunning) {
-        this.stop().catch(error => {
-          this.emit('error', error);
+        this.stop().catch((error) => {
+          this.emit("error", error);
         });
       }
     });
@@ -220,25 +233,40 @@ export class ASTMCPServer extends EventEmitter {
    */
   private registerDefaultHandlers(): void {
     // Initialize handler
-    this.registerHandler('initialize', this.handlerFactory.createInitializeHandler(
-      {
-        serverName: this.config.serverName,
-        serverVersion: this.config.serverVersion,
-        protocolVersion: this.config.protocolVersion
-      },
-      this.getCapabilities()
-    ));
-    
+    this.registerHandler(
+      "initialize",
+      this.handlerFactory.createInitializeHandler(
+        {
+          serverName: this.config.serverName,
+          serverVersion: this.config.serverVersion,
+          protocolVersion: this.config.protocolVersion,
+        },
+        this.getCapabilities(),
+      ),
+    );
+
     // Ping handler
-    this.registerHandler('ping', this.handlerFactory.createPingHandler());
-    
+    this.registerHandler("ping", this.handlerFactory.createPingHandler());
+
     // Tools handlers
-    this.registerHandler('tools/list', this.handlerFactory.createToolsListHandler());
-    this.registerHandler('tools/call', this.handlerFactory.createToolsCallHandler());
-    
+    this.registerHandler(
+      "tools/list",
+      this.handlerFactory.createToolsListHandler(),
+    );
+    this.registerHandler(
+      "tools/call",
+      this.handlerFactory.createToolsCallHandler(),
+    );
+
     // Resource handlers
-    this.registerHandler('resources/list', this.handlerFactory.createResourcesListHandler());
-    this.registerHandler('resources/read', this.handlerFactory.createResourcesReadHandler(this.database));
+    this.registerHandler(
+      "resources/list",
+      this.handlerFactory.createResourcesListHandler(),
+    );
+    this.registerHandler(
+      "resources/read",
+      this.handlerFactory.createResourcesReadHandler(this.database),
+    );
   }
 
   /**
@@ -246,80 +274,76 @@ export class ASTMCPServer extends EventEmitter {
    */
   private async handleRequest(request: JSONRPCRequest): Promise<void> {
     const startTime = Date.now();
-    
+
     try {
       // Validate request
       if (!isValidMCPRequest(request)) {
-        const errorResponse = createErrorResponse(
-          'unknown',
-          {
-            code: MCPErrorCode.INVALID_REQUEST,
-            message: 'Invalid MCP request format'
-          }
-        );
+        const errorResponse = createErrorResponse("unknown", {
+          code: MCPErrorCode.INVALID_REQUEST,
+          message: "Invalid MCP request format",
+        });
         await this.sendResponse(errorResponse);
         return;
       }
 
       // Check if server is initialized (except for initialize method)
-      if (!this.isInitialized && request.method !== 'initialize') {
-        const errorResponse = createErrorResponse(
-          request.id,
-          {
-            code: MCPErrorCode.INITIALIZATION_FAILED,
-            message: 'Server not initialized. Send initialize request first.'
-          }
-        );
+      if (!this.isInitialized && request.method !== "initialize") {
+        const errorResponse = createErrorResponse(request.id, {
+          code: MCPErrorCode.INITIALIZATION_FAILED,
+          message: "Server not initialized. Send initialize request first.",
+        });
         await this.sendResponse(errorResponse);
         return;
       }
 
       // Check concurrent request limit
       if (this.activeRequests.size >= this.config.maxConcurrentRequests) {
-        const errorResponse = createErrorResponse(
-          request.id,
-          {
-            code: MCPErrorCode.INTERNAL_ERROR,
-            message: 'Server busy. Maximum concurrent requests exceeded.'
-          }
-        );
+        const errorResponse = createErrorResponse(request.id, {
+          code: MCPErrorCode.INTERNAL_ERROR,
+          message: "Server busy. Maximum concurrent requests exceeded.",
+        });
         await this.sendResponse(errorResponse);
         return;
       }
 
-      this.emit('request', request);
+      this.emit("request", request);
       this.stats.requestCount++;
 
       // Process request with timeout
       const responsePromise = this.processRequest(request);
       this.activeRequests.set(request.id, responsePromise);
 
-      const response = await this.withTimeout(responsePromise, this.config.requestTimeout);
-      
+      const response = await this.withTimeout(
+        responsePromise,
+        this.config.requestTimeout,
+      );
+
       await this.sendResponse(response);
-      
+
       // Update statistics
       const processingTime = Date.now() - startTime;
       this.updateAverageResponseTime(processingTime);
-      
     } catch (error) {
       this.stats.errorCount++;
-      
+
       // Send error response if possible
       try {
-        const errorResponse = createErrorResponse(
-          request.id || 'unknown',
-          {
-            code: MCPErrorCode.INTERNAL_ERROR,
-            message: error instanceof Error ? error.message : String(error)
-          }
-        );
+        const errorResponse = createErrorResponse(request.id || "unknown", {
+          code: MCPErrorCode.INTERNAL_ERROR,
+          message: error instanceof Error ? error.message : String(error),
+        });
         await this.sendResponse(errorResponse);
       } catch (sendError) {
-        this.emit('error', sendError instanceof Error ? sendError : new Error(String(sendError)));
+        this.emit(
+          "error",
+          sendError instanceof Error ? sendError : new Error(String(sendError)),
+        );
       }
-      
-      this.emit('error', error instanceof Error ? error : new Error(String(error)));
+
+      this.emit(
+        "error",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     } finally {
       this.activeRequests.delete(request.id);
       this.stats.lastRequestAt = new Date();
@@ -329,29 +353,25 @@ export class ASTMCPServer extends EventEmitter {
   /**
    * Process a request using appropriate handler
    */
-  private async processRequest(request: JSONRPCRequest): Promise<JSONRPCResponse> {
+  private async processRequest(
+    request: JSONRPCRequest,
+  ): Promise<JSONRPCResponse> {
     const handler = this.requestHandlers.get(request.method);
-    
+
     if (!handler) {
-      return createErrorResponse(
-        request.id,
-        {
-          code: MCPErrorCode.METHOD_NOT_FOUND,
-          message: `Method not found: ${request.method}`
-        }
-      );
+      return createErrorResponse(request.id, {
+        code: MCPErrorCode.METHOD_NOT_FOUND,
+        message: `Method not found: ${request.method}`,
+      });
     }
 
     try {
       return await handler.handle(request);
     } catch (error) {
-      return createErrorResponse(
-        request.id,
-        {
-          code: MCPErrorCode.INTERNAL_ERROR,
-          message: `Handler error: ${error instanceof Error ? error.message : String(error)}`
-        }
-      );
+      return createErrorResponse(request.id, {
+        code: MCPErrorCode.INTERNAL_ERROR,
+        message: `Handler error: ${error instanceof Error ? error.message : String(error)}`,
+      });
     }
   }
 
@@ -360,18 +380,21 @@ export class ASTMCPServer extends EventEmitter {
    */
   private async sendResponse(response: JSONRPCResponse): Promise<void> {
     await this.transport.sendMessage(response);
-    this.emit('response', response);
+    this.emit("response", response);
   }
 
   /**
    * Execute promise with timeout
    */
-  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  private async withTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number,
+  ): Promise<T> {
     return Promise.race([
       promise,
       new Promise<T>((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
-      })
+        setTimeout(() => reject(new Error("Request timeout")), timeoutMs);
+      }),
     ]);
   }
 
@@ -386,11 +409,11 @@ export class ASTMCPServer extends EventEmitter {
     try {
       await this.withTimeout(
         Promise.all(Array.from(this.activeRequests.values())),
-        timeoutMs
+        timeoutMs,
       );
-    } catch (error) {
+    } catch (_error) {
       // Log timeout but don't throw - we still want to shut down
-      console.warn('Some requests did not complete during shutdown');
+      console.warn("Some requests did not complete during shutdown");
     }
   }
 
@@ -403,7 +426,7 @@ export class ASTMCPServer extends EventEmitter {
       requestCount: 0,
       errorCount: 0,
       averageResponseTime: 0,
-      activeConnections: 0
+      activeConnections: 0,
     };
   }
 
@@ -412,7 +435,7 @@ export class ASTMCPServer extends EventEmitter {
    */
   private updateAverageResponseTime(newTime: number): void {
     const { requestCount, averageResponseTime } = this.stats;
-    this.stats.averageResponseTime = 
+    this.stats.averageResponseTime =
       (averageResponseTime * (requestCount - 1) + newTime) / requestCount;
   }
 
@@ -423,4 +446,3 @@ export class ASTMCPServer extends EventEmitter {
     this.isInitialized = true;
   }
 }
-

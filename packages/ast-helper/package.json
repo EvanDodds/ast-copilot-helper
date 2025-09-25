@@ -1,6 +1,6 @@
 {
   "name": "@ast-copilot-helper/ast-helper",
-  "version": "0.1.0",
+  "version": "1.5.0",
   "description": "Core AST manipulation and utility functions for Git, filesystem, and error handling operations",
   "type": "module",
   "main": "dist/index.js",
@@ -52,8 +52,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:ci": "node --max-old-space-size=2048 ./node_modules/.bin/vitest run --reporter=basic",
-    "lint": "echo 'Linting not configured yet'",
+    "test:ci": "node --max-old-space-size=2048 ./node_modules/.bin/vitest run --reporter=default",
+    "lint": "eslint . --config ../../eslint.config.js",
+    "lint:fix": "eslint . --config ../../eslint.config.js --fix",
     "typecheck": "tsc --noEmit",
     "dist:validate": "node dist/cli/distribution.js validate",
     "dist:npm": "node dist/cli/distribution.js npm",
@@ -79,26 +80,27 @@
     "arm64"
   ],
   "dependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^24.5.2",
     "@xenova/transformers": "^2.17.2",
-    "better-sqlite3": "^9.6.0",
+    "better-sqlite3": "^12.4.1",
     "chokidar": "^4.0.3",
     "commander": "^14.0.1",
     "hnswlib-node": "^3.0.0",
     "minimatch": "^10.0.3"
   },
   "optionalDependencies": {
-    "tree-sitter": "^0.21.0",
-    "tree-sitter-javascript": "^0.20.1",
-    "tree-sitter-python": "^0.20.4",
-    "tree-sitter-typescript": "^0.20.3",
+    "onnxruntime-node": "1.22.0-rev",
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-javascript": "^0.21.4",
+    "tree-sitter-python": "^0.21.0",
+    "tree-sitter-typescript": "^0.23.2",
     "web-tree-sitter": "^0.21.0"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.11",
-    "@types/minimatch": "^5.1.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/minimatch": "^6.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.0",
+    "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
   "files": [

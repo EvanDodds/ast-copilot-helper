@@ -3,8 +3,9 @@
  * Provides comprehensive validation with detailed error reporting
  */
 
-import type { PartialConfig } from '../types.js';
-import { CONFIG_VALIDATION_SCHEMA, ValidationRule, ValidationSchema } from './validation-schema.js';
+import type { PartialConfig } from "../types.js";
+import type { ValidationRule, ValidationSchema } from "./validation-schema.js";
+import { CONFIG_VALIDATION_SCHEMA } from "./validation-schema.js";
 
 /**
  * Validation error with context and suggestions
@@ -41,11 +42,11 @@ export interface ValidationResult {
  */
 export class EnhancedConfigValidator {
   private schema: ValidationSchema;
-  
+
   constructor(schema: ValidationSchema = CONFIG_VALIDATION_SCHEMA) {
     this.schema = schema;
   }
-  
+
   /**
    * Validate a configuration object with detailed error reporting
    */
@@ -53,17 +54,24 @@ export class EnhancedConfigValidator {
     const errors: ValidationError[] = [];
     const warnings: ValidationError[] = [];
     const cleanedConfig: PartialConfig = {};
-    
-    this.validateObject(config, this.schema, '', errors, warnings, cleanedConfig);
-    
+
+    this.validateObject(
+      config,
+      this.schema,
+      "",
+      errors,
+      warnings,
+      cleanedConfig,
+    );
+
     return {
       valid: errors.length === 0,
       errors,
       warnings,
-      cleanedConfig: errors.length === 0 ? cleanedConfig : undefined
+      cleanedConfig: errors.length === 0 ? cleanedConfig : undefined,
     };
   }
-  
+
   /**
    * Recursively validate an object against a schema
    */
@@ -73,53 +81,70 @@ export class EnhancedConfigValidator {
     path: string,
     errors: ValidationError[],
     warnings: ValidationError[],
-    cleaned: any
+    cleaned: any,
   ): void {
-    if (!obj || typeof obj !== 'object') {
+    if (!obj || typeof obj !== "object") {
       return;
     }
-    
+
     // Initialize cleaned object for this level
-    if (cleaned && typeof cleaned === 'object') {
+    if (cleaned && typeof cleaned === "object") {
       // Already initialized
     }
-    
+
     // Validate each property in the object
     for (const [key, value] of Object.entries(obj)) {
       const currentPath = path ? `${path}.${key}` : key;
       const schemaRule = schema[key];
-      
+
       if (!schemaRule) {
         // Unknown property - add warning but don't fail
         warnings.push({
           path: currentPath,
           message: `Unknown configuration property: ${currentPath}`,
-          suggestion: 'Remove this property or check for typos in property name',
-          invalidValue: value
+          suggestion:
+            "Remove this property or check for typos in property name",
+          invalidValue: value,
         });
         continue;
       }
-      
+
       if (this.isValidationRule(schemaRule)) {
         // Direct validation rule
-        this.validateValue(value, schemaRule, currentPath, errors, warnings, cleaned, key);
-      } else if (typeof schemaRule === 'object') {
+        this.validateValue(
+          value,
+          schemaRule,
+          currentPath,
+          errors,
+          warnings,
+          cleaned,
+          key,
+        );
+      } else if (typeof schemaRule === "object") {
         // Nested schema
-        if (value !== null && typeof value === 'object') {
+        if (value !== null && typeof value === "object") {
           cleaned[key] = {};
-          this.validateObject(value, schemaRule, currentPath, errors, warnings, cleaned[key]);
+          this.validateObject(
+            value,
+            schemaRule,
+            currentPath,
+            errors,
+            warnings,
+            cleaned[key],
+          );
         } else if (value !== undefined) {
           errors.push({
             path: currentPath,
             message: `${currentPath} must be an object, got: ${typeof value}`,
-            suggestion: 'Provide an object with the appropriate nested properties',
-            invalidValue: value
+            suggestion:
+              "Provide an object with the appropriate nested properties",
+            invalidValue: value,
           });
         }
       }
     }
   }
-  
+
   /**
    * Validate a single value against a validation rule
    */
@@ -130,14 +155,14 @@ export class EnhancedConfigValidator {
     errors: ValidationError[],
     _warnings: ValidationError[],
     cleaned: any,
-    key: string
+    key: string,
   ): void {
     if (value === undefined) {
       return; // Optional properties
     }
-    
+
     const result = rule.validate(value);
-    
+
     if (result === true) {
       // Validation passed - store cleaned value
       cleaned[key] = this.cleanValue(value, path);
@@ -148,150 +173,185 @@ export class EnhancedConfigValidator {
         message: result,
         suggestion: rule.suggestion,
         example: rule.example,
-        invalidValue: value
+        invalidValue: value,
       });
     }
   }
-  
+
   /**
    * Clean and normalize a valid value
    */
   private cleanValue(value: any, path: string): any {
     // Handle specific cleaning for different types
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       const trimmed = value.trim();
-      
+
       // Convert string booleans to actual booleans for boolean fields
       if (this.isBooleanField(path)) {
         const lower = trimmed.toLowerCase();
-        if (['true', '1', 'yes'].includes(lower)) return true;
-        if (['false', '0', 'no'].includes(lower)) return false;
+        if (["true", "1", "yes"].includes(lower)) {
+          return true;
+        }
+        if (["false", "0", "no"].includes(lower)) {
+          return false;
+        }
       }
-      
+
       // Convert numeric strings to numbers for numeric fields
       if (this.isNumericField(path)) {
         const num = Number(trimmed);
-        if (!isNaN(num)) return num;
+        if (!isNaN(num)) {
+          return num;
+        }
       }
-      
+
       return trimmed;
     }
-    
+
     // Handle number to boolean conversion for boolean fields
-    if (typeof value === 'number' && this.isBooleanField(path)) {
+    if (typeof value === "number" && this.isBooleanField(path)) {
       return value === 1 || value > 0;
     }
-    
+
     if (Array.isArray(value)) {
       return value
-        .filter(item => typeof item === 'string' && item.trim().length > 0)
-        .map(item => item.trim());
+        .filter((item) => typeof item === "string" && item.trim().length > 0)
+        .map((item) => item.trim());
     }
-    
-    if (typeof value === 'number') {
+
+    if (typeof value === "number") {
       return Number(value);
     }
-    
+
     return value;
   }
-  
+
   /**
    * Check if a path represents a boolean field
    */
   private isBooleanField(path: string): boolean {
     const booleanFields = [
-      'enableTelemetry', 'verbose', 'debug', 'jsonLogs',
-      'showProgress', 'enableRecursive', 'followSymlinks',
-      'enableConfidenceScoring', 'preserveCodeStructure',
-      'normalizeWhitespace', 'preserveComments'
+      "enableTelemetry",
+      "verbose",
+      "debug",
+      "jsonLogs",
+      "showProgress",
+      "enableRecursive",
+      "followSymlinks",
+      "enableConfidenceScoring",
+      "preserveCodeStructure",
+      "normalizeWhitespace",
+      "preserveComments",
     ];
-    
-    const pathSegments = path.split('.');
+
+    const pathSegments = path.split(".");
     const lastSegment = pathSegments[pathSegments.length - 1];
-    
-    return (lastSegment && booleanFields.includes(lastSegment)) || 
-           pathSegments.some(segment => booleanFields.includes(segment));
+
+    return (
+      (lastSegment && booleanFields.includes(lastSegment)) ||
+      pathSegments.some((segment) => booleanFields.includes(segment))
+    );
   }
-  
+
   /**
    * Check if a path represents a numeric field
    */
   private isNumericField(path: string): boolean {
     const numericFields = [
-      'topK', 'snippetLines', 'concurrency', 'batchSize',
-      'efConstruction', 'M', 'downloadTimeout', 'maxConcurrentDownloads',
-      'maxConcurrency', 'memoryLimit', 'maxTokenLength', 'maxSnippetLength',
-      'debounceMs'
+      "topK",
+      "snippetLines",
+      "concurrency",
+      "batchSize",
+      "efConstruction",
+      "M",
+      "downloadTimeout",
+      "maxConcurrentDownloads",
+      "maxConcurrency",
+      "memoryLimit",
+      "maxTokenLength",
+      "maxSnippetLength",
+      "debounceMs",
     ];
-    
-    const pathSegments = path.split('.');
+
+    const pathSegments = path.split(".");
     const lastSegment = pathSegments[pathSegments.length - 1];
-    
-    return (lastSegment && numericFields.includes(lastSegment)) || 
-           pathSegments.some(segment => numericFields.includes(segment));
+
+    return (
+      (lastSegment && numericFields.includes(lastSegment)) ||
+      pathSegments.some((segment) => numericFields.includes(segment))
+    );
   }
-  
+
   /**
    * Type guard to check if a value is a ValidationRule
    */
   private isValidationRule(value: any): value is ValidationRule {
-    return value && typeof value === 'object' && typeof value.validate === 'function';
+    return (
+      value && typeof value === "object" && typeof value.validate === "function"
+    );
   }
-  
+
   /**
    * Format validation errors into a human-readable report
    */
   static formatErrors(result: ValidationResult): string {
     if (result.valid) {
-      const warningText = result.warnings.length > 0 
-        ? `\n\nWarnings (${result.warnings.length}):\n${this.formatErrorList(result.warnings)}`
-        : '';
+      const warningText =
+        result.warnings.length > 0
+          ? `\n\nWarnings (${result.warnings.length}):\n${this.formatErrorList(result.warnings)}`
+          : "";
       return `✅ Configuration is valid${warningText}`;
     }
-    
-    let report = `❌ Configuration validation failed (${result.errors.length} error${result.errors.length === 1 ? '' : 's'}):\n\n`;
+
+    let report = `❌ Configuration validation failed (${result.errors.length} error${result.errors.length === 1 ? "" : "s"}):\n\n`;
     report += this.formatErrorList(result.errors);
-    
+
     if (result.warnings.length > 0) {
       report += `\n\nWarnings (${result.warnings.length}):\n${this.formatErrorList(result.warnings)}`;
     }
-    
+
     return report;
   }
-  
+
   /**
    * Format a list of validation errors
    */
   private static formatErrorList(errors: ValidationError[]): string {
-    return errors.map(error => {
-      let msg = `• ${error.path}: ${error.message}`;
-      if (error.suggestion) {
-        msg += `\n  💡 ${error.suggestion}`;
-      }
-      if (error.example) {
-        const examples = Array.isArray(error.example) ? error.example : [error.example];
-        msg += `\n  📋 Examples: ${examples.map(ex => JSON.stringify(ex)).join(', ')}`;
-      }
-      return msg;
-    }).join('\n\n');
+    return errors
+      .map((error) => {
+        let msg = `• ${error.path}: ${error.message}`;
+        if (error.suggestion) {
+          msg += `\n  💡 ${error.suggestion}`;
+        }
+        if (error.example) {
+          const examples = Array.isArray(error.example)
+            ? error.example
+            : [error.example];
+          msg += `\n  📋 Examples: ${examples.map((ex) => JSON.stringify(ex)).join(", ")}`;
+        }
+        return msg;
+      })
+      .join("\n\n");
   }
-  
+
   /**
    * Validate and throw detailed error if invalid
    */
   validateAndThrow(config: PartialConfig): PartialConfig {
     const result = this.validate(config);
-    
+
     if (!result.valid) {
       const errorMessage = EnhancedConfigValidator.formatErrors(result);
       throw new Error(`Configuration validation failed:\n\n${errorMessage}`);
     }
-    
+
     // Log warnings if present
     if (result.warnings.length > 0) {
-      console.warn(`Configuration warnings:\n${EnhancedConfigValidator.formatErrors(result)}`);
+      console.warn(
+        `Configuration warnings:\n${EnhancedConfigValidator.formatErrors(result)}`,
+      );
     }
-    
+
     return result.cleanedConfig!;
   }
 }

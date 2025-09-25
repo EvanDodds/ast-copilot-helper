@@ -2,10 +2,10 @@
  * @fileoverview Advanced license scanner with SPDX support and complex expression parsing
  */
 
-import { promises as fs } from 'fs';
-import { join, dirname } from 'path';
-import { LicenseInfo, DependencyLicense } from './types.js';
-import { LicenseDatabase } from './LicenseDatabase.js';
+import { promises as fs } from "fs";
+import { join, dirname } from "path";
+import type { LicenseInfo, DependencyLicense } from "./types.js";
+import type { LicenseDatabase } from "./LicenseDatabase.js";
 
 /**
  * License header pattern matching for custom license detection
@@ -44,7 +44,9 @@ export class AdvancedLicenseScanner {
   /**
    * Enhanced license scanning with custom detection
    */
-  async scanLicensesAdvanced(packagePath: string): Promise<EnhancedLicenseScanResult> {
+  async scanLicensesAdvanced(
+    packagePath: string,
+  ): Promise<EnhancedLicenseScanResult> {
     const packageJson = await this.readPackageJson(packagePath);
     if (!packageJson) {
       return {
@@ -55,7 +57,7 @@ export class AdvancedLicenseScanner {
         licenseFiles: [],
         totalDependencies: 0,
         scanTimestamp: new Date(),
-        errors: [`Could not read package.json at ${packagePath}`]
+        errors: [`Could not read package.json at ${packagePath}`],
       };
     }
 
@@ -63,7 +65,7 @@ export class AdvancedLicenseScanner {
       ...packageJson.dependencies,
       ...packageJson.devDependencies,
       ...packageJson.peerDependencies,
-      ...packageJson.optionalDependencies
+      ...packageJson.optionalDependencies,
     };
 
     const results: DependencyLicense[] = [];
@@ -74,7 +76,7 @@ export class AdvancedLicenseScanner {
     const errors: string[] = [];
 
     const packageDir = dirname(packagePath);
-    const nodeModulesPath = join(packageDir, 'node_modules');
+    const nodeModulesPath = join(packageDir, "node_modules");
 
     // Scan direct license files in project
     const projectLicenseFiles = await this.findLicenseFiles(packageDir);
@@ -84,31 +86,44 @@ export class AdvancedLicenseScanner {
     for (const file of projectLicenseFiles) {
       const customMatches = await this.detectCustomLicenses(file);
       customLicenses.push(...customMatches);
-      
+
       const copyrights = await this.extractCopyrightHolders(file);
-      copyrights.forEach(c => copyrightHolders.add(c));
+      copyrights.forEach((c) => copyrightHolders.add(c));
     }
 
     // Process each dependency
     for (const [name, version] of Object.entries(dependencies)) {
       try {
         const depPath = join(nodeModulesPath, name);
-        const depPackageJson = await this.readPackageJson(join(depPath, 'package.json'));
-        
+        const depPackageJson = await this.readPackageJson(
+          join(depPath, "package.json"),
+        );
+
         if (!depPackageJson) {
           continue;
         }
 
-        const license = await this.processDependencyLicense(name, String(version), depPath, depPackageJson);
+        const license = await this.processDependencyLicense(
+          name,
+          String(version),
+          depPath,
+          depPackageJson,
+        );
         if (license) {
           results.push(license);
-          
+
           // Check for complex expressions
           if (license.licenseFile) {
             try {
-              const licenseContent = await fs.readFile(license.licenseFile, 'utf-8');
+              const licenseContent = await fs.readFile(
+                license.licenseFile,
+                "utf-8",
+              );
               if (this.isComplexExpression(licenseContent)) {
-                const complexExpr = await this.parseComplexExpression(licenseContent, name);
+                const complexExpr = await this.parseComplexExpression(
+                  licenseContent,
+                  name,
+                );
                 if (complexExpr) {
                   complexExpressions.push(complexExpr);
                 }
@@ -119,10 +134,12 @@ export class AdvancedLicenseScanner {
           }
 
           // Add copyright holders
-          license.copyrightHolders.forEach(c => copyrightHolders.add(c));
+          license.copyrightHolders.forEach((c) => copyrightHolders.add(c));
         }
       } catch (error) {
-        errors.push(`Error processing ${name}: ${error instanceof Error ? error.message : String(error)}`);
+        errors.push(
+          `Error processing ${name}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
 
@@ -134,29 +151,32 @@ export class AdvancedLicenseScanner {
       licenseFiles,
       totalDependencies: Object.keys(dependencies).length,
       scanTimestamp: new Date(),
-      errors
+      errors,
     };
   }
 
   /**
    * Parse complex SPDX license expressions (AND, OR, WITH operators)
    */
-  async parseComplexExpression(expression: string, packageName: string): Promise<ComplexLicenseExpression | null> {
+  async parseComplexExpression(
+    expression: string,
+    packageName: string,
+  ): Promise<ComplexLicenseExpression | null> {
     const normalized = expression.trim();
-    
+
     // Detect expression type
-    let operator: 'AND' | 'OR' | 'WITH' | null = null;
+    let operator: "AND" | "OR" | "WITH" | null = null;
     let parts: string[] = [];
 
-    if (normalized.includes(' OR ')) {
-      operator = 'OR';
-      parts = this.splitExpression(normalized, ' OR ');
-    } else if (normalized.includes(' AND ')) {
-      operator = 'AND';
-      parts = this.splitExpression(normalized, ' AND ');
-    } else if (normalized.includes(' WITH ')) {
-      operator = 'WITH';
-      parts = this.splitExpression(normalized, ' WITH ');
+    if (normalized.includes(" OR ")) {
+      operator = "OR";
+      parts = this.splitExpression(normalized, " OR ");
+    } else if (normalized.includes(" AND ")) {
+      operator = "AND";
+      parts = this.splitExpression(normalized, " AND ");
+    } else if (normalized.includes(" WITH ")) {
+      operator = "WITH";
+      parts = this.splitExpression(normalized, " WITH ");
     } else {
       // Simple expression
       const license = this.database.getLicense(normalized);
@@ -167,7 +187,7 @@ export class AdvancedLicenseScanner {
           licenses: [license],
           isValid: true,
           packageName,
-          interpretation: `Simple license: ${license.name}`
+          interpretation: `Simple license: ${license.name}`,
         };
       }
       return null;
@@ -178,7 +198,7 @@ export class AdvancedLicenseScanner {
     let isValid = true;
 
     for (const part of parts) {
-      const cleanPart = part.trim().replace(/[()]/g, '');
+      const cleanPart = part.trim().replace(/[()]/g, "");
       const license = this.database.getLicense(cleanPart);
       if (license) {
         licenses.push(license);
@@ -187,13 +207,14 @@ export class AdvancedLicenseScanner {
       }
     }
 
-    let interpretation = '';
-    if (operator === 'OR') {
-      interpretation = 'Choose any one of the listed licenses';
-    } else if (operator === 'AND') {
-      interpretation = 'Must comply with all listed licenses simultaneously';
-    } else if (operator === 'WITH') {
-      interpretation = 'Primary license with additional exception or modification';
+    let interpretation = "";
+    if (operator === "OR") {
+      interpretation = "Choose any one of the listed licenses";
+    } else if (operator === "AND") {
+      interpretation = "Must comply with all listed licenses simultaneously";
+    } else if (operator === "WITH") {
+      interpretation =
+        "Primary license with additional exception or modification";
     }
 
     return {
@@ -202,7 +223,7 @@ export class AdvancedLicenseScanner {
       licenses,
       isValid,
       packageName,
-      interpretation
+      interpretation,
     };
   }
 
@@ -211,10 +232,12 @@ export class AdvancedLicenseScanner {
    */
   async startLicenseMonitoring(directories: string[]): Promise<void> {
     // Implementation would use fs.watch or similar to monitor license file changes
-    directories.forEach(dir => this.watchedDirectories.add(dir));
-    
+    directories.forEach((dir) => this.watchedDirectories.add(dir));
+
     // Note: Full implementation would set up file system watchers
-    console.log(`License monitoring started for ${directories.length} directories`);
+    console.log(
+      `License monitoring started for ${directories.length} directories`,
+    );
   }
 
   /**
@@ -223,7 +246,7 @@ export class AdvancedLicenseScanner {
   async stopLicenseMonitoring(): Promise<void> {
     this.watchedDirectories.clear();
     this.changeCallbacks.length = 0;
-    console.log('License monitoring stopped');
+    console.log("License monitoring stopped");
   }
 
   /**
@@ -236,17 +259,21 @@ export class AdvancedLicenseScanner {
   /**
    * Detect custom or unknown licenses in files
    */
-  private async detectCustomLicenses(filePath: string): Promise<CustomLicenseMatch[]> {
+  private async detectCustomLicenses(
+    filePath: string,
+  ): Promise<CustomLicenseMatch[]> {
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      const lines = content.split('\n');
+      const content = await fs.readFile(filePath, "utf-8");
+      const lines = content.split("\n");
       const matches: CustomLicenseMatch[] = [];
 
       for (const pattern of this.licensePatterns) {
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
-          if (!line) continue;
-          
+          if (!line) {
+            continue;
+          }
+
           for (const regex of pattern.patterns) {
             const match = regex.exec(line);
             if (match) {
@@ -257,8 +284,8 @@ export class AdvancedLicenseScanner {
                 location: {
                   file: filePath,
                   line: i + 1,
-                  column: match.index || 0
-                }
+                  column: match.index || 0,
+                },
               });
             }
           }
@@ -277,54 +304,54 @@ export class AdvancedLicenseScanner {
   private initializeLicensePatterns(): void {
     this.licensePatterns = [
       {
-        name: 'MIT License',
-        spdxId: 'MIT',
+        name: "MIT License",
+        spdxId: "MIT",
         patterns: [
           /Permission is hereby granted, free of charge/i,
           /MIT License/i,
-          /THE SOFTWARE IS PROVIDED "AS IS"/i
+          /THE SOFTWARE IS PROVIDED "AS IS"/i,
         ],
-        confidence: 0.95
+        confidence: 0.95,
       },
       {
-        name: 'Apache License 2.0',
-        spdxId: 'Apache-2.0',
+        name: "Apache License 2.0",
+        spdxId: "Apache-2.0",
         patterns: [
           /Licensed under the Apache License, Version 2\.0/i,
           /Apache License\s*Version 2\.0/i,
-          /www\.apache\.org\/licenses\/LICENSE-2\.0/i
+          /www\.apache\.org\/licenses\/LICENSE-2\.0/i,
         ],
-        confidence: 0.95
+        confidence: 0.95,
       },
       {
-        name: 'GPL-3.0',
-        spdxId: 'GPL-3.0',
+        name: "GPL-3.0",
+        spdxId: "GPL-3.0",
         patterns: [
           /GNU GENERAL PUBLIC LICENSE\s*Version 3/i,
           /GPL-3\.0/i,
-          /www\.gnu\.org\/licenses\/gpl-3\.0/i
+          /www\.gnu\.org\/licenses\/gpl-3\.0/i,
         ],
-        confidence: 0.9
+        confidence: 0.9,
       },
       {
-        name: 'BSD-3-Clause',
-        spdxId: 'BSD-3-Clause',
+        name: "BSD-3-Clause",
+        spdxId: "BSD-3-Clause",
         patterns: [
           /BSD 3-Clause/i,
           /Redistributions of source code must retain/i,
-          /Neither the name of.*nor the names/i
+          /Neither the name of.*nor the names/i,
         ],
-        confidence: 0.9
+        confidence: 0.9,
       },
       {
-        name: 'ISC License',
-        spdxId: 'ISC',
+        name: "ISC License",
+        spdxId: "ISC",
         patterns: [
           /ISC License/i,
-          /Permission to use, copy, modify, and\/or distribute/i
+          /Permission to use, copy, modify, and\/or distribute/i,
         ],
-        confidence: 0.95
-      }
+        confidence: 0.95,
+      },
     ];
   }
 
@@ -333,27 +360,30 @@ export class AdvancedLicenseScanner {
    */
   private splitExpression(expression: string, delimiter: string): string[] {
     const parts: string[] = [];
-    let currentPart = '';
+    let currentPart = "";
     let parenDepth = 0;
     let i = 0;
 
     while (i < expression.length) {
       const char = expression[i];
-      
-      if (char === '(') {
+
+      if (char === "(") {
         parenDepth++;
         currentPart += char;
-      } else if (char === ')') {
+      } else if (char === ")") {
         parenDepth--;
         currentPart += char;
-      } else if (parenDepth === 0 && expression.substring(i, i + delimiter.length) === delimiter) {
+      } else if (
+        parenDepth === 0 &&
+        expression.substring(i, i + delimiter.length) === delimiter
+      ) {
         parts.push(currentPart.trim());
-        currentPart = '';
+        currentPart = "";
         i += delimiter.length - 1;
       } else {
         currentPart += char;
       }
-      
+
       i++;
     }
 
@@ -368,11 +398,13 @@ export class AdvancedLicenseScanner {
    * Check if expression contains complex operators
    */
   private isComplexExpression(expression: string): boolean {
-    return expression.includes(' AND ') || 
-           expression.includes(' OR ') || 
-           expression.includes(' WITH ') ||
-           expression.includes('(') ||
-           expression.includes(')');
+    return (
+      expression.includes(" AND ") ||
+      expression.includes(" OR ") ||
+      expression.includes(" WITH ") ||
+      expression.includes("(") ||
+      expression.includes(")")
+    );
   }
 
   /**
@@ -380,15 +412,15 @@ export class AdvancedLicenseScanner {
    */
   private async extractCopyrightHolders(filePath: string): Promise<string[]> {
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
+      const content = await fs.readFile(filePath, "utf-8");
       const copyrightPatterns = [
         /Copyright\s*\(c\)\s*(\d{4}(?:-\d{4})?)\s*(.+?)(?:\n|$)/gi,
         /Copyright\s*(\d{4}(?:-\d{4})?)\s*(.+?)(?:\n|$)/gi,
-        /©\s*(\d{4}(?:-\d{4})?)\s*(.+?)(?:\n|$)/gi
+        /©\s*(\d{4}(?:-\d{4})?)\s*(.+?)(?:\n|$)/gi,
       ];
 
       const holders: Set<string> = new Set();
-      
+
       for (const pattern of copyrightPatterns) {
         let match;
         while ((match = pattern.exec(content)) !== null) {
@@ -412,18 +444,26 @@ export class AdvancedLicenseScanner {
     try {
       const entries = await fs.readdir(dir);
       const licenseFiles: string[] = [];
-      
+
       const licenseFileNames = [
-        'LICENSE', 'LICENSE.txt', 'LICENSE.md',
-        'LICENCE', 'LICENCE.txt', 'LICENCE.md',
-        'COPYING', 'COPYING.txt',
-        'COPYRIGHT', 'COPYRIGHT.txt'
+        "LICENSE",
+        "LICENSE.txt",
+        "LICENSE.md",
+        "LICENCE",
+        "LICENCE.txt",
+        "LICENCE.md",
+        "COPYING",
+        "COPYING.txt",
+        "COPYRIGHT",
+        "COPYRIGHT.txt",
       ];
 
       for (const entry of entries) {
-        if (licenseFileNames.some(name => 
-          entry.toUpperCase() === name.toUpperCase()
-        )) {
+        if (
+          licenseFileNames.some(
+            (name) => entry.toUpperCase() === name.toUpperCase(),
+          )
+        ) {
           licenseFiles.push(join(dir, entry));
         }
       }
@@ -439,7 +479,7 @@ export class AdvancedLicenseScanner {
    */
   private async readPackageJson(path: string): Promise<any | null> {
     try {
-      const content = await fs.readFile(path, 'utf-8');
+      const content = await fs.readFile(path, "utf-8");
       return JSON.parse(content);
     } catch (error) {
       return null;
@@ -450,10 +490,10 @@ export class AdvancedLicenseScanner {
    * Process individual dependency license
    */
   private async processDependencyLicense(
-    name: string, 
-    version: string, 
-    depPath: string, 
-    packageJson: any
+    name: string,
+    version: string,
+    depPath: string,
+    packageJson: any,
   ): Promise<DependencyLicense | null> {
     const licenseFiles = await this.findLicenseFiles(depPath);
     const copyrightHolders = [];
@@ -464,19 +504,19 @@ export class AdvancedLicenseScanner {
       copyrightHolders.push(...copyrights);
     }
 
-    const license = packageJson.license || 'Unknown';
+    const license = packageJson.license || "Unknown";
     let licenseInfo: LicenseInfo | null = null;
-    let licenseText = '';
+    let licenseText = "";
 
     // Try to get license information from database
-    if (license !== 'Unknown') {
+    if (license !== "Unknown") {
       licenseInfo = this.database.getLicense(license);
     }
 
     // Read license text from files
     if (licenseFiles.length > 0 && licenseFiles[0]) {
       try {
-        licenseText = await fs.readFile(licenseFiles[0], 'utf-8');
+        licenseText = await fs.readFile(licenseFiles[0], "utf-8");
       } catch (error) {
         // Ignore read errors
       }
@@ -488,7 +528,7 @@ export class AdvancedLicenseScanner {
       license: licenseInfo || {
         name: license,
         spdxId: license,
-        url: '',
+        url: "",
         text: licenseText,
         permissions: [],
         conditions: [],
@@ -500,14 +540,14 @@ export class AdvancedLicenseScanner {
           requiresSourceDisclosure: false,
           allowsLinking: true,
           isCopeyleft: false,
-          copyleftScope: null
-        }
+          copyleftScope: null,
+        },
       },
       licenseFile: licenseFiles[0] || undefined,
       noticeFile: undefined,
       copyrightHolders: Array.from(new Set(copyrightHolders)),
       attributionRequired: licenseInfo?.compatibility.requiresNotice ?? true,
-      sourceUrl: packageJson.repository?.url || packageJson.homepage || ''
+      sourceUrl: packageJson.repository?.url || packageJson.homepage || "",
     };
   }
 }
@@ -531,7 +571,7 @@ export interface EnhancedLicenseScanResult {
  */
 export interface ComplexLicenseExpression {
   expression: string;
-  operator: 'AND' | 'OR' | 'WITH' | null;
+  operator: "AND" | "OR" | "WITH" | null;
   licenses: LicenseInfo[];
   isValid: boolean;
   packageName: string;
@@ -542,7 +582,7 @@ export interface ComplexLicenseExpression {
  * License change monitoring event
  */
 export interface LicenseChangeEvent {
-  type: 'added' | 'modified' | 'removed';
+  type: "added" | "modified" | "removed";
   filePath: string;
   timestamp: Date;
   oldLicense?: string;

@@ -3,7 +3,7 @@
  * Provides base functionality for MCP request handlers
  */
 
-import { JSONRPCRequest, JSONRPCResponse, MCPHandler } from './protocol';
+import type { JSONRPCRequest, JSONRPCResponse, MCPHandler } from "./protocol";
 
 /**
  * Abstract base handler with common functionality
@@ -15,8 +15,8 @@ export abstract class BaseHandler implements MCPHandler {
    * Validate required parameters
    */
   protected validateParams(params: any, required: string[]): string | null {
-    if (!params || typeof params !== 'object') {
-      return 'Missing or invalid params object';
+    if (!params || typeof params !== "object") {
+      return "Missing or invalid params object";
     }
 
     for (const field of required) {
@@ -31,7 +31,10 @@ export abstract class BaseHandler implements MCPHandler {
   /**
    * Validate parameter types
    */
-  protected validateParamTypes(params: any, types: Record<string, string>): string | null {
+  protected validateParamTypes(
+    params: any,
+    types: Record<string, string>,
+  ): string | null {
     for (const [field, expectedType] of Object.entries(types)) {
       if (field in params) {
         const actualType = typeof params[field];
@@ -48,17 +51,17 @@ export abstract class BaseHandler implements MCPHandler {
    * Validate numeric parameter ranges
    */
   protected validateNumericRanges(
-    params: any, 
-    ranges: Record<string, { min?: number; max?: number }>
+    params: any,
+    ranges: Record<string, { min?: number; max?: number }>,
   ): string | null {
     for (const [field, range] of Object.entries(ranges)) {
-      if (field in params && typeof params[field] === 'number') {
+      if (field in params && typeof params[field] === "number") {
         const value = params[field];
-        
+
         if (range.min !== undefined && value < range.min) {
           return `Parameter '${field}' must be >= ${range.min}, got ${value}`;
         }
-        
+
         if (range.max !== undefined && value > range.max) {
           return `Parameter '${field}' must be <= ${range.max}, got ${value}`;
         }
@@ -73,13 +76,13 @@ export abstract class BaseHandler implements MCPHandler {
    */
   protected applyDefaults(params: any, defaults: Record<string, any>): any {
     const result = { ...params };
-    
+
     for (const [field, defaultValue] of Object.entries(defaults)) {
       if (!(field in result) || result[field] === undefined) {
         result[field] = defaultValue;
       }
     }
-    
+
     return result;
   }
 }

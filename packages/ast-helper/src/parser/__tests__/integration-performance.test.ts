@@ -1,21 +1,21 @@
 /**
  * Integration & Performance Testing Suite
- * 
+ *
  * Comprehensive end-to-end testing of the complete AST processing system
  * including performance benchmarks, memory usage validation, and full pipeline testing.
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import * as fs from "fs";
+import * as path from "path";
 
-import { NodeProcessor, ProcessingUtils } from '../node-processor';
-import { NodeIDGenerator } from '../node-id-generator';
-import { NodeClassifier } from '../node-classifier';
-import { SignificanceCalculator } from '../significance-calculator';
-import { MetadataExtractor } from '../metadata-extractor';
-import { NodeSerializer } from '../node-serializer';
-import { ASTNode, NodeType, SignificanceLevel } from '../ast-schema';
+import { NodeProcessor, ProcessingUtils } from "../node-processor";
+import { NodeIDGenerator } from "../node-id-generator";
+import { NodeClassifier } from "../node-classifier";
+import { SignificanceCalculator } from "../significance-calculator";
+import { MetadataExtractor } from "../metadata-extractor";
+import { NodeSerializer } from "../node-serializer";
+import { ASTNode, NodeType, SignificanceLevel } from "../ast-schema";
 
 // Test data for integration tests
 const SAMPLE_TYPESCRIPT_CODE = `
@@ -254,20 +254,20 @@ if __name__ == "__main__":
 `;
 
 // Mock file system for integration tests
-vi.mock('fs');
+vi.mock("fs");
 const mockFs = fs as any;
 
-describe('Integration & Performance Testing', () => {
+describe("Integration & Performance Testing", () => {
   let processor: NodeProcessor;
   let tempDir: string;
 
   beforeEach(() => {
     processor = ProcessingUtils.createFullProcessor();
-    tempDir = '/tmp/ast-test';
-    
+    tempDir = "/tmp/ast-test";
+
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Setup file system mocks
     mockFs.existsSync = vi.fn().mockReturnValue(true);
     mockFs.statSync = vi.fn().mockReturnValue({ size: 5000 });
@@ -281,13 +281,13 @@ describe('Integration & Performance Testing', () => {
     vi.restoreAllMocks();
   });
 
-  describe('End-to-End Pipeline Integration', () => {
-    it('should process TypeScript code through complete pipeline', async () => {
+  describe("End-to-End Pipeline Integration", () => {
+    it("should process TypeScript code through complete pipeline", async () => {
       mockFs.readFileSync.mockReturnValue(SAMPLE_TYPESCRIPT_CODE);
 
       const result = await processor.processFile(
-        '/test/app.component.ts',
-        'typescript'
+        "/test/app.component.ts",
+        "typescript",
       );
 
       // Verify basic processing success
@@ -305,18 +305,18 @@ describe('Integration & Performance Testing', () => {
       expect(rootNode.significance).toBeDefined();
     });
 
-    it('should process JavaScript code through complete pipeline', async () => {
+    it("should process JavaScript code through complete pipeline", async () => {
       mockFs.readFileSync.mockReturnValue(SAMPLE_JAVASCRIPT_CODE);
 
       const result = await processor.processFile(
-        '/test/server.js',
-        'javascript'
+        "/test/server.js",
+        "javascript",
       );
 
       expect(result.success).toBe(true);
       expect(result.nodes).toBeDefined();
       expect(result.nodes.length).toBeGreaterThan(0);
-      expect(result.language).toBe('javascript');
+      expect(result.language).toBe("javascript");
 
       // Verify processing statistics
       expect(result.stats.totalNodes).toBeGreaterThan(0);
@@ -324,45 +324,57 @@ describe('Integration & Performance Testing', () => {
       expect(result.stats.performance.nodesPerSecond).toBeGreaterThanOrEqual(0);
     });
 
-    it('should process Python code through complete pipeline', async () => {
+    it("should process Python code through complete pipeline", async () => {
       mockFs.readFileSync.mockReturnValue(SAMPLE_PYTHON_CODE);
 
       const result = await processor.processFile(
-        '/test/user_service.py',
-        'python'
+        "/test/user_service.py",
+        "python",
       );
 
       expect(result.success).toBe(true);
       expect(result.nodes).toBeDefined();
-      expect(result.language).toBe('python');
+      expect(result.language).toBe("python");
 
       // Verify metadata extraction worked
       const rootNode = result.nodes[0];
-      expect(rootNode.metadata.language).toBe('python');
+      expect(rootNode.metadata.language).toBe("python");
       expect(rootNode.metadata.scope).toBeDefined();
       expect(rootNode.metadata.modifiers).toBeDefined();
     });
 
-    it('should handle mixed language batch processing', async () => {
+    it("should handle mixed language batch processing", async () => {
       const files = [
-        { filePath: '/test/app.component.ts', language: 'typescript', sourceText: SAMPLE_TYPESCRIPT_CODE },
-        { filePath: '/test/server.js', language: 'javascript', sourceText: SAMPLE_JAVASCRIPT_CODE },
-        { filePath: '/test/user_service.py', language: 'python', sourceText: SAMPLE_PYTHON_CODE },
+        {
+          filePath: "/test/app.component.ts",
+          language: "typescript",
+          sourceText: SAMPLE_TYPESCRIPT_CODE,
+        },
+        {
+          filePath: "/test/server.js",
+          language: "javascript",
+          sourceText: SAMPLE_JAVASCRIPT_CODE,
+        },
+        {
+          filePath: "/test/user_service.py",
+          language: "python",
+          sourceText: SAMPLE_PYTHON_CODE,
+        },
       ];
 
       const result = await processor.processBatch(files);
 
       expect(result.results).toHaveLength(3);
       expect(result.overallStats.totalFiles).toBe(3);
-      
+
       // Verify all files processed successfully
-      const successfulResults = result.results.filter(r => r.success);
+      const successfulResults = result.results.filter((r) => r.success);
       expect(successfulResults).toHaveLength(3);
 
       // Verify language-specific processing
-      const tsResult = result.results.find(r => r.language === 'typescript');
-      const jsResult = result.results.find(r => r.language === 'javascript');  
-      const pyResult = result.results.find(r => r.language === 'python');
+      const tsResult = result.results.find((r) => r.language === "typescript");
+      const jsResult = result.results.find((r) => r.language === "javascript");
+      const pyResult = result.results.find((r) => r.language === "python");
 
       expect(tsResult?.success).toBe(true);
       expect(jsResult?.success).toBe(true);
@@ -370,20 +382,20 @@ describe('Integration & Performance Testing', () => {
     });
   });
 
-  describe('Component Integration Testing', () => {
-    it('should integrate ID generation with other components', () => {
+  describe("Component Integration Testing", () => {
+    it("should integrate ID generation with other components", () => {
       const idGenerator = new NodeIDGenerator();
       const sampleNode: ASTNode = {
-        id: '',
+        id: "",
         type: NodeType.FUNCTION,
-        name: 'testFunction',
-        filePath: '/test.ts',
+        name: "testFunction",
+        filePath: "/test.ts",
         start: { line: 1, column: 0 },
         end: { line: 5, column: 1 },
         children: [],
         significance: SignificanceLevel.HIGH,
         metadata: {
-          language: 'typescript',
+          language: "typescript",
           scope: [],
           modifiers: [],
           imports: [],
@@ -394,19 +406,19 @@ describe('Integration & Performance Testing', () => {
 
       const id1 = idGenerator.generateId(sampleNode);
       const id2 = idGenerator.generateId({ ...sampleNode });
-      
+
       expect(id1).toBeTruthy();
       expect(id2).toBeTruthy();
       expect(id1).toBe(id2); // Same node should generate same ID
-      
+
       // Different node should generate different ID
-      const differentNode = { ...sampleNode, name: 'differentFunction' };
+      const differentNode = { ...sampleNode, name: "differentFunction" };
       const id3 = idGenerator.generateId(differentNode);
       expect(id3).toBeTruthy();
       expect(id3).not.toBe(id1);
     });
 
-    it('should integrate serialization with processing results', async () => {
+    it("should integrate serialization with processing results", async () => {
       const serializer = new NodeSerializer({
         prettyPrint: true,
         validateOnSerialize: true,
@@ -414,35 +426,37 @@ describe('Integration & Performance Testing', () => {
       });
 
       // Create mock nodes for serialization
-      const mockNodes: ASTNode[] = [{
-        id: 'test-function-1',
-        type: NodeType.FUNCTION,
-        name: 'testFunction',
-        filePath: '/test.ts',
-        start: { line: 1, column: 0 },
-        end: { line: 5, column: 1 },
-        children: [],
-        significance: SignificanceLevel.HIGH,
-        metadata: {
-          language: 'typescript',
-          scope: [],
-          modifiers: ['public', 'async'],
-          imports: [],
-          exports: [],
-          annotations: ['@Component'],
+      const mockNodes: ASTNode[] = [
+        {
+          id: "test-function-1",
+          type: NodeType.FUNCTION,
+          name: "testFunction",
+          filePath: "/test.ts",
+          start: { line: 1, column: 0 },
+          end: { line: 5, column: 1 },
+          children: [],
+          significance: SignificanceLevel.HIGH,
+          metadata: {
+            language: "typescript",
+            scope: [],
+            modifiers: ["public", "async"],
+            imports: [],
+            exports: [],
+            annotations: ["@Component"],
+          },
+          sourceText: "async testFunction() { return 42; }",
+          signature: "testFunction(): Promise<number>",
+          complexity: 1,
         },
-        sourceText: 'async testFunction() { return 42; }',
-        signature: 'testFunction(): Promise<number>',
-        complexity: 1,
-      }];
+      ];
 
       // Test serialization
       const serializedNode = serializer.serializeNode(mockNodes[0]);
       expect(serializedNode).toBeTruthy();
       expect(serializedNode.$schema).toBeTruthy();
-      expect(serializedNode.id).toBe('test-function-1');
-      expect(serializedNode.type).toBe('function');
-      
+      expect(serializedNode.id).toBe("test-function-1");
+      expect(serializedNode.type).toBe("function");
+
       // Test deserialization
       const deserializedNode = serializer.deserializeNode(serializedNode);
       expect(deserializedNode).toBeTruthy();
@@ -451,58 +465,62 @@ describe('Integration & Performance Testing', () => {
       expect(deserializedNode.name).toBe(mockNodes[0].name);
     });
 
-    it('should validate round-trip serialization integrity', async () => {
+    it("should validate round-trip serialization integrity", async () => {
       const serializer = new NodeSerializer();
 
-      const originalNodes: ASTNode[] = [{
-        id: 'test-1',
-        type: NodeType.CLASS,
-        name: 'TestClass',
-        filePath: '/test.ts',
-        start: { line: 1, column: 0 },
-        end: { line: 20, column: 1 },
-        children: ['test-method-1', 'test-property-1'],
-        significance: SignificanceLevel.CRITICAL,
-        metadata: {
-          language: 'typescript',
-          scope: ['global'],
-          modifiers: ['export', 'default'],
-          imports: ['Component'],
-          exports: ['TestClass'],
-          annotations: ['@Component'],
-          docstring: 'Test class for demonstration',
+      const originalNodes: ASTNode[] = [
+        {
+          id: "test-1",
+          type: NodeType.CLASS,
+          name: "TestClass",
+          filePath: "/test.ts",
+          start: { line: 1, column: 0 },
+          end: { line: 20, column: 1 },
+          children: ["test-method-1", "test-property-1"],
+          significance: SignificanceLevel.CRITICAL,
+          metadata: {
+            language: "typescript",
+            scope: ["global"],
+            modifiers: ["export", "default"],
+            imports: ["Component"],
+            exports: ["TestClass"],
+            annotations: ["@Component"],
+            docstring: "Test class for demonstration",
+          },
+          sourceText: "export default class TestClass { ... }",
+          signature: "class TestClass",
+          complexity: 5,
         },
-        sourceText: 'export default class TestClass { ... }',
-        signature: 'class TestClass',
-        complexity: 5,
-      }];
+      ];
 
       // Test round-trip validation
       const serializedNode = serializer.serializeNode(originalNodes[0]);
       const deserializedNode = serializer.deserializeNode(serializedNode);
-      
+
       const validation = serializer.validateRoundTrip(
         originalNodes[0],
         serializedNode,
-        deserializedNode
+        deserializedNode,
       );
 
       expect(validation).toBe(true);
     });
   });
 
-  describe('Performance Benchmarking', () => {
-    it('should process large TypeScript files efficiently', async () => {
+  describe("Performance Benchmarking", () => {
+    it("should process large TypeScript files efficiently", async () => {
       // Create a larger TypeScript code sample by repeating the base code
-      const largeTypeScriptCode = Array(10).fill(SAMPLE_TYPESCRIPT_CODE).join('\n\n');
+      const largeTypeScriptCode = Array(10)
+        .fill(SAMPLE_TYPESCRIPT_CODE)
+        .join("\n\n");
       mockFs.readFileSync.mockReturnValue(largeTypeScriptCode);
       mockFs.statSync.mockReturnValue({ size: largeTypeScriptCode.length });
 
       const startTime = Date.now();
-      
+
       const result = await processor.processFile(
-        '/test/large-app.ts',
-        'typescript'
+        "/test/large-app.ts",
+        "typescript",
       );
 
       const endTime = Date.now();
@@ -511,42 +529,42 @@ describe('Integration & Performance Testing', () => {
       expect(result.success).toBe(true);
       expect(result.stats.processingTimeMs).toBeLessThan(5000); // Should complete within 5 seconds
       expect(result.stats.performance.nodesPerSecond).toBeGreaterThan(0);
-      
+
       // Performance thresholds
       expect(processingTime).toBeLessThan(10000); // Total processing under 10 seconds
       expect(result.stats.memoryUsage.peakMB).toBeLessThan(100); // Memory usage under 100MB
     });
 
-    it('should handle batch processing of multiple files efficiently', async () => {
+    it("should handle batch processing of multiple files efficiently", async () => {
       const files = Array.from({ length: 20 }, (_, i) => ({
         filePath: `/test/file${i}.ts`,
-        language: 'typescript' as const,
+        language: "typescript" as const,
         sourceText: SAMPLE_TYPESCRIPT_CODE,
       }));
 
       const startTime = Date.now();
-      
+
       const result = await processor.processBatch(files);
-      
+
       const endTime = Date.now();
       const totalTime = endTime - startTime;
 
       expect(result.results).toHaveLength(20);
       expect(result.overallStats.totalFiles).toBe(20);
-      
+
       // Performance expectations for batch processing
       expect(totalTime).toBeLessThan(30000); // Should complete within 30 seconds
       expect(result.overallStats.performance.nodesPerSecond).toBeGreaterThan(0);
-      
+
       // Verify all files processed successfully (in our mock scenario)
       const averageTimePerFile = totalTime / 20;
       expect(averageTimePerFile).toBeLessThan(2000); // Average under 2 seconds per file
     });
 
-    it('should maintain consistent memory usage during processing', async () => {
+    it("should maintain consistent memory usage during processing", async () => {
       const files = Array.from({ length: 5 }, (_, i) => ({
         filePath: `/test/memory-test-${i}.ts`,
-        language: 'typescript' as const,
+        language: "typescript" as const,
         sourceText: SAMPLE_TYPESCRIPT_CODE,
       }));
 
@@ -556,7 +574,7 @@ describe('Integration & Performance Testing', () => {
         const result = await processor.processFile(
           file.filePath,
           file.language,
-          file.sourceText
+          file.sourceText,
         );
 
         expect(result.success).toBe(true);
@@ -564,7 +582,8 @@ describe('Integration & Performance Testing', () => {
       }
 
       // Memory usage should be relatively stable across multiple files
-      const avgMemory = memoryUsages.reduce((sum, mem) => sum + mem, 0) / memoryUsages.length;
+      const avgMemory =
+        memoryUsages.reduce((sum, mem) => sum + mem, 0) / memoryUsages.length;
       const maxMemory = Math.max(...memoryUsages);
       const minMemory = Math.min(...memoryUsages);
 
@@ -573,12 +592,18 @@ describe('Integration & Performance Testing', () => {
       expect(memoryVariation).toBeLessThan(0.5); // Less than 50% variation
     });
 
-    it('should demonstrate scalable directory processing', async () => {
+    it("should demonstrate scalable directory processing", async () => {
       // Mock a directory structure with multiple files
       const fileNames = [
-        'app.component.ts', 'user.service.ts', 'auth.guard.ts',
-        'server.js', 'routes.js', 'middleware.js',
-        'models.py', 'views.py', 'utils.py'
+        "app.component.ts",
+        "user.service.ts",
+        "auth.guard.ts",
+        "server.js",
+        "routes.js",
+        "middleware.js",
+        "models.py",
+        "views.py",
+        "utils.py",
       ];
 
       mockFs.readdirSync.mockReturnValue(fileNames);
@@ -588,46 +613,54 @@ describe('Integration & Performance Testing', () => {
         isFile: () => true,
       }));
       mockFs.readFileSync.mockImplementation((filePath: string) => {
-        if (filePath.includes('.ts')) return SAMPLE_TYPESCRIPT_CODE;
-        if (filePath.includes('.js')) return SAMPLE_JAVASCRIPT_CODE;
-        if (filePath.includes('.py')) return SAMPLE_PYTHON_CODE;
+        if (filePath.includes(".ts")) return SAMPLE_TYPESCRIPT_CODE;
+        if (filePath.includes(".js")) return SAMPLE_JAVASCRIPT_CODE;
+        if (filePath.includes(".py")) return SAMPLE_PYTHON_CODE;
         return 'console.log("default");';
       });
 
       const startTime = Date.now();
-      
-      const result = await processor.processDirectory('/test/project', {
+
+      const result = await processor.processDirectory("/test/project", {
         recursive: true,
-        extensions: ['.ts', '.js', '.py'],
+        extensions: [".ts", ".js", ".py"],
       });
-      
+
       const endTime = Date.now();
 
       expect(result.results).toHaveLength(fileNames.length);
       expect(result.overallStats.totalFiles).toBe(fileNames.length);
-      
+
       // Performance validation
       const processingTime = endTime - startTime;
       expect(processingTime).toBeLessThan(20000); // Under 20 seconds for 9 files
-      
+
       // Verify mixed language processing
-      const languages = new Set(result.results.map(r => r.language));
+      const languages = new Set(result.results.map((r) => r.language));
       expect(languages.size).toBeGreaterThan(1); // Multiple languages processed
     });
   });
 
-  describe('Error Handling and Recovery', () => {
-    it('should gracefully handle and recover from processing errors', async () => {
+  describe("Error Handling and Recovery", () => {
+    it("should gracefully handle and recover from processing errors", async () => {
       const files = [
-        { filePath: '/test/good.ts', language: 'typescript', sourceText: SAMPLE_TYPESCRIPT_CODE },
-        { filePath: '/test/bad.ts', language: 'typescript' }, // No source text, will fail
-        { filePath: '/test/good2.js', language: 'javascript', sourceText: SAMPLE_JAVASCRIPT_CODE },
+        {
+          filePath: "/test/good.ts",
+          language: "typescript",
+          sourceText: SAMPLE_TYPESCRIPT_CODE,
+        },
+        { filePath: "/test/bad.ts", language: "typescript" }, // No source text, will fail
+        {
+          filePath: "/test/good2.js",
+          language: "javascript",
+          sourceText: SAMPLE_JAVASCRIPT_CODE,
+        },
       ];
 
       // Make the bad file fail by not providing source and making fs.readFile fail
       mockFs.readFileSync.mockImplementation((filePath: string) => {
-        if (filePath.includes('bad.ts')) {
-          throw new Error('File read error');
+        if (filePath.includes("bad.ts")) {
+          throw new Error("File read error");
         }
         return SAMPLE_TYPESCRIPT_CODE;
       });
@@ -640,56 +673,59 @@ describe('Integration & Performance Testing', () => {
       expect(result.errors).toHaveLength(result.overallStats.failedFiles);
 
       // Verify successful files still processed correctly
-      const successfulResults = result.results.filter(r => r.success);
+      const successfulResults = result.results.filter((r) => r.success);
       expect(successfulResults.length).toBeGreaterThan(0);
-      
+
       for (const successResult of successfulResults) {
         expect(successResult.nodes).toBeDefined();
         expect(successResult.stats).toBeDefined();
       }
     });
 
-    it('should handle timeout scenarios gracefully', async () => {
+    it("should handle timeout scenarios gracefully", async () => {
       // Create a processor with very short timeout
       const timeoutProcessor = new NodeProcessor({ timeoutMs: 1 });
-      
+
       const result = await timeoutProcessor.processFile(
-        '/test/timeout.ts',
-        'typescript',
-        SAMPLE_TYPESCRIPT_CODE
+        "/test/timeout.ts",
+        "typescript",
+        SAMPLE_TYPESCRIPT_CODE,
       );
 
       // Processing should complete (our mock is fast), but this tests the timeout mechanism exists
       expect(result).toBeDefined();
-      expect(typeof result.success).toBe('boolean');
+      expect(typeof result.success).toBe("boolean");
     });
 
-    it('should handle file size limit violations', async () => {
+    it("should handle file size limit violations", async () => {
       // Create processor with small file size limit
       const limitedProcessor = new NodeProcessor({ maxFileSizeBytes: 100 });
-      
+
       mockFs.statSync.mockReturnValue({ size: 1000000 }); // 1MB file
-      
-      const result = await limitedProcessor.processFile('/test/large.ts', 'typescript');
-      
+
+      const result = await limitedProcessor.processFile(
+        "/test/large.ts",
+        "typescript",
+      );
+
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
-      expect(result.error?.message).toContain('File too large');
+      expect(result.error?.message).toContain("File too large");
     });
 
-    it('should validate input parameters and provide meaningful errors', async () => {
+    it("should validate input parameters and provide meaningful errors", async () => {
       // Test with empty file path
-      const result1 = await processor.processFile('', 'typescript', 'code');
+      const result1 = await processor.processFile("", "typescript", "code");
       expect(result1.success).toBe(false);
-      
+
       // Test with invalid language
-      const result2 = await processor.processFile('/test.ts', '', 'code');
+      const result2 = await processor.processFile("/test.ts", "", "code");
       expect(result2.success).toBe(false);
     });
   });
 
-  describe('Configuration and Customization', () => {
-    it('should support different processor configurations', async () => {
+  describe("Configuration and Customization", () => {
+    it("should support different processor configurations", async () => {
       const configurations = [
         ProcessingUtils.createMinimalProcessor(),
         ProcessingUtils.createFullProcessor(),
@@ -698,30 +734,30 @@ describe('Integration & Performance Testing', () => {
 
       for (const processor of configurations) {
         const result = await processor.processFile(
-          '/test/config.ts',
-          'typescript',
-          SAMPLE_TYPESCRIPT_CODE
+          "/test/config.ts",
+          "typescript",
+          SAMPLE_TYPESCRIPT_CODE,
         );
 
         // All configurations should produce some result
         expect(result).toBeDefined();
         expect(result.stats).toBeDefined();
-        
+
         // The level of processing may vary based on configuration
         if (processor.getConfig().generateIds) {
-          expect(result.nodes.every(n => n.id)).toBe(true);
+          expect(result.nodes.every((n) => n.id)).toBe(true);
         }
       }
     });
 
-    it('should allow runtime configuration updates', async () => {
+    it("should allow runtime configuration updates", async () => {
       const initialConfig = processor.getConfig();
       expect(initialConfig.enableSerialization).toBe(true);
 
       // Update configuration
-      processor.updateConfig({ 
+      processor.updateConfig({
         enableSerialization: false,
-        includeSourceText: false 
+        includeSourceText: false,
       });
 
       const updatedConfig = processor.getConfig();
@@ -731,16 +767,16 @@ describe('Integration & Performance Testing', () => {
 
       // Test that the configuration change affects processing
       const result = await processor.processFile(
-        '/test/updated-config.ts',
-        'typescript',
-        SAMPLE_TYPESCRIPT_CODE
+        "/test/updated-config.ts",
+        "typescript",
+        SAMPLE_TYPESCRIPT_CODE,
       );
 
       expect(result.success).toBe(true);
       expect(result.serializedPath).toBeUndefined(); // Serialization disabled
     });
 
-    it('should support custom serialization configurations', async () => {
+    it("should support custom serialization configurations", async () => {
       const customProcessor = new NodeProcessor({
         enableSerialization: true,
         serializationConfig: {
@@ -751,24 +787,32 @@ describe('Integration & Performance Testing', () => {
       });
 
       const result = await customProcessor.processFile(
-        '/test/custom-serial.ts',
-        'typescript',
-        SAMPLE_TYPESCRIPT_CODE
+        "/test/custom-serial.ts",
+        "typescript",
+        SAMPLE_TYPESCRIPT_CODE,
       );
 
       expect(result.success).toBe(true);
-      
+
       // In a real implementation, we could verify the serialization format
       // For now, just ensure the custom configuration doesn't break processing
       expect(result.stats).toBeDefined();
     });
   });
 
-  describe('Statistics and Monitoring', () => {
-    it('should provide comprehensive processing statistics', async () => {
+  describe("Statistics and Monitoring", () => {
+    it("should provide comprehensive processing statistics", async () => {
       const files = [
-        { filePath: '/test/stats1.ts', language: 'typescript', sourceText: SAMPLE_TYPESCRIPT_CODE },
-        { filePath: '/test/stats2.js', language: 'javascript', sourceText: SAMPLE_JAVASCRIPT_CODE },
+        {
+          filePath: "/test/stats1.ts",
+          language: "typescript",
+          sourceText: SAMPLE_TYPESCRIPT_CODE,
+        },
+        {
+          filePath: "/test/stats2.js",
+          language: "javascript",
+          sourceText: SAMPLE_JAVASCRIPT_CODE,
+        },
       ];
 
       const result = await processor.processBatch(files);
@@ -784,25 +828,27 @@ describe('Integration & Performance Testing', () => {
       expect(summary.significanceDistribution).toBeDefined();
 
       // Verify statistics accuracy
-      expect(summary.totalFiles).toBe(summary.successfulFiles + summary.failedFiles);
-      
+      expect(summary.totalFiles).toBe(
+        summary.successfulFiles + summary.failedFiles,
+      );
+
       // Verify distribution statistics are meaningful
       const nodeTypes = Object.keys(summary.nodeDistribution);
       expect(nodeTypes.length).toBeGreaterThanOrEqual(0);
-      
+
       const significanceLevels = Object.keys(summary.significanceDistribution);
       expect(significanceLevels.length).toBeGreaterThanOrEqual(0);
     });
 
-    it('should track performance metrics accurately', async () => {
+    it("should track performance metrics accurately", async () => {
       const result = await processor.processFile(
-        '/test/perf-metrics.ts',
-        'typescript',
-        SAMPLE_TYPESCRIPT_CODE
+        "/test/perf-metrics.ts",
+        "typescript",
+        SAMPLE_TYPESCRIPT_CODE,
       );
 
       expect(result.success).toBe(true);
-      
+
       const stats = result.stats;
       expect(stats.totalNodes).toBeGreaterThanOrEqual(0);
       expect(stats.processingTimeMs).toBeGreaterThanOrEqual(0);
@@ -813,18 +859,29 @@ describe('Integration & Performance Testing', () => {
 
       // Performance metrics should be logically consistent
       if (stats.totalNodes > 0 && stats.processingTimeMs > 0) {
-        const expectedNodesPerSecond = (stats.totalNodes * 1000) / stats.processingTimeMs;
-        expect(Math.abs(stats.performance.nodesPerSecond - expectedNodesPerSecond)).toBeLessThan(1);
+        const expectedNodesPerSecond =
+          (stats.totalNodes * 1000) / stats.processingTimeMs;
+        expect(
+          Math.abs(stats.performance.nodesPerSecond - expectedNodesPerSecond),
+        ).toBeLessThan(1);
       }
     });
 
-    it('should support merging results from multiple processing runs', async () => {
+    it("should support merging results from multiple processing runs", async () => {
       const run1 = await processor.processBatch([
-        { filePath: '/test/merge1.ts', language: 'typescript', sourceText: SAMPLE_TYPESCRIPT_CODE },
+        {
+          filePath: "/test/merge1.ts",
+          language: "typescript",
+          sourceText: SAMPLE_TYPESCRIPT_CODE,
+        },
       ]);
 
       const run2 = await processor.processBatch([
-        { filePath: '/test/merge2.js', language: 'javascript', sourceText: SAMPLE_JAVASCRIPT_CODE },
+        {
+          filePath: "/test/merge2.js",
+          language: "javascript",
+          sourceText: SAMPLE_JAVASCRIPT_CODE,
+        },
       ]);
 
       const merged = ProcessingUtils.mergeProcessingResults([run1, run2]);
@@ -832,7 +889,7 @@ describe('Integration & Performance Testing', () => {
       expect(merged.results).toHaveLength(2);
       expect(merged.overallStats.totalFiles).toBe(2);
       expect(merged.overallStats.processingTimeMs).toBeGreaterThanOrEqual(
-        run1.overallStats.processingTimeMs + run2.overallStats.processingTimeMs
+        run1.overallStats.processingTimeMs + run2.overallStats.processingTimeMs,
       );
 
       // Verify merged statistics are cumulative
@@ -841,14 +898,14 @@ describe('Integration & Performance Testing', () => {
     });
   });
 
-  describe('Real-world Scenario Testing', () => {
-    it('should handle typical frontend project structure', async () => {
+  describe("Real-world Scenario Testing", () => {
+    it("should handle typical frontend project structure", async () => {
       const frontendFiles = [
-        'src/app.component.ts',
-        'src/services/user.service.ts',
-        'src/guards/auth.guard.ts',
-        'src/models/user.model.ts',
-        'src/utils/helpers.ts',
+        "src/app.component.ts",
+        "src/services/user.service.ts",
+        "src/guards/auth.guard.ts",
+        "src/models/user.model.ts",
+        "src/utils/helpers.ts",
       ];
 
       mockFs.readdirSync.mockReturnValue(frontendFiles);
@@ -859,106 +916,118 @@ describe('Integration & Performance Testing', () => {
       }));
       mockFs.readFileSync.mockReturnValue(SAMPLE_TYPESCRIPT_CODE);
 
-      const result = await processor.processDirectory('/project/frontend', {
-        extensions: ['.ts', '.tsx'],
+      const result = await processor.processDirectory("/project/frontend", {
+        extensions: [".ts", ".tsx"],
         recursive: true,
       });
 
       expect(result.results).toHaveLength(frontendFiles.length);
       expect(result.overallStats.totalFiles).toBe(frontendFiles.length);
-      
+
       // Verify all TypeScript files detected
-      expect(result.results.every(r => r.language === 'typescript')).toBe(true);
+      expect(result.results.every((r) => r.language === "typescript")).toBe(
+        true,
+      );
     });
 
-    it('should handle typical backend project structure', async () => {
+    it("should handle typical backend project structure", async () => {
       const backendFiles = [
-        'server.js',
-        'routes/users.js',
-        'routes/auth.js',
-        'middleware/cors.js',
-        'models/User.js',
-        'config/database.js',
+        "server.js",
+        "routes/users.js",
+        "routes/auth.js",
+        "middleware/cors.js",
+        "models/User.js",
+        "config/database.js",
       ];
 
       mockFs.readdirSync
-        .mockReturnValueOnce(['server.js', 'routes', 'middleware', 'models', 'config'])
-        .mockReturnValueOnce(['users.js', 'auth.js'])
-        .mockReturnValueOnce(['cors.js'])
-        .mockReturnValueOnce(['User.js'])
-        .mockReturnValueOnce(['database.js']);
-        
+        .mockReturnValueOnce([
+          "server.js",
+          "routes",
+          "middleware",
+          "models",
+          "config",
+        ])
+        .mockReturnValueOnce(["users.js", "auth.js"])
+        .mockReturnValueOnce(["cors.js"])
+        .mockReturnValueOnce(["User.js"])
+        .mockReturnValueOnce(["database.js"]);
+
       mockFs.statSync.mockImplementation((filePath: string) => ({
         size: 1500,
-        isDirectory: () => !filePath.includes('.js'),
-        isFile: () => filePath.includes('.js'),
+        isDirectory: () => !filePath.includes(".js"),
+        isFile: () => filePath.includes(".js"),
       }));
-      
+
       mockFs.readFileSync.mockReturnValue(SAMPLE_JAVASCRIPT_CODE);
 
-      const result = await processor.processDirectory('/project/backend', {
-        extensions: ['.js'],
+      const result = await processor.processDirectory("/project/backend", {
+        extensions: [".js"],
         recursive: true,
       });
 
       // Should find some JavaScript files
       expect(result.results.length).toBeGreaterThan(0);
-      expect(result.results.every(r => r.language === 'javascript')).toBe(true);
+      expect(result.results.every((r) => r.language === "javascript")).toBe(
+        true,
+      );
     });
 
-    it('should process mixed-language full-stack project', async () => {
+    it("should process mixed-language full-stack project", async () => {
       const projectFiles = [
         // Frontend TypeScript
-        { path: 'frontend/src/app.ts', content: SAMPLE_TYPESCRIPT_CODE },
-        { path: 'frontend/src/component.tsx', content: SAMPLE_TYPESCRIPT_CODE },
-        
+        { path: "frontend/src/app.ts", content: SAMPLE_TYPESCRIPT_CODE },
+        { path: "frontend/src/component.tsx", content: SAMPLE_TYPESCRIPT_CODE },
+
         // Backend JavaScript
-        { path: 'backend/server.js', content: SAMPLE_JAVASCRIPT_CODE },
-        { path: 'backend/routes.js', content: SAMPLE_JAVASCRIPT_CODE },
-        
+        { path: "backend/server.js", content: SAMPLE_JAVASCRIPT_CODE },
+        { path: "backend/routes.js", content: SAMPLE_JAVASCRIPT_CODE },
+
         // Scripts Python
-        { path: 'scripts/deploy.py', content: SAMPLE_PYTHON_CODE },
+        { path: "scripts/deploy.py", content: SAMPLE_PYTHON_CODE },
       ];
 
       const result = await processor.processBatch(
-        projectFiles.map(file => ({
+        projectFiles.map((file) => ({
           filePath: `/project/${file.path}`,
-          language: file.path.endsWith('.py') ? 'python' :
-                   file.path.endsWith('.ts') || file.path.endsWith('.tsx') ? 'typescript' :
-                   'javascript',
+          language: file.path.endsWith(".py")
+            ? "python"
+            : file.path.endsWith(".ts") || file.path.endsWith(".tsx")
+              ? "typescript"
+              : "javascript",
           sourceText: file.content,
-        }))
+        })),
       );
 
       expect(result.results).toHaveLength(5);
       expect(result.overallStats.totalFiles).toBe(5);
-      
+
       // Verify mixed languages processed
-      const languages = new Set(result.results.map(r => r.language));
-      expect(languages).toContain('typescript');
-      expect(languages).toContain('javascript');
-      expect(languages).toContain('python');
+      const languages = new Set(result.results.map((r) => r.language));
+      expect(languages).toContain("typescript");
+      expect(languages).toContain("javascript");
+      expect(languages).toContain("python");
       expect(languages.size).toBe(3);
 
       // Verify processing quality across languages
-      const successfulResults = result.results.filter(r => r.success);
+      const successfulResults = result.results.filter((r) => r.success);
       expect(successfulResults.length).toBeGreaterThan(0);
     });
   });
 
-  describe('Regression Testing', () => {
-    it('should maintain backward compatibility with previous versions', async () => {
+  describe("Regression Testing", () => {
+    it("should maintain backward compatibility with previous versions", async () => {
       // Test that current implementation can handle data from previous versions
       const legacyResult = await processor.processFile(
-        '/test/legacy.ts',
-        'typescript',
-        SAMPLE_TYPESCRIPT_CODE
+        "/test/legacy.ts",
+        "typescript",
+        SAMPLE_TYPESCRIPT_CODE,
       );
 
       expect(legacyResult.success).toBe(true);
       expect(legacyResult.nodes).toBeDefined();
       expect(legacyResult.stats).toBeDefined();
-      
+
       // Verify all required fields are present
       for (const node of legacyResult.nodes) {
         expect(node.id).toBeTruthy();
@@ -972,26 +1041,29 @@ describe('Integration & Performance Testing', () => {
       }
     });
 
-    it('should handle edge cases consistently', async () => {
+    it("should handle edge cases consistently", async () => {
       const edgeCases = [
-        { name: 'empty file', content: '' },
-        { name: 'whitespace only', content: '   \n\n\t   ' },
-        { name: 'single line', content: 'const x = 1;' },
-        { name: 'unicode content', content: 'const 名前 = "テスト";' },
-        { name: 'very long line', content: `const longString = "${'x'.repeat(1000)}";` },
+        { name: "empty file", content: "" },
+        { name: "whitespace only", content: "   \n\n\t   " },
+        { name: "single line", content: "const x = 1;" },
+        { name: "unicode content", content: 'const 名前 = "テスト";' },
+        {
+          name: "very long line",
+          content: `const longString = "${"x".repeat(1000)}";`,
+        },
       ];
 
       for (const testCase of edgeCases) {
         const result = await processor.processFile(
-          `/test/edge-case-${testCase.name.replace(/\s+/g, '-')}.ts`,
-          'typescript',
-          testCase.content
+          `/test/edge-case-${testCase.name.replace(/\s+/g, "-")}.ts`,
+          "typescript",
+          testCase.content,
         );
 
         // Should handle gracefully without crashing
         expect(result).toBeDefined();
-        expect(typeof result.success).toBe('boolean');
-        
+        expect(typeof result.success).toBe("boolean");
+
         if (result.success) {
           expect(result.nodes).toBeDefined();
           expect(result.stats).toBeDefined();
@@ -1001,47 +1073,59 @@ describe('Integration & Performance Testing', () => {
       }
     });
 
-    it('should maintain consistent behavior across multiple runs', async () => {
+    it("should maintain consistent behavior across multiple runs", async () => {
       const runs = [];
-      
+
       for (let i = 0; i < 3; i++) {
         const result = await processor.processFile(
-          '/test/consistency.ts',
-          'typescript',
-          SAMPLE_TYPESCRIPT_CODE
+          "/test/consistency.ts",
+          "typescript",
+          SAMPLE_TYPESCRIPT_CODE,
         );
         runs.push(result);
       }
 
       // Verify consistency across runs
-      const fileHashes = runs.map(r => r.fileHash);
+      const fileHashes = runs.map((r) => r.fileHash);
       expect(new Set(fileHashes).size).toBe(1); // All hashes should be the same
 
-      const successStatus = runs.map(r => r.success);
+      const successStatus = runs.map((r) => r.success);
       expect(new Set(successStatus).size).toBe(1); // All should have same success status
 
-      const nodesCounts = runs.map(r => r.nodes.length);
+      const nodesCounts = runs.map((r) => r.nodes.length);
       expect(new Set(nodesCounts).size).toBe(1); // All should have same number of nodes
     });
   });
 
-  describe('Production Readiness Validation', () => {
-    it('should demonstrate production-level error handling', async () => {
+  describe("Production Readiness Validation", () => {
+    it("should demonstrate production-level error handling", async () => {
       const productionProcessor = ProcessingUtils.createPerformanceProcessor();
 
       // Simulate various production scenarios
       const scenarios = [
-        { filePath: '/prod/normal.ts', sourceText: SAMPLE_TYPESCRIPT_CODE, shouldSucceed: true },
-        { filePath: '', sourceText: SAMPLE_TYPESCRIPT_CODE, shouldSucceed: false }, // Invalid path
-        { filePath: '/prod/empty.ts', sourceText: '', shouldSucceed: true }, // Empty file
-        { filePath: '/prod/large.ts', sourceText: 'x'.repeat(100000), shouldSucceed: true }, // Large content
+        {
+          filePath: "/prod/normal.ts",
+          sourceText: SAMPLE_TYPESCRIPT_CODE,
+          shouldSucceed: true,
+        },
+        {
+          filePath: "",
+          sourceText: SAMPLE_TYPESCRIPT_CODE,
+          shouldSucceed: false,
+        }, // Invalid path
+        { filePath: "/prod/empty.ts", sourceText: "", shouldSucceed: true }, // Empty file
+        {
+          filePath: "/prod/large.ts",
+          sourceText: "x".repeat(100000),
+          shouldSucceed: true,
+        }, // Large content
       ];
 
       for (const scenario of scenarios) {
         const result = await productionProcessor.processFile(
           scenario.filePath,
-          'typescript',
-          scenario.sourceText
+          "typescript",
+          scenario.sourceText,
         );
 
         if (scenario.shouldSucceed) {
@@ -1056,14 +1140,17 @@ describe('Integration & Performance Testing', () => {
       }
     });
 
-    it('should support enterprise-scale processing requirements', async () => {
+    it("should support enterprise-scale processing requirements", async () => {
       // Simulate enterprise-scale batch processing
       const enterpriseFiles = Array.from({ length: 50 }, (_, i) => ({
         filePath: `/enterprise/module-${Math.floor(i / 10)}/file-${i}.ts`,
-        language: 'typescript' as const,
-        sourceText: i % 3 === 0 ? SAMPLE_TYPESCRIPT_CODE :
-                   i % 3 === 1 ? SAMPLE_JAVASCRIPT_CODE :
-                   SAMPLE_PYTHON_CODE.substring(0, 500), // Vary content sizes
+        language: "typescript" as const,
+        sourceText:
+          i % 3 === 0
+            ? SAMPLE_TYPESCRIPT_CODE
+            : i % 3 === 1
+              ? SAMPLE_JAVASCRIPT_CODE
+              : SAMPLE_PYTHON_CODE.substring(0, 500), // Vary content sizes
       }));
 
       const startTime = Date.now();
@@ -1074,21 +1161,22 @@ describe('Integration & Performance Testing', () => {
       expect(result.results).toHaveLength(50);
       expect(endTime - startTime).toBeLessThan(60000); // Complete within 1 minute
       expect(result.overallStats.performance.nodesPerSecond).toBeGreaterThan(0);
-      
+
       // Should maintain good success rate
-      const successRate = result.overallStats.successfulFiles / result.overallStats.totalFiles;
+      const successRate =
+        result.overallStats.successfulFiles / result.overallStats.totalFiles;
       expect(successRate).toBeGreaterThan(0.8); // At least 80% success rate
     });
 
-    it('should provide detailed monitoring and observability data', async () => {
+    it("should provide detailed monitoring and observability data", async () => {
       const result = await processor.processFile(
-        '/prod/monitoring.ts',
-        'typescript',
-        SAMPLE_TYPESCRIPT_CODE
+        "/prod/monitoring.ts",
+        "typescript",
+        SAMPLE_TYPESCRIPT_CODE,
       );
 
       expect(result.success).toBe(true);
-      
+
       // Verify comprehensive monitoring data
       const stats = result.stats;
       expect(stats).toMatchObject({

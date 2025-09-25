@@ -2,8 +2,8 @@
  * Dynamic batch size optimization based on system resources and performance metrics
  */
 
-import os from 'os';
-import { createLogger } from '../logging/index.js';
+import os from "os";
+import { createLogger } from "../logging/index.js";
 
 export interface SystemResourceMetrics {
   /** CPU usage percentage (0-100) */
@@ -91,23 +91,20 @@ export class DynamicBatchOptimizer {
   private config: OptimizationConfig;
   private performanceHistory: PerformanceHistory[] = [];
   private currentBatchSize: number;
-  private lastOptimization: number = 0;
+  private lastOptimization = 0;
   private cpuMonitoring: Map<string, number[]> = new Map();
-  private logger = createLogger({ operation: 'DynamicBatchOptimizer' });
+  private logger = createLogger({ operation: "DynamicBatchOptimizer" });
 
-  constructor(
-    initialBatchSize: number = 32,
-    config: Partial<OptimizationConfig> = {}
-  ) {
+  constructor(initialBatchSize = 32, config: Partial<OptimizationConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.currentBatchSize = Math.max(
       this.config.minBatchSize,
-      Math.min(initialBatchSize, this.config.maxBatchSize)
+      Math.min(initialBatchSize, this.config.maxBatchSize),
     );
 
-    this.logger.info('Dynamic batch optimizer initialized', {
+    this.logger.info("Dynamic batch optimizer initialized", {
       initialBatchSize: this.currentBatchSize,
-      config: this.config
+      config: this.config,
     });
   }
 
@@ -125,7 +122,7 @@ export class DynamicBatchOptimizer {
     batchSize: number,
     processingTime: number,
     itemCount: number,
-    success: boolean = true
+    success = true,
   ): void {
     const throughput = itemCount / (processingTime / 1000); // items per second
     const systemMetrics = this.getCurrentSystemMetrics();
@@ -147,12 +144,12 @@ export class DynamicBatchOptimizer {
       this.performanceHistory.shift();
     }
 
-    this.logger.debug('Performance recorded', {
+    this.logger.debug("Performance recorded", {
       batchSize,
       processingTime: `${processingTime}ms`,
       throughput: `${throughput.toFixed(2)} items/sec`,
       memoryUsage: `${systemMetrics.memoryUsage.toFixed(1)}%`,
-      success
+      success,
     });
 
     // Trigger optimization if enough samples collected
@@ -169,7 +166,7 @@ export class DynamicBatchOptimizer {
       return {
         recommendedBatchSize: this.currentBatchSize,
         confidence: 0.1,
-        reason: 'Insufficient performance data for optimization',
+        reason: "Insufficient performance data for optimization",
         expectedImprovement: 0,
         resourcePrediction: {
           cpuUsage: 0,
@@ -180,14 +177,19 @@ export class DynamicBatchOptimizer {
     }
 
     const systemMetrics = this.getCurrentSystemMetrics();
-    const recentHistory = this.performanceHistory.slice(-this.config.minSamples);
-    const successfulBatches = recentHistory.filter(h => h.success);
+    const recentHistory = this.performanceHistory.slice(
+      -this.config.minSamples,
+    );
+    const successfulBatches = recentHistory.filter((h) => h.success);
 
     if (successfulBatches.length === 0) {
       return {
-        recommendedBatchSize: Math.max(1, Math.floor(this.currentBatchSize * 0.5)),
+        recommendedBatchSize: Math.max(
+          1,
+          Math.floor(this.currentBatchSize * 0.5),
+        ),
         confidence: 0.8,
-        reason: 'Recent batches failed, reducing batch size for stability',
+        reason: "Recent batches failed, reducing batch size for stability",
         expectedImprovement: 0.2,
         resourcePrediction: {
           cpuUsage: systemMetrics.cpuUsage * 0.7,
@@ -198,7 +200,10 @@ export class DynamicBatchOptimizer {
     }
 
     // Analyze optimal batch size based on throughput and resource usage
-    const analysis = this.analyzeOptimalBatchSize(successfulBatches, systemMetrics);
+    const analysis = this.analyzeOptimalBatchSize(
+      successfulBatches,
+      systemMetrics,
+    );
     return analysis;
   }
 
@@ -207,11 +212,11 @@ export class DynamicBatchOptimizer {
    */
   optimize(): void {
     const recommendation = this.getOptimizationRecommendation();
-    
+
     if (recommendation.confidence < 0.5) {
-      this.logger.debug('Skipping optimization due to low confidence', {
+      this.logger.debug("Skipping optimization due to low confidence", {
         confidence: recommendation.confidence,
-        reason: recommendation.reason
+        reason: recommendation.reason,
       });
       return;
     }
@@ -220,12 +225,12 @@ export class DynamicBatchOptimizer {
     this.currentBatchSize = recommendation.recommendedBatchSize;
     this.lastOptimization = Date.now();
 
-    this.logger.info('Batch size optimized', {
+    this.logger.info("Batch size optimized", {
       oldBatchSize,
       newBatchSize: this.currentBatchSize,
       confidence: recommendation.confidence,
       reason: recommendation.reason,
-      expectedImprovement: `${(recommendation.expectedImprovement * 100).toFixed(1)}%`
+      expectedImprovement: `${(recommendation.expectedImprovement * 100).toFixed(1)}%`,
     });
   }
 
@@ -296,16 +301,19 @@ export class DynamicBatchOptimizer {
 
     // Check if recent performance suggests optimization is needed
     const recentBatches = this.performanceHistory.slice(-5);
-    const failureRate = recentBatches.filter(b => !b.success).length / recentBatches.length;
-    
+    const failureRate =
+      recentBatches.filter((b) => !b.success).length / recentBatches.length;
+
     if (failureRate > 0.2) {
       return true; // High failure rate, optimize immediately
     }
 
     // Check resource utilization
     const systemMetrics = this.getCurrentSystemMetrics();
-    if (systemMetrics.memoryUsage > this.config.targetMemoryUsage ||
-        systemMetrics.cpuUsage > this.config.targetCpuUsage) {
+    if (
+      systemMetrics.memoryUsage > this.config.targetMemoryUsage ||
+      systemMetrics.cpuUsage > this.config.targetCpuUsage
+    ) {
       return true;
     }
 
@@ -317,11 +325,11 @@ export class DynamicBatchOptimizer {
    */
   private analyzeOptimalBatchSize(
     history: PerformanceHistory[],
-    systemMetrics: SystemResourceMetrics
+    systemMetrics: SystemResourceMetrics,
   ): OptimizationRecommendation {
     // Group by batch size and calculate average performance
     const batchSizeGroups = new Map<number, PerformanceHistory[]>();
-    
+
     for (const record of history) {
       if (!batchSizeGroups.has(record.batchSize)) {
         batchSizeGroups.set(record.batchSize, []);
@@ -332,25 +340,36 @@ export class DynamicBatchOptimizer {
     let bestBatchSize = this.currentBatchSize;
     let bestScore = 0;
     let confidence = 0.5;
-    let reason = 'Maintaining current batch size';
+    let reason = "Maintaining current batch size";
 
     for (const [batchSize, records] of batchSizeGroups) {
-      const avgThroughput = records.reduce((sum, r) => sum + r.throughput, 0) / records.length;
-      const avgMemoryUsage = records.reduce((sum, r) => sum + r.memoryUsage, 0) / records.length;
-      const avgCpuUsage = records.reduce((sum, r) => sum + r.cpuUsage, 0) / records.length;
-      const successRate = records.filter(r => r.success).length / records.length;
+      const avgThroughput =
+        records.reduce((sum, r) => sum + r.throughput, 0) / records.length;
+      const avgMemoryUsage =
+        records.reduce((sum, r) => sum + r.memoryUsage, 0) / records.length;
+      const avgCpuUsage =
+        records.reduce((sum, r) => sum + r.cpuUsage, 0) / records.length;
+      const successRate =
+        records.filter((r) => r.success).length / records.length;
 
       // Calculate composite score considering throughput, resource usage, and success rate
       const throughputScore = avgThroughput / 100; // Normalize
-      const resourceScore = Math.max(0, 2 - (avgMemoryUsage + avgCpuUsage) / 100);
+      const resourceScore = Math.max(
+        0,
+        2 - (avgMemoryUsage + avgCpuUsage) / 100,
+      );
       const stabilityScore = successRate;
-      
-      const compositeScore = (throughputScore + resourceScore + stabilityScore) / 3;
+
+      const compositeScore =
+        (throughputScore + resourceScore + stabilityScore) / 3;
 
       if (compositeScore > bestScore) {
         bestScore = compositeScore;
         bestBatchSize = batchSize;
-        confidence = Math.min(0.9, 0.5 + (records.length / this.config.minSamples) * 0.4);
+        confidence = Math.min(
+          0.9,
+          0.5 + (records.length / this.config.minSamples) * 0.4,
+        );
       }
     }
 
@@ -358,38 +377,50 @@ export class DynamicBatchOptimizer {
     if (systemMetrics.memoryUsage > this.config.targetMemoryUsage) {
       bestBatchSize = Math.max(
         this.config.minBatchSize,
-        Math.floor(bestBatchSize * 0.8)
+        Math.floor(bestBatchSize * 0.8),
       );
-      reason = 'Reduced batch size due to high memory usage';
+      reason = "Reduced batch size due to high memory usage";
     } else if (systemMetrics.cpuUsage > this.config.targetCpuUsage) {
       bestBatchSize = Math.max(
         this.config.minBatchSize,
-        Math.floor(bestBatchSize * 0.9)
+        Math.floor(bestBatchSize * 0.9),
       );
-      reason = 'Reduced batch size due to high CPU usage';
-    } else if (systemMetrics.memoryUsage < this.config.targetMemoryUsage * 0.5 &&
-               systemMetrics.cpuUsage < this.config.targetCpuUsage * 0.5) {
+      reason = "Reduced batch size due to high CPU usage";
+    } else if (
+      systemMetrics.memoryUsage < this.config.targetMemoryUsage * 0.5 &&
+      systemMetrics.cpuUsage < this.config.targetCpuUsage * 0.5
+    ) {
       bestBatchSize = Math.min(
         this.config.maxBatchSize,
-        Math.floor(bestBatchSize * 1.2)
+        Math.floor(bestBatchSize * 1.2),
       );
-      reason = 'Increased batch size due to low resource usage';
+      reason = "Increased batch size due to low resource usage";
     }
 
     // Calculate expected improvement
-    const currentAvg = history.filter(h => h.batchSize === this.currentBatchSize);
-    const currentThroughput = currentAvg.length > 0 
-      ? currentAvg.reduce((sum, r) => sum + r.throughput, 0) / currentAvg.length 
-      : 0;
-    
-    const expectedAvg = history.filter(h => h.batchSize === bestBatchSize);
-    const expectedThroughput = expectedAvg.length > 0 
-      ? expectedAvg.reduce((sum, r) => sum + r.throughput, 0) / expectedAvg.length 
-      : currentThroughput;
+    const currentAvg = history.filter(
+      (h) => h.batchSize === this.currentBatchSize,
+    );
+    const currentThroughput =
+      currentAvg.length > 0
+        ? currentAvg.reduce((sum, r) => sum + r.throughput, 0) /
+          currentAvg.length
+        : 0;
 
-    const expectedImprovement = currentThroughput > 0 
-      ? Math.max(0, (expectedThroughput - currentThroughput) / currentThroughput)
-      : 0;
+    const expectedAvg = history.filter((h) => h.batchSize === bestBatchSize);
+    const expectedThroughput =
+      expectedAvg.length > 0
+        ? expectedAvg.reduce((sum, r) => sum + r.throughput, 0) /
+          expectedAvg.length
+        : currentThroughput;
+
+    const expectedImprovement =
+      currentThroughput > 0
+        ? Math.max(
+            0,
+            (expectedThroughput - currentThroughput) / currentThroughput,
+          )
+        : 0;
 
     return {
       recommendedBatchSize: bestBatchSize,
@@ -420,27 +451,40 @@ export class DynamicBatchOptimizer {
     const earlier = history.slice(-10, -5);
 
     const recentAvgs = {
-      throughput: recent.reduce((sum, r) => sum + r.throughput, 0) / recent.length,
+      throughput:
+        recent.reduce((sum, r) => sum + r.throughput, 0) / recent.length,
       memory: recent.reduce((sum, r) => sum + r.memoryUsage, 0) / recent.length,
       cpu: recent.reduce((sum, r) => sum + r.cpuUsage, 0) / recent.length,
     };
 
-    const earlierAvgs = earlier.length > 0 ? {
-      throughput: earlier.reduce((sum, r) => sum + r.throughput, 0) / earlier.length,
-      memory: earlier.reduce((sum, r) => sum + r.memoryUsage, 0) / earlier.length,
-      cpu: earlier.reduce((sum, r) => sum + r.cpuUsage, 0) / earlier.length,
-    } : recentAvgs;
+    const earlierAvgs =
+      earlier.length > 0
+        ? {
+            throughput:
+              earlier.reduce((sum, r) => sum + r.throughput, 0) /
+              earlier.length,
+            memory:
+              earlier.reduce((sum, r) => sum + r.memoryUsage, 0) /
+              earlier.length,
+            cpu:
+              earlier.reduce((sum, r) => sum + r.cpuUsage, 0) / earlier.length,
+          }
+        : recentAvgs;
 
     return {
-      throughputTrend: earlierAvgs.throughput > 0 
-        ? (recentAvgs.throughput - earlierAvgs.throughput) / earlierAvgs.throughput 
-        : 0,
-      memoryTrend: earlierAvgs.memory > 0 
-        ? (recentAvgs.memory - earlierAvgs.memory) / earlierAvgs.memory 
-        : 0,
-      cpuTrend: earlierAvgs.cpu > 0 
-        ? (recentAvgs.cpu - earlierAvgs.cpu) / earlierAvgs.cpu 
-        : 0,
+      throughputTrend:
+        earlierAvgs.throughput > 0
+          ? (recentAvgs.throughput - earlierAvgs.throughput) /
+            earlierAvgs.throughput
+          : 0,
+      memoryTrend:
+        earlierAvgs.memory > 0
+          ? (recentAvgs.memory - earlierAvgs.memory) / earlierAvgs.memory
+          : 0,
+      cpuTrend:
+        earlierAvgs.cpu > 0
+          ? (recentAvgs.cpu - earlierAvgs.cpu) / earlierAvgs.cpu
+          : 0,
     };
   }
 
@@ -450,37 +494,37 @@ export class DynamicBatchOptimizer {
   private estimateCpuUsage(): number {
     const usage = process.cpuUsage();
     const total = usage.user + usage.system;
-    
+
     // Store recent measurements
-    const key = 'cpu-usage';
-    
+    const key = "cpu-usage";
+
     if (!this.cpuMonitoring.has(key)) {
       this.cpuMonitoring.set(key, []);
     }
-    
+
     const measurements = this.cpuMonitoring.get(key)!;
     measurements.push(total);
-    
+
     // Keep only recent measurements
     if (measurements.length > 10) {
       measurements.shift();
     }
-    
+
     // Calculate percentage (simplified)
     if (measurements.length < 2) {
       return 0;
     }
-    
+
     const recent = measurements.slice(-2);
     const prev = recent[0];
     const current = recent[1];
-    
+
     if (prev === undefined || current === undefined) {
       return 0;
     }
-    
+
     const diff = current - prev;
-    
+
     // Convert to percentage (rough approximation)
     return Math.min(100, Math.max(0, (diff / 1000000) * 100)); // microseconds to percentage
   }

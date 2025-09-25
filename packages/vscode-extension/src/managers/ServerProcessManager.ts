@@ -1,13 +1,20 @@
-import { ChildProcess, spawn } from 'child_process';
-import { EventEmitter } from 'events';
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
+import type { ChildProcess } from "child_process";
+import { spawn } from "child_process";
+import { EventEmitter } from "events";
+import * as vscode from "vscode";
+import * as path from "path";
+import * as fs from "fs";
 
 /**
  * Server process states
  */
-export type ServerState = 'stopped' | 'starting' | 'running' | 'stopping' | 'error' | 'crashed';
+export type ServerState =
+  | "stopped"
+  | "starting"
+  | "running"
+  | "stopping"
+  | "error"
+  | "crashed";
 
 /**
  * Server process information
@@ -40,13 +47,17 @@ export interface ServerConfig {
  * Events emitted by ServerProcessManager
  */
 export interface ServerProcessEvents {
-  'stateChanged': (state: ServerState, previousState: ServerState) => void;
-  'started': (info: ServerProcessInfo) => void;
-  'stopped': (info: ServerProcessInfo) => void;
-  'error': (error: Error, info: ServerProcessInfo) => void;
-  'crashed': (exitCode: number | null, signal: string | null, info: ServerProcessInfo) => void;
-  'restarting': (attempt: number, maxAttempts: number) => void;
-  'output': (data: string, isError: boolean) => void;
+  stateChanged: (state: ServerState, previousState: ServerState) => void;
+  started: (info: ServerProcessInfo) => void;
+  stopped: (info: ServerProcessInfo) => void;
+  error: (error: Error, info: ServerProcessInfo) => void;
+  crashed: (
+    exitCode: number | null,
+    signal: string | null,
+    info: ServerProcessInfo,
+  ) => void;
+  restarting: (attempt: number, maxAttempts: number) => void;
+  output: (data: string, isError: boolean) => void;
 }
 
 /**
@@ -55,7 +66,7 @@ export interface ServerProcessEvents {
 export class ServerProcessManager extends EventEmitter {
   private process: ChildProcess | null = null;
   private config: ServerConfig;
-  private state: ServerState = 'stopped';
+  private state: ServerState = "stopped";
   private startTime: Date | null = null;
   private restarts = 0;
   private lastError: string | null = null;
@@ -65,23 +76,29 @@ export class ServerProcessManager extends EventEmitter {
   private outputChannel: vscode.OutputChannel;
   private isDisposed = false;
 
-  constructor(config: Partial<ServerConfig>, outputChannel: vscode.OutputChannel) {
+  constructor(
+    config: Partial<ServerConfig>,
+    outputChannel: vscode.OutputChannel,
+  ) {
     super();
-    
+
     this.outputChannel = outputChannel;
     this.config = this.normalizeConfig(config);
-    
+
     this.outputChannel.appendLine(`Server Process Manager initialized`);
     this.outputChannel.appendLine(`Server path: ${this.config.serverPath}`);
-    this.outputChannel.appendLine(`Working directory: ${this.config.workingDirectory}`);
+    this.outputChannel.appendLine(
+      `Working directory: ${this.config.workingDirectory}`,
+    );
   }
 
   /**
    * Normalize and validate server configuration
    */
   private normalizeConfig(config: Partial<ServerConfig>): ServerConfig {
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
-    
+    const workspaceRoot =
+      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
+
     // Filter out undefined values from environment
     const cleanEnv: Record<string, string> = {};
     for (const [key, value] of Object.entries(process.env)) {
@@ -89,7 +106,7 @@ export class ServerProcessManager extends EventEmitter {
         cleanEnv[key] = value;
       }
     }
-    
+
     return {
       serverPath: config.serverPath || this.getDefaultServerPath(),
       workingDirectory: config.workingDirectory || workspaceRoot,
@@ -110,30 +127,36 @@ export class ServerProcessManager extends EventEmitter {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (workspaceRoot) {
       // Look for server binary in workspace
-      const localServerPath = path.join(workspaceRoot, 'packages', 'ast-mcp-server', 'bin', 'ast-mcp-server');
+      const localServerPath = path.join(
+        workspaceRoot,
+        "packages",
+        "ast-mcp-server",
+        "bin",
+        "ast-mcp-server",
+      );
       if (fs.existsSync(localServerPath)) {
         return localServerPath;
       }
     }
-    
+
     // Fall back to global installation
-    return 'ast-mcp-server';
+    return "ast-mcp-server";
   }
 
   /**
    * Start the MCP server process
    */
   public async start(): Promise<void> {
-    if (this.state === 'running' || this.state === 'starting') {
+    if (this.state === "running" || this.state === "starting") {
       throw new Error(`Server is already ${this.state}`);
     }
 
     if (this.isDisposed) {
-      throw new Error('ServerProcessManager has been disposed');
+      throw new Error("ServerProcessManager has been disposed");
     }
 
-    this.outputChannel.appendLine('Starting MCP server...');
-    this.setState('starting');
+    this.outputChannel.appendLine("Starting MCP server...");
+    this.setState("starting");
 
     try {
       // Validate server executable exists
@@ -146,7 +169,7 @@ export class ServerProcessManager extends EventEmitter {
       this.process = spawn(this.config.serverPath, this.config.args, {
         cwd: this.config.workingDirectory,
         env: this.config.env,
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: ["pipe", "pipe", "pipe"],
       });
 
       // Set up process event handlers
@@ -154,7 +177,7 @@ export class ServerProcessManager extends EventEmitter {
 
       // Start startup timeout
       this.startupTimer = setTimeout(() => {
-        if (this.state === 'starting') {
+        if (this.state === "starting") {
           this.handleStartupTimeout();
         }
       }, this.config.startupTimeout);
@@ -163,14 +186,15 @@ export class ServerProcessManager extends EventEmitter {
       await this.waitForReady();
 
       this.startTime = new Date();
-      this.setState('running');
-      this.outputChannel.appendLine(`MCP server started successfully (PID: ${this.process.pid})`);
-      
+      this.setState("running");
+      this.outputChannel.appendLine(
+        `MCP server started successfully (PID: ${this.process.pid})`,
+      );
+
       // Start health monitoring
       this.startHealthCheck();
-      
-      this.emit('started', this.getProcessInfo());
 
+      this.emit("started", this.getProcessInfo());
     } catch (error) {
       this.handleStartError(error);
       throw error;
@@ -181,12 +205,12 @@ export class ServerProcessManager extends EventEmitter {
    * Stop the MCP server process
    */
   public async stop(force = false): Promise<void> {
-    if (this.state === 'stopped' || this.state === 'stopping') {
+    if (this.state === "stopped" || this.state === "stopping") {
       return;
     }
 
-    this.outputChannel.appendLine('Stopping MCP server...');
-    this.setState('stopping');
+    this.outputChannel.appendLine("Stopping MCP server...");
+    this.setState("stopping");
 
     // Clear timers
     this.clearTimers();
@@ -194,15 +218,17 @@ export class ServerProcessManager extends EventEmitter {
     if (this.process) {
       try {
         if (force) {
-          this.process.kill('SIGKILL');
+          this.process.kill("SIGKILL");
         } else {
-          this.process.kill('SIGTERM');
-          
+          this.process.kill("SIGTERM");
+
           // Wait for graceful shutdown, then force kill if needed
           setTimeout(() => {
             if (this.process && !this.process.killed) {
-              this.outputChannel.appendLine('Forcefully terminating server process...');
-              this.process.kill('SIGKILL');
+              this.outputChannel.appendLine(
+                "Forcefully terminating server process...",
+              );
+              this.process.kill("SIGKILL");
             }
           }, 5000);
         }
@@ -222,10 +248,9 @@ export class ServerProcessManager extends EventEmitter {
           if (this.process.exitCode !== null) {
             onExit();
           } else {
-            this.process.once('exit', onExit);
+            this.process.once("exit", onExit);
           }
         });
-
       } catch (error) {
         this.outputChannel.appendLine(`Error stopping server: ${error}`);
       }
@@ -233,25 +258,25 @@ export class ServerProcessManager extends EventEmitter {
 
     this.process = null;
     this.startTime = null;
-    this.setState('stopped');
-    this.outputChannel.appendLine('MCP server stopped');
-    
-    this.emit('stopped', this.getProcessInfo());
+    this.setState("stopped");
+    this.outputChannel.appendLine("MCP server stopped");
+
+    this.emit("stopped", this.getProcessInfo());
   }
 
   /**
    * Restart the MCP server process
    */
   public async restart(): Promise<void> {
-    this.outputChannel.appendLine('Restarting MCP server...');
-    
-    if (this.state !== 'stopped') {
+    this.outputChannel.appendLine("Restarting MCP server...");
+
+    if (this.state !== "stopped") {
       await this.stop();
     }
-    
+
     // Add a small delay before restart
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     await this.start();
   }
 
@@ -272,7 +297,9 @@ export class ServerProcessManager extends EventEmitter {
       startTime: this.startTime || undefined,
       restarts: this.restarts,
       lastError: this.lastError || undefined,
-      uptime: this.startTime ? Date.now() - this.startTime.getTime() : undefined,
+      uptime: this.startTime
+        ? Date.now() - this.startTime.getTime()
+        : undefined,
     };
   }
 
@@ -280,7 +307,7 @@ export class ServerProcessManager extends EventEmitter {
    * Check if server is running
    */
   public isRunning(): boolean {
-    return this.state === 'running';
+    return this.state === "running";
   }
 
   /**
@@ -289,19 +316,25 @@ export class ServerProcessManager extends EventEmitter {
   public updateConfig(newConfig: Partial<ServerConfig>): void {
     const oldConfig = { ...this.config };
     this.config = this.normalizeConfig({ ...this.config, ...newConfig });
-    
-    this.outputChannel.appendLine('Server configuration updated');
-    
+
+    this.outputChannel.appendLine("Server configuration updated");
+
     // If critical settings changed and server is running, restart
-    const criticalSettings = ['serverPath', 'args', 'workingDirectory'];
-    const criticalChanged = criticalSettings.some(key => 
-      oldConfig[key as keyof ServerConfig] !== this.config[key as keyof ServerConfig]
+    const criticalSettings = ["serverPath", "args", "workingDirectory"];
+    const criticalChanged = criticalSettings.some(
+      (key) =>
+        oldConfig[key as keyof ServerConfig] !==
+        this.config[key as keyof ServerConfig],
     );
-    
+
     if (criticalChanged && this.isRunning()) {
-      this.outputChannel.appendLine('Critical settings changed, restarting server...');
-      this.restart().catch(error => {
-        this.outputChannel.appendLine(`Failed to restart after config change: ${error}`);
+      this.outputChannel.appendLine(
+        "Critical settings changed, restarting server...",
+      );
+      this.restart().catch((error) => {
+        this.outputChannel.appendLine(
+          `Failed to restart after config change: ${error}`,
+        );
       });
     }
   }
@@ -315,12 +348,12 @@ export class ServerProcessManager extends EventEmitter {
     }
 
     this.isDisposed = true;
-    this.outputChannel.appendLine('Disposing ServerProcessManager...');
+    this.outputChannel.appendLine("Disposing ServerProcessManager...");
 
     // Stop the process if running
-    if (this.state !== 'stopped') {
-      this.stop(true).catch(error => {
-        console.error('Error stopping server during disposal:', error);
+    if (this.state !== "stopped") {
+      this.stop(true).catch((error) => {
+        console.error("Error stopping server during disposal:", error);
       });
     }
 
@@ -337,10 +370,12 @@ export class ServerProcessManager extends EventEmitter {
   private setState(newState: ServerState): void {
     const previousState = this.state;
     this.state = newState;
-    
+
     if (previousState !== newState) {
-      this.outputChannel.appendLine(`Server state changed: ${previousState} → ${newState}`);
-      this.emit('stateChanged', newState, previousState);
+      this.outputChannel.appendLine(
+        `Server state changed: ${previousState} → ${newState}`,
+      );
+      this.emit("stateChanged", newState, previousState);
     }
   }
 
@@ -349,13 +384,21 @@ export class ServerProcessManager extends EventEmitter {
    */
   private async validateServerPath(): Promise<void> {
     return new Promise((resolve, reject) => {
-      fs.access(this.config.serverPath, fs.constants.F_OK | fs.constants.X_OK, (error) => {
-        if (error) {
-          reject(new Error(`Server executable not found or not executable: ${this.config.serverPath}`));
-        } else {
-          resolve();
-        }
-      });
+      fs.access(
+        this.config.serverPath,
+        fs.constants.F_OK | fs.constants.X_OK,
+        (error) => {
+          if (error) {
+            reject(
+              new Error(
+                `Server executable not found or not executable: ${this.config.serverPath}`,
+              ),
+            );
+          } else {
+            resolve();
+          }
+        },
+      );
     });
   }
 
@@ -363,27 +406,29 @@ export class ServerProcessManager extends EventEmitter {
    * Set up process event handlers
    */
   private setupProcessHandlers(): void {
-    if (!this.process) return;
+    if (!this.process) {
+      return;
+    }
 
-    this.process.on('exit', (code, signal) => {
+    this.process.on("exit", (code, signal) => {
       this.handleProcessExit(code, signal);
     });
 
-    this.process.on('error', (error) => {
+    this.process.on("error", (error) => {
       this.handleProcessError(error);
     });
 
     // Capture stdout and stderr
-    this.process.stdout?.on('data', (data) => {
+    this.process.stdout?.on("data", (data) => {
       const output = data.toString();
       this.outputChannel.append(output);
-      this.emit('output', output, false);
+      this.emit("output", output, false);
     });
 
-    this.process.stderr?.on('data', (data) => {
+    this.process.stderr?.on("data", (data) => {
       const output = data.toString();
       this.outputChannel.append(`[ERROR] ${output}`);
-      this.emit('output', output, true);
+      this.emit("output", output, true);
     });
   }
 
@@ -393,11 +438,11 @@ export class ServerProcessManager extends EventEmitter {
   private async waitForReady(): Promise<void> {
     // For now, just wait a short time for the process to initialize
     // In a full implementation, this would check for specific output or health endpoint
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // Verify process is still alive
     if (!this.process || this.process.exitCode !== null) {
-      throw new Error('Server process exited during startup');
+      throw new Error("Server process exited during startup");
     }
   }
 
@@ -405,19 +450,23 @@ export class ServerProcessManager extends EventEmitter {
    * Handle startup timeout
    */
   private handleStartupTimeout(): void {
-    if (this.state !== 'starting') {
+    if (this.state !== "starting") {
       return; // Already handled or not in startup phase
     }
-    
-    this.outputChannel.appendLine('Server startup timeout reached');
-    this.setState('error');
-    this.lastError = 'Startup timeout';
-    
+
+    this.outputChannel.appendLine("Server startup timeout reached");
+    this.setState("error");
+    this.lastError = "Startup timeout";
+
     if (this.process) {
-      this.process.kill('SIGKILL');
+      this.process.kill("SIGKILL");
     }
-    
-    this.emit('error', new Error('Server startup timeout'), this.getProcessInfo());
+
+    this.emit(
+      "error",
+      new Error("Server startup timeout"),
+      this.getProcessInfo(),
+    );
   }
 
   /**
@@ -425,45 +474,51 @@ export class ServerProcessManager extends EventEmitter {
    */
   private handleStartError(error: any): void {
     this.outputChannel.appendLine(`Failed to start server: ${error.message}`);
-    this.setState('error');
+    this.setState("error");
     this.lastError = error.message;
     this.clearTimers();
-    
+
     if (this.process) {
-      this.process.kill('SIGKILL');
+      this.process.kill("SIGKILL");
       this.process = null;
     }
-    
-    this.emit('error', error, this.getProcessInfo());
+
+    this.emit("error", error, this.getProcessInfo());
   }
 
   /**
    * Handle process exit
    */
   private handleProcessExit(code: number | null, signal: string | null): void {
-    const wasRunning = this.state === 'running';
-    
+    const wasRunning = this.state === "running";
+
     this.clearTimers();
     this.process = null;
     this.startTime = null;
-    
-    if (this.state === 'stopping') {
+
+    if (this.state === "stopping") {
       // Expected shutdown
-      this.setState('stopped');
+      this.setState("stopped");
       return;
     }
-    
+
     // Unexpected exit
-    this.outputChannel.appendLine(`Server process exited unexpectedly (code: ${code}, signal: ${signal})`);
-    this.setState('crashed');
-    
-    this.emit('crashed', code, signal, this.getProcessInfo());
-    
+    this.outputChannel.appendLine(
+      `Server process exited unexpectedly (code: ${code}, signal: ${signal})`,
+    );
+    this.setState("crashed");
+
+    this.emit("crashed", code, signal, this.getProcessInfo());
+
     // Auto-restart if enabled and not too many restarts
-    if (wasRunning && this.config.autoRestart && this.restarts < this.config.maxRestarts) {
+    if (
+      wasRunning &&
+      this.config.autoRestart &&
+      this.restarts < this.config.maxRestarts
+    ) {
       this.scheduleRestart();
     } else {
-      this.setState('error');
+      this.setState("error");
       this.lastError = `Process exited with code ${code}`;
     }
   }
@@ -473,10 +528,10 @@ export class ServerProcessManager extends EventEmitter {
    */
   private handleProcessError(error: Error): void {
     this.outputChannel.appendLine(`Server process error: ${error.message}`);
-    this.setState('error');
+    this.setState("error");
     this.lastError = error.message;
-    
-    this.emit('error', error, this.getProcessInfo());
+
+    this.emit("error", error, this.getProcessInfo());
   }
 
   /**
@@ -484,14 +539,16 @@ export class ServerProcessManager extends EventEmitter {
    */
   private scheduleRestart(): void {
     this.restarts++;
-    this.outputChannel.appendLine(`Scheduling restart (attempt ${this.restarts}/${this.config.maxRestarts})...`);
-    
-    this.emit('restarting', this.restarts, this.config.maxRestarts);
-    
+    this.outputChannel.appendLine(
+      `Scheduling restart (attempt ${this.restarts}/${this.config.maxRestarts})...`,
+    );
+
+    this.emit("restarting", this.restarts, this.config.maxRestarts);
+
     this.restartTimer = setTimeout(() => {
-      this.start().catch(error => {
+      this.start().catch((error) => {
         this.outputChannel.appendLine(`Auto-restart failed: ${error.message}`);
-        this.setState('error');
+        this.setState("error");
         this.lastError = error.message;
       });
     }, this.config.restartDelay);
@@ -504,12 +561,14 @@ export class ServerProcessManager extends EventEmitter {
     if (this.config.healthCheckInterval <= 0) {
       return;
     }
-    
+
     this.healthCheckTimer = setInterval(() => {
-      if (this.process && this.state === 'running') {
+      if (this.process && this.state === "running") {
         // Simple health check - verify process is still alive
         if (this.process.exitCode !== null) {
-          this.outputChannel.appendLine('Health check failed: process not running');
+          this.outputChannel.appendLine(
+            "Health check failed: process not running",
+          );
           this.handleProcessExit(this.process.exitCode, null);
         }
       }
@@ -524,12 +583,12 @@ export class ServerProcessManager extends EventEmitter {
       clearInterval(this.healthCheckTimer);
       this.healthCheckTimer = null;
     }
-    
+
     if (this.startupTimer) {
       clearTimeout(this.startupTimer);
       this.startupTimer = null;
     }
-    
+
     if (this.restartTimer) {
       clearTimeout(this.restartTimer);
       this.restartTimer = null;
@@ -540,7 +599,13 @@ export class ServerProcessManager extends EventEmitter {
 /**
  * Server process manager events interface (for TypeScript typing)
  */
-export declare interface ServerProcessManager {
-  on<K extends keyof ServerProcessEvents>(event: K, listener: ServerProcessEvents[K]): this;
-  emit<K extends keyof ServerProcessEvents>(event: K, ...args: Parameters<ServerProcessEvents[K]>): boolean;
+export declare interface ServerProcessManagerEvents {
+  on<K extends keyof ServerProcessEvents>(
+    event: K,
+    listener: ServerProcessEvents[K],
+  ): this;
+  emit<K extends keyof ServerProcessEvents>(
+    event: K,
+    ...args: Parameters<ServerProcessEvents[K]>
+  ): boolean;
 }

@@ -2,7 +2,7 @@
   "name": "ast-copilot-helper-extension",
   "displayName": "AST Copilot Helper",
   "description": "VS Code extension for managing AST-based code analysis server with MCP protocol support",
-  "version": "0.1.0",
+  "version": "1.5.0",
   "publisher": "ast-copilot-helper",
   "main": "./dist/extension.js",
   "icon": "resources/icon.png",
@@ -14,7 +14,8 @@
     "clean": "rm -rf dist",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
-    "lint": "echo 'Linting not configured yet'",
+    "lint": "eslint . --config ../../eslint.config.js",
+    "lint:fix": "eslint . --config ../../eslint.config.js --fix",
     "typecheck": "tsc --noEmit",
     "package": "vsce package",
     "publish": "vsce publish"
@@ -317,16 +318,16 @@
     }
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.5.0",
-    "@types/node": "^20.0.0"
+    "@modelcontextprotocol/sdk": "^1.18.1",
+    "@types/node": "^24.5.2"
   },
   "devDependencies": {
-    "@types/vscode": "^1.80.0",
-    "@vscode/test-cli": "^0.0.4",
-    "@vscode/test-electron": "^2.3.6",
-    "@vscode/vsce": "^2.21.1",
+    "@types/vscode": "^1.104.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.6.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.0",
+    "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
   "repository": {

@@ -17,7 +17,6 @@ The ast-copilot-helper VS Code extension provides:
 ### From VS Code Marketplace
 
 1. **Via VS Code Interface:**
-
    - Open VS Code
    - Go to Extensions (Ctrl/Cmd+Shift+X)
    - Search for "ast-copilot-helper"
@@ -54,7 +53,6 @@ After installation, verify the extension is active:
    ```
 
 2. **Initialize ast-copilot-helper:**
-
    - Command Palette → "AST Helper: Initialize Project"
    - Or use the welcome walkthrough
 
@@ -685,7 +683,7 @@ Master the VS Code extension and explore:
 
 - ⚙️ **[Configuration Guide](configuration)** - Advanced customization options
 - 🤖 **[AI Integration Guide](ai-integration)** - Connect with AI agents and workflows
-- 🛠️ **[Developer Guide](../development)** - Contributing and extending functionality
+- 🛠️ **[Developer Guide](../development/contributing.md)** - Contributing and extending functionality
 - 🚀 **[CLI Usage Guide](cli-usage)** - Command-line power user techniques
 
 ## Extension Quick Reference

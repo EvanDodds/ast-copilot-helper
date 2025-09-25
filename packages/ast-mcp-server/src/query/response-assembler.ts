@@ -1,11 +1,11 @@
 /**
  * @fileoverview Response Assembly and Formatting System
- * 
+ *
  * Converts internal query results into MCP protocol-compliant responses.
  * Handles result aggregation, formatting, metadata enrichment, and pagination.
  */
 
-import { createLogger } from '../../../ast-helper/src/logging/index.js';
+import { createLogger } from "../../../ast-helper/src/logging/index.js";
 
 import type {
   QueryResponse,
@@ -14,7 +14,7 @@ import type {
   MCPQuery,
   Annotation,
   QuerySystemConfig,
-} from './types.js';
+} from "./types.js";
 
 /**
  * Response formatting options
@@ -22,19 +22,19 @@ import type {
 interface ResponseFormattingOptions {
   /** Include source code snippets in responses */
   includeSnippets: boolean;
-  
+
   /** Maximum snippet length in characters */
   maxSnippetLength: number;
-  
+
   /** Include relevance explanations */
   includeRelevanceExplanation: boolean;
-  
+
   /** Format for code snippets (markdown, plain) */
-  snippetFormat: 'markdown' | 'plain';
-  
+  snippetFormat: "markdown" | "plain";
+
   /** Include file context information */
   includeFileContext: boolean;
-  
+
   /** Maximum number of related matches to include */
   maxRelatedMatches: number;
 }
@@ -64,15 +64,15 @@ interface MCPTool {
 export interface MCPQueryResponse {
   /** Response type for MCP protocol */
   _meta: {
-    responseType: 'query_results';
+    responseType: "query_results";
     timestamp: string;
     requestId?: string;
     processingTime: number;
   };
-  
+
   /** Main result data */
   content: Array<{
-    type: 'code' | 'text' | 'resource';
+    type: "code" | "text" | "resource";
     text?: string;
     code?: string;
     language?: string;
@@ -87,7 +87,7 @@ export interface MCPQueryResponse {
       relevanceFactors?: Record<string, number>;
     };
   }>;
-  
+
   /** Pagination information */
   pagination: {
     total: number;
@@ -96,7 +96,7 @@ export interface MCPQueryResponse {
     hasMore: boolean;
     nextCursor?: string;
   };
-  
+
   /** Query execution metadata */
   queryMetadata: QueryMetadata & {
     queryType: string;
@@ -108,7 +108,7 @@ export interface MCPQueryResponse {
       formattingTime: number;
     };
   };
-  
+
   /** Available tools and resources */
   capabilities: {
     availableTools: MCPTool[];
@@ -119,29 +119,29 @@ export interface MCPQueryResponse {
 
 /**
  * Response Assembly and Formatting System
- * 
+ *
  * Central component for converting internal query results into MCP protocol-compliant
  * responses with proper formatting, metadata, and pagination support.
  */
 export class ResponseAssembler {
-  private logger = createLogger({ operation: 'response-assembler' });
-  
+  private logger = createLogger({ operation: "response-assembler" });
+
   private config: QuerySystemConfig;
   private formattingOptions: ResponseFormattingOptions;
-  
+
   // Performance tracking
   private processedResponses = 0;
   private avgFormattingTime = 0;
 
   constructor(config: QuerySystemConfig) {
     this.config = config;
-    
+
     // Initialize formatting options with defaults
     this.formattingOptions = {
       includeSnippets: true,
       maxSnippetLength: 500,
       includeRelevanceExplanation: true,
-      snippetFormat: 'markdown',
+      snippetFormat: "markdown",
       includeFileContext: true,
       maxRelatedMatches: 3,
     };
@@ -155,37 +155,37 @@ export class ResponseAssembler {
     originalQuery: MCPQuery,
     requestId?: string,
     page = 1,
-    pageSize = 50
+    pageSize = 50,
   ): Promise<MCPQueryResponse> {
     const startTime = Date.now();
-    
-    this.logger.debug('Assembling response', {
+
+    this.logger.debug("Assembling response", {
       resultCount: queryResponse.results.length,
       queryType: originalQuery.type,
       page,
       pageSize,
     });
-    
+
     try {
       // Calculate pagination
       const pagination = this.calculatePagination(
         queryResponse.results.length,
         queryResponse.totalMatches,
         page,
-        pageSize
+        pageSize,
       );
-      
+
       // Slice results for current page
       const paginatedResults = queryResponse.results.slice(
         (page - 1) * pageSize,
-        page * pageSize
+        page * pageSize,
       );
-      
+
       // Format each result
       const formattedContent = await Promise.all(
-        paginatedResults.map(result => this.formatAnnotationMatch(result))
+        paginatedResults.map((result) => this.formatAnnotationMatch(result)),
       );
-      
+
       // Build performance metadata
       const formattingTime = Date.now() - startTime;
       const performanceMetrics = {
@@ -194,11 +194,11 @@ export class ResponseAssembler {
         rankingTime: queryResponse.metadata.rankingTime,
         formattingTime,
       };
-      
+
       // Assemble final MCP response
       const mcpResponse: MCPQueryResponse = {
         _meta: {
-          responseType: 'query_results',
+          responseType: "query_results",
           timestamp: new Date().toISOString(),
           requestId,
           processingTime: performanceMetrics.totalTime,
@@ -213,26 +213,25 @@ export class ResponseAssembler {
         },
         capabilities: {
           availableTools: this.getAvailableTools(),
-          supportedQueryTypes: ['semantic', 'signature', 'file', 'contextual'],
+          supportedQueryTypes: ["semantic", "signature", "file", "contextual"],
           maxResultsPerQuery: this.config.search.defaultMaxResults,
         },
       };
-      
+
       // Update performance tracking
       this.updatePerformanceMetrics(formattingTime);
-      
-      this.logger.info('Response assembled successfully', {
+
+      this.logger.info("Response assembled successfully", {
         contentItems: formattedContent.length,
         totalMatches: queryResponse.totalMatches,
         formattingTime,
         page,
         pageSize,
       });
-      
+
       return mcpResponse;
-      
     } catch (error) {
-      this.logger.error('Response assembly failed', {
+      this.logger.error("Response assembly failed", {
         error: error instanceof Error ? error.message : String(error),
         queryType: originalQuery.type,
         resultCount: queryResponse.results.length,
@@ -245,38 +244,38 @@ export class ResponseAssembler {
    * Format individual annotation match into MCP content
    */
   private async formatAnnotationMatch(
-    match: AnnotationMatch
-  ): Promise<MCPQueryResponse['content'][0]> {
+    match: AnnotationMatch,
+  ): Promise<MCPQueryResponse["content"][0]> {
     const annotation = match.annotation;
-    
+
     // Determine content type based on annotation
-    let contentType: 'code' | 'text' | 'resource' = 'code';
-    let formattedText = '';
-    let codeContent = '';
-    let language = this.detectLanguage(annotation.filePath);
-    
+    let contentType: "code" | "text" | "resource" = "code";
+    let formattedText = "";
+    let codeContent = "";
+    const language = this.detectLanguage(annotation.filePath);
+
     // Format main content
     if (this.formattingOptions.includeSnippets && match.contextSnippet) {
-      if (this.formattingOptions.snippetFormat === 'markdown') {
+      if (this.formattingOptions.snippetFormat === "markdown") {
         codeContent = this.formatCodeSnippet(
           match.contextSnippet,
           language,
-          annotation.lineNumber
+          annotation.lineNumber,
         );
-        contentType = 'code';
+        contentType = "code";
       } else {
         formattedText = this.truncateSnippet(
-          match.contextSnippet, 
-          this.formattingOptions.maxSnippetLength
+          match.contextSnippet,
+          this.formattingOptions.maxSnippetLength,
         );
-        contentType = 'text';
+        contentType = "text";
       }
     } else {
       // Fallback to signature and summary
       formattedText = this.formatSignatureAndSummary(annotation);
-      contentType = 'text';
+      contentType = "text";
     }
-    
+
     // Build metadata
     const metadata = {
       score: match.score,
@@ -289,10 +288,12 @@ export class ResponseAssembler {
         relevanceExplanation: this.generateRelevanceExplanation(match),
       }),
     };
-    
+
     return {
       type: contentType,
-      ...(contentType === 'code' ? { code: codeContent, language } : { text: formattedText }),
+      ...(contentType === "code"
+        ? { code: codeContent, language }
+        : { text: formattedText }),
       metadata,
     };
   }
@@ -300,18 +301,22 @@ export class ResponseAssembler {
   /**
    * Format code snippet with syntax highlighting metadata
    */
-  private formatCodeSnippet(snippet: string, language: string, lineNumber: number): string {
-    const lines = snippet.split('\n');
+  private formatCodeSnippet(
+    snippet: string,
+    language: string,
+    lineNumber: number,
+  ): string {
+    const lines = snippet.split("\n");
     const startLine = Math.max(1, lineNumber - Math.floor(lines.length / 2));
-    
+
     // Add line numbers for context
     const numberedLines = lines.map((line, index) => {
       const currentLine = startLine + index;
-      const marker = currentLine === lineNumber ? '→' : ' ';
+      const marker = currentLine === lineNumber ? "→" : " ";
       return `${marker}${currentLine.toString().padStart(4)}: ${line}`;
     });
-    
-    return `\`\`\`${language}\n${numberedLines.join('\n')}\n\`\`\``;
+
+    return `\`\`\`${language}\n${numberedLines.join("\n")}\n\`\`\``;
   }
 
   /**
@@ -319,11 +324,11 @@ export class ResponseAssembler {
    */
   private formatSignatureAndSummary(annotation: Annotation): string {
     let formatted = annotation.signature;
-    
+
     if (annotation.summary) {
       formatted += `\n\n${annotation.summary}`;
     }
-    
+
     return formatted;
   }
 
@@ -333,30 +338,30 @@ export class ResponseAssembler {
   private generateRelevanceExplanation(match: AnnotationMatch): string {
     const score = Math.round(match.score * 100);
     let explanation = `${score}% relevance`;
-    
+
     // Add specific reasons based on match reason
     const reasons: string[] = [];
-    
-    if (match.matchReason.includes('vector_similarity')) {
-      reasons.push('semantic similarity');
+
+    if (match.matchReason.includes("vector_similarity")) {
+      reasons.push("semantic similarity");
     }
-    
-    if (match.matchReason.includes('context_boost')) {
-      reasons.push('context relevance');
+
+    if (match.matchReason.includes("context_boost")) {
+      reasons.push("context relevance");
     }
-    
-    if (match.matchReason.includes('exact_match')) {
-      reasons.push('exact match');
+
+    if (match.matchReason.includes("exact_match")) {
+      reasons.push("exact match");
     }
-    
-    if (match.matchReason.includes('fuzzy_match')) {
-      reasons.push('partial match');
+
+    if (match.matchReason.includes("fuzzy_match")) {
+      reasons.push("partial match");
     }
-    
+
     if (reasons.length > 0) {
-      explanation += ` (${reasons.join(', ')})`;
+      explanation += ` (${reasons.join(", ")})`;
     }
-    
+
     return explanation;
   }
 
@@ -364,44 +369,46 @@ export class ResponseAssembler {
    * Detect programming language from file path
    */
   private detectLanguage(filePath: string): string {
-    const extension = filePath.split('.').pop()?.toLowerCase();
-    
+    const extension = filePath.split(".").pop()?.toLowerCase();
+
     const languageMap: Record<string, string> = {
-      'ts': 'typescript',
-      'tsx': 'typescript',
-      'js': 'javascript',
-      'jsx': 'javascript',
-      'py': 'python',
-      'java': 'java',
-      'cpp': 'cpp',
-      'c': 'c',
-      'h': 'c',
-      'hpp': 'cpp',
-      'cs': 'csharp',
-      'go': 'go',
-      'rs': 'rust',
-      'php': 'php',
-      'rb': 'ruby',
+      ts: "typescript",
+      tsx: "typescript",
+      js: "javascript",
+      jsx: "javascript",
+      py: "python",
+      java: "java",
+      cpp: "cpp",
+      c: "c",
+      h: "c",
+      hpp: "cpp",
+      cs: "csharp",
+      go: "go",
+      rs: "rust",
+      php: "php",
+      rb: "ruby",
     };
-    
-    return extension ? languageMap[extension] || extension : 'text';
+
+    return extension ? languageMap[extension] || extension : "text";
   }
 
   /**
    * Truncate text snippet to maximum length
    */
   private truncateSnippet(text: string, maxLength: number): string {
-    if (text.length <= maxLength) return text;
-    
+    if (text.length <= maxLength) {
+      return text;
+    }
+
     // Try to break at word boundary
     const truncated = text.substring(0, maxLength);
-    const lastSpace = truncated.lastIndexOf(' ');
-    
+    const lastSpace = truncated.lastIndexOf(" ");
+
     if (lastSpace > maxLength * 0.8) {
-      return truncated.substring(0, lastSpace) + '...';
+      return truncated.substring(0, lastSpace) + "...";
     }
-    
-    return truncated + '...';
+
+    return truncated + "...";
   }
 
   /**
@@ -411,11 +418,11 @@ export class ResponseAssembler {
     _currentResultCount: number,
     totalMatches: number,
     page: number,
-    pageSize: number
+    pageSize: number,
   ) {
     const totalPages = Math.ceil(totalMatches / pageSize);
     const hasMore = page < totalPages;
-    
+
     return {
       total: totalMatches,
       page,
@@ -433,39 +440,48 @@ export class ResponseAssembler {
   private getAvailableTools(): MCPTool[] {
     return [
       {
-        name: 'semantic_query',
-        description: 'Search code using natural language queries',
+        name: "semantic_query",
+        description: "Search code using natural language queries",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
-            text: { type: 'string', description: 'Natural language query' },
-            maxResults: { type: 'number', description: 'Maximum results to return' },
+            text: { type: "string", description: "Natural language query" },
+            maxResults: {
+              type: "number",
+              description: "Maximum results to return",
+            },
           },
-          required: ['text'],
+          required: ["text"],
         },
       },
       {
-        name: 'signature_query',
-        description: 'Search for specific function or method signatures',
+        name: "signature_query",
+        description: "Search for specific function or method signatures",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
-            signature: { type: 'string', description: 'Function or method signature' },
-            exactMatch: { type: 'boolean', description: 'Require exact match' },
+            signature: {
+              type: "string",
+              description: "Function or method signature",
+            },
+            exactMatch: { type: "boolean", description: "Require exact match" },
           },
-          required: ['signature'],
+          required: ["signature"],
         },
       },
       {
-        name: 'file_query',
-        description: 'Search within specific files or file patterns',
+        name: "file_query",
+        description: "Search within specific files or file patterns",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
-            filePath: { type: 'string', description: 'File path or glob pattern' },
-            recursive: { type: 'boolean', description: 'Search recursively' },
+            filePath: {
+              type: "string",
+              description: "File path or glob pattern",
+            },
+            recursive: { type: "boolean", description: "Search recursively" },
           },
-          required: ['filePath'],
+          required: ["filePath"],
         },
       },
     ];
@@ -476,7 +492,10 @@ export class ResponseAssembler {
    */
   private updatePerformanceMetrics(formattingTime: number): void {
     this.processedResponses++;
-    this.avgFormattingTime = (this.avgFormattingTime * (this.processedResponses - 1) + formattingTime) / this.processedResponses;
+    this.avgFormattingTime =
+      (this.avgFormattingTime * (this.processedResponses - 1) +
+        formattingTime) /
+      this.processedResponses;
   }
 
   /**
@@ -495,8 +514,8 @@ export class ResponseAssembler {
    */
   updateFormattingOptions(options: Partial<ResponseFormattingOptions>): void {
     this.formattingOptions = { ...this.formattingOptions, ...options };
-    
-    this.logger.info('Formatting options updated', {
+
+    this.logger.info("Formatting options updated", {
       newOptions: this.formattingOptions,
     });
   }

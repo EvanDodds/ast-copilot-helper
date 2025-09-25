@@ -1,5 +1,5 @@
-import { EventEmitter } from 'events';
-import { logger } from '../../logging/logger.js';
+import { EventEmitter } from "events";
+import { logger } from "../../logging/logger.js";
 
 export interface MessageBrokerConfig {
   maxQueueSize?: number;
@@ -30,40 +30,44 @@ export class MessageBroker extends EventEmitter {
     super();
     this.config = {
       maxQueueSize: 1000,
-      messageTimeout: 30000,  // 30 seconds
+      messageTimeout: 30000, // 30 seconds
       retryAttempts: 3,
-      retryDelay: 1000,      // 1 second
-      ...config
+      retryDelay: 1000, // 1 second
+      ...config,
     };
 
-    logger.info('Message broker initialized', {
+    logger.info("Message broker initialized", {
       maxQueueSize: this.config.maxQueueSize,
       messageTimeout: this.config.messageTimeout,
-      retryAttempts: this.config.retryAttempts
+      retryAttempts: this.config.retryAttempts,
     });
   }
 
   /**
    * Queue a message for delivery
    */
-  queueMessage(connectionId: string, message: any, options: { 
-    maxAttempts?: number; 
-    priority?: number 
-  } = {}): string {
+  queueMessage(
+    connectionId: string,
+    message: any,
+    options: {
+      maxAttempts?: number;
+      priority?: number;
+    } = {},
+  ): string {
     const messageId = this.generateMessageId();
-    
+
     if (!this.messageQueues.has(connectionId)) {
       this.messageQueues.set(connectionId, []);
     }
 
     const queue = this.messageQueues.get(connectionId)!;
-    
+
     // Check queue size limits
     if (queue.length >= this.config.maxQueueSize!) {
-      logger.warn('Message queue full, dropping oldest message', {
+      logger.warn("Message queue full, dropping oldest message", {
         connectionId,
         queueSize: queue.length,
-        maxSize: this.config.maxQueueSize
+        maxSize: this.config.maxQueueSize,
       });
       queue.shift(); // Remove oldest message
     }
@@ -74,14 +78,16 @@ export class MessageBroker extends EventEmitter {
       message,
       timestamp: new Date(),
       attempts: 0,
-      maxAttempts: options.maxAttempts || this.config.retryAttempts!
+      maxAttempts: options.maxAttempts || this.config.retryAttempts!,
     };
 
     // Insert based on priority (if specified) or append
     if (options.priority !== undefined) {
       // Higher priority = lower number, insert at front
-      const insertIndex = queue.findIndex(m => 
-        (m as any).priority === undefined || (m as any).priority > options.priority!
+      const insertIndex = queue.findIndex(
+        (m) =>
+          (m as any).priority === undefined ||
+          (m as any).priority > options.priority!,
       );
       if (insertIndex >= 0) {
         queue.splice(insertIndex, 0, queuedMessage);
@@ -93,11 +99,11 @@ export class MessageBroker extends EventEmitter {
       queue.push(queuedMessage);
     }
 
-    logger.debug('Message queued', {
+    logger.debug("Message queued", {
       messageId,
       connectionId,
       queueSize: queue.length,
-      priority: options.priority
+      priority: options.priority,
     });
 
     // Start processing if not already running for this connection
@@ -124,28 +130,28 @@ export class MessageBroker extends EventEmitter {
 
       while (queue.length > 0) {
         const message = queue.shift()!;
-        
+
         try {
           await this.deliverMessage(message);
-          
-          logger.debug('Message delivered successfully', {
+
+          logger.debug("Message delivered successfully", {
             messageId: message.id,
             connectionId,
-            attempts: message.attempts
+            attempts: message.attempts,
           });
 
-          this.emit('messageDelivered', message);
+          this.emit("messageDelivered", message);
         } catch (error) {
           message.attempts++;
-          
+
           if (message.attempts < message.maxAttempts) {
             // Retry after delay
-            logger.warn('Message delivery failed, retrying', {
+            logger.warn("Message delivery failed, retrying", {
               messageId: message.id,
               connectionId,
               attempt: message.attempts,
               maxAttempts: message.maxAttempts,
-              error: error instanceof Error ? error.message : 'Unknown error'
+              error: error instanceof Error ? error.message : "Unknown error",
             });
 
             // Re-queue with delay
@@ -156,14 +162,14 @@ export class MessageBroker extends EventEmitter {
 
             break; // Stop processing this queue for now
           } else {
-            logger.error('Message delivery failed permanently', {
+            logger.error("Message delivery failed permanently", {
               messageId: message.id,
               connectionId,
               attempts: message.attempts,
-              error: error instanceof Error ? error.message : 'Unknown error'
+              error: error instanceof Error ? error.message : "Unknown error",
             });
 
-            this.emit('messageFailed', { message, error });
+            this.emit("messageFailed", { message, error });
           }
         }
       }
@@ -178,11 +184,11 @@ export class MessageBroker extends EventEmitter {
   private async deliverMessage(message: QueuedMessage): Promise<void> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error('Message delivery timeout'));
+        reject(new Error("Message delivery timeout"));
       }, this.config.messageTimeout);
 
       // Emit delivery event and wait for confirmation
-      this.emit('deliverMessage', message, (error?: Error) => {
+      this.emit("deliverMessage", message, (error?: Error) => {
         clearTimeout(timeout);
         if (error) {
           reject(error);
@@ -203,24 +209,28 @@ export class MessageBroker extends EventEmitter {
         connectionId,
         queueSize: queue.length,
         processing: this.processing.has(connectionId),
-        oldestMessage: queue.length > 0 ? queue[0]?.timestamp || null : null
+        oldestMessage: queue.length > 0 ? queue[0]?.timestamp || null : null,
       };
     }
 
-    const totalMessages = Array.from(this.messageQueues.values())
-      .reduce((sum, queue) => sum + queue.length, 0);
+    const totalMessages = Array.from(this.messageQueues.values()).reduce(
+      (sum, queue) => sum + queue.length,
+      0,
+    );
 
-    const connectionStats = Array.from(this.messageQueues.entries()).map(([id, queue]) => ({
-      connectionId: id,
-      queueSize: queue.length,
-      processing: this.processing.has(id)
-    }));
+    const connectionStats = Array.from(this.messageQueues.entries()).map(
+      ([id, queue]) => ({
+        connectionId: id,
+        queueSize: queue.length,
+        processing: this.processing.has(id),
+      }),
+    );
 
     return {
       totalMessages,
       activeQueues: this.messageQueues.size,
       processingQueues: this.processing.size,
-      connectionStats
+      connectionStats,
     };
   }
 
@@ -230,14 +240,14 @@ export class MessageBroker extends EventEmitter {
   clearQueue(connectionId: string): number {
     const queue = this.messageQueues.get(connectionId);
     const clearedCount = queue ? queue.length : 0;
-    
+
     if (queue) {
       queue.length = 0;
       this.processing.delete(connectionId);
-      
-      logger.info('Queue cleared', {
+
+      logger.info("Queue cleared", {
         connectionId,
-        clearedMessages: clearedCount
+        clearedMessages: clearedCount,
       });
     }
 
@@ -250,10 +260,10 @@ export class MessageBroker extends EventEmitter {
   removeConnection(connectionId: string): void {
     const clearedCount = this.clearQueue(connectionId);
     this.messageQueues.delete(connectionId);
-    
-    logger.info('Connection removed from message broker', {
+
+    logger.info("Connection removed from message broker", {
       connectionId,
-      clearedMessages: clearedCount
+      clearedMessages: clearedCount,
     });
   }
 
@@ -261,23 +271,29 @@ export class MessageBroker extends EventEmitter {
    * Shutdown the message broker
    */
   async shutdown(): Promise<void> {
-    logger.info('Shutting down message broker', {
+    logger.info("Shutting down message broker", {
       activeQueues: this.messageQueues.size,
-      processingQueues: this.processing.size
+      processingQueues: this.processing.size,
     });
 
     // Wait for current processing to complete (with timeout)
     const shutdownTimeout = 10000; // 10 seconds
     const startTime = Date.now();
 
-    while (this.processing.size > 0 && (Date.now() - startTime) < shutdownTimeout) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+    while (
+      this.processing.size > 0 &&
+      Date.now() - startTime < shutdownTimeout
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     if (this.processing.size > 0) {
-      logger.warn('Message broker shutdown timeout, some queues still processing', {
-        processingQueues: Array.from(this.processing)
-      });
+      logger.warn(
+        "Message broker shutdown timeout, some queues still processing",
+        {
+          processingQueues: Array.from(this.processing),
+        },
+      );
     }
 
     // Clear all queues
@@ -288,7 +304,7 @@ export class MessageBroker extends EventEmitter {
     this.messageQueues.clear();
     this.processing.clear();
 
-    logger.info('Message broker shutdown complete');
+    logger.info("Message broker shutdown complete");
   }
 
   private generateMessageId(): string {

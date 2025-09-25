@@ -3,17 +3,17 @@
  * @description Type definitions for privacy-respecting data anonymization
  */
 
-import type { PrivacyLevel } from '../types.js';
+import type { PrivacyLevel } from "../types.js";
 
 /**
  * Anonymization strategies for different data types
  */
 export enum AnonymizationStrategy {
-  HASH = 'hash',
-  REDACT = 'redact',
-  MASK = 'mask',
-  REMOVE = 'remove',
-  ENCRYPT = 'encrypt'
+  HASH = "hash",
+  REDACT = "redact",
+  MASK = "mask",
+  REMOVE = "remove",
+  ENCRYPT = "encrypt",
 }
 
 /**
@@ -84,13 +84,13 @@ export interface AnonymizationMetadata {
  * Data categories for anonymization
  */
 export enum DataCategory {
-  PERSONAL_IDENTIFIER = 'personal_identifier',
-  SYSTEM_INFO = 'system_info',
-  FILE_PATH = 'file_path',
-  ERROR_MESSAGE = 'error_message',
-  PERFORMANCE_DATA = 'performance_data',
-  USAGE_DATA = 'usage_data',
-  CUSTOM_DATA = 'custom_data'
+  PERSONAL_IDENTIFIER = "personal_identifier",
+  SYSTEM_INFO = "system_info",
+  FILE_PATH = "file_path",
+  ERROR_MESSAGE = "error_message",
+  PERFORMANCE_DATA = "performance_data",
+  USAGE_DATA = "usage_data",
+  CUSTOM_DATA = "custom_data",
 }
 
 /**

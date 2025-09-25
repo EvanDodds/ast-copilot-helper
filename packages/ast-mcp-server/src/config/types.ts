@@ -7,28 +7,28 @@
  * Transport configuration options
  */
 export interface TransportConfig {
-  type: 'stdio' | 'websocket' | 'http';
-  
+  type: "stdio" | "websocket" | "http";
+
   // WebSocket/HTTP specific settings
   port?: number;
   host?: string;
-  
+
   // Connection management
   maxConnections?: number;
   connectionTimeout?: number;
   requestTimeout?: number;
   heartbeatInterval?: number;
-  
+
   // Auto-reconnection for clients
   autoReconnect?: boolean;
   maxReconnectAttempts?: number;
   reconnectDelay?: number;
-  
+
   // WebSocket specific
   pingInterval?: number;
   pongTimeout?: number;
   maxMessageSize?: number;
-  
+
   // STDIO specific
   lineBuffering?: boolean;
   maxLineLength?: number;
@@ -42,19 +42,19 @@ export interface PerformanceConfig {
   maxConcurrentRequests?: number;
   requestQueueSize?: number;
   requestTimeout?: number;
-  
+
   // Memory management
   maxMemoryUsage?: number;
   gcThreshold?: number;
   enableGcMetrics?: boolean;
-  
+
   // Query performance
   maxQueryResults?: number;
   queryTimeout?: number;
   cacheEnabled?: boolean;
   cacheSize?: number;
   cacheTtl?: number;
-  
+
   // Database settings
   dbPoolSize?: number;
   dbTimeout?: number;
@@ -65,20 +65,20 @@ export interface PerformanceConfig {
  * Logging and monitoring configuration
  */
 export interface LoggingConfig {
-  level: 'error' | 'warn' | 'info' | 'debug' | 'trace';
+  level: "error" | "warn" | "info" | "debug" | "trace";
   enableConsole?: boolean;
   enableFile?: boolean;
   filePath?: string;
   maxFileSize?: string;
   maxFiles?: number;
-  
+
   // Request/Response logging
   enableRequestLogging?: boolean;
   enableResponseLogging?: boolean;
   enableErrorLogging?: boolean;
   logRequestBody?: boolean;
   logResponseBody?: boolean;
-  
+
   // Performance logging
   enablePerformanceLogging?: boolean;
   slowQueryThreshold?: number;
@@ -92,23 +92,23 @@ export interface LoggingConfig {
 export interface SecurityConfig {
   // Authentication
   enableAuthentication?: boolean;
-  authMethod?: 'basic' | 'bearer' | 'apikey' | 'custom';
+  authMethod?: "basic" | "bearer" | "apikey" | "custom";
   authConfig?: Record<string, any>;
-  
+
   // Rate limiting
   enableRateLimit?: boolean;
   rateLimitRequests?: number;
   rateLimitWindow?: number;
-  
+
   // CORS (for HTTP transport)
   enableCors?: boolean;
   corsOrigins?: string[];
-  
+
   // Input validation
   enableStrictValidation?: boolean;
   maxRequestSize?: number;
   sanitizeInput?: boolean;
-  
+
   // TLS/SSL (for secure transports)
   enableTls?: boolean;
   tlsConfig?: {
@@ -128,14 +128,14 @@ export interface FeatureConfig {
   enableResources?: boolean;
   enablePrompts?: boolean;
   enableLogging?: boolean;
-  
+
   // Advanced features
   enableHotReload?: boolean;
   enableWebInterface?: boolean;
   enableHealthCheck?: boolean;
   enableMetricsEndpoint?: boolean;
   enableTestEndpoints?: boolean;
-  
+
   // Experimental features
   experimental?: {
     enableStreaming?: boolean;
@@ -149,8 +149,8 @@ export interface FeatureConfig {
  * Environment-specific configuration
  */
 export interface EnvironmentConfig {
-  nodeEnv?: 'development' | 'production' | 'test';
-  
+  nodeEnv?: "development" | "production" | "test";
+
   // Development settings
   development?: {
     enableDebug?: boolean;
@@ -158,7 +158,7 @@ export interface EnvironmentConfig {
     mockDatabase?: boolean;
     enableTestEndpoints?: boolean;
   };
-  
+
   // Production settings
   production?: {
     enableCompression?: boolean;
@@ -166,7 +166,7 @@ export interface EnvironmentConfig {
     healthCheckInterval?: number;
     gracefulShutdownTimeout?: number;
   };
-  
+
   // Test settings
   test?: {
     enableMocking?: boolean;
@@ -184,7 +184,7 @@ export interface MCPServerConfig {
   version: string;
   description?: string;
   protocolVersion?: string;
-  
+
   // Core settings
   transport: TransportConfig;
   performance: PerformanceConfig;
@@ -192,7 +192,7 @@ export interface MCPServerConfig {
   security: SecurityConfig;
   features: FeatureConfig;
   environment: EnvironmentConfig;
-  
+
   // Database settings
   database: {
     path: string;
@@ -200,14 +200,14 @@ export interface MCPServerConfig {
     backupEnabled?: boolean;
     backupInterval?: number;
   };
-  
+
   // Plugin/Extension settings
   plugins?: {
     enabled?: string[];
     disabled?: string[];
     config?: Record<string, any>;
   };
-  
+
   // Custom configuration extensions
   custom?: Record<string, any>;
 }
@@ -225,7 +225,7 @@ export interface ConfigValidationResult {
  * Configuration source information
  */
 export interface ConfigSource {
-  type: 'file' | 'environment' | 'programmatic' | 'default';
+  type: "file" | "environment" | "programmatic" | "default";
   path?: string;
   priority: number;
 }
@@ -245,8 +245,8 @@ export interface ConfigLoadOptions {
  * Configuration manager events
  */
 export interface ConfigEvents {
-  'config:loaded': (config: MCPServerConfig) => void;
-  'config:validated': (result: ConfigValidationResult) => void;
-  'config:changed': (config: MCPServerConfig, source: ConfigSource) => void;
-  'config:error': (error: Error) => void;
+  "config:loaded": (config: MCPServerConfig) => void;
+  "config:validated": (result: ConfigValidationResult) => void;
+  "config:changed": (config: MCPServerConfig, source: ConfigSource) => void;
+  "config:error": (error: Error) => void;
 }

@@ -2,22 +2,24 @@
  * Basic test for signature extractors
  */
 
-import { TypeScriptExtractor, JavaScriptExtractor } from './index';
-import { ASTNode } from '../../parser/types';
+/* eslint-disable no-console -- Test file with debug output */
+
+import { TypeScriptExtractor, JavaScriptExtractor } from "./index";
+import type { ASTNode } from "../../parser/types";
 
 // Create a mock AST node for testing
 const mockNode: ASTNode = {
-  id: 'test-node-id',
-  type: 'function',
-  name: 'testFunction',
-  filePath: '/test/file.ts',
+  id: "test-node-id",
+  type: "function",
+  name: "testFunction",
+  filePath: "/test/file.ts",
   start: { line: 1, column: 0 },
   end: { line: 5, column: 10 },
   metadata: {
-    language: 'typescript',
+    language: "typescript",
     scope: [],
-    modifiers: ['public']
-  }
+    modifiers: ["public"],
+  },
 };
 
 const mockSourceText = `
@@ -31,23 +33,30 @@ const tsExtractor = new TypeScriptExtractor();
 const tsSignature = tsExtractor.extractSignature(mockNode, mockSourceText);
 const tsParameters = tsExtractor.extractParameters(mockNode, mockSourceText);
 const tsReturnType = tsExtractor.extractReturnType(mockNode, mockSourceText);
-const tsModifiers = tsExtractor.extractAccessModifiers(mockNode, mockSourceText);
+const tsModifiers = tsExtractor.extractAccessModifiers(
+  mockNode,
+  mockSourceText,
+);
 
-console.log('TypeScript Extractor Results:');
-console.log('Signature:', tsSignature);
-console.log('Parameters:', tsParameters);
-console.log('Return Type:', tsReturnType);
-console.log('Modifiers:', tsModifiers);
+console.log("TypeScript Extractor Results:");
+console.log("Signature:", tsSignature);
+console.log("Parameters:", tsParameters);
+console.log("Return Type:", tsReturnType);
+console.log("Modifiers:", tsModifiers);
 
 // Test JavaScript extractor
 const jsExtractor = new JavaScriptExtractor();
 const jsSignature = jsExtractor.extractSignature(mockNode, mockSourceText);
 const jsParameters = jsExtractor.extractParameters(mockNode, mockSourceText);
 
-console.log('\nJavaScript Extractor Results:');
-console.log('Signature:', jsSignature);
-console.log('Parameters:', jsParameters);
+console.log("\nJavaScript Extractor Results:");
+console.log("Signature:", jsSignature);
+console.log("Parameters:", jsParameters);
 
 // TODO: Add Python extractor test when implementation is complete
 
-console.log('\nAll extractors loaded successfully!');
+console.log("\nAll extractors loaded successfully!");
+
+// TODO: Add Python extractor test when implementation is complete
+
+console.log("\nAll extractors loaded successfully!");

@@ -2,13 +2,23 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]  # Full suite only on main branch after merge
+    branches: [main]
   pull_request:
-    branches: [ main ]
-    types: [ opened, synchronize, reopened, ready_for_review ]  # Only ready-for-review PRs
+    branches: [main]
+    types: [ready_for_review, synchronize]
+  release:
+    types: [published]
   schedule:
-    # Run nightly performance benchmarks
-    - cron: '0 2 * * *'
+    # Run nightly performance benchmarks and security scans
+    - cron: "0 2 * * *"
+
+# Permissions needed for GitHub Actions
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: write
+  actions: read
 
 # Cancel previous runs when new commits are pushed
 concurrency:
@@ -16,114 +26,105 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
-  PERFORMANCE_THRESHOLD_ENABLED: ${{ github.event_name == 'schedule' || contains(github.event.head_commit.message, '[benchmark]') }}
+  NODE_VERSION_DEFAULT: "20"
+  NODE_VERSION_MATRIX: '["18", "20", "22"]'
+  PLATFORM_MATRIX: '["ubuntu-latest", "windows-latest", "macos-latest"]'
 
 jobs:
-  # Basic validation and setup
+  # ===============================
+  # FAST FEEDBACK JOBS (PR + Main)
+  # ===============================
+
   validate:
     name: Code Validation
     runs-on: ubuntu-latest
-    # Skip draft PRs - only run on ready-for-review PRs or main branch
+    # Skip draft PRs
     if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
     outputs:
       should-run-benchmarks: ${{ steps.check.outputs.should-run-benchmarks }}
-      matrix: ${{ steps.matrix.outputs.matrix }}
+      is-main-push: ${{ steps.context.outputs.is-main-push }}
+      is-release: ${{ steps.context.outputs.is-release }}
+      is-pr: ${{ steps.context.outputs.is-pr }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Setup build tools for native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
-      - name: Lint code
-        run: npm run lint || echo "Lint not configured"
+      - name: Cache TypeScript build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/tsconfig.tsbuildinfo
+            packages/*/dist
+            .tsbuildinfo
+          key: ${{ runner.os }}-typescript-${{ hashFiles('**/tsconfig*.json', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-typescript-
 
-      - name: Type check
-        run: npm run type-check || npx tsc --noEmit
+      - name: Run ESLint
+        run: yarn run lint
+
+      - name: Run Prettier format check
+        run: yarn run format:check
+
+      - name: Run TypeScript type check
+        run: yarn run type-check
+
+      - name: Set context outputs
+        id: context
+        run: |
+          echo "is-main-push=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}" >> $GITHUB_OUTPUT
+          echo "is-release=${{ github.event_name == 'release' }}" >> $GITHUB_OUTPUT
+          echo "is-pr=${{ github.event_name == 'pull_request' }}" >> $GITHUB_OUTPUT
 
       - name: Check benchmark conditions
         id: check
         run: |
-          if [[ "${{ env.PERFORMANCE_THRESHOLD_ENABLED }}" == "true" ]]; then
+          # For scheduled runs, check if there are new commits since last nightly run
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            # Get the timestamp of the last successful nightly run (24 hours ago)
+            LAST_RUN_TIME=$(date -d '24 hours ago' --iso-8601=seconds)
+            
+            # Check if there are any commits since the last run
+            RECENT_COMMITS=$(git log --since="$LAST_RUN_TIME" --oneline | wc -l)
+            
+            if [[ $RECENT_COMMITS -gt 0 ]]; then
+              echo "Found $RECENT_COMMITS new commits since last nightly run"
+              echo "should-run-benchmarks=true" >> $GITHUB_OUTPUT
+            else
+              echo "No new commits since last nightly run, skipping benchmarks"
+              echo "should-run-benchmarks=false" >> $GITHUB_OUTPUT
+            fi
+          elif [[ "${{ contains(github.event.head_commit.message, '[benchmark]') }}" == "true" ]]; then
+            echo "Explicit benchmark request found in commit message"
             echo "should-run-benchmarks=true" >> $GITHUB_OUTPUT
           else
             echo "should-run-benchmarks=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Generate test matrix
-        id: matrix
-        run: |
-          echo "matrix={\"os\":[\"ubuntu-latest\",\"windows-latest\",\"macos-latest\"],\"node\":[\"18\",\"20\",\"21\"]}" >> $GITHUB_OUTPUT
-
-  # Multi-platform testing
-  test:
-    name: Test Suite
-    needs: validate
-    # Skip draft PRs - only run on ready-for-review PRs or main branch  
-    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
-    strategy:
-      fail-fast: false
-      matrix:
-        # Lightweight for PRs: single OS, single Node version
-        # Full suite for main branch: multi-platform, multi-version
-        os: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && fromJson('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJson('["ubuntu-latest"]') }}
-        node: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && fromJson('["18", "20", "21"]') || fromJson('["20"]') }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run unit tests
-        run: npm run test:ci:fast tests/unit/ || npm test -- tests/unit/ --config vitest.ci.config.ts
-        timeout-minutes: 10
-
-      - name: Run integration tests  
-        run: npm run test:ci:fast tests/integration/ || npm test -- tests/integration/ --config vitest.ci.config.ts
-        timeout-minutes: 15
-
-      - name: Generate coverage report
-        if: matrix.os == 'ubuntu-latest' && matrix.node == '20'
-        run: npm run test:coverage || npm test -- --coverage
-        timeout-minutes: 10
-
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.node == '20'
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
-  # Performance benchmarking (only on main branch or when explicitly requested)
-  benchmarks:
-    name: Performance Benchmarks
-    needs: [validate, test]
-    # Only run full benchmarks on main branch pushes or scheduled runs
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+  security-audit:
+    name: Security Audit
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
+    needs: validate
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -131,115 +132,358 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
-      - name: Run performance benchmarks
-        run: |
-          echo "🚀 Starting performance benchmarks..."
-          # Run with CI config and shorter timeouts
-          export RUN_EXPENSIVE_TESTS=true
-          npm run test:benchmarks || timeout 10m npm test -- tests/benchmarks/ --config vitest.ci.config.ts --testTimeout=60000
-          
-      - name: Validate performance criteria
-        run: |
-          echo "📊 Validating acceptance criteria..."
-          
-          # Check for parsing performance (15k+ nodes < 10min)
-          if grep -q "Parsed.*nodes in.*ms" benchmark-results.txt; then
-            parsing_time=$(grep "Parsed.*nodes in.*ms" benchmark-results.txt | head -1 | grep -o '[0-9.]*ms' | grep -o '[0-9.]*')
-            parsing_time_minutes=$(echo "scale=2; $parsing_time / 60000" | bc)
-            echo "✅ Parsing time: ${parsing_time}ms (${parsing_time_minutes} minutes)"
-            if (( $(echo "$parsing_time_minutes > 10" | bc -l) )); then
-              echo "❌ FAIL: Parsing time exceeded 10 minutes"
-              exit 1
-            fi
-          fi
-          
-          # Check MCP query latency (<200ms)
-          if grep -q "MCP Query Performance" benchmark-results.txt; then
-            mcp_avg=$(grep "Average:" benchmark-results.txt | head -1 | grep -o '[0-9.]*ms' | grep -o '[0-9.]*')
-            mcp_max=$(grep "Maximum:" benchmark-results.txt | head -1 | grep -o '[0-9.]*ms' | grep -o '[0-9.]*')
-            echo "✅ MCP latency: avg ${mcp_avg}ms, max ${mcp_max}ms"
-            if (( $(echo "$mcp_avg > 200" | bc -l) )); then
-              echo "❌ FAIL: MCP average latency exceeded 200ms"
-              exit 1
-            fi
-          fi
-          
-          # Check CLI query latency (<500ms)  
-          if grep -q "CLI Query Performance" benchmark-results.txt; then
-            cli_avg=$(grep "Average:" benchmark-results.txt | tail -1 | grep -o '[0-9.]*ms' | grep -o '[0-9.]*')
-            cli_max=$(grep "Maximum:" benchmark-results.txt | tail -1 | grep -o '[0-9.]*ms' | grep -o '[0-9.]*')
-            echo "✅ CLI latency: avg ${cli_avg}ms, max ${cli_max}ms"
-            if (( $(echo "$cli_avg > 500" | bc -l) )); then
-              echo "❌ FAIL: CLI average latency exceeded 500ms"
-              exit 1
-            fi
-          fi
-          
-          echo "🎉 All performance criteria validated successfully!"
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: false
 
-      - name: Archive benchmark results
+      - name: Run security scanning
+        run: yarn run security:scan
+        continue-on-error: false
+
+      - name: Upload security results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: benchmark-results-${{ github.run_number }}
+          name: security-audit-results
+          path: security-audit-report.json
+          retention-days: 30
+
+  unit-tests:
+    name: Unit Tests
+    needs: validate
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        # PR: Single platform/version for speed
+        # Main: Multi-platform/version for coverage
+        os: ${{ needs.validate.outputs.is-main-push == 'true' && fromJson('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJson('["ubuntu-latest"]') }}
+        node-version: ${{ needs.validate.outputs.is-main-push == 'true' && fromJson('["18", "20", "22"]') || fromJson('["20"]') }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup build tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev
+
+      - name: Setup build tools (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install python@3.11
+
+      - name: Setup build tools (Windows)
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run unit tests
+        run: yarn run test:unit
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20'
+        with:
+          name: test-results-unit
           path: |
-            benchmark-results.txt
+            test-output/
             coverage/
           retention-days: 30
 
-      - name: Comment performance results on PR
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: unit-tests
+
+  # =====================================
+  # COMPREHENSIVE JOBS (Main Branch Only)
+  # =====================================
+
+  integration-tests:
+    name: Integration Tests
+    needs: [validate, unit-tests]
+    # Only run on main branch pushes, releases, or scheduled runs
+    if: |
+      (needs.validate.outputs.is-main-push == 'true' || 
+       needs.validate.outputs.is-release == 'true' || 
+       github.event_name == 'schedule') &&
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJson('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
+        node-version: ${{ fromJson('["18", "20", "22"]') }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup build tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev
+
+      - name: Setup build tools (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install python@3.11
+
+      - name: Setup build tools (Windows)
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run integration tests
+        run: yarn run test:integration
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20'
+        with:
+          name: test-results-integration
+          path: test-output/integration/
+          retention-days: 30
+
+  performance-tests:
+    name: Performance Tests
+    needs: [validate, unit-tests]
+    # Only run on main branch pushes, releases, or scheduled runs
+    if: |
+      (needs.validate.outputs.is-main-push == 'true' || 
+       needs.validate.outputs.is-release == 'true' || 
+       github.event_name == 'schedule') &&
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run performance validation
+        run: yarn run test:performance
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-test-results
+          path: test-output/performance/
+          retention-days: 30
+
+  # =================================
+  # NIGHTLY BENCHMARK JOBS (Scheduled)
+  # =================================
+
+  performance-benchmarks:
+    name: Performance Benchmarks
+    needs: validate
+    # Only run on schedule or when explicitly requested
+    if: needs.validate.outputs.should-run-benchmarks == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run comprehensive benchmarks
+        run: yarn run benchmark:all
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results
+          path: test-output/benchmarks/
+          retention-days: 90
+
+      - name: Comment benchmark results on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            let benchmarkResults = '';
-            try {
-              benchmarkResults = fs.readFileSync('benchmark-results.txt', 'utf8');
-            } catch (e) {
-              benchmarkResults = 'Benchmark results not available';
+            const path = './test-output/benchmarks/summary.json';
+            if (fs.existsSync(path)) {
+              const results = JSON.parse(fs.readFileSync(path, 'utf8'));
+              const body = `## 📊 Performance Benchmark Results\n\n${results.summary}`;
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
             }
-            
-            const body = `## 🚀 Performance Benchmark Results
-            
-            **Acceptance Criteria Validation:**
-            - ✅ Parsing 15k+ nodes in under 10 minutes
-            - ✅ MCP query latency under 200ms  
-            - ✅ CLI query latency under 500ms
-            
-            <details>
-            <summary>📊 Detailed Results</summary>
-            
-            \`\`\`
-            ${benchmarkResults.slice(0, 3000)}${benchmarkResults.length > 3000 ? '...\n(truncated)' : ''}
-            \`\`\`
-            
-            </details>
-            
-            _Benchmarks run on: \`${{ runner.os }}\` with Node.js \`${{ env.NODE_VERSION }}\`_`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
 
-  # Integration and E2E Testing (simplified for PRs, full for main branch)
-  integration:
-    name: Integration Tests
-    needs: test
-    # Skip draft PRs - only run on ready-for-review PRs or main branch
-    if: (github.event.pull_request.draft == false || github.event_name != 'pull_request') && needs.test.result == 'success'
+  # ========================
+  # BUILD JOBS (Main + Release)
+  # ========================
+
+  build:
+    name: Build Artifacts
+    needs: [validate, unit-tests]
+    # Run on main branch pushes and releases
+    if: |
+      (needs.validate.outputs.is-main-push == 'true' || 
+       needs.validate.outputs.is-release == 'true') &&
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJson('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup build tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev
+
+      - name: Setup build tools (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install python@3.11
+
+      - name: Setup build tools (Windows)
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build all packages
+        run: yarn run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.os }}
+          path: |
+            packages/*/dist/
+            packages/*/build/
+          retention-days: 7
+
+  # ============================
+  # QUALITY GATE (All Contexts)
+  # ============================
+
+  quality-gates:
+    name: Quality Gates
+    needs: [validate, security-audit, unit-tests]
+    # Always run quality gates (PR, main, release)
+    if: always() && (github.event.pull_request.draft == false || github.event_name != 'pull_request')
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 20 || 10 }}
-    
+    steps:
+      - name: Check job results
+        run: |
+          echo "Validate result: ${{ needs.validate.result }}"
+          echo "Security audit result: ${{ needs.security-audit.result }}"
+          echo "Unit tests result: ${{ needs.unit-tests.result }}"
+
+          if [[ "${{ needs.validate.result }}" != "success" ]]; then
+            echo "❌ Code validation failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.security-audit.result }}" != "success" ]]; then
+            echo "❌ Security audit failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.unit-tests.result }}" != "success" ]]; then
+            echo "❌ Unit tests failed"
+            exit 1
+          fi
+
+          echo "✅ All quality gates passed!"
+
+  # ================================
+  # RELEASE JOBS (Release Events Only)
+  # ================================
+
+  prepare-release:
+    name: Prepare Release
+    needs: [validate, quality-gates, build]
+    if: needs.validate.outputs.is-release == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -247,55 +491,36 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
-      - name: Setup test environment
+      - name: Extract version info
+        id: version
         run: |
-          # Create minimal test environment
-          mkdir -p test-tmp
-          echo "TEST_ENV=ci" >> $GITHUB_ENV
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Run integration tests
-        run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # Lightweight integration tests for PRs
-            echo "🚀 Running lightweight integration tests for PR..."
-            timeout 5m npm test -- tests/integration/ --config vitest.ci.config.ts --testTimeout=30000 --maxConcurrency=2 || echo "Some integration tests skipped"
-          else
-            # Full integration tests for main branch
-            echo "🚀 Running full integration test suite for main branch..."
-            npm run test:integration || timeout 15m npm test -- tests/integration/ --config vitest.ci.config.ts
-          fi
-          
-      - name: Test CLI functionality  
-        run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # Quick CLI validation for PRs
-            echo "🔍 Quick CLI validation for PR..."
-            npm run build || echo "Build step completed"
-            echo "CLI integration tests completed"
-          else
-            # Full CLI testing for main branch
-            echo "🔍 Full CLI testing for main branch..."
-            npm run build || echo "Build step completed"
-            # Add more comprehensive CLI tests here
-            echo "Full CLI integration tests completed"
-          fi
-        timeout-minutes: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 5 || 2 }}
+      - name: Generate changelog
+        run: yarn run release:changelog
 
-  # Quality gates and deployment readiness
-  quality-gate:
-    name: Quality Gate
-    needs: [validate, test, integration]
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            CHANGELOG.md
+            packages/*/package.json
+          retention-days: 30
+
+  deploy-npm:
+    name: Deploy to NPM
+    needs: [validate, prepare-release, integration-tests]
+    if: needs.validate.outputs.is-release == 'true' && needs.integration-tests.result == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    # Skip draft PRs - only run on ready-for-review PRs or main branch
-    if: (github.event.pull_request.draft == false || github.event_name != 'pull_request') && always()
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -303,89 +528,100 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
-      - name: Check coverage thresholds
-        run: |
-          echo "🔍 Checking coverage thresholds..."
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            # Full coverage check for main branch
-            echo "Running full coverage analysis for main branch..."
-            npm run test:coverage || npm test -- --coverage --silent
-          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # Quick coverage check for PRs
-            echo "Running quick coverage check for PR..."
-            timeout 5m npm test -- --coverage --silent --testTimeout=10000 || echo "Coverage check completed with warnings"
-          else
-            echo "Skipping coverage check for this event type"
-          fi
-          
-      - name: Security audit
-        run: |
-          echo "🔒 Running security audit..."
-          timeout 5m npm audit --audit-level=moderate || echo "Security audit completed with warnings"
+      - name: Build packages
+        run: yarn run build
 
-      - name: Deployment readiness check
-        run: |
-          echo "🚀 Deployment readiness check..."
-          
-          # Verify all critical jobs passed
-          if [[ "${{ needs.test.result }}" != "success" ]]; then
-            echo "❌ Test suite failed"
-            exit 1
-          fi
-          
-          if [[ "${{ needs.integration.result }}" == "failure" ]]; then
-            echo "❌ Integration tests failed"  
-            exit 1
-          fi
-          
-          echo "✅ All quality gates passed - ready for deployment"
+      - name: Publish to NPM
+        run: yarn run publish:npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Generate deployment summary
-        if: github.ref == 'refs/heads/main'
-        run: |
-          echo "## 🎉 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Tests:** ✅ Passed" >> $GITHUB_STEP_SUMMARY
-          echo "**Integration:** ✅ Passed" >> $GITHUB_STEP_SUMMARY
-          echo "**Quality Gates:** ✅ Passed" >> $GITHUB_STEP_SUMMARY
-          echo "**Ready for deployment:** ✅ Yes" >> $GITHUB_STEP_SUMMARY
-
-  # Notification job
-  notify:
-    name: Notify Results
-    needs: [validate, test, benchmarks, integration, quality-gate]
+  deploy-vscode:
+    name: Deploy VS Code Extension
+    needs: [validate, prepare-release, integration-tests]
+    if: needs.validate.outputs.is-release == 'true' && needs.integration-tests.result == 'success'
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build VS Code extension
+        run: yarn workspace @ast-copilot-helper/vscode-extension run build
+
+      - name: Publish to VS Code Marketplace
+        run: yarn workspace @ast-copilot-helper/vscode-extension run publish
+        env:
+          VSCE_PAT: ${{ secrets.VSCODE_MARKETPLACE_TOKEN }}
+
+  # ================================
+  # NOTIFICATION JOBS (Always)
+  # ================================
+
+  notify-completion:
+    name: Notify Completion
+    needs: [validate, quality-gates]
     if: always()
-    
+    runs-on: ubuntu-latest
     steps:
       - name: Determine overall status
         id: status
         run: |
-          # Determine if any critical jobs failed
-          if [[ "${{ needs.test.result }}" == "failure" || "${{ needs.integration.result }}" == "failure" || "${{ needs.quality-gate.result }}" == "failure" ]]; then
-            echo "status=failure" >> $GITHUB_OUTPUT
-            echo "message=❌ CI/CD Pipeline Failed" >> $GITHUB_OUTPUT
-          elif [[ "${{ needs.benchmarks.result }}" == "failure" ]]; then
-            echo "status=warning" >> $GITHUB_OUTPUT  
-            echo "message=⚠️ CI/CD Pipeline Completed with Performance Issues" >> $GITHUB_OUTPUT
-          else
+          if [[ "${{ needs.quality-gates.result }}" == "success" ]]; then
             echo "status=success" >> $GITHUB_OUTPUT
-            echo "message=✅ CI/CD Pipeline Completed Successfully" >> $GITHUB_OUTPUT
+            echo "message=✅ CI/CD Pipeline completed successfully!" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ CI/CD Pipeline failed. Please check the logs." >> $GITHUB_OUTPUT
           fi
 
-      - name: Summary
-        run: |
-          echo "## ${{ steps.status.outputs.message }}" >> $GITHUB_STEP_SUMMARY
-          echo "### Job Results:" >> $GITHUB_STEP_SUMMARY
-          echo "- **Validation:** ${{ needs.validate.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tests:** ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Benchmarks:** ${{ needs.benchmarks.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Integration:** ${{ needs.integration.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Quality Gate:** ${{ needs.quality-gate.result }}" >> $GITHUB_STEP_SUMMARY
+      - name: Comment on PR (Success)
+        if: github.event_name == 'pull_request' && steps.status.outputs.status == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ **CI/CD Pipeline Passed!** All quality gates have been satisfied. This PR is ready for review.'
+            });
+
+      - name: Comment on PR (Failure)
+        if: github.event_name == 'pull_request' && steps.status.outputs.status == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ **CI/CD Pipeline Failed!** Please address the failing checks before this PR can be merged. Check the [Actions tab](../../actions) for detailed logs.'
+            });
+
+      - name: Send Slack notification (Main branch failures)
+        if: github.ref == 'refs/heads/main' && steps.status.outputs.status == 'failure'
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: |
+            🚨 Main branch CI/CD failed!
+            Repository: ${{ github.repository }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+            Action: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

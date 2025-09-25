@@ -51,7 +51,7 @@ async function simpleRelease() {
   if (validation.success) {
     const result = await manager.executeRelease(plan);
     console.log(
-      `Release ${result.version} ${result.success ? "succeeded" : "failed"}`
+      `Release ${result.version} ${result.success ? "succeeded" : "failed"}`,
     );
   } else {
     console.log("Release validation failed:", validation.errors);
@@ -71,7 +71,7 @@ async function prereleaseWorkflow() {
   // Create an alpha prerelease
   const alphaPlan = await manager.planRelease(
     "1.1.0-alpha.1",
-    ReleaseType.PRERELEASE
+    ReleaseType.PRERELEASE,
   );
   const alphaResult = await manager.executeRelease(alphaPlan);
 
@@ -81,7 +81,7 @@ async function prereleaseWorkflow() {
     // Create a beta after testing alpha
     const betaPlan = await manager.planRelease(
       "1.1.0-beta.1",
-      ReleaseType.PRERELEASE
+      ReleaseType.PRERELEASE,
     );
     const betaResult = await manager.executeRelease(betaPlan);
 
@@ -93,7 +93,7 @@ async function prereleaseWorkflow() {
       const stableResult = await manager.executeRelease(stablePlan);
 
       console.log(
-        `Stable release ${stableResult.success ? "succeeded" : "failed"}`
+        `Stable release ${stableResult.success ? "succeeded" : "failed"}`,
       );
     }
   }
@@ -137,11 +137,11 @@ async function automatedRelease() {
     const nextVersion = await versionManager.calculateNextVersion(
       currentVersion,
       releaseType,
-      changes.entries
+      changes.entries,
     );
 
     console.log(
-      `Planning ${releaseType} release: ${currentVersion} → ${nextVersion}`
+      `Planning ${releaseType} release: ${currentVersion} → ${nextVersion}`,
     );
 
     // Create and validate release plan
@@ -173,7 +173,7 @@ async function automatedRelease() {
       // Generate release notes
       const notes = await manager.createReleaseNotes(
         result.version,
-        changes.entries
+        changes.entries,
       );
       writeFileSync(`releases/v${result.version}.md`, notes.content);
 
@@ -190,7 +190,7 @@ async function automatedRelease() {
       const latestVersion = await manager.getLatestVersion("stable");
       await manager.rollbackRelease(
         latestVersion,
-        "Emergency rollback due to release failure"
+        "Emergency rollback due to release failure",
       );
       console.log("🔄 Emergency rollback completed");
     } catch (rollbackError) {
@@ -262,7 +262,7 @@ async function monorepoRelease() {
 
   console.log(
     "Packages to release:",
-    sortedPackages.map((p) => p.name)
+    sortedPackages.map((p) => p.name),
   );
 
   // Release packages in dependency order
@@ -328,7 +328,7 @@ async function hotfixRelease() {
   };
 
   console.log(
-    `🚨 Creating hotfix for ${criticalIssue.id}: ${criticalIssue.description}`
+    `🚨 Creating hotfix for ${criticalIssue.id}: ${criticalIssue.description}`,
   );
 
   // Get the latest stable version
@@ -339,7 +339,7 @@ async function hotfixRelease() {
   const versionManager = manager["versionManager"];
   const hotfixVersion = await versionManager.calculateNextVersion(
     latestVersion,
-    ReleaseType.HOTFIX
+    ReleaseType.HOTFIX,
   );
 
   // Create hotfix plan with special configuration
@@ -769,7 +769,7 @@ async function main() {
     const versionManager = manager.versionManager;
     targetVersion = await versionManager.calculateNextVersion(
       currentVersion,
-      ReleaseType[releaseType.toUpperCase()]
+      ReleaseType[releaseType.toUpperCase()],
     );
     targetType = ReleaseType[releaseType.toUpperCase()];
   }
@@ -831,7 +831,7 @@ export function registerReleaseCommands(context: vscode.ExtensionContext) {
     async () => {
       const manager = new ComprehensiveReleaseManager();
       const config = vscode.workspace.getConfiguration(
-        "astCopilotHelper.release"
+        "astCopilotHelper.release",
       );
 
       await manager.initialize(config);
@@ -869,7 +869,7 @@ export function registerReleaseCommands(context: vscode.ExtensionContext) {
         const versionManager = manager.versionManager;
         const nextVersion = await versionManager.calculateNextVersion(
           currentVersion,
-          selection.value
+          selection.value,
         );
 
         const plan = await manager.planRelease(nextVersion, selection.value);
@@ -877,7 +877,7 @@ export function registerReleaseCommands(context: vscode.ExtensionContext) {
         // Show plan details in a webview
         showReleasePlan(context, plan);
       }
-    }
+    },
   );
 
   // Command: Execute Release
@@ -892,14 +892,14 @@ export function registerReleaseCommands(context: vscode.ExtensionContext) {
       const confirm = await vscode.window.showWarningMessage(
         `Are you sure you want to execute release ${plan.version}?`,
         { modal: true },
-        "Yes, Execute Release"
+        "Yes, Execute Release",
       );
 
       if (confirm) {
         const manager = new ComprehensiveReleaseManager();
         // ... initialize and execute
       }
-    }
+    },
   );
 
   context.subscriptions.push(planReleaseCommand, executeReleaseCommand);
@@ -912,7 +912,7 @@ function showReleasePlan(context: vscode.ExtensionContext, plan: any) {
     vscode.ViewColumn.One,
     {
       enableScripts: true,
-    }
+    },
   );
 
   panel.webview.html = generateReleasePlanHtml(plan);
@@ -940,20 +940,20 @@ async function robustReleaseWithErrorHandling() {
       if (!validation.success) {
         // Handle validation errors
         const criticalErrors = validation.errors.filter(
-          (e) => e.severity === "error"
+          (e) => e.severity === "error",
         );
         const warnings = validation.errors.filter(
-          (e) => e.severity === "warning"
+          (e) => e.severity === "warning",
         );
 
         if (criticalErrors.length > 0) {
           console.error("❌ Critical validation errors:");
           criticalErrors.forEach((error) =>
-            console.error(`  - ${error.message}`)
+            console.error(`  - ${error.message}`),
           );
           throw new ValidationError(
             "Critical validation failures",
-            criticalErrors
+            criticalErrors,
           );
         }
 
@@ -965,7 +965,7 @@ async function robustReleaseWithErrorHandling() {
           if (!proceed) {
             throw new ValidationError(
               "User cancelled due to warnings",
-              warnings
+              warnings,
             );
           }
         }
@@ -992,7 +992,7 @@ async function robustReleaseWithErrorHandling() {
 
       if (error instanceof PublishError) {
         console.error(
-          `Publishing failed for platform ${error.platform}: ${error.message}`
+          `Publishing failed for platform ${error.platform}: ${error.message}`,
         );
 
         // Attempt partial rollback for failed platforms
@@ -1005,7 +1005,7 @@ async function robustReleaseWithErrorHandling() {
   } catch (error) {
     if (error instanceof ReleaseError) {
       console.error(
-        `Release failed at ${error.context?.phase}: ${error.message}`
+        `Release failed at ${error.context?.phase}: ${error.message}`,
       );
 
       // Attempt rollback
@@ -1036,12 +1036,12 @@ async function handlePublishFailure(error: PublishError, plan: any) {
 
   // Get list of successful platforms
   const successfulPlatforms = plan.platforms.filter(
-    (p) => p.name !== error.platform && p.publishStatus === "success"
+    (p) => p.name !== error.platform && p.publishStatus === "success",
   );
 
   if (successfulPlatforms.length > 0) {
     console.log(
-      "Some platforms published successfully. Attempting partial rollback..."
+      "Some platforms published successfully. Attempting partial rollback...",
     );
 
     for (const platform of successfulPlatforms) {
@@ -1063,7 +1063,7 @@ async function executeWithRetry<T>(
   operation: () => Promise<T>,
   operationName: string,
   maxRetries: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
 ): Promise<T> {
   let lastError: Error;
 
@@ -1074,7 +1074,7 @@ async function executeWithRetry<T>(
     } catch (error) {
       lastError = error as Error;
       console.warn(
-        `${operationName} failed on attempt ${attempt}: ${error.message}`
+        `${operationName} failed on attempt ${attempt}: ${error.message}`,
       );
 
       if (attempt === maxRetries) {
@@ -1090,7 +1090,7 @@ async function executeWithRetry<T>(
   }
 
   throw new Error(
-    `${operationName} failed after ${maxRetries} attempts: ${lastError.message}`
+    `${operationName} failed after ${maxRetries} attempts: ${lastError.message}`,
   );
 }
 
@@ -1100,17 +1100,17 @@ async function resilientRelease() {
 
   await executeWithRetry(
     () => manager.initialize(config),
-    "Release manager initialization"
+    "Release manager initialization",
   );
 
   const plan = await executeWithRetry(
     () => manager.planRelease("1.2.0", ReleaseType.MINOR),
-    "Release planning"
+    "Release planning",
   );
 
   const validation = await executeWithRetry(
     () => manager.validateRelease(plan),
-    "Release validation"
+    "Release validation",
   );
 
   if (validation.success) {
@@ -1118,7 +1118,7 @@ async function resilientRelease() {
       () => manager.executeRelease(plan),
       "Release execution",
       2, // Fewer retries for execution to avoid duplicate releases
-      2000
+      2000,
     );
 
     console.log(`Release ${result.version} completed with retries`);

@@ -235,7 +235,6 @@ npm install -g @ast-copilot-helper/cli
 ### Install from Marketplace
 
 1. **Via VS Code Interface:**
-
    - Open VS Code
    - Go to Extensions (Ctrl/Cmd+Shift+X)
    - Search for "ast-copilot-helper"

@@ -3,9 +3,9 @@
  * Exports all locking-related functionality
  */
 
-export { LockManager } from './manager.js';
-export type { Lock, LockOptions } from './types.js';
-export { LockError, LockTimeoutError, LockConflictError } from './types.js';
+export { LockManager } from "./manager.js";
+export type { Lock, LockOptions } from "./types.js";
+export { LockError, LockTimeoutError, LockConflictError } from "./types.js";
 export {
   generateLockId,
   createLockContent,
@@ -15,5 +15,5 @@ export {
   readLockFile,
   writeLockFile,
   removeLockFile,
-  cleanupStaleLocks
-} from './utils.js';
+  cleanupStaleLocks,
+} from "./utils.js";

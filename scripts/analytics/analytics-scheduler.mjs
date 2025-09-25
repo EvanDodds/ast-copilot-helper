@@ -5,23 +5,23 @@
  * Runs community analytics on a schedule and manages historical data
  */
 
-import { CommunityAnalytics } from './community-analytics.mjs';
-import fs from 'fs/promises';
-import path from 'path';
+import { CommunityAnalytics } from "./community-analytics.mjs";
+import fs from "fs/promises";
+import path from "path";
 
 export class AnalyticsScheduler {
   constructor(options = {}) {
     this.config = {
       token: options.token || process.env.GITHUB_TOKEN,
-      owner: options.owner || 'yourusername',
-      repo: options.repo || 'ast-copilot-helper',
-      outputDir: options.outputDir || './analytics-data',
-      schedule: options.schedule || 'daily', // daily, weekly, monthly
+      owner: options.owner || "yourusername",
+      repo: options.repo || "ast-copilot-helper",
+      outputDir: options.outputDir || "./analytics-data",
+      schedule: options.schedule || "daily", // daily, weekly, monthly
       retentionDays: options.retentionDays || 365,
       timeframes: options.timeframes || [7, 30, 90], // days
-      ...options
+      ...options,
     };
-    
+
     this.analytics = new CommunityAnalytics(this.config);
   }
 
@@ -29,19 +29,23 @@ export class AnalyticsScheduler {
    * Run analytics for all configured timeframes
    */
   async runScheduledAnalytics() {
-    console.log('📊 Running scheduled community analytics...');
-    
-    const timestamp = new Date().toISOString().split('T')[0];
+    console.log("📊 Running scheduled community analytics...");
+
+    const timestamp = new Date().toISOString().split("T")[0];
     const results = {};
 
     for (const timeframe of this.config.timeframes) {
       console.log(`\n🔍 Analyzing ${timeframe}-day period...`);
-      
+
       try {
         const analytics = new CommunityAnalytics({
           ...this.config,
           timeframe,
-          outputDir: path.join(this.config.outputDir, `${timeframe}d`, timestamp)
+          outputDir: path.join(
+            this.config.outputDir,
+            `${timeframe}d`,
+            timestamp,
+          ),
         });
 
         const report = await analytics.generateReport();
@@ -52,10 +56,25 @@ export class AnalyticsScheduler {
           insights: report.insights,
           recommendations: report.recommendations,
           filePaths: {
-            json: path.join(this.config.outputDir, `${timeframe}d`, timestamp, 'community-analytics.json'),
-            html: path.join(this.config.outputDir, `${timeframe}d`, timestamp, 'community-analytics.html'),
-            csv: path.join(this.config.outputDir, `${timeframe}d`, timestamp, 'community-summary.csv')
-          }
+            json: path.join(
+              this.config.outputDir,
+              `${timeframe}d`,
+              timestamp,
+              "community-analytics.json",
+            ),
+            html: path.join(
+              this.config.outputDir,
+              `${timeframe}d`,
+              timestamp,
+              "community-analytics.html",
+            ),
+            csv: path.join(
+              this.config.outputDir,
+              `${timeframe}d`,
+              timestamp,
+              "community-summary.csv",
+            ),
+          },
         };
 
         console.log(`✅ ${timeframe}-day analysis completed`);
@@ -67,17 +86,17 @@ export class AnalyticsScheduler {
 
     // Save combined summary
     await this.saveCombinedSummary(results, timestamp);
-    
+
     // Update trending data
     await this.updateTrendingData(results, timestamp);
-    
+
     // Cleanup old data
     await this.cleanupOldData();
-    
+
     // Generate dashboard
     await this.generateDashboard(timestamp);
 
-    console.log('\n✅ Scheduled analytics completed!');
+    console.log("\n✅ Scheduled analytics completed!");
     return results;
   }
 
@@ -85,7 +104,7 @@ export class AnalyticsScheduler {
    * Save combined summary of all timeframes
    */
   async saveCombinedSummary(results, timestamp) {
-    const summaryDir = path.join(this.config.outputDir, 'summaries');
+    const summaryDir = path.join(this.config.outputDir, "summaries");
     await fs.mkdir(summaryDir, { recursive: true });
 
     const summary = {
@@ -94,14 +113,14 @@ export class AnalyticsScheduler {
       repository: `${this.config.owner}/${this.config.repo}`,
       timeframes: this.config.timeframes,
       results,
-      overview: this.generateOverview(results)
+      overview: this.generateOverview(results),
     };
 
     const summaryPath = path.join(summaryDir, `${timestamp}.json`);
     await fs.writeFile(summaryPath, JSON.stringify(summary, null, 2));
 
     // Update latest summary link
-    const latestPath = path.join(summaryDir, 'latest.json');
+    const latestPath = path.join(summaryDir, "latest.json");
     await fs.writeFile(latestPath, JSON.stringify(summary, null, 2));
 
     console.log(`📄 Combined summary saved: ${summaryPath}`);
@@ -112,18 +131,18 @@ export class AnalyticsScheduler {
    */
   generateOverview(results) {
     const overview = {
-      status: 'success',
+      status: "success",
       timeframes: {},
       trends: {},
-      alerts: []
+      alerts: [],
     };
 
     // Process each timeframe
     for (const [timeframe, data] of Object.entries(results)) {
       if (data.error) {
         overview.alerts.push({
-          type: 'error',
-          message: `Failed to analyze ${timeframe}: ${data.error}`
+          type: "error",
+          message: `Failed to analyze ${timeframe}: ${data.error}`,
         });
         continue;
       }
@@ -135,17 +154,17 @@ export class AnalyticsScheduler {
         issueCloseRate: data.summary.engagement.issueCloseRate,
         prMergeRate: data.summary.engagement.prMergeRate,
         stars: data.summary.engagement.stars,
-        forks: data.summary.engagement.forks
+        forks: data.summary.engagement.forks,
       };
 
       // Check for alerts based on insights
-      data.insights.forEach(insight => {
-        if (insight.type === 'warning' && insight.impact === 'high') {
+      data.insights.forEach((insight) => {
+        if (insight.type === "warning" && insight.impact === "high") {
           overview.alerts.push({
-            type: 'warning',
+            type: "warning",
             timeframe,
             message: insight.message,
-            category: insight.category
+            category: insight.category,
           });
         }
       });
@@ -158,7 +177,7 @@ export class AnalyticsScheduler {
    * Update trending data with new analytics
    */
   async updateTrendingData(results, timestamp) {
-    const trendingDir = path.join(this.config.outputDir, 'trending');
+    const trendingDir = path.join(this.config.outputDir, "trending");
     await fs.mkdir(trendingDir, { recursive: true });
 
     for (const [timeframe, data] of Object.entries(results)) {
@@ -169,9 +188,9 @@ export class AnalyticsScheduler {
 
       // Load existing trending data
       try {
-        const existingData = await fs.readFile(trendingPath, 'utf8');
+        const existingData = await fs.readFile(trendingPath, "utf8");
         trendingData = JSON.parse(existingData);
-      } catch (error) {
+      } catch {
         // File doesn't exist yet, start fresh
       }
 
@@ -186,7 +205,7 @@ export class AnalyticsScheduler {
         stars: data.summary.engagement.stars,
         forks: data.summary.engagement.forks,
         issueCloseRate: parseFloat(data.summary.engagement.issueCloseRate),
-        prMergeRate: parseFloat(data.summary.engagement.prMergeRate)
+        prMergeRate: parseFloat(data.summary.engagement.prMergeRate),
       });
 
       // Keep only last 100 data points to prevent file from growing too large
@@ -200,7 +219,7 @@ export class AnalyticsScheduler {
       await fs.writeFile(trendingPath, JSON.stringify(trendingData, null, 2));
     }
 
-    console.log('📈 Trending data updated');
+    console.log("📈 Trending data updated");
   }
 
   /**
@@ -213,14 +232,29 @@ export class AnalyticsScheduler {
     const previous = dataPoints[dataPoints.length - 2];
 
     return {
-      contributors: this.calculateTrend(previous.contributors, latest.contributors),
-      newContributors: this.calculateTrend(previous.newContributors, latest.newContributors),
+      contributors: this.calculateTrend(
+        previous.contributors,
+        latest.contributors,
+      ),
+      newContributors: this.calculateTrend(
+        previous.newContributors,
+        latest.newContributors,
+      ),
       issues: this.calculateTrend(previous.issues, latest.issues),
-      pullRequests: this.calculateTrend(previous.pullRequests, latest.pullRequests),
+      pullRequests: this.calculateTrend(
+        previous.pullRequests,
+        latest.pullRequests,
+      ),
       stars: this.calculateTrend(previous.stars, latest.stars),
       forks: this.calculateTrend(previous.forks, latest.forks),
-      issueCloseRate: this.calculateTrend(previous.issueCloseRate, latest.issueCloseRate),
-      prMergeRate: this.calculateTrend(previous.prMergeRate, latest.prMergeRate)
+      issueCloseRate: this.calculateTrend(
+        previous.issueCloseRate,
+        latest.issueCloseRate,
+      ),
+      prMergeRate: this.calculateTrend(
+        previous.prMergeRate,
+        latest.prMergeRate,
+      ),
     };
   }
 
@@ -228,11 +262,11 @@ export class AnalyticsScheduler {
    * Calculate trend between two values
    */
   calculateTrend(previous, current) {
-    if (previous === 0) return current > 0 ? 'up' : 'stable';
-    
+    if (previous === 0) return current > 0 ? "up" : "stable";
+
     const change = ((current - previous) / previous) * 100;
-    if (Math.abs(change) < 1) return 'stable';
-    return change > 0 ? 'up' : 'down';
+    if (Math.abs(change) < 1) return "stable";
+    return change > 0 ? "up" : "down";
   }
 
   /**
@@ -244,10 +278,10 @@ export class AnalyticsScheduler {
 
     for (const timeframe of this.config.timeframes) {
       const timeframeDir = path.join(this.config.outputDir, `${timeframe}d`);
-      
+
       try {
         const entries = await fs.readdir(timeframeDir, { withFileTypes: true });
-        
+
         for (const entry of entries) {
           if (entry.isDirectory()) {
             const folderDate = new Date(entry.name);
@@ -258,7 +292,7 @@ export class AnalyticsScheduler {
             }
           }
         }
-      } catch (error) {
+      } catch {
         // Directory might not exist yet
       }
     }
@@ -267,19 +301,23 @@ export class AnalyticsScheduler {
   /**
    * Generate analytics dashboard
    */
-  async generateDashboard(timestamp) {
-    const dashboardDir = path.join(this.config.outputDir, 'dashboard');
+  async generateDashboard(_timestamp) {
+    const dashboardDir = path.join(this.config.outputDir, "dashboard");
     await fs.mkdir(dashboardDir, { recursive: true });
 
     // Load latest summary
-    const summaryPath = path.join(this.config.outputDir, 'summaries', 'latest.json');
+    const summaryPath = path.join(
+      this.config.outputDir,
+      "summaries",
+      "latest.json",
+    );
     let summary;
-    
+
     try {
-      const summaryData = await fs.readFile(summaryPath, 'utf8');
+      const summaryData = await fs.readFile(summaryPath, "utf8");
       summary = JSON.parse(summaryData);
     } catch (error) {
-      console.error('❌ Could not load summary for dashboard:', error);
+      console.error("❌ Could not load summary for dashboard:", error);
       return;
     }
 
@@ -287,17 +325,21 @@ export class AnalyticsScheduler {
     const trendingData = {};
     for (const timeframe of this.config.timeframes) {
       try {
-        const trendingPath = path.join(this.config.outputDir, 'trending', `${timeframe}d.json`);
-        const data = await fs.readFile(trendingPath, 'utf8');
+        const trendingPath = path.join(
+          this.config.outputDir,
+          "trending",
+          `${timeframe}d.json`,
+        );
+        const data = await fs.readFile(trendingPath, "utf8");
         trendingData[`${timeframe}d`] = JSON.parse(data);
-      } catch (error) {
+      } catch {
         trendingData[`${timeframe}d`] = { dataPoints: [], trends: {} };
       }
     }
 
     // Generate HTML dashboard
     const dashboardHTML = this.generateDashboardHTML(summary, trendingData);
-    const dashboardPath = path.join(dashboardDir, 'index.html');
+    const dashboardPath = path.join(dashboardDir, "index.html");
     await fs.writeFile(dashboardPath, dashboardHTML);
 
     // Copy assets if they exist
@@ -311,7 +353,7 @@ export class AnalyticsScheduler {
    */
   generateDashboardHTML(summary, trendingData) {
     const { overview, results } = summary;
-    
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -370,72 +412,85 @@ export class AnalyticsScheduler {
             <p>Last updated: ${new Date(summary.generatedAt).toLocaleString()}</p>
         </div>
 
-        ${overview.alerts.length > 0 ? `
+        ${
+          overview.alerts.length > 0
+            ? `
         <div class="alerts">
-            ${overview.alerts.map(alert => `
+            ${overview.alerts
+              .map(
+                (alert) => `
                 <div class="alert ${alert.type}">
                     <strong>${alert.type.charAt(0).toUpperCase() + alert.type.slice(1)}:</strong> ${alert.message}
                 </div>
-            `).join('')}
+            `,
+              )
+              .join("")}
         </div>
-        ` : ''}
+        `
+            : ""
+        }
 
         <div class="timeframe-tabs">
-            ${this.config.timeframes.map((timeframe, index) => `
-                <button class="timeframe-tab ${index === 0 ? 'active' : ''}" onclick="showTimeframe('${timeframe}d')">
-                    ${timeframe} Day${timeframe > 1 ? 's' : ''}
+            ${this.config.timeframes
+              .map(
+                (timeframe, index) => `
+                <button class="timeframe-tab ${index === 0 ? "active" : ""}" onclick="showTimeframe('${timeframe}d')">
+                    ${timeframe} Day${timeframe > 1 ? "s" : ""}
                 </button>
-            `).join('')}
+            `,
+              )
+              .join("")}
         </div>
 
-        ${this.config.timeframes.map((timeframe, index) => {
-          const data = results[`${timeframe}d`];
-          if (!data || data.error) return '';
-          
-          const trending = trendingData[`${timeframe}d`]?.trends || {};
-          
-          return `
-          <div class="timeframe-content ${index === 0 ? 'active' : ''}" id="content-${timeframe}d">
+        ${this.config.timeframes
+          .map((timeframe, index) => {
+            const data = results[`${timeframe}d`];
+            if (!data || data.error) return "";
+
+            const trending = trendingData[`${timeframe}d`]?.trends || {};
+
+            return `
+          <div class="timeframe-content ${index === 0 ? "active" : ""}" id="content-${timeframe}d">
               <div class="metric-grid">
                   <div class="metric-card">
                       <div class="metric-value" style="color: #667eea;">${data.summary.communityGrowth.totalContributors}</div>
                       <div class="metric-label">Total Contributors</div>
-                      <div class="metric-change ${trending.contributors || 'stable'}">${trending.contributors || 'stable'}</div>
+                      <div class="metric-change ${trending.contributors || "stable"}">${trending.contributors || "stable"}</div>
                   </div>
                   <div class="metric-card">
                       <div class="metric-value" style="color: #28a745;">${data.summary.communityGrowth.newContributors}</div>
                       <div class="metric-label">New Contributors</div>
-                      <div class="metric-change ${trending.newContributors || 'stable'}">${trending.newContributors || 'stable'}</div>
+                      <div class="metric-change ${trending.newContributors || "stable"}">${trending.newContributors || "stable"}</div>
                   </div>
                   <div class="metric-card">
                       <div class="metric-value" style="color: #ffc107;">${data.summary.activity.issuesOpened}</div>
                       <div class="metric-label">Issues Opened</div>
-                      <div class="metric-change ${trending.issues || 'stable'}">${trending.issues || 'stable'}</div>
+                      <div class="metric-change ${trending.issues || "stable"}">${trending.issues || "stable"}</div>
                   </div>
                   <div class="metric-card">
                       <div class="metric-value" style="color: #17a2b8;">${data.summary.activity.pullRequestsOpened}</div>
                       <div class="metric-label">Pull Requests</div>
-                      <div class="metric-change ${trending.pullRequests || 'stable'}">${trending.pullRequests || 'stable'}</div>
+                      <div class="metric-change ${trending.pullRequests || "stable"}">${trending.pullRequests || "stable"}</div>
                   </div>
                   <div class="metric-card">
                       <div class="metric-value" style="color: #dc3545;">${data.summary.engagement.issueCloseRate}%</div>
                       <div class="metric-label">Issue Close Rate</div>
-                      <div class="metric-change ${trending.issueCloseRate || 'stable'}">${trending.issueCloseRate || 'stable'}</div>
+                      <div class="metric-change ${trending.issueCloseRate || "stable"}">${trending.issueCloseRate || "stable"}</div>
                   </div>
                   <div class="metric-card">
                       <div class="metric-value" style="color: #6f42c1;">${data.summary.engagement.prMergeRate}%</div>
                       <div class="metric-label">PR Merge Rate</div>
-                      <div class="metric-change ${trending.prMergeRate || 'stable'}">${trending.prMergeRate || 'stable'}</div>
+                      <div class="metric-change ${trending.prMergeRate || "stable"}">${trending.prMergeRate || "stable"}</div>
                   </div>
                   <div class="metric-card">
                       <div class="metric-value" style="color: #fd7e14;">⭐ ${data.summary.engagement.stars}</div>
                       <div class="metric-label">GitHub Stars</div>
-                      <div class="metric-change ${trending.stars || 'stable'}">${trending.stars || 'stable'}</div>
+                      <div class="metric-change ${trending.stars || "stable"}">${trending.stars || "stable"}</div>
                   </div>
                   <div class="metric-card">
                       <div class="metric-value" style="color: #20c997;">🍴 ${data.summary.engagement.forks}</div>
                       <div class="metric-label">GitHub Forks</div>
-                      <div class="metric-change ${trending.forks || 'stable'}">${trending.forks || 'stable'}</div>
+                      <div class="metric-change ${trending.forks || "stable"}">${trending.forks || "stable"}</div>
                   </div>
               </div>
 
@@ -450,29 +505,38 @@ export class AnalyticsScheduler {
               <div class="insights-grid">
                   <div class="insights-card">
                       <h3>💡 Key Insights</h3>
-                      ${data.insights.map(insight => `
+                      ${data.insights
+                        .map(
+                          (insight) => `
                           <div class="insight-item ${insight.type}">
                               <strong>${insight.category}:</strong> ${insight.message}
                               <small style="float: right;">${insight.impact} impact</small>
                           </div>
-                      `).join('')}
+                      `,
+                        )
+                        .join("")}
                   </div>
                   
                   <div class="insights-card">
                       <h3>🎯 Recommendations</h3>
-                      ${data.recommendations.map(rec => `
+                      ${data.recommendations
+                        .map(
+                          (rec) => `
                           <div class="recommendation">
                               <h4>${rec.action} <small>(${rec.priority} priority)</small></h4>
                               <ul style="margin-top: 8px;">
-                                  ${rec.details.map(detail => `<li style="margin: 4px 0;">${detail}</li>`).join('')}
+                                  ${rec.details.map((detail) => `<li style="margin: 4px 0;">${detail}</li>`).join("")}
                               </ul>
                           </div>
-                      `).join('')}
+                      `,
+                        )
+                        .join("")}
                   </div>
               </div>
           </div>
           `;
-        }).join('')}
+          })
+          .join("")}
 
         <div class="footer">
             <p>🏘️ Generated by ast-copilot-helper Community Analytics • ${new Date().toLocaleString()}</p>
@@ -511,7 +575,7 @@ export class AnalyticsScheduler {
   /**
    * Copy dashboard assets (CSS, JS, images)
    */
-  async copyDashboardAssets(dashboardDir) {
+  async copyDashboardAssets(_dashboardDir) {
     // This would copy any static assets needed for the dashboard
     // For now, we're using inline styles and scripts
   }
@@ -519,14 +583,14 @@ export class AnalyticsScheduler {
   /**
    * Get configuration for scheduling
    */
-  static getScheduleConfig(schedule = 'daily') {
+  static getScheduleConfig(schedule = "daily") {
     const configs = {
-      hourly: { cron: '0 * * * *', description: 'Every hour' },
-      daily: { cron: '0 0 * * *', description: 'Every day at midnight' },
-      weekly: { cron: '0 0 * * 0', description: 'Every Sunday at midnight' },
-      monthly: { cron: '0 0 1 * *', description: 'First day of every month' }
+      hourly: { cron: "0 * * * *", description: "Every hour" },
+      daily: { cron: "0 0 * * *", description: "Every day at midnight" },
+      weekly: { cron: "0 0 * * 0", description: "Every Sunday at midnight" },
+      monthly: { cron: "0 0 1 * *", description: "First day of every month" },
     };
-    
+
     return configs[schedule] || configs.daily;
   }
 }
@@ -535,36 +599,41 @@ export class AnalyticsScheduler {
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   const options = {
     token: process.env.GITHUB_TOKEN,
-    owner: process.argv[2] || 'yourusername',
-    repo: process.argv[3] || 'ast-copilot-helper',
-    schedule: process.argv[4] || 'daily',
-    outputDir: process.argv[5] || './analytics-data'
+    owner: process.argv[2] || "yourusername",
+    repo: process.argv[3] || "ast-copilot-helper",
+    schedule: process.argv[4] || "daily",
+    outputDir: process.argv[5] || "./analytics-data",
   };
 
   if (!options.token) {
-    console.error('❌ GitHub token required. Set GITHUB_TOKEN environment variable.');
+    console.error(
+      "❌ GitHub token required. Set GITHUB_TOKEN environment variable.",
+    );
     process.exit(1);
   }
 
   const scheduler = new AnalyticsScheduler(options);
-  
-  scheduler.runScheduledAnalytics()
-    .then(results => {
-      console.log('\n✅ Analytics scheduler completed successfully');
-      
+
+  scheduler
+    .runScheduledAnalytics()
+    .then((results) => {
+      console.log("\n✅ Analytics scheduler completed successfully");
+
       // Print summary
       Object.entries(results).forEach(([timeframe, data]) => {
         if (data.error) {
           console.log(`❌ ${timeframe}: ${data.error}`);
         } else {
-          console.log(`📊 ${timeframe}: ${data.summary.communityGrowth.totalContributors} contributors, ${data.summary.activity.issuesOpened} issues opened`);
+          console.log(
+            `📊 ${timeframe}: ${data.summary.communityGrowth.totalContributors} contributors, ${data.summary.activity.issuesOpened} issues opened`,
+          );
         }
       });
-      
+
       process.exit(0);
     })
-    .catch(error => {
-      console.error('❌ Analytics scheduling failed:', error);
+    .catch((error) => {
+      console.error("❌ Analytics scheduling failed:", error);
       process.exit(1);
     });
 }

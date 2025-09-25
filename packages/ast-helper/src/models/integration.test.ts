@@ -1,9 +1,9 @@
 /**
  * Integration tests for model management system
  * Tests end-to-end workflows across all components
- * 
+ *
  * Addresses acceptance criteria:
- * - ✅ End-to-end model workflow integration  
+ * - ✅ End-to-end model workflow integration
  * - ✅ Cross-component communication
  * - ✅ Error scenario handling
  * - ✅ Performance optimization integration
@@ -11,10 +11,11 @@
  * - ✅ System resilience and recovery
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { promises as fs } from 'fs';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { tmpdir } from "os";
+import { join } from "path";
+import { promises as fs } from "fs";
+import * as crypto from "crypto";
 import {
   ModelDownloader,
   ModelCache,
@@ -25,10 +26,10 @@ import {
   ModelRegistry,
   ModelConfig,
   ModelMetadata,
-  DEFAULT_MODEL
-} from './index.js';
+  DEFAULT_MODEL,
+} from "./index.js";
 
-describe('Model Management System Integration', () => {
+describe("Model Management System Integration", () => {
   let testDir: string;
   let mockModel: ModelConfig;
 
@@ -38,36 +39,38 @@ describe('Model Management System Integration', () => {
     await fs.mkdir(testDir, { recursive: true });
 
     // Create test content with known checksum
-    const testContent = 'A'.repeat(1024); // 1KB of 'A' characters
-    const crypto = require('crypto');
-    const actualChecksum = crypto.createHash('sha256').update(testContent).digest('hex');
-    
+    const testContent = "A".repeat(1024); // 1KB of 'A' characters
+    const actualChecksum = crypto
+      .createHash("sha256")
+      .update(testContent)
+      .digest("hex");
+
     // Create mock model configuration
     mockModel = {
-      name: 'test-model',
-      version: '1.0.0',
-      url: 'https://example.com/test-model.onnx',
+      name: "test-model",
+      version: "1.0.0",
+      url: "https://example.com/test-model.onnx",
       checksum: actualChecksum,
       size: testContent.length,
-      format: 'onnx' as const,
+      format: "onnx" as const,
       dimensions: 768,
-      description: 'Test model for integration testing',
+      description: "Test model for integration testing",
       requirements: {
         memoryMB: 512,
-        architecture: ['x64'],
-        platforms: ['linux']
-      }
+        architecture: ["x64"],
+        platforms: ["linux"],
+      },
     };
 
     // Mock fetch for successful downloads
-    global.fetch = vi.fn().mockImplementation(() => 
+    global.fetch = vi.fn().mockImplementation(() =>
       Promise.resolve({
         ok: true,
         headers: {
           get: (header: string) => {
-            if (header === 'content-length') return mockModel.size.toString();
+            if (header === "content-length") return mockModel.size.toString();
             return null;
-          }
+          },
         },
         body: new ReadableStream({
           start(controller) {
@@ -75,9 +78,9 @@ describe('Model Management System Integration', () => {
             const encoder = new TextEncoder();
             controller.enqueue(encoder.encode(testContent));
             controller.close();
-          }
-        })
-      })
+          },
+        }),
+      }),
     );
   });
 
@@ -85,18 +88,18 @@ describe('Model Management System Integration', () => {
     // Clean up test directory
     try {
       await fs.rm(testDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
     vi.restoreAllMocks();
   });
 
-  describe('End-to-End Model Workflow', () => {
+  describe("End-to-End Model Workflow", () => {
     /**
      * Tests complete model download, verification, and caching workflow
      * Addresses acceptance criteria: ✅ Complete workflow integration
      */
-    it('should handle complete model workflow', async () => {
+    it("should handle complete model workflow", async () => {
       // Initialize components
       const downloader = new ModelDownloader();
       const cache = new ModelCache({ cacheDir: testDir });
@@ -107,17 +110,26 @@ describe('Model Management System Integration', () => {
       await metadata.initialize();
 
       // 1. Download model
-      const downloadPath = join(testDir, 'downloads', `${mockModel.name}.${mockModel.format}`);
-      await fs.mkdir(join(testDir, 'downloads'), { recursive: true });
-      
+      const downloadPath = join(
+        testDir,
+        "downloads",
+        `${mockModel.name}.${mockModel.format}`,
+      );
+      await fs.mkdir(join(testDir, "downloads"), { recursive: true });
+
       const filePath = await downloader.downloadModel(mockModel, downloadPath);
       expect(filePath).toBe(downloadPath);
-      expect(await fs.access(filePath).then(() => true).catch(() => false)).toBe(true);
+      expect(
+        await fs
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
 
       // 2. Verify model (with relaxed validation for mock data)
       const verification = await verifier.verifyModelFile(filePath, mockModel, {
         skipChecksum: true, // Skip for mock data
-        skipFormatCheck: true // Skip ONNX format check for mock data
+        skipFormatCheck: true, // Skip ONNX format check for mock data
       });
       expect(verification.valid).toBe(true);
 
@@ -135,10 +147,22 @@ describe('Model Management System Integration', () => {
         verified: true,
         usageStats: {
           loadCount: 0,
-          lastUsed: new Date()
-        }
+          lastUsed: new Date(),
+          firstUsed: new Date(),
+          totalProcessingTime: 0,
+          embeddingRequests: 0,
+          averageProcessingTime: 0,
+          peakMemoryUsage: 0,
+          errorCount: 0,
+          successRate: 100,
+          performanceHistory: [],
+          hourlyUsage: {},
+          weeklyUsage: {},
+          cacheHitRate: 100,
+          lastOptimized: new Date(),
+        },
       };
-      
+
       await metadata.storeMetadata(mockModel, modelMetadata);
       const retrievedMetadata = await metadata.getMetadata(mockModel);
       expect(retrievedMetadata).toBeDefined();
@@ -149,7 +173,7 @@ describe('Model Management System Integration', () => {
      * Tests model registry integration
      * Addresses acceptance criteria: ✅ Registry integration
      */
-    it('should integrate with model registry', async () => {
+    it("should integrate with model registry", async () => {
       // Test registry access
       const defaultModel = ModelRegistry.getModel(DEFAULT_MODEL);
       expect(defaultModel).toBeDefined();
@@ -158,31 +182,38 @@ describe('Model Management System Integration', () => {
       // Test model enumeration
       const allModels = ModelRegistry.getAllModels();
       expect(allModels.length).toBeGreaterThan(0);
-      expect(allModels).toContainEqual(expect.objectContaining({
-        name: DEFAULT_MODEL
-      }));
+      expect(allModels).toContainEqual(
+        expect.objectContaining({
+          name: DEFAULT_MODEL,
+        }),
+      );
     });
   });
 
-  describe('Error Handling Integration', () => {
+  describe("Error Handling Integration", () => {
     /**
      * Tests network failure handling
      * Addresses acceptance criteria: ✅ Network error resilience
      */
-    it('should handle network failures gracefully', async () => {
+    it("should handle network failures gracefully", async () => {
       // Mock network failure
-      vi.mocked(fetch).mockRejectedValue(new Error('Network error'));
+      vi.mocked(fetch).mockRejectedValue(new Error("Network error"));
 
       const downloader = new ModelDownloader();
       const errorHandler = new ErrorHandler();
 
       // Test connectivity validation
-      const connectivity = await errorHandler.validateConnectivity(['https://example.com']);
+      const connectivity = await errorHandler.validateConnectivity([
+        "https://example.com",
+      ]);
       expect(connectivity.status).toBeDefined();
 
       // Test download with retries
       await expect(
-        downloader.downloadModel(mockModel, join(testDir, 'failed-download.onnx'))
+        downloader.downloadModel(
+          mockModel,
+          join(testDir, "failed-download.onnx"),
+        ),
       ).rejects.toThrow();
     });
 
@@ -190,29 +221,29 @@ describe('Model Management System Integration', () => {
      * Tests cache corruption handling
      * Addresses acceptance criteria: ✅ Data integrity and recovery
      */
-    it('should handle cache corruption gracefully', async () => {
+    it("should handle cache corruption gracefully", async () => {
       const cache = new ModelCache({ cacheDir: testDir });
       await cache.initialize();
 
       // Simulate cache corruption by writing invalid metadata
-      const metadataFile = join(testDir, 'cache-metadata.json');
-      await fs.writeFile(metadataFile, 'invalid json');
+      const metadataFile = join(testDir, "cache-metadata.json");
+      await fs.writeFile(metadataFile, "invalid json");
 
       // Cache should handle corruption and reinitialize
       const cacheResult = await cache.checkCache(mockModel);
       expect(cacheResult.hit).toBe(false);
-      expect(cacheResult.status).toBe('missing');
+      expect(cacheResult.status).toBe("missing");
     });
   });
 
-  describe('Performance Integration', () => {
+  describe("Performance Integration", () => {
     /**
      * Tests performance optimization integration
      * Addresses acceptance criteria: ✅ Performance integration
      */
-    it('should integrate performance optimizations', async () => {
+    it("should integrate performance optimizations", async () => {
       const optimizer = new PerformanceOptimizer();
-      
+
       // Test basic optimizer functionality
       expect(optimizer).toBeDefined();
 
@@ -221,25 +252,27 @@ describe('Model Management System Integration', () => {
     });
   });
 
-  describe('Concurrent Access Safety', () => {
+  describe("Concurrent Access Safety", () => {
     /**
      * Tests concurrent cache operations
      * Addresses acceptance criteria: ✅ Concurrent access safety
      */
-    it('should handle concurrent operations safely', async () => {
+    it("should handle concurrent operations safely", async () => {
       const cache = new ModelCache({ cacheDir: testDir });
       await cache.initialize();
 
-      const crypto = require('crypto');
-      const testContent = 'concurrent test content';
-      const testChecksum = crypto.createHash('sha256').update(testContent).digest('hex');
+      const testContent = "concurrent test content";
+      const testChecksum = crypto
+        .createHash("sha256")
+        .update(testContent)
+        .digest("hex");
 
       // Create multiple concurrent cache operations
       const operations = Array.from({ length: 5 }, (_, i) => ({
         ...mockModel,
         name: `concurrent-model-${i}`,
         checksum: testChecksum,
-        size: testContent.length
+        size: testContent.length,
       })).map(async (model) => {
         const filePath = join(testDir, `${model.name}.onnx`);
         await fs.writeFile(filePath, testContent);
@@ -251,11 +284,11 @@ describe('Model Management System Integration', () => {
 
       // Verify all models were stored
       for (let i = 0; i < 5; i++) {
-        const model = { 
-          ...mockModel, 
+        const model = {
+          ...mockModel,
           name: `concurrent-model-${i}`,
           checksum: testChecksum,
-          size: testContent.length
+          size: testContent.length,
         };
         const result = await cache.checkCache(model);
         expect(result.hit).toBe(true);
@@ -263,32 +296,32 @@ describe('Model Management System Integration', () => {
     });
   });
 
-  describe('System Recovery', () => {
+  describe("System Recovery", () => {
     /**
      * Tests system recovery from partial states
      * Addresses acceptance criteria: ✅ System recovery and cleanup
      */
-    it('should recover from partial download states', async () => {
+    it("should recover from partial download states", async () => {
       const cache = new ModelCache({ cacheDir: testDir });
       await cache.initialize();
 
       // Create partial file
       const partialPath = join(testDir, `${mockModel.name}.partial`);
-      await fs.writeFile(partialPath, 'partial content');
+      await fs.writeFile(partialPath, "partial content");
 
       // Cache should detect partial state
       const cacheResult = await cache.checkCache(mockModel);
       expect(cacheResult.hit).toBe(false);
-      expect(cacheResult.status).toBe('missing');
+      expect(cacheResult.status).toBe("missing");
     });
   });
 
-  describe('Performance Benchmarks', () => {
+  describe("Performance Benchmarks", () => {
     /**
      * Tests high-volume operations efficiency
      * Addresses acceptance criteria: ✅ Performance benchmarks
      */
-    it('should handle high-volume operations efficiently', async () => {
+    it("should handle high-volume operations efficiently", async () => {
       const startTime = Date.now();
       const cache = new ModelCache({ cacheDir: testDir });
       await cache.initialize();
@@ -296,7 +329,7 @@ describe('Model Management System Integration', () => {
       // Test with many cache operations
       const operations = Array.from({ length: 50 }, (_, i) => ({
         ...mockModel,
-        name: `benchmark-model-${i}`
+        name: `benchmark-model-${i}`,
       })).map(async (model) => {
         return cache.checkCache(model);
       });
@@ -308,9 +341,9 @@ describe('Model Management System Integration', () => {
       // Should complete within reasonable time (less than 5 seconds)
       expect(duration).toBeLessThan(5000);
       expect(results).toHaveLength(50);
-      
+
       // All should return cache miss for non-existent models
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.hit).toBe(false);
       });
     });

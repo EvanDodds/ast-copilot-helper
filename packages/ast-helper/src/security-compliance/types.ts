@@ -44,10 +44,10 @@ export interface SecurityValidationConfig {
   };
 }
 
-export type SecuritySeverity = 'low' | 'medium' | 'high' | 'critical';
-export type AuthMethod = 'token' | 'oauth' | 'saml' | 'api-key';
-export type SecurityProtocol = 'https' | 'tls' | 'wss' | 'ssh';
-export type ComplianceStandard = 'gdpr' | 'ccpa' | 'hipaa' | 'sox' | 'iso27001';
+export type SecuritySeverity = "low" | "medium" | "high" | "critical";
+export type AuthMethod = "token" | "oauth" | "saml" | "api-key";
+export type SecurityProtocol = "https" | "tls" | "wss" | "ssh";
+export type ComplianceStandard = "gdpr" | "ccpa" | "hipaa" | "sox" | "iso27001";
 
 export interface SanitizationConfig {
   enabled: boolean;
@@ -62,7 +62,7 @@ export interface ValidationConfig {
 }
 
 export interface AuthRequirement {
-  type: 'password-strength' | 'mfa' | 'session-timeout' | 'lockout-policy';
+  type: "password-strength" | "mfa" | "session-timeout" | "lockout-policy";
   config: Record<string, unknown>;
 }
 
@@ -108,11 +108,19 @@ export interface ComplianceReportConfig {
   format: ReportFormat[];
 }
 
-export type SanitizationMethod = 'html-escape' | 'sql-escape' | 'path-sanitize' | 'xss-filter';
-export type AnonymizationMethod = 'mask' | 'hash' | 'tokenize' | 'remove';
-export type AuditEvent = 'login' | 'data-access' | 'permission-change' | 'system-error';
-export type ReportFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly';
-export type ReportFormat = 'pdf' | 'html' | 'json' | 'csv';
+export type SanitizationMethod =
+  | "html-escape"
+  | "sql-escape"
+  | "path-sanitize"
+  | "xss-filter";
+export type AnonymizationMethod = "mask" | "hash" | "tokenize" | "remove";
+export type AuditEvent =
+  | "login"
+  | "data-access"
+  | "permission-change"
+  | "system-error";
+export type ReportFrequency = "daily" | "weekly" | "monthly" | "quarterly";
+export type ReportFormat = "pdf" | "html" | "json" | "csv";
 
 export interface SanitizationRule {
   name: string;
@@ -142,7 +150,14 @@ export interface DataCategory {
   encryption: boolean;
 }
 
-export type ValidationType = 'email' | 'phone' | 'url' | 'regex' | 'length' | 'numeric' | 'date';
+export type ValidationType =
+  | "email"
+  | "phone"
+  | "url"
+  | "regex"
+  | "length"
+  | "numeric"
+  | "date";
 
 export interface ValidationRuleConfig {
   minLength?: number;
@@ -288,27 +303,40 @@ export interface SecurityVulnerability {
   fixedIn?: string;
 }
 
-export type SecurityCategory = 
-  | 'vulnerability-scanning'
-  | 'input-validation'
-  | 'authentication'
-  | 'data-privacy'
-  | 'network-security'
-  | 'code-security'
-  | 'compliance';
+export type SecurityCategory =
+  | "vulnerability-scanning"
+  | "input-validation"
+  | "authentication"
+  | "data-privacy"
+  | "network-security"
+  | "code-security"
+  | "compliance";
 
-export type ImpactLevel = 'low' | 'medium' | 'high' | 'critical';
-export type EffortLevel = 'trivial' | 'minor' | 'moderate' | 'major' | 'extreme';
-export type CertificationState = 'valid' | 'expired' | 'pending' | 'revoked' | 'not-applicable';
+export type ImpactLevel = "low" | "medium" | "high" | "critical";
+export type EffortLevel =
+  | "trivial"
+  | "minor"
+  | "moderate"
+  | "major"
+  | "extreme";
+export type CertificationState =
+  | "valid"
+  | "expired"
+  | "pending"
+  | "revoked"
+  | "not-applicable";
 
 // Security Validation Events
 export interface SecurityValidationEvents {
-  'test:start': { category: SecurityCategory; testName: string };
-  'test:complete': { category: SecurityCategory; result: SecurityTestResult };
-  'vulnerability:found': { vulnerability: SecurityVulnerability; package: string };
-  'compliance:gap': { gap: ComplianceGap };
-  'recommendation:generated': { recommendation: SecurityRecommendation };
-  'validation:complete': { result: SecurityValidationResult };
+  "test:start": { category: SecurityCategory; testName: string };
+  "test:complete": { category: SecurityCategory; result: SecurityTestResult };
+  "vulnerability:found": {
+    vulnerability: SecurityVulnerability;
+    package: string;
+  };
+  "compliance:gap": { gap: ComplianceGap };
+  "recommendation:generated": { recommendation: SecurityRecommendation };
+  "validation:complete": { result: SecurityValidationResult };
 }
 
 // Default Configuration
@@ -316,35 +344,35 @@ export const DEFAULT_SECURITY_CONFIG: SecurityValidationConfig = {
   enabled: true,
   vulnerabilityScanning: {
     enabled: true,
-    sources: ['npm-audit', 'snyk', 'owasp'],
-    severity: ['medium', 'high', 'critical'],
+    sources: ["npm-audit", "snyk", "owasp"],
+    severity: ["medium", "high", "critical"],
     autoFix: false,
-    allowList: []
+    allowList: [],
   },
   inputValidation: {
     enabled: true,
     strictMode: true,
     sanitization: {
       enabled: true,
-      methods: ['html-escape', 'sql-escape', 'xss-filter'],
-      customRules: []
+      methods: ["html-escape", "sql-escape", "xss-filter"],
+      customRules: [],
     },
     validation: {
       enabled: true,
       rules: [],
-      customValidators: []
-    }
+      customValidators: [],
+    },
   },
   authentication: {
     enabled: true,
-    methods: ['token', 'api-key'],
+    methods: ["token", "api-key"],
     tokenExpiry: 3600000, // 1 hour
     requirements: [
       {
-        type: 'password-strength',
-        config: { minLength: 8, requireSpecialChars: true }
-      }
-    ]
+        type: "password-strength",
+        config: { minLength: 8, requireSpecialChars: true },
+      },
+    ],
   },
   dataPrivacy: {
     enabled: true,
@@ -353,45 +381,45 @@ export const DEFAULT_SECURITY_CONFIG: SecurityValidationConfig = {
       enabled: true,
       defaultRetention: 365,
       categories: [],
-      autoDelete: true
+      autoDelete: true,
     },
     anonymization: {
       enabled: true,
-      methods: ['hash', 'mask'],
-      sensitiveFields: ['email', 'phone', 'ssn']
-    }
+      methods: ["hash", "mask"],
+      sensitiveFields: ["email", "phone", "ssn"],
+    },
   },
   networkSecurity: {
     enabled: true,
     encryption: {
       enabled: true,
-      algorithm: 'AES-256-GCM',
+      algorithm: "AES-256-GCM",
       keySize: 256,
       transport: true,
-      atRest: true
+      atRest: true,
     },
-    protocols: ['https', 'tls'],
+    protocols: ["https", "tls"],
     certificates: {
       enabled: true,
       validation: true,
       expiration: true,
-      selfSigned: false
-    }
+      selfSigned: false,
+    },
   },
   compliance: {
     enabled: true,
-    standards: ['gdpr'],
+    standards: ["gdpr"],
     auditing: {
       enabled: true,
-      events: ['login', 'data-access', 'permission-change'],
+      events: ["login", "data-access", "permission-change"],
       retention: 2555, // 7 years
-      encryption: true
+      encryption: true,
     },
     reporting: {
       enabled: true,
-      frequency: 'monthly',
+      frequency: "monthly",
       recipients: [],
-      format: ['json', 'html']
-    }
-  }
+      format: ["json", "html"],
+    },
+  },
 };

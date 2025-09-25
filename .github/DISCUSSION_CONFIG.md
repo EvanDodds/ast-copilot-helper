@@ -44,12 +44,14 @@ This document outlines the recommended GitHub Discussions categories and setting
 ## ⚙️ Configuration Steps
 
 ### Step 1: Enable Discussions
+
 1. Go to your repository Settings
-2. Scroll to "Features" section  
+2. Scroll to "Features" section
 3. Check "Discussions"
 4. Click "Set up discussions"
 
 ### Step 2: Configure Categories
+
 Navigate to the Discussions tab and configure these categories:
 
 ```yaml
@@ -58,61 +60,68 @@ categories:
   - name: "📢 Announcements"
     description: "Updates and announcements from the maintainers"
     format: "announcement"
-    
-  - name: "💡 Ideas"  
+
+  - name: "💡 Ideas"
     description: "Share ideas for new features and improvements"
     format: "open-ended"
-    
+
   - name: "🙋 Q&A"
-    description: "Ask the community for help"  
+    description: "Ask the community for help"
     format: "question-answer"
-    
+
   - name: "💬 General"
     description: "General discussions about ast-copilot-helper"
     format: "open-ended"
-    
+
   - name: "🎉 Show and tell"
     description: "Share what you've built with ast-copilot-helper"
     format: "open-ended"
-    
+
   - name: "📊 Polls"
     description: "Community polls and decision making"
     format: "open-ended"
 ```
 
 ### Step 3: Set Category Templates
+
 1. Go to repository Settings → General
-2. Scroll to "Discussion template repository" 
+2. Scroll to "Discussion template repository"
 3. The templates in `.github/DISCUSSION_TEMPLATE/` will be automatically used
 
 ### Step 4: Configure Category Settings
 
 #### Announcements
+
 - **Posting permissions**: Maintainers only
 - **Enable reactions**: Yes
 - **Enable upvoting**: Yes
 
 #### Ideas
+
 - **Enable reactions**: Yes
-- **Enable upvoting**: Yes  
+- **Enable upvoting**: Yes
 - **Auto-assign labels**: `enhancement`, `feature request`
 
 #### Q&A
+
 - **Enable reactions**: Yes
 - **Enable marking answers**: Yes
 - **Enable upvoting**: Yes
 - **Auto-assign labels**: `question`
 
 #### General
+
 - **Enable reactions**: Yes
 - **Enable upvoting**: Yes
 
 #### Show and tell
+
 - **Enable reactions**: Yes
 - **Enable upvoting**: Yes
 - **Auto-assign labels**: `showcase`
 
-#### Polls  
+#### Polls
+
 - **Enable reactions**: Yes
 - **Enable upvoting**: Yes
 - **Auto-assign labels**: `poll`
@@ -122,15 +131,17 @@ categories:
 Recommended labels for discussions:
 
 ### Type Labels
+
 - `question` - Questions needing answers
-- `enhancement` - Feature requests and improvements  
+- `enhancement` - Feature requests and improvements
 - `bug-report` - Bug reports (should usually be issues)
 - `documentation` - Documentation related
 - `showcase` - Community showcases
 - `poll` - Community polls
 - `announcement` - Official announcements
 
-### Status Labels  
+### Status Labels
+
 - `answered` - Questions that have been answered
 - `under-consideration` - Ideas being evaluated
 - `planned` - Features planned for development
@@ -138,11 +149,13 @@ Recommended labels for discussions:
 - `duplicate` - Duplicate discussions
 
 ### Priority Labels
+
 - `high-priority` - High priority discussions
 - `help-wanted` - Community help needed
 - `good-first-contribution` - Good for newcomers
 
 ### Area Labels
+
 - `cli` - CLI related discussions
 - `vscode-extension` - VS Code extension related
 - `mcp-server` - MCP server related
@@ -153,6 +166,7 @@ Recommended labels for discussions:
 ## 🔧 Moderation Guidelines
 
 ### Discussion Moderation
+
 1. **Monitor daily** for new discussions
 2. **Apply appropriate labels** to help with organization
 3. **Pin important announcements** and frequently referenced discussions
@@ -160,12 +174,14 @@ Recommended labels for discussions:
 5. **Convert issues to discussions** when appropriate (and vice versa)
 
 ### Answer Management (Q&A)
+
 1. **Mark helpful answers** as accepted answers
 2. **Encourage question authors** to mark their own accepted answers
 3. **Pin comprehensive answers** that might help others
 4. **Link to documentation** when questions reveal gaps
 
 ### Community Engagement
+
 1. **Welcome new contributors** in General discussions
 2. **Celebrate community showcases** in Show and tell
 3. **Participate in polls** to show maintainer engagement
@@ -176,32 +192,37 @@ Recommended labels for discussions:
 GitHub provides analytics for discussions:
 
 ### Key Metrics to Track
+
 - **Participation rate** - How many people engage with discussions
-- **Response time** - How quickly questions get answered  
+- **Response time** - How quickly questions get answered
 - **Answer rate** - Percentage of questions that get answered
 - **Community growth** - New participants over time
 - **Popular topics** - Most discussed areas
 
 ### Regular Review
+
 - **Weekly**: Review new discussions and unanswered questions
-- **Monthly**: Analyze trends and popular topics  
+- **Monthly**: Analyze trends and popular topics
 - **Quarterly**: Review category effectiveness and consider adjustments
 
 ## 🛠️ Maintenance Tasks
 
 ### Weekly
+
 - [ ] Review new discussions across all categories
 - [ ] Answer unanswered questions in Q&A
 - [ ] Apply appropriate labels to discussions
 - [ ] Pin important or frequently referenced content
 
-### Monthly  
+### Monthly
+
 - [ ] Review discussion analytics
 - [ ] Update FAQ based on common questions
 - [ ] Archive or close outdated discussions
 - [ ] Recognize active community contributors
 
 ### Quarterly
+
 - [ ] Review category structure and effectiveness
 - [ ] Update discussion templates based on usage patterns
 - [ ] Analyze community feedback on discussion experience
@@ -213,15 +234,16 @@ Each discussion template is designed for specific purposes:
 
 - **general.yml** - Flexible template for open discussions
 - **ideas.yml** - Structured feature request format
-- **questions.yml** - Comprehensive help request format  
+- **questions.yml** - Comprehensive help request format
 - **show-and-tell.yml** - Project showcase format
 - **polls.yml** - Community decision-making format
 
 ## 🎯 Success Metrics
 
 A successful discussions setup will show:
+
 - ✅ High community participation
-- ✅ Quick response times to questions  
+- ✅ Quick response times to questions
 - ✅ Rich feature discussions with good feedback
 - ✅ Active show-and-tell participation
 - ✅ Effective community polls influencing decisions
@@ -229,4 +251,4 @@ A successful discussions setup will show:
 
 ---
 
-*This configuration creates a comprehensive community discussion platform that encourages engagement while maintaining organization and focus.*
+_This configuration creates a comprehensive community discussion platform that encourages engagement while maintaining organization and focus._

@@ -1,7 +1,12 @@
-import { EventEmitter } from 'events';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { BaseIntegrationTestSuite, TestEnvironment, TestConfiguration, WorkflowValidation } from './framework/integration-test-suite';
+import { EventEmitter } from "events";
+import { promises as fs } from "fs";
+import { join } from "path";
+import {
+  BaseIntegrationTestSuite,
+  TestEnvironment,
+  TestConfiguration,
+  WorkflowValidation as _WorkflowValidation,
+} from "./framework/integration-test-suite";
 
 /**
  * Main test runner for orchestrating integration tests
@@ -16,17 +21,25 @@ export class IntegrationTestRunner extends EventEmitter {
 
   registerTestSuite(name: string, suite: BaseIntegrationTestSuite): void {
     this.testSuites.set(name, suite);
-    
+
     // Forward events from test suites
-    suite.on('environment-setup', (env: any) => this.emit('suite-environment-setup', name, env));
-    suite.on('tests-completed', (results: any) => this.emit('suite-completed', name, results));
-    suite.on('tests-failed', (error: any) => this.emit('suite-failed', name, error));
-    suite.on('cleanup-completed', () => this.emit('suite-cleanup-completed', name));
+    suite.on("environment-setup", (env: any) =>
+      this.emit("suite-environment-setup", name, env),
+    );
+    suite.on("tests-completed", (results: any) =>
+      this.emit("suite-completed", name, results),
+    );
+    suite.on("tests-failed", (error: any) =>
+      this.emit("suite-failed", name, error),
+    );
+    suite.on("cleanup-completed", () =>
+      this.emit("suite-cleanup-completed", name),
+    );
   }
 
   async runAllTests(): Promise<Map<string, any>> {
     console.log(`Running ${this.testSuites.size} test suites...`);
-    this.emit('run-started', this.testSuites.size);
+    this.emit("run-started", this.testSuites.size);
 
     const startTime = Date.now();
     const results = new Map();
@@ -39,12 +52,12 @@ export class IntegrationTestRunner extends EventEmitter {
       }
 
       const totalDuration = Date.now() - startTime;
-      this.emit('run-completed', results, totalDuration);
+      this.emit("run-completed", results, totalDuration);
 
       return this.results;
-    } catch (error) {
-      this.emit('run-failed', error);
-      throw error;
+    } catch (_error) {
+      this.emit("run-failed", _error);
+      throw _error;
     }
   }
 
@@ -55,7 +68,7 @@ export class IntegrationTestRunner extends EventEmitter {
     }
 
     console.log(`Running test suite: ${suiteName}`);
-    this.emit('suite-started', suiteName);
+    this.emit("suite-started", suiteName);
 
     try {
       await suite.setupTestEnvironment();
@@ -75,10 +88,10 @@ export class IntegrationTestRunner extends EventEmitter {
 
       console.log(`Test suite '${suiteName}' completed successfully`);
       return suiteResults;
-    } catch (error) {
-      console.error(`Test suite '${suiteName}' failed:`, error);
+    } catch (_error) {
+      console.error(`Test suite '${suiteName}' failed:`, _error);
       await suite.cleanupTestEnvironment();
-      throw error;
+      throw _error;
     }
   }
 
@@ -93,7 +106,7 @@ export class IntegrationTestRunner extends EventEmitter {
     const chunks = this.chunkArray(suiteNames, this.config.parallelTestCount);
 
     for (const chunk of chunks) {
-      const promises = chunk.map(suiteName => this.runTestSuite(suiteName));
+      const promises = chunk.map((suiteName) => this.runTestSuite(suiteName));
       await Promise.all(promises);
     }
   }
@@ -125,25 +138,31 @@ export class IntegrationTestRunner extends EventEmitter {
 
     for (const [suiteName, results] of this.results) {
       combinedReport.suites[suiteName] = results;
-      
+
       if (results.success) {
         combinedReport.summary.passedSuites++;
       } else {
         combinedReport.summary.failedSuites++;
       }
 
-      combinedReport.summary.totalTests += results.testReport.summary.totalTests;
+      combinedReport.summary.totalTests +=
+        results.testReport.summary.totalTests;
       combinedReport.summary.passedTests += results.testReport.summary.passed;
       combinedReport.summary.failedTests += results.testReport.summary.failed;
-      combinedReport.summary.totalDuration += results.testReport.summary.duration;
+      combinedReport.summary.totalDuration +=
+        results.testReport.summary.duration;
 
       // Collect recommendations
-      combinedReport.recommendations.push(...results.testReport.recommendations);
+      combinedReport.recommendations.push(
+        ...results.testReport.recommendations,
+      );
     }
 
     // Add global recommendations
     if (combinedReport.summary.failedSuites > 0) {
-      combinedReport.recommendations.push(`${combinedReport.summary.failedSuites} test suites failed. Review individual suite reports.`);
+      combinedReport.recommendations.push(
+        `${combinedReport.summary.failedSuites} test suites failed. Review individual suite reports.`,
+      );
     }
 
     if (this.config.generateReports) {
@@ -154,32 +173,35 @@ export class IntegrationTestRunner extends EventEmitter {
   }
 
   private async saveReport(report: any): Promise<void> {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `integration-test-report-${timestamp}`;
 
     switch (this.config.reportFormat) {
-      case 'json':
+      case "json": {
         await fs.writeFile(
           join(process.cwd(), `${filename}.json`),
-          JSON.stringify(report, null, 2)
+          JSON.stringify(report, null, 2),
         );
         break;
+      }
 
-      case 'html':
+      case "html": {
         const htmlContent = this.generateHtmlReport(report);
         await fs.writeFile(
           join(process.cwd(), `${filename}.html`),
-          htmlContent
+          htmlContent,
         );
         break;
+      }
 
-      case 'junit':
+      case "junit": {
         const junitContent = this.generateJunitReport(report);
         await fs.writeFile(
           join(process.cwd(), `${filename}.xml`),
-          junitContent
+          junitContent,
         );
         break;
+      }
     }
 
     console.log(`Test report saved: ${filename}.${this.config.reportFormat}`);
@@ -217,53 +239,68 @@ export class IntegrationTestRunner extends EventEmitter {
         <p>Total Duration: ${report.summary.totalDuration}ms</p>
     </div>
 
-    ${report.recommendations.length > 0 ? `
+    ${
+      report.recommendations.length > 0
+        ? `
     <div class="recommendations">
         <h3>Recommendations</h3>
         <ul>
-            ${report.recommendations.map((rec: string) => `<li>${rec}</li>`).join('')}
+            ${report.recommendations.map((rec: string) => `<li>${rec}</li>`).join("")}
         </ul>
     </div>
-    ` : ''}
+    `
+        : ""
+    }
 
     <h2>Test Suites</h2>
-    ${Object.entries(report.suites).map(([name, results]: [string, any]) => `
+    ${Object.entries(report.suites)
+      .map(
+        ([name, results]: [string, any]) => `
     <div class="suite">
-        <div class="suite-header ${results.success ? 'pass' : 'fail'}">
-            ${name} - ${results.success ? 'PASSED' : 'FAILED'}
+        <div class="suite-header ${results.success ? "pass" : "fail"}">
+            ${name} - ${results.success ? "PASSED" : "FAILED"}
         </div>
         <div class="suite-content">
             <p>Tests: ${results.testReport.summary.totalTests}</p>
             <p>Duration: ${results.testReport.summary.duration}ms</p>
-            ${results.testReport.failures.length > 0 ? `
+            ${
+              results.testReport.failures.length > 0
+                ? `
             <h4>Failures:</h4>
             <ul>
-                ${results.testReport.failures.map((failure: any) => `<li>${failure.testName}: ${failure.error}</li>`).join('')}
+                ${results.testReport.failures.map((failure: any) => `<li>${failure.testName}: ${failure.error}</li>`).join("")}
             </ul>
-            ` : ''}
+            `
+                : ""
+            }
         </div>
     </div>
-    `).join('')}
+    `,
+      )
+      .join("")}
 </body>
 </html>
     `;
   }
 
   private generateJunitReport(report: any): string {
-    const testsuites = Object.entries(report.suites).map(([name, results]: [string, any]) => {
-      const testcases = results.testResults.tests.map((test: any) => {
-        if (test.success) {
-          return `<testcase name="${test.name}" time="${test.duration / 1000}" />`;
-        } else {
-          return `
+    const testsuites = Object.entries(report.suites)
+      .map(([name, results]: [string, any]) => {
+        const testcases = results.testResults.tests
+          .map((test: any) => {
+            if (test.success) {
+              return `<testcase name="${test.name}" time="${test.duration / 1000}" />`;
+            } else {
+              return `
             <testcase name="${test.name}" time="${test.duration / 1000}">
-              <failure message="${test.error || 'Test failed'}">${test.stackTrace || ''}</failure>
+              <failure message="${test.error || "Test failed"}">${test.stackTrace || ""}</failure>
             </testcase>
           `;
-        }
-      }).join('\n');
+            }
+          })
+          .join("\n");
 
-      return `
+        return `
         <testsuite name="${name}" 
                    tests="${results.testReport.summary.totalTests}"
                    failures="${results.testReport.summary.failed}"
@@ -271,7 +308,8 @@ export class IntegrationTestRunner extends EventEmitter {
           ${testcases}
         </testsuite>
       `;
-    }).join('\n');
+      })
+      .join("\n");
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="${report.summary.totalTests}" 
@@ -286,7 +324,10 @@ export class IntegrationTestRunner extends EventEmitter {
  * Utility class for test data generation and management
  */
 export class TestDataGenerator {
-  static async generateSampleWorkspace(size: 'small' | 'medium' | 'large', basePath: string): Promise<void> {
+  static async generateSampleWorkspace(
+    size: "small" | "medium" | "large",
+    basePath: string,
+  ): Promise<void> {
     const fileCounts = {
       small: 10,
       medium: 50,
@@ -297,38 +338,41 @@ export class TestDataGenerator {
     console.log(`Generating ${size} workspace with ${fileCount} files...`);
 
     // Create directory structure
-    await fs.mkdir(join(basePath, 'src'), { recursive: true });
-    await fs.mkdir(join(basePath, 'tests'), { recursive: true });
-    await fs.mkdir(join(basePath, 'lib'), { recursive: true });
+    await fs.mkdir(join(basePath, "src"), { recursive: true });
+    await fs.mkdir(join(basePath, "tests"), { recursive: true });
+    await fs.mkdir(join(basePath, "lib"), { recursive: true });
 
     // Generate TypeScript files
     for (let i = 0; i < Math.floor(fileCount * 0.6); i++) {
       const content = this.generateTypeScriptFile(i);
-      await fs.writeFile(join(basePath, 'src', `module-${i}.ts`), content);
+      await fs.writeFile(join(basePath, "src", `module-${i}.ts`), content);
     }
 
     // Generate JavaScript files
     for (let i = 0; i < Math.floor(fileCount * 0.3); i++) {
       const content = this.generateJavaScriptFile(i);
-      await fs.writeFile(join(basePath, 'lib', `utility-${i}.js`), content);
+      await fs.writeFile(join(basePath, "lib", `utility-${i}.js`), content);
     }
 
     // Generate test files
     for (let i = 0; i < Math.floor(fileCount * 0.1); i++) {
       const content = this.generateTestFile(i);
-      await fs.writeFile(join(basePath, 'tests', `test-${i}.test.ts`), content);
+      await fs.writeFile(join(basePath, "tests", `test-${i}.test.ts`), content);
     }
 
     // Generate package.json
     const packageJson = {
       name: `test-workspace-${size}`,
-      version: '1.0.0',
+      version: "1.0.0",
       dependencies: {
-        typescript: '^4.9.0',
-        '@types/node': '^18.0.0',
+        typescript: "^4.9.0",
+        "@types/node": "^18.0.0",
       },
     };
-    await fs.writeFile(join(basePath, 'package.json'), JSON.stringify(packageJson, null, 2));
+    await fs.writeFile(
+      join(basePath, "package.json"),
+      JSON.stringify(packageJson, null, 2),
+    );
 
     console.log(`Generated ${size} workspace at ${basePath}`);
   }
@@ -510,7 +554,10 @@ describe('DataProcessor${index}', () => {
 export class TestEnvironmentManager {
   private environments: Map<string, TestEnvironment> = new Map();
 
-  async createIsolatedEnvironment(name: string, config: TestConfiguration): Promise<TestEnvironment> {
+  async createIsolatedEnvironment(
+    name: string,
+    config: TestConfiguration,
+  ): Promise<TestEnvironment> {
     if (this.environments.has(name)) {
       throw new Error(`Environment '${name}' already exists`);
     }
@@ -528,7 +575,9 @@ export class TestEnvironmentManager {
 
   async cleanupEnvironment(name: string): Promise<void> {
     const environment = this.environments.get(name);
-    if (!environment) return;
+    if (!environment) {
+      return;
+    }
 
     // Cleanup logic here
     await fs.rm(environment.tempDirectory, { recursive: true, force: true });
@@ -536,8 +585,8 @@ export class TestEnvironmentManager {
   }
 
   async cleanupAllEnvironments(): Promise<void> {
-    const cleanupPromises = Array.from(this.environments.keys()).map(name => 
-      this.cleanupEnvironment(name)
+    const cleanupPromises = Array.from(this.environments.keys()).map((name) =>
+      this.cleanupEnvironment(name),
     );
     await Promise.all(cleanupPromises);
   }

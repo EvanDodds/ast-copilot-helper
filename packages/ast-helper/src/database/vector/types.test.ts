@@ -2,9 +2,9 @@
  * Vector Database Types and Configuration Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { promises as fs } from 'fs';
-import { join } from 'path';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { promises as fs } from "fs";
+import { join } from "path";
 import {
   VectorDBConfig,
   validateVectorDBConfig,
@@ -13,19 +13,19 @@ import {
   VectorConfigManager,
   createVectorConfig,
   loadVectorConfig,
-} from '../vector/index.js';
+} from "../vector/index.js";
 
-describe('Vector Database Types', () => {
-  describe('validateVectorDBConfig', () => {
-    it('should pass validation for valid config', () => {
+describe("Vector Database Types", () => {
+  describe("validateVectorDBConfig", () => {
+    it("should pass validation for valid config", () => {
       const config: VectorDBConfig = {
         dimensions: 768,
         maxElements: 100000,
         M: 16,
         efConstruction: 200,
-        space: 'cosine',
-        storageFile: 'test.sqlite',
-        indexFile: 'test.hnsw',
+        space: "cosine",
+        storageFile: "test.sqlite",
+        indexFile: "test.hnsw",
         autoSave: true,
         saveInterval: 300,
       };
@@ -34,98 +34,102 @@ describe('Vector Database Types', () => {
       expect(errors).toHaveLength(0);
     });
 
-    it('should fail validation for invalid dimensions', () => {
+    it("should fail validation for invalid dimensions", () => {
       const config = createVectorDBConfig({
         dimensions: 0,
-        storageFile: 'test.sqlite',
-        indexFile: 'test.hnsw',
+        storageFile: "test.sqlite",
+        indexFile: "test.hnsw",
       });
 
       const errors = validateVectorDBConfig(config);
-      expect(errors).toContain('dimensions must be greater than 0');
+      expect(errors).toContain("dimensions must be greater than 0");
     });
 
-    it('should fail validation for invalid M parameter', () => {
+    it("should fail validation for invalid M parameter", () => {
       const config = createVectorDBConfig({
         M: 0,
-        storageFile: 'test.sqlite',
-        indexFile: 'test.hnsw',
+        storageFile: "test.sqlite",
+        indexFile: "test.hnsw",
       });
 
       const errors = validateVectorDBConfig(config);
-      expect(errors).toContain('M must be between 1 and 100');
+      expect(errors).toContain("M must be between 1 and 100");
     });
 
-    it('should fail validation for efConstruction < M', () => {
+    it("should fail validation for efConstruction < M", () => {
       const config = createVectorDBConfig({
         M: 50,
         efConstruction: 20,
-        storageFile: 'test.sqlite',
-        indexFile: 'test.hnsw',
+        storageFile: "test.sqlite",
+        indexFile: "test.hnsw",
       });
 
       const errors = validateVectorDBConfig(config);
-      expect(errors).toContain('efConstruction should be >= M for optimal performance');
+      expect(errors).toContain(
+        "efConstruction should be >= M for optimal performance",
+      );
     });
 
-    it('should fail validation for invalid space metric', () => {
+    it("should fail validation for invalid space metric", () => {
       const config = createVectorDBConfig({
-        space: 'invalid' as any,
-        storageFile: 'test.sqlite',
-        indexFile: 'test.hnsw',
+        space: "invalid" as any,
+        storageFile: "test.sqlite",
+        indexFile: "test.hnsw",
       });
 
       const errors = validateVectorDBConfig(config);
-      expect(errors).toContain('space must be one of: cosine, l2, ip');
+      expect(errors).toContain("space must be one of: cosine, l2, ip");
     });
   });
 
-  describe('createVectorDBConfig', () => {
-    it('should apply defaults for missing properties', () => {
+  describe("createVectorDBConfig", () => {
+    it("should apply defaults for missing properties", () => {
       const config = createVectorDBConfig({
-        storageFile: 'test.sqlite',
-        indexFile: 'test.hnsw',
+        storageFile: "test.sqlite",
+        indexFile: "test.hnsw",
       });
 
       expect(config.dimensions).toBe(DEFAULT_VECTOR_DB_CONFIG.dimensions);
       expect(config.maxElements).toBe(DEFAULT_VECTOR_DB_CONFIG.maxElements);
       expect(config.M).toBe(DEFAULT_VECTOR_DB_CONFIG.M);
-      expect(config.efConstruction).toBe(DEFAULT_VECTOR_DB_CONFIG.efConstruction);
+      expect(config.efConstruction).toBe(
+        DEFAULT_VECTOR_DB_CONFIG.efConstruction,
+      );
       expect(config.space).toBe(DEFAULT_VECTOR_DB_CONFIG.space);
       expect(config.autoSave).toBe(DEFAULT_VECTOR_DB_CONFIG.autoSave);
       expect(config.saveInterval).toBe(DEFAULT_VECTOR_DB_CONFIG.saveInterval);
     });
 
-    it('should override defaults with provided values', () => {
+    it("should override defaults with provided values", () => {
       const config = createVectorDBConfig({
         dimensions: 512,
         maxElements: 50000,
         M: 32,
-        space: 'l2',
-        storageFile: 'custom.sqlite',
-        indexFile: 'custom.hnsw',
+        space: "l2",
+        storageFile: "custom.sqlite",
+        indexFile: "custom.hnsw",
       });
 
       expect(config.dimensions).toBe(512);
       expect(config.maxElements).toBe(50000);
       expect(config.M).toBe(32);
-      expect(config.space).toBe('l2');
-      expect(config.storageFile).toBe('custom.sqlite');
-      expect(config.indexFile).toBe('custom.hnsw');
+      expect(config.space).toBe("l2");
+      expect(config.storageFile).toBe("custom.sqlite");
+      expect(config.indexFile).toBe("custom.hnsw");
     });
   });
 });
 
-describe('VectorConfigManager', () => {
+describe("VectorConfigManager", () => {
   let manager: VectorConfigManager;
   let tempDir: string;
   let testConfigPath: string;
 
   beforeEach(async () => {
     manager = new VectorConfigManager();
-    tempDir = join(process.cwd(), 'temp-test-vectors');
-    testConfigPath = join(tempDir, 'vector-config.json');
-    
+    tempDir = join(process.cwd(), "temp-test-vectors");
+    testConfigPath = join(tempDir, "vector-config.json");
+
     // Clean up any existing test directory
     try {
       await fs.rm(tempDir, { recursive: true, force: true });
@@ -143,21 +147,21 @@ describe('VectorConfigManager', () => {
     }
   });
 
-  describe('createConfig', () => {
-    it('should create config with default options', async () => {
+  describe("createConfig", () => {
+    it("should create config with default options", async () => {
       const config = await manager.createConfig({
         dataDir: tempDir,
       });
 
       expect(config.dimensions).toBe(768);
-      expect(config.storageFile).toBe(join(tempDir, 'ast-copilot.sqlite'));
-      expect(config.indexFile).toBe(join(tempDir, 'ast-copilot.hnsw'));
+      expect(config.storageFile).toBe(join(tempDir, "ast-copilot.sqlite"));
+      expect(config.indexFile).toBe(join(tempDir, "ast-copilot.hnsw"));
     });
 
-    it('should apply environment-specific settings for test environment', async () => {
+    it("should apply environment-specific settings for test environment", async () => {
       const config = await manager.createConfig({
         dataDir: tempDir,
-        environment: 'test',
+        environment: "test",
       });
 
       expect(config.maxElements).toBe(1000);
@@ -165,10 +169,10 @@ describe('VectorConfigManager', () => {
       expect(config.autoSave).toBe(false);
     });
 
-    it('should apply environment-specific settings for production environment', async () => {
+    it("should apply environment-specific settings for production environment", async () => {
       const config = await manager.createConfig({
         dataDir: tempDir,
-        environment: 'production',
+        environment: "production",
       });
 
       expect(config.maxElements).toBe(500000);
@@ -176,22 +180,22 @@ describe('VectorConfigManager', () => {
       expect(config.autoSave).toBe(true);
     });
 
-    it('should apply user overrides', async () => {
+    it("should apply user overrides", async () => {
       const config = await manager.createConfig({
         dataDir: tempDir,
         overrides: {
           dimensions: 512,
           M: 32,
-          space: 'l2',
+          space: "l2",
         },
       });
 
       expect(config.dimensions).toBe(512);
       expect(config.M).toBe(32);
-      expect(config.space).toBe('l2');
+      expect(config.space).toBe("l2");
     });
 
-    it('should create data directory if it does not exist', async () => {
+    it("should create data directory if it does not exist", async () => {
       await manager.createConfig({
         dataDir: tempDir,
       });
@@ -201,8 +205,8 @@ describe('VectorConfigManager', () => {
     });
   });
 
-  describe('file operations', () => {
-    it('should save and load configuration from file', async () => {
+  describe("file operations", () => {
+    it("should save and load configuration from file", async () => {
       const originalConfig = await manager.createConfig({
         dataDir: tempDir,
         overrides: {
@@ -222,14 +226,15 @@ describe('VectorConfigManager', () => {
       expect(loadedConfig.indexFile).toBe(originalConfig.indexFile);
     });
 
-    it('should throw error when loading non-existent file', async () => {
-      await expect(manager.loadFromFile('non-existent-config.json'))
-        .rejects.toThrow('Configuration file not found');
+    it("should throw error when loading non-existent file", async () => {
+      await expect(
+        manager.loadFromFile("non-existent-config.json"),
+      ).rejects.toThrow("Configuration file not found");
     });
   });
 
-  describe('updateConfig', () => {
-    it('should update configuration with partial changes', async () => {
+  describe("updateConfig", () => {
+    it("should update configuration with partial changes", async () => {
       await manager.createConfig({ dataDir: tempDir });
 
       const updatedConfig = manager.updateConfig({
@@ -242,22 +247,24 @@ describe('VectorConfigManager', () => {
       expect(updatedConfig.efConstruction).toBe(200); // Should preserve existing values
     });
 
-    it('should validate updates and reject invalid changes', async () => {
+    it("should validate updates and reject invalid changes", async () => {
       await manager.createConfig({ dataDir: tempDir });
 
-      expect(() => manager.updateConfig({
-        dimensions: 0, // Invalid
-      })).toThrow('Invalid configuration updates');
+      expect(() =>
+        manager.updateConfig({
+          dimensions: 0, // Invalid
+        }),
+      ).toThrow("Invalid configuration updates");
     });
   });
 
-  describe('getConfigSummary', () => {
-    it('should return not_initialized when config not set', () => {
+  describe("getConfigSummary", () => {
+    it("should return not_initialized when config not set", () => {
       const summary = manager.getConfigSummary();
-      expect(summary).toEqual({ status: 'not_initialized' });
+      expect(summary).toEqual({ status: "not_initialized" });
     });
 
-    it('should return config summary when initialized', async () => {
+    it("should return config summary when initialized", async () => {
       const config = await manager.createConfig({ dataDir: tempDir });
       const summary = manager.getConfigSummary();
 
@@ -276,12 +283,12 @@ describe('VectorConfigManager', () => {
   });
 });
 
-describe('Configuration utilities', () => {
+describe("Configuration utilities", () => {
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = join(process.cwd(), 'temp-test-config-utils');
-    
+    tempDir = join(process.cwd(), "temp-test-config-utils");
+
     // Clean up any existing test directory
     try {
       await fs.rm(tempDir, { recursive: true, force: true });
@@ -299,24 +306,24 @@ describe('Configuration utilities', () => {
     }
   });
 
-  describe('createVectorConfig', () => {
-    it('should create config with default options when no options provided', async () => {
+  describe("createVectorConfig", () => {
+    it("should create config with default options when no options provided", async () => {
       const config = await createVectorConfig();
 
       expect(config.dimensions).toBe(768);
       expect(config.maxElements).toBe(100000);
       expect(config.M).toBe(16);
       expect(config.efConstruction).toBe(200);
-      expect(config.space).toBe('cosine');
+      expect(config.space).toBe("cosine");
       expect(config.autoSave).toBe(true);
       expect(config.saveInterval).toBe(300);
     });
 
-    it('should override defaults with provided options', async () => {
+    it("should override defaults with provided options", async () => {
       const config = await createVectorConfig({
         dataDir: tempDir,
-        dbName: 'custom-db',
-        environment: 'test',
+        dbName: "custom-db",
+        environment: "test",
         overrides: {
           dimensions: 256,
           M: 8,
@@ -326,23 +333,23 @@ describe('Configuration utilities', () => {
       expect(config.dimensions).toBe(256);
       expect(config.M).toBe(8);
       expect(config.maxElements).toBe(1000); // Test environment setting
-      expect(config.storageFile).toBe(join(tempDir, 'custom-db.sqlite'));
-      expect(config.indexFile).toBe(join(tempDir, 'custom-db.hnsw'));
+      expect(config.storageFile).toBe(join(tempDir, "custom-db.sqlite"));
+      expect(config.indexFile).toBe(join(tempDir, "custom-db.hnsw"));
     });
   });
 
-  describe('loadVectorConfig', () => {
-    it('should load config with environment defaults when no config file specified', async () => {
+  describe("loadVectorConfig", () => {
+    it("should load config with environment defaults when no config file specified", async () => {
       // Clear environment variables that might affect the test
       delete process.env.AST_VECTOR_CONFIG_FILE;
       delete process.env.AST_VECTOR_DATA_DIR;
       delete process.env.AST_VECTOR_DB_NAME;
-      
+
       const config = await loadVectorConfig();
 
       expect(config.dimensions).toBe(768);
-      expect(config.storageFile).toContain('ast-copilot.sqlite');
-      expect(config.indexFile).toContain('ast-copilot.hnsw');
+      expect(config.storageFile).toContain("ast-copilot.sqlite");
+      expect(config.indexFile).toContain("ast-copilot.hnsw");
     });
   });
 });

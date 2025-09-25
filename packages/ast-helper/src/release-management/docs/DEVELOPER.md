@@ -93,7 +93,7 @@ class VersionManagerImpl implements VersionManager {
   async calculateNextVersion(
     current: string,
     type: ReleaseType,
-    changes?: ChangelogEntry[]
+    changes?: ChangelogEntry[],
   ): Promise<string> {
     // 1. Parse current version
     const parsed = this.semver.parse(current);
@@ -209,7 +209,7 @@ class CompatibilityCheckerImpl implements CompatibilityChecker {
 
   async checkCompatibility(
     baseVersion: string,
-    newVersion: string
+    newVersion: string,
   ): Promise<CompatibilityReport> {
     const results: CompatibilityCheck[] = [];
 
@@ -231,7 +231,7 @@ class CompatibilityCheckerImpl implements CompatibilityChecker {
 class ApiCompatibilityStrategy implements CompatibilityStrategy {
   async check(
     baseVersion: string,
-    newVersion: string
+    newVersion: string,
   ): Promise<CompatibilityCheck> {
     // 1. Extract API definitions
     const baseApi = await this.extractApiDefinition(baseVersion);
@@ -272,7 +272,7 @@ export enum CustomReleaseType {
 class CustomVersionManager extends VersionManagerImpl {
   protected applyReleaseType(
     version: SemanticVersion,
-    type: ReleaseType | CustomReleaseType
+    type: ReleaseType | CustomReleaseType,
   ): SemanticVersion {
     switch (type) {
       case CustomReleaseType.HOTFIX:
@@ -381,7 +381,7 @@ class CustomValidationRule implements ValidationRule {
     const securityResults = await this.runSecurityScan(plan);
 
     const criticalVulns = securityResults.filter(
-      (v) => v.severity === "CRITICAL"
+      (v) => v.severity === "CRITICAL",
     );
     const highVulns = securityResults.filter((v) => v.severity === "HIGH");
 
@@ -433,7 +433,7 @@ class PluginContext {
   constructor(
     public manager: ReleaseManager,
     public config: ReleaseConfig,
-    public logger: Logger
+    public logger: Logger,
   ) {}
 
   // Plugin utilities
@@ -576,7 +576,7 @@ describe("VersionManagerImpl", () => {
     it("should increment patch version for patch releases", async () => {
       const result = await versionManager.calculateNextVersion(
         "1.2.3",
-        ReleaseType.PATCH
+        ReleaseType.PATCH,
       );
       expect(result).toBe("1.2.4");
     });
@@ -584,7 +584,7 @@ describe("VersionManagerImpl", () => {
     it("should increment minor version and reset patch for minor releases", async () => {
       const result = await versionManager.calculateNextVersion(
         "1.2.3",
-        ReleaseType.MINOR
+        ReleaseType.MINOR,
       );
       expect(result).toBe("1.3.0");
     });
@@ -592,7 +592,7 @@ describe("VersionManagerImpl", () => {
     it("should increment major version and reset minor/patch for major releases", async () => {
       const result = await versionManager.calculateNextVersion(
         "1.2.3",
-        ReleaseType.MAJOR
+        ReleaseType.MAJOR,
       );
       expect(result).toBe("2.0.0");
     });
@@ -600,7 +600,7 @@ describe("VersionManagerImpl", () => {
     it("should handle prerelease versions", async () => {
       const result = await versionManager.calculateNextVersion(
         "1.2.3",
-        ReleaseType.PRERELEASE
+        ReleaseType.PRERELEASE,
       );
       expect(result).toMatch(/^1\.3\.0-(alpha|beta|rc)\.1$/);
     });
@@ -620,7 +620,7 @@ describe("VersionManagerImpl", () => {
       const result = await versionManager.calculateNextVersion(
         "1.2.3",
         ReleaseType.MINOR,
-        changes
+        changes,
       );
 
       // Should upgrade to major due to breaking change
@@ -712,7 +712,7 @@ describe("Release Integration Tests", () => {
       expect.objectContaining({
         name: "test-repo",
         version: "1.1.0",
-      })
+      }),
     );
   });
 
@@ -769,7 +769,7 @@ describe("E2E Release Tests", () => {
 
     // Verify package.json updated
     const packageJson = JSON.parse(
-      await fs.readFile(path.join(testRepo, "package.json"), "utf-8")
+      await fs.readFile(path.join(testRepo, "package.json"), "utf-8"),
     );
     expect(packageJson.version).toBe("0.1.0");
   });
@@ -788,7 +788,7 @@ class CachedVersionManager extends VersionManagerImpl {
   async calculateNextVersion(
     current: string,
     type: ReleaseType,
-    changes?: ChangelogEntry[]
+    changes?: ChangelogEntry[],
   ): Promise<string> {
     const cacheKey = `${current}-${type}-${this.hashChanges(changes)}`;
 
@@ -809,8 +809,8 @@ class CachedVersionManager extends VersionManagerImpl {
       .createHash("sha256")
       .update(
         JSON.stringify(
-          changes.map((c) => ({ type: c.type, breaking: c.breaking }))
-        )
+          changes.map((c) => ({ type: c.type, breaking: c.breaking })),
+        ),
       )
       .digest("hex")
       .substring(0, 8);
@@ -839,7 +839,7 @@ class OptimizedReleaseManager extends ComprehensiveReleaseManager {
   async executeRelease(plan: ReleasePlan): Promise<ReleaseResult> {
     // Parallel artifact preparation
     const artifactPromises = plan.platforms.map((platform) =>
-      this.prepareArtifacts(plan, platform)
+      this.prepareArtifacts(plan, platform),
     );
 
     const artifacts = await Promise.all(artifactPromises);
@@ -849,7 +849,7 @@ class OptimizedReleaseManager extends ComprehensiveReleaseManager {
     for (let i = 0; i < plan.platforms.length; i++) {
       const result = await this.publishToPlatform(
         plan.platforms[i],
-        artifacts[i]
+        artifacts[i],
       );
       publishResults.push(result);
     }
@@ -905,7 +905,7 @@ debugVersionManager.setLogLevel("debug");
 const result = await debugVersionManager.calculateNextVersion(
   "1.2.3",
   ReleaseType.MINOR,
-  changes
+  changes,
 );
 
 // Check intermediate steps

@@ -5,30 +5,35 @@ A comprehensive VS Code extension for managing AST-based code analysis with MCP 
 ## Features
 
 ### 🚀 Server Management
+
 - **Automatic Server Lifecycle**: Start, stop, and restart AST MCP server processes
 - **Health Monitoring**: Continuous health checks and automatic restart on failures
 - **Process Control**: Full control over server processes with configurable timeouts
 - **Status Tracking**: Real-time server status in VS Code status bar
 
 ### 🔄 MCP Protocol Integration
+
 - **MCP Client**: Full MCP protocol support for communication with AST servers
 - **Heartbeat Monitoring**: Connection health monitoring with automatic reconnection
 - **Request Management**: Timeout handling and request queue management
 - **Error Recovery**: Automatic reconnection with configurable retry policies
 
 ### 🎯 GitHub Workflow Automation
+
 - **Issue Analysis**: AI-powered analysis of GitHub issues with code context
 - **Code Generation**: Automated code generation based on issue requirements
 - **Pull Request Creation**: Automated PR creation with generated code changes
 - **Code Review**: AI-assisted code review with improvement suggestions
 
 ### ⚙️ Configuration Management
+
 - **Comprehensive Settings**: Over 30 configurable options for all aspects
 - **Validation**: Real-time configuration validation with helpful error messages
 - **Dynamic Updates**: Hot-reloading of configuration changes without restart
 - **Schema Support**: Full VS Code settings schema with IntelliSense
 
 ### 🎨 User Interface
+
 - **Status Bar Integration**: Server status and quick actions
 - **Progress Indicators**: Visual feedback for long-running operations
 - **Notifications**: Contextual notifications with action buttons
@@ -37,28 +42,34 @@ A comprehensive VS Code extension for managing AST-based code analysis with MCP 
 ## Installation
 
 ### Prerequisites
+
 - VS Code 1.80.0 or higher
 - Node.js 20.0.0 or higher
 - AST MCP Server binary
 
 ### From Source
+
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/EvanDodds/ast-copilot-helper.git
    cd ast-copilot-helper/packages/vscode-extension
    ```
 
 2. Install dependencies:
+
    ```bash
    yarn install
    ```
 
 3. Build the extension:
+
    ```bash
    npm run build
    ```
 
 4. Package the extension:
+
    ```bash
    npm run package
    ```
@@ -66,7 +77,8 @@ A comprehensive VS Code extension for managing AST-based code analysis with MCP 
 5. Install the generated `.vsix` file in VS Code
 
 ### From Marketplace
-*(Coming soon)*
+
+_(Coming soon)_
 
 ## Configuration
 
@@ -148,6 +160,7 @@ Global extension behavior:
 ## Commands
 
 ### Server Management
+
 - **AST Helper: Start Server** - Start the AST MCP server
 - **AST Helper: Stop Server** - Stop the AST MCP server
 - **AST Helper: Restart Server** - Restart the AST MCP server
@@ -155,12 +168,14 @@ Global extension behavior:
 - **AST Helper: Validate Configuration** - Validate current settings
 
 ### GitHub Workflow
+
 - **GitHub Workflow: Analyze Issue** - Analyze GitHub issue with AI
 - **GitHub Workflow: Generate Code** - Generate code for issue resolution
 - **GitHub Workflow: Create Pull Request** - Create PR with generated changes
 - **GitHub Workflow: Review Code** - AI-assisted code review
 
 ### Utilities
+
 - **AST Helper: Parse Workspace** - Parse current workspace files
 - **AST Helper: Clear Index** - Clear AST index cache
 - **AST Helper: Show Logs** - Display extension logs
@@ -233,15 +248,19 @@ Use the configuration validation feature to ensure your settings are correct:
 ### Common Error Messages
 
 #### "Server path is not configured"
+
 - **Solution**: Set `astCopilotHelper.serverPath` in VS Code settings
 
 #### "Server executable not found"
+
 - **Solution**: Verify the server path and file permissions
 
 #### "Connection timeout"
+
 - **Solution**: Increase `client.connectionTimeout` setting
 
 #### "Health check failed"
+
 - **Solution**: Check server status and restart if needed
 
 ## Development
@@ -308,24 +327,30 @@ npm run typecheck
 The extension exposes several APIs for integration:
 
 #### Server Management API
+
 ```typescript
 // Start server
-await vscode.commands.executeCommand('astCopilotHelper.startServer');
+await vscode.commands.executeCommand("astCopilotHelper.startServer");
 
 // Stop server
-await vscode.commands.executeCommand('astCopilotHelper.stopServer');
+await vscode.commands.executeCommand("astCopilotHelper.stopServer");
 
 // Get server status
-const status = await vscode.commands.executeCommand('astCopilotHelper.getServerStatus');
+const status = await vscode.commands.executeCommand(
+  "astCopilotHelper.getServerStatus",
+);
 ```
 
 #### Configuration API
+
 ```typescript
 // Validate configuration
-const validation = await vscode.commands.executeCommand('astCopilotHelper.validateConfiguration');
+const validation = await vscode.commands.executeCommand(
+  "astCopilotHelper.validateConfiguration",
+);
 
 // Get configuration
-const config = vscode.workspace.getConfiguration('astCopilotHelper');
+const config = vscode.workspace.getConfiguration("astCopilotHelper");
 ```
 
 ### Events

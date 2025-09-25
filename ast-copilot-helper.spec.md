@@ -1,35 +1,34 @@
 # Project Specification: ast-copilot-helper
 
-## 1. Overview  
+## 1. Overview
 
-ast-copilot-helper is a self-contained, filesystem-only AI codebase assistant that continuously extracts, annotates, embeds, indexes, and retrieves AST fragments from your codebase. It provides a standalone MCP (Model Context Protocol) server that enables external AI models to access deep codebase understanding from any compatible editor or client. There are no external services or databases—just files under `.astdb/` and a standard MCP server for AI integration.  
+ast-copilot-helper is a self-contained, filesystem-only AI codebase assistant that continuously extracts, annotates, embeds, indexes, and retrieves AST fragments from your codebase. It provides a standalone MCP (Model Context Protocol) server that enables external AI models to access deep codebase understanding from any compatible editor or client. There are no external services or databases—just files under `.astdb/` and a standard MCP server for AI integration.
 
-This design dramatically cuts Copilot’s token usage, improves suggestion relevance, and slots seamlessly into existing git workflows and CI pipelines.  
+This design dramatically cuts Copilot’s token usage, improves suggestion relevance, and slots seamlessly into existing git workflows and CI pipelines.
 
----  
+---
 
-## 2. Design Decisions  
+## 2. Design Decisions
 
 - **File-only datastore**  
-  All data—raw ASTs, annotations, vector index—lives under `.astdb/`. No Docker, no remote DB, no long-running MCP server.  
+  All data—raw ASTs, annotations, vector index—lives under `.astdb/`. No Docker, no remote DB, no long-running MCP server.
 
 - **Standalone MCP Server**  
   Independent `ast-mcp-server` binary provides AST context and tools via standard MCP protocol. Works with any MCP-compatible client (Claude Desktop, VS Code, Neovim, etc.).
 
 - **Editor Agnostic Design**  
-  Server runs independently of any specific editor, enabling broad compatibility. Optional VS Code extension provides convenience layer for server management and workspace integration.  
+  Server runs independently of any specific editor, enabling broad compatibility. Optional VS Code extension provides convenience layer for server management and workspace integration.
 
 - **Local embeddings + vector search**  
-  Leverage an embedded JS/Node embedding model (e.g. `@xenova/transformers`) and `hnswlib-node` (with a pure-JS fallback) to build and query a nearest-neighbor index on disk (`.astdb/index.*`).  
+  Leverage an embedded JS/Node embedding model (e.g. `@xenova/transformers`) and `hnswlib-node` (with a pure-JS fallback) to build and query a nearest-neighbor index on disk (`.astdb/index.*`).
 
 - **TypeScript implementation**  
-  Provides strong types for AST schemas, annotation metadata, and index records. Distributes as a transpiled NPM module.  
+  Provides strong types for AST schemas, annotation metadata, and index records. Distributes as a transpiled NPM module.
 
 - **MCP Integration**  
-  Standalone MCP server provides AST context directly to AI models via standard protocol. Optional VS Code extension provides convenient server management and workspace integration.  
+  Standalone MCP server provides AST context directly to AI models via standard protocol. Optional VS Code extension provides convenient server management and workspace integration.
 
-
----  
+---
 
 ## 3. System Architecture & Data Flow
 
@@ -65,7 +64,7 @@ Your Repo/
 ├─ src/…                     # Your code
 ├─ .astdb/                   # AST database (created at runtime)
 │  ├─ asts/                  # raw AST JSON per file
-│  ├─ annots/                # annotated metadata JSON per node  
+│  ├─ annots/                # annotated metadata JSON per node
 │  ├─ grammars/              # cached Tree-sitter grammars
 │  ├─ models/                # downloaded embedding models
 │  ├─ native/                # optional native binaries
@@ -81,7 +80,7 @@ Your Repo/
 ### 3.3 Data Processing Pipeline
 
 1. **Parse Phase**: `ast-helper parse` reads git-changed files, generates normalized AST JSON under `asts/`
-2. **Annotation Phase**: `ast-helper annotate` processes ASTs, computes signatures/summaries/complexity, writes to `annots/`  
+2. **Annotation Phase**: `ast-helper annotate` processes ASTs, computes signatures/summaries/complexity, writes to `annots/`
 3. **Embedding Phase**: `ast-helper embed` vectorizes annotations using CodeBERT, builds HNSW index in `index.*`
 4. **Query Phase**: `ast-mcp-server` reads database, serves context via MCP protocol to AI clients
 5. **Watch Phase**: `ast-helper watch` monitors file changes, triggers pipeline updates in real-time
@@ -89,21 +88,21 @@ Your Repo/
 ### 3.4 Inter-Process Communication
 
 - **CLI ↔ Database**: Direct file I/O with `.lock` coordination
-- **MCP Server ↔ Database**: Read-only file access with hot reload detection  
+- **MCP Server ↔ Database**: Read-only file access with hot reload detection
 - **AI Clients ↔ MCP Server**: Standard MCP protocol over stdio/TCP
 - **VS Code Extension ↔ Both**: Process management via Node.js child_process
-- **Conflict Resolution**: File locking prevents read-during-write, atomic updates ensure consistency  
+- **Conflict Resolution**: File locking prevents read-during-write, atomic updates ensure consistency
 
----  
+---
 
-## 4. Module Specifications  
+## 4. Module Specifications
 
-### 4.1 CLI Data Processor (`ast-helper`)  
+### 4.1 CLI Data Processor (`ast-helper`)
 
 - **Purpose**: Builds and maintains AST database that MCP server reads from
-- **Language**: TypeScript, compiled to JS.  
-- **Dispatch**: uses [commander.js](https://github.com/tj/commander.js).  
-- **Subcommands**:  
+- **Language**: TypeScript, compiled to JS.
+- **Dispatch**: uses [commander.js](https://github.com/tj/commander.js).
+- **Subcommands**:
   - `init [--workspace <path>]` (initialize .astdb/ directory)
   - `parse [--changed] [--glob <pattern>]` (generate ASTs)
   - `annotate [--changed]` (generate metadata)
@@ -120,6 +119,7 @@ Your Repo/
   - `status` (check server health)
 
 **MCP Protocol Implementation**:
+
 - **Tools Exposed**:
   - `query_ast_context`: Search for relevant AST nodes by intent/query
   - `get_node_details`: Retrieve full details for specific AST node IDs
@@ -128,7 +128,7 @@ Your Repo/
   - `ast://nodes/{nodeId}`: Individual AST node data
   - `ast://files/{filePath}`: All nodes from a specific file
   - `ast://search/{query}`: Search results for semantic queries
-- **Server Capabilities**: Supports MCP 1.0 protocol with tools and resources  
+- **Server Capabilities**: Supports MCP 1.0 protocol with tools and resources
 
 **Configuration** lives in `.astdb/config.json`, merging CLI flags with defaults.
 
@@ -150,14 +150,14 @@ ast-helper parse [options]
   --force, -f            Force reparse even if files unchanged
   --help, -h             Show command help
 
-# Annotate command - Generate metadata for parsed AST nodes  
+# Annotate command - Generate metadata for parsed AST nodes
 ast-helper annotate [options]
   --changed, -c          Process only nodes from changed files
   --force, -f            Force re-annotation of existing nodes
   --help, -h             Show command help
 
 # Embed command - Generate vector embeddings for annotations
-ast-helper embed [options] 
+ast-helper embed [options]
   --changed, -c          Process only changed annotations
   --model <path>         Path to custom embedding model
   --runtime <type>       Runtime: wasm (default) or onnx
@@ -198,7 +198,7 @@ ast-mcp-server status [options]
 # Global options (available for all commands)
   --config <path>        Configuration file path
   --verbose, -v          Verbose logging output
-  --quiet, -q            Suppress non-error output  
+  --quiet, -q            Suppress non-error output
   --version, -V          Show version information
   --help, -h             Show help information
 ```
@@ -212,56 +212,60 @@ ast-mcp-server status [options]
 - Model path validation for custom models
 - Git repository detection for `--changed` flag
 
-### 4.5 AST Extractor (parse)  
+### 4.5 AST Extractor (parse)
 
-- **Parser**: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) for polyglot support (TS/JS/Python initially).  
-- **Runtime**: Prefer native `node-tree-sitter` with WASM fallback via `tree-sitter-wasm` for zero-dependency installs.  
-- **Grammars**: Downloaded on demand to `.astdb/grammars/` with version pins; TS/JS/Python grammars cached locally.  
-- **Input**: All files matching `config.parseGlob` or `--glob`, filtered by `git diff --name-only --diff-filter=ACMRT HEAD` (or `--staged`/`--base <ref>` overrides).  
-- **Output**: One JSON file per source file under `.astdb/asts/`.  
-- **AST Schema**:  
+- **Parser**: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) for polyglot support (TS/JS/Python initially).
+- **Runtime**: Prefer native `node-tree-sitter` with WASM fallback via `tree-sitter-wasm` for zero-dependency installs.
+- **Grammars**: Downloaded on demand to `.astdb/grammars/` with version pins; TS/JS/Python grammars cached locally.
+- **Input**: All files matching `config.parseGlob` or `--glob`, filtered by `git diff --name-only --diff-filter=ACMRT HEAD` (or `--staged`/`--base <ref>` overrides).
+- **Output**: One JSON file per source file under `.astdb/asts/`.
+- **AST Schema**:
   ```ts
   interface ASTNode {
-    id: string;               // deterministic hash of file+span+type+name
-    type: string;             // node type (function, class, if_statement, etc.)
-    name?: string;            // identifier if present (function name, class name)
-    start: { line: number; column: number };  // source location start
-    end: { line: number; column: number };    // source location end
-    parentId?: string;        // parent node ID for tree navigation
-    children: string[];       // child node IDs
-    filePath: string;         // absolute path to source file
+    id: string; // deterministic hash of file+span+type+name
+    type: string; // node type (function, class, if_statement, etc.)
+    name?: string; // identifier if present (function name, class name)
+    start: { line: number; column: number }; // source location start
+    end: { line: number; column: number }; // source location end
+    parentId?: string; // parent node ID for tree navigation
+    children: string[]; // child node IDs
+    filePath: string; // absolute path to source file
   }
   ```
 - **Normalization**: strip comments, include only function/class/module definitions plus control-flow nodes.
 
-### 4.6 Annotator (annotate)  
+### 4.6 Annotator (annotate)
 
-- **Input**: `.astdb/asts/*.json`  
-- **Metadata Computation**:  
-  - **Signature**: Language-aware extraction for TS/JS/Python (leveraging Tree-sitter heuristics); generic fallback for others.  
-  - **Summary**: Template-based generation ("Function X does Y" using name + parameter heuristics).  
-  - **Template System Implementation**:  
+- **Input**: `.astdb/asts/*.json`
+- **Metadata Computation**:
+  - **Signature**: Language-aware extraction for TS/JS/Python (leveraging Tree-sitter heuristics); generic fallback for others.
+  - **Summary**: Template-based generation ("Function X does Y" using name + parameter heuristics).
+  - **Template System Implementation**:
+
     ```typescript
     // Template-based summary generation
     const summaryTemplates = {
-      function: 'Function {name} {purpose} with parameters: {params}',
-      class: 'Class {name} {description} implementing {interfaces}',
-      method: 'Method {name} in {className} {purpose}',
-      interface: 'Interface {name} defining {members}',
-      enum: 'Enum {name} with values: {values}',
-      variable: 'Variable {name} of type {type} {usage}'
+      function: "Function {name} {purpose} with parameters: {params}",
+      class: "Class {name} {description} implementing {interfaces}",
+      method: "Method {name} in {className} {purpose}",
+      interface: "Interface {name} defining {members}",
+      enum: "Enum {name} with values: {values}",
+      variable: "Variable {name} of type {type} {usage}",
     };
-    
+
     function generateSummary(node: ASTNode, metadata: any): string {
-      const template = summaryTemplates[node.type] || 'Code element {name}';
-      return template.replace(/{(\w+)}/g, (_, key) => 
-        metadata[key] || extractFromNode(node, key) || 'unknown'
+      const template = summaryTemplates[node.type] || "Code element {name}";
+      return template.replace(
+        /{(\w+)}/g,
+        (_, key) => metadata[key] || extractFromNode(node, key) || "unknown",
       );
     }
-    ```  
-  - **Cyclomatic Complexity**: Classical count (1 + decision points): `if`, `for`, `while`, `case`, `catch`, ternary, boolean operators.  
-  - **Dependencies**: List of imported symbols referenced in node scope.  
-- **Output**: `.astdb/annots/{nodeId}.json`  
+    ```
+
+  - **Cyclomatic Complexity**: Classical count (1 + decision points): `if`, `for`, `while`, `case`, `catch`, ternary, boolean operators.
+  - **Dependencies**: List of imported symbols referenced in node scope.
+
+- **Output**: `.astdb/annots/{nodeId}.json`
 
   ```ts
   interface Annot {
@@ -271,39 +275,39 @@ ast-mcp-server status [options]
     summary: string;
     complexity: number;
     deps: string[];
-    sourceSnippet: string;    // up to snippetLines (default 10) with truncation markers
+    sourceSnippet: string; // up to snippetLines (default 10) with truncation markers
   }
   ```
 
-### 4.7 Embedder (embed)  
+### 4.7 Embedder (embed)
 
-- **Model**: `@xenova/transformers` (WASM) as default runtime with CodeBERT-base ONNX (768-dim embeddings).  
-- **Model Delivery**: Downloaded from HuggingFace to `.astdb/models/` on first run with SHA256 checksum verification.  
-- **Model Specifications**:  
-  - **Primary Model**: microsoft/codebert-base (ONNX format)  
-  - **Model URL**: `https://huggingface.co/microsoft/codebert-base/resolve/main/onnx/model.onnx`  
-  - **Tokenizer URL**: `https://huggingface.co/microsoft/codebert-base/resolve/main/tokenizer.json`  
+- **Model**: `@xenova/transformers` (WASM) as default runtime with CodeBERT-base ONNX (768-dim embeddings).
+- **Model Delivery**: Downloaded from HuggingFace to `.astdb/models/` on first run with SHA256 checksum verification.
+- **Model Specifications**:
+  - **Primary Model**: microsoft/codebert-base (ONNX format)
+  - **Model URL**: `https://huggingface.co/microsoft/codebert-base/resolve/main/onnx/model.onnx`
+  - **Tokenizer URL**: `https://huggingface.co/microsoft/codebert-base/resolve/main/tokenizer.json`
   - **Checksum Verification**: Implement SHA256 verification with checksums retrieved from model manifest
   - **Model Manifest**: Download `https://huggingface.co/microsoft/codebert-base/resolve/main/manifest.json` for checksums
-  - **Fallback Models**: sentence-transformers/all-MiniLM-L6-v2 for compatibility  
-  - **Local Cache**: Models cached in `.astdb/models/` with version tracking  
-- **Alternative Runtime**: `--runtime onnx` flag enables `onnxruntime-node` for performance (if available).  
-- **Index**: Pure-JS/WASM HNSW implementation by default; optional `hnswlib-node` for performance (via prebuilt binaries).  
-- **HNSW Parameters**:  
-  - **efConstruction**: 200 (build-time quality, configurable 16-800)  
-  - **M**: 16 (connectivity, configurable 4-64)  
-  - **ef**: 64 (query-time quality, configurable 16-512)  
-- **Metadata**: `index.meta.json` maps nodeId → indexId + vectorHash with versioning for upserts.  
-- **Process**:  
-  1. Load all new/updated `annots/*.json`.  
-  2. For each, concatenate `summary + signature`.  
-  3. Compute embedding vector (768 dims default, configurable).  
-  4. Upsert via delete+insert using nodeId mapping.  
+  - **Fallback Models**: sentence-transformers/all-MiniLM-L6-v2 for compatibility
+  - **Local Cache**: Models cached in `.astdb/models/` with version tracking
+- **Alternative Runtime**: `--runtime onnx` flag enables `onnxruntime-node` for performance (if available).
+- **Index**: Pure-JS/WASM HNSW implementation by default; optional `hnswlib-node` for performance (via prebuilt binaries).
+- **HNSW Parameters**:
+  - **efConstruction**: 200 (build-time quality, configurable 16-800)
+  - **M**: 16 (connectivity, configurable 4-64)
+  - **ef**: 64 (query-time quality, configurable 16-512)
+- **Metadata**: `index.meta.json` maps nodeId → indexId + vectorHash with versioning for upserts.
+- **Process**:
+  1. Load all new/updated `annots/*.json`.
+  2. For each, concatenate `summary + signature`.
+  3. Compute embedding vector (768 dims default, configurable).
+  4. Upsert via delete+insert using nodeId mapping.
   5. Serialize index and metadata to disk.
 
-### 4.8 Retriever (query)  
+### 4.8 Retriever (query)
 
-- **CLI**:  
+- **CLI**:
 
   ```bash
   ast-helper query \
@@ -312,20 +316,20 @@ ast-mcp-server status [options]
     --format json
   ```
 
-- **Steps**:  
-  1. Embed intent text using same model as indexing.  
-  2. Load `index.bin` + `index.meta.json`.  
-  3. Perform K-NN search, retrieve top-K index IDs.  
-  4. Load corresponding `annots/{nodeId}.json`.  
+- **Steps**:
+  1. Embed intent text using same model as indexing.
+  2. Load `index.bin` + `index.meta.json`.
+  3. Perform K-NN search, retrieve top-K index IDs.
+  4. Load corresponding `annots/{nodeId}.json`.
   5. Output array of `{ summary, signature, complexity, deps, sourceSnippet }` in requested format.
 
-### 4.9 Watcher (watch)  
+### 4.9 Watcher (watch)
 
-- **Library**: [chokidar](https://github.com/paulmillr/chokidar).  
-- **Behavior**: on file add/change/delete under `config.watchGlob`:  
-  1. Debounce 200 ms with batching for rapid edit bursts.  
-  2. Run `parse --changed`, `annotate --changed`, `embed --changed` sequentially.  
-  3. Support `--batch` and `--max-batch-size` options for large repositories.  
+- **Library**: [chokidar](https://github.com/paulmillr/chokidar).
+- **Behavior**: on file add/change/delete under `config.watchGlob`:
+  1. Debounce 200 ms with batching for rapid edit bursts.
+  2. Run `parse --changed`, `annotate --changed`, `embed --changed` sequentially.
+  3. Support `--batch` and `--max-batch-size` options for large repositories.
 - **Use Case**: live prompt enrichment during edit sessions.
 
 ### 4.10 VS Code Extension (Optional Server Manager)
@@ -334,16 +338,15 @@ ast-mcp-server status [options]
 - **Architecture**: Lightweight extension managing external `ast-mcp-server` binary.
 - **Core Components**:
   - External process management for `ast-mcp-server`
-  - Status monitoring and UI integration  
+  - Status monitoring and UI integration
   - Configuration management for server settings
   - No embedded MCP server (manages standalone binary)
-  
-- **Extension API Specifications**:  
+- **Extension API Specifications**:
   ```json
   {
     "activationEvents": [
       "onLanguage:typescript",
-      "onLanguage:javascript", 
+      "onLanguage:javascript",
       "onLanguage:python",
       "onStartupFinished"
     ],
@@ -355,7 +358,7 @@ ast-mcp-server status [options]
           "category": "AST Copilot Helper"
         },
         {
-          "command": "ast-copilot-helper.stopServer", 
+          "command": "ast-copilot-helper.stopServer",
           "title": "Stop MCP Server",
           "category": "AST Copilot Helper"
         },
@@ -366,7 +369,7 @@ ast-mcp-server status [options]
         },
         {
           "command": "ast-copilot-helper.indexRepository",
-          "title": "Index Repository", 
+          "title": "Index Repository",
           "category": "AST Copilot Helper"
         },
         {
@@ -411,42 +414,45 @@ ast-mcp-server status [options]
       }
     }
   }
-  ```  
-- **Dual Tool Management Implementation**:  
+  ```
+- **Dual Tool Management Implementation**:
+
   ```typescript
   // VS Code extension manages both ast-helper and ast-mcp-server
-  import { ChildProcess, spawn } from 'child_process';
-  
+  import { ChildProcess, spawn } from "child_process";
+
   class ASTHelperManager {
     private astHelperPath: string;
-    
+
     constructor() {
-      this.astHelperPath = vscode.workspace.getConfiguration()
-        .get('astCopilotHelper.astHelperPath', 'ast-helper');
+      this.astHelperPath = vscode.workspace
+        .getConfiguration()
+        .get("astCopilotHelper.astHelperPath", "ast-helper");
     }
-    
+
     async ensureIndexed(workspaceRoot: string): Promise<void> {
       // Run ast-helper parse && ast-helper embed to build database
-      await this.runCommand(['parse', '--workspace', workspaceRoot]);
-      await this.runCommand(['embed', '--workspace', workspaceRoot]);
+      await this.runCommand(["parse", "--workspace", workspaceRoot]);
+      await this.runCommand(["embed", "--workspace", workspaceRoot]);
     }
-    
+
     async startWatcher(workspaceRoot: string): Promise<ChildProcess> {
-      return spawn(this.astHelperPath, ['watch', '--workspace', workspaceRoot]);
+      return spawn(this.astHelperPath, ["watch", "--workspace", workspaceRoot]);
     }
   }
-  
+
   class MCPServerManager {
     private serverProcess: ChildProcess | null = null;
     private serverPath: string;
-    
+
     async startServer(workspaceRoot: string): Promise<void> {
-      const args = ['start', '--workspace', workspaceRoot];
-      this.serverProcess = spawn(this.serverPath, args, { stdio: 'pipe' });
+      const args = ["start", "--workspace", workspaceRoot];
+      this.serverProcess = spawn(this.serverPath, args, { stdio: "pipe" });
     }
   }
-  ```  
-- **Workflow**:  
+  ```
+
+- **Workflow**:
   1. `ast-helper` processes codebase → builds `.astdb/` database
   2. `ast-mcp-server` reads from `.astdb/` → serves via MCP protocol
   3. External AI models (Claude, GPT-4) connect to MCP server via stdio
@@ -455,9 +461,9 @@ ast-mcp-server status [options]
 - **Packaging**: Two separate tools + optional VS Code extension manager
 - **Settings**: Separate configs for data processing vs MCP serving
 
----  
+---
 
-## 5. File Structure  
+## 5. File Structure
 
 ```txt
 ast-copilot-helper/
@@ -527,12 +533,14 @@ ast-copilot-helper/
 **Baseline Conversion Ratio**: ~15,000 significant AST nodes per 100,000 lines of code
 
 **Node Type Distribution** (typical mixed codebase):
+
 - **Functions/Methods**: 3,000-5,000 nodes (20-33%)
-- **Control Flow**: 8,000-12,000 nodes (53-80%) 
+- **Control Flow**: 8,000-12,000 nodes (53-80%)
 - **Classes/Interfaces**: 500-1,500 nodes (3-10%)
 - **Module Constructs**: 100-500 nodes (1-3%)
 
 **Language Variations**:
+
 - **TypeScript/JavaScript**: ~1 node per 6-8 LOC (higher functional density)
 - **Python**: ~1 node per 8-12 LOC (larger function bodies)
 - **Java**: ~1 node per 10-15 LOC (more structured, verbose)
@@ -543,7 +551,7 @@ ast-copilot-helper/
 
 ## 7. Configuration
 
-`.astdb/config.json` (auto-generated on first run, mergeable):  
+`.astdb/config.json` (auto-generated on first run, mergeable):
 
 ```json
 {
@@ -574,12 +582,13 @@ ast-copilot-helper/
 Configuration values are resolved in the following priority order (highest to lowest):
 
 1. **VS Code Settings**: Extension settings in VS Code preferences
-2. **Environment Variables**: `AST_COPILOT_*` prefixed variables  
+2. **Environment Variables**: `AST_COPILOT_*` prefixed variables
 3. **Project Config**: `.astdb/config.json` in current workspace
 4. **User Config**: `~/.config/ast-copilot-helper/config.json`
 5. **Built-in Defaults**: Hardcoded fallback values
 
 **Environment Variable Mapping**:
+
 ```bash
 export AST_COPILOT_TOP_K=10                    # overrides topK
 export AST_COPILOT_ENABLE_TELEMETRY=true       # overrides enableTelemetry
@@ -595,8 +604,9 @@ export AST_COPILOT_MODEL_HOST=https://custom/  # overrides modelHost
 **Recommended Approach: .astdb/ is GITIGNORED**
 
 The `.astdb/` directory should be excluded from version control to avoid:
+
 - **Merge Conflicts**: Binary index files and frequent JSON changes create constant conflicts
-- **Repository Bloat**: Large model files and vector indices significantly increase repo size  
+- **Repository Bloat**: Large model files and vector indices significantly increase repo size
 - **Commit Noise**: Every code change triggers AST regeneration, cluttering git history
 
 ### 8.2 .gitignore Configuration
@@ -611,6 +621,7 @@ The `.astdb/` directory should be excluded from version control to avoid:
 ```
 
 **Rationale for config.json exception:**
+
 - Configuration should be shared across team members
 - Project-specific parsing globs and model preferences belong in version control
 - Small file size with infrequent changes, manageable merge conflicts
@@ -618,13 +629,14 @@ The `.astdb/` directory should be excluded from version control to avoid:
 ### 8.3 New Repository Setup
 
 **Developer Onboarding (first clone):**
+
 ```bash
 git clone <repo>
 cd <repo>
 npm install ast-copilot-helper -g   # or use npx
 ast-helper init                     # creates .astdb/ structure
 ast-helper parse                    # process all source files (~5-10 min for 100k nodes)
-ast-helper annotate                 # generate metadata (~2-3 min)  
+ast-helper annotate                 # generate metadata (~2-3 min)
 ast-helper embed                    # build vector index (~3-5 min)
 ```
 
@@ -633,6 +645,7 @@ ast-helper embed                    # build vector index (~3-5 min)
 ### 8.4 CI/CD Optimization Strategies
 
 **GitHub Actions Example with Caching:**
+
 ```yaml
 name: AST Context Setup
 on: [push, pull_request]
@@ -642,7 +655,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       # Cache .astdb based on source code hash
       - name: Cache AST Database
         uses: actions/cache@v3
@@ -651,57 +664,61 @@ jobs:
           key: astdb-v1-${{ runner.os }}-${{ hashFiles('src/**/*.{ts,js,py}') }}
           restore-keys: |
             astdb-v1-${{ runner.os }}-
-            
-      # Install ast-helper  
+
+      # Install ast-helper
       - name: Setup AST Helper
         run: npm install -g ast-copilot-helper
-        
+
       # Initialize if not cached
       - name: Initialize AST Database
         run: |
           if [ ! -d ".astdb" ]; then
             ast-helper init
           fi
-          
+
       # Incremental update (fast on cache hit)
       - name: Update AST Context
         run: |
           ast-helper parse --changed --base origin/main
           ast-helper annotate --changed  
           ast-helper embed --changed
-          
+
       # Your build/test steps can now use AST context
       - name: Run Tests with AST Context
         run: npm test
 ```
 
 **Performance Targets:**
+
 - **Cache Hit**: < 1 minute to verify and update incremental changes
-- **Cache Miss**: < 10 minutes to rebuild entire 100k significant nodes  
+- **Cache Miss**: < 10 minutes to rebuild entire 100k significant nodes
 - **Typical PR**: < 30 seconds to process changed files
 
 ### 8.5 Team Collaboration Strategies
 
 **Option 1: Individual Developer Databases (Recommended)**
-- Each developer maintains their own `.astdb/` 
+
+- Each developer maintains their own `.astdb/`
 - Fast incremental updates as they work
 - No coordination overhead
 - Consistent configuration via shared `config.json`
 
 **Option 2: Shared Snapshot Artifacts (Optional)**
+
 - Team lead generates `.astdb/` snapshots for major releases
 - Distributed via GitHub Releases or artifact storage
 - New team members can download snapshot instead of cold build
 - Still maintain local incremental updates
 
 **Snapshot Generation Example:**
+
 ```bash
 # Team lead creates snapshot
 ast-helper parse --all && ast-helper annotate && ast-helper embed
 tar -czf astdb-snapshot-v1.2.0.tar.gz .astdb/
 # Upload to GitHub Releases
 
-# New team member uses snapshot  
+# New team member uses snapshot
 wget https://github.com/org/repo/releases/download/v1.2.0/astdb-snapshot-v1.2.0.tar.gz
 tar -xzf astdb-snapshot-v1.2.0.tar.gz
 ast-helper parse --changed  # catch up to current state
@@ -737,7 +754,7 @@ ast-helper parse --changed  # catch up to current state
     "@xenova/transformers": "^2.18.0",
     "tree-sitter": "^0.21.1",
     "tree-sitter-typescript": "^0.21.2",
-    "tree-sitter-javascript": "^0.21.4", 
+    "tree-sitter-javascript": "^0.21.4",
     "tree-sitter-python": "^0.21.0",
     "chokidar": "^4.0.1",
     "glob": "^11.0.0",
@@ -767,7 +784,7 @@ ast-helper parse --changed  # catch up to current state
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ES2022", 
+    "module": "ES2022",
     "moduleResolution": "Node",
     "lib": ["ES2022"],
     "outDir": "dist",
@@ -802,47 +819,47 @@ ast-helper parse --changed  # catch up to current state
 
 ```typescript
 // vitest.config.ts
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
-    include: ['src/**/*.{test,spec}.ts', 'tests/**/*.{test,spec}.ts'],
-    exclude: ['node_modules', 'dist'],
+    environment: "node",
+    include: ["src/**/*.{test,spec}.ts", "tests/**/*.{test,spec}.ts"],
+    exclude: ["node_modules", "dist"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html', 'json'],
+      provider: "v8",
+      reporter: ["text", "html", "json"],
       exclude: [
-        'node_modules/',
-        'dist/',
-        'tests/',
-        '**/*.d.ts',
-        'src/**/*.test.ts',
-        'src/**/*.spec.ts'
+        "node_modules/",
+        "dist/",
+        "tests/",
+        "**/*.d.ts",
+        "src/**/*.test.ts",
+        "src/**/*.spec.ts",
       ],
       thresholds: {
         global: {
           branches: 80,
           functions: 80,
           lines: 80,
-          statements: 80
-        }
-      }
+          statements: 80,
+        },
+      },
     },
     testTimeout: 10000,
-    hookTimeout: 10000
-  }
-})
+    hookTimeout: 10000,
+  },
+});
 ```
 
 ---
 
-## 10. Testing & Validation  
+## 10. Testing & Validation
 
 - **Unit tests** for each module using Vitest with comprehensive coverage targets.
-- **Integration tests** against sample repo fixtures: verify AST JSON schema, annotation completeness, index build/query accuracy.  
-- **Performance benchmarks**: 
+- **Integration tests** against sample repo fixtures: verify AST JSON schema, annotation completeness, index build/query accuracy.
+- **Performance benchmarks**:
   - **Indexing Performance**: Index 100k significant nodes in <10 minutes on 2-CPU 8GB CI runner
   - **Query Latency**: Top-5 query latency <200ms P95 across 100k indexed nodes
   - **Memory Usage**: Peak memory <4GB for 100k significant nodes
@@ -851,15 +868,15 @@ export default defineConfig({
   - **Embedding Generation**: 1k code fragments <60s with WASM, <30s with native
   - **Index Size**: Vector index <50MB for 100k nodes (768-dim vectors)
   - **Concurrent Operations**: Support 3+ parallel CLI operations without degradation
-- **End-to-end workflow validation**: 
+- **End-to-end workflow validation**:
   - Git hooks: commit → parse/annotate → pre-push embed → index updates
   - VS Code extension: prompt enrichment → query execution → Copilot integration
   - Scale testing: synthetic 100k node fixture with representative language distribution
-- **Security testing**: Model download verification, checksum validation, signature checking  
+- **Security testing**: Model download verification, checksum validation, signature checking
 
----  
+---
 
-## 11. Example Usage  
+## 11. Example Usage
 
 ```bash
 # Installation
@@ -882,7 +899,7 @@ ast-helper watch                  # Live updates during development
 
 # CI/CD workflow
 ast-helper parse --changed        # Parse changed files
-ast-helper annotate --changed     # Generate annotations  
+ast-helper annotate --changed     # Generate annotations
 ast-helper embed --changed        # Update vector index
 ast-helper query "test coverage" --format json > context.json       # Export for other tools
 ```
@@ -894,16 +911,19 @@ ast-helper query "test coverage" --format json > context.json       # Export for
 ### 11.1 Corruption Detection & Recovery
 
 **Index Corruption**
+
 - **Detection**: Checksum validation on index load, schema version checks
 - **Recovery**: Automatic rebuild from annotations with user confirmation
 - **Prevention**: Atomic writes, backup index during updates
 
 **Model Download Failures**
+
 - **Retry Logic**: Exponential backoff (3 attempts max)
 - **Fallback**: Graceful degradation with warning messages
 - **Offline Mode**: Use cached models when available
 
 **Parse Failures**
+
 - **Individual Files**: Log error, continue with other files
 - **Grammar Issues**: Download latest grammar, retry once
 - **Syntax Errors**: Skip malformed files with detailed logging
@@ -911,15 +931,17 @@ ast-helper query "test coverage" --format json > context.json       # Export for
 ### 11.2 Concurrent Access Management
 
 **File Locking Strategy**
+
 ```typescript
 interface LockManager {
-  acquireExclusiveLock(operation: 'parse' | 'embed' | 'query'): Promise<Lock>;
-  acquireSharedLock(operation: 'query'): Promise<Lock>;
+  acquireExclusiveLock(operation: "parse" | "embed" | "query"): Promise<Lock>;
+  acquireSharedLock(operation: "query"): Promise<Lock>;
   releaseLock(lock: Lock): void;
 }
 ```
 
 **Multi-Process Coordination**
+
 - Exclusive locks for write operations (parse, annotate, embed)
 - Shared locks for read operations (query)
 - Timeout handling (30s default, configurable)
@@ -928,6 +950,7 @@ interface LockManager {
 ### 11.3 Memory Management
 
 **Large Repository Handling**
+
 - Streaming processing for files >10MB
 - Batch processing: max 100 files per batch
 - Memory pressure detection and graceful degradation
@@ -936,47 +959,48 @@ interface LockManager {
 ### 11.4 Error Code Framework
 
 **Exit Codes and Error Classification**
+
 ```typescript
 enum ErrorCodes {
   SUCCESS = 0,
-  
+
   // Configuration & Setup (1-10)
   CONFIG_INVALID = 1,
   CONFIG_MISSING = 2,
   WORKSPACE_INVALID = 3,
   PERMISSION_DENIED = 4,
-  
+
   // Parsing & Analysis (11-20)
   PARSE_FAILED = 11,
   GRAMMAR_DOWNLOAD_FAILED = 12,
   FILE_NOT_FOUND = 13,
   SYNTAX_ERROR = 14,
-  
+
   // Model & Embedding (21-30)
   MODEL_DOWNLOAD_FAILED = 21,
   MODEL_INVALID = 22,
   EMBEDDING_FAILED = 23,
   INDEX_CORRUPTION = 24,
-  
+
   // Query & Retrieval (31-40)
   INDEX_NOT_FOUND = 31,
   QUERY_FAILED = 32,
   INVALID_QUERY = 33,
-  
+
   // System & Resources (41-50)
   INSUFFICIENT_MEMORY = 41,
   DISK_FULL = 42,
   LOCK_TIMEOUT = 43,
   PROCESS_INTERRUPTED = 44,
-  
+
   // Network & External (51-60)
   NETWORK_ERROR = 51,
   TIMEOUT = 52,
   RATE_LIMITED = 53,
-  
+
   // Internal Errors (90+)
   INTERNAL_ERROR = 90,
-  UNKNOWN_ERROR = 99
+  UNKNOWN_ERROR = 99,
 }
 
 const ErrorMessages: Record<ErrorCodes, string> = {
@@ -986,11 +1010,12 @@ const ErrorMessages: Record<ErrorCodes, string> = {
   [ErrorCodes.WORKSPACE_INVALID]: "Not a valid workspace directory",
   [ErrorCodes.PERMISSION_DENIED]: "Insufficient permissions for operation",
   [ErrorCodes.PARSE_FAILED]: "Failed to parse source files",
-  [ErrorCodes.GRAMMAR_DOWNLOAD_FAILED]: "Could not download Tree-sitter grammar",
+  [ErrorCodes.GRAMMAR_DOWNLOAD_FAILED]:
+    "Could not download Tree-sitter grammar",
   [ErrorCodes.FILE_NOT_FOUND]: "Source file not found",
   [ErrorCodes.SYNTAX_ERROR]: "Syntax error in source file",
   [ErrorCodes.MODEL_DOWNLOAD_FAILED]: "Could not download embedding model",
-  [ErrorCodes.MODEL_INVALID]: "Embedding model is invalid or corrupted", 
+  [ErrorCodes.MODEL_INVALID]: "Embedding model is invalid or corrupted",
   [ErrorCodes.EMBEDDING_FAILED]: "Failed to generate embeddings",
   [ErrorCodes.INDEX_CORRUPTION]: "Vector index is corrupted, rebuild required",
   [ErrorCodes.INDEX_NOT_FOUND]: "Vector index not found, run indexing first",
@@ -998,18 +1023,20 @@ const ErrorMessages: Record<ErrorCodes, string> = {
   [ErrorCodes.INVALID_QUERY]: "Query syntax or parameters invalid",
   [ErrorCodes.INSUFFICIENT_MEMORY]: "Insufficient memory for operation",
   [ErrorCodes.DISK_FULL]: "Insufficient disk space",
-  [ErrorCodes.LOCK_TIMEOUT]: "Could not acquire file lock, another process running",
+  [ErrorCodes.LOCK_TIMEOUT]:
+    "Could not acquire file lock, another process running",
   [ErrorCodes.PROCESS_INTERRUPTED]: "Operation interrupted by user or system",
   [ErrorCodes.NETWORK_ERROR]: "Network connection failed",
   [ErrorCodes.TIMEOUT]: "Operation timed out",
   [ErrorCodes.RATE_LIMITED]: "Rate limited by external service",
   [ErrorCodes.INTERNAL_ERROR]: "Internal application error",
-  [ErrorCodes.UNKNOWN_ERROR]: "Unknown error occurred"
+  [ErrorCodes.UNKNOWN_ERROR]: "Unknown error occurred",
 };
 
 // User-friendly error reporting
 function formatError(code: ErrorCodes, details?: string): string {
-  const message = ErrorMessages[code] || ErrorMessages[ErrorCodes.UNKNOWN_ERROR];
+  const message =
+    ErrorMessages[code] || ErrorMessages[ErrorCodes.UNKNOWN_ERROR];
   return details ? `${message}: ${details}` : message;
 }
 
@@ -1017,9 +1044,12 @@ function formatError(code: ErrorCodes, details?: string): string {
 const ErrorHelp: Partial<Record<ErrorCodes, string>> = {
   [ErrorCodes.CONFIG_MISSING]: "Try: ast-helper init",
   [ErrorCodes.INDEX_NOT_FOUND]: "Try: ast-helper parse && ast-helper embed",
-  [ErrorCodes.GRAMMAR_DOWNLOAD_FAILED]: "Check network connection and try again",
-  [ErrorCodes.MODEL_DOWNLOAD_FAILED]: "Check network connection or try --offline mode",
-  [ErrorCodes.LOCK_TIMEOUT]: "Wait for other operations to complete or use --force"
+  [ErrorCodes.GRAMMAR_DOWNLOAD_FAILED]:
+    "Check network connection and try again",
+  [ErrorCodes.MODEL_DOWNLOAD_FAILED]:
+    "Check network connection or try --offline mode",
+  [ErrorCodes.LOCK_TIMEOUT]:
+    "Wait for other operations to complete or use --force",
 };
 ```
 
@@ -1030,18 +1060,19 @@ const ErrorHelp: Partial<Record<ErrorCodes, string>> = {
 ### 12.1 CI/CD Pipeline Specification
 
 **GitHub Actions Workflow** (`.github/workflows/release.yml`)
+
 ```yaml
 name: Build and Release
 on:
   push:
-    tags: ['v*']
-    
+    tags: ["v*"]
+
 jobs:
   build-prebuilts:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        arch: [x64, arm64]  # arm64 only for macOS
+        arch: [x64, arm64] # arm64 only for macOS
     steps:
       - name: Build native binaries
         run: npm run build:native
@@ -1052,6 +1083,7 @@ jobs:
 ```
 
 **Artifact Naming Convention**
+
 - `ast-copilot-helper-{version}-{platform}-{arch}.tar.gz`
 - `checksums.txt` with SHA256 hashes
 - `signatures.txt` with Sigstore signatures
@@ -1061,28 +1093,31 @@ jobs:
 ### 12.2 Monitoring & Observability
 
 **Performance Metrics Collection**
+
 ```typescript
 interface Metrics {
-  parseTime: number;           // ms per file
-  annotateTime: number;        // ms per node  
-  embedTime: number;          // ms per embedding
-  queryLatency: number;       // ms per query
-  indexSize: number;          // bytes
-  memoryUsage: number;        // peak MB
+  parseTime: number; // ms per file
+  annotateTime: number; // ms per node
+  embedTime: number; // ms per embedding
+  queryLatency: number; // ms per query
+  indexSize: number; // bytes
+  memoryUsage: number; // peak MB
 }
 ```
 
 **Health Checks**
+
 - Index integrity validation
-- Model availability check  
+- Model availability check
 - Git integration status
 - VS Code extension connectivity
 
 **Logging Framework**
+
 ```typescript
 interface Logger {
   error(message: string, context?: object): void;
-  warn(message: string, context?: object): void;  
+  warn(message: string, context?: object): void;
   info(message: string, context?: object): void;
   debug(message: string, context?: object): void;
 }
@@ -1091,18 +1126,20 @@ interface Logger {
 ### 12.3 Migration & Upgrade Strategies
 
 **Schema Versioning**
+
 ```typescript
 interface ASTDBVersion {
-  schemaVersion: string;        // "1.0.0"
-  modelVersion: string;         // "codebert-base-v1"  
-  indexVersion: string;         // "hnsw-v2"
-  migrationPath?: string;       // upgrade script
+  schemaVersion: string; // "1.0.0"
+  modelVersion: string; // "codebert-base-v1"
+  indexVersion: string; // "hnsw-v2"
+  migrationPath?: string; // upgrade script
 }
 ```
 
 **Migration Procedures**
+
 1. **Backup existing .astdb directory**
-2. **Run migration script if available**  
+2. **Run migration script if available**
 3. **Rebuild index if schema incompatible**
 4. **Validate migrated data**
 5. **Rollback on failure**
@@ -1118,7 +1155,7 @@ interface ASTDBVersion {
   // Core settings (from previous spec)
   "parseGlob": ["src/**/*.{ts,js,py}"],
   "watchGlob": ["src/**/*.{ts,js,py}"],
-  
+
   // Performance tuning
   "performance": {
     "maxMemoryMB": 2048,
@@ -1127,8 +1164,8 @@ interface ASTDBVersion {
     "timeoutMs": 30000,
     "concurrentParsers": 4
   },
-  
-  // Error handling  
+
+  // Error handling
   "errorHandling": {
     "maxRetries": 3,
     "retryDelayMs": 1000,
@@ -1136,16 +1173,16 @@ interface ASTDBVersion {
     "autoRebuildCorrupted": false,
     "logLevel": "info"
   },
-  
+
   // Advanced features
   "advanced": {
     "enableIncrementalParsing": true,
-    "enableSemanticCaching": true,  
+    "enableSemanticCaching": true,
     "pruneStaleEntries": true,
     "compressionLevel": 6,
     "enableProfiler": false
   },
-  
+
   // Platform-specific
   "platform": {
     "preferNativeBinaries": true,
@@ -1156,20 +1193,23 @@ interface ASTDBVersion {
 }
 ```
 
-### 13.2 Performance Optimization Guidelines  
+### 13.2 Performance Optimization Guidelines
 
 **Large Repository Optimization**
+
 - Use `--changed` flag to limit scope
 - Enable incremental parsing for faster updates
-- Consider splitting very large repositories  
+- Consider splitting very large repositories
 - Monitor memory usage and adjust batch sizes
 
 **Query Performance Tuning**
+
 - Adjust HNSW parameters (M, efConstruction) based on index size
 - Use query caching for repeated searches
 - Consider model quantization for faster inference
 
 **VS Code Extension Performance**
+
 - Set reasonable query timeouts (5-10s)
 - Implement query debouncing (500ms)
 - Cache recent query results
@@ -1182,8 +1222,9 @@ interface ASTDBVersion {
 ### 14.1 Comprehensive Testing Strategy
 
 **Unit Testing (Vitest + TypeScript)**
+
 - **Target Coverage**: 90%+ for core modules
-- **Test Categories**: 
+- **Test Categories**:
   - Parser functionality with malformed ASTs
   - Annotation generation with edge cases
   - Embedding model integration and caching
@@ -1191,17 +1232,20 @@ interface ASTDBVersion {
   - Configuration validation and merging
 
 **Integration Testing**
+
 - **Multi-language Repository**: Test with TypeScript + Python + JavaScript
-- **Large Scale Testing**: 100k significant nodes synthetic repository  
+- **Large Scale Testing**: 100k significant nodes synthetic repository
 - **Git Workflow Testing**: Various git states (clean, dirty, staged, conflicts)
 - **Cross-platform Testing**: Windows, macOS, Linux environments
 
 **End-to-End Testing**
+
 - **Complete Workflow**: Parse → Annotate → Embed → Query → VS Code integration
 - **Performance Benchmarks**: Automated performance regression testing
 - **VS Code Extension Testing**: Mock Copilot interactions, user scenarios
 
 **Edge Case Testing Matrix**
+
 ```typescript
 interface EdgeCaseTest {
   scenario: string;
@@ -1213,17 +1257,17 @@ const edgeCases: EdgeCaseTest[] = [
   {
     scenario: "Empty repository",
     expectedBehavior: "Graceful handling with informative message",
-    testMethod: "Full workflow on empty git repo"
+    testMethod: "Full workflow on empty git repo",
   },
   {
     scenario: "Very large single file (>50MB)",
-    expectedBehavior: "Memory-bounded processing with streaming",  
-    testMethod: "Generate large synthetic file and test parsing"
+    expectedBehavior: "Memory-bounded processing with streaming",
+    testMethod: "Generate large synthetic file and test parsing",
   },
   {
     scenario: "Corrupted .astdb directory",
     expectedBehavior: "Detection and recovery with user confirmation",
-    testMethod: "Deliberately corrupt index and test recovery"
+    testMethod: "Deliberately corrupt index and test recovery",
   },
   // ... additional edge cases
 ];
@@ -1232,26 +1276,29 @@ const edgeCases: EdgeCaseTest[] = [
 ### 14.2 Performance Benchmarking Framework
 
 **Benchmark Scenarios**
+
 - Repository sizes: 1k, 10k, 100k, 500k significant AST nodes (equivalent to ~6k-333k LOC)
 - Language distributions: TS-only, multi-language, Python-heavy
 - Query types: Simple keywords, complex semantic queries, frequent vs. rare terms
 
 **Metrics Collection**
+
 ```typescript
 interface BenchmarkResult {
   timestamp: Date;
-  repoSize: number;           // Lines of code
-  parseTimeMs: number;        // Full parse duration
-  annotateTimeMs: number;     // Full annotation duration  
-  embedTimeMs: number;        // Full embedding duration
-  queryLatencyP95: number;    // 95th percentile query time
-  memoryPeakMB: number;       // Peak memory usage
-  indexSizeMB: number;        // Disk usage
-  gitCommitHash: string;      // Version under test
+  repoSize: number; // Lines of code
+  parseTimeMs: number; // Full parse duration
+  annotateTimeMs: number; // Full annotation duration
+  embedTimeMs: number; // Full embedding duration
+  queryLatencyP95: number; // 95th percentile query time
+  memoryPeakMB: number; // Peak memory usage
+  indexSizeMB: number; // Disk usage
+  gitCommitHash: string; // Version under test
 }
 ```
 
 **Automated Performance Gates**
+
 - Parse: <5 minutes per 100k significant nodes
 - Query: <200ms P95 latency across 100k indexed nodes
 - Memory: <4GB peak for 100k significant nodes
@@ -1264,18 +1311,21 @@ interface BenchmarkResult {
 ### 15.1 Security Hardening
 
 **Input Validation**
+
 - File path sanitization (prevent directory traversal)
-- Git command injection prevention  
+- Git command injection prevention
 - Model file integrity verification (checksums + signatures)
 - Configuration file schema validation
 
 **Privilege Management**
+
 - Minimal file system permissions required
 - No network access except for model downloads
 - Sandboxed model execution where possible
 - User consent for all network operations
 
 **Supply Chain Security**
+
 ```typescript
 interface SecurityCheck {
   artifact: string;
@@ -1291,20 +1341,22 @@ const securityChecks: SecurityCheck[] = [
     checksum: "sha256:a1b2c3d4e5f6...",
     signature: "cosign signature blob",
     downloadUrl: "https://github.com/EvanDodds/ast-copilot-helper/releases/...",
-    verificationKey: "cosign-public.pem"
-  }
+    verificationKey: "cosign-public.pem",
+  },
 ];
 ```
 
 ### 15.2 Privacy Protection
 
 **Data Locality Guarantees**
+
 - All code processing remains local (no cloud transmission)
 - Embeddings computed and stored locally
 - Query results never leave the machine
 - Optional telemetry is anonymized and aggregated only
 
 **Sensitive Data Handling**
+
 - Skip files matching `.gitignore` patterns
 - Configurable exclusion patterns for sensitive files
 - Automatic detection of potential secrets in ASTs
@@ -1317,6 +1369,7 @@ const securityChecks: SecurityCheck[] = [
 ### 16.1 Installation & Setup Guide
 
 **Prerequisites Check**
+
 ```bash
 # System requirements validation
 ast-helper doctor                 # Check system compatibility
@@ -1324,8 +1377,9 @@ ast-helper doctor --fix          # Attempt to resolve common issues
 ```
 
 **Step-by-Step Setup**
+
 1. **Install Data Processor**: `npm install -g ast-helper`
-2. **Install MCP Server**: `npm install -g ast-mcp-server`  
+2. **Install MCP Server**: `npm install -g ast-mcp-server`
 3. **Initialize Repository**: `ast-helper init` (creates `.astdb/` and default config)
 4. **Build AST Database**: `ast-helper parse && ast-helper embed` (processes entire repository)
 5. **Start MCP Server**: `ast-mcp-server start` (launches MCP server for AI clients)
@@ -1343,9 +1397,10 @@ ast-helper doctor --fix          # Attempt to resolve common issues
 | Model download fails | Network/checksum errors | Check internet connection, verify firewall settings |
 
 **Diagnostic Commands**
+
 ```bash
 ast-helper status               # System status and configuration
-ast-helper validate             # Check .astdb integrity  
+ast-helper validate             # Check .astdb integrity
 ast-helper debug --query "test" # Verbose query execution
 ast-helper logs --tail 50       # View recent operation logs
 ```
@@ -1353,10 +1408,11 @@ ast-helper logs --tail 50       # View recent operation logs
 ### 16.3 Configuration Examples
 
 **TypeScript Monorepo**
+
 ```json
 {
   "parseGlob": ["packages/*/src/**/*.{ts,tsx}"],
-  "watchGlob": ["packages/*/src/**/*.{ts,tsx}"], 
+  "watchGlob": ["packages/*/src/**/*.{ts,tsx}"],
   "performance": {
     "batchSize": 50,
     "maxMemoryMB": 4096
@@ -1365,7 +1421,8 @@ ast-helper logs --tail 50       # View recent operation logs
 ```
 
 **Python Data Science Project**
-```json  
+
+```json
 {
   "parseGlob": ["src/**/*.py", "notebooks/**/*.py"],
   "excludePatterns": ["**/test_*.py", "**/__pycache__/**"],
@@ -1383,7 +1440,8 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 17.1 Language & Parser Stack
 
 **Decision**: Multi-language support with TS/JS/Python in initial release
-- **Parser**: Tree-sitter with native `node-tree-sitter` + WASM fallback via `tree-sitter-wasm`  
+
+- **Parser**: Tree-sitter with native `node-tree-sitter` + WASM fallback via `tree-sitter-wasm`
 - **Grammars**: Downloaded on-demand to `.astdb/grammars/` with version pins
 - **Node Identity**: Deterministic hash of (file path + span + type + name) for stable upserts
 - **Normalization**: Include function/class/module definitions + control-flow; strip comments
@@ -1392,6 +1450,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 17.2 Annotation & Analysis
 
 **Decision**: Template-based approach with language-aware extraction
+
 - **Signatures**: Language-specific extraction for TS/JS/Python; generic fallback for others
 - **Summaries**: Template generation ("Function X does Y" using heuristics)
 - **Complexity**: Classical cyclomatic (1 + decision points: if/for/while/case/catch/ternary/boolean-ops)
@@ -1402,6 +1461,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 17.3 Embedding & Indexing
 
 **Decision**: Hybrid runtime approach with pure-JS default
+
 - **Model**: CodeBERT-base ONNX (768-dim) via `@xenova/transformers` WASM runtime
 - **Delivery**: Download from HuggingFace with SHA256 verification
 - **Alternative**: `--runtime onnx` flag for `onnxruntime-node` (if available)
@@ -1412,6 +1472,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 17.4 Git Integration & File Handling
 
 **Decision**: Flexible git workflow integration
+
 - **Default**: `git diff --name-only --diff-filter=ACMRT HEAD`
 - **Overrides**: `--staged` and `--base <ref>` flags for different workflows
 - **Watch**: Debounced (200ms) with batching for rapid edits; `--batch` and `--max-batch-size` options
@@ -1421,6 +1482,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 17.5 VS Code Extension Strategy
 
 **Decision**: Optional server management with MCP protocol integration
+
 - **Primary**: Standalone MCP server provides direct AI model integration
 - **Extension Role**: Optional process management, status monitoring, workspace settings
 - **Integration**: AI clients connect directly to MCP server via standard protocol
@@ -1430,6 +1492,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 17.6 Distribution & Native Performance
 
 **Decision**: Zero-dependency default with optional native optimization
+
 - **Core Package**: Pure-JS/WASM, works everywhere, reasonable performance
 - **Prebuilt Binaries**: CI-produced artifacts for Windows x64, macOS (arm64/x64), Linux x64
 - **Delivery**: GitHub Releases with SHA256 checksums + Sigstore/GPG signing
@@ -1439,6 +1502,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 17.7 Privacy & Telemetry
 
 **Decision**: Privacy-first with opt-in analytics
+
 - **Default**: No telemetry, explicit privacy guarantee (no code/embeddings leave machine)
 - **Opt-in**: Anonymous error counts, environment metadata, performance metrics
 - **Retention**: 90-day limit with documented opt-out/deletion process
@@ -1448,6 +1512,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 17.8 Security & Supply Chain
 
 **Decision**: Comprehensive verification pipeline
+
 - **Downloads**: HTTPS + SHA256 checksums for all artifacts (models from HuggingFace, prebuilds from GitHub Releases)
 - **Signing**: Sigstore/cosign for prebuilt binary authenticity
 - **Verification**: Public keys stored in repo with documented validation steps
@@ -1457,8 +1522,9 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 17.9 Scale & Performance Targets
 
 **Decision**: Enterprise-grade scale planning
+
 - **Target**: 100k significant AST nodes (validated requirement from stakeholders)
-- **Benchmarks**: 
+- **Benchmarks**:
   - Full index build: <10 minutes for 100k significant nodes (~667k LOC, 2-CPU 8GB CI runner)
   - Query latency: <200ms P95 for top-5 results across 15k indexed nodes
   - Memory: <4GB peak processing 100k significant nodes (~667k LOC) with efficient batching
@@ -1472,6 +1538,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 18.1 High Priority Implementation Details
 
 **VS Code Extension API Integration**
+
 - **Primary Approach**: Command-based integration with explicit user action
   - Command: `ast-copilot-helper.enrichAndSend` in command palette
   - Keybinding: Configurable shortcut for quick access
@@ -1482,44 +1549,52 @@ This section consolidates all architectural decisions, trade-offs, and implement
   3. **Selection-Based**: Enrich prompts based on current text selection and cursor position
   4. **MCP Integration**: Seamless integration with external AI models via standardized MCP protocol
 - **Implementation Details**:
+
   ```typescript
   // Primary implementation approach
   async function enrichAndSend() {
     const prompt = await vscode.window.showInputBox({
-      prompt: 'Enter your prompt for GitHub Copilot',
-      placeHolder: 'e.g., "refactor this function to use async/await"'
+      prompt: "Enter your prompt for GitHub Copilot",
+      placeHolder: 'e.g., "refactor this function to use async/await"',
     });
-    
+
     if (!prompt) return;
-    
+
     // Query relevant context
     const context = await queryContext(prompt);
     const enrichedPrompt = `Relevant code context:\n${context}\n\nUser request: ${prompt}`;
-    
+
     // Copy to clipboard and show instruction
     await vscode.env.clipboard.writeText(enrichedPrompt);
-    vscode.window.showInformationMessage(
-      'Enhanced prompt copied to clipboard. Paste in Copilot Chat.',
-      'Open Copilot Chat'
-    ).then(selection => {
-      if (selection === 'Open Copilot Chat') {
-        vscode.commands.executeCommand('workbench.panel.chat.view.copilot.focus');
-      }
-    });
+    vscode.window
+      .showInformationMessage(
+        "Enhanced prompt copied to clipboard. Paste in Copilot Chat.",
+        "Open Copilot Chat",
+      )
+      .then((selection) => {
+        if (selection === "Open Copilot Chat") {
+          vscode.commands.executeCommand(
+            "workbench.panel.chat.view.copilot.focus",
+          );
+        }
+      });
   }
   ```
+
 - **Command Registration**: Implement activation events and contribution points as specified in Section 4.7
 - **Settings Integration**: Wire VS Code configuration system to CLI backend
 - **Progress Reporting**: Use `vscode.window.withProgress` for indexing operations
 
 **Model Artifact Management**
+
 - **URLs & Checksums**: Finalize exact URLs and compute SHA256 checksums for all model artifacts
 - **Download Infrastructure**: Set up GitHub Releases artifacts with signing pipeline
 - **Model Validation**: Implement checksum verification and model compatibility testing
 - **Fallback Strategy**: Define specific fallback model selection criteria
 
 **Template System Finalization**
-- **Language-Specific Templates**: Complete templates for Python, JavaScript patterns  
+
+- **Language-Specific Templates**: Complete templates for Python, JavaScript patterns
 - **Metadata Extraction**: Implement `extractFromNode()` functions for each supported language
 - **Template Validation**: Test template generation against diverse code samples
 - **Customization Support**: Allow user-defined templates in configuration
@@ -1527,12 +1602,14 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 18.2 Medium Priority Dependencies
 
 **Performance Optimization Parameters**
+
 - **HNSW Tuning**: Validate default efConstruction=200, M=16 parameters against target workloads
 - **Batch Processing**: Optimize batch sizes for different hardware configurations
 - **Memory Thresholds**: Define specific memory limits and pressure detection algorithms
 - **Query Optimization**: Fine-tune similarity thresholds and ranking algorithms
 
-**Error Recovery Procedures**  
+**Error Recovery Procedures**
+
 - **Index Rebuild Logic**: Implement safe rebuild with progress reporting and rollback
 - **Partial Failure Handling**: Define recovery strategies for individual file parse failures
 - **Network Resilience**: Implement retry policies with exponential backoff for model downloads
@@ -1541,12 +1618,14 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 18.3 Lower Priority Implementation Tasks
 
 **Testing Infrastructure**
+
 - **Fixture Development**: Create comprehensive test repositories covering target languages and patterns
-- **Performance Benchmarking**: Set up automated testing against 100k significant node repositories  
+- **Performance Benchmarking**: Set up automated testing against 100k significant node repositories
 - **Integration Testing**: Develop end-to-end workflows covering all major use cases
 - **Security Testing**: Validate model download verification and input sanitization
 
 **Documentation & Support**
+
 - **API Documentation**: Generate comprehensive API docs from TypeScript definitions
 - **User Guides**: Create step-by-step guides for common development workflows
 - **Troubleshooting**: Develop diagnostic tools and common issue resolution procedures
@@ -1555,11 +1634,13 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 18.1 Legal & Compliance Requirements
 
 **Model License Verification** (Legal Team)
+
 - [ ] Confirm CodeBERT-base redistribution rights and attribution requirements
 - [ ] Obtain exact license text and attribution format
 - [ ] Verify download-only distribution approach compliance
 
 **Privacy & Legal Documentation** (Legal/Product)
+
 - [ ] Draft privacy policy for optional telemetry collection
 - [ ] Finalize project open source license (MIT recommended)
 - [ ] Review GDPR/privacy compliance for telemetry features
@@ -1567,16 +1648,19 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 18.2 Infrastructure Setup
 
 **CI/CD Pipeline Configuration** (DevOps)
+
 - [ ] Configure GitHub Actions for multi-platform native binary builds
 - [ ] Set up automated testing across Windows/macOS/Linux environments
 - [ ] Implement release automation with version tagging
 
 **Artifact Security & Distribution** (DevOps/Security)
+
 - [ ] Set up Sigstore/cosign signing infrastructure with key management
 - [ ] Configure GitHub Releases for secure model and binary distribution
 - [ ] Establish artifact verification procedures and documentation
 
 **Extension Publishing** (Product/Engineering)
+
 - [ ] Register VS Code marketplace publisher account
 - [ ] Prepare extension packaging and submission process
 - [ ] Set up extension update and distribution pipeline
@@ -1584,16 +1668,19 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 18.3 Technical Validation
 
 **Performance Baseline Establishment** (QA/Engineering)
+
 - [ ] Create 100k significant node synthetic test repository with representative code
 - [ ] Establish baseline performance metrics on standard CI hardware
 - [ ] Define automated performance regression testing procedures
 
 **Cross-Platform Validation** (QA)
+
 - [ ] Validate functionality across Windows 10/11, macOS 12+, Ubuntu 20.04+
 - [ ] Test installation and operation on common development environments
 - [ ] Verify graceful degradation when native dependencies unavailable
 
 **Security & Integration Testing** (Security/QA)
+
 - [ ] Conduct third-party security review of download and verification systems
 - [ ] Validate end-to-end VS Code + Copilot integration across scenarios
 - [ ] Test security hardening measures and input validation
@@ -1605,23 +1692,27 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 19.1 Current Completeness Status
 
 **Architecture & Design**: ✅ **Complete**
+
 - All major architectural decisions resolved and documented
 - Module specifications provide sufficient detail for implementation
 - File structure and configuration schemas fully defined
 
-**Technical Specifications**: ✅ **Complete**  
+**Technical Specifications**: ✅ **Complete**
+
 - Package.json dependencies and build configuration specified
 - CLI command specifications with validation rules
 - VS Code extension API integration approaches defined
 - Error handling framework with enumerated codes
 
 **Implementation Guidance**: ✅ **Complete**
+
 - Template system implementation with code examples
 - Model artifact management with concrete URLs and verification
 - Performance benchmarks with specific targets
 - Configuration precedence rules clearly defined
 
 **Outstanding Dependencies**: 🟡 **Tracked**
+
 - All remaining dependencies categorized by priority
 - High-priority items have concrete action plans
 - Medium and low priority items identified for future iterations
@@ -1629,18 +1720,21 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 19.2 Development Readiness Checklist
 
 **Core Development** (Ready to Start):
+
 - ✅ Module architecture and interfaces defined
 - ✅ TypeScript configurations and build pipeline specified
 - ✅ Error handling and logging frameworks designed
 - ✅ Testing strategies and performance targets established
 
 **Integration Development** (Ready with Dependencies):
+
 - ✅ VS Code extension approach defined with fallback strategies
 - ✅ MCP server integration with standardized protocol
 - ✅ Model download and verification procedures specified
 - ✅ Git workflow integration patterns documented
 
 **Production Readiness** (Requires Completion):
+
 - ✅ Model artifact URLs and checksums finalized with HuggingFace distribution
 - ⏳ Signing infrastructure setup required
 - ⏳ Performance validation against target workloads needed
@@ -1651,6 +1745,7 @@ This section consolidates all architectural decisions, trade-offs, and implement
 **START DEVELOPMENT NOW**: The specification provides sufficient detail for core development to begin immediately. All critical architectural questions have been resolved and implementation approaches are clearly defined.
 
 **Parallel Workstreams**:
+
 1. **Core CLI Implementation**: Begin with parser, annotator, and embedder modules
 2. **VS Code Extension**: Implement optional server management extension for MCP server lifecycle
 3. **Infrastructure Setup**: Configure build pipelines, signing, and artifact hosting
@@ -1665,12 +1760,14 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 19.1 Technical Milestones
 
 **Core Functionality**
+
 - [ ] Parse 100k LOC repository (~15k significant nodes) in <10 minutes on 2-CPU 8GB CI runner
 - [ ] Query latency <200ms P95 for top-5 results across 15k indexed nodes with warm index
 - [ ] Zero-dependency install success rate >95% across supported platforms
 - [ ] Memory usage scales linearly with repository size (efficient batching, <4GB peak for 100k LOC)
 
 **Integration & User Experience**
+
 - [ ] VS Code extension functional with all major Copilot scenarios
 - [ ] Single-command installation and setup (npm install + init)
 - [ ] Comprehensive error messages and recovery procedures
@@ -1679,12 +1776,14 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 19.2 Operational Readiness
 
 **Production Systems**
+
 - [ ] Automated CI/CD pipeline with security scanning and artifact signing
 - [ ] Comprehensive monitoring and health check systems operational
 - [ ] User documentation, troubleshooting guides, and support channels ready
 - [ ] Maintenance procedures and update mechanisms documented and tested
 
 **Quality Assurance**
+
 - [ ] 90%+ test coverage across unit, integration, and end-to-end scenarios
 - [ ] Performance benchmarking suite with automated regression detection
 - [ ] Security audit completed with all findings addressed
@@ -1693,17 +1792,20 @@ This section consolidates all architectural decisions, trade-offs, and implement
 ### 19.3 Launch Prerequisites
 
 **Documentation & Support**
+
 - [ ] Installation guide with platform-specific instructions
 - [ ] Configuration examples for common project types
 - [ ] Troubleshooting guide covering common issues and solutions
 - [ ] API documentation for advanced configuration and integration
 
 **Legal & Compliance**
+
 - [ ] All licenses, attributions, and legal requirements satisfied
 - [ ] Privacy policy published and telemetry consent mechanisms implemented
 - [ ] Open source license applied and contributor guidelines established
 
 **Community & Ecosystem**
+
 - [ ] GitHub repository with comprehensive README and contribution guidelines
 - [ ] Issue tracking and support processes established
 - [ ] VS Code marketplace listing with screenshots and feature descriptions
@@ -1718,7 +1820,7 @@ This consolidated organization eliminates redundancy while maintaining all criti
 This specification now provides a comprehensive, implementation-ready blueprint for the ast-copilot-helper system. Key enhancements include:
 
 - **Complete Error Handling**: Corruption detection, recovery procedures, edge case management
-- **Operational Excellence**: CI/CD pipeline, monitoring, deployment automation  
+- **Operational Excellence**: CI/CD pipeline, monitoring, deployment automation
 - **Security Hardening**: Input validation, privilege management, supply chain security
 - **Comprehensive Testing**: Unit, integration, performance, and edge case testing strategies
 - **User Experience**: Installation guides, troubleshooting, configuration examples

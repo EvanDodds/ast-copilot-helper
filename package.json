@@ -1,32 +1,34 @@
 {
   "name": "ast-copilot-helper",
-  "version": "0.1.0",
+  "version": "1.5.0",
   "description": "Monorepo for AST-based code analysis tools and MCP server",
+  "type": "module",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "docs"
   ],
   "scripts": {
     "build": "yarn workspaces foreach --all --parallel --topological --verbose run build",
     "build:all": "yarn run build",
     "build:watch": "yarn workspaces foreach --all --parallel --verbose run build:watch",
-    "test": "vitest run",
+    "test": "node --max-old-space-size=6144 --expose-gc ./node_modules/.bin/vitest run --exclude='tests/integration/**'",
     "test:all": "echo '🧪 Running ALL tests (unit + integration + benchmarks)...' && yarn run test && yarn run test:integration && yarn run test:benchmarks",
     "test:comprehensive": "yarn run test:all",
     "test:dev": "yarn run test:all",
-    "test:unit": "echo '🧪 Running essential unit tests (excluding performance tests)...' && vitest run tests/unit --exclude='**/performance/**' --reporter=basic",
-    "test:precommit": "node --max-old-space-size=2048 ./node_modules/.bin/vitest run --config vitest.precommit.config.ts --reporter=basic",
-    "test:prepush": "node --max-old-space-size=4096 ./node_modules/.bin/vitest run --config vitest.prepush.config.ts --reporter=basic",
+    "test:unit": "echo '🧪 Running essential unit tests (excluding performance tests)...' && vitest run tests/unit --exclude='**/performance/**' --reporter=default",
+    "test:precommit": "node --max-old-space-size=2048 ./node_modules/.bin/vitest run --config vitest.precommit.config.ts --reporter=default",
+    "test:prepush": "node --max-old-space-size=4096 ./node_modules/.bin/vitest run --config vitest.prepush.config.ts --reporter=default",
     "test:fast": "yarn run test:prepush",
-    "test:integration": "vitest run tests/integration",
-    "test:benchmarks": "vitest run tests/benchmarks",
-    "test:benchmark": "vitest run tests/benchmarks",
+    "test:integration": "vitest run tests/integration --exclude='**/performance*.{test,spec}.{js,ts}' --exclude='**/scaling*.{test,spec}.{js,ts}'",
+    "test:benchmarks": "vitest run --config vitest.benchmarks.config.ts",
+    "test:benchmark": "vitest run --config vitest.benchmarks.config.ts",
     "test:watch": "vitest",
-    "test:ci": "node --max-old-space-size=4096 ./node_modules/.bin/vitest run --config vitest.ci.config.ts --coverage --reporter=basic --reporter=json --outputFile=test-results.json",
-    "test:ci:fast": "node --max-old-space-size=2048 ./node_modules/.bin/vitest run --config vitest.ci.config.ts --reporter=basic",
+    "test:ci": "node --max-old-space-size=4096 ./node_modules/.bin/vitest run --config vitest.ci.config.ts --coverage --reporter=default --reporter=json --outputFile=test-results.json",
+    "test:ci:fast": "node --max-old-space-size=2048 ./node_modules/.bin/vitest run --config vitest.ci.config.ts --reporter=default",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:e2e": "vitest run tests/integration",
@@ -35,8 +37,11 @@
     "start:cli": "yarn workspace ast-helper run start",
     "clean": "yarn workspaces foreach --all --parallel --verbose run clean && rm -rf coverage test-output test-tmp *.log",
     "clean:all": "yarn run clean && rm -rf node_modules packages/*/node_modules",
-    "lint": "yarn workspaces foreach --all --parallel --verbose run lint",
-    "lint:fix": "yarn workspaces foreach --all --parallel --verbose run lint:fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint-staged": "lint-staged",
+    "lint:workspaces": "yarn workspaces foreach --all --parallel --verbose run lint",
+    "lint:fix:workspaces": "yarn workspaces foreach --all --parallel --verbose run lint:fix",
     "type-check": "tsc --build --verbose",
     "typecheck": "yarn run type-check",
     "security:audit": "yarn npm audit --severity moderate",
@@ -83,18 +88,31 @@
     "release:dry": "echo 'Dry run - would publish to npm'",
     "release": "yarn run prepack && npm publish --access=public"
   },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "npx prettier --write",
+      "eslint --fix --quiet"
+    ]
+  },
   "devDependencies": {
+    "@eslint/js": "^9.36.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.0.0",
+    "@types/node": "^24.5.2",
     "@types/tmp": "^0.2.6",
+    "@typescript-eslint/eslint-plugin": "^8.44.1",
+    "@typescript-eslint/parser": "^8.44.1",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
-    "husky": "^8.0.3",
+    "eslint": "^9.36.0",
+    "globals": "^16.4.0",
+    "husky": "^9.1.7",
     "js-yaml": "^4.1.0",
-    "tmp": "^0.2.3",
+    "lint-staged": "^16.2.0",
+    "tmp": "^0.2.5",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
-    "typescript": "^5.5.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.44.1",
     "vitest": "^3.2.4"
   },
   "repository": {
@@ -120,5 +138,8 @@
     "x64",
     "arm64"
   ],
-  "packageManager": "yarn@4.9.4"
+  "packageManager": "yarn@4.9.4",
+  "resolutions": {
+    "esbuild": "^0.25.10"
+  }
 }

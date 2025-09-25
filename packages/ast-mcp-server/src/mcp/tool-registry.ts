@@ -1,13 +1,13 @@
-import { EventEmitter } from 'events';
-import { logger } from '../logging/logger';
-import type { 
-  MCPTool, 
-  MCPToolResult, 
+import { EventEmitter } from "events";
+import { logger } from "../logging/logger";
+import type {
+  MCPTool,
+  MCPToolResult,
   ToolExecutionContext,
   ToolValidationResult,
   ToolMetadata,
-  ToolCapabilities
-} from './protocol/types';
+  ToolCapabilities,
+} from "./protocol/types";
 
 /**
  * Tool execution statistics for performance monitoring
@@ -62,10 +62,10 @@ export class MCPToolRegistry extends EventEmitter {
   constructor(options: { maxExecutionTime?: number } = {}) {
     super();
     this.maxExecutionTime = options.maxExecutionTime ?? 200; // 200ms default per performance requirements
-    
-    logger.info('MCP Tool Registry initialized', {
+
+    logger.info("MCP Tool Registry initialized", {
       maxExecutionTime: this.maxExecutionTime,
-      registeredTools: 0
+      registeredTools: 0,
     });
   }
 
@@ -74,14 +74,16 @@ export class MCPToolRegistry extends EventEmitter {
    */
   async registerTool(
     tool: MCPTool,
-    options: ToolRegistrationOptions = {}
+    options: ToolRegistrationOptions = {},
   ): Promise<void> {
     try {
       // Validate tool before registration
       if (!options.skipValidation) {
         const validation = await this.validateTool(tool);
         if (!validation.isValid) {
-          throw new Error(`Tool validation failed: ${validation.errors.join(', ')}`);
+          throw new Error(
+            `Tool validation failed: ${validation.errors.join(", ")}`,
+          );
         }
       }
 
@@ -92,19 +94,19 @@ export class MCPToolRegistry extends EventEmitter {
 
       // Register the tool
       this.tools.set(tool.name, tool);
-      
+
       // Initialize metadata
       const metadata: ToolMetadata = {
         name: tool.name,
         description: tool.description,
-        category: options.category || 'general',
+        category: options.category || "general",
         tags: options.tags || [],
         capabilities: (tool as any).capabilities || [],
         registeredAt: new Date(),
         lastModified: new Date(),
-        version: '1.0.0',
-        author: 'AST MCP Server',
-        config: options.config || {}
+        version: "1.0.0",
+        author: "AST MCP Server",
+        config: options.config || {},
       };
       this.metadata.set(tool.name, metadata);
 
@@ -114,7 +116,7 @@ export class MCPToolRegistry extends EventEmitter {
         totalExecutionTime: 0,
         averageExecutionTime: 0,
         successRate: 1.0,
-        errorCount: 0
+        errorCount: 0,
       });
 
       // Update category mapping
@@ -135,18 +137,18 @@ export class MCPToolRegistry extends EventEmitter {
         }
       }
 
-      this.emit('tool-registered', tool.name, metadata);
-      
-      logger.info('Tool registered successfully', {
+      this.emit("tool-registered", tool.name, metadata);
+
+      logger.info("Tool registered successfully", {
         toolName: tool.name,
         category: metadata.category,
         tags: metadata.tags,
-        capabilities: metadata.capabilities
+        capabilities: metadata.capabilities,
       });
     } catch (error) {
-      logger.error('Failed to register tool', {
+      logger.error("Failed to register tool", {
         toolName: tool.name,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
@@ -161,7 +163,7 @@ export class MCPToolRegistry extends EventEmitter {
     }
 
     const metadata = this.metadata.get(toolName);
-    
+
     // Remove from all data structures
     this.tools.delete(toolName);
     this.metadata.delete(toolName);
@@ -192,9 +194,9 @@ export class MCPToolRegistry extends EventEmitter {
       }
     }
 
-    this.emit('tool-unregistered', toolName);
-    
-    logger.info('Tool unregistered successfully', { toolName });
+    this.emit("tool-unregistered", toolName);
+
+    logger.info("Tool unregistered successfully", { toolName });
     return true;
   }
 
@@ -213,44 +215,56 @@ export class MCPToolRegistry extends EventEmitter {
 
     // Filter by name (exact match)
     if (options.name) {
-      candidateTools = new Set([options.name].filter(name => candidateTools.has(name)));
+      candidateTools = new Set(
+        [options.name].filter((name) => candidateTools.has(name)),
+      );
     }
 
     // Filter by category
     if (options.category) {
       const categoryTools = this.categories.get(options.category) || new Set();
-      candidateTools = new Set(Array.from(candidateTools).filter(name => categoryTools.has(name)));
+      candidateTools = new Set(
+        Array.from(candidateTools).filter((name) => categoryTools.has(name)),
+      );
     }
 
     // Filter by tags (intersection)
     if (options.tags && options.tags.length > 0) {
       for (const tag of options.tags) {
         const tagTools = this.tags.get(tag) || new Set();
-        candidateTools = new Set(Array.from(candidateTools).filter(name => tagTools.has(name)));
+        candidateTools = new Set(
+          Array.from(candidateTools).filter((name) => tagTools.has(name)),
+        );
       }
     }
 
     // Filter by capabilities
     if (options.capabilities && options.capabilities.length > 0) {
       candidateTools = new Set(
-        Array.from(candidateTools).filter(name => {
+        Array.from(candidateTools).filter((name) => {
           const tool = this.tools.get(name);
-          if (!(tool as any)?.capabilities) return false;
-          return options.capabilities!.every(cap => (tool as any).capabilities!.includes(cap));
-        })
+          if (!(tool as any)?.capabilities) {
+            return false;
+          }
+          return options.capabilities!.every((cap) =>
+            (tool as any).capabilities!.includes(cap),
+          );
+        }),
       );
     }
 
     // Filter disabled tools unless explicitly included
     if (!options.includeDisabled) {
       candidateTools = new Set(
-        Array.from(candidateTools).filter(name => !this.disabledTools.has(name))
+        Array.from(candidateTools).filter(
+          (name) => !this.disabledTools.has(name),
+        ),
       );
     }
 
     return Array.from(candidateTools)
-      .map(name => this.tools.get(name)!)
-      .filter(tool => tool !== undefined);
+      .map((name) => this.tools.get(name)!)
+      .filter((tool) => tool !== undefined);
   }
 
   /**
@@ -280,7 +294,7 @@ export class MCPToolRegistry extends EventEmitter {
   async executeTool(
     toolName: string,
     params: Record<string, any>,
-    context?: ToolExecutionContext
+    context?: ToolExecutionContext,
   ): Promise<MCPToolResult> {
     const startTime = Date.now();
     const tool = this.tools.get(toolName);
@@ -298,12 +312,15 @@ export class MCPToolRegistry extends EventEmitter {
       // Validate parameters
       const validation = await this.validateToolParameters(tool, params);
       if (!validation.isValid) {
-        throw new Error(`Invalid parameters: ${validation.errors.join(', ')}`);
+        throw new Error(`Invalid parameters: ${validation.errors.join(", ")}`);
       }
 
       // Set up execution timeout
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Tool execution timeout')), this.maxExecutionTime)
+        setTimeout(
+          () => reject(new Error("Tool execution timeout")),
+          this.maxExecutionTime,
+        ),
       );
 
       const executionPromise = (tool as any).handler(params, context);
@@ -316,15 +333,16 @@ export class MCPToolRegistry extends EventEmitter {
       stats.callCount++;
       stats.totalExecutionTime += executionTime;
       stats.averageExecutionTime = stats.totalExecutionTime / stats.callCount;
-      stats.successRate = (stats.callCount - stats.errorCount) / stats.callCount;
+      stats.successRate =
+        (stats.callCount - stats.errorCount) / stats.callCount;
       stats.lastExecuted = new Date();
 
-      this.emit('tool-executed', toolName, executionTime, result);
+      this.emit("tool-executed", toolName, executionTime, result);
 
-      logger.info('Tool executed successfully', {
+      logger.info("Tool executed successfully", {
         toolName,
         executionTime,
-        resultType: result.isError ? 'error' : 'success'
+        resultType: result.isError ? "error" : "success",
       });
 
       return result;
@@ -335,16 +353,18 @@ export class MCPToolRegistry extends EventEmitter {
       stats.errorCount++;
       stats.totalExecutionTime += executionTime;
       stats.averageExecutionTime = stats.totalExecutionTime / stats.callCount;
-      stats.successRate = (stats.callCount - stats.errorCount) / stats.callCount;
-      stats.lastError = error instanceof Error ? error : new Error(String(error));
+      stats.successRate =
+        (stats.callCount - stats.errorCount) / stats.callCount;
+      stats.lastError =
+        error instanceof Error ? error : new Error(String(error));
       stats.lastExecuted = new Date();
 
-      this.emit('tool-error', toolName, error);
+      this.emit("tool-error", toolName, error);
 
-      logger.error('Tool execution failed', {
+      logger.error("Tool execution failed", {
         toolName,
         executionTime,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
 
       throw error;
@@ -361,12 +381,12 @@ export class MCPToolRegistry extends EventEmitter {
 
     if (enabled) {
       this.disabledTools.delete(toolName);
-      this.emit('tool-enabled', toolName);
-      logger.info('Tool enabled', { toolName });
+      this.emit("tool-enabled", toolName);
+      logger.info("Tool enabled", { toolName });
     } else {
       this.disabledTools.add(toolName);
-      this.emit('tool-disabled', toolName);
-      logger.info('Tool disabled', { toolName });
+      this.emit("tool-disabled", toolName);
+      logger.info("Tool disabled", { toolName });
     }
 
     return true;
@@ -399,8 +419,8 @@ export class MCPToolRegistry extends EventEmitter {
   getToolsByCategory(category: string): MCPTool[] {
     const toolNames = this.categories.get(category) || new Set();
     return Array.from(toolNames)
-      .map(name => this.tools.get(name)!)
-      .filter(tool => tool !== undefined);
+      .map((name) => this.tools.get(name)!)
+      .filter((tool) => tool !== undefined);
   }
 
   /**
@@ -409,8 +429,8 @@ export class MCPToolRegistry extends EventEmitter {
   getToolsByTag(tag: string): MCPTool[] {
     const toolNames = this.tags.get(tag) || new Set();
     return Array.from(toolNames)
-      .map(name => this.tools.get(name)!)
-      .filter(tool => tool !== undefined);
+      .map((name) => this.tools.get(name)!)
+      .filter((tool) => tool !== undefined);
   }
 
   /**
@@ -426,9 +446,9 @@ export class MCPToolRegistry extends EventEmitter {
       delete stats.lastExecuted;
       delete stats.lastError;
     }
-    
-    this.emit('stats-cleared');
-    logger.info('Tool execution statistics cleared');
+
+    this.emit("stats-cleared");
+    logger.info("Tool execution statistics cleared");
   }
 
   /**
@@ -443,13 +463,18 @@ export class MCPToolRegistry extends EventEmitter {
     totalExecutions: number;
     averageSuccessRate: number;
   } {
-    const totalExecutions = Array.from(this.stats.values())
-      .reduce((sum, stats) => sum + stats.callCount, 0);
+    const totalExecutions = Array.from(this.stats.values()).reduce(
+      (sum, stats) => sum + stats.callCount,
+      0,
+    );
 
-    const averageSuccessRate = this.stats.size > 0
-      ? Array.from(this.stats.values())
-          .reduce((sum, stats) => sum + stats.successRate, 0) / this.stats.size
-      : 1.0;
+    const averageSuccessRate =
+      this.stats.size > 0
+        ? Array.from(this.stats.values()).reduce(
+            (sum, stats) => sum + stats.successRate,
+            0,
+          ) / this.stats.size
+        : 1.0;
 
     return {
       totalTools: this.tools.size,
@@ -458,7 +483,7 @@ export class MCPToolRegistry extends EventEmitter {
       categories: this.categories.size,
       tags: this.tags.size,
       totalExecutions,
-      averageSuccessRate
+      averageSuccessRate,
     };
   }
 
@@ -469,33 +494,33 @@ export class MCPToolRegistry extends EventEmitter {
     const errors: string[] = [];
 
     // Basic validation
-    if (!tool.name || typeof tool.name !== 'string') {
-      errors.push('Tool name is required and must be a string');
+    if (!tool.name || typeof tool.name !== "string") {
+      errors.push("Tool name is required and must be a string");
     }
 
-    if (!tool.description || typeof tool.description !== 'string') {
-      errors.push('Tool description is required and must be a string');
+    if (!tool.description || typeof tool.description !== "string") {
+      errors.push("Tool description is required and must be a string");
     }
 
-    if (!(tool as any).handler || typeof (tool as any).handler !== 'function') {
-      errors.push('Tool handler is required and must be a function');
+    if (!(tool as any).handler || typeof (tool as any).handler !== "function") {
+      errors.push("Tool handler is required and must be a function");
     }
 
     // Validate input schema if provided
     if (tool.inputSchema) {
       try {
         // Basic JSON schema validation (simplified)
-        if (typeof tool.inputSchema !== 'object' || !tool.inputSchema.type) {
-          errors.push('Input schema must be a valid JSON schema object');
+        if (typeof tool.inputSchema !== "object" || !tool.inputSchema.type) {
+          errors.push("Input schema must be a valid JSON schema object");
         }
-      } catch (error) {
-        errors.push('Invalid input schema format');
+      } catch (_error) {
+        errors.push("Invalid input schema format");
       }
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -504,7 +529,7 @@ export class MCPToolRegistry extends EventEmitter {
    */
   private async validateToolParameters(
     tool: MCPTool,
-    params: Record<string, any>
+    params: Record<string, any>,
   ): Promise<ToolValidationResult> {
     const errors: string[] = [];
 
@@ -515,25 +540,33 @@ export class MCPToolRegistry extends EventEmitter {
 
     // Basic parameter validation (simplified JSON schema validation)
     const schema = tool.inputSchema;
-    
-    if (schema.type === 'object' && schema.properties) {
-      for (const [propName, propSchema] of Object.entries(schema.properties as Record<string, any>)) {
+
+    if (schema.type === "object" && schema.properties) {
+      for (const [propName, propSchema] of Object.entries(
+        schema.properties as Record<string, any>,
+      )) {
         const value = params[propName];
-        
+
         // Check required properties
-        if (schema.required && schema.required.includes(propName) && value === undefined) {
+        if (
+          schema.required &&
+          schema.required.includes(propName) &&
+          value === undefined
+        ) {
           errors.push(`Required parameter '${propName}' is missing`);
         }
-        
+
         // Basic type checking
         if (value !== undefined && propSchema.type) {
           const actualType = typeof value;
           const expectedType = propSchema.type;
-          
-          if (expectedType === 'array' && !Array.isArray(value)) {
+
+          if (expectedType === "array" && !Array.isArray(value)) {
             errors.push(`Parameter '${propName}' must be an array`);
-          } else if (expectedType !== 'array' && actualType !== expectedType) {
-            errors.push(`Parameter '${propName}' must be of type ${expectedType}, got ${actualType}`);
+          } else if (expectedType !== "array" && actualType !== expectedType) {
+            errors.push(
+              `Parameter '${propName}' must be of type ${expectedType}, got ${actualType}`,
+            );
           }
         }
       }
@@ -541,7 +574,7 @@ export class MCPToolRegistry extends EventEmitter {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }

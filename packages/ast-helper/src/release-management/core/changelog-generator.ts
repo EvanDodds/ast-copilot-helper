@@ -1,21 +1,21 @@
 /**
  * Automated Changelog Generation Implementation
- * 
+ *
  * @fileoverview Implements automated changelog generation with commit analysis,
  * categorization, conventional commits parsing, and release notes generation.
- * 
+ *
  * @author GitHub Copilot
  * @version 1.0.0
  */
 
-import { ChangelogGenerator } from '../interfaces.js';
-import {
+import type { ChangelogGenerator } from "../interfaces.js";
+import type {
   ChangelogConfig,
   ChangelogEntry,
-  ReleaseNotes
-} from '../types.js';
+  ReleaseNotes,
+} from "../types.js";
 
-import { execSync } from 'child_process';
+import { execSync } from "child_process";
 
 /**
  * Automated changelog generation implementation
@@ -28,12 +28,14 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
    * Initialize changelog generator with configuration
    */
   async initialize(config: ChangelogConfig): Promise<void> {
-    console.log('📝 Initializing changelog generator...');
-    
+    console.log("📝 Initializing changelog generator...");
+
     this.config = config;
     this.initialized = true;
-    
-    console.log(`✅ Changelog generator initialized (format: ${config.format})`);
+
+    console.log(
+      `✅ Changelog generator initialized (format: ${config.format})`,
+    );
   }
 
   /**
@@ -41,27 +43,30 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
    */
   async detectChangesSince(version: string): Promise<ChangelogEntry[]> {
     this.ensureInitialized();
-    
+
     console.log(`🔍 Detecting changes since version: ${version}`);
-    
+
     try {
       // Get commit history since the specified version
       const commits = await this.getCommitsSince(version);
-      
+
       // Parse commits into changelog entries
       const entries = await this.parseCommits(commits);
-      
+
       // Filter out excluded types
-      const filteredEntries = entries.filter(entry => 
-        !this.config.excludeTypes.includes(entry.type)
+      const filteredEntries = entries.filter(
+        (entry) => !this.config.excludeTypes.includes(entry.type),
       );
-      
-      console.log(`✅ Detected ${filteredEntries.length} changes since ${version}`);
+
+      console.log(
+        `✅ Detected ${filteredEntries.length} changes since ${version}`,
+      );
       return filteredEntries;
-      
     } catch (error) {
       console.error(`❌ Failed to detect changes since ${version}:`, error);
-      throw new Error(`Failed to detect changes: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to detect changes: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -70,11 +75,11 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
    */
   async categorizeChanges(commits: Commit[]): Promise<ChangelogEntry[]> {
     this.ensureInitialized();
-    
+
     console.log(`📊 Categorizing ${commits.length} commits`);
-    
+
     const entries: ChangelogEntry[] = [];
-    
+
     for (const commit of commits) {
       try {
         const entry = await this.parseCommitMessage(commit);
@@ -83,11 +88,13 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
           entries.push(entry);
         }
       } catch (error) {
-        console.warn(`⚠️ Failed to parse commit ${commit.hash}: ${error instanceof Error ? error.message : String(error)}`);
+        console.warn(
+          `⚠️ Failed to parse commit ${commit.hash}: ${error instanceof Error ? error.message : String(error)}`,
+        );
         // Continue processing other commits
       }
     }
-    
+
     console.log(`✅ Categorized ${entries.length} changelog entries`);
     return entries;
   }
@@ -97,31 +104,44 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
    */
   async generateEntries(changes: ChangelogEntry[]): Promise<ChangelogEntry[]> {
     this.ensureInitialized();
-    
+
     console.log(`📋 Generating entries from ${changes.length} changes`);
-    
+
     // Sort changes by type and scope
     const sortedChanges = changes.sort((a, b) => {
       // Breaking changes first
-      if (a.breaking && !b.breaking) return -1;
-      if (!a.breaking && b.breaking) return 1;
-      
+      if (a.breaking && !b.breaking) {
+        return -1;
+      }
+      if (!a.breaking && b.breaking) {
+        return 1;
+      }
+
       // Then by type priority
-      const typePriority = this.getTypePriority(a.type) - this.getTypePriority(b.type);
-      if (typePriority !== 0) return typePriority;
-      
+      const typePriority =
+        this.getTypePriority(a.type) - this.getTypePriority(b.type);
+      if (typePriority !== 0) {
+        return typePriority;
+      }
+
       // Then by scope
       if (a.scope && b.scope) {
         return a.scope.localeCompare(b.scope);
       }
-      if (a.scope && !b.scope) return -1;
-      if (!a.scope && b.scope) return 1;
-      
+      if (a.scope && !b.scope) {
+        return -1;
+      }
+      if (!a.scope && b.scope) {
+        return 1;
+      }
+
       // Finally by timestamp
       return a.timestamp.getTime() - b.timestamp.getTime();
     });
-    
-    console.log(`✅ Generated ${sortedChanges.length} sorted changelog entries`);
+
+    console.log(
+      `✅ Generated ${sortedChanges.length} sorted changelog entries`,
+    );
     return sortedChanges;
   }
 
@@ -130,15 +150,15 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
    */
   async formatChangelog(entries: ChangelogEntry[]): Promise<string> {
     this.ensureInitialized();
-    
+
     console.log(`📄 Formatting changelog with ${entries.length} entries`);
-    
+
     switch (this.config.format) {
-      case 'keepachangelog':
+      case "keepachangelog":
         return this.formatKeepAChangelog(entries);
-      case 'conventional':
+      case "conventional":
         return this.formatConventionalChangelog(entries);
-      case 'custom':
+      case "custom":
         return this.formatCustomChangelog(entries);
       default:
         throw new Error(`Unsupported changelog format: ${this.config.format}`);
@@ -150,32 +170,34 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
    */
   async parseCommits(commits: string[]): Promise<ChangelogEntry[]> {
     this.ensureInitialized();
-    
+
     console.log(`🔍 Parsing ${commits.length} commit messages`);
-    
+
     const entries: ChangelogEntry[] = [];
-    
+
     for (const commit of commits) {
       try {
         let parsed: ChangelogEntry | null = null;
-        
+
         // Check if commit is in pipe-delimited format (from git log)
-        if (commit.includes('|')) {
+        if (commit.includes("|")) {
           parsed = this.parseConventionalCommit(commit);
         } else {
           // Handle simple commit message format (for tests and direct usage)
           parsed = this.parseSimpleCommitMessage(commit);
         }
-        
+
         // Filter out excluded types
         if (parsed && !this.config.excludeTypes.includes(parsed.type)) {
           entries.push(parsed);
         }
       } catch (error) {
-        console.warn(`⚠️ Failed to parse commit message: ${error instanceof Error ? error.message : String(error)}`);
+        console.warn(
+          `⚠️ Failed to parse commit message: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
-    
+
     console.log(`✅ Parsed ${entries.length} commit entries`);
     return entries;
   }
@@ -183,53 +205,69 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
   /**
    * Generate release notes from changelog entries
    */
-  async generateReleaseNotes(version: string, entries: ChangelogEntry[]): Promise<ReleaseNotes> {
+  async generateReleaseNotes(
+    version: string,
+    entries: ChangelogEntry[],
+  ): Promise<ReleaseNotes> {
     this.ensureInitialized();
-    
+
     console.log(`📄 Generating release notes for version: ${version}`);
-    
-    const breakingChanges = entries.filter(e => e.breaking);
-    const newFeatures = entries.filter(e => e.type === 'feat' || e.type === 'feature');
-    const bugFixes = entries.filter(e => e.type === 'fix');
-    const improvements = entries.filter(e => e.type === 'refactor' || e.type === 'perf');
-    
+
+    const breakingChanges = entries.filter((e) => e.breaking);
+    const newFeatures = entries.filter(
+      (e) => e.type === "feat" || e.type === "feature",
+    );
+    const bugFixes = entries.filter((e) => e.type === "fix");
+    const improvements = entries.filter(
+      (e) => e.type === "refactor" || e.type === "perf",
+    );
+
     // Generate highlights
     const highlights: string[] = [];
-    
+
     if (newFeatures.length > 0) {
-      highlights.push(`🎉 ${newFeatures.length} new feature${newFeatures.length === 1 ? '' : 's'}`);
+      highlights.push(
+        `🎉 ${newFeatures.length} new feature${newFeatures.length === 1 ? "" : "s"}`,
+      );
     }
-    
+
     if (bugFixes.length > 0) {
-      highlights.push(`🐛 ${bugFixes.length} bug fix${bugFixes.length === 1 ? '' : 'es'}`);
+      highlights.push(
+        `🐛 ${bugFixes.length} bug fix${bugFixes.length === 1 ? "" : "es"}`,
+      );
     }
-    
+
     if (improvements.length > 0) {
-      highlights.push(`⚡ ${improvements.length} improvement${improvements.length === 1 ? '' : 's'}`);
+      highlights.push(
+        `⚡ ${improvements.length} improvement${improvements.length === 1 ? "" : "s"}`,
+      );
     }
-    
+
     if (breakingChanges.length > 0) {
-      highlights.push(`💥 ${breakingChanges.length} breaking change${breakingChanges.length === 1 ? '' : 's'}`);
+      highlights.push(
+        `💥 ${breakingChanges.length} breaking change${breakingChanges.length === 1 ? "" : "s"}`,
+      );
     }
-    
+
     // Generate description
     const description = this.generateDescription(version, entries);
-    
+
     const releaseNotes: ReleaseNotes = {
       version,
       title: `Release ${version}`,
       description,
       date: new Date(),
       highlights,
-      breakingChanges: breakingChanges.map(c => c.description),
+      breakingChanges: breakingChanges.map((c) => c.description),
       knownIssues: [], // Would be populated from issue tracking
-      migrationGuide: breakingChanges.length > 0 ? 
-        `Please review the breaking changes above and update your code accordingly.` : 
-        undefined,
+      migrationGuide:
+        breakingChanges.length > 0
+          ? `Please review the breaking changes above and update your code accordingly.`
+          : undefined,
       downloadLinks: [], // Would be populated after publishing
-      acknowledgments: this.generateAcknowledgments(entries)
+      acknowledgments: this.generateAcknowledgments(entries),
     };
-    
+
     console.log(`✅ Generated release notes for ${version}`);
     return releaseNotes;
   }
@@ -238,25 +276,30 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
 
   private ensureInitialized(): void {
     if (!this.initialized) {
-      throw new Error('ChangelogGenerator not initialized. Call initialize() first.');
+      throw new Error(
+        "ChangelogGenerator not initialized. Call initialize() first.",
+      );
     }
   }
 
   private async getCommitsSince(version: string): Promise<string[]> {
     try {
       // Get commit messages since the specified version/tag
-      const command = version === 'HEAD' ? 
-        'git log --pretty=format:"%H|%an|%ad|%s|%b" --date=iso' :
-        `git log ${version}..HEAD --pretty=format:"%H|%an|%ad|%s|%b" --date=iso`;
-      
-      const result = execSync(command, { 
-        encoding: 'utf8', 
-        stdio: ['pipe', 'pipe', 'ignore'],
-        cwd: process.cwd()
+      const command =
+        version === "HEAD"
+          ? 'git log --pretty=format:"%H|%an|%ad|%s|%b" --date=iso'
+          : `git log ${version}..HEAD --pretty=format:"%H|%an|%ad|%s|%b" --date=iso`;
+
+      const result = execSync(command, {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "ignore"],
+        cwd: process.cwd(),
       });
-      
-      return result.trim().split('\n').filter(line => line.trim());
-      
+
+      return result
+        .trim()
+        .split("\n")
+        .filter((line) => line.trim());
     } catch (error) {
       console.warn(`⚠️ Failed to get git commits:`, error);
       // Re-throw to let calling method handle it
@@ -264,92 +307,110 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     }
   }
 
-  private async parseCommitMessage(commit: Commit): Promise<ChangelogEntry | null> {
+  private async parseCommitMessage(
+    commit: Commit,
+  ): Promise<ChangelogEntry | null> {
     // Try to parse as conventional commit first
-    const conventional = this.parseConventionalCommit(`${commit.hash}|${commit.author}|${commit.date.toISOString()}|${commit.message}|`);
-    
+    const conventional = this.parseConventionalCommit(
+      `${commit.hash}|${commit.author}|${commit.date.toISOString()}|${commit.message}|`,
+    );
+
     if (conventional) {
       return conventional;
     }
-    
+
     // Fall back to basic parsing
     return {
-      type: 'other',
+      type: "other",
       description: commit.message,
       breaking: false,
       author: commit.author,
       commit: commit.hash,
       timestamp: commit.date,
-      affectedPackages: []
+      affectedPackages: [],
     };
   }
 
   private parseSimpleCommitMessage(message: string): ChangelogEntry | null {
-    if (!message || !message.trim()) return null;
-    
+    if (!message || !message.trim()) {
+      return null;
+    }
+
     // Parse conventional commit format: type(scope): description
-    const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?\!?:\s*(.+)$/;
+    const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/;
     const match = message.trim().match(conventionalRegex);
-    
+
     if (!match) {
       // Not a conventional commit, return null to be filtered out
       return null;
     }
-    
+
     const [, type, scope, description] = match;
-    if (!type || !description) return null;
-    
+    if (!type || !description) {
+      return null;
+    }
+
     // Check for breaking change indicators
-    const breaking = message.includes('!:');
-    
+    const breaking = message.includes("!:");
+
     return {
       type,
       scope,
       description,
       breaking: Boolean(breaking),
-      author: 'Unknown', // Default for simple messages
-      commit: 'unknown', // Default for simple messages  
+      author: "Unknown", // Default for simple messages
+      commit: "unknown", // Default for simple messages
       timestamp: new Date(), // Default to current time
-      affectedPackages: scope ? [scope] : []
+      affectedPackages: scope ? [scope] : [],
     };
   }
 
   private parseConventionalCommit(commitLine: string): ChangelogEntry | null {
-    const parts = commitLine.split('|');
-    if (parts.length < 4) return null;
-    
+    const parts = commitLine.split("|");
+    if (parts.length < 4) {
+      return null;
+    }
+
     const [hash, author, dateStr, message, body] = parts;
-    if (!hash || !author || !dateStr || !message) return null;
-    
+    if (!hash || !author || !dateStr || !message) {
+      return null;
+    }
+
     const date = new Date(dateStr);
-    
+
     // Parse conventional commit format: type(scope): description
-    const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?\!?:\s*(.+)$/;
+    const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/;
     const match = message.match(conventionalRegex);
-    
+
     if (!match) {
       // Not a conventional commit, create basic entry
       return {
-        type: 'other',
+        type: "other",
         description: message,
         breaking: false,
         author,
         commit: hash,
         timestamp: date,
-        affectedPackages: []
+        affectedPackages: [],
       };
     }
-    
+
     const [, type, scope, description] = match;
-    if (!type || !description) return null;
-    
+    if (!type || !description) {
+      return null;
+    }
+
     // Check for breaking change indicators
-    const breaking = message.includes('!:') || 
-                    (body && body.toLowerCase().includes('breaking change'));
-    
+    const breaking =
+      message.includes("!:") ||
+      (body && body.toLowerCase().includes("breaking change"));
+
     // Extract affected packages from scope or body
-    const affectedPackages = this.extractAffectedPackages(scope || '', body || '');
-    
+    const affectedPackages = this.extractAffectedPackages(
+      scope || "",
+      body || "",
+    );
+
     return {
       type,
       scope,
@@ -359,137 +420,180 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
       author,
       commit: hash,
       timestamp: date,
-      affectedPackages
+      affectedPackages,
     };
   }
 
   private extractAffectedPackages(scope: string, body: string): string[] {
     const packages = new Set<string>();
-    
+
     // Extract from scope
     if (scope) {
       packages.add(scope);
     }
-    
+
     // Extract from body (look for package names)
     const packagePattern = /@[\w-]+\/[\w-]+|packages\/[\w-]+/g;
     const bodyMatches = body.match(packagePattern);
     if (bodyMatches) {
-      bodyMatches.forEach(match => packages.add(match));
+      bodyMatches.forEach((match) => packages.add(match));
     }
-    
+
     return Array.from(packages);
   }
 
   private getTypePriority(type: string): number {
     const priorities: Record<string, number> = {
-      'feat': 1,
-      'feature': 1,
-      'fix': 2,
-      'perf': 3,
-      'refactor': 4,
-      'docs': 5,
-      'style': 6,
-      'test': 7,
-      'build': 8,
-      'ci': 9,
-      'chore': 10,
-      'other': 11
+      feat: 1,
+      feature: 1,
+      fix: 2,
+      perf: 3,
+      refactor: 4,
+      docs: 5,
+      style: 6,
+      test: 7,
+      build: 8,
+      ci: 9,
+      chore: 10,
+      other: 11,
     };
-    
+
     return priorities[type] || 11;
   }
 
   private formatKeepAChangelog(entries: ChangelogEntry[]): string {
     const typeMapping: Record<string, string> = {
-      'feat': 'Added',
-      'feature': 'Added',
-      'fix': 'Fixed',
-      'refactor': 'Changed',
-      'perf': 'Changed',
-      'docs': 'Changed',
-      'style': 'Changed',
-      'test': 'Changed',
-      'build': 'Changed',
-      'ci': 'Changed',
-      'chore': 'Changed'
+      feat: "Added",
+      feature: "Added",
+      fix: "Fixed",
+      refactor: "Changed",
+      perf: "Changed",
+      docs: "Changed",
+      style: "Changed",
+      test: "Changed",
+      build: "Changed",
+      ci: "Changed",
+      chore: "Changed",
     };
-    
+
     const grouped: Record<string, ChangelogEntry[]> = {};
-    
+
     // Group entries by keepachangelog sections
     for (const entry of entries) {
-      const section = typeMapping[entry.type] || 'Changed';
+      const section = typeMapping[entry.type] || "Changed";
       if (!grouped[section]) {
         grouped[section] = [];
       }
       grouped[section].push(entry);
     }
-    
-    let changelog = '';
-    
+
+    let changelog = "";
+
     // Output in keepachangelog order
-    const sectionOrder = ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security'];
-    
+    const sectionOrder = [
+      "Added",
+      "Changed",
+      "Deprecated",
+      "Removed",
+      "Fixed",
+      "Security",
+    ];
+
     for (const sectionName of sectionOrder) {
       const sectionEntries = grouped[sectionName];
-      if (!sectionEntries || sectionEntries.length === 0) continue;
-      
+      if (!sectionEntries || sectionEntries.length === 0) {
+        continue;
+      }
+
       changelog += `### ${sectionName}\n\n`;
-      
+
       for (const entry of sectionEntries) {
-        const scope = entry.scope ? `**${entry.scope}**: ` : '';
-        const breaking = entry.breaking ? '**BREAKING:** ' : '';
-        const author = this.config.includeAuthor && entry.author ? ` (by ${entry.author})` : '';
-        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` ([${entry.commit}](commit/${entry.commit}))` : '';
+        const scope = entry.scope ? `**${entry.scope}**: ` : "";
+        const breaking = entry.breaking ? "**BREAKING:** " : "";
+        const author =
+          this.config.includeAuthor && entry.author
+            ? ` (by ${entry.author})`
+            : "";
+        const commit =
+          this.config.includeCommitLinks &&
+          entry.commit &&
+          entry.commit !== "unknown"
+            ? ` ([${entry.commit}](commit/${entry.commit}))`
+            : "";
         changelog += `- ${breaking}${scope}${entry.description}${author}${commit}\n`;
       }
-      
-      changelog += '\n';
+
+      changelog += "\n";
     }
-    
+
     return changelog;
   }
 
   private formatConventionalChangelog(entries: ChangelogEntry[]): string {
-    const breakingChanges = entries.filter(e => e.breaking);
-    const features = entries.filter(e => e.type === 'feat' || e.type === 'feature');
-    const fixes = entries.filter(e => e.type === 'fix');
-    
-    let changelog = '';
-    
+    const breakingChanges = entries.filter((e) => e.breaking);
+    const features = entries.filter(
+      (e) => e.type === "feat" || e.type === "feature",
+    );
+    const fixes = entries.filter((e) => e.type === "fix");
+
+    let changelog = "";
+
     if (breakingChanges.length > 0) {
-      changelog += '### BREAKING CHANGES\n\n';
-      breakingChanges.forEach(entry => {
-        const author = this.config.includeAuthor && entry.author ? ` (by ${entry.author})` : '';
-        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` ([${entry.commit}](commit/${entry.commit}))` : '';
+      changelog += "### BREAKING CHANGES\n\n";
+      breakingChanges.forEach((entry) => {
+        const author =
+          this.config.includeAuthor && entry.author
+            ? ` (by ${entry.author})`
+            : "";
+        const commit =
+          this.config.includeCommitLinks &&
+          entry.commit &&
+          entry.commit !== "unknown"
+            ? ` ([${entry.commit}](commit/${entry.commit}))`
+            : "";
         changelog += `* ${entry.description}${author}${commit}\n`;
       });
-      changelog += '\n';
+      changelog += "\n";
     }
-    
+
     if (features.length > 0) {
-      changelog += '### Features\n\n';
-      features.forEach(entry => {
-        const scope = entry.scope ? `**${entry.scope}**: ` : '';
-        const author = this.config.includeAuthor && entry.author ? ` (by ${entry.author})` : '';
-        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` ([${entry.commit}](commit/${entry.commit}))` : '';
+      changelog += "### Features\n\n";
+      features.forEach((entry) => {
+        const scope = entry.scope ? `**${entry.scope}**: ` : "";
+        const author =
+          this.config.includeAuthor && entry.author
+            ? ` (by ${entry.author})`
+            : "";
+        const commit =
+          this.config.includeCommitLinks &&
+          entry.commit &&
+          entry.commit !== "unknown"
+            ? ` ([${entry.commit}](commit/${entry.commit}))`
+            : "";
         changelog += `* ${scope}${entry.description}${author}${commit}\n`;
       });
-      changelog += '\n';
+      changelog += "\n";
     }
-    
+
     if (fixes.length > 0) {
-      changelog += '### Bug Fixes\n\n';
-      fixes.forEach(entry => {
-        const scope = entry.scope ? `**${entry.scope}**: ` : '';
-        const author = this.config.includeAuthor && entry.author ? ` (by ${entry.author})` : '';
-        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` ([${entry.commit}](commit/${entry.commit}))` : '';
+      changelog += "### Bug Fixes\n\n";
+      fixes.forEach((entry) => {
+        const scope = entry.scope ? `**${entry.scope}**: ` : "";
+        const author =
+          this.config.includeAuthor && entry.author
+            ? ` (by ${entry.author})`
+            : "";
+        const commit =
+          this.config.includeCommitLinks &&
+          entry.commit &&
+          entry.commit !== "unknown"
+            ? ` ([${entry.commit}](commit/${entry.commit}))`
+            : "";
         changelog += `* ${scope}${entry.description}${author}${commit}\n`;
       });
-      changelog += '\n';
+      changelog += "\n";
     }
-    
+
     return changelog;
   }
 
@@ -497,7 +601,7 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
     if (!this.config.customTemplate) {
       return this.formatConventionalChangelog(entries);
     }
-    
+
     // Group entries by type
     const grouped: Record<string, ChangelogEntry[]> = {};
     for (const entry of entries) {
@@ -506,73 +610,101 @@ export class ChangelogGeneratorImpl implements ChangelogGenerator {
       }
       grouped[entry.type]!.push(entry);
     }
-    
+
     // Simple template replacement - handle both single braces and double braces
     let result = this.config.customTemplate;
-    
+
     // Replace version placeholder
-    result = result.replace(/\{version\}/g, '{version}'); // Keep as placeholder for now
-    
+    result = result.replace(/\{version\}/g, "{version}"); // Keep as placeholder for now
+
     // Replace each type section
     for (const [type, typeEntries] of Object.entries(grouped)) {
-      const typeSection = typeEntries.map(entry => {
-        const scope = entry.scope ? `(${entry.scope})` : '';
-        const author = this.config.includeAuthor && entry.author ? ` by ${entry.author}` : '';
-        const commit = this.config.includeCommitLinks && entry.commit && entry.commit !== 'unknown' ? ` [${entry.commit}]` : '';
-        return `${entry.description}${scope}${author}${commit}`;
-      }).join('\n- ');
-      
+      const typeSection = typeEntries
+        .map((entry) => {
+          const scope = entry.scope ? `(${entry.scope})` : "";
+          const author =
+            this.config.includeAuthor && entry.author
+              ? ` by ${entry.author}`
+              : "";
+          const commit =
+            this.config.includeCommitLinks &&
+            entry.commit &&
+            entry.commit !== "unknown"
+              ? ` [${entry.commit}]`
+              : "";
+          return `${entry.description}${scope}${author}${commit}`;
+        })
+        .join("\n- ");
+
       result = result.replace(`{type}`, type);
       result = result.replace(`{description}`, typeSection);
     }
-    
+
     // Replace any remaining placeholders with first entry data if available
     if (entries.length > 0) {
       const firstEntry = entries[0]!;
       result = result.replace(/\{type\}/g, firstEntry.type);
       result = result.replace(/\{description\}/g, firstEntry.description);
     }
-    
+
     // Replace count
     result = result.replace(/\{count\}/g, entries.length.toString());
-    result = result.replace(/\{\{entries\}\}/g, entries.map(e => `- ${e.description}`).join('\n'));
+    result = result.replace(
+      /\{\{entries\}\}/g,
+      entries.map((e) => `- ${e.description}`).join("\n"),
+    );
     result = result.replace(/\{\{count\}\}/g, entries.length.toString());
-    
+
     return result;
   }
 
-  private generateDescription(_version: string, entries: ChangelogEntry[]): string {
+  private generateDescription(
+    _version: string,
+    entries: ChangelogEntry[],
+  ): string {
     const totalChanges = entries.length;
-    const breakingChanges = entries.filter(e => e.breaking).length;
-    const features = entries.filter(e => e.type === 'feat' || e.type === 'feature').length;
-    const fixes = entries.filter(e => e.type === 'fix').length;
-    
+    const breakingChanges = entries.filter((e) => e.breaking).length;
+    const features = entries.filter(
+      (e) => e.type === "feat" || e.type === "feature",
+    ).length;
+    const fixes = entries.filter((e) => e.type === "fix").length;
+
     let description = `This release includes ${totalChanges} changes`;
-    
+
     const parts: string[] = [];
-    if (features > 0) parts.push(`${features} new feature${features === 1 ? '' : 's'}`);
-    if (fixes > 0) parts.push(`${fixes} bug fix${fixes === 1 ? '' : 'es'}`);
-    if (breakingChanges > 0) parts.push(`${breakingChanges} breaking change${breakingChanges === 1 ? '' : 's'}`);
-    
-    if (parts.length > 0) {
-      description += ` including ${parts.join(', ')}`;
+    if (features > 0) {
+      parts.push(`${features} new feature${features === 1 ? "" : "s"}`);
     }
-    
-    description += '.';
-    
+    if (fixes > 0) {
+      parts.push(`${fixes} bug fix${fixes === 1 ? "" : "es"}`);
+    }
+    if (breakingChanges > 0) {
+      parts.push(
+        `${breakingChanges} breaking change${breakingChanges === 1 ? "" : "s"}`,
+      );
+    }
+
+    if (parts.length > 0) {
+      description += ` including ${parts.join(", ")}`;
+    }
+
+    description += ".";
+
     return description;
   }
 
   private generateAcknowledgments(entries: ChangelogEntry[]): string[] {
     const authors = new Set<string>();
-    
-    entries.forEach(entry => {
+
+    entries.forEach((entry) => {
       if (entry.author) {
         authors.add(entry.author);
       }
     });
-    
-    return Array.from(authors).map(author => `Thanks to @${author} for contributing to this release!`);
+
+    return Array.from(authors).map(
+      (author) => `Thanks to @${author} for contributing to this release!`,
+    );
   }
 }
 

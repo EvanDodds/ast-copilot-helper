@@ -11,6 +11,7 @@ The AST Copilot Helper project includes a comprehensive security framework desig
 The security framework is built around four primary components that work together to provide comprehensive protection:
 
 #### 1. ComprehensiveSecurityAuditor
+
 **Location**: `packages/ast-helper/src/security/auditor.ts`
 
 The security auditor performs comprehensive security assessments with the following capabilities:
@@ -22,6 +23,7 @@ The security auditor performs comprehensive security assessments with the follow
 - **Policy Enforcement**: Configurable security policies with compliance validation
 
 **Key Features**:
+
 - 6 comprehensive audit sections covering all security domains
 - Automated dependency vulnerability scanning
 - Risk scoring algorithms based on industry standards
@@ -29,6 +31,7 @@ The security auditor performs comprehensive security assessments with the follow
 - Integration with external security databases and threat intelligence
 
 #### 2. ComprehensiveInputValidator
+
 **Location**: `packages/ast-helper/src/security/input-validator.ts`
 
 Advanced input validation and sanitization engine with the following protections:
@@ -41,6 +44,7 @@ Advanced input validation and sanitization engine with the following protections
 - **Context-Aware Sanitization**: Input sanitization based on usage context
 
 **Supported Validation Types**:
+
 - Text input sanitization with XSS pattern detection
 - Numeric input validation with range checking
 - Array and object validation with depth limits
@@ -49,6 +53,7 @@ Advanced input validation and sanitization engine with the following protections
 - Custom validation rules with extensible rule engine
 
 #### 3. VulnerabilityScanner
+
 **Location**: `packages/ast-helper/src/security/vulnerability-scanner.ts`
 
 Pattern-based vulnerability detection system with comprehensive coverage:
@@ -60,12 +65,14 @@ Pattern-based vulnerability detection system with comprehensive coverage:
 - **Code Quality Issues**: Security-relevant code smells and anti-patterns
 
 **Vulnerability Categories**:
+
 - **Critical**: Remote code execution, authentication bypass
 - **High**: Data exposure, privilege escalation
 - **Medium**: Information disclosure, denial of service
 - **Low**: Best practice violations, hardening recommendations
 
 #### 4. SecurityHardeningFramework
+
 **Location**: `packages/ast-helper/src/security/security-hardening-framework.ts`
 
 Security policy enforcement and configuration management system:
@@ -77,6 +84,7 @@ Security policy enforcement and configuration management system:
 - **Security Baselines**: Industry-standard security baseline enforcement
 
 **Policy Categories**:
+
 - Authentication and authorization policies
 - Data encryption and protection policies
 - Network security and communication policies
@@ -90,12 +98,14 @@ Security policy enforcement and configuration management system:
 The security framework includes comprehensive test coverage with multiple testing layers:
 
 #### Unit Tests (139+ Tests)
+
 - **Core Architecture Tests**: 40 tests covering security auditor functionality
 - **Input Validation Tests**: 40 tests covering all validation scenarios
 - **Vulnerability Scanner Tests**: 30 tests covering detection patterns
 - **Security Hardening Tests**: 29+ tests covering policy enforcement
 
 #### Integration Tests (14 Tests)
+
 - **End-to-End Workflow Testing**: Complete security pipeline validation
 - **Component Integration**: Cross-component communication and data flow
 - **Performance Testing**: Security operations under load
@@ -114,7 +124,7 @@ yarn test tests/integration/security-integration.test.ts
 
 # Run specific security test suites
 yarn test tests/unit/security/core-architecture.test.ts
-yarn test tests/unit/security/input-validation-system.test.ts  
+yarn test tests/unit/security/input-validation-system.test.ts
 yarn test tests/unit/security/vulnerability-detection-engine.test.ts
 yarn test tests/unit/security/security-hardening-framework.test.ts
 
@@ -129,35 +139,35 @@ yarn run test:security
 The security framework uses a comprehensive default configuration that can be customized:
 
 ```typescript
-import { DEFAULT_SECURITY_CONFIG } from 'packages/ast-helper/src/security/config';
+import { DEFAULT_SECURITY_CONFIG } from "packages/ast-helper/src/security/config";
 
 const config = {
   // Audit Configuration
-  auditLevel: 'comprehensive',
+  auditLevel: "comprehensive",
   dependencyScanning: true,
-  complianceFrameworks: ['OWASP', 'CWE', 'NIST'],
-  
-  // Input Validation Configuration  
+  complianceFrameworks: ["OWASP", "CWE", "NIST"],
+
+  // Input Validation Configuration
   validation: {
     enableSanitization: true,
     strictMode: true,
     customRules: [],
-    contextAware: true
+    contextAware: true,
   },
-  
+
   // Vulnerability Scanning Configuration
   scanning: {
     patternMatching: true,
     riskScoring: true,
-    findingCategories: ['critical', 'high', 'medium', 'low']
+    findingCategories: ["critical", "high", "medium", "low"],
   },
-  
+
   // Security Hardening Configuration
   hardening: {
     policyEnforcement: true,
     complianceChecking: true,
-    accessControl: true
-  }
+    accessControl: true,
+  },
 };
 ```
 
@@ -166,7 +176,7 @@ const config = {
 You can define custom security policies by extending the base configuration:
 
 ```typescript
-import { SecurityConfig } from 'packages/ast-helper/src/security/types';
+import { SecurityConfig } from "packages/ast-helper/src/security/types";
 
 const customConfig: SecurityConfig = {
   ...DEFAULT_SECURITY_CONFIG,
@@ -174,36 +184,40 @@ const customConfig: SecurityConfig = {
     ...DEFAULT_SECURITY_CONFIG.validation,
     customRules: [
       {
-        name: 'custom-email-validation',
+        name: "custom-email-validation",
         pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-        message: 'Invalid email format'
-      }
-    ]
-  }
+        message: "Invalid email format",
+      },
+    ],
+  },
 };
 ```
 
 ## Vulnerability Categories
 
 ### Critical Vulnerabilities
+
 - Remote Code Execution (RCE)
 - Authentication Bypass
 - Privilege Escalation
 - SQL Injection with Admin Access
 
-### High Vulnerabilities  
+### High Vulnerabilities
+
 - Cross-Site Scripting (XSS)
 - Local File Inclusion (LFI)
 - Hardcoded Credentials
 - Insecure Direct Object References
 
 ### Medium Vulnerabilities
+
 - Information Disclosure
 - Denial of Service (DoS)
 - Cross-Site Request Forgery (CSRF)
 - Weak Cryptographic Storage
 
 ### Low Vulnerabilities
+
 - Best Practice Violations
 - Configuration Hardening
 - Code Quality Issues
@@ -251,7 +265,7 @@ The security framework addresses all OWASP Top 10 vulnerabilities:
 3. **A03 Injection** - Comprehensive injection attack prevention
 4. **A04 Insecure Design** - Secure design patterns and architecture
 5. **A05 Security Misconfiguration** - Configuration security validation
-6. **A06 Vulnerable Components** - Dependency vulnerability scanning  
+6. **A06 Vulnerable Components** - Dependency vulnerability scanning
 7. **A07 Authentication Failures** - Authentication mechanism validation
 8. **A08 Data Integrity Failures** - Data validation and integrity checks
 9. **A09 Logging/Monitoring Failures** - Comprehensive security logging
@@ -260,8 +274,9 @@ The security framework addresses all OWASP Top 10 vulnerabilities:
 ### CWE (Common Weakness Enumeration) Support
 
 The framework addresses key CWE categories:
+
 - CWE-79: Cross-site Scripting
-- CWE-89: SQL Injection  
+- CWE-89: SQL Injection
 - CWE-22: Path Traversal
 - CWE-78: OS Command Injection
 - CWE-200: Information Exposure
@@ -305,13 +320,14 @@ We do not currently offer a bug bounty program, but we recognize and appreciate 
 ### Update Policy
 
 - **Critical Security Issues**: Patched within 24-48 hours
-- **High Security Issues**: Patched within 1 week  
+- **High Security Issues**: Patched within 1 week
 - **Medium Security Issues**: Patched within 1 month
 - **Low Security Issues**: Addressed in regular release cycle
 
 ### Security Notifications
 
 Subscribe to security notifications through:
+
 - GitHub security advisories
 - Release notes with security fixes
 - Documentation updates for security changes
@@ -327,6 +343,7 @@ Subscribe to security notifications through:
 ## Contact
 
 For security-related questions and concerns:
+
 - **Security Issues**: Use GitHub's private security advisory system
 - **General Security Questions**: Open a regular GitHub issue with the `security` label
 - **Security Documentation**: Submit pull requests for documentation improvements

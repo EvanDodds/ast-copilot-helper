@@ -1,13 +1,13 @@
-import {
+import type {
   DistributionConfig,
   ValidationResult,
-  VerificationResult
-} from './types.js';
-import { NPMPublisher } from './npm-publisher.js';
+  VerificationResult,
+} from "./types.js";
+import { NPMPublisher } from "./npm-publisher.js";
 // import { VSCodeMarketplacePublisher } from './vscode-marketplace-publisher.js';
-import { GitHubReleaseManager } from './github-release-manager.js';
-import { BinaryDistributor } from './binary-distributor.js';
-import { AutoUpdateManager } from './auto-update-manager.js';
+import { GitHubReleaseManager } from "./github-release-manager.js";
+import { BinaryDistributor } from "./binary-distributor.js";
+import { AutoUpdateManager } from "./auto-update-manager.js";
 
 /**
  * Publisher interface that all distribution channels must implement
@@ -49,28 +49,28 @@ export class DistributionOrchestrator {
 
   async initialize(config: DistributionConfig): Promise<void> {
     this.config = config;
-    
+
     // Initialize all publishers
     const npmPublisher = new NPMPublisher();
     await npmPublisher.initialize(config);
-    this.publishers.set('npm', npmPublisher);
-    
+    this.publishers.set("npm", npmPublisher);
+
     // TODO: Uncomment when VS Code marketplace publisher is implemented
     // const vsCodePublisher = new VSCodeMarketplacePublisher();
     // await vsCodePublisher.initialize(config);
     // this.publishers.set('marketplace', vsCodePublisher);
-    
+
     const githubPublisher = new GitHubReleaseManager();
     await githubPublisher.initialize(config);
-    this.publishers.set('github', githubPublisher);
-    
+    this.publishers.set("github", githubPublisher);
+
     const binaryDistributor = new BinaryDistributor();
     await binaryDistributor.initialize(config);
-    this.publishers.set('binary', binaryDistributor);
-    
+    this.publishers.set("binary", binaryDistributor);
+
     const autoUpdateManager = new AutoUpdateManager();
     await autoUpdateManager.initialize(config);
-    this.publishers.set('auto-update', autoUpdateManager);
+    this.publishers.set("auto-update", autoUpdateManager);
   }
 
   /**
@@ -90,13 +90,15 @@ export class DistributionOrchestrator {
       } catch (error: any) {
         results[name] = {
           success: false,
-          errors: [{
-            code: 'VALIDATION_ERROR',
-            message: error.message,
-            field: name,
-            severity: 'error'
-          }],
-          warnings: []
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: error.message,
+              field: name,
+              severity: "error",
+            },
+          ],
+          warnings: [],
         };
         allSuccess = false;
       }
@@ -104,7 +106,7 @@ export class DistributionOrchestrator {
 
     return {
       success: allSuccess,
-      results
+      results,
     };
   }
 
@@ -116,13 +118,15 @@ export class DistributionOrchestrator {
     if (!publisher) {
       return {
         success: false,
-        errors: [{
-          code: 'PUBLISHER_NOT_FOUND',
-          message: `Publisher '${publisherName}' not found`,
-          field: 'publisher',
-          severity: 'error'
-        }],
-        warnings: []
+        errors: [
+          {
+            code: "PUBLISHER_NOT_FOUND",
+            message: `Publisher '${publisherName}' not found`,
+            field: "publisher",
+            severity: "error",
+          },
+        ],
+        warnings: [],
       };
     }
 
@@ -132,27 +136,31 @@ export class DistributionOrchestrator {
   /**
    * Distribute to all channels
    */
-  async distributeAll(options: { parallel?: boolean; continueOnError?: boolean } = {}): Promise<DistributionResult> {
+  async distributeAll(
+    options: { parallel?: boolean; continueOnError?: boolean } = {},
+  ): Promise<DistributionResult> {
     const startTime = Date.now();
     const results: Record<string, any> = {};
     let allSuccess = true;
 
     if (options.parallel) {
       // Run all distributions in parallel
-      const promises = Array.from(this.publishers.entries()).map(async ([name, publisher]) => {
-        try {
-          const result = await publisher.publish();
-          results[name] = result;
-          return { name, success: result.success || true };
-        } catch (error: any) {
-          results[name] = { success: false, error: error.message };
-          return { name, success: false };
-        }
-      });
+      const promises = Array.from(this.publishers.entries()).map(
+        async ([name, publisher]) => {
+          try {
+            const result = await publisher.publish();
+            results[name] = result;
+            return { name, success: result.success || true };
+          } catch (error: any) {
+            results[name] = { success: false, error: error.message };
+            return { name, success: false };
+          }
+        },
+      );
 
       const outcomes = await Promise.allSettled(promises);
-      allSuccess = outcomes.every(outcome => 
-        outcome.status === 'fulfilled' && outcome.value.success
+      allSuccess = outcomes.every(
+        (outcome) => outcome.status === "fulfilled" && outcome.value.success,
       );
     } else {
       // Run distributions sequentially
@@ -181,7 +189,7 @@ export class DistributionOrchestrator {
     return {
       success: allSuccess,
       results,
-      duration
+      duration,
     };
   }
 
@@ -193,7 +201,7 @@ export class DistributionOrchestrator {
     if (!publisher) {
       return {
         success: false,
-        error: `Publisher '${publisherName}' not found`
+        error: `Publisher '${publisherName}' not found`,
       };
     }
 
@@ -202,13 +210,13 @@ export class DistributionOrchestrator {
       const result = await publisher.publish();
       return {
         ...result,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       };
     } catch (error: any) {
       return {
         success: false,
         error: error.message,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       };
     }
   }
@@ -231,12 +239,14 @@ export class DistributionOrchestrator {
       } catch (error: any) {
         results[name] = {
           success: false,
-          checks: [{
-            name: 'verification-error',
-            success: false,
-            message: error.message
-          }],
-          duration: 0
+          checks: [
+            {
+              name: "verification-error",
+              success: false,
+              message: error.message,
+            },
+          ],
+          duration: 0,
         };
         allSuccess = false;
       }
@@ -244,24 +254,29 @@ export class DistributionOrchestrator {
 
     return {
       success: allSuccess,
-      results
+      results,
     };
   }
 
   /**
    * Verify a specific distribution
    */
-  async verify(publisherName: string, publishResult: any): Promise<VerificationResult> {
+  async verify(
+    publisherName: string,
+    publishResult: any,
+  ): Promise<VerificationResult> {
     const publisher = this.publishers.get(publisherName);
     if (!publisher) {
       return {
         success: false,
-        checks: [{
-          name: 'publisher-not-found',
-          success: false,
-          message: `Publisher '${publisherName}' not found`
-        }],
-        duration: 0
+        checks: [
+          {
+            name: "publisher-not-found",
+            success: false,
+            message: `Publisher '${publisherName}' not found`,
+          },
+        ],
+        duration: 0,
       };
     }
 
@@ -284,15 +299,17 @@ export class DistributionOrchestrator {
   /**
    * Generate distribution report
    */
-  async generateReport(options: {
-    channel?: string;
-    version?: string;
-    format?: 'json' | 'html';
-  } = {}): Promise<any> {
+  async generateReport(
+    options: {
+      channel?: string;
+      version?: string;
+      format?: "json" | "html";
+    } = {},
+  ): Promise<any> {
     const report = {
       timestamp: new Date().toISOString(),
       version: options.version || this.config.version,
-      channels: {} as Record<string, any>
+      channels: {} as Record<string, any>,
     };
 
     // If specific channel requested
@@ -301,16 +318,16 @@ export class DistributionOrchestrator {
       if (publisher) {
         // Generate channel-specific report
         report.channels[options.channel] = {
-          status: 'available',
-          lastUpdated: new Date().toISOString()
+          status: "available",
+          lastUpdated: new Date().toISOString(),
         };
       }
     } else {
       // Generate report for all channels
       for (const [name] of this.publishers) {
         report.channels[name] = {
-          status: 'available',
-          lastUpdated: new Date().toISOString()
+          status: "available",
+          lastUpdated: new Date().toISOString(),
         };
       }
     }
@@ -323,7 +340,7 @@ export class DistributionOrchestrator {
    */
   async generateVerificationReport(): Promise<string> {
     const verificationResults = await this.verifyAll();
-    
+
     let html = `
 <!DOCTYPE html>
 <html>
@@ -345,27 +362,29 @@ export class DistributionOrchestrator {
     <h1>Distribution Verification Report</h1>
     <p>Generated: ${new Date().toLocaleString()}</p>
     <p>Version: ${this.config.version}</p>
-    <p>Overall Status: ${verificationResults.success ? '✅ All Verified' : '❌ Some Failed'}</p>
+    <p>Overall Status: ${verificationResults.success ? "✅ All Verified" : "❌ Some Failed"}</p>
   </div>
 `;
 
     if (verificationResults.results) {
-      for (const [channel, result] of Object.entries(verificationResults.results)) {
-        const statusClass = result.success ? 'success' : 'failure';
-        const statusIcon = result.success ? '✅' : '❌';
-        
+      for (const [channel, result] of Object.entries(
+        verificationResults.results,
+      )) {
+        const statusClass = result.success ? "success" : "failure";
+        const statusIcon = result.success ? "✅" : "❌";
+
         html += `
   <div class="channel ${statusClass}">
     <h2>${statusIcon} ${channel}</h2>
-    <p>Status: ${result.success ? 'Verified' : 'Failed'}</p>
+    <p>Status: ${result.success ? "Verified" : "Failed"}</p>
     <p>Duration: ${result.duration}ms</p>
 `;
-        
+
         if (result.checks) {
-          html += '<h3>Checks:</h3>';
+          html += "<h3>Checks:</h3>";
           for (const check of result.checks) {
-            const checkClass = check.success ? 'success' : 'failure';
-            const checkIcon = check.success ? '✅' : '❌';
+            const checkClass = check.success ? "success" : "failure";
+            const checkIcon = check.success ? "✅" : "❌";
             html += `
     <div class="check ${checkClass}">
       <strong>${checkIcon} ${check.name}</strong><br>
@@ -373,8 +392,8 @@ export class DistributionOrchestrator {
     </div>`;
           }
         }
-        
-        html += '</div>';
+
+        html += "</div>";
       }
     }
 

@@ -38,7 +38,7 @@ class EnterpriseReleaseCoordinator {
   }
 
   async planCoordinatedRelease(
-    trigger: ReleaseTrigger
+    trigger: ReleaseTrigger,
   ): Promise<CoordinatedReleasePlan> {
     const affectedRepos = await this.determineAffectedRepositories(trigger);
     const releasePlan: CoordinatedReleasePlan = {
@@ -60,23 +60,23 @@ class EnterpriseReleaseCoordinator {
     for (const repoName of sortedRepos) {
       const manager = this.managers.get(repoName)!;
       const repoConfig = this.config.repositories.find(
-        (r) => r.name === repoName
+        (r) => r.name === repoName,
       )!;
 
       // Determine version increment based on dependencies
       const versionIncrement = await this.calculateVersionIncrement(
         repoName,
-        trigger
+        trigger,
       );
       const currentVersion = await manager.getLatestVersion("stable");
       const nextVersion = await this.calculateNextVersion(
         currentVersion,
-        versionIncrement
+        versionIncrement,
       );
 
       const repoPlan = await manager.planRelease(
         nextVersion,
-        versionIncrement.type
+        versionIncrement.type,
       );
 
       releasePlan.repositories.push({
@@ -100,7 +100,7 @@ class EnterpriseReleaseCoordinator {
   }
 
   async executeCoordinatedRelease(
-    plan: CoordinatedReleasePlan
+    plan: CoordinatedReleasePlan,
   ): Promise<CoordinatedReleaseResult> {
     if (plan.approval.status !== "approved") {
       throw new Error("Release plan not approved");
@@ -139,12 +139,12 @@ class EnterpriseReleaseCoordinator {
         // Update dependency versions
         await this.updateDependentRepositories(
           repoPlan.name,
-          repoResult.version
+          repoResult.version,
         );
       }
 
       result.overallSuccess = result.repositories.every(
-        (r) => r.result.success
+        (r) => r.result.success,
       );
       result.endTime = new Date();
 
@@ -169,7 +169,7 @@ class EnterpriseReleaseCoordinator {
   }
 
   private async determineAffectedRepositories(
-    trigger: ReleaseTrigger
+    trigger: ReleaseTrigger,
   ): Promise<string[]> {
     switch (trigger.type) {
       case "security-patch":
@@ -190,7 +190,7 @@ class EnterpriseReleaseCoordinator {
         for (const [repoName, manager] of this.managers) {
           const changes = await manager.generateChangelog(
             await manager.getLatestVersion("stable"),
-            "HEAD"
+            "HEAD",
           );
           if (changes.entries.length > 0) {
             reposWithChanges.push(repoName);
@@ -206,7 +206,7 @@ class EnterpriseReleaseCoordinator {
   private async handleRepositoryFailure(
     repoName: string,
     repoResult: ReleaseResult,
-    overallResult: CoordinatedReleaseResult
+    overallResult: CoordinatedReleaseResult,
   ): Promise<void> {
     console.error(`Repository ${repoName} failed: ${repoResult.error}`);
 
@@ -309,7 +309,7 @@ class ContainerRegistryPlatform implements Platform {
       const architectures = ["linux/amd64", "linux/arm64", "linux/arm/v7"];
       const manifestList = await this.buildMultiArchImage(
         artifact,
-        architectures
+        architectures,
       );
 
       // Push with retries and progress tracking
@@ -386,7 +386,7 @@ class ContainerRegistryPlatform implements Platform {
   }
 
   private async buildOptimizedImage(
-    artifact: ReleaseArtifact
+    artifact: ReleaseArtifact,
   ): Promise<BuildResult> {
     // Multi-stage build with layer caching
     const dockerfile = this.generateOptimizedDockerfile(artifact);
@@ -410,7 +410,7 @@ class ContainerRegistryPlatform implements Platform {
   }
 
   private async performSecurityScan(
-    imageId: string
+    imageId: string,
   ): Promise<SecurityScanResult> {
     const scanners = [
       new TrivyScanner(),
@@ -419,7 +419,7 @@ class ContainerRegistryPlatform implements Platform {
     ];
 
     const results = await Promise.allSettled(
-      scanners.map((scanner) => scanner.scan(imageId))
+      scanners.map((scanner) => scanner.scan(imageId)),
     );
 
     return this.aggregateScanResults(results);
@@ -467,7 +467,7 @@ class KubernetesDeploymentPlatform implements Platform {
   }
 
   private async blueGreenDeploy(
-    artifact: ReleaseArtifact
+    artifact: ReleaseArtifact,
   ): Promise<PublishResult> {
     const namespace = artifact.config?.namespace || "default";
     const appName = artifact.name;
@@ -476,7 +476,7 @@ class KubernetesDeploymentPlatform implements Platform {
     const greenDeployment = await this.deployToEnvironment(
       artifact,
       `${appName}-green`,
-      namespace
+      namespace,
     );
 
     if (!greenDeployment.success) {
@@ -487,7 +487,7 @@ class KubernetesDeploymentPlatform implements Platform {
     const healthCheck = await this.performHealthChecks(
       `${appName}-green`,
       namespace,
-      artifact.config?.healthChecks || []
+      artifact.config?.healthChecks || [],
     );
 
     if (!healthCheck.passed) {
@@ -523,7 +523,7 @@ class KubernetesDeploymentPlatform implements Platform {
   }
 
   private async canaryDeploy(
-    artifact: ReleaseArtifact
+    artifact: ReleaseArtifact,
   ): Promise<PublishResult> {
     const namespace = artifact.config?.namespace || "default";
     const appName = artifact.name;
@@ -532,7 +532,7 @@ class KubernetesDeploymentPlatform implements Platform {
     // Deploy canary version
     const canaryDeployment = await this.deployCanary(
       artifact,
-      canaryPercentage
+      canaryPercentage,
     );
 
     if (!canaryDeployment.success) {
@@ -543,7 +543,7 @@ class KubernetesDeploymentPlatform implements Platform {
     const monitoringResult = await this.monitorCanaryMetrics(
       appName,
       namespace,
-      artifact.config?.monitoringDuration || 600000 // 10 minutes
+      artifact.config?.monitoringDuration || 600000, // 10 minutes
     );
 
     if (!monitoringResult.successful) {
@@ -566,7 +566,7 @@ class KubernetesDeploymentPlatform implements Platform {
       const stageResult = await this.monitorCanaryMetrics(
         appName,
         namespace,
-        180000 // 3 minutes per stage
+        180000, // 3 minutes per stage
       );
 
       if (!stageResult.successful) {
@@ -609,7 +609,7 @@ class KubernetesDeploymentPlatform implements Platform {
         await this.k8sClient.listReplicaSetForAllNamespaces();
       const previousRS = this.findPreviousReplicaSet(
         deployment.metadata.name,
-        rolloutHistory
+        rolloutHistory,
       );
 
       if (!previousRS) {
@@ -629,7 +629,7 @@ class KubernetesDeploymentPlatform implements Platform {
                 ],
             },
           },
-        }
+        },
       );
 
       // Wait for rollback completion
@@ -686,7 +686,7 @@ class SecurityValidationRule implements ValidationRule {
   }
 
   private async checkDependencyVulnerabilities(
-    plan: ReleasePlan
+    plan: ReleasePlan,
   ): Promise<SecurityCheckResult> {
     const vulnerabilityCheckers = [
       new NpmAuditChecker(),
@@ -695,7 +695,7 @@ class SecurityValidationRule implements ValidationRule {
     ];
 
     const results = await Promise.allSettled(
-      vulnerabilityCheckers.map((checker) => checker.checkDependencies(plan))
+      vulnerabilityCheckers.map((checker) => checker.checkDependencies(plan)),
     );
 
     const criticalVulns = results
@@ -714,7 +714,7 @@ class SecurityValidationRule implements ValidationRule {
   }
 
   private async validateSecurityHeaders(
-    plan: ReleasePlan
+    plan: ReleasePlan,
   ): Promise<SecurityCheckResult> {
     // Check for security headers in web applications
     const requiredHeaders = [
@@ -759,7 +759,7 @@ class PerformanceValidationRule implements ValidationRule {
       success: regressions.length === 0,
       errors: regressions.map(
         (r) =>
-          `Performance regression: ${r.metric} decreased by ${r.percentage}%`
+          `Performance regression: ${r.metric} decreased by ${r.percentage}%`,
       ),
       warnings: this.generatePerformanceWarnings(benchmarks),
       metadata: {
@@ -770,7 +770,7 @@ class PerformanceValidationRule implements ValidationRule {
   }
 
   private async runPerformanceBenchmarks(
-    plan: ReleasePlan
+    plan: ReleasePlan,
   ): Promise<BenchmarkResult[]> {
     const benchmarkSuites = [
       new LoadTestSuite(),
@@ -833,7 +833,7 @@ class BusinessValidationRule implements ValidationRule {
   }
 
   private async validateFeatureFlags(
-    plan: ReleasePlan
+    plan: ReleasePlan,
   ): Promise<BusinessCheckResult> {
     // Ensure feature flags are properly configured for new features
     const newFeatures = plan.changes?.filter((c) => c.type === "feat") || [];
@@ -888,15 +888,15 @@ class EventDrivenReleaseOrchestrator {
     this.eventBus.on("release.started", this.onReleaseStarted.bind(this));
     this.eventBus.on(
       "release.platform.publishing",
-      this.onPlatformPublishing.bind(this)
+      this.onPlatformPublishing.bind(this),
     );
     this.eventBus.on(
       "release.platform.published",
-      this.onPlatformPublished.bind(this)
+      this.onPlatformPublished.bind(this),
     );
     this.eventBus.on(
       "release.platform.failed",
-      this.onPlatformFailed.bind(this)
+      this.onPlatformFailed.bind(this),
     );
 
     // Post-release events
@@ -904,14 +904,14 @@ class EventDrivenReleaseOrchestrator {
     this.eventBus.on("release.failed", this.onReleaseFailed.bind(this));
     this.eventBus.on(
       "release.rollback.triggered",
-      this.onRollbackTriggered.bind(this)
+      this.onRollbackTriggered.bind(this),
     );
 
     // External system events
     this.eventBus.on("monitoring.alert", this.onMonitoringAlert.bind(this));
     this.eventBus.on(
       "security.vulnerability",
-      this.onSecurityVulnerability.bind(this)
+      this.onSecurityVulnerability.bind(this),
     );
     this.eventBus.on("dependency.updated", this.onDependencyUpdated.bind(this));
   }
@@ -926,7 +926,7 @@ class EventDrivenReleaseOrchestrator {
       // Plan release
       const plan = await this.releaseManager.planRelease(
         releaseRequest.version,
-        releaseRequest.type
+        releaseRequest.type,
       );
 
       await this.eventBus.emit("release.planned", {
@@ -972,7 +972,7 @@ class EventDrivenReleaseOrchestrator {
   }
 
   private async onReleaseValidated(
-    event: ReleaseValidatedEvent
+    event: ReleaseValidatedEvent,
   ): Promise<void> {
     const { releaseId, validation } = event;
 
@@ -1014,7 +1014,7 @@ class EventDrivenReleaseOrchestrator {
 
       // Execute release
       const result = await this.releaseManager.executeRelease(
-        releaseState.plan
+        releaseState.plan,
       );
 
       if (result.success) {
@@ -1058,7 +1058,7 @@ class EventDrivenReleaseOrchestrator {
   }
 
   private async onRollbackTriggered(
-    event: RollbackTriggeredEvent
+    event: RollbackTriggeredEvent,
   ): Promise<void> {
     const { releaseId, reason } = event;
 
@@ -1068,7 +1068,7 @@ class EventDrivenReleaseOrchestrator {
       if (releaseState.phase === "completed") {
         const rollbackResult = await this.releaseManager.rollbackRelease(
           releaseState.result.version,
-          reason
+          reason,
         );
 
         await this.stateManager.updateReleaseState(releaseId, {

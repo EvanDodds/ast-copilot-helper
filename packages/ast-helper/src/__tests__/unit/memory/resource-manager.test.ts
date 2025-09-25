@@ -1,8 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AdvancedResourceManager } from '../../../memory/resource-manager.js';
-import { ResourceConfig, DEFAULT_RESOURCE_CONFIG, OptimizationStep } from '../../../memory/types.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { AdvancedResourceManager } from "../../../memory/resource-manager.js";
+import {
+  ResourceConfig,
+  DEFAULT_RESOURCE_CONFIG,
+  OptimizationStep,
+} from "../../../memory/types.js";
 
-describe('AdvancedResourceManager', () => {
+describe("AdvancedResourceManager", () => {
   let resourceManager: AdvancedResourceManager;
 
   beforeEach(() => {
@@ -19,59 +23,66 @@ describe('AdvancedResourceManager', () => {
     }
   });
 
-  describe('initialization', () => {
-    it('should initialize successfully with default config', async () => {
-      await expect(resourceManager.initialize(DEFAULT_RESOURCE_CONFIG)).resolves.not.toThrow();
+  describe("initialization", () => {
+    it("should initialize successfully with default config", async () => {
+      await expect(
+        resourceManager.initialize(DEFAULT_RESOURCE_CONFIG),
+      ).resolves.not.toThrow();
     });
 
-    it('should initialize successfully with custom config', async () => {
+    it("should initialize successfully with custom config", async () => {
       const customConfig: ResourceConfig = {
         ...DEFAULT_RESOURCE_CONFIG,
         maxMemoryMB: 2048,
         gcTriggerThreshold: 1638.4, // 80% of 2048MB
       };
 
-      await expect(resourceManager.initialize(customConfig)).resolves.not.toThrow();
+      await expect(
+        resourceManager.initialize(customConfig),
+      ).resolves.not.toThrow();
     });
 
-    it('should validate configuration parameters', async () => {
+    it("should validate configuration parameters", async () => {
       const invalidConfig: ResourceConfig = {
         ...DEFAULT_RESOURCE_CONFIG,
         maxMemoryMB: -1, // Invalid: must be positive
       };
 
-      await expect(resourceManager.initialize(invalidConfig))
-        .rejects.toThrow('maxMemoryMB must be greater than 0');
+      await expect(resourceManager.initialize(invalidConfig)).rejects.toThrow(
+        "maxMemoryMB must be greater than 0",
+      );
     });
 
-    it('should validate GC threshold is within bounds', async () => {
+    it("should validate GC threshold is within bounds", async () => {
       const invalidConfig: ResourceConfig = {
         ...DEFAULT_RESOURCE_CONFIG,
         maxMemoryMB: 1024,
         gcTriggerThreshold: 2048, // Invalid: exceeds maxMemoryMB
       };
 
-      await expect(resourceManager.initialize(invalidConfig))
-        .rejects.toThrow('gcTriggerThreshold must be between 0 and maxMemoryMB');
+      await expect(resourceManager.initialize(invalidConfig)).rejects.toThrow(
+        "gcTriggerThreshold must be between 0 and maxMemoryMB",
+      );
     });
 
-    it('should validate monitoring interval is positive', async () => {
+    it("should validate monitoring interval is positive", async () => {
       const invalidConfig: ResourceConfig = {
         ...DEFAULT_RESOURCE_CONFIG,
         monitoringInterval: 0, // Invalid: must be positive
       };
 
-      await expect(resourceManager.initialize(invalidConfig))
-        .rejects.toThrow('monitoringInterval must be greater than 0');
+      await expect(resourceManager.initialize(invalidConfig)).rejects.toThrow(
+        "monitoringInterval must be greater than 0",
+      );
     });
   });
 
-  describe('memory optimization', () => {
+  describe("memory optimization", () => {
     beforeEach(async () => {
       await resourceManager.initialize(DEFAULT_RESOURCE_CONFIG);
     });
 
-    it('should run memory optimization successfully', async () => {
+    it("should run memory optimization successfully", async () => {
       const result = await resourceManager.optimizeMemoryUsage();
 
       expect(result).toMatchObject({
@@ -87,31 +98,34 @@ describe('AdvancedResourceManager', () => {
       expect(result.duration).toBeGreaterThan(0);
     });
 
-    it('should include all optimization steps', async () => {
+    it("should include all optimization steps", async () => {
       const result = await resourceManager.optimizeMemoryUsage();
 
-      const stepNames = result.optimizations.map((step: OptimizationStep) => step.name);
-      expect(stepNames).toContain('vector_storage');
-      expect(stepNames).toContain('embedding_cache');
-      expect(stepNames).toContain('database_indexes');
-      expect(stepNames).toContain('temporary_cleanup');
-      expect(stepNames).toContain('garbage_collection');
+      const stepNames = result.optimizations.map(
+        (step: OptimizationStep) => step.name,
+      );
+      expect(stepNames).toContain("vector_storage");
+      expect(stepNames).toContain("embedding_cache");
+      expect(stepNames).toContain("database_indexes");
+      expect(stepNames).toContain("temporary_cleanup");
+      expect(stepNames).toContain("garbage_collection");
     });
 
-    it('should fail gracefully when not initialized', async () => {
+    it("should fail gracefully when not initialized", async () => {
       const uninitializedManager = new AdvancedResourceManager();
-      
-      await expect(uninitializedManager.optimizeMemoryUsage())
-        .rejects.toThrow('ResourceManager not initialized');
+
+      await expect(uninitializedManager.optimizeMemoryUsage()).rejects.toThrow(
+        "ResourceManager not initialized",
+      );
     });
   });
 
-  describe('memory leak detection', () => {
+  describe("memory leak detection", () => {
     beforeEach(async () => {
       await resourceManager.initialize(DEFAULT_RESOURCE_CONFIG);
     });
 
-    it('should return leak report structure', async () => {
+    it("should return leak report structure", async () => {
       const report = await resourceManager.detectMemoryLeaks();
 
       expect(report).toMatchObject({
@@ -122,23 +136,24 @@ describe('AdvancedResourceManager', () => {
         severity: expect.any(String),
       });
 
-      expect(['low', 'medium', 'high', 'critical']).toContain(report.severity);
+      expect(["low", "medium", "high", "critical"]).toContain(report.severity);
     });
 
-    it('should fail gracefully when not initialized', async () => {
+    it("should fail gracefully when not initialized", async () => {
       const uninitializedManager = new AdvancedResourceManager();
-      
-      await expect(uninitializedManager.detectMemoryLeaks())
-        .rejects.toThrow('ResourceManager not initialized');
+
+      await expect(uninitializedManager.detectMemoryLeaks()).rejects.toThrow(
+        "ResourceManager not initialized",
+      );
     });
   });
 
-  describe('resource pool management', () => {
+  describe("resource pool management", () => {
     beforeEach(async () => {
       await resourceManager.initialize(DEFAULT_RESOURCE_CONFIG);
     });
 
-    it('should return pool status structure', async () => {
+    it("should return pool status structure", async () => {
       const status = await resourceManager.manageResourcePools();
 
       expect(status).toMatchObject({
@@ -148,31 +163,32 @@ describe('AdvancedResourceManager', () => {
         healthStatus: expect.any(String),
       });
 
-      expect(['healthy', 'warning', 'critical']).toContain(status.healthStatus);
+      expect(["healthy", "warning", "critical"]).toContain(status.healthStatus);
     });
 
-    it('should include expected pool types', async () => {
+    it("should include expected pool types", async () => {
       const status = await resourceManager.manageResourcePools();
 
-      expect(status.pools).toHaveProperty('database_connections');
-      expect(status.pools).toHaveProperty('embedding_workers');
-      expect(status.pools).toHaveProperty('file_handles');
+      expect(status.pools).toHaveProperty("database_connections");
+      expect(status.pools).toHaveProperty("embedding_workers");
+      expect(status.pools).toHaveProperty("file_handles");
     });
 
-    it('should fail gracefully when not initialized', async () => {
+    it("should fail gracefully when not initialized", async () => {
       const uninitializedManager = new AdvancedResourceManager();
-      
-      await expect(uninitializedManager.manageResourcePools())
-        .rejects.toThrow('ResourceManager not initialized');
+
+      await expect(uninitializedManager.manageResourcePools()).rejects.toThrow(
+        "ResourceManager not initialized",
+      );
     });
   });
 
-  describe('resource monitoring', () => {
+  describe("resource monitoring", () => {
     beforeEach(async () => {
       await resourceManager.initialize(DEFAULT_RESOURCE_CONFIG);
     });
 
-    it('should return resource monitor', () => {
+    it("should return resource monitor", () => {
       const monitor = resourceManager.monitorResourceUsage();
 
       expect(monitor).toMatchObject({
@@ -183,7 +199,7 @@ describe('AdvancedResourceManager', () => {
       });
     });
 
-    it('should provide current usage snapshot', () => {
+    it("should provide current usage snapshot", () => {
       const monitor = resourceManager.monitorResourceUsage();
       const usage = monitor.getCurrentUsage();
 
@@ -199,39 +215,40 @@ describe('AdvancedResourceManager', () => {
       expect(usage.heapTotal).toBeGreaterThan(0);
     });
 
-    it('should report health status', () => {
+    it("should report health status", () => {
       const monitor = resourceManager.monitorResourceUsage();
       const isHealthy = monitor.isHealthy();
 
-      expect(typeof isHealthy).toBe('boolean');
+      expect(typeof isHealthy).toBe("boolean");
     });
 
-    it('should fail gracefully when not initialized', () => {
+    it("should fail gracefully when not initialized", () => {
       const uninitializedManager = new AdvancedResourceManager();
-      
-      expect(() => uninitializedManager.monitorResourceUsage())
-        .toThrow('ResourceManager not initialized');
+
+      expect(() => uninitializedManager.monitorResourceUsage()).toThrow(
+        "ResourceManager not initialized",
+      );
     });
   });
 
-  describe('cleanup', () => {
-    it('should cleanup successfully after initialization', async () => {
+  describe("cleanup", () => {
+    it("should cleanup successfully after initialization", async () => {
       await resourceManager.initialize(DEFAULT_RESOURCE_CONFIG);
       await expect(resourceManager.cleanup()).resolves.not.toThrow();
     });
 
-    it('should handle cleanup when not initialized', async () => {
+    it("should handle cleanup when not initialized", async () => {
       await expect(resourceManager.cleanup()).resolves.not.toThrow();
     });
 
-    it('should handle cleanup errors gracefully', async () => {
+    it("should handle cleanup errors gracefully", async () => {
       await resourceManager.initialize(DEFAULT_RESOURCE_CONFIG);
-      
+
       // Mock a failing cleanup scenario
       const originalConsoleError = console.error;
       const mockConsoleError = vi.fn();
       console.error = mockConsoleError;
-      
+
       try {
         await resourceManager.cleanup();
         // Should not throw even if internal cleanup fails
@@ -241,40 +258,42 @@ describe('AdvancedResourceManager', () => {
     });
   });
 
-  describe('configuration handling', () => {
-    it('should use custom config when provided in constructor', async () => {
+  describe("configuration handling", () => {
+    it("should use custom config when provided in constructor", async () => {
       const customConfig = {
         maxMemoryMB: 2048,
         enableProfiling: true,
       };
-      
+
       const customManager = new AdvancedResourceManager(customConfig);
-      
+
       // Should accept the partial config and merge with defaults
-      await expect(customManager.initialize(DEFAULT_RESOURCE_CONFIG)).resolves.not.toThrow();
-      
+      await expect(
+        customManager.initialize(DEFAULT_RESOURCE_CONFIG),
+      ).resolves.not.toThrow();
+
       await customManager.cleanup();
     });
 
-    it('should merge configs correctly', async () => {
+    it("should merge configs correctly", async () => {
       const partialConfig = {
         maxMemoryMB: 1024,
       };
-      
+
       const manager = new AdvancedResourceManager(partialConfig);
-      
+
       const initConfig: ResourceConfig = {
         ...DEFAULT_RESOURCE_CONFIG,
         gcTriggerThreshold: 512, // 50% of 1024MB
       };
-      
+
       await expect(manager.initialize(initConfig)).resolves.not.toThrow();
       await manager.cleanup();
     });
   });
 
-  describe('error handling', () => {
-    it('should handle errors during initialization', async () => {
+  describe("error handling", () => {
+    it("should handle errors during initialization", async () => {
       const invalidConfig: ResourceConfig = {
         ...DEFAULT_RESOURCE_CONFIG,
         maxMemoryMB: 0, // This should cause validation to fail
@@ -283,7 +302,7 @@ describe('AdvancedResourceManager', () => {
       await expect(resourceManager.initialize(invalidConfig)).rejects.toThrow();
     });
 
-    it('should provide meaningful error messages', async () => {
+    it("should provide meaningful error messages", async () => {
       const configs = [
         { ...DEFAULT_RESOURCE_CONFIG, maxMemoryMB: -1 },
         { ...DEFAULT_RESOURCE_CONFIG, gcTriggerThreshold: -1 },
@@ -291,7 +310,9 @@ describe('AdvancedResourceManager', () => {
       ];
 
       for (const config of configs) {
-        await expect(resourceManager.initialize(config)).rejects.toThrow(/must be/);
+        await expect(resourceManager.initialize(config)).rejects.toThrow(
+          /must be/,
+        );
       }
     });
   });

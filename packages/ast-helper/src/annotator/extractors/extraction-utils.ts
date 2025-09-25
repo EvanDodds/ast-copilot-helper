@@ -2,8 +2,8 @@
  * Base utilities and shared functionality for signature extractors
  */
 
-import { ASTNode } from '../../parser/types';
-import { Parameter } from '../types';
+import type { ASTNode } from "../../parser/types";
+import type { Parameter } from "../types";
 
 /**
  * Utility functions for extracting common elements from source text
@@ -13,7 +13,7 @@ export class ExtractionUtils {
    * Extract the source lines for a given node
    */
   static getNodeLines(node: ASTNode, sourceText: string): string[] {
-    const lines = sourceText.split('\n');
+    const lines = sourceText.split("\n");
     const startLine = Math.max(0, node.start.line - 1);
     const endLine = Math.min(lines.length, node.end.line);
     return lines.slice(startLine, endLine);
@@ -24,9 +24,9 @@ export class ExtractionUtils {
    */
   static cleanSignature(signature: string): string {
     return signature
-      .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
-      .replace(/\s*([{}(),;])\s*/g, '$1') // Remove spaces around punctuation
-      .replace(/\s*:\s*/g, ': ')      // Normalize type annotations
+      .replace(/\s+/g, " ") // Replace multiple spaces with single space
+      .replace(/\s*([{}(),;])\s*/g, "$1") // Remove spaces around punctuation
+      .replace(/\s*:\s*/g, ": ") // Normalize type annotations
       .trim();
   }
 
@@ -36,9 +36,9 @@ export class ExtractionUtils {
   static parseParameter(paramStr: string): Parameter {
     // Handle TypeScript/JavaScript parameter patterns
     // Examples: "name", "name: type", "name?: type", "name = defaultValue", "name: type = defaultValue"
-    
+
     const trimmed = paramStr.trim();
-    let name = '';
+    let name = "";
     let type: string | undefined;
     let optional = false;
     let defaultValue: string | undefined;
@@ -48,30 +48,30 @@ export class ExtractionUtils {
     if (defaultMatch && defaultMatch[1] && defaultMatch[2]) {
       defaultValue = defaultMatch[2];
       const beforeDefault = defaultMatch[1];
-      
+
       // Check for optional marker
-      if (beforeDefault.includes('?:')) {
+      if (beforeDefault.includes("?:")) {
         optional = true;
-        const parts = beforeDefault.split('?:').map(s => s.trim());
-        name = parts[0] || '';
+        const parts = beforeDefault.split("?:").map((s) => s.trim());
+        name = parts[0] || "";
         type = parts[1];
-      } else if (beforeDefault.includes(':')) {
-        const parts = beforeDefault.split(':').map(s => s.trim());
-        name = parts[0] || '';
+      } else if (beforeDefault.includes(":")) {
+        const parts = beforeDefault.split(":").map((s) => s.trim());
+        name = parts[0] || "";
         type = parts[1];
       } else {
         name = beforeDefault.trim();
       }
     } else {
       // No default value
-      if (trimmed.includes('?:')) {
+      if (trimmed.includes("?:")) {
         optional = true;
-        const parts = trimmed.split('?:').map(s => s.trim());
-        name = parts[0] || '';
+        const parts = trimmed.split("?:").map((s) => s.trim());
+        name = parts[0] || "";
         type = parts[1];
-      } else if (trimmed.includes(':')) {
-        const parts = trimmed.split(':').map(s => s.trim());
-        name = parts[0] || '';
+      } else if (trimmed.includes(":")) {
+        const parts = trimmed.split(":").map((s) => s.trim());
+        name = parts[0] || "";
         type = parts[1];
       } else {
         name = trimmed;
@@ -86,20 +86,28 @@ export class ExtractionUtils {
    */
   static extractModifiers(node: ASTNode, sourceLines: string[]): string[] {
     const modifiers: string[] = [];
-    
+
     // Add modifiers from node metadata
     if (node.metadata.modifiers) {
       modifiers.push(...node.metadata.modifiers);
     }
 
     // Extract additional modifiers from source text
-    const sourceText = sourceLines.join(' ').toLowerCase();
-    
+    const sourceText = sourceLines.join(" ").toLowerCase();
+
     const modifierPatterns = [
-      'public', 'private', 'protected',
-      'static', 'abstract', 'readonly',
-      'async', 'export', 'default',
-      'const', 'let', 'var'
+      "public",
+      "private",
+      "protected",
+      "static",
+      "abstract",
+      "readonly",
+      "async",
+      "export",
+      "default",
+      "const",
+      "let",
+      "var",
     ];
 
     for (const modifier of modifierPatterns) {
@@ -117,25 +125,28 @@ export class ExtractionUtils {
   static looksLikeType(str: string): boolean {
     // Common type patterns
     const typePatterns = [
-      /^[A-Z]/,                    // PascalCase types
+      /^[A-Z]/, // PascalCase types
       /^(string|number|boolean|object|function|void|any|unknown|never)$/i,
-      /\[\]$/,                     // Array types
-      /^Promise</,                 // Promise types
-      /<.*>$/,                     // Generic types
-      /\|/,                        // Union types
-      /&/,                         // Intersection types
+      /\[\]$/, // Array types
+      /^Promise</, // Promise types
+      /<.*>$/, // Generic types
+      /\|/, // Union types
+      /&/, // Intersection types
     ];
 
-    return typePatterns.some(pattern => pattern.test(str.trim()));
+    return typePatterns.some((pattern) => pattern.test(str.trim()));
   }
 
   /**
    * Find function declaration line in source
    */
-  static findDeclarationLine(sourceLines: string[], keywords: string[]): string | null {
+  static findDeclarationLine(
+    sourceLines: string[],
+    keywords: string[],
+  ): string | null {
     for (const line of sourceLines) {
       const trimmed = line.trim();
-      if (keywords.some(keyword => trimmed.includes(keyword))) {
+      if (keywords.some((keyword) => trimmed.includes(keyword))) {
         return trimmed;
       }
     }

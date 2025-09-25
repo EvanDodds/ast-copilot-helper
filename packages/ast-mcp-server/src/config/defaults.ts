@@ -3,14 +3,22 @@
  * Provides sensible defaults for all configuration options
  */
 
-import { MCPServerConfig, TransportConfig, PerformanceConfig, LoggingConfig, SecurityConfig, FeatureConfig, EnvironmentConfig } from './types.js';
+import type {
+  MCPServerConfig,
+  TransportConfig,
+  PerformanceConfig,
+  LoggingConfig,
+  SecurityConfig,
+  FeatureConfig,
+  EnvironmentConfig,
+} from "./types.js";
 
 /**
  * Default transport configuration
  */
 export const DEFAULT_TRANSPORT_CONFIG: TransportConfig = {
-  type: 'stdio',
-  host: 'localhost',
+  type: "stdio",
+  host: "localhost",
   port: 3000,
   maxConnections: 100,
   connectionTimeout: 30000,
@@ -50,10 +58,10 @@ export const DEFAULT_PERFORMANCE_CONFIG: PerformanceConfig = {
  * Default logging configuration
  */
 export const DEFAULT_LOGGING_CONFIG: LoggingConfig = {
-  level: 'info',
+  level: "info",
   enableConsole: true,
   enableFile: false,
-  maxFileSize: '10MB',
+  maxFileSize: "10MB",
   maxFiles: 5,
   enableRequestLogging: false,
   enableResponseLogging: false,
@@ -75,7 +83,7 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   rateLimitRequests: 100,
   rateLimitWindow: 900000, // 15 minutes
   enableCors: true,
-  corsOrigins: ['*'],
+  corsOrigins: ["*"],
   enableStrictValidation: true,
   maxRequestSize: 1024 * 1024, // 1MB
   sanitizeInput: true,
@@ -110,7 +118,7 @@ export const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
  * Default environment configuration
  */
 export const DEFAULT_ENVIRONMENT_CONFIG: EnvironmentConfig = {
-  nodeEnv: 'production',
+  nodeEnv: "production",
   development: {
     enableDebug: true,
     enableHotReload: true,
@@ -134,31 +142,31 @@ export const DEFAULT_ENVIRONMENT_CONFIG: EnvironmentConfig = {
  * Complete default configuration
  */
 export const DEFAULT_MCP_SERVER_CONFIG: MCPServerConfig = {
-  name: 'AST MCP Server',
-  version: '1.0.0',
-  description: 'Model Context Protocol Server for AST Analysis',
-  protocolVersion: '2024-11-05',
-  
+  name: "AST MCP Server",
+  version: "1.0.0",
+  description: "Model Context Protocol Server for AST Analysis",
+  protocolVersion: "2024-11-05",
+
   transport: DEFAULT_TRANSPORT_CONFIG,
   performance: DEFAULT_PERFORMANCE_CONFIG,
   logging: DEFAULT_LOGGING_CONFIG,
   security: DEFAULT_SECURITY_CONFIG,
   features: DEFAULT_FEATURE_CONFIG,
   environment: DEFAULT_ENVIRONMENT_CONFIG,
-  
+
   database: {
-    path: './.astdb',
+    path: "./.astdb",
     hotReload: false,
     backupEnabled: false,
     backupInterval: 3600000, // 1 hour
   },
-  
+
   plugins: {
     enabled: [],
     disabled: [],
     config: {},
   },
-  
+
   custom: {},
 };
 
@@ -168,7 +176,7 @@ export const DEFAULT_MCP_SERVER_CONFIG: MCPServerConfig = {
 export const DEVELOPMENT_CONFIG: Partial<MCPServerConfig> = {
   logging: {
     ...DEFAULT_LOGGING_CONFIG,
-    level: 'debug',
+    level: "debug",
     enableRequestLogging: true,
     enablePerformanceLogging: true,
     enableMetrics: true,
@@ -186,16 +194,16 @@ export const DEVELOPMENT_CONFIG: Partial<MCPServerConfig> = {
   },
   environment: {
     ...DEFAULT_ENVIRONMENT_CONFIG,
-    nodeEnv: 'development',
+    nodeEnv: "development",
   },
 };
 
 export const PRODUCTION_CONFIG: Partial<MCPServerConfig> = {
   logging: {
     ...DEFAULT_LOGGING_CONFIG,
-    level: 'warn',
+    level: "warn",
     enableFile: true,
-    filePath: './logs/mcp-server.log',
+    filePath: "./logs/mcp-server.log",
     enableMetrics: true,
     metricsInterval: 300000, // 5 minutes
   },
@@ -219,14 +227,14 @@ export const PRODUCTION_CONFIG: Partial<MCPServerConfig> = {
   },
   environment: {
     ...DEFAULT_ENVIRONMENT_CONFIG,
-    nodeEnv: 'production',
+    nodeEnv: "production",
   },
 };
 
 export const TEST_CONFIG: Partial<MCPServerConfig> = {
   logging: {
     ...DEFAULT_LOGGING_CONFIG,
-    level: 'error',
+    level: "error",
     enableConsole: false,
   },
   performance: {
@@ -237,10 +245,10 @@ export const TEST_CONFIG: Partial<MCPServerConfig> = {
   },
   environment: {
     ...DEFAULT_ENVIRONMENT_CONFIG,
-    nodeEnv: 'test',
+    nodeEnv: "test",
   },
   database: {
-    path: './test/.astdb',
+    path: "./test/.astdb",
     hotReload: false,
     backupEnabled: false,
   },
@@ -249,20 +257,22 @@ export const TEST_CONFIG: Partial<MCPServerConfig> = {
 /**
  * Get configuration for specific environment
  */
-export function getEnvironmentConfig(environment?: string): Partial<MCPServerConfig> {
+export function getEnvironmentConfig(
+  environment?: string,
+): Partial<MCPServerConfig> {
   if (!environment) {
     return PRODUCTION_CONFIG;
   }
-  
+
   switch (environment.toLowerCase()) {
-    case 'development':
-    case 'dev':
+    case "development":
+    case "dev":
       return DEVELOPMENT_CONFIG;
-    case 'production':
-    case 'prod':
+    case "production":
+    case "prod":
       return PRODUCTION_CONFIG;
-    case 'test':
-    case 'testing':
+    case "test":
+    case "testing":
       return TEST_CONFIG;
     default:
       return PRODUCTION_CONFIG;

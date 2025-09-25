@@ -3,35 +3,35 @@
  */
 
 // Core exports
-export * from './types.js';
-export { LicenseDatabase } from './LicenseDatabase.js';
-export { DependencyScanner } from './DependencyScanner.js';
-export { AdvancedLicenseScanner } from './AdvancedLicenseScanner.js';
-export { AttributionGenerator } from './AttributionGenerator.js';
-export { AdvancedAttributionGenerator } from './AdvancedAttributionGenerator.js';
-export { DependencyLicenseAnalyzer } from './DependencyLicenseAnalyzer.js';
-export { LegalDocumentTemplateEngine } from './LegalDocumentTemplateEngine.js';
-export { ComprehensiveLegalComplianceManager } from './ComprehensiveLegalComplianceManager.js';
+export * from "./types.js";
+export { LicenseDatabase } from "./LicenseDatabase.js";
+export { DependencyScanner } from "./DependencyScanner.js";
+export { AdvancedLicenseScanner } from "./AdvancedLicenseScanner.js";
+export { AttributionGenerator } from "./AttributionGenerator.js";
+export { AdvancedAttributionGenerator } from "./AdvancedAttributionGenerator.js";
+export { DependencyLicenseAnalyzer } from "./DependencyLicenseAnalyzer.js";
+export { LegalDocumentTemplateEngine } from "./LegalDocumentTemplateEngine.js";
+export { ComprehensiveLegalComplianceManager } from "./ComprehensiveLegalComplianceManager.js";
 
 // Default configuration
 export const defaultComplianceConfig = {
-  projectLicense: 'MIT',
-  allowedLicenses: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'BSD-2-Clause', 'ISC'],
-  restrictedLicenses: ['GPL-2.0', 'GPL-3.0', 'AGPL-3.0'],
+  projectLicense: "MIT",
+  allowedLicenses: ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC"],
+  restrictedLicenses: ["GPL-2.0", "GPL-3.0", "AGPL-3.0"],
   attributionRequirements: {
     generateNotice: true,
     generateThirdPartyLicense: true,
     generateCredits: true,
     generateMetadata: true,
     includeDevDependencies: false,
-    outputDirectory: './legal',
+    outputDirectory: "./legal",
   },
-  complianceStandards: ['SPDX', 'OpenChain'],
+  complianceStandards: ["SPDX", "OpenChain"],
   reportingConfig: {
-    formats: ['json', 'markdown'],
+    formats: ["json", "markdown"],
     includeFullLicenseTexts: true,
     includeVulnerabilityInfo: false,
-    outputDirectory: './reports',
+    outputDirectory: "./reports",
     scheduledReports: false,
   },
   monitoring: {
@@ -40,6 +40,6 @@ export const defaultComplianceConfig = {
     alertOnNewViolations: true,
     alertOnRestrictedLicenses: true,
     emailRecipients: [],
-    checkFrequency: 'daily',
+    checkFrequency: "daily",
   },
 };

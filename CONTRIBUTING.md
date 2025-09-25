@@ -3,6 +3,7 @@
 Thank you for your interest in contributing to ast-copilot-helper! This document provides guidelines and information for contributors.
 
 ## Table of Contents
+
 - [Getting Started](#getting-started)
 - [Development Setup](#development-setup)
 - [Contributing Guidelines](#contributing-guidelines)
@@ -16,12 +17,14 @@ Thank you for your interest in contributing to ast-copilot-helper! This document
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18.0.0 or higher
 - Yarn 4.9.4 or higher (modern Yarn v4)
 - Git 2.40.0 or higher
 - VS Code (recommended for the best development experience)
 
 ### Quick Start
+
 1. Fork and clone the repository
 2. Install dependencies: `yarn install`
 3. Build the project: `yarn run build`
@@ -31,6 +34,7 @@ Thank you for your interest in contributing to ast-copilot-helper! This document
 ### Development Setup
 
 #### 1. Fork and Clone
+
 ```bash
 # Fork the repository on GitHub, then:
 git clone https://github.com/YOUR_USERNAME/ast-copilot-helper.git
@@ -38,6 +42,7 @@ cd ast-copilot-helper
 ```
 
 #### 2. Install Dependencies
+
 ```bash
 yarn install
 ```
@@ -45,6 +50,7 @@ yarn install
 This will install dependencies for all packages in the monorepo.
 
 #### 3. Build the Project
+
 ```bash
 yarn run build
 ```
@@ -52,6 +58,7 @@ yarn run build
 Build all packages to ensure everything compiles correctly.
 
 #### 4. Verify Installation
+
 ```bash
 yarn test
 yarn run lint
@@ -166,6 +173,7 @@ type(scope): description
 ```
 
 #### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -178,6 +186,7 @@ type(scope): description
 - `chore`: Other changes (dependencies, etc.)
 
 #### Examples
+
 ```bash
 feat(cli): add support for Python parsing
 fix(mcp): resolve memory leak in query processing
@@ -198,6 +207,7 @@ test(parser): add edge case tests for TypeScript generics
 ### Test Strategy
 
 We maintain high test coverage through:
+
 - **Unit tests** - Test individual functions and components
 - **Integration tests** - Test component interactions
 - **End-to-end tests** - Test complete workflows
@@ -227,23 +237,24 @@ yarn run benchmark
 ### Writing Tests
 
 #### Test Structure
+
 ```typescript
-describe('ComponentName', () => {
-  describe('methodName', () => {
-    it('should do something when condition is met', () => {
+describe("ComponentName", () => {
+  describe("methodName", () => {
+    it("should do something when condition is met", () => {
       // Arrange
       const input = createTestInput();
-      
+
       // Act
       const result = methodName(input);
-      
+
       // Assert
       expect(result).toBe(expectedValue);
     });
-    
-    it('should handle error cases properly', () => {
+
+    it("should handle error cases properly", () => {
       // Test error scenarios
-      expect(() => methodName(invalidInput)).toThrow('Expected error message');
+      expect(() => methodName(invalidInput)).toThrow("Expected error message");
     });
   });
 });
@@ -293,12 +304,14 @@ yarn run docs:build
 ### Before Submitting
 
 1. **Ensure tests pass**
+
    ```bash
    yarn test
    yarn run test:integration
    ```
 
 2. **Check code quality**
+
    ```bash
    yarn run lint
    yarn run type-check
@@ -318,6 +331,7 @@ yarn run docs:build
 ### Creating a Pull Request
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -328,6 +342,7 @@ yarn run docs:build
    - Update documentation
 
 3. **Commit with clear messages**
+
    ```bash
    git add .
    git commit -m "feat(scope): add new feature description"
@@ -404,6 +419,7 @@ We are committed to providing a welcoming and inclusive environment. Please read
 ### Recognition
 
 Contributors are recognized in:
+
 - Project README
 - Release notes
 - GitHub contributors page
@@ -414,6 +430,7 @@ Contributors are recognized in:
 ### Debugging
 
 #### CLI Tool
+
 ```bash
 # Debug CLI with specific file
 yarn run debug:cli -- parse --file example.ts --verbose
@@ -423,6 +440,7 @@ node --inspect-brk packages/ast-helper/bin/ast-helper.js parse --file example.ts
 ```
 
 #### MCP Server
+
 ```bash
 # Debug MCP server
 yarn run debug:mcp
@@ -432,6 +450,7 @@ DEBUG=ast-mcp:* yarn run start:mcp
 ```
 
 #### VS Code Extension
+
 - Use F5 in VS Code to launch Extension Development Host
 - Use VS Code's built-in debugger
 - Check extension logs in Developer Tools
@@ -480,6 +499,7 @@ yarn run test:watch
 ### Environment Setup
 
 #### VS Code Extensions (Recommended)
+
 - TypeScript and JavaScript Language Features
 - ESLint
 - Prettier - Code formatter
@@ -487,6 +507,7 @@ yarn run test:watch
 - Thunder Client (for API testing)
 
 #### Git Configuration
+
 ```bash
 # Set up commit signing (recommended)
 git config --global user.signingkey YOUR_GPG_KEY
@@ -512,6 +533,7 @@ Releases are handled by maintainers following these principles:
 ### Common Issues
 
 #### Build Failures
+
 ```bash
 # Clean and rebuild
 yarn run clean && yarn run build
@@ -524,6 +546,7 @@ npm cache clean --force
 ```
 
 #### Test Failures
+
 ```bash
 # Run tests in isolation
 yarn test -- --reporter=verbose
@@ -536,6 +559,7 @@ yarn test -- --updateSnapshot
 ```
 
 #### VS Code Extension Issues
+
 ```bash
 # Rebuild extension
 cd packages/vscode-extension && yarn run compile
@@ -566,4 +590,4 @@ Thank you for contributing to ast-copilot-helper! Your contributions help make t
 
 ---
 
-*This guide is continuously updated. If you find areas for improvement, please suggest changes!*
+_This guide is continuously updated. If you find areas for improvement, please suggest changes!_

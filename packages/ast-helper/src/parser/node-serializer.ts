@@ -1,13 +1,14 @@
 /**
  * AST Node Serialization and Storage
- * 
+ *
  * Handles JSON serialization/deserialization of AST nodes with schema versioning,
  * validation, and file storage capabilities.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import { ASTNode, Position, NodeMetadata, NodeType, SignificanceLevel } from './ast-schema';
+import * as fs from "fs";
+import * as path from "path";
+import type { ASTNode, Position, NodeMetadata, NodeType } from "./ast-schema";
+import { SignificanceLevel } from "./ast-schema";
 
 /**
  * Serialization configuration
@@ -99,11 +100,13 @@ export class SerializationValidationError extends Error {
   constructor(
     message: string,
     public readonly path: string,
-    public readonly actualValue: any,
-    public readonly expectedType: string
+    public readonly actualValue: unknown,
+    public readonly expectedType: string,
   ) {
-    super(`Schema validation failed at ${path}: ${message}. Expected ${expectedType}, got ${JSON.stringify(actualValue)}`);
-    this.name = 'SerializationValidationError';
+    super(
+      `Schema validation failed at ${path}: ${message}. Expected ${expectedType}, got ${JSON.stringify(actualValue)}`,
+    );
+    this.name = "SerializationValidationError";
   }
 }
 
@@ -114,10 +117,12 @@ export class SchemaMigrationError extends Error {
   constructor(
     message: string,
     public readonly fromVersion: string,
-    public readonly toVersion: string
+    public readonly toVersion: string,
   ) {
-    super(`Schema migration failed from ${fromVersion} to ${toVersion}: ${message}`);
-    this.name = 'SchemaMigrationError';
+    super(
+      `Schema migration failed from ${fromVersion} to ${toVersion}: ${message}`,
+    );
+    this.name = "SchemaMigrationError";
   }
 }
 
@@ -127,7 +132,7 @@ export class SchemaMigrationError extends Error {
 export const DEFAULT_SERIALIZATION_CONFIG: SerializationConfig = {
   includeMetadata: true,
   prettyPrint: false,
-  schemaVersion: '1.0.0',
+  schemaVersion: "1.0.0",
   validateOnSerialize: true,
   validateOnDeserialize: true,
   includeSourceText: true,
@@ -136,7 +141,7 @@ export const DEFAULT_SERIALIZATION_CONFIG: SerializationConfig = {
 /**
  * Current schema version
  */
-export const CURRENT_SCHEMA_VERSION = '1.0.0';
+export const CURRENT_SCHEMA_VERSION = "1.0.0";
 
 /**
  * AST Node Serializer
@@ -199,7 +204,7 @@ export class NodeSerializer {
     nodes: ASTNode[],
     filePath: string,
     language: string,
-    fileHash?: string
+    fileHash?: string,
   ): SerializedFile {
     if (this.config.validateOnSerialize) {
       for (const node of nodes) {
@@ -214,7 +219,7 @@ export class NodeSerializer {
       $schema: this.config.schemaVersion,
       filePath,
       language,
-      nodes: nodes.map(node => this.serializeNode(node)),
+      nodes: nodes.map((node) => this.serializeNode(node)),
       metadata: {
         nodeCount: stats.totalNodes,
         serializedAt: new Date().toISOString(),
@@ -278,7 +283,7 @@ export class NodeSerializer {
     nodes: ASTNode[];
     filePath: string;
     language: string;
-    metadata: SerializedFile['metadata'];
+    metadata: SerializedFile["metadata"];
   } {
     if (this.config.validateOnDeserialize) {
       this.validateSerializedFile(data);
@@ -288,7 +293,9 @@ export class NodeSerializer {
     const migratedData = this.migrateFileSchema(data);
 
     return {
-      nodes: migratedData.nodes.map(nodeData => this.deserializeNode(nodeData)),
+      nodes: migratedData.nodes.map((nodeData) =>
+        this.deserializeNode(nodeData),
+      ),
       filePath: migratedData.filePath,
       language: migratedData.language,
       metadata: migratedData.metadata,
@@ -303,10 +310,10 @@ export class NodeSerializer {
     filePath: string,
     outputPath: string,
     language: string,
-    fileHash?: string
+    fileHash?: string,
   ): Promise<void> {
     const serialized = this.serializeFile(nodes, filePath, language, fileHash);
-    const json = this.config.prettyPrint 
+    const json = this.config.prettyPrint
       ? JSON.stringify(serialized, null, 2)
       : JSON.stringify(serialized);
 
@@ -316,7 +323,7 @@ export class NodeSerializer {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    await fs.promises.writeFile(outputPath, json, 'utf8');
+    await fs.promises.writeFile(outputPath, json, "utf8");
   }
 
   /**
@@ -326,42 +333,74 @@ export class NodeSerializer {
     nodes: ASTNode[];
     filePath: string;
     language: string;
-    metadata: SerializedFile['metadata'];
+    metadata: SerializedFile["metadata"];
   }> {
-    const json = await fs.promises.readFile(inputPath, 'utf8');
+    const json = await fs.promises.readFile(inputPath, "utf8");
     const data = JSON.parse(json) as SerializedFile;
-    
+
     return this.deserializeFile(data);
   }
 
   /**
    * Validate serialized output against original
    */
-  validateRoundTrip(original: ASTNode, _serialized: SerializedASTNode, deserialized: ASTNode): boolean {
+  validateRoundTrip(
+    original: ASTNode,
+    _serialized: SerializedASTNode,
+    deserialized: ASTNode,
+  ): boolean {
     // Check core properties
-    if (original.id !== deserialized.id) return false;
-    if (original.type !== deserialized.type) return false;
-    if (original.filePath !== deserialized.filePath) return false;
-    if (original.significance !== deserialized.significance) return false;
+    if (original.id !== deserialized.id) {
+      return false;
+    }
+    if (original.type !== deserialized.type) {
+      return false;
+    }
+    if (original.filePath !== deserialized.filePath) {
+      return false;
+    }
+    if (original.significance !== deserialized.significance) {
+      return false;
+    }
 
     // Check optional properties
-    if (original.name !== deserialized.name) return false;
-    if (original.parent !== deserialized.parent) return false;
-    if (original.sourceText !== deserialized.sourceText) return false;
-    if (original.signature !== deserialized.signature) return false;
-    if (original.complexity !== deserialized.complexity) return false;
+    if (original.name !== deserialized.name) {
+      return false;
+    }
+    if (original.parent !== deserialized.parent) {
+      return false;
+    }
+    if (original.sourceText !== deserialized.sourceText) {
+      return false;
+    }
+    if (original.signature !== deserialized.signature) {
+      return false;
+    }
+    if (original.complexity !== deserialized.complexity) {
+      return false;
+    }
 
     // Check positions
-    if (!this.deepEqual(original.start, deserialized.start)) return false;
-    if (!this.deepEqual(original.end, deserialized.end)) return false;
+    if (!this.deepEqual(original.start, deserialized.start)) {
+      return false;
+    }
+    if (!this.deepEqual(original.end, deserialized.end)) {
+      return false;
+    }
 
     // Check metadata
-    if (!this.deepEqual(original.metadata, deserialized.metadata)) return false;
+    if (!this.deepEqual(original.metadata, deserialized.metadata)) {
+      return false;
+    }
 
     // Check children arrays
-    if (original.children.length !== deserialized.children.length) return false;
+    if (original.children.length !== deserialized.children.length) {
+      return false;
+    }
     for (let i = 0; i < original.children.length; i++) {
-      if (original.children[i] !== deserialized.children[i]) return false;
+      if (original.children[i] !== deserialized.children[i]) {
+        return false;
+      }
     }
 
     return true;
@@ -400,7 +439,7 @@ export class NodeSerializer {
 
     // Note: This is a mock implementation since we don't have a node lookup mechanism
     // In a real implementation, you'd need a way to resolve child IDs to actual nodes
-    const collectStats = (node: ASTNode, depth: number = 0) => {
+    const collectStats = (node: ASTNode, depth = 0) => {
       totalNodes++;
       totalDepth += depth;
       maxDepth = Math.max(maxDepth, depth);
@@ -409,14 +448,15 @@ export class NodeSerializer {
       typeDistribution[node.type] = (typeDistribution[node.type] || 0) + 1;
 
       // Significance distribution
-      significanceDistribution[node.significance.toString()] = (significanceDistribution[node.significance.toString()] || 0) + 1;
+      significanceDistribution[node.significance.toString()] =
+        (significanceDistribution[node.significance.toString()] || 0) + 1;
     };
 
     for (const node of nodes) {
       collectStats(node);
     }
 
-    const serialized = this.serializeFile(nodes, 'temp', 'temp');
+    const serialized = this.serializeFile(nodes, "temp", "temp");
     const totalSize = JSON.stringify(serialized).length;
 
     return {
@@ -432,16 +472,19 @@ export class NodeSerializer {
   /**
    * Calculate file statistics
    */
-  private calculateStats(nodes: ASTNode[]): SerializedFile['metadata']['stats'] {
+  private calculateStats(
+    nodes: ASTNode[],
+  ): SerializedFile["metadata"]["stats"] {
     let totalNodes = 0;
     const significanceLevels: Record<string, number> = {};
     const nodeTypes: Record<string, number> = {};
 
     const collectStats = (node: ASTNode) => {
       totalNodes++;
-      
-      significanceLevels[node.significance.toString()] = (significanceLevels[node.significance.toString()] || 0) + 1;
-      
+
+      significanceLevels[node.significance.toString()] =
+        (significanceLevels[node.significance.toString()] || 0) + 1;
+
       nodeTypes[node.type] = (nodeTypes[node.type] || 0) + 1;
 
       // Note: We can't recurse to children here since children are just IDs
@@ -458,70 +501,145 @@ export class NodeSerializer {
   /**
    * Validate ASTNode structure
    */
-  private validateASTNode(node: ASTNode, path: string = 'root'): void {
-    if (!node.id || typeof node.id !== 'string') {
-      throw new SerializationValidationError('Missing or invalid id', path, node.id, 'string');
+  private validateASTNode(node: ASTNode, path = "root"): void {
+    if (!node.id || typeof node.id !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid id",
+        path,
+        node.id,
+        "string",
+      );
     }
-    
-    if (!node.type || typeof node.type !== 'string') {
-      throw new SerializationValidationError('Missing or invalid type', path, node.type, 'NodeType');
+
+    if (!node.type || typeof node.type !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid type",
+        path,
+        node.type,
+        "NodeType",
+      );
     }
-    
-    if (!node.filePath || typeof node.filePath !== 'string') {
-      throw new SerializationValidationError('Missing or invalid filePath', path, node.filePath, 'string');
+
+    if (!node.filePath || typeof node.filePath !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid filePath",
+        path,
+        node.filePath,
+        "string",
+      );
     }
 
     if (!this.validatePosition(node.start)) {
-      throw new SerializationValidationError('Invalid start position', `${path}.start`, node.start, 'Position');
+      throw new SerializationValidationError(
+        "Invalid start position",
+        `${path}.start`,
+        node.start,
+        "Position",
+      );
     }
 
     if (!this.validatePosition(node.end)) {
-      throw new SerializationValidationError('Invalid end position', `${path}.end`, node.end, 'Position');
+      throw new SerializationValidationError(
+        "Invalid end position",
+        `${path}.end`,
+        node.end,
+        "Position",
+      );
     }
 
     if (!Array.isArray(node.children)) {
-      throw new SerializationValidationError('Children must be an array', `${path}.children`, node.children, 'string[]');
+      throw new SerializationValidationError(
+        "Children must be an array",
+        `${path}.children`,
+        node.children,
+        "string[]",
+      );
     }
 
     if (!node.metadata) {
-      throw new SerializationValidationError('Missing metadata', `${path}.metadata`, node.metadata, 'NodeMetadata');
+      throw new SerializationValidationError(
+        "Missing metadata",
+        `${path}.metadata`,
+        node.metadata,
+        "NodeMetadata",
+      );
     }
 
     if (!Object.values(SignificanceLevel).includes(node.significance)) {
-      throw new SerializationValidationError('Invalid significance level', `${path}.significance`, node.significance, 'SignificanceLevel');
+      throw new SerializationValidationError(
+        "Invalid significance level",
+        `${path}.significance`,
+        node.significance,
+        "SignificanceLevel",
+      );
     }
   }
 
   /**
    * Validate SerializedASTNode structure
    */
-  private validateSerializedNode(data: SerializedASTNode, path: string = 'root'): void {
-    if (!data.$schema || typeof data.$schema !== 'string') {
-      throw new SerializationValidationError('Missing or invalid $schema', path, data.$schema, 'string');
+  private validateSerializedNode(data: SerializedASTNode, path = "root"): void {
+    if (!data.$schema || typeof data.$schema !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid $schema",
+        path,
+        data.$schema,
+        "string",
+      );
     }
-    
-    if (!data.id || typeof data.id !== 'string') {
-      throw new SerializationValidationError('Missing or invalid id', path, data.id, 'string');
+
+    if (!data.id || typeof data.id !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid id",
+        path,
+        data.id,
+        "string",
+      );
     }
-    
-    if (!data.type || typeof data.type !== 'string') {
-      throw new SerializationValidationError('Missing or invalid type', path, data.type, 'NodeType');
+
+    if (!data.type || typeof data.type !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid type",
+        path,
+        data.type,
+        "NodeType",
+      );
     }
-    
-    if (!data.filePath || typeof data.filePath !== 'string') {
-      throw new SerializationValidationError('Missing or invalid filePath', path, data.filePath, 'string');
+
+    if (!data.filePath || typeof data.filePath !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid filePath",
+        path,
+        data.filePath,
+        "string",
+      );
     }
 
     if (!this.validatePosition(data.start)) {
-      throw new SerializationValidationError('Invalid start position', `${path}.start`, data.start, 'Position');
+      throw new SerializationValidationError(
+        "Invalid start position",
+        `${path}.start`,
+        data.start,
+        "Position",
+      );
     }
 
     if (!this.validatePosition(data.end)) {
-      throw new SerializationValidationError('Invalid end position', `${path}.end`, data.end, 'Position');
+      throw new SerializationValidationError(
+        "Invalid end position",
+        `${path}.end`,
+        data.end,
+        "Position",
+      );
     }
 
     if (!Array.isArray(data.children)) {
-      throw new SerializationValidationError('Children must be an array', `${path}.children`, data.children, 'string[]');
+      throw new SerializationValidationError(
+        "Children must be an array",
+        `${path}.children`,
+        data.children,
+        "string[]",
+      );
     }
   }
 
@@ -529,20 +647,40 @@ export class NodeSerializer {
    * Validate SerializedFile structure
    */
   private validateSerializedFile(data: SerializedFile): void {
-    if (!data.$schema || typeof data.$schema !== 'string') {
-      throw new SerializationValidationError('Missing or invalid $schema', 'root', data.$schema, 'string');
+    if (!data.$schema || typeof data.$schema !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid $schema",
+        "root",
+        data.$schema,
+        "string",
+      );
     }
-    
-    if (!data.filePath || typeof data.filePath !== 'string') {
-      throw new SerializationValidationError('Missing or invalid filePath', 'root', data.filePath, 'string');
+
+    if (!data.filePath || typeof data.filePath !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid filePath",
+        "root",
+        data.filePath,
+        "string",
+      );
     }
-    
-    if (!data.language || typeof data.language !== 'string') {
-      throw new SerializationValidationError('Missing or invalid language', 'root', data.language, 'string');
+
+    if (!data.language || typeof data.language !== "string") {
+      throw new SerializationValidationError(
+        "Missing or invalid language",
+        "root",
+        data.language,
+        "string",
+      );
     }
 
     if (!Array.isArray(data.nodes)) {
-      throw new SerializationValidationError('Missing or invalid nodes array', 'root', data.nodes, 'SerializedASTNode[]');
+      throw new SerializationValidationError(
+        "Missing or invalid nodes array",
+        "root",
+        data.nodes,
+        "SerializedASTNode[]",
+      );
     }
 
     for (let i = 0; i < data.nodes.length; i++) {
@@ -558,9 +696,9 @@ export class NodeSerializer {
    */
   private validatePosition(position: Position): boolean {
     return (
-      typeof position === 'object' &&
-      typeof position.line === 'number' &&
-      typeof position.column === 'number' &&
+      typeof position === "object" &&
+      typeof position.line === "number" &&
+      typeof position.column === "number" &&
       position.line >= 0 &&
       position.column >= 0
     );
@@ -576,12 +714,12 @@ export class NodeSerializer {
 
     // Future schema migration logic would go here
     // For now, we only have version 1.0.0
-    
+
     if (!this.isSupportedSchemaVersion(data.$schema)) {
       throw new SchemaMigrationError(
         `Unsupported schema version: ${data.$schema}`,
         data.$schema,
-        CURRENT_SCHEMA_VERSION
+        CURRENT_SCHEMA_VERSION,
       );
     }
 
@@ -597,12 +735,12 @@ export class NodeSerializer {
     }
 
     // Future file schema migration logic would go here
-    
+
     if (!this.isSupportedSchemaVersion(data.$schema)) {
       throw new SchemaMigrationError(
         `Unsupported file schema version: ${data.$schema}`,
         data.$schema,
-        CURRENT_SCHEMA_VERSION
+        CURRENT_SCHEMA_VERSION,
       );
     }
 
@@ -613,34 +751,61 @@ export class NodeSerializer {
    * Check if schema version is supported
    */
   private isSupportedSchemaVersion(version: string): boolean {
-    const supportedVersions = ['1.0.0'];
+    const supportedVersions = ["1.0.0"];
     return supportedVersions.includes(version);
   }
 
   /**
    * Deep equality check
    */
-  private deepEqual(obj1: any, obj2: any): boolean {
-    if (obj1 === obj2) return true;
-    
-    if (obj1 == null || obj2 == null) return obj1 === obj2;
-    
-    if (typeof obj1 !== typeof obj2) return false;
-    
-    if (typeof obj1 !== 'object') return obj1 === obj2;
-    
-    if (Array.isArray(obj1) !== Array.isArray(obj2)) return false;
-    
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-    
-    if (keys1.length !== keys2.length) return false;
-    
-    for (const key of keys1) {
-      if (!keys2.includes(key)) return false;
-      if (!this.deepEqual(obj1[key], obj2[key])) return false;
+  private deepEqual(obj1: unknown, obj2: unknown): boolean {
+    if (obj1 === obj2) {
+      return true;
     }
-    
+
+    if (
+      obj1 === null ||
+      obj1 === undefined ||
+      obj2 === null ||
+      obj2 === undefined
+    ) {
+      return obj1 === obj2;
+    }
+
+    if (typeof obj1 !== typeof obj2) {
+      return false;
+    }
+
+    if (typeof obj1 !== "object") {
+      return obj1 === obj2;
+    }
+
+    if (Array.isArray(obj1) !== Array.isArray(obj2)) {
+      return false;
+    }
+
+    // At this point both are objects (but could be arrays)
+    const keys1 = Object.keys(obj1 as Record<string, unknown>);
+    const keys2 = Object.keys(obj2 as Record<string, unknown>);
+
+    if (keys1.length !== keys2.length) {
+      return false;
+    }
+
+    for (const key of keys1) {
+      if (!keys2.includes(key)) {
+        return false;
+      }
+      if (
+        !this.deepEqual(
+          (obj1 as Record<string, unknown>)[key],
+          (obj2 as Record<string, unknown>)[key],
+        )
+      ) {
+        return false;
+      }
+    }
+
     return true;
   }
 }
@@ -698,42 +863,51 @@ export class SerializationUtils {
    */
   static estimateSerializedSize(nodes: ASTNode[]): number {
     let size = 0;
-    
+
     const estimateNodeSize = (node: ASTNode): number => {
       let nodeSize = 0;
-      
+
       // Base properties
       nodeSize += node.id.length + node.type.length + node.filePath.length;
       nodeSize += 200; // JSON overhead + positions + other fields
-      
+
       // Optional text fields
-      if (node.name) nodeSize += node.name.length;
-      if (node.sourceText) nodeSize += node.sourceText.length;
-      if (node.signature) nodeSize += node.signature.length;
-      
+      if (node.name) {
+        nodeSize += node.name.length;
+      }
+      if (node.sourceText) {
+        nodeSize += node.sourceText.length;
+      }
+      if (node.signature) {
+        nodeSize += node.signature.length;
+      }
+
       // Metadata
       nodeSize += JSON.stringify(node.metadata).length;
-      
+
       // Children array (just IDs)
       nodeSize += node.children.length * 50; // Estimated average ID length
-      
+
       return nodeSize;
     };
-    
+
     for (const node of nodes) {
       size += estimateNodeSize(node);
     }
-    
+
     return size;
   }
 
   /**
    * Calculate compression ratio for serialized data
    */
-  static calculateCompressionRatio(original: string, compressed: string): number {
+  static calculateCompressionRatio(
+    original: string,
+    compressed: string,
+  ): number {
     if (original.length === 0) {
       return 0; // No compression possible for empty strings
     }
-    return 1 - (compressed.length / original.length);
+    return 1 - compressed.length / original.length;
   }
 }

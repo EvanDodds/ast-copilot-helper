@@ -1,11 +1,11 @@
 /**
  * Metadata Extraction System
- * 
+ *
  * Extracts comprehensive metadata from AST nodes including scope chains,
  * modifiers, imports/exports, documentation, and language-specific annotations.
  */
 
-import { NodeMetadata, Position } from './ast-schema';
+import type { NodeMetadata, Position } from "./ast-schema";
 
 /**
  * Raw tree-sitter node interface (minimal definition for metadata extraction)
@@ -50,7 +50,7 @@ export interface ImportInfo {
   /** Source module/file */
   source: string;
   /** Import type (default, named, namespace, etc.) */
-  type: 'default' | 'named' | 'namespace' | 'side-effect';
+  type: "default" | "named" | "namespace" | "side-effect";
   /** Imported symbol name */
   imported?: string;
   /** Local alias name */
@@ -64,7 +64,7 @@ export interface ImportInfo {
  */
 export interface ExportInfo {
   /** Export type */
-  type: 'default' | 'named' | 're-export';
+  type: "default" | "named" | "re-export";
   /** Exported symbol name */
   name?: string;
   /** Source module (for re-exports) */
@@ -177,7 +177,7 @@ export interface MetadataConfig {
 
 /**
  * Metadata Extractor
- * 
+ *
  * Extracts comprehensive metadata from AST nodes including scope chains,
  * modifiers, imports/exports, documentation, and language-specific annotations.
  */
@@ -190,7 +190,14 @@ export class MetadataExtractor {
     extractDocumentation: true,
     extractAnnotations: true,
     maxDocumentationLength: 2000,
-    supportedLanguages: ['typescript', 'javascript', 'python', 'java', 'c', 'cpp'],
+    supportedLanguages: [
+      "typescript",
+      "javascript",
+      "python",
+      "java",
+      "c",
+      "cpp",
+    ],
   };
 
   private config: MetadataConfig;
@@ -201,12 +208,15 @@ export class MetadataExtractor {
 
   /**
    * Extract metadata from a raw AST node
-   * 
+   *
    * @param rawNode - Raw tree-sitter node
    * @param context - Extraction context
    * @returns Complete node metadata
    */
-  extractMetadata(rawNode: RawASTNode, context: ExtractionContext): NodeMetadata {
+  extractMetadata(
+    rawNode: RawASTNode,
+    context: ExtractionContext,
+  ): NodeMetadata {
     const metadata: NodeMetadata = {
       language: context.language,
       scope: [],
@@ -249,12 +259,15 @@ export class MetadataExtractor {
   /**
    * Extract scope chain information
    */
-  private extractScope(rawNode: RawASTNode, context: ExtractionContext): string[] {
+  private extractScope(
+    rawNode: RawASTNode,
+    context: ExtractionContext,
+  ): string[] {
     const scope = [...context.scopeStack];
-    
+
     // Add current node to scope if it creates a new scope
     const scopeCreatingTypes = this.getScopeCreatingTypes(context.language);
-    
+
     if (scopeCreatingTypes.includes(rawNode.type)) {
       const scopeName = this.extractNodeName(rawNode) || rawNode.type;
       scope.push(scopeName);
@@ -266,23 +279,26 @@ export class MetadataExtractor {
   /**
    * Extract modifiers (public, private, static, etc.)
    */
-  private extractModifiers(rawNode: RawASTNode, context: ExtractionContext): string[] {
+  private extractModifiers(
+    rawNode: RawASTNode,
+    context: ExtractionContext,
+  ): string[] {
     const modifiers: string[] = [];
 
     // Language-specific modifier extraction
     switch (context.language) {
-      case 'typescript':
-      case 'javascript':
+      case "typescript":
+      case "javascript":
         modifiers.push(...this.extractTSJSModifiers(rawNode));
         break;
-      case 'python':
+      case "python":
         modifiers.push(...this.extractPythonModifiers(rawNode));
         break;
-      case 'java':
+      case "java":
         modifiers.push(...this.extractJavaModifiers(rawNode));
         break;
-      case 'c':
-      case 'cpp':
+      case "c":
+      case "cpp":
         modifiers.push(...this.extractCModifiers(rawNode));
         break;
     }
@@ -293,12 +309,15 @@ export class MetadataExtractor {
   /**
    * Extract import references for this node
    */
-  private extractImports(rawNode: RawASTNode, context: ExtractionContext): string[] {
+  private extractImports(
+    rawNode: RawASTNode,
+    context: ExtractionContext,
+  ): string[] {
     const imports: string[] = [];
-    
+
     // Find identifier references in the node
     const identifiers = this.findIdentifiers(rawNode);
-    
+
     for (const identifier of identifiers) {
       const importInfo = context.fileImports.get(identifier);
       if (importInfo) {
@@ -312,18 +331,27 @@ export class MetadataExtractor {
   /**
    * Extract export information for this node
    */
-  private extractExports(rawNode: RawASTNode, context: ExtractionContext): string[] {
+  private extractExports(
+    rawNode: RawASTNode,
+    context: ExtractionContext,
+  ): string[] {
     const exports: string[] = [];
 
     // Check if this node is exported
     const nodeName = this.extractNodeName(rawNode);
-    if (!nodeName) return exports;
+    if (!nodeName) {
+      return exports;
+    }
 
     // Check file exports for this name
     const exportsArray = Array.from(context.fileExports);
     for (const exportInfo of exportsArray) {
-      if (exportInfo.name === nodeName || exportInfo.type === 'default') {
-        exports.push(exportInfo.type === 'default' ? 'default' : exportInfo.name || nodeName);
+      if (exportInfo.name === nodeName || exportInfo.type === "default") {
+        exports.push(
+          exportInfo.type === "default"
+            ? "default"
+            : exportInfo.name || nodeName,
+        );
       }
     }
 
@@ -339,16 +367,22 @@ export class MetadataExtractor {
   /**
    * Extract documentation from comments
    */
-  private extractDocumentation(rawNode: RawASTNode, context: ExtractionContext): string | undefined {
+  private extractDocumentation(
+    rawNode: RawASTNode,
+    context: ExtractionContext,
+  ): string | undefined {
     const docComment = this.findDocumentationComment(rawNode, context);
-    
-    if (!docComment) return undefined;
+
+    if (!docComment) {
+      return undefined;
+    }
 
     let docText = this.cleanDocumentationText(docComment, context.language);
-    
+
     // Truncate if too long
     if (docText.length > this.config.maxDocumentationLength) {
-      docText = docText.substring(0, this.config.maxDocumentationLength) + '...';
+      docText =
+        docText.substring(0, this.config.maxDocumentationLength) + "...";
     }
 
     return docText || undefined;
@@ -357,18 +391,21 @@ export class MetadataExtractor {
   /**
    * Extract language-specific annotations
    */
-  private extractAnnotations(rawNode: RawASTNode, context: ExtractionContext): string[] {
+  private extractAnnotations(
+    rawNode: RawASTNode,
+    context: ExtractionContext,
+  ): string[] {
     const annotations: string[] = [];
 
     switch (context.language) {
-      case 'typescript':
-      case 'javascript':
+      case "typescript":
+      case "javascript":
         annotations.push(...this.extractTSJSAnnotations(rawNode));
         break;
-      case 'python':
+      case "python":
         annotations.push(...this.extractPythonAnnotations(rawNode));
         break;
-      case 'java':
+      case "java":
         annotations.push(...this.extractJavaAnnotations(rawNode));
         break;
     }
@@ -382,18 +419,18 @@ export class MetadataExtractor {
   private extractLanguageSpecific(
     rawNode: RawASTNode,
     context: ExtractionContext,
-    metadata: NodeMetadata
+    metadata: NodeMetadata,
   ): void {
     metadata.languageSpecific = metadata.languageSpecific || {};
 
     switch (context.language) {
-      case 'typescript':
+      case "typescript":
         this.extractTypeScriptSpecific(rawNode, context, metadata);
         break;
-      case 'python':
+      case "python":
         this.extractPythonSpecific(rawNode, context, metadata);
         break;
-      case 'java':
+      case "java":
         this.extractJavaSpecific(rawNode, context, metadata);
         break;
     }
@@ -403,16 +440,47 @@ export class MetadataExtractor {
    * Get node types that create new scopes for a language
    */
   private getScopeCreatingTypes(language: string): string[] {
-    const commonTypes = ['function', 'method', 'class', 'interface', 'namespace'];
-    
+    const commonTypes = [
+      "function",
+      "method",
+      "class",
+      "interface",
+      "namespace",
+    ];
+
     switch (language) {
-      case 'typescript':
-      case 'javascript':
-        return [...commonTypes, 'arrow_function', 'function_declaration', 'method_definition', 'class_declaration', 'if_statement', 'for_statement', 'while_statement'];
-      case 'python':
-        return [...commonTypes, 'function_definition', 'class_definition', 'lambda', 'if_statement', 'for_statement', 'while_statement'];
-      case 'java':
-        return [...commonTypes, 'method_declaration', 'class_declaration', 'interface_declaration', 'if_statement', 'for_statement', 'while_statement'];
+      case "typescript":
+      case "javascript":
+        return [
+          ...commonTypes,
+          "arrow_function",
+          "function_declaration",
+          "method_definition",
+          "class_declaration",
+          "if_statement",
+          "for_statement",
+          "while_statement",
+        ];
+      case "python":
+        return [
+          ...commonTypes,
+          "function_definition",
+          "class_definition",
+          "lambda",
+          "if_statement",
+          "for_statement",
+          "while_statement",
+        ];
+      case "java":
+        return [
+          ...commonTypes,
+          "method_declaration",
+          "class_declaration",
+          "interface_declaration",
+          "if_statement",
+          "for_statement",
+          "while_statement",
+        ];
       default:
         return commonTypes;
     }
@@ -423,10 +491,12 @@ export class MetadataExtractor {
    */
   private extractNodeName(rawNode: RawASTNode): string | undefined {
     // Try to find name in common patterns
-    const nameFields = ['name', 'identifier', 'id'];
-    
+    const nameFields = ["name", "identifier", "id"];
+
     for (const field of nameFields) {
-      const nameChild = rawNode.children.find(child => child.fieldName === field);
+      const nameChild = rawNode.children.find(
+        (child) => child.fieldName === field,
+      );
       if (nameChild) {
         return nameChild.text;
       }
@@ -434,7 +504,7 @@ export class MetadataExtractor {
 
     // Try common child patterns
     const firstNamedChild = rawNode.namedChildren[0];
-    if (firstNamedChild && firstNamedChild.type === 'identifier') {
+    if (firstNamedChild && firstNamedChild.type === "identifier") {
       return firstNamedChild.text;
     }
 
@@ -446,11 +516,23 @@ export class MetadataExtractor {
    */
   private extractTSJSModifiers(rawNode: RawASTNode): string[] {
     const modifiers: string[] = [];
-    const modifierTypes = ['public', 'private', 'protected', 'static', 'abstract', 'async', 'readonly', 'export'];
-    
+    const modifierTypes = [
+      "public",
+      "private",
+      "protected",
+      "static",
+      "abstract",
+      "async",
+      "readonly",
+      "export",
+    ];
+
     for (const child of rawNode.children) {
-      if (modifierTypes.includes(child.type) || modifierTypes.includes(child.text)) {
-        modifiers.push(child.type === 'keyword' ? child.text : child.type);
+      if (
+        modifierTypes.includes(child.type) ||
+        modifierTypes.includes(child.text)
+      ) {
+        modifiers.push(child.type === "keyword" ? child.text : child.type);
       }
     }
 
@@ -462,14 +544,14 @@ export class MetadataExtractor {
    */
   private extractPythonModifiers(rawNode: RawASTNode): string[] {
     const modifiers: string[] = [];
-    
+
     // Python modifiers are mostly naming conventions
     const nodeName = this.extractNodeName(rawNode);
     if (nodeName) {
-      if (nodeName.startsWith('__') && nodeName.endsWith('__')) {
-        modifiers.push('magic');
-      } else if (nodeName.startsWith('_')) {
-        modifiers.push('private');
+      if (nodeName.startsWith("__") && nodeName.endsWith("__")) {
+        modifiers.push("magic");
+      } else if (nodeName.startsWith("_")) {
+        modifiers.push("private");
       }
     }
 
@@ -485,8 +567,17 @@ export class MetadataExtractor {
    */
   private extractJavaModifiers(rawNode: RawASTNode): string[] {
     const modifiers: string[] = [];
-    const javaModifiers = ['public', 'private', 'protected', 'static', 'final', 'abstract', 'synchronized', 'volatile'];
-    
+    const javaModifiers = [
+      "public",
+      "private",
+      "protected",
+      "static",
+      "final",
+      "abstract",
+      "synchronized",
+      "volatile",
+    ];
+
     for (const child of rawNode.children) {
       if (javaModifiers.includes(child.text)) {
         modifiers.push(child.text);
@@ -501,8 +592,15 @@ export class MetadataExtractor {
    */
   private extractCModifiers(rawNode: RawASTNode): string[] {
     const modifiers: string[] = [];
-    const cModifiers = ['static', 'extern', 'inline', 'const', 'volatile', 'restrict'];
-    
+    const cModifiers = [
+      "static",
+      "extern",
+      "inline",
+      "const",
+      "volatile",
+      "restrict",
+    ];
+
     for (const child of rawNode.children) {
       if (cModifiers.includes(child.text)) {
         modifiers.push(child.text);
@@ -517,12 +615,12 @@ export class MetadataExtractor {
    */
   private findIdentifiers(rawNode: RawASTNode): string[] {
     const identifiers: string[] = [];
-    
+
     const traverse = (node: RawASTNode) => {
-      if (node.type === 'identifier') {
+      if (node.type === "identifier") {
         identifiers.push(node.text);
       }
-      
+
       for (const child of node.children) {
         traverse(child);
       }
@@ -539,7 +637,7 @@ export class MetadataExtractor {
     // Check parent or siblings for export keywords
     let current = rawNode.parent;
     while (current) {
-      if (current.type.includes('export') || current.text.includes('export')) {
+      if (current.type.includes("export") || current.text.includes("export")) {
         return true;
       }
       current = current.parent;
@@ -554,28 +652,31 @@ export class MetadataExtractor {
   private getDirectExportType(rawNode: RawASTNode): string {
     let current = rawNode.parent;
     while (current) {
-      if (current.text.includes('export default')) {
-        return 'default';
-      } else if (current.text.includes('export')) {
-        return 'named';
+      if (current.text.includes("export default")) {
+        return "default";
+      } else if (current.text.includes("export")) {
+        return "named";
       }
       current = current.parent;
     }
-    
-    return 'named';
+
+    return "named";
   }
 
   /**
    * Find documentation comment for a node
    */
-  private findDocumentationComment(rawNode: RawASTNode, context: ExtractionContext): string | null {
+  private findDocumentationComment(
+    rawNode: RawASTNode,
+    context: ExtractionContext,
+  ): string | null {
     // Look for comment nodes before this node
     const nodeStart = rawNode.startPosition;
-    const lines = context.sourceText.split('\n');
-    
-    let commentLines: string[] = [];
+    const lines = context.sourceText.split("\n");
+
+    const commentLines: string[] = [];
     let currentLine = nodeStart.row - 1;
-    
+
     // Look backwards for comments
     while (currentLine >= 0) {
       if (currentLine >= 0 && currentLine < lines.length) {
@@ -585,13 +686,13 @@ export class MetadataExtractor {
           continue;
         }
         const trimmedLine = line.trim();
-        
+
         if (this.isCommentLine(trimmedLine, context.language)) {
-          commentLines.unshift(this.stripCommentMarkers(trimmedLine, context.language));
+          commentLines.unshift(
+            this.stripCommentMarkers(trimmedLine, context.language),
+          );
           currentLine--;
-        } else if (trimmedLine === '') {
-          currentLine--;
-        } else if (trimmedLine === '') {
+        } else if (trimmedLine === "") {
           currentLine--;
         } else {
           break; // Non-comment, non-empty line
@@ -601,7 +702,7 @@ export class MetadataExtractor {
       }
     }
 
-    return commentLines.length > 0 ? commentLines.join('\n') : null;
+    return commentLines.length > 0 ? commentLines.join("\n") : null;
   }
 
   /**
@@ -609,14 +710,20 @@ export class MetadataExtractor {
    */
   private isCommentLine(line: string, language: string): boolean {
     switch (language) {
-      case 'typescript':
-      case 'javascript':
-      case 'java':
-      case 'c':
-      case 'cpp':
-        return line.startsWith('//') || line.startsWith('/*') || line.startsWith('*');
-      case 'python':
-        return line.startsWith('#') || line.startsWith('"""') || line.startsWith("'''");
+      case "typescript":
+      case "javascript":
+      case "java":
+      case "c":
+      case "cpp":
+        return (
+          line.startsWith("//") || line.startsWith("/*") || line.startsWith("*")
+        );
+      case "python":
+        return (
+          line.startsWith("#") ||
+          line.startsWith('"""') ||
+          line.startsWith("'''")
+        );
       default:
         return false;
     }
@@ -627,14 +734,14 @@ export class MetadataExtractor {
    */
   private stripCommentMarkers(line: string, language: string): string {
     switch (language) {
-      case 'typescript':
-      case 'javascript':
-      case 'java':
-      case 'c':
-      case 'cpp':
-        return line.replace(/^\/\/\s?|^\*\s?|^\/\*\*?\s?|\*\/$/g, '').trim();
-      case 'python':
-        return line.replace(/^#\s?|^"""\s?|^'''\s?/g, '').trim();
+      case "typescript":
+      case "javascript":
+      case "java":
+      case "c":
+      case "cpp":
+        return line.replace(/^\/\/\s?|^\*\s?|^\/\*\*?\s?|\*\/$/g, "").trim();
+      case "python":
+        return line.replace(/^#\s?|^"""\s?|^'''\s?/g, "").trim();
       default:
         return line;
     }
@@ -645,18 +752,18 @@ export class MetadataExtractor {
    */
   private cleanDocumentationText(docText: string, language: string): string {
     // Remove extra whitespace and normalize
-    let cleaned = docText.replace(/\s+/g, ' ').trim();
-    
+    let cleaned = docText.replace(/\s+/g, " ").trim();
+
     // Language-specific cleaning
     switch (language) {
-      case 'typescript':
-      case 'javascript':
+      case "typescript":
+      case "javascript":
         // Remove JSDoc tags for simple description
-        cleaned = cleaned.replace(/@\w+.*$/gm, '').trim();
+        cleaned = cleaned.replace(/@\w+.*$/gm, "").trim();
         break;
-      case 'python':
+      case "python":
         // Clean Python docstrings
-        cleaned = cleaned.replace(/^"""?|"""?$/g, '').trim();
+        cleaned = cleaned.replace(/^"""?|"""?$/g, "").trim();
         break;
     }
 
@@ -668,7 +775,7 @@ export class MetadataExtractor {
    */
   private extractTSJSAnnotations(rawNode: RawASTNode): string[] {
     const annotations: string[] = [];
-    
+
     // Look for decorators (@decorator)
     const decorators = this.findDecorators(rawNode);
     annotations.push(...decorators);
@@ -681,7 +788,7 @@ export class MetadataExtractor {
    */
   private extractPythonAnnotations(rawNode: RawASTNode): string[] {
     const annotations: string[] = [];
-    
+
     // Look for decorators (@decorator)
     const decorators = this.findPythonDecorators(rawNode);
     annotations.push(...decorators);
@@ -694,10 +801,10 @@ export class MetadataExtractor {
    */
   private extractJavaAnnotations(rawNode: RawASTNode): string[] {
     const annotations: string[] = [];
-    
+
     // Look for annotations (@Annotation)
     for (const child of rawNode.children) {
-      if (child.type === 'annotation' || child.text.startsWith('@')) {
+      if (child.type === "annotation" || child.text.startsWith("@")) {
         annotations.push(child.text);
       }
     }
@@ -710,9 +817,12 @@ export class MetadataExtractor {
    */
   private findDecorators(rawNode: RawASTNode): string[] {
     const decorators: string[] = [];
-    
+
     for (const child of rawNode.children) {
-      if (child.type === 'decorator' || (child.type === 'identifier' && child.text.startsWith('@'))) {
+      if (
+        child.type === "decorator" ||
+        (child.type === "identifier" && child.text.startsWith("@"))
+      ) {
         decorators.push(child.text);
       }
     }
@@ -725,12 +835,12 @@ export class MetadataExtractor {
    */
   private findPythonDecorators(rawNode: RawASTNode): string[] {
     const decorators: string[] = [];
-    
+
     // Look at parent or siblings for decorators
     let current = rawNode.parent;
     while (current) {
       for (const child of current.children) {
-        if (child.type === 'decorator' || child.text.startsWith('@')) {
+        if (child.type === "decorator" || child.text.startsWith("@")) {
           decorators.push(child.text);
         }
       }
@@ -746,10 +856,13 @@ export class MetadataExtractor {
   private extractTypeScriptSpecific(
     rawNode: RawASTNode,
     _context: ExtractionContext,
-    metadata: NodeMetadata
+    metadata: NodeMetadata,
   ): void {
-    const specific = metadata.languageSpecific!;
-    
+    if (!metadata.languageSpecific) {
+      metadata.languageSpecific = {};
+    }
+    const specific = metadata.languageSpecific;
+
     // Type annotations
     const typeAnnotation = this.findTypeAnnotation(rawNode);
     if (typeAnnotation) {
@@ -763,7 +876,7 @@ export class MetadataExtractor {
     }
 
     // Interface implementations
-    if (rawNode.type === 'class_declaration') {
+    if (rawNode.type === "class_declaration") {
       const implementsList = this.findImplements(rawNode);
       if (implementsList.length > 0) {
         specific.implements = implementsList;
@@ -777,10 +890,13 @@ export class MetadataExtractor {
   private extractPythonSpecific(
     rawNode: RawASTNode,
     _context: ExtractionContext,
-    metadata: NodeMetadata
+    metadata: NodeMetadata,
   ): void {
-    const specific = metadata.languageSpecific!;
-    
+    if (!metadata.languageSpecific) {
+      metadata.languageSpecific = {};
+    }
+    const specific = metadata.languageSpecific;
+
     // Type hints
     const typeHint = this.findPythonTypeHint(rawNode);
     if (typeHint) {
@@ -788,7 +904,7 @@ export class MetadataExtractor {
     }
 
     // Class inheritance
-    if (rawNode.type === 'class_definition') {
+    if (rawNode.type === "class_definition") {
       const baseClasses = this.findPythonBaseClasses(rawNode);
       if (baseClasses.length > 0) {
         specific.baseClasses = baseClasses;
@@ -802,10 +918,13 @@ export class MetadataExtractor {
   private extractJavaSpecific(
     rawNode: RawASTNode,
     _context: ExtractionContext,
-    metadata: NodeMetadata
+    metadata: NodeMetadata,
   ): void {
-    const specific = metadata.languageSpecific!;
-    
+    if (!metadata.languageSpecific) {
+      metadata.languageSpecific = {};
+    }
+    const specific = metadata.languageSpecific;
+
     // Generic parameters
     const generics = this.findJavaGenerics(rawNode);
     if (generics.length > 0) {
@@ -813,7 +932,7 @@ export class MetadataExtractor {
     }
 
     // Interface implementations
-    if (rawNode.type === 'class_declaration') {
+    if (rawNode.type === "class_declaration") {
       const implementsList = this.findJavaImplements(rawNode);
       if (implementsList.length > 0) {
         specific.implements = implementsList;
@@ -826,7 +945,7 @@ export class MetadataExtractor {
    */
   private findTypeAnnotation(rawNode: RawASTNode): string | undefined {
     for (const child of rawNode.children) {
-      if (child.type === 'type_annotation' || child.fieldName === 'type') {
+      if (child.type === "type_annotation" || child.fieldName === "type") {
         return child.text;
       }
     }
@@ -838,11 +957,11 @@ export class MetadataExtractor {
    */
   private findGenerics(rawNode: RawASTNode): string[] {
     const generics: string[] = [];
-    
+
     for (const child of rawNode.children) {
-      if (child.type === 'type_parameters') {
+      if (child.type === "type_parameters") {
         for (const param of child.children) {
-          if (param.type === 'type_parameter') {
+          if (param.type === "type_parameter") {
             generics.push(param.text);
           }
         }
@@ -857,11 +976,11 @@ export class MetadataExtractor {
    */
   private findImplements(rawNode: RawASTNode): string[] {
     const implementsList: string[] = [];
-    
+
     for (const child of rawNode.children) {
-      if (child.type === 'class_heritage' || child.fieldName === 'implements') {
+      if (child.type === "class_heritage" || child.fieldName === "implements") {
         for (const impl of child.children) {
-          if (impl.type === 'identifier') {
+          if (impl.type === "identifier") {
             implementsList.push(impl.text);
           }
         }
@@ -877,7 +996,7 @@ export class MetadataExtractor {
   private findPythonTypeHint(rawNode: RawASTNode): string | undefined {
     // Look for type annotations in function definitions
     for (const child of rawNode.children) {
-      if (child.fieldName === 'return_type') {
+      if (child.fieldName === "return_type") {
         return child.text;
       }
     }
@@ -889,11 +1008,11 @@ export class MetadataExtractor {
    */
   private findPythonBaseClasses(rawNode: RawASTNode): string[] {
     const baseClasses: string[] = [];
-    
+
     for (const child of rawNode.children) {
-      if (child.fieldName === 'superclasses') {
+      if (child.fieldName === "superclasses") {
         for (const base of child.children) {
-          if (base.type === 'identifier') {
+          if (base.type === "identifier") {
             baseClasses.push(base.text);
           }
         }
@@ -908,11 +1027,11 @@ export class MetadataExtractor {
    */
   private findJavaGenerics(rawNode: RawASTNode): string[] {
     const generics: string[] = [];
-    
+
     for (const child of rawNode.children) {
-      if (child.type === 'type_parameters') {
+      if (child.type === "type_parameters") {
         for (const param of child.children) {
-          if (param.type === 'type_parameter') {
+          if (param.type === "type_parameter") {
             generics.push(param.text);
           }
         }
@@ -927,11 +1046,11 @@ export class MetadataExtractor {
    */
   private findJavaImplements(rawNode: RawASTNode): string[] {
     const implementsList: string[] = [];
-    
+
     for (const child of rawNode.children) {
-      if (child.fieldName === 'interfaces') {
+      if (child.fieldName === "interfaces") {
         for (const impl of child.children) {
-          if (impl.type === 'type_identifier') {
+          if (impl.type === "type_identifier") {
             implementsList.push(impl.text);
           }
         }
@@ -953,7 +1072,7 @@ export class MetadataUtils {
     filePath: string,
     language: string,
     sourceText: string,
-    scopeStack: string[] = []
+    scopeStack: string[] = [],
   ): ExtractionContext {
     return {
       filePath,
@@ -968,18 +1087,26 @@ export class MetadataUtils {
   /**
    * Parse import statements from source text
    */
-  static parseImports(sourceText: string, language: string): Map<string, ImportInfo> {
+  static parseImports(
+    sourceText: string,
+    language: string,
+  ): Map<string, ImportInfo> {
     const imports = new Map<string, ImportInfo>();
-    const lines = sourceText.split('\n');
+    const lines = sourceText.split("\n");
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]?.trim();
-      if (!line) continue;
-      
+      if (!line) {
+        continue;
+      }
+
       const importInfos = MetadataUtils.parseImportLine(line, language, i + 1);
-      
+
       for (const importInfo of importInfos) {
-        imports.set(importInfo.local || importInfo.imported || 'default', importInfo);
+        imports.set(
+          importInfo.local || importInfo.imported || "default",
+          importInfo,
+        );
       }
     }
 
@@ -991,14 +1118,16 @@ export class MetadataUtils {
    */
   static parseExports(sourceText: string, language: string): Set<ExportInfo> {
     const exports = new Set<ExportInfo>();
-    const lines = sourceText.split('\n');
+    const lines = sourceText.split("\n");
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]?.trim();
-      if (!line) continue;
-      
+      if (!line) {
+        continue;
+      }
+
       const exportInfo = MetadataUtils.parseExportLine(line, language, i + 1);
-      
+
       if (exportInfo) {
         exports.add(exportInfo);
       }
@@ -1010,16 +1139,21 @@ export class MetadataUtils {
   /**
    * Parse single import line
    */
-  private static parseImportLine(line: string, language: string, lineNumber: number): ImportInfo[] {
+  private static parseImportLine(
+    line: string,
+    language: string,
+    lineNumber: number,
+  ): ImportInfo[] {
     const position: Position = { line: lineNumber, column: 0 };
 
     switch (language) {
-      case 'typescript':
-      case 'javascript':
+      case "typescript":
+      case "javascript":
         return MetadataUtils.parseTSJSImport(line, position);
-      case 'python':
+      case "python": {
         const pythonImport = MetadataUtils.parsePythonImport(line, position);
         return pythonImport ? [pythonImport] : [];
+      }
       default:
         return [];
     }
@@ -1028,14 +1162,18 @@ export class MetadataUtils {
   /**
    * Parse single export line
    */
-  private static parseExportLine(line: string, language: string, lineNumber: number): ExportInfo | null {
+  private static parseExportLine(
+    line: string,
+    language: string,
+    lineNumber: number,
+  ): ExportInfo | null {
     const position: Position = { line: lineNumber, column: 0 };
 
     switch (language) {
-      case 'typescript':
-      case 'javascript':
+      case "typescript":
+      case "javascript":
         return MetadataUtils.parseTSJSExport(line, position);
-      case 'python':
+      case "python":
         return MetadataUtils.parsePythonExport(line, position);
       default:
         return null;
@@ -1045,25 +1183,33 @@ export class MetadataUtils {
   /**
    * Parse TypeScript/JavaScript import
    */
-  private static parseTSJSImport(line: string, position: Position): ImportInfo[] {
+  private static parseTSJSImport(
+    line: string,
+    position: Position,
+  ): ImportInfo[] {
     const imports: ImportInfo[] = [];
 
     // import { name1, name2, name3 } from 'module'
-    const namedMatch = line.match(/import\s*\{\s*([^}]+)\s*\}\s*from\s*['"]([^'"]+)['"]/);
+    const namedMatch = line.match(
+      /import\s*\{\s*([^}]+)\s*\}\s*from\s*['"]([^'"]+)['"]/,
+    );
     if (namedMatch && namedMatch[1] && namedMatch[2]) {
       const [, importedItems, source] = namedMatch;
-      const items = importedItems.split(',').map(item => item.trim()).filter(item => item);
-      
+      const items = importedItems
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item);
+
       for (const item of items) {
         imports.push({
-          type: 'named',
+          type: "named",
           imported: item,
           local: item,
           source: source.trim(),
           position,
         });
       }
-      
+
       return imports;
     }
 
@@ -1072,13 +1218,13 @@ export class MetadataUtils {
     if (defaultMatch && defaultMatch[1] && defaultMatch[2]) {
       const [, local, source] = defaultMatch;
       imports.push({
-        type: 'default',
-        imported: 'default',
+        type: "default",
+        imported: "default",
         local: local.trim(),
         source: source.trim(),
         position,
       });
-      
+
       return imports;
     }
 
@@ -1088,11 +1234,14 @@ export class MetadataUtils {
   /**
    * Parse TypeScript/JavaScript export
    */
-  private static parseTSJSExport(line: string, position: Position): ExportInfo | null {
+  private static parseTSJSExport(
+    line: string,
+    position: Position,
+  ): ExportInfo | null {
     // export default
-    if (line.includes('export default')) {
+    if (line.includes("export default")) {
       return {
-        type: 'default',
+        type: "default",
         position,
       };
     }
@@ -1102,7 +1251,7 @@ export class MetadataUtils {
     if (namedMatch && namedMatch[1]) {
       const [, name] = namedMatch;
       return {
-        type: 'named',
+        type: "named",
         name: name.trim(),
         position,
       };
@@ -1114,13 +1263,16 @@ export class MetadataUtils {
   /**
    * Parse Python import
    */
-  private static parsePythonImport(line: string, position: Position): ImportInfo | null {
+  private static parsePythonImport(
+    line: string,
+    position: Position,
+  ): ImportInfo | null {
     // from module import name
     const fromMatch = line.match(/from\s+([^\s]+)\s+import\s+(.+)/);
     if (fromMatch && fromMatch[1] && fromMatch[2]) {
       const [, source, imported] = fromMatch;
       return {
-        type: 'named',
+        type: "named",
         imported: imported.trim(),
         local: imported.trim(),
         source: source.trim(),
@@ -1133,7 +1285,7 @@ export class MetadataUtils {
     if (importMatch && importMatch[1]) {
       const [, imported] = importMatch;
       return {
-        type: 'namespace',
+        type: "namespace",
         imported: imported.trim(),
         local: imported.trim(),
         source: imported.trim(),
@@ -1147,12 +1299,15 @@ export class MetadataUtils {
   /**
    * Parse Python export (limited - Python doesn't have explicit exports)
    */
-  private static parsePythonExport(line: string, position: Position): ExportInfo | null {
+  private static parsePythonExport(
+    line: string,
+    position: Position,
+  ): ExportInfo | null {
     // __all__ = [...]
-    if (line.includes('__all__')) {
+    if (line.includes("__all__")) {
       return {
-        type: 'named',
-        name: '__all__',
+        type: "named",
+        name: "__all__",
         position,
       };
     }

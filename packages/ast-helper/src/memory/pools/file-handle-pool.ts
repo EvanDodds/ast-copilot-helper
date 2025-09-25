@@ -3,13 +3,11 @@
  * Provides pooling for file system handles with path management and concurrent access control
  */
 
-import { BaseResourcePool, BasePoolConfig } from './base-pool.js';
-import { 
-  FileHandle, 
-  FileHandleFactory
-} from '../types.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import type { BasePoolConfig } from "./base-pool.js";
+import { BaseResourcePool } from "./base-pool.js";
+import type { FileHandle, FileHandleFactory } from "../types.js";
+import * as fs from "fs/promises";
+import * as path from "path";
 
 export interface FileHandlePoolConfig extends BasePoolConfig {
   basePath: string;
@@ -22,36 +20,40 @@ export interface FileHandlePoolConfig extends BasePoolConfig {
 
 export class FileHandlePool extends BaseResourcePool<FileHandle> {
   private poolConfig: FileHandlePoolConfig;
-  
+
   constructor(config: FileHandlePoolConfig) {
     const factory: FileHandleFactory = new FileHandleFactoryImpl(config);
     super(config, factory);
     this.poolConfig = config;
   }
 
-  async acquireFileHandle(filePath: string, mode: string = 'r'): Promise<FileHandle> {
+  async acquireFileHandle(filePath: string, mode = "r"): Promise<FileHandle> {
     // Create a specific file handle outside of the generic pool system
     // This is a specialized method that bypasses the generic pool for specific file access
-    const tempFactory = new SpecificFileHandleFactory(this.poolConfig, filePath, mode);
-    
+    const tempFactory = new SpecificFileHandleFactory(
+      this.poolConfig,
+      filePath,
+      mode,
+    );
+
     try {
       const resource = await tempFactory.create();
-      
+
       // Manually track this resource in our internal system by creating an internal lease
       const leaseId = `lease_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const resourceId = resource.id;
-      
+
       // Add to our internal tracking (simulating pool behavior)
       const pooledResource = {
         id: resourceId,
         resource,
-        state: 'active' as const,
+        state: "active" as const,
         createdAt: Date.now(),
         lastUsedAt: Date.now(),
         useCount: 1,
         leaseId,
       };
-      
+
       // Store in our private maps (we need to cast to access private members)
       (this as any).resources.set(resourceId, pooledResource);
       (this as any).inUseResources.set(leaseId, {
@@ -63,10 +65,12 @@ export class FileHandlePool extends BaseResourcePool<FileHandle> {
         },
         resourceId,
       });
-      
+
       return resource;
     } catch (error) {
-      throw new Error(`Failed to acquire file handle for ${filePath}: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to acquire file handle for ${filePath}: ${(error as Error).message}`,
+      );
     }
   }
 }
@@ -78,7 +82,7 @@ class FileHandleFactoryImpl implements FileHandleFactory {
 
   constructor(protected config: FileHandlePoolConfig) {
     this.basePath = config.basePath;
-    this.defaultMode = config.defaultMode || 'r';
+    this.defaultMode = config.defaultMode || "r";
     this.maxConcurrentFiles = config.maxConcurrentFiles;
   }
 
@@ -86,8 +90,8 @@ class FileHandleFactoryImpl implements FileHandleFactory {
     // For pool initialization, create a placeholder that doesn't require file system access
     return {
       id: `placeholder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      path: '',
-      mode: 'r',
+      path: "",
+      mode: "r",
       handle: null,
       isLocked: false,
       operations: 0,
@@ -112,7 +116,7 @@ class FileHandleFactoryImpl implements FileHandleFactory {
       if (!resource.handle) {
         return false;
       }
-      
+
       // Check if file handle is still valid by checking stats
       const stats = await resource.handle.stat();
       return stats !== null;
@@ -123,7 +127,7 @@ class FileHandleFactoryImpl implements FileHandleFactory {
 
   async reset(resource: FileHandle): Promise<void> {
     try {
-      if (resource.handle && resource.mode !== 'r') {
+      if (resource.handle && resource.mode !== "r") {
         // For writable files, sync any pending data
         await resource.handle.sync();
       }
@@ -133,7 +137,10 @@ class FileHandleFactoryImpl implements FileHandleFactory {
     }
   }
 
-  protected async createFileHandle(filePath: string, mode: string): Promise<FileHandle> {
+  protected async createFileHandle(
+    filePath: string,
+    mode: string,
+  ): Promise<FileHandle> {
     // Validate file path and extension if configured
     if (this.config.allowedExtensions) {
       const ext = path.extname(filePath).toLowerCase();
@@ -150,14 +157,16 @@ class FileHandleFactoryImpl implements FileHandleFactory {
 
     // Open file handle
     const handle = await fs.open(filePath, mode);
-    
+
     // Get file stats
     const stats = await handle.stat();
-    
+
     // Check file size limits
     if (this.config.maxFileSize && stats.size > this.config.maxFileSize) {
       await handle.close();
-      throw new Error(`File size ${stats.size} exceeds maximum ${this.config.maxFileSize}`);
+      throw new Error(
+        `File size ${stats.size} exceeds maximum ${this.config.maxFileSize}`,
+      );
     }
 
     return {
@@ -178,7 +187,7 @@ class SpecificFileHandleFactory extends FileHandleFactoryImpl {
   constructor(
     config: FileHandlePoolConfig,
     private filePath: string,
-    private fileMode: string
+    private fileMode: string,
   ) {
     super(config);
   }
@@ -187,7 +196,10 @@ class SpecificFileHandleFactory extends FileHandleFactoryImpl {
     return await this.createSpecificFileHandle(this.filePath, this.fileMode);
   }
 
-  private async createSpecificFileHandle(filePath: string, mode: string): Promise<FileHandle> {
+  private async createSpecificFileHandle(
+    filePath: string,
+    mode: string,
+  ): Promise<FileHandle> {
     // Validate file path and extension if configured
     if (this.config.allowedExtensions) {
       const ext = path.extname(filePath).toLowerCase();
@@ -200,7 +212,9 @@ class SpecificFileHandleFactory extends FileHandleFactoryImpl {
     const normalizedPath = path.resolve(filePath);
     const normalizedBasePath = path.resolve(this.basePath);
     if (!normalizedPath.startsWith(normalizedBasePath)) {
-      throw new Error(`File path ${filePath} is outside base path ${this.basePath}`);
+      throw new Error(
+        `File path ${filePath} is outside base path ${this.basePath}`,
+      );
     }
 
     // Create directory if needed
@@ -211,13 +225,13 @@ class SpecificFileHandleFactory extends FileHandleFactoryImpl {
 
     // Open file handle
     const handle = await fs.open(filePath, mode);
-    
+
     // Get file stats (create empty file if it doesn't exist and mode allows)
     let stats;
     try {
       stats = await handle.stat();
     } catch (error) {
-      if (mode.includes('w') || mode.includes('a')) {
+      if (mode.includes("w") || mode.includes("a")) {
         // File doesn't exist but we can create it
         stats = { size: 0 };
       } else {
@@ -229,7 +243,9 @@ class SpecificFileHandleFactory extends FileHandleFactoryImpl {
     // Check file size limits
     if (this.config.maxFileSize && stats.size > this.config.maxFileSize) {
       await handle.close();
-      throw new Error(`File size ${stats.size} exceeds maximum ${this.config.maxFileSize}`);
+      throw new Error(
+        `File size ${stats.size} exceeds maximum ${this.config.maxFileSize}`,
+      );
     }
 
     return {

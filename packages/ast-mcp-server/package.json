@@ -1,6 +1,6 @@
 {
   "name": "@ast-copilot-helper/ast-mcp-server",
-  "version": "0.1.0",
+  "version": "1.5.0",
   "description": "MCP protocol server that serves AST data from .astdb/ database",
   "main": "dist/index.js",
   "bin": "./bin/ast-mcp-server",
@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "echo 'Linting not configured yet'",
+    "lint": "eslint . --config ../../eslint.config.js",
+    "lint:fix": "eslint . --config ../../eslint.config.js --fix",
     "typecheck": "tsc --noEmit"
   },
   "engines": {
@@ -28,11 +29,11 @@
     "arm64"
   ],
   "dependencies": {
-    "@types/node": "^20.0.0"
+    "@types/node": "^24.5.2"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.0",
+    "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
   "files": [

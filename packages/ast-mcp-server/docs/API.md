@@ -21,6 +21,7 @@ All tools follow the MCP (Model Context Protocol) specification for tool calling
 Parses a file into its Abstract Syntax Tree representation.
 
 **Parameters:**
+
 ```typescript
 {
   filePath: string;              // Path to the file to parse
@@ -37,6 +38,7 @@ Parses a file into its Abstract Syntax Tree representation.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -49,6 +51,7 @@ Parses a file into its Abstract Syntax Tree representation.
 ```
 
 **Example:**
+
 ```json
 {
   "name": "parse_file",
@@ -68,6 +71,7 @@ Parses a file into its Abstract Syntax Tree representation.
 Extracts and analyzes function definitions from a file or AST.
 
 **Parameters:**
+
 ```typescript
 {
   filePath?: string;             // File to analyze (exclusive with ast)
@@ -81,6 +85,7 @@ Extracts and analyzes function definitions from a file or AST.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -111,6 +116,7 @@ interface FunctionInfo {
 Extracts and analyzes class definitions from a file or AST.
 
 **Parameters:**
+
 ```typescript
 {
   filePath?: string;             // File to analyze
@@ -124,6 +130,7 @@ Extracts and analyzes class definitions from a file or AST.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -152,6 +159,7 @@ interface ClassInfo {
 Analyzes import/require statements and dependencies.
 
 **Parameters:**
+
 ```typescript
 {
   filePath?: string;             // File to analyze
@@ -163,6 +171,7 @@ Analyzes import/require statements and dependencies.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -190,6 +199,7 @@ interface ImportInfo {
 Performs semantic search across the codebase using embeddings.
 
 **Parameters:**
+
 ```typescript
 {
   query: string;                 // Search query
@@ -204,6 +214,7 @@ Performs semantic search across the codebase using embeddings.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -226,6 +237,7 @@ interface SearchResult {
 Locates function, class, or variable definitions.
 
 **Parameters:**
+
 ```typescript
 {
   symbol: string;                // Symbol name to find
@@ -238,6 +250,7 @@ Locates function, class, or variable definitions.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -264,6 +277,7 @@ interface DefinitionInfo {
 Finds all references to a specific symbol.
 
 **Parameters:**
+
 ```typescript
 {
   symbol: string;                // Symbol to find references for
@@ -275,6 +289,7 @@ Finds all references to a specific symbol.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -291,6 +306,7 @@ Finds all references to a specific symbol.
 Intelligently reads files with AST context and analysis.
 
 **Parameters:**
+
 ```typescript
 {
   filePath: string;              // File to read
@@ -303,6 +319,7 @@ Intelligently reads files with AST context and analysis.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -321,6 +338,7 @@ Intelligently reads files with AST context and analysis.
 Performs comprehensive analysis of an entire repository.
 
 **Parameters:**
+
 ```typescript
 {
   repositoryPath: string;        // Path to repository root
@@ -335,6 +353,7 @@ Performs comprehensive analysis of an entire repository.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -360,11 +379,13 @@ All resources follow the pattern: `{scheme}://{type}/{path}?{params}`
 Returns the parsed AST for a specific file.
 
 **Parameters (query string):**
+
 - `includeComments=true/false` - Include comment nodes
 - `includePositions=true/false` - Include source positions
 - `format=json/yaml` - Response format
 
 **Example:**
+
 ```
 ast://file/src/utils/parser.ts?includeComments=true&format=json
 ```
@@ -374,6 +395,7 @@ ast://file/src/utils/parser.ts?includeComments=true&format=json
 Returns ASTs for all files in a directory.
 
 **Parameters:**
+
 - `recursive=true/false` - Include subdirectories
 - `fileTypes=.ts,.js` - Comma-separated file extensions
 
@@ -384,6 +406,7 @@ Returns ASTs for all files in a directory.
 Returns structural overview of a file.
 
 **Returns:**
+
 ```typescript
 {
   filePath: string;
@@ -409,6 +432,7 @@ Returns structural overview of entire repository.
 Returns code complexity metrics.
 
 **Returns:**
+
 ```typescript
 {
   filePath: string;
@@ -426,6 +450,7 @@ Returns code complexity metrics.
 Returns dependency analysis.
 
 **Returns:**
+
 ```typescript
 {
   filePath: string;
@@ -465,7 +490,7 @@ MCP_SERVER_NAME="My AST Server"
 MCP_SERVER_VERSION="1.0.0"
 MCP_SERVER_DESCRIPTION="Custom AST analysis server"
 
-# Transport configuration  
+# Transport configuration
 MCP_SERVER_TRANSPORT_TYPE=websocket
 MCP_SERVER_PORT=3001
 MCP_SERVER_HOST=localhost
@@ -506,7 +531,7 @@ JSON configuration file example:
   "name": "Production AST Server",
   "version": "1.2.0",
   "description": "High-performance AST analysis server",
-  
+
   "transport": {
     "type": "websocket",
     "port": 3001,
@@ -514,7 +539,7 @@ JSON configuration file example:
     "maxConnections": 200,
     "timeout": 30000
   },
-  
+
   "performance": {
     "maxConcurrentRequests": 100,
     "requestTimeout": 60000,
@@ -523,7 +548,7 @@ JSON configuration file example:
     "cacheEnabled": true,
     "gcThreshold": 0.7
   },
-  
+
   "logging": {
     "level": "warn",
     "enableFile": true,
@@ -532,7 +557,7 @@ JSON configuration file example:
     "logRequestBody": false,
     "enableStructuredLogging": true
   },
-  
+
   "security": {
     "enableAuthentication": true,
     "enableRateLimit": true,
@@ -542,7 +567,7 @@ JSON configuration file example:
     "enableTls": true,
     "allowedOrigins": ["https://app.example.com"]
   },
-  
+
   "features": {
     "enableTools": true,
     "enableResources": true,
@@ -550,14 +575,14 @@ JSON configuration file example:
     "enableTestEndpoints": false,
     "enableMetricsEndpoint": true
   },
-  
+
   "database": {
     "path": "./data/production.db",
     "hotReload": false,
     "backupInterval": 3600000,
     "maxSize": "10GB"
   },
-  
+
   "environment": {
     "nodeEnv": "production",
     "debugMode": false
@@ -570,6 +595,7 @@ JSON configuration file example:
 All API responses follow a consistent error format:
 
 ### Success Response
+
 ```typescript
 {
   success: true,
@@ -583,6 +609,7 @@ All API responses follow a consistent error format:
 ```
 
 ### Error Response
+
 ```typescript
 {
   success: false,
@@ -603,19 +630,19 @@ All API responses follow a consistent error format:
 
 Common error codes used throughout the API:
 
-| Code | Description |
-|------|-------------|
-| `INVALID_REQUEST` | Request format is invalid |
-| `MISSING_PARAMETER` | Required parameter is missing |
-| `INVALID_PARAMETER` | Parameter value is invalid |
-| `FILE_NOT_FOUND` | Requested file doesn't exist |
-| `PERMISSION_DENIED` | Access to resource denied |
-| `PARSE_ERROR` | Failed to parse file/AST |
-| `ANALYSIS_ERROR` | Analysis operation failed |
-| `SEARCH_ERROR` | Search operation failed |
-| `TIMEOUT_ERROR` | Operation timed out |
-| `INTERNAL_ERROR` | Internal server error |
-| `RATE_LIMITED` | Request rate limit exceeded |
+| Code                  | Description                     |
+| --------------------- | ------------------------------- |
+| `INVALID_REQUEST`     | Request format is invalid       |
+| `MISSING_PARAMETER`   | Required parameter is missing   |
+| `INVALID_PARAMETER`   | Parameter value is invalid      |
+| `FILE_NOT_FOUND`      | Requested file doesn't exist    |
+| `PERMISSION_DENIED`   | Access to resource denied       |
+| `PARSE_ERROR`         | Failed to parse file/AST        |
+| `ANALYSIS_ERROR`      | Analysis operation failed       |
+| `SEARCH_ERROR`        | Search operation failed         |
+| `TIMEOUT_ERROR`       | Operation timed out             |
+| `INTERNAL_ERROR`      | Internal server error           |
+| `RATE_LIMITED`        | Request rate limit exceeded     |
 | `SERVICE_UNAVAILABLE` | Service temporarily unavailable |
 
 ## Request/Response Examples
@@ -623,6 +650,7 @@ Common error codes used throughout the API:
 ### Example: Parse File Tool Call
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -643,6 +671,7 @@ Common error codes used throughout the API:
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -690,6 +719,7 @@ Common error codes used throughout the API:
 ### Example: Resource Access
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -702,6 +732,7 @@ Common error codes used throughout the API:
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -721,6 +752,7 @@ Common error codes used throughout the API:
 ### Example: Semantic Search
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -741,6 +773,7 @@ Common error codes used throughout the API:
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -748,7 +781,7 @@ Common error codes used throughout the API:
   "result": {
     "content": [
       {
-        "type": "text", 
+        "type": "text",
         "text": "Found 5 semantic matches for 'user authentication and authorization logic'"
       }
     ],

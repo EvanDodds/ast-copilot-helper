@@ -15,8 +15,8 @@ import type {
   DeploymentEnvironment,
   DeploymentPriority,
   CertificationLevel,
-  DeploymentCategory
-} from './types.js';
+  DeploymentCategory,
+} from "./types.js";
 
 /**
  * Default build verification configuration
@@ -29,20 +29,20 @@ const DEFAULT_BUILD_VERIFICATION: BuildVerificationConfig = {
     test: true,
     lint: true,
     bundle: true,
-    analyze: true
+    analyze: true,
   },
   thresholds: {
     testCoverage: 80,
     bundleSize: 10485760, // 10MB
     buildTime: 180000, // 3 minutes
-    errorThreshold: 0
+    errorThreshold: 0,
   },
   quality: {
     codeQuality: true,
     securityScan: true,
     dependencyCheck: true,
-    licenseCheck: true
-  }
+    licenseCheck: true,
+  },
 };
 
 /**
@@ -55,19 +55,19 @@ const DEFAULT_PACKAGE_DISTRIBUTION: PackageDistributionConfig = {
     npm: true,
     docker: false,
     maven: false,
-    pypi: false
+    pypi: false,
   },
   verification: {
     integrity: true,
     signatures: true,
     metadata: true,
-    dependencies: true
+    dependencies: true,
   },
   rollback: {
     enabled: true,
-    strategy: 'immediate',
-    timeout: 300000
-  }
+    strategy: "immediate",
+    timeout: 300000,
+  },
 };
 
 /**
@@ -78,33 +78,33 @@ const DEFAULT_HEALTH_CHECKS: HealthCheckConfig = {
   timeout: 120000, // 2 minutes
   endpoints: [
     {
-      name: 'api-health',
-      url: '/health',
-      method: 'GET',
+      name: "api-health",
+      url: "/health",
+      method: "GET",
       expectedStatus: [200],
       timeout: 5000,
-      retries: 3
+      retries: 3,
     },
     {
-      name: 'readiness',
-      url: '/ready',
-      method: 'GET',
+      name: "readiness",
+      url: "/ready",
+      method: "GET",
       expectedStatus: [200],
       timeout: 10000,
-      retries: 2
-    }
+      retries: 2,
+    },
   ],
   services: {
     database: true,
     cache: true,
     messageQueue: false,
-    externalApis: true
+    externalApis: true,
   },
   thresholds: {
     responseTime: 1000,
     errorRate: 5,
-    availability: 99.9
-  }
+    availability: 99.9,
+  },
 };
 
 /**
@@ -117,18 +117,18 @@ const DEFAULT_ROLLBACK_TESTING: RollbackTestingConfig = {
     gracefulShutdown: true,
     dataConsistency: true,
     serviceRecovery: true,
-    userImpact: true
+    userImpact: true,
   },
   automation: {
-    triggers: ['high_error_rate', 'performance_degradation', 'manual_trigger'],
-    actions: ['stop_deployment', 'rollback_version', 'notify_team'],
-    notifications: ['email', 'slack', 'pagerduty']
+    triggers: ["high_error_rate", "performance_degradation", "manual_trigger"],
+    actions: ["stop_deployment", "rollback_version", "notify_team"],
+    notifications: ["email", "slack", "pagerduty"],
   },
   validation: {
     postRollback: true,
     dataIntegrity: true,
-    serviceHealth: true
-  }
+    serviceHealth: true,
+  },
 };
 
 /**
@@ -141,25 +141,25 @@ const DEFAULT_MONITORING_SETUP: MonitoringSetupConfig = {
     system: true,
     application: true,
     business: false,
-    security: true
+    security: true,
   },
   alerting: {
     enabled: true,
-    channels: ['email', 'slack'],
+    channels: ["email", "slack"],
     escalation: true,
-    suppressionRules: false
+    suppressionRules: false,
   },
   logging: {
     structured: true,
     centralized: true,
     retention: 30, // days
-    levels: ['error', 'warn', 'info']
+    levels: ["error", "warn", "info"],
   },
   tracing: {
     distributed: false,
     sampling: 0.1,
-    storage: 'memory'
-  }
+    storage: "memory",
+  },
 };
 
 /**
@@ -172,20 +172,20 @@ const DEFAULT_DOCUMENTATION_VALIDATION: DocumentationValidationConfig = {
     api: true,
     deployment: true,
     operations: true,
-    troubleshooting: true
+    troubleshooting: true,
   },
   quality: {
     completeness: 80,
     accuracy: true,
     upToDate: true,
-    examples: true
+    examples: true,
   },
   formats: {
     markdown: true,
     openapi: false,
     swagger: false,
-    postman: false
-  }
+    postman: false,
+  },
 };
 
 /**
@@ -196,29 +196,29 @@ const DEFAULT_PRODUCTION_APPROVAL: ProductionApprovalConfig = {
   timeout: 86400000, // 24 hours
   approvers: {
     required: 2,
-    roles: ['tech-lead', 'devops-engineer'],
-    teams: ['development', 'operations']
+    roles: ["tech-lead", "devops-engineer"],
+    teams: ["development", "operations"],
   },
   criteria: {
     allTestsPassed: true,
     securityApproval: true,
     performanceBaseline: true,
-    rollbackPlan: true
+    rollbackPlan: true,
   },
   automation: {
     autoApprove: false,
-    conditions: ['all_tests_green', 'security_scan_passed'],
-    overrides: true
-  }
+    conditions: ["all_tests_green", "security_scan_passed"],
+    overrides: true,
+  },
 };
 
 /**
  * Default deployment certification configuration
  */
 const DEFAULT_CONFIG: IDeploymentCertificationConfig = {
-  environment: 'staging',
-  priority: 'medium',
-  certificationLevel: 'standard',
+  environment: "staging",
+  priority: "medium",
+  certificationLevel: "standard",
   timeout: 1800000, // 30 minutes
   parallel: true,
   buildVerification: DEFAULT_BUILD_VERIFICATION,
@@ -227,7 +227,7 @@ const DEFAULT_CONFIG: IDeploymentCertificationConfig = {
   rollbackTesting: DEFAULT_ROLLBACK_TESTING,
   monitoringSetup: DEFAULT_MONITORING_SETUP,
   documentationValidation: DEFAULT_DOCUMENTATION_VALIDATION,
-  productionApproval: DEFAULT_PRODUCTION_APPROVAL
+  productionApproval: DEFAULT_PRODUCTION_APPROVAL,
 };
 
 /**
@@ -325,25 +325,25 @@ export class DeploymentCertificationConfigManager {
    */
   public toggleCategory(category: DeploymentCategory, enabled: boolean): void {
     switch (category) {
-      case 'build-verification':
+      case "build-verification":
         this.config.buildVerification.enabled = enabled;
         break;
-      case 'package-distribution':
+      case "package-distribution":
         this.config.packageDistribution.enabled = enabled;
         break;
-      case 'health-checks':
+      case "health-checks":
         this.config.healthChecks.enabled = enabled;
         break;
-      case 'rollback-testing':
+      case "rollback-testing":
         this.config.rollbackTesting.enabled = enabled;
         break;
-      case 'monitoring-setup':
+      case "monitoring-setup":
         this.config.monitoringSetup.enabled = enabled;
         break;
-      case 'documentation-validation':
+      case "documentation-validation":
         this.config.documentationValidation.enabled = enabled;
         break;
-      case 'production-approval':
+      case "production-approval":
         this.config.productionApproval.enabled = enabled;
         break;
     }
@@ -356,25 +356,25 @@ export class DeploymentCertificationConfigManager {
     const categories: DeploymentCategory[] = [];
 
     if (this.config.buildVerification.enabled) {
-      categories.push('build-verification');
+      categories.push("build-verification");
     }
     if (this.config.packageDistribution.enabled) {
-      categories.push('package-distribution');
+      categories.push("package-distribution");
     }
     if (this.config.healthChecks.enabled) {
-      categories.push('health-checks');
+      categories.push("health-checks");
     }
     if (this.config.rollbackTesting.enabled) {
-      categories.push('rollback-testing');
+      categories.push("rollback-testing");
     }
     if (this.config.monitoringSetup.enabled) {
-      categories.push('monitoring-setup');
+      categories.push("monitoring-setup");
     }
     if (this.config.documentationValidation.enabled) {
-      categories.push('documentation-validation');
+      categories.push("documentation-validation");
     }
     if (this.config.productionApproval.enabled) {
-      categories.push('production-approval');
+      categories.push("production-approval");
     }
 
     return categories;
@@ -388,32 +388,36 @@ export class DeploymentCertificationConfigManager {
 
     // Check timeout consistency
     if (this.config.timeout <= 0) {
-      errors.push('Overall timeout must be positive');
+      errors.push("Overall timeout must be positive");
     }
 
     // Check that at least one category is enabled
     const enabledCategories = this.getEnabledCategories();
     if (enabledCategories.length === 0) {
-      errors.push('At least one certification category must be enabled');
+      errors.push("At least one certification category must be enabled");
     }
 
     // Validate build verification
     if (this.config.buildVerification.enabled) {
-      if (this.config.buildVerification.thresholds.testCoverage < 0 || 
-          this.config.buildVerification.thresholds.testCoverage > 100) {
-        errors.push('Test coverage threshold must be between 0 and 100');
+      if (
+        this.config.buildVerification.thresholds.testCoverage < 0 ||
+        this.config.buildVerification.thresholds.testCoverage > 100
+      ) {
+        errors.push("Test coverage threshold must be between 0 and 100");
       }
     }
 
     // Validate health checks
     if (this.config.healthChecks.enabled) {
       if (this.config.healthChecks.endpoints.length === 0) {
-        errors.push('At least one health check endpoint must be configured');
+        errors.push("At least one health check endpoint must be configured");
       }
-      
+
       for (const endpoint of this.config.healthChecks.endpoints) {
         if (!endpoint.name || !endpoint.url) {
-          errors.push(`Health check endpoint missing name or URL: ${endpoint.name}`);
+          errors.push(
+            `Health check endpoint missing name or URL: ${endpoint.name}`,
+          );
         }
       }
     }
@@ -421,52 +425,75 @@ export class DeploymentCertificationConfigManager {
     // Validate production approval
     if (this.config.productionApproval.enabled) {
       if (this.config.productionApproval.approvers.required <= 0) {
-        errors.push('At least one approver must be required for production approval');
+        errors.push(
+          "At least one approver must be required for production approval",
+        );
       }
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
   /**
    * Get configuration for specific environment
    */
-  public static getEnvironmentConfig(environment: DeploymentEnvironment): Partial<IDeploymentCertificationConfig> {
-    const configs: Record<DeploymentEnvironment, Partial<IDeploymentCertificationConfig>> = {
-      'development': {
-        certificationLevel: 'basic',
-        priority: 'low',
+  public static getEnvironmentConfig(
+    environment: DeploymentEnvironment,
+  ): Partial<IDeploymentCertificationConfig> {
+    const configs: Record<
+      DeploymentEnvironment,
+      Partial<IDeploymentCertificationConfig>
+    > = {
+      development: {
+        certificationLevel: "basic",
+        priority: "low",
         productionApproval: { ...DEFAULT_PRODUCTION_APPROVAL, enabled: false },
-        rollbackTesting: { ...DEFAULT_ROLLBACK_TESTING, enabled: false }
+        rollbackTesting: { ...DEFAULT_ROLLBACK_TESTING, enabled: false },
       },
-      'staging': {
-        certificationLevel: 'standard',
-        priority: 'medium',
-        productionApproval: { ...DEFAULT_PRODUCTION_APPROVAL, enabled: false }
+      staging: {
+        certificationLevel: "standard",
+        priority: "medium",
+        productionApproval: { ...DEFAULT_PRODUCTION_APPROVAL, enabled: false },
       },
-      'pre-production': {
-        certificationLevel: 'premium',
-        priority: 'high',
-        productionApproval: { ...DEFAULT_PRODUCTION_APPROVAL, enabled: true }
+      "pre-production": {
+        certificationLevel: "premium",
+        priority: "high",
+        productionApproval: { ...DEFAULT_PRODUCTION_APPROVAL, enabled: true },
       },
-      'production': {
-        certificationLevel: 'enterprise',
-        priority: 'critical',
-        productionApproval: { ...DEFAULT_PRODUCTION_APPROVAL, enabled: true, approvers: { ...DEFAULT_PRODUCTION_APPROVAL.approvers, required: 3 } }
+      production: {
+        certificationLevel: "enterprise",
+        priority: "critical",
+        productionApproval: {
+          ...DEFAULT_PRODUCTION_APPROVAL,
+          enabled: true,
+          approvers: { ...DEFAULT_PRODUCTION_APPROVAL.approvers, required: 3 },
+        },
       },
-      'canary': {
-        certificationLevel: 'premium',
-        priority: 'high',
-        rollbackTesting: { ...DEFAULT_ROLLBACK_TESTING, scenarios: { ...DEFAULT_ROLLBACK_TESTING.scenarios, userImpact: true } }
+      canary: {
+        certificationLevel: "premium",
+        priority: "high",
+        rollbackTesting: {
+          ...DEFAULT_ROLLBACK_TESTING,
+          scenarios: {
+            ...DEFAULT_ROLLBACK_TESTING.scenarios,
+            userImpact: true,
+          },
+        },
       },
-      'blue-green': {
-        certificationLevel: 'standard',
-        priority: 'medium',
-        rollbackTesting: { ...DEFAULT_ROLLBACK_TESTING, automation: { ...DEFAULT_ROLLBACK_TESTING.automation, triggers: ['performance_degradation', 'error_spike'] } }
-      }
+      "blue-green": {
+        certificationLevel: "standard",
+        priority: "medium",
+        rollbackTesting: {
+          ...DEFAULT_ROLLBACK_TESTING,
+          automation: {
+            ...DEFAULT_ROLLBACK_TESTING.automation,
+            triggers: ["performance_degradation", "error_spike"],
+          },
+        },
+      },
     };
 
     return configs[environment] || {};
@@ -477,7 +504,7 @@ export class DeploymentCertificationConfigManager {
    */
   private mergeConfigurations(
     defaultConfig: IDeploymentCertificationConfig,
-    customConfig?: Partial<IDeploymentCertificationConfig>
+    customConfig?: Partial<IDeploymentCertificationConfig>,
   ): IDeploymentCertificationConfig {
     if (!customConfig) {
       return { ...defaultConfig };
@@ -486,33 +513,64 @@ export class DeploymentCertificationConfigManager {
     const merged = { ...defaultConfig };
 
     // Merge top-level properties
-    if (customConfig.environment !== undefined) merged.environment = customConfig.environment;
-    if (customConfig.priority !== undefined) merged.priority = customConfig.priority;
-    if (customConfig.certificationLevel !== undefined) merged.certificationLevel = customConfig.certificationLevel;
-    if (customConfig.timeout !== undefined) merged.timeout = customConfig.timeout;
-    if (customConfig.parallel !== undefined) merged.parallel = customConfig.parallel;
+    if (customConfig.environment !== undefined) {
+      merged.environment = customConfig.environment;
+    }
+    if (customConfig.priority !== undefined) {
+      merged.priority = customConfig.priority;
+    }
+    if (customConfig.certificationLevel !== undefined) {
+      merged.certificationLevel = customConfig.certificationLevel;
+    }
+    if (customConfig.timeout !== undefined) {
+      merged.timeout = customConfig.timeout;
+    }
+    if (customConfig.parallel !== undefined) {
+      merged.parallel = customConfig.parallel;
+    }
 
     // Deep merge nested configurations
     if (customConfig.buildVerification) {
-      merged.buildVerification = { ...merged.buildVerification, ...customConfig.buildVerification };
+      merged.buildVerification = {
+        ...merged.buildVerification,
+        ...customConfig.buildVerification,
+      };
     }
     if (customConfig.packageDistribution) {
-      merged.packageDistribution = { ...merged.packageDistribution, ...customConfig.packageDistribution };
+      merged.packageDistribution = {
+        ...merged.packageDistribution,
+        ...customConfig.packageDistribution,
+      };
     }
     if (customConfig.healthChecks) {
-      merged.healthChecks = { ...merged.healthChecks, ...customConfig.healthChecks };
+      merged.healthChecks = {
+        ...merged.healthChecks,
+        ...customConfig.healthChecks,
+      };
     }
     if (customConfig.rollbackTesting) {
-      merged.rollbackTesting = { ...merged.rollbackTesting, ...customConfig.rollbackTesting };
+      merged.rollbackTesting = {
+        ...merged.rollbackTesting,
+        ...customConfig.rollbackTesting,
+      };
     }
     if (customConfig.monitoringSetup) {
-      merged.monitoringSetup = { ...merged.monitoringSetup, ...customConfig.monitoringSetup };
+      merged.monitoringSetup = {
+        ...merged.monitoringSetup,
+        ...customConfig.monitoringSetup,
+      };
     }
     if (customConfig.documentationValidation) {
-      merged.documentationValidation = { ...merged.documentationValidation, ...customConfig.documentationValidation };
+      merged.documentationValidation = {
+        ...merged.documentationValidation,
+        ...customConfig.documentationValidation,
+      };
     }
     if (customConfig.productionApproval) {
-      merged.productionApproval = { ...merged.productionApproval, ...customConfig.productionApproval };
+      merged.productionApproval = {
+        ...merged.productionApproval,
+        ...customConfig.productionApproval,
+      };
     }
 
     return merged;
@@ -521,34 +579,39 @@ export class DeploymentCertificationConfigManager {
   /**
    * Adjust configuration for specific environment
    */
-  private adjustConfigurationForEnvironment(environment: DeploymentEnvironment): void {
-    const environmentConfig = DeploymentCertificationConfigManager.getEnvironmentConfig(environment);
+  private adjustConfigurationForEnvironment(
+    environment: DeploymentEnvironment,
+  ): void {
+    const environmentConfig =
+      DeploymentCertificationConfigManager.getEnvironmentConfig(environment);
     this.config = this.mergeConfigurations(this.config, environmentConfig);
   }
 
   /**
    * Adjust configuration for certification level
    */
-  private adjustConfigurationForCertificationLevel(level: CertificationLevel): void {
+  private adjustConfigurationForCertificationLevel(
+    level: CertificationLevel,
+  ): void {
     switch (level) {
-      case 'basic':
+      case "basic":
         this.config.buildVerification.thresholds.testCoverage = 60;
         this.config.healthChecks.thresholds.availability = 95;
         break;
-      case 'standard':
+      case "standard":
         this.config.buildVerification.thresholds.testCoverage = 80;
         this.config.healthChecks.thresholds.availability = 99;
         break;
-      case 'premium':
+      case "premium":
         this.config.buildVerification.thresholds.testCoverage = 90;
         this.config.healthChecks.thresholds.availability = 99.9;
         break;
-      case 'enterprise':
+      case "enterprise":
         this.config.buildVerification.thresholds.testCoverage = 95;
         this.config.healthChecks.thresholds.availability = 99.95;
         this.config.buildVerification.quality.securityScan = true;
         break;
-      case 'critical':
+      case "critical":
         this.config.buildVerification.thresholds.testCoverage = 98;
         this.config.healthChecks.thresholds.availability = 99.99;
         this.config.buildVerification.quality.securityScan = true;
@@ -562,24 +625,24 @@ export class DeploymentCertificationConfigManager {
    */
   private adjustConfigurationForPriority(priority: DeploymentPriority): void {
     switch (priority) {
-      case 'low':
+      case "low":
         this.config.timeout = 3600000; // 1 hour
         this.config.parallel = true;
         break;
-      case 'medium':
+      case "medium":
         this.config.timeout = 1800000; // 30 minutes
         this.config.parallel = true;
         break;
-      case 'high':
+      case "high":
         this.config.timeout = 900000; // 15 minutes
         this.config.parallel = false;
         break;
-      case 'critical':
+      case "critical":
         this.config.timeout = 600000; // 10 minutes
         this.config.parallel = false;
         this.config.productionApproval.enabled = true;
         break;
-      case 'emergency':
+      case "emergency":
         this.config.timeout = 300000; // 5 minutes
         this.config.parallel = false;
         this.config.productionApproval.automation.overrides = true;

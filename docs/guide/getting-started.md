@@ -278,7 +278,7 @@ ast-helper query "*" --limit 5
 
 ### Getting Help
 
-- 📖 [Troubleshooting Guide](troubleshooting) - Comprehensive problem solving
+- 📖 [Troubleshooting Guide](../troubleshooting.md) - Comprehensive problem solving
 - 💬 [GitHub Discussions](https://github.com/EvanDodds/ast-copilot-helper/discussions) - Community support
 - 🐛 [Report Issues](https://github.com/EvanDodds/ast-copilot-helper/issues) - Bug reports and feature requests
 

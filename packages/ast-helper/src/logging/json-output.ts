@@ -3,10 +3,10 @@
  * Provides structured JSON output for programmatic consumption
  */
 
-import { appendFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
-import { mkdir } from 'node:fs/promises';
-import type { LogEntry, LogOutput } from './types.js';
+import { appendFile } from "node:fs/promises";
+import { dirname } from "node:path";
+import { mkdir } from "node:fs/promises";
+import type { LogEntry, LogOutput } from "./types.js";
 
 export class JsonOutput implements LogOutput {
   private readonly filePath?: string;
@@ -15,12 +15,14 @@ export class JsonOutput implements LogOutput {
   private readonly maxBufferSize: number;
   private flushTimer?: NodeJS.Timeout;
 
-  constructor(options: {
-    filePath?: string;
-    pretty?: boolean;
-    maxBufferSize?: number;
-    autoFlushMs?: number;
-  } = {}) {
+  constructor(
+    options: {
+      filePath?: string;
+      pretty?: boolean;
+      maxBufferSize?: number;
+      autoFlushMs?: number;
+    } = {},
+  ) {
     this.filePath = options.filePath;
     this.pretty = options.pretty ?? false;
     this.maxBufferSize = options.maxBufferSize ?? 100;
@@ -57,16 +59,16 @@ export class JsonOutput implements LogOutput {
       await mkdir(dirname(this.filePath), { recursive: true });
 
       // Format all buffered entries
-      const lines = this.buffer.map(entry => this.formatEntry(entry));
-      const content = lines.join('\n') + '\n';
+      const lines = this.buffer.map((entry) => this.formatEntry(entry));
+      const content = lines.join("\n") + "\n";
 
       // Append to file
-      await appendFile(this.filePath, content, 'utf-8');
+      await appendFile(this.filePath, content, "utf-8");
 
       // Clear buffer
       this.buffer = [];
     } catch (error) {
-      console.error('Failed to flush JSON log output:', error);
+      console.error("Failed to flush JSON log output:", error);
     }
   }
 

@@ -3,14 +3,15 @@
  * Provides pooling for worker threads with task distribution and resource monitoring
  */
 
-import { BaseResourcePool, BasePoolConfig } from './base-pool.js';
-import { 
-  WorkerThread, 
+import type { BasePoolConfig } from "./base-pool.js";
+import { BaseResourcePool } from "./base-pool.js";
+import type {
+  WorkerThread,
   WorkerThreadFactory,
-  WorkerType
-} from '../types.js';
-import { Worker } from 'worker_threads';
-import * as path from 'path';
+  WorkerType,
+} from "../types.js";
+import { Worker } from "worker_threads";
+import * as path from "path";
 
 export interface WorkerThreadPoolConfig extends BasePoolConfig {
   workerScript: string;
@@ -24,7 +25,7 @@ export interface WorkerThreadPoolConfig extends BasePoolConfig {
 
 export class WorkerThreadPool extends BaseResourcePool<WorkerThread> {
   private poolConfig: WorkerThreadPoolConfig;
-  
+
   constructor(config: WorkerThreadPoolConfig) {
     const factory: WorkerThreadFactory = new WorkerThreadFactoryImpl(config);
     super(config, factory);
@@ -33,7 +34,7 @@ export class WorkerThreadPool extends BaseResourcePool<WorkerThread> {
 
   async executeTask<T = any>(taskData: any, taskId?: string): Promise<T> {
     const worker = await this.acquire();
-    
+
     try {
       const result = await this.sendTaskToWorker<T>(worker, taskData, taskId);
       await this.release(worker);
@@ -45,22 +46,30 @@ export class WorkerThreadPool extends BaseResourcePool<WorkerThread> {
     }
   }
 
-  private async sendTaskToWorker<T>(worker: WorkerThread, taskData: any, taskId?: string): Promise<T> {
+  private async sendTaskToWorker<T>(
+    worker: WorkerThread,
+    taskData: any,
+    taskId?: string,
+  ): Promise<T> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error(`Worker task timeout after ${this.poolConfig.taskTimeout || 30000}ms`));
+        reject(
+          new Error(
+            `Worker task timeout after ${this.poolConfig.taskTimeout || 30000}ms`,
+          ),
+        );
       }, this.poolConfig.taskTimeout || 30000);
 
       const messageHandler = (result: any) => {
         clearTimeout(timeout);
-        worker.worker.off('message', messageHandler);
-        worker.worker.off('error', errorHandler);
-        
+        worker.worker.off("message", messageHandler);
+        worker.worker.off("error", errorHandler);
+
         worker.lastUsedAt = Date.now();
         worker.taskCount++;
         worker.isProcessing = false;
         worker.currentTask = undefined;
-        
+
         if (result.error) {
           reject(new Error(result.error));
         } else {
@@ -70,21 +79,21 @@ export class WorkerThreadPool extends BaseResourcePool<WorkerThread> {
 
       const errorHandler = (error: Error) => {
         clearTimeout(timeout);
-        worker.worker.off('message', messageHandler);
-        worker.worker.off('error', errorHandler);
-        
+        worker.worker.off("message", messageHandler);
+        worker.worker.off("error", errorHandler);
+
         worker.isProcessing = false;
         worker.currentTask = undefined;
-        
+
         reject(error);
       };
 
-      worker.worker.on('message', messageHandler);
-      worker.worker.on('error', errorHandler);
-      
+      worker.worker.on("message", messageHandler);
+      worker.worker.on("error", errorHandler);
+
       worker.isProcessing = true;
       worker.currentTask = taskId || `task_${Date.now()}`;
-      
+
       worker.worker.postMessage({ taskData, taskId });
     });
   }
@@ -104,23 +113,25 @@ class WorkerThreadFactoryImpl implements WorkerThreadFactory {
   async create(): Promise<WorkerThread> {
     // Resolve worker script path
     const scriptPath = path.resolve(this.workerScript);
-    
+
     // Create worker with options
     const workerOptions = {
       ...this.workerOptions,
       ...(this.config.maxMemoryPerWorker && {
         resourceLimits: {
           maxOldGenerationSizeMb: this.config.maxMemoryPerWorker,
-          maxYoungGenerationSizeMb: Math.floor(this.config.maxMemoryPerWorker * 0.2),
-        }
-      })
+          maxYoungGenerationSizeMb: Math.floor(
+            this.config.maxMemoryPerWorker * 0.2,
+          ),
+        },
+      }),
     };
 
     const worker = new Worker(scriptPath, workerOptions);
-    
+
     // Wait for worker to be ready
     await this.waitForWorkerReady(worker);
-    
+
     return {
       id: `worker_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       worker,
@@ -141,9 +152,12 @@ class WorkerThreadFactoryImpl implements WorkerThreadFactory {
         // Set longer timeout for clean shutdown
         const terminatePromise = resource.worker.terminate();
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Worker termination timeout')), 5000);
+          setTimeout(
+            () => reject(new Error("Worker termination timeout")),
+            5000,
+          );
         });
-        
+
         // Race between termination and timeout
         await Promise.race([terminatePromise, timeoutPromise]);
       }
@@ -157,7 +171,10 @@ class WorkerThreadFactoryImpl implements WorkerThreadFactory {
       } catch (forceError) {
         // Ignore force termination errors
       }
-      console.debug(`Worker thread ${resource.id} cleanup completed with error:`, error);
+      console.debug(
+        `Worker thread ${resource.id} cleanup completed with error:`,
+        error,
+      );
     }
   }
 
@@ -166,14 +183,16 @@ class WorkerThreadFactoryImpl implements WorkerThreadFactory {
       if (!resource.worker) {
         return false;
       }
-      
+
       // Check if worker is still running and responsive
       const isResponsive = await this.pingWorker(resource.worker);
-      const memoryOk = this.config.maxMemoryPerWorker ? 
-        resource.memoryUsage <= this.config.maxMemoryPerWorker : true;
-      const cpuOk = this.config.maxCpuUsagePercent ? 
-        resource.cpuUsage <= this.config.maxCpuUsagePercent : true;
-      
+      const memoryOk = this.config.maxMemoryPerWorker
+        ? resource.memoryUsage <= this.config.maxMemoryPerWorker
+        : true;
+      const cpuOk = this.config.maxCpuUsagePercent
+        ? resource.cpuUsage <= this.config.maxCpuUsagePercent
+        : true;
+
       return isResponsive && memoryOk && cpuOk;
     } catch (error) {
       return false;
@@ -185,10 +204,10 @@ class WorkerThreadFactoryImpl implements WorkerThreadFactory {
       // Reset worker state
       resource.isProcessing = false;
       resource.currentTask = undefined;
-      
+
       // Send reset message to worker if it supports it
       if (resource.worker) {
-        resource.worker.postMessage({ type: 'reset' });
+        resource.worker.postMessage({ type: "reset" });
       }
     } catch (error) {
       console.warn(`Error resetting worker thread ${resource.id}:`, error);
@@ -198,27 +217,27 @@ class WorkerThreadFactoryImpl implements WorkerThreadFactory {
   private async waitForWorkerReady(worker: Worker): Promise<void> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error('Worker startup timeout'));
+        reject(new Error("Worker startup timeout"));
       }, 10000); // 10 second timeout
 
       const messageHandler = (message: any) => {
-        if (message.type === 'ready') {
+        if (message.type === "ready") {
           clearTimeout(timeout);
-          worker.off('message', messageHandler);
-          worker.off('error', errorHandler);
+          worker.off("message", messageHandler);
+          worker.off("error", errorHandler);
           resolve();
         }
       };
 
       const errorHandler = (error: Error) => {
         clearTimeout(timeout);
-        worker.off('message', messageHandler);
-        worker.off('error', errorHandler);
+        worker.off("message", messageHandler);
+        worker.off("error", errorHandler);
         reject(error);
       };
 
-      worker.on('message', messageHandler);
-      worker.on('error', errorHandler);
+      worker.on("message", messageHandler);
+      worker.on("error", errorHandler);
     });
   }
 
@@ -229,15 +248,15 @@ class WorkerThreadFactoryImpl implements WorkerThreadFactory {
       }, 5000); // 5 second ping timeout
 
       const messageHandler = (message: any) => {
-        if (message.type === 'pong') {
+        if (message.type === "pong") {
           clearTimeout(timeout);
-          worker.off('message', messageHandler);
+          worker.off("message", messageHandler);
           resolve(true);
         }
       };
 
-      worker.on('message', messageHandler);
-      worker.postMessage({ type: 'ping' });
+      worker.on("message", messageHandler);
+      worker.postMessage({ type: "ping" });
     });
   }
 }

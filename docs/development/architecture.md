@@ -186,7 +186,7 @@ class EmbeddingGenerator {
 
     // 3. API calls with retry logic
     const embeddings = await Promise.all(
-      batches.map((batch) => this.callEmbeddingAPI(batch))
+      batches.map((batch) => this.callEmbeddingAPI(batch)),
     );
 
     // 4. Caching and persistence
@@ -273,7 +273,7 @@ graph TD
 class QueryEngine {
   async query(
     queryText: string,
-    options: QueryOptions = {}
+    options: QueryOptions = {},
   ): Promise<QueryResult[]> {
     // 1. Preprocess query
     const processedQuery = this.preprocessQuery(queryText);
@@ -284,7 +284,7 @@ class QueryEngine {
     // 3. Vector similarity search
     const semanticResults = await this.vectorSearch(
       queryEmbedding[0],
-      options.similarityThreshold || 0.7
+      options.similarityThreshold || 0.7,
     );
 
     // 4. Text-based filtering
@@ -299,7 +299,7 @@ class QueryEngine {
 
   private async vectorSearch(
     queryVector: number[],
-    threshold: number
+    threshold: number,
   ): Promise<SearchResult[]> {
     // SQLite vector similarity using extension
     const sql = `
@@ -327,7 +327,7 @@ class MCPServer {
   private resources: Map<string, MCPResource> = new Map();
 
   async initialize(
-    capabilities: ClientCapabilities
+    capabilities: ClientCapabilities,
   ): Promise<ServerCapabilities> {
     this.registerTools();
     this.registerResources();
@@ -348,7 +348,7 @@ class MCPServer {
     this.tools.set("get_function_details", new GetFunctionDetailsTool(this.db));
     this.tools.set(
       "analyze_dependencies",
-      new AnalyzeDependenciesTool(this.parser)
+      new AnalyzeDependenciesTool(this.parser),
     );
   }
 }
@@ -430,7 +430,7 @@ interface DatabaseManager {
   insertAnnotation(annotation: ASTAnnotation): Promise<void>;
   updateAnnotation(
     id: string,
-    annotation: Partial<ASTAnnotation>
+    annotation: Partial<ASTAnnotation>,
   ): Promise<void>;
   deleteAnnotation(id: string): Promise<void>;
   getAnnotation(id: string): Promise<ASTAnnotation | null>;
@@ -439,7 +439,7 @@ interface DatabaseManager {
   insertEmbedding(annotationId: string, embedding: Embedding): Promise<void>;
   searchBySimilarity(
     vector: number[],
-    threshold: number
+    threshold: number,
   ): Promise<SearchResult[]>;
 
   // Full-text search
@@ -556,7 +556,7 @@ class ErrorHandler {
 
   private async parseWithErrorRecovery(
     source: string,
-    error: SyntaxError
+    error: SyntaxError,
   ): Promise<ParseResult> {
     // Implement error recovery strategies
     const cleanSource = this.removeProblematicSections(source, error);

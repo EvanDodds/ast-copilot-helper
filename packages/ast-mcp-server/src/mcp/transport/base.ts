@@ -1,10 +1,15 @@
-import { EventEmitter } from 'events';
-import { logger } from '../../logging/logger';
+import { EventEmitter } from "events";
+import { logger } from "../../logging/logger";
 
 /**
  * Transport connection state
  */
-export type TransportState = 'disconnected' | 'connecting' | 'connected' | 'disconnecting' | 'error';
+export type TransportState =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "disconnecting"
+  | "error";
 
 /**
  * Transport configuration options
@@ -61,7 +66,7 @@ export interface TransportMessage {
   /** Message ID for correlation */
   id?: string;
   /** Message type */
-  type: 'request' | 'response' | 'notification' | 'error';
+  type: "request" | "response" | "notification" | "error";
   /** Message method/operation */
   method?: string;
   /** Message payload */
@@ -73,15 +78,15 @@ export interface TransportMessage {
 /**
  * Transport error types
  */
-export type TransportErrorType = 
-  | 'connection-failed'
-  | 'connection-lost'
-  | 'timeout'
-  | 'protocol-error'
-  | 'authentication-failed'
-  | 'rate-limit-exceeded'
-  | 'message-too-large'
-  | 'invalid-message';
+export type TransportErrorType =
+  | "connection-failed"
+  | "connection-lost"
+  | "timeout"
+  | "protocol-error"
+  | "authentication-failed"
+  | "rate-limit-exceeded"
+  | "message-too-large"
+  | "invalid-message";
 
 /**
  * Transport error
@@ -91,10 +96,10 @@ export class TransportError extends Error {
     public readonly type: TransportErrorType,
     message: string,
     public readonly connectionId?: string,
-    public override readonly cause?: Error
+    public override readonly cause?: Error,
   ) {
     super(message);
-    this.name = 'TransportError';
+    this.name = "TransportError";
   }
 }
 
@@ -104,14 +109,14 @@ export class TransportError extends Error {
 export abstract class Transport extends EventEmitter {
   protected config: Required<TransportConfig>;
   protected connections = new Map<string, ConnectionInfo>();
-  protected state: TransportState = 'disconnected';
+  protected state: TransportState = "disconnected";
   protected heartbeatTimer?: NodeJS.Timeout;
   protected reconnectTimer?: NodeJS.Timeout;
   protected reconnectAttempts = 0;
 
   constructor(config: TransportConfig = {}) {
     super();
-    
+
     this.config = {
       maxConnections: config.maxConnections ?? 100,
       connectionTimeout: config.connectionTimeout ?? 30000,
@@ -120,12 +125,12 @@ export abstract class Transport extends EventEmitter {
       autoReconnect: config.autoReconnect ?? true,
       maxReconnectAttempts: config.maxReconnectAttempts ?? 5,
       reconnectDelay: config.reconnectDelay ?? 5000,
-      ...config
+      ...config,
     };
-    
-    logger.info('Transport initialized', {
+
+    logger.info("Transport initialized", {
       transportType: this.getTransportType(),
-      config: this.config
+      config: this.config,
     });
   }
 
@@ -147,7 +152,10 @@ export abstract class Transport extends EventEmitter {
   /**
    * Send a message through the transport
    */
-  abstract sendMessage(connectionId: string, message: TransportMessage): Promise<void>;
+  abstract sendMessage(
+    connectionId: string,
+    message: TransportMessage,
+  ): Promise<void>;
 
   /**
    * Get current transport state
@@ -181,13 +189,20 @@ export abstract class Transport extends EventEmitter {
     totalErrors: number;
   } {
     const connections = Array.from(this.connections.values());
-    
+
     return {
       totalConnections: connections.length,
-      activeConnections: connections.filter(c => c.state === 'connected').length,
-      totalMessages: connections.reduce((sum, c) => sum + c.stats.messagesReceived + c.stats.messagesSent, 0),
-      totalBytes: connections.reduce((sum, c) => sum + c.stats.bytesReceived + c.stats.bytesSent, 0),
-      totalErrors: connections.reduce((sum, c) => sum + c.stats.errors, 0)
+      activeConnections: connections.filter((c) => c.state === "connected")
+        .length,
+      totalMessages: connections.reduce(
+        (sum, c) => sum + c.stats.messagesReceived + c.stats.messagesSent,
+        0,
+      ),
+      totalBytes: connections.reduce(
+        (sum, c) => sum + c.stats.bytesReceived + c.stats.bytesSent,
+        0,
+      ),
+      totalErrors: connections.reduce((sum, c) => sum + c.stats.errors, 0),
     };
   }
 
@@ -195,24 +210,25 @@ export abstract class Transport extends EventEmitter {
    * Broadcast message to all active connections
    */
   async broadcastMessage(message: TransportMessage): Promise<void> {
-    const activeConnections = Array.from(this.connections.values())
-      .filter(conn => conn.state === 'connected');
+    const activeConnections = Array.from(this.connections.values()).filter(
+      (conn) => conn.state === "connected",
+    );
 
-    const promises = activeConnections.map(conn => 
-      this.sendMessage(conn.id, message).catch(error => {
-        logger.error('Broadcast message failed', {
+    const promises = activeConnections.map((conn) =>
+      this.sendMessage(conn.id, message).catch((error) => {
+        logger.error("Broadcast message failed", {
           connectionId: conn.id,
-          error: error.message
+          error: error.message,
         });
-      })
+      }),
     );
 
     await Promise.allSettled(promises);
-    
-    logger.debug('Message broadcasted', {
+
+    logger.debug("Message broadcasted", {
       connectionCount: activeConnections.length,
       messageType: message.type,
-      method: message.method
+      method: message.method,
     });
   }
 
@@ -224,18 +240,21 @@ export abstract class Transport extends EventEmitter {
   /**
    * Protected method to register a new connection
    */
-  protected registerConnection(connectionId: string, clientInfo?: ConnectionInfo['clientInfo']): ConnectionInfo {
+  protected registerConnection(
+    connectionId: string,
+    clientInfo?: ConnectionInfo["clientInfo"],
+  ): ConnectionInfo {
     if (this.connections.size >= this.config.maxConnections) {
       throw new TransportError(
-        'rate-limit-exceeded',
+        "rate-limit-exceeded",
         `Maximum connections limit (${this.config.maxConnections}) reached`,
-        connectionId
+        connectionId,
       );
     }
 
     const connection: ConnectionInfo = {
       id: connectionId,
-      state: 'connecting',
+      state: "connecting",
       connectedAt: new Date(),
       lastActivity: new Date(),
       clientInfo,
@@ -244,18 +263,18 @@ export abstract class Transport extends EventEmitter {
         messagesSent: 0,
         bytesReceived: 0,
         bytesSent: 0,
-        errors: 0
-      }
+        errors: 0,
+      },
     };
 
     this.connections.set(connectionId, connection);
-    
-    this.emit('connection-registered', connectionId, connection);
-    
-    logger.info('Connection registered', {
+
+    this.emit("connection-registered", connectionId, connection);
+
+    logger.info("Connection registered", {
       connectionId,
       clientInfo,
-      totalConnections: this.connections.size
+      totalConnections: this.connections.size,
     });
 
     return connection;
@@ -264,7 +283,10 @@ export abstract class Transport extends EventEmitter {
   /**
    * Protected method to update connection state
    */
-  protected updateConnectionState(connectionId: string, state: TransportState): void {
+  protected updateConnectionState(
+    connectionId: string,
+    state: TransportState,
+  ): void {
     const connection = this.connections.get(connectionId);
     if (!connection) {
       return;
@@ -274,16 +296,16 @@ export abstract class Transport extends EventEmitter {
     connection.state = state;
     connection.lastActivity = new Date();
 
-    if (state === 'connected' && previousState !== 'connected') {
+    if (state === "connected" && previousState !== "connected") {
       connection.connectedAt = new Date();
     }
 
-    this.emit('connection-state-changed', connectionId, state, previousState);
-    
-    logger.debug('Connection state changed', {
+    this.emit("connection-state-changed", connectionId, state, previousState);
+
+    logger.debug("Connection state changed", {
       connectionId,
       previousState,
-      newState: state
+      newState: state,
     });
   }
 
@@ -293,44 +315,46 @@ export abstract class Transport extends EventEmitter {
   protected handleMessage(connectionId: string, rawMessage: any): void {
     const connection = this.connections.get(connectionId);
     if (!connection) {
-      logger.warn('Message received for unknown connection', { connectionId });
+      logger.warn("Message received for unknown connection", { connectionId });
       return;
     }
 
     try {
       // Parse and validate message
       const message = this.parseMessage(rawMessage);
-      
+
       // Update connection statistics
       connection.stats.messagesReceived++;
       connection.stats.bytesReceived += this.getMessageSize(rawMessage);
       connection.lastActivity = new Date();
 
-      this.emit('message-received', connectionId, message);
-      
-      logger.debug('Message received', {
+      this.emit("message-received", connectionId, message);
+
+      logger.debug("Message received", {
         connectionId,
         messageType: message.type,
         method: message.method,
-        messageId: message.id
+        messageId: message.id,
       });
-
     } catch (error) {
       connection.stats.errors++;
-      
+
       const transportError = new TransportError(
-        'protocol-error',
+        "protocol-error",
         `Failed to parse message: ${error instanceof Error ? error.message : String(error)}`,
         connectionId,
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
 
-      this.emit('transport-error', transportError);
-      
-      logger.error('Message parsing failed', {
+      this.emit("transport-error", transportError);
+
+      logger.error("Message parsing failed", {
         connectionId,
         error: transportError.message,
-        rawMessage: typeof rawMessage === 'string' ? rawMessage.substring(0, 200) : 'non-string'
+        rawMessage:
+          typeof rawMessage === "string"
+            ? rawMessage.substring(0, 200)
+            : "non-string",
       });
     }
   }
@@ -342,26 +366,29 @@ export abstract class Transport extends EventEmitter {
     const connection = this.connections.get(connectionId);
     if (connection) {
       connection.stats.errors++;
-      this.updateConnectionState(connectionId, 'error');
+      this.updateConnectionState(connectionId, "error");
     }
 
     const transportError = new TransportError(
-      'connection-failed',
+      "connection-failed",
       error.message,
       connectionId,
-      error
+      error,
     );
 
-    this.emit('transport-error', transportError);
-    
-    logger.error('Connection error', {
+    this.emit("transport-error", transportError);
+
+    logger.error("Connection error", {
       connectionId,
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
 
     // Attempt reconnection if configured
-    if (this.config.autoReconnect && this.reconnectAttempts < this.config.maxReconnectAttempts) {
+    if (
+      this.config.autoReconnect &&
+      this.reconnectAttempts < this.config.maxReconnectAttempts
+    ) {
       this.scheduleReconnect(connectionId);
     }
   }
@@ -376,13 +403,13 @@ export abstract class Transport extends EventEmitter {
     }
 
     this.connections.delete(connectionId);
-    
-    this.emit('connection-unregistered', connectionId, connection);
-    
-    logger.info('Connection unregistered', {
+
+    this.emit("connection-unregistered", connectionId, connection);
+
+    logger.info("Connection unregistered", {
       connectionId,
       totalConnections: this.connections.size,
-      stats: connection.stats
+      stats: connection.stats,
     });
   }
 
@@ -390,21 +417,26 @@ export abstract class Transport extends EventEmitter {
    * Parse raw message into TransportMessage
    */
   protected parseMessage(rawMessage: any): TransportMessage {
-    if (typeof rawMessage === 'string') {
+    if (typeof rawMessage === "string") {
       try {
         rawMessage = JSON.parse(rawMessage);
       } catch (error) {
-        throw new Error('Invalid JSON message');
+        throw new Error("Invalid JSON message");
       }
     }
 
-    if (!rawMessage || typeof rawMessage !== 'object') {
-      throw new Error('Message must be an object');
+    if (!rawMessage || typeof rawMessage !== "object") {
+      throw new Error("Message must be an object");
     }
 
     // Validate required fields
-    if (!rawMessage.type || !['request', 'response', 'notification', 'error'].includes(rawMessage.type)) {
-      throw new Error('Invalid message type');
+    if (
+      !rawMessage.type ||
+      !["request", "response", "notification", "error"].includes(
+        rawMessage.type,
+      )
+    ) {
+      throw new Error("Invalid message type");
     }
 
     return {
@@ -412,7 +444,7 @@ export abstract class Transport extends EventEmitter {
       type: rawMessage.type,
       method: rawMessage.method,
       payload: rawMessage.payload || rawMessage,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -437,22 +469,22 @@ export abstract class Transport extends EventEmitter {
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectAttempts++;
-      
-      logger.info('Attempting reconnection', {
+
+      logger.info("Attempting reconnection", {
         connectionId,
         attempt: this.reconnectAttempts,
-        maxAttempts: this.config.maxReconnectAttempts
+        maxAttempts: this.config.maxReconnectAttempts,
       });
 
-      this.attemptReconnect(connectionId).catch(error => {
-        logger.error('Reconnection failed', {
+      this.attemptReconnect(connectionId).catch((error) => {
+        logger.error("Reconnection failed", {
           connectionId,
           attempt: this.reconnectAttempts,
-          error: error.message
+          error: error.message,
         });
 
         if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
-          this.emit('reconnect-failed', connectionId, this.reconnectAttempts);
+          this.emit("reconnect-failed", connectionId, this.reconnectAttempts);
         }
       });
     }, this.config.reconnectDelay);
@@ -463,7 +495,7 @@ export abstract class Transport extends EventEmitter {
    */
   protected async attemptReconnect(_connectionId: string): Promise<void> {
     // Default implementation - subclasses should override
-    throw new Error('Reconnection not implemented for this transport');
+    throw new Error("Reconnection not implemented for this transport");
   }
 
   /**
@@ -478,8 +510,8 @@ export abstract class Transport extends EventEmitter {
       this.performHeartbeat();
     }, this.config.heartbeatInterval);
 
-    logger.debug('Heartbeat monitoring started', {
-      interval: this.config.heartbeatInterval
+    logger.debug("Heartbeat monitoring started", {
+      interval: this.config.heartbeatInterval,
     });
   }
 
@@ -492,7 +524,7 @@ export abstract class Transport extends EventEmitter {
       this.heartbeatTimer = undefined;
     }
 
-    logger.debug('Heartbeat monitoring stopped');
+    logger.debug("Heartbeat monitoring stopped");
   }
 
   /**
@@ -503,33 +535,34 @@ export abstract class Transport extends EventEmitter {
     const timeout = this.config.heartbeatInterval * 2; // Allow 2 intervals for response
 
     for (const [connectionId, connection] of this.connections.entries()) {
-      if (connection.state === 'connected') {
-        const timeSinceActivity = now.getTime() - connection.lastActivity.getTime();
-        
+      if (connection.state === "connected") {
+        const timeSinceActivity =
+          now.getTime() - connection.lastActivity.getTime();
+
         if (timeSinceActivity > timeout) {
-          logger.warn('Connection heartbeat timeout', {
+          logger.warn("Connection heartbeat timeout", {
             connectionId,
             timeSinceActivity,
-            timeout
+            timeout,
           });
 
           this.handleConnectionError(
             connectionId,
-            new Error('Heartbeat timeout')
+            new Error("Heartbeat timeout"),
           );
         } else {
           // Send ping message
           try {
             await this.sendMessage(connectionId, {
-              type: 'notification',
-              method: 'ping',
+              type: "notification",
+              method: "ping",
               payload: { timestamp: now.toISOString() },
-              timestamp: now
+              timestamp: now,
             });
           } catch (error) {
-            logger.debug('Heartbeat ping failed', {
+            logger.debug("Heartbeat ping failed", {
               connectionId,
-              error: error instanceof Error ? error.message : String(error)
+              error: error instanceof Error ? error.message : String(error),
             });
           }
         }
@@ -542,7 +575,7 @@ export abstract class Transport extends EventEmitter {
    */
   protected cleanup(): void {
     this.stopHeartbeat();
-    
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = undefined;
@@ -550,9 +583,9 @@ export abstract class Transport extends EventEmitter {
 
     this.connections.clear();
     this.removeAllListeners();
-    
-    logger.info('Transport cleanup completed', {
-      transportType: this.getTransportType()
+
+    logger.info("Transport cleanup completed", {
+      transportType: this.getTransportType(),
     });
   }
 }

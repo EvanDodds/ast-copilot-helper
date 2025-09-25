@@ -5,7 +5,13 @@
 export interface PerformanceBenchmark {
   name: string;
   description: string;
-  category: 'cli' | 'mcp-server' | 'vscode-extension' | 'memory' | 'disk-io' | 'network';
+  category:
+    | "cli"
+    | "mcp-server"
+    | "vscode-extension"
+    | "memory"
+    | "disk-io"
+    | "network";
   target: PerformanceTarget;
   tolerance: number; // percentage allowed above target
   critical: boolean; // if true, failure blocks production deployment
@@ -13,8 +19,8 @@ export interface PerformanceBenchmark {
 
 export interface PerformanceTarget {
   value: number;
-  unit: 'ms' | 'mb' | 'gb' | 'req/s' | 'files/s' | 'connections';
-  constraint: 'max' | 'min' | 'avg';
+  unit: "ms" | "mb" | "gb" | "req/s" | "files/s" | "connections";
+  constraint: "max" | "min" | "avg";
 }
 
 export interface PerformanceMeasurement {
@@ -32,7 +38,7 @@ export interface PerformanceEnvironment {
   arch: string;
   memory: number; // bytes
   cpuCores: number;
-  testLoad?: 'light' | 'normal' | 'heavy' | 'stress';
+  testLoad?: "light" | "normal" | "heavy" | "stress";
 }
 
 export interface PerformanceTestResult {
@@ -66,12 +72,12 @@ export interface PerformanceValidationResult {
 }
 
 export interface PerformanceRecommendation {
-  type: 'optimization' | 'scaling' | 'configuration' | 'hardware';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "optimization" | "scaling" | "configuration" | "hardware";
+  severity: "low" | "medium" | "high" | "critical";
   title: string;
   description: string;
   impact: string;
-  effort: 'low' | 'medium' | 'high';
+  effort: "low" | "medium" | "high";
   resources?: string[];
 }
 
@@ -79,13 +85,13 @@ export interface ScalabilityTest {
   name: string;
   description: string;
   workload: ScalabilityWorkload;
-  expectedBehavior: 'linear' | 'logarithmic' | 'constant' | 'degraded-graceful';
+  expectedBehavior: "linear" | "logarithmic" | "constant" | "degraded-graceful";
   maxScale: number;
   metrics: string[]; // which performance metrics to track
 }
 
 export interface ScalabilityWorkload {
-  type: 'file-count' | 'file-size' | 'concurrent-requests' | 'connection-count';
+  type: "file-count" | "file-size" | "concurrent-requests" | "connection-count";
   startValue: number;
   endValue: number;
   stepSize: number;
@@ -95,7 +101,12 @@ export interface ScalabilityWorkload {
 export interface ScalabilityResult {
   test: string;
   workloadPoints: ScalabilityDataPoint[];
-  behavior: 'linear' | 'logarithmic' | 'constant' | 'degraded-graceful' | 'failure';
+  behavior:
+    | "linear"
+    | "logarithmic"
+    | "constant"
+    | "degraded-graceful"
+    | "failure";
   maxSupportedScale: number;
   recommendations: string[];
 }
@@ -154,7 +165,7 @@ export interface PerformanceConfig {
   };
   reporting: {
     outputDir: string;
-    formats: ('json' | 'html' | 'csv')[];
+    formats: ("json" | "html" | "csv")[];
     includeCharts: boolean;
   };
   thresholds: {

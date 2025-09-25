@@ -86,7 +86,10 @@ export interface EmbeddingGenerator {
    * @param options Batch processing configuration
    * @returns Promise resolving to array of embedding results
    */
-  batchProcess(annotations: Annotation[], options?: Partial<BatchProcessOptions>): Promise<EmbeddingResult[]>;
+  batchProcess(
+    annotations: Annotation[],
+    options?: Partial<BatchProcessOptions>,
+  ): Promise<EmbeddingResult[]>;
 
   /**
    * Shutdown the embedding generator and cleanup resources
@@ -125,29 +128,33 @@ export interface EmbeddingConfig {
  * Error types for embedding operations
  */
 export class EmbeddingError extends Error {
-  constructor(message: string, public readonly code: string, public readonly details?: any) {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly details?: any,
+  ) {
     super(message);
-    this.name = 'EmbeddingError';
+    this.name = "EmbeddingError";
   }
 }
 
 export class ModelInitializationError extends EmbeddingError {
   constructor(message: string, details?: any) {
-    super(message, 'MODEL_INIT_FAILED', details);
-    this.name = 'ModelInitializationError';
+    super(message, "MODEL_INIT_FAILED", details);
+    this.name = "ModelInitializationError";
   }
 }
 
 export class EmbeddingGenerationError extends EmbeddingError {
   constructor(message: string, details?: any) {
-    super(message, 'EMBEDDING_GENERATION_FAILED', details);
-    this.name = 'EmbeddingGenerationError';
+    super(message, "EMBEDDING_GENERATION_FAILED", details);
+    this.name = "EmbeddingGenerationError";
   }
 }
 
 export class MemoryLimitError extends EmbeddingError {
   constructor(message: string, details?: any) {
-    super(message, 'MEMORY_LIMIT_EXCEEDED', details);
-    this.name = 'MemoryLimitError';
+    super(message, "MEMORY_LIMIT_EXCEEDED", details);
+    this.name = "MemoryLimitError";
   }
 }

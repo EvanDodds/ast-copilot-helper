@@ -4,63 +4,59 @@
 
 {
   "name": "CI/CD Pipeline (Optimized)",
-  "on": [
-    "push",
-    "pull_request"
-  ],
-  "jobs": {
-    "validate-code": {
-      "runs-on": "ubuntu-latest",
-      "timeout-minutes": 5,
-      "steps": [
-        "uses: actions/checkout@v4",
+  "on": ["push", "pull_request"],
+  "jobs":
+    {
+      "validate-code":
         {
-          "name": "Cache dependencies",
-          "uses": "actions/cache@v3",
-          "with": {
-            "path": "~/.npm\nnode_modules",
-            "key": "${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}",
-            "restore-keys": "${{ runner.os }}-node-"
-          }
+          "runs-on": "ubuntu-latest",
+          "timeout-minutes": 5,
+          "steps":
+            [
+              "uses: actions/checkout@v4",
+              {
+                "name": "Cache dependencies",
+                "uses": "actions/cache@v3",
+                "with":
+                  {
+                    "path": "~/.npm\nnode_modules",
+                    "key": "${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}",
+                    "restore-keys": "${{ runner.os }}-node-",
+                  },
+              },
+              "name: Setup Node.js\nuses: actions/setup-node@v4\nwith:\n  node-version: \"20\"",
+              "name: Install dependencies\nrun: npm ci --prefer-offline",
+              "name: Type check\nrun: npm run type-check",
+              "name: Lint\nrun: npm run lint",
+            ],
         },
-        "name: Setup Node.js\nuses: actions/setup-node@v4\nwith:\n  node-version: \"20\"",
-        "name: Install dependencies\nrun: npm ci --prefer-offline",
-        "name: Type check\nrun: npm run type-check",
-        "name: Lint\nrun: npm run lint"
-      ]
+      "build-and-test":
+        {
+          "runs-on": "${{ matrix.os }}",
+          "needs": "validate-code",
+          "timeout-minutes": 15,
+          "strategy":
+            {
+              "fail-fast": false,
+              "matrix":
+                {
+                  "os": ["ubuntu-latest", "windows-latest", "macos-latest"],
+                  "node": ["18", "20", "21"],
+                },
+            },
+          "steps":
+            [
+              "uses: actions/checkout@v4",
+              "Cache setup (same as above)",
+              "Build and test steps",
+            ],
+        },
+      "performance-benchmarks":
+        {
+          "runs-on": "ubuntu-latest",
+          "needs": "validate-code",
+          "timeout-minutes": 10,
+          "steps": ["Benchmark execution steps"],
+        },
     },
-    "build-and-test": {
-      "runs-on": "${{ matrix.os }}",
-      "needs": "validate-code",
-      "timeout-minutes": 15,
-      "strategy": {
-        "fail-fast": false,
-        "matrix": {
-          "os": [
-            "ubuntu-latest",
-            "windows-latest",
-            "macos-latest"
-          ],
-          "node": [
-            "18",
-            "20",
-            "21"
-          ]
-        }
-      },
-      "steps": [
-        "uses: actions/checkout@v4",
-        "Cache setup (same as above)",
-        "Build and test steps"
-      ]
-    },
-    "performance-benchmarks": {
-      "runs-on": "ubuntu-latest",
-      "needs": "validate-code",
-      "timeout-minutes": 10,
-      "steps": [
-        "Benchmark execution steps"
-      ]
-    }
-  }
 }

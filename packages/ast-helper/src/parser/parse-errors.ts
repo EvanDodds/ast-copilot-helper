@@ -40,18 +40,18 @@ export interface ParseErrorDetails {
   };
 }
 
-export type ParseErrorType = 
-  | 'syntax'
-  | 'grammar' 
-  | 'runtime'
-  | 'timeout'
-  | 'memory'
-  | 'file_system'
-  | 'network'
-  | 'configuration'
-  | 'validation';
+export type ParseErrorType =
+  | "syntax"
+  | "grammar"
+  | "runtime"
+  | "timeout"
+  | "memory"
+  | "file_system"
+  | "network"
+  | "configuration"
+  | "validation";
 
-export type ErrorSeverity = 'error' | 'warning' | 'info';
+export type ErrorSeverity = "error" | "warning" | "info";
 
 /**
  * Base error class for all parsing errors
@@ -80,7 +80,7 @@ export class BaseParseError extends Error implements ParseErrorDetails {
     type: ParseErrorType,
     message: string,
     code: string,
-    severity: ErrorSeverity = 'error',
+    severity: ErrorSeverity = "error",
     filePath?: string,
     position?: { line: number; column: number; offset?: number },
     context?: string,
@@ -92,7 +92,7 @@ export class BaseParseError extends Error implements ParseErrorDetails {
       expectedTokens?: string[];
       actualToken?: string;
     },
-    relatedErrors?: ParseErrorDetails[]
+    relatedErrors?: ParseErrorDetails[],
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -127,23 +127,24 @@ export class ParseSyntaxError extends BaseParseError {
       expectedTokens?: string[];
       actualToken?: string;
     },
-    language?: string
+    language?: string,
   ) {
-    const finalSuggestions = suggestions.length > 0 
-      ? suggestions 
-      : ParseSyntaxError.generateSyntaxSuggestions(treeSitterInfo);
+    const finalSuggestions =
+      suggestions.length > 0
+        ? suggestions
+        : ParseSyntaxError.generateSyntaxSuggestions(treeSitterInfo);
 
     super(
-      'syntax',
+      "syntax",
       message,
-      'PARSE_SYNTAX_ERROR',
-      'error',
+      "PARSE_SYNTAX_ERROR",
+      "error",
       filePath,
       position,
       context,
       finalSuggestions,
       language,
-      treeSitterInfo
+      treeSitterInfo,
     );
   }
 
@@ -154,18 +155,22 @@ export class ParseSyntaxError extends BaseParseError {
     actualToken?: string;
   }): string[] {
     const suggestions: string[] = [];
-    
+
     if (treeSitterInfo?.expectedTokens?.length) {
-      suggestions.push(`Expected one of: ${treeSitterInfo.expectedTokens.join(', ')}`);
+      suggestions.push(
+        `Expected one of: ${treeSitterInfo.expectedTokens.join(", ")}`,
+      );
     }
-    
+
     if (treeSitterInfo?.actualToken) {
-      suggestions.push(`Found unexpected token: '${treeSitterInfo.actualToken}'`);
+      suggestions.push(
+        `Found unexpected token: '${treeSitterInfo.actualToken}'`,
+      );
     }
-    
-    suggestions.push('Check for missing brackets, parentheses, or semicolons');
-    suggestions.push('Verify proper syntax for the current language');
-    
+
+    suggestions.push("Check for missing brackets, parentheses, or semicolons");
+    suggestions.push("Verify proper syntax for the current language");
+
     return suggestions;
   }
 }
@@ -179,37 +184,42 @@ export class ParseGrammarError extends BaseParseError {
     language?: string,
     filePath?: string,
     context?: string,
-    suggestions: string[] = []
+    suggestions: string[] = [],
   ) {
-    const finalSuggestions = suggestions.length > 0 
-      ? suggestions 
-      : ParseGrammarError.generateGrammarSuggestions(language);
+    const finalSuggestions =
+      suggestions.length > 0
+        ? suggestions
+        : ParseGrammarError.generateGrammarSuggestions(language);
 
     super(
-      'grammar',
+      "grammar",
       message,
-      'PARSE_GRAMMAR_ERROR',
-      'error',
+      "PARSE_GRAMMAR_ERROR",
+      "error",
       filePath,
       undefined,
       context,
       finalSuggestions,
-      language
+      language,
     );
   }
 
   private static generateGrammarSuggestions(language?: string): string[] {
     const suggestions: string[] = [];
-    
+
     if (language) {
-      suggestions.push(`Ensure Tree-sitter grammar for '${language}' is installed`);
+      suggestions.push(
+        `Ensure Tree-sitter grammar for '${language}' is installed`,
+      );
       suggestions.push(`Check if language '${language}' is supported`);
     }
-    
-    suggestions.push('Verify internet connection for grammar downloads');
-    suggestions.push('Clear grammar cache and retry: delete .astdb/grammars folder');
-    suggestions.push('Check grammar SHA256 checksums for corruption');
-    
+
+    suggestions.push("Verify internet connection for grammar downloads");
+    suggestions.push(
+      "Clear grammar cache and retry: delete .astdb/grammars folder",
+    );
+    suggestions.push("Check grammar SHA256 checksums for corruption");
+
     return suggestions;
   }
 }
@@ -223,24 +233,25 @@ export class ParseRuntimeError extends BaseParseError {
     filePath?: string,
     context?: string,
     suggestions: string[] = [],
-    severity: ErrorSeverity = 'error',
-    stackTrace?: string
+    severity: ErrorSeverity = "error",
+    stackTrace?: string,
   ) {
-    const finalSuggestions = suggestions.length > 0 
-      ? suggestions 
-      : ParseRuntimeError.generateRuntimeSuggestions(message);
+    const finalSuggestions =
+      suggestions.length > 0
+        ? suggestions
+        : ParseRuntimeError.generateRuntimeSuggestions(message);
 
     super(
-      'runtime',
+      "runtime",
       message,
-      'PARSE_RUNTIME_ERROR',
+      "PARSE_RUNTIME_ERROR",
       severity,
       filePath,
       undefined,
       context,
-      finalSuggestions
+      finalSuggestions,
     );
-    
+
     if (stackTrace) {
       (this as any).stackTrace = stackTrace;
     }
@@ -248,24 +259,24 @@ export class ParseRuntimeError extends BaseParseError {
 
   private static generateRuntimeSuggestions(message: string): string[] {
     const suggestions: string[] = [];
-    
-    if (message.includes('memory')) {
-      suggestions.push('Reduce batch size or enable memory throttling');
-      suggestions.push('Close other applications to free memory');
-      suggestions.push('Consider processing files in smaller chunks');
-    } else if (message.includes('timeout')) {
-      suggestions.push('Increase parsing timeout limit');
-      suggestions.push('Check if file is unusually large or complex');
-      suggestions.push('Verify system performance and available resources');
-    } else if (message.includes('module')) {
-      suggestions.push('Install required Tree-sitter modules');
-      suggestions.push('Check Node.js version compatibility');
-      suggestions.push('Verify installation integrity');
+
+    if (message.includes("memory")) {
+      suggestions.push("Reduce batch size or enable memory throttling");
+      suggestions.push("Close other applications to free memory");
+      suggestions.push("Consider processing files in smaller chunks");
+    } else if (message.includes("timeout")) {
+      suggestions.push("Increase parsing timeout limit");
+      suggestions.push("Check if file is unusually large or complex");
+      suggestions.push("Verify system performance and available resources");
+    } else if (message.includes("module")) {
+      suggestions.push("Install required Tree-sitter modules");
+      suggestions.push("Check Node.js version compatibility");
+      suggestions.push("Verify installation integrity");
     }
-    
-    suggestions.push('Check system logs for additional details');
-    suggestions.push('Retry the operation');
-    
+
+    suggestions.push("Check system logs for additional details");
+    suggestions.push("Retry the operation");
+
     return suggestions;
   }
 }
@@ -278,44 +289,48 @@ export class ParseFileSystemError extends BaseParseError {
     message: string,
     filePath?: string,
     context?: string,
-    suggestions: string[] = []
+    suggestions: string[] = [],
   ) {
-    const finalSuggestions = suggestions.length > 0 
-      ? suggestions 
-      : ParseFileSystemError.generateFileSystemSuggestions(message);
+    const finalSuggestions =
+      suggestions.length > 0
+        ? suggestions
+        : ParseFileSystemError.generateFileSystemSuggestions(message);
 
     super(
-      'file_system',
+      "file_system",
       message,
-      'PARSE_FILE_SYSTEM_ERROR',
-      'error',
+      "PARSE_FILE_SYSTEM_ERROR",
+      "error",
       filePath,
       undefined,
       context,
-      finalSuggestions
+      finalSuggestions,
     );
   }
 
   private static generateFileSystemSuggestions(message: string): string[] {
     const suggestions: string[] = [];
-    
-    if (message.includes('ENOENT') || message.includes('not found')) {
-      suggestions.push('Verify the file path exists');
-      suggestions.push('Check file permissions');
-      suggestions.push('Ensure the file has not been moved or deleted');
-    } else if (message.includes('EACCES') || message.includes('permission')) {
-      suggestions.push('Check file read permissions');
-      suggestions.push('Run with appropriate user privileges');
-      suggestions.push('Verify directory access permissions');
-    } else if (message.includes('EMFILE') || message.includes('too many files')) {
-      suggestions.push('Reduce batch processing concurrency');
-      suggestions.push('Close unused file handles');
-      suggestions.push('Increase system file descriptor limits');
+
+    if (message.includes("ENOENT") || message.includes("not found")) {
+      suggestions.push("Verify the file path exists");
+      suggestions.push("Check file permissions");
+      suggestions.push("Ensure the file has not been moved or deleted");
+    } else if (message.includes("EACCES") || message.includes("permission")) {
+      suggestions.push("Check file read permissions");
+      suggestions.push("Run with appropriate user privileges");
+      suggestions.push("Verify directory access permissions");
+    } else if (
+      message.includes("EMFILE") ||
+      message.includes("too many files")
+    ) {
+      suggestions.push("Reduce batch processing concurrency");
+      suggestions.push("Close unused file handles");
+      suggestions.push("Increase system file descriptor limits");
     }
-    
-    suggestions.push('Check available disk space');
-    suggestions.push('Verify file system health');
-    
+
+    suggestions.push("Check available disk space");
+    suggestions.push("Verify file system health");
+
     return suggestions;
   }
 }
@@ -324,35 +339,32 @@ export class ParseFileSystemError extends BaseParseError {
  * Network related error for grammar downloads
  */
 export class ParseNetworkError extends BaseParseError {
-  constructor(
-    message: string,
-    context?: string,
-    suggestions: string[] = []
-  ) {
-    const finalSuggestions = suggestions.length > 0 
-      ? suggestions 
-      : ParseNetworkError.generateNetworkSuggestions();
+  constructor(message: string, context?: string, suggestions: string[] = []) {
+    const finalSuggestions =
+      suggestions.length > 0
+        ? suggestions
+        : ParseNetworkError.generateNetworkSuggestions();
 
     super(
-      'network',
+      "network",
       message,
-      'PARSE_NETWORK_ERROR',
-      'error',
+      "PARSE_NETWORK_ERROR",
+      "error",
       undefined,
       undefined,
       context,
-      finalSuggestions
+      finalSuggestions,
     );
   }
 
   private static generateNetworkSuggestions(): string[] {
     return [
-      'Check internet connection',
-      'Verify proxy settings if behind corporate firewall',
-      'Try again later in case of temporary server issues',
-      'Check if GitHub or grammar repository is accessible',
-      'Consider using local grammar files if available',
-      'Verify DNS resolution is working correctly',
+      "Check internet connection",
+      "Verify proxy settings if behind corporate firewall",
+      "Try again later in case of temporary server issues",
+      "Check if GitHub or grammar repository is accessible",
+      "Consider using local grammar files if available",
+      "Verify DNS resolution is working correctly",
     ];
   }
 }
@@ -361,35 +373,32 @@ export class ParseNetworkError extends BaseParseError {
  * Configuration or validation error
  */
 export class ParseConfigurationError extends BaseParseError {
-  constructor(
-    message: string,
-    context?: string,
-    suggestions: string[] = []
-  ) {
-    const finalSuggestions = suggestions.length > 0 
-      ? suggestions 
-      : ParseConfigurationError.generateConfigurationSuggestions();
+  constructor(message: string, context?: string, suggestions: string[] = []) {
+    const finalSuggestions =
+      suggestions.length > 0
+        ? suggestions
+        : ParseConfigurationError.generateConfigurationSuggestions();
 
     super(
-      'configuration',
+      "configuration",
       message,
-      'PARSE_CONFIGURATION_ERROR',
-      'error',
+      "PARSE_CONFIGURATION_ERROR",
+      "error",
       undefined,
       undefined,
       context,
-      finalSuggestions
+      finalSuggestions,
     );
   }
 
   private static generateConfigurationSuggestions(): string[] {
     return [
-      'Check configuration file syntax and structure',
-      'Verify all required configuration fields are present',
-      'Validate configuration values against expected types',
-      'Review documentation for proper configuration format',
-      'Reset to default configuration and try again',
-      'Check for conflicting configuration options',
+      "Check configuration file syntax and structure",
+      "Verify all required configuration fields are present",
+      "Validate configuration values against expected types",
+      "Review documentation for proper configuration format",
+      "Reset to default configuration and try again",
+      "Check for conflicting configuration options",
     ];
   }
 }
@@ -403,36 +412,37 @@ export class ParseTimeoutError extends BaseParseError {
     filePath?: string,
     timeoutMs?: number,
     context?: string,
-    suggestions: string[] = []
+    suggestions: string[] = [],
   ) {
-    const finalSuggestions = suggestions.length > 0 
-      ? suggestions 
-      : ParseTimeoutError.generateTimeoutSuggestions(timeoutMs);
+    const finalSuggestions =
+      suggestions.length > 0
+        ? suggestions
+        : ParseTimeoutError.generateTimeoutSuggestions(timeoutMs);
 
     super(
-      'timeout',
+      "timeout",
       message,
-      'PARSE_TIMEOUT_ERROR',
-      'error',
+      "PARSE_TIMEOUT_ERROR",
+      "error",
       filePath,
       undefined,
       context,
-      finalSuggestions
+      finalSuggestions,
     );
   }
 
   private static generateTimeoutSuggestions(timeoutMs?: number): string[] {
     const suggestions: string[] = [];
-    
+
     if (timeoutMs) {
       suggestions.push(`Consider increasing timeout from ${timeoutMs}ms`);
     }
-    
-    suggestions.push('Check if file is extremely large or complex');
-    suggestions.push('Verify system performance and available resources');
-    suggestions.push('Consider breaking large files into smaller parts');
-    suggestions.push('Monitor CPU and memory usage during parsing');
-    
+
+    suggestions.push("Check if file is extremely large or complex");
+    suggestions.push("Verify system performance and available resources");
+    suggestions.push("Consider breaking large files into smaller parts");
+    suggestions.push("Monitor CPU and memory usage during parsing");
+
     return suggestions;
   }
 }
@@ -446,38 +456,41 @@ export class ParseMemoryError extends BaseParseError {
     filePath?: string,
     memoryUsageMB?: number,
     context?: string,
-    suggestions: string[] = []
+    suggestions: string[] = [],
   ) {
-    const finalSuggestions = suggestions.length > 0 
-      ? suggestions 
-      : ParseMemoryError.generateMemorySuggestions(memoryUsageMB);
+    const finalSuggestions =
+      suggestions.length > 0
+        ? suggestions
+        : ParseMemoryError.generateMemorySuggestions(memoryUsageMB);
 
     super(
-      'memory',
+      "memory",
       message,
-      'PARSE_MEMORY_ERROR',
-      'error',
+      "PARSE_MEMORY_ERROR",
+      "error",
       filePath,
       undefined,
       context,
-      finalSuggestions
+      finalSuggestions,
     );
   }
 
   private static generateMemorySuggestions(memoryUsageMB?: number): string[] {
     const suggestions: string[] = [];
-    
+
     if (memoryUsageMB) {
-      suggestions.push(`Memory usage was ${memoryUsageMB}MB when error occurred`);
+      suggestions.push(
+        `Memory usage was ${memoryUsageMB}MB when error occurred`,
+      );
     }
-    
-    suggestions.push('Reduce batch processing concurrency');
-    suggestions.push('Enable memory throttling in batch processor');
-    suggestions.push('Close other memory-intensive applications');
-    suggestions.push('Process files in smaller batches');
-    suggestions.push('Consider increasing available system memory');
-    suggestions.push('Enable garbage collection between batches');
-    
+
+    suggestions.push("Reduce batch processing concurrency");
+    suggestions.push("Enable memory throttling in batch processor");
+    suggestions.push("Close other memory-intensive applications");
+    suggestions.push("Process files in smaller batches");
+    suggestions.push("Consider increasing available system memory");
+    suggestions.push("Enable garbage collection between batches");
+
     return suggestions;
   }
 }
@@ -489,43 +502,46 @@ export class ParseErrorHandler {
   private errorHistory: ParseErrorDetails[] = [];
   private maxHistorySize = 1000;
   private errorCounts = new Map<string, number>();
-  
+
   /**
    * Log and store a parsing error
    */
   logError(error: ParseErrorDetails | Error): ParseErrorDetails {
     let errorDetails: ParseErrorDetails;
-    
+
     if (this.isParseErrorDetails(error)) {
       errorDetails = error;
     } else if (error instanceof Error) {
       // Convert generic Error to ParseErrorDetails
       errorDetails = {
-        type: 'runtime',
+        type: "runtime",
         message: error.message,
-        severity: 'error',
+        severity: "error",
         timestamp: Date.now(),
-        code: 'GENERIC_ERROR',
+        code: "GENERIC_ERROR",
         stackTrace: error.stack,
-        suggestions: ['Check logs for additional details', 'Retry the operation'],
+        suggestions: [
+          "Check logs for additional details",
+          "Retry the operation",
+        ],
       };
     } else {
       errorDetails = error;
     }
-    
+
     // Store in history
     this.errorHistory.push(errorDetails);
     if (this.errorHistory.length > this.maxHistorySize) {
       this.errorHistory = this.errorHistory.slice(-this.maxHistorySize);
     }
-    
+
     // Update error counts
     const errorKey = `${errorDetails.type}:${errorDetails.code}`;
     this.errorCounts.set(errorKey, (this.errorCounts.get(errorKey) || 0) + 1);
-    
+
     // Log to console or external logging system
     this.logToConsole(errorDetails);
-    
+
     return errorDetails;
   }
 
@@ -533,14 +549,16 @@ export class ParseErrorHandler {
    * Type guard to check if an error is ParseErrorDetails
    */
   private isParseErrorDetails(error: any): error is ParseErrorDetails {
-    return error && 
-           typeof error.type === 'string' && 
-           typeof error.message === 'string' &&
-           typeof error.severity === 'string' &&
-           typeof error.timestamp === 'number' &&
-           typeof error.code === 'string';
+    return (
+      error &&
+      typeof error.type === "string" &&
+      typeof error.message === "string" &&
+      typeof error.severity === "string" &&
+      typeof error.timestamp === "number" &&
+      typeof error.code === "string"
+    );
   }
-  
+
   /**
    * Create a syntax error from Tree-sitter parse information
    */
@@ -549,14 +567,16 @@ export class ParseErrorHandler {
     filePath?: string,
     position?: { line: number; column: number; offset?: number },
     treeSitterNode?: any,
-    language?: string
+    language?: string,
   ): ParseSyntaxError {
     const context = treeSitterNode ? `Node: ${treeSitterNode.type}` : undefined;
-    const treeSitterInfo = treeSitterNode ? {
-      nodeType: treeSitterNode.type,
-      parentNodeType: treeSitterNode.parent?.type,
-    } : undefined;
-    
+    const treeSitterInfo = treeSitterNode
+      ? {
+          nodeType: treeSitterNode.type,
+          parentNodeType: treeSitterNode.parent?.type,
+        }
+      : undefined;
+
     return new ParseSyntaxError(
       message,
       filePath,
@@ -564,10 +584,10 @@ export class ParseErrorHandler {
       context,
       [],
       treeSitterInfo,
-      language
+      language,
     );
   }
-  
+
   /**
    * Create a grammar error
    */
@@ -575,11 +595,11 @@ export class ParseErrorHandler {
     message: string,
     language?: string,
     filePath?: string,
-    context?: string
+    context?: string,
   ): ParseGrammarError {
     return new ParseGrammarError(message, language, filePath, context);
   }
-  
+
   /**
    * Create a runtime error
    */
@@ -587,36 +607,39 @@ export class ParseErrorHandler {
     message: string,
     filePath?: string,
     context?: string,
-    severity: ErrorSeverity = 'error'
+    severity: ErrorSeverity = "error",
   ): ParseRuntimeError {
     return new ParseRuntimeError(message, filePath, context, [], severity);
   }
-  
+
   /**
    * Create a file system error
    */
   createFileSystemError(
     message: string,
     filePath?: string,
-    context?: string
+    context?: string,
   ): ParseFileSystemError {
     return new ParseFileSystemError(message, filePath, context);
   }
-  
+
   /**
    * Create a network error
    */
   createNetworkError(message: string, context?: string): ParseNetworkError {
     return new ParseNetworkError(message, context);
   }
-  
+
   /**
    * Create a configuration error
    */
-  createConfigurationError(message: string, context?: string): ParseConfigurationError {
+  createConfigurationError(
+    message: string,
+    context?: string,
+  ): ParseConfigurationError {
     return new ParseConfigurationError(message, context);
   }
-  
+
   /**
    * Create a timeout error
    */
@@ -624,11 +647,11 @@ export class ParseErrorHandler {
     message: string,
     filePath?: string,
     timeoutMs?: number,
-    context?: string
+    context?: string,
   ): ParseTimeoutError {
     return new ParseTimeoutError(message, filePath, timeoutMs, context);
   }
-  
+
   /**
    * Create a memory error
    */
@@ -636,11 +659,11 @@ export class ParseErrorHandler {
     message: string,
     filePath?: string,
     memoryUsageMB?: number,
-    context?: string
+    context?: string,
   ): ParseMemoryError {
     return new ParseMemoryError(message, filePath, memoryUsageMB, context);
   }
-  
+
   /**
    * Get error statistics
    */
@@ -653,17 +676,17 @@ export class ParseErrorHandler {
   } {
     const errorsByType = new Map<ParseErrorType, number>();
     const errorsByCode = new Map<string, number>();
-    
+
     for (const error of this.errorHistory) {
       errorsByType.set(error.type, (errorsByType.get(error.type) || 0) + 1);
       errorsByCode.set(error.code, (errorsByCode.get(error.code) || 0) + 1);
     }
-    
+
     const topErrors = Array.from(this.errorCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([key, count]) => ({ key, count }));
-    
+
     return {
       totalErrors: this.errorHistory.length,
       errorsByType,
@@ -672,7 +695,7 @@ export class ParseErrorHandler {
       topErrors,
     };
   }
-  
+
   /**
    * Clear error history
    */
@@ -680,69 +703,71 @@ export class ParseErrorHandler {
     this.errorHistory = [];
     this.errorCounts.clear();
   }
-  
+
   /**
    * Log error to console with formatting
    */
   private logToConsole(error: ParseErrorDetails): void {
     const timestamp = new Date(error.timestamp).toISOString();
-    const location = error.filePath 
-      ? `${error.filePath}${error.position ? `:${error.position.line}:${error.position.column}` : ''}`
-      : 'unknown';
-    
-    console.error(`[${timestamp}] ${error.severity.toUpperCase()} ${error.type}/${error.code}: ${error.message}`);
+    const location = error.filePath
+      ? `${error.filePath}${error.position ? `:${error.position.line}:${error.position.column}` : ""}`
+      : "unknown";
+
+    console.error(
+      `[${timestamp}] ${error.severity.toUpperCase()} ${error.type}/${error.code}: ${error.message}`,
+    );
     console.error(`  Location: ${location}`);
-    
+
     if (error.context) {
       console.error(`  Context: ${error.context}`);
     }
-    
+
     if (error.suggestions && error.suggestions.length > 0) {
-      console.error('  Suggestions:');
-      error.suggestions.forEach(suggestion => {
+      console.error("  Suggestions:");
+      error.suggestions.forEach((suggestion) => {
         console.error(`    - ${suggestion}`);
       });
     }
-    
-    if (error.stackTrace && error.severity === 'error') {
-      console.error('  Stack trace:');
+
+    if (error.stackTrace && error.severity === "error") {
+      console.error("  Stack trace:");
       console.error(error.stackTrace);
     }
   }
-  
+
   /**
    * Check if an error is recoverable
    */
   isRecoverable(error: ParseErrorDetails): boolean {
     // Network and timeout errors are often recoverable
-    if (error.type === 'network' || error.type === 'timeout') {
+    if (error.type === "network" || error.type === "timeout") {
       return true;
     }
-    
+
     // File system errors might be recoverable (permissions, temp issues)
-    if (error.type === 'file_system') {
-      return !error.message.includes('ENOENT'); // File not found is not recoverable
+    if (error.type === "file_system") {
+      return !error.message.includes("ENOENT"); // File not found is not recoverable
     }
-    
+
     // Memory errors might be recoverable with different settings
-    if (error.type === 'memory') {
+    if (error.type === "memory") {
       return true;
     }
-    
+
     // Syntax errors are generally not recoverable without code changes
-    if (error.type === 'syntax') {
+    if (error.type === "syntax") {
       return false;
     }
-    
+
     // Configuration errors need manual intervention
-    if (error.type === 'configuration') {
+    if (error.type === "configuration") {
       return false;
     }
-    
+
     // Grammar and runtime errors might be recoverable
-    return error.type === 'grammar' || error.type === 'runtime';
+    return error.type === "grammar" || error.type === "runtime";
   }
-  
+
   /**
    * Suggest retry strategy for recoverable errors
    */
@@ -755,40 +780,40 @@ export class ParseErrorHandler {
     if (!this.isRecoverable(error)) {
       return null;
     }
-    
+
     switch (error.type) {
-      case 'network':
+      case "network":
         return {
           shouldRetry: true,
           retryDelayMs: 1000,
           maxRetries: 3,
           backoffMultiplier: 2,
         };
-      
-      case 'timeout':
+
+      case "timeout":
         return {
           shouldRetry: true,
           retryDelayMs: 500,
           maxRetries: 2,
           backoffMultiplier: 1.5,
         };
-      
-      case 'memory':
+
+      case "memory":
         return {
           shouldRetry: true,
           retryDelayMs: 2000,
           maxRetries: 2,
           backoffMultiplier: 2,
         };
-      
-      case 'file_system':
+
+      case "file_system":
         return {
           shouldRetry: true,
           retryDelayMs: 500,
           maxRetries: 2,
           backoffMultiplier: 1.5,
         };
-      
+
       default:
         return {
           shouldRetry: true,

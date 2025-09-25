@@ -31,6 +31,7 @@ Handles publication to NPM registries with support for:
 - **Verification**: Post-publication verification and health checks
 
 **Key Features:**
+
 - Multi-registry support with per-registry authentication
 - Scoped package support (`@organization/package-name`)
 - Version conflict detection and resolution
@@ -49,6 +50,7 @@ Manages VS Code extension publishing with:
 - **Verification**: Extension availability and installation verification
 
 **Key Features:**
+
 - Extension manifest validation
 - Multi-target support (VS Code, VS Code Insiders, CodeOSS)
 - Automated screenshot and README processing
@@ -66,6 +68,7 @@ Handles GitHub releases and asset management:
 - **Verification**: Release asset integrity verification
 
 **Key Features:**
+
 - Multi-asset release support
 - Release draft and pre-release capabilities
 - Asset checksum generation and verification
@@ -83,6 +86,7 @@ Provides cross-platform binary distribution:
 - **Distribution**: CDN and direct download support
 
 **Key Features:**
+
 - Multi-format packaging (zip, tar.gz, deb, rpm, dmg, msi)
 - Code signing for Windows (Authenticode), macOS (notarization), and Linux (GPG)
 - Binary size optimization and compression
@@ -100,6 +104,7 @@ Handles automatic application updates:
 - **User Interface**: User notification and consent management
 
 **Key Features:**
+
 - Configurable update channels (stable, beta, development)
 - Background update downloading
 - Silent and interactive update modes
@@ -139,29 +144,29 @@ const config: DistributionConfig = {
       path: "./packages/ast-helper",
       publishConfig: {
         registry: "https://registry.npmjs.org",
-        access: "public"
-      }
-    }
+        access: "public",
+      },
+    },
   ],
   registries: [
     {
       name: "npm",
       url: "https://registry.npmjs.org",
-      auth: { token: process.env.NPM_TOKEN }
-    }
+      auth: { token: process.env.NPM_TOKEN },
+    },
   ],
   platforms: ["win32", "darwin", "linux"],
   marketplaces: [
     {
       name: "vscode-marketplace",
       publisherId: "your-publisher-id",
-      auth: { token: process.env.VSCE_TOKEN }
-    }
+      auth: { token: process.env.VSCE_TOKEN },
+    },
   ],
   github: {
     owner: "your-username",
     repo: "ast-copilot-helper",
-    auth: { token: process.env.GITHUB_TOKEN }
+    auth: { token: process.env.GITHUB_TOKEN },
   },
   binaryDistribution: {
     enabled: true,
@@ -172,29 +177,29 @@ const config: DistributionConfig = {
       certificates: {
         windows: process.env.WIN_CERT_PATH,
         macos: process.env.MACOS_CERT_PATH,
-        linux: process.env.LINUX_GPG_KEY
-      }
-    }
+        linux: process.env.LINUX_GPG_KEY,
+      },
+    },
   },
   autoUpdate: {
     enabled: true,
     server: {
       url: "https://your-update-server.com/api",
-      channels: ["stable", "beta"]
+      channels: ["stable", "beta"],
     },
     client: {
       updateInterval: 24,
       channel: "stable",
       autoDownload: true,
       autoInstall: false,
-      notifyUser: true
+      notifyUser: true,
     },
     rollback: {
       enabled: true,
       autoRollback: false,
-      maxVersionsToKeep: 3
-    }
-  }
+      maxVersionsToKeep: 3,
+    },
+  },
 };
 ```
 
@@ -203,27 +208,27 @@ const config: DistributionConfig = {
 ### Basic Distribution Workflow
 
 ```typescript
-import { DistributionOrchestrator } from '@ast-copilot-helper/ast-helper';
+import { DistributionOrchestrator } from "@ast-copilot-helper/ast-helper";
 
 async function distribute() {
   const orchestrator = new DistributionOrchestrator();
-  
+
   // Initialize with configuration
   await orchestrator.initialize(config);
-  
+
   // Validate all publishers
   const validation = await orchestrator.validateAll();
   if (!validation.success) {
-    console.error('Validation failed:', validation.errors);
+    console.error("Validation failed:", validation.errors);
     return;
   }
-  
+
   // Execute distribution
   const result = await orchestrator.distributeAll();
   if (result.success) {
-    console.log('Distribution completed successfully');
+    console.log("Distribution completed successfully");
   } else {
-    console.error('Distribution failed:', result.error);
+    console.error("Distribution failed:", result.error);
   }
 }
 ```
@@ -295,25 +300,25 @@ The distribution system integrates seamlessly with CI/CD pipelines:
 name: Release Distribution
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 jobs:
   distribute:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          
+          node-version: "18"
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build packages
         run: npm run build
-        
+
       - name: Run distribution
         run: npm run distribute
         env:
@@ -327,13 +332,13 @@ jobs:
 ```groovy
 pipeline {
     agent any
-    
+
     environment {
         NPM_TOKEN = credentials('npm-token')
         VSCE_TOKEN = credentials('vsce-token')
         GITHUB_TOKEN = credentials('github-token')
     }
-    
+
     stages {
         stage('Build') {
             steps {
@@ -341,13 +346,13 @@ pipeline {
                 sh 'npm run build'
             }
         }
-        
+
         stage('Test') {
             steps {
                 sh 'npm test'
             }
         }
-        
+
         stage('Distribute') {
             when {
                 tag 'v*'
@@ -444,19 +449,19 @@ class CustomPublisher implements Publisher {
   async initialize(config: DistributionConfig): Promise<void> {
     // Custom initialization logic
   }
-  
+
   async validate(): Promise<ValidationResult> {
     // Custom validation logic
   }
-  
+
   async publish(): Promise<CustomResult> {
     // Custom publishing logic
   }
-  
+
   async verify(result: CustomResult): Promise<VerificationResult> {
     // Custom verification logic
   }
-  
+
   async cleanup(): Promise<void> {
     // Custom cleanup logic
   }

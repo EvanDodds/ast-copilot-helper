@@ -3,15 +3,15 @@
  * @description Type definitions for privacy-respecting consent management system
  */
 
-import type { PrivacyLevel } from '../types.js';
+import type { PrivacyLevel } from "../types.js";
 
 /**
  * Privacy level enum for easier usage
  */
 export const PRIVACY_LEVELS = {
-  STRICT: 'strict' as const,
-  BALANCED: 'balanced' as const,
-  PERMISSIVE: 'permissive' as const
+  STRICT: "strict" as const,
+  BALANCED: "balanced" as const,
+  PERMISSIVE: "permissive" as const,
 } as const;
 
 /**
@@ -52,14 +52,14 @@ export interface ConsentRecord {
  * Features that can be individually consented to
  */
 export enum ConsentFeature {
-  USAGE_ANALYTICS = 'usage_analytics',
-  PERFORMANCE_MONITORING = 'performance_monitoring',
-  ERROR_REPORTING = 'error_reporting',
-  FEATURE_USAGE = 'feature_usage',
-  COMMAND_TRACKING = 'command_tracking',
-  FILE_TYPE_ANALYSIS = 'file_type_analysis',
-  EXTENSION_USAGE = 'extension_usage',
-  CRASH_REPORTING = 'crash_reporting'
+  USAGE_ANALYTICS = "usage_analytics",
+  PERFORMANCE_MONITORING = "performance_monitoring",
+  ERROR_REPORTING = "error_reporting",
+  FEATURE_USAGE = "feature_usage",
+  COMMAND_TRACKING = "command_tracking",
+  FILE_TYPE_ANALYSIS = "file_type_analysis",
+  EXTENSION_USAGE = "extension_usage",
+  CRASH_REPORTING = "crash_reporting",
 }
 
 /**
@@ -98,11 +98,11 @@ export interface ConsentValidationResult {
  * Consent renewal reasons
  */
 export enum ConsentRenewalReason {
-  EXPIRED = 'expired',
-  VERSION_CHANGE = 'version_change',
-  PRIVACY_POLICY_UPDATE = 'privacy_policy_update',
-  FEATURE_CHANGES = 'feature_changes',
-  USER_REQUEST = 'user_request'
+  EXPIRED = "expired",
+  VERSION_CHANGE = "version_change",
+  PRIVACY_POLICY_UPDATE = "privacy_policy_update",
+  FEATURE_CHANGES = "feature_changes",
+  USER_REQUEST = "user_request",
 }
 
 /**

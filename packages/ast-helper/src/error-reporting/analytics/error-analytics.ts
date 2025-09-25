@@ -8,8 +8,8 @@ import type {
   ErrorHistoryEntry,
   ErrorAnalytics,
   ErrorPattern,
-  ErrorTrend
-} from '../types.js';
+  ErrorTrend,
+} from "../types.js";
 
 /**
  * Configuration for error analytics
@@ -20,7 +20,7 @@ export interface ErrorAnalyticsConfig {
   trendAnalysisWindow: number; // hours
   patternDetectionThreshold: number; // minimum occurrences
   enableRealTimeAnalytics: boolean;
-  storageBackend: 'memory' | 'file' | 'database';
+  storageBackend: "memory" | "file" | "database";
   enableMLAnalysis: boolean;
   retentionPolicyDays: number;
 }
@@ -31,7 +31,7 @@ export interface ErrorAnalyticsConfig {
 export interface ErrorFrequencyPoint {
   timestamp: Date;
   count: number;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   errorTypes: string[];
   categories: string[];
 }
@@ -71,16 +71,16 @@ export class ErrorAnalyticsManager {
   private config: ErrorAnalyticsConfig;
   private errorHistory: ErrorHistoryEntry[] = [];
   private analyticsCache: Map<string, any> = new Map();
-  
+
   private readonly DEFAULT_CONFIG: ErrorAnalyticsConfig = {
     maxHistorySize: 10000,
     analyticsPeriodDays: 30,
     trendAnalysisWindow: 24, // 24 hours
     patternDetectionThreshold: 3,
     enableRealTimeAnalytics: true,
-    storageBackend: 'memory',
+    storageBackend: "memory",
     enableMLAnalysis: false, // Disabled for now
-    retentionPolicyDays: 90
+    retentionPolicyDays: 90,
   };
 
   constructor(config: Partial<ErrorAnalyticsConfig> = {}) {
@@ -91,7 +91,9 @@ export class ErrorAnalyticsManager {
    * Add error to history and update analytics
    */
   async addError(error: ErrorReport): Promise<void> {
-    console.log(`📈 Adding error to analytics: ${error.type} - ${error.category}`);
+    console.log(
+      `📈 Adding error to analytics: ${error.type} - ${error.category}`,
+    );
 
     // Create history entry matching existing interface
     const historyEntry: ErrorHistoryEntry = {
@@ -101,7 +103,7 @@ export class ErrorAnalyticsManager {
       resolved: false,
       resolvedAt: undefined,
       resolution: undefined,
-      userFeedback: undefined
+      userFeedback: undefined,
     };
 
     // Check for similar errors
@@ -116,7 +118,10 @@ export class ErrorAnalyticsManager {
 
     // Enforce history size limit
     if (this.errorHistory.length > this.config.maxHistorySize) {
-      this.errorHistory = this.errorHistory.slice(0, this.config.maxHistorySize);
+      this.errorHistory = this.errorHistory.slice(
+        0,
+        this.config.maxHistorySize,
+      );
     }
 
     // Update analytics if enabled
@@ -132,13 +137,13 @@ export class ErrorAnalyticsManager {
    * Mark error as resolved
    */
   async resolveError(errorId: string, resolutionTime?: Date): Promise<void> {
-    const historyEntry = this.errorHistory.find(e => e.id === errorId);
+    const historyEntry = this.errorHistory.find((e) => e.id === errorId);
     if (historyEntry && !historyEntry.resolved) {
       historyEntry.resolved = true;
       historyEntry.resolvedAt = resolutionTime || new Date();
-      
+
       console.log(`✅ Error ${errorId} marked as resolved`);
-      
+
       // Update analytics
       if (this.config.enableRealTimeAnalytics) {
         await this.updateAnalytics();
@@ -155,9 +160,13 @@ export class ErrorAnalyticsManager {
     categories?: string[];
     severities?: string[];
   }): Promise<ErrorAnalytics> {
-    console.log('📊 Generating error analytics...');
+    console.log("📊 Generating error analytics...");
 
-    const startDate = options?.startDate || new Date(Date.now() - this.config.analyticsPeriodDays * 24 * 60 * 60 * 1000);
+    const startDate =
+      options?.startDate ||
+      new Date(
+        Date.now() - this.config.analyticsPeriodDays * 24 * 60 * 60 * 1000,
+      );
     const endDate = options?.endDate || new Date();
 
     // Filter errors based on criteria
@@ -165,21 +174,30 @@ export class ErrorAnalyticsManager {
 
     // Generate basic statistics
     const totalErrors = filteredErrors.length;
-    const resolvedErrors = filteredErrors.filter(e => e.resolved).length;
-    const criticalErrors = filteredErrors.filter(e => e.error.severity === 'critical').length;
+    const resolvedErrors = filteredErrors.filter((e) => e.resolved).length;
+    const criticalErrors = filteredErrors.filter(
+      (e) => e.error.severity === "critical",
+    ).length;
 
     // Calculate error rate (errors per hour)
-    const timeSpanHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+    const timeSpanHours =
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
     const errorRate = totalErrors / timeSpanHours;
 
     // Generate severity distribution
-    const severityDistribution = this.calculateSeverityDistribution(filteredErrors);
+    const severityDistribution =
+      this.calculateSeverityDistribution(filteredErrors);
 
     // Generate category distribution
-    const categoryDistribution = this.calculateCategoryDistribution(filteredErrors);
+    const categoryDistribution =
+      this.calculateCategoryDistribution(filteredErrors);
 
     // Generate trends
-    const trends = await this.generateTrends(filteredErrors, startDate, endDate);
+    const trends = await this.generateTrends(
+      filteredErrors,
+      startDate,
+      endDate,
+    );
 
     // Detect patterns
     const patterns = await this.detectPatterns(filteredErrors);
@@ -191,7 +209,7 @@ export class ErrorAnalyticsManager {
       period: {
         start: startDate,
         end: endDate,
-        duration: endDate.getTime() - startDate.getTime()
+        duration: endDate.getTime() - startDate.getTime(),
       },
       summary: {
         totalErrors,
@@ -200,17 +218,22 @@ export class ErrorAnalyticsManager {
         criticalErrors,
         errorRate,
         resolutionRate: totalErrors > 0 ? resolvedErrors / totalErrors : 0,
-        averageResolutionTime: this.calculateAverageResolutionTime(filteredErrors)
+        averageResolutionTime:
+          this.calculateAverageResolutionTime(filteredErrors),
       },
       distribution: {
         severity: severityDistribution,
         category: categoryDistribution,
-        byTime: this.generateTimeDistribution(filteredErrors, startDate, endDate)
+        byTime: this.generateTimeDistribution(
+          filteredErrors,
+          startDate,
+          endDate,
+        ),
       },
       trends,
       patterns,
       correlations,
-      recommendations: await this.generateRecommendations(filteredErrors)
+      recommendations: await this.generateRecommendations(filteredErrors),
     };
 
     console.log(`✅ Analytics generated for ${totalErrors} errors`);
@@ -221,8 +244,8 @@ export class ErrorAnalyticsManager {
    * Get error frequency trends
    */
   async getErrorFrequencyTrends(
-    timeWindow: 'hour' | 'day' | 'week' | 'month' = 'day',
-    limit: number = 30
+    timeWindow: "hour" | "day" | "week" | "month" = "day",
+    limit = 30,
   ): Promise<ErrorFrequencyPoint[]> {
     console.log(`📈 Generating error frequency trends (${timeWindow})`);
 
@@ -231,16 +254,16 @@ export class ErrorAnalyticsManager {
 
     let timeInterval: number;
     switch (timeWindow) {
-      case 'hour':
+      case "hour":
         timeInterval = 60 * 60 * 1000; // 1 hour
         break;
-      case 'day':
+      case "day":
         timeInterval = 24 * 60 * 60 * 1000; // 1 day
         break;
-      case 'week':
+      case "week":
         timeInterval = 7 * 24 * 60 * 60 * 1000; // 1 week
         break;
-      case 'month':
+      case "month":
         timeInterval = 30 * 24 * 60 * 60 * 1000; // 30 days
         break;
     }
@@ -249,15 +272,15 @@ export class ErrorAnalyticsManager {
       const endTime = new Date(now.getTime() - i * timeInterval);
       const startTime = new Date(endTime.getTime() - timeInterval);
 
-      const errors = this.errorHistory.filter(error => 
-        error.timestamp >= startTime && error.timestamp < endTime
+      const errors = this.errorHistory.filter(
+        (error) => error.timestamp >= startTime && error.timestamp < endTime,
       );
 
       const severityCounts = { low: 0, medium: 0, high: 0, critical: 0 };
       const errorTypes = new Set<string>();
       const categories = new Set<string>();
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         const severity = error.error.severity as keyof typeof severityCounts;
         severityCounts[severity]++;
         errorTypes.add(error.error.type);
@@ -265,13 +288,17 @@ export class ErrorAnalyticsManager {
       });
 
       // Determine predominant severity
-      let predominantSeverity: 'low' | 'medium' | 'high' | 'critical' = 'low';
+      let predominantSeverity: "low" | "medium" | "high" | "critical" = "low";
       let maxSeverityCount = 0;
-      
+
       Object.entries(severityCounts).forEach(([severity, count]) => {
         if (count > maxSeverityCount) {
           maxSeverityCount = count;
-          predominantSeverity = severity as 'low' | 'medium' | 'high' | 'critical';
+          predominantSeverity = severity as
+            | "low"
+            | "medium"
+            | "high"
+            | "critical";
         }
       });
 
@@ -280,7 +307,7 @@ export class ErrorAnalyticsManager {
         count: errors.length,
         severity: predominantSeverity,
         errorTypes: Array.from(errorTypes),
-        categories: Array.from(categories)
+        categories: Array.from(categories),
       });
     }
 
@@ -291,14 +318,16 @@ export class ErrorAnalyticsManager {
    * Generate system health metrics
    */
   async generateSystemHealth(): Promise<SystemHealthMetrics> {
-    console.log('🏥 Generating system health metrics...');
+    console.log("🏥 Generating system health metrics...");
 
-    const recentErrors = this.errorHistory.filter(error => 
-      error.timestamp.getTime() > Date.now() - 24 * 60 * 60 * 1000 // Last 24 hours
+    const recentErrors = this.errorHistory.filter(
+      (error) => error.timestamp.getTime() > Date.now() - 24 * 60 * 60 * 1000, // Last 24 hours
     );
 
     const totalErrors = recentErrors.length;
-    const criticalErrors = recentErrors.filter(e => e.error.severity === 'critical').length;
+    const criticalErrors = recentErrors.filter(
+      (e) => e.error.severity === "critical",
+    ).length;
 
     // Calculate error rates
     const errorRate = totalErrors / 24; // errors per hour
@@ -311,22 +340,26 @@ export class ErrorAnalyticsManager {
     healthScore = Math.max(0, healthScore);
 
     // Calculate average resolution time
-    const resolvedWithTime = recentErrors.filter(e => e.resolved && e.resolvedAt);
-    const averageResolutionTime = resolvedWithTime.length > 0 
-      ? resolvedWithTime.reduce((sum, e) => {
-          const resolutionTime = (e.resolvedAt!.getTime() - e.timestamp.getTime()) / (1000 * 60);
-          return sum + resolutionTime;
-        }, 0) / resolvedWithTime.length 
-      : 0;
+    const resolvedWithTime = recentErrors.filter(
+      (e) => e.resolved && e.resolvedAt,
+    );
+    const averageResolutionTime =
+      resolvedWithTime.length > 0
+        ? resolvedWithTime.reduce((sum, e) => {
+            const resolutionTime =
+              (e.resolvedAt!.getTime() - e.timestamp.getTime()) / (1000 * 60);
+            return sum + resolutionTime;
+          }, 0) / resolvedWithTime.length
+        : 0;
 
     // Find most frequent errors
     const errorTypeCount = new Map<string, number>();
     const errorTypeLastSeen = new Map<string, Date>();
-    
-    recentErrors.forEach(historyEntry => {
+
+    recentErrors.forEach((historyEntry) => {
       const count = errorTypeCount.get(historyEntry.error.type) || 0;
       errorTypeCount.set(historyEntry.error.type, count + 1);
-      
+
       const lastSeen = errorTypeLastSeen.get(historyEntry.error.type);
       if (!lastSeen || historyEntry.timestamp > lastSeen) {
         errorTypeLastSeen.set(historyEntry.error.type, historyEntry.timestamp);
@@ -337,13 +370,14 @@ export class ErrorAnalyticsManager {
       .map(([type, count]) => ({
         type,
         count,
-        lastOccurrence: errorTypeLastSeen.get(type)!
+        lastOccurrence: errorTypeLastSeen.get(type)!,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
     // Generate improvement suggestions
-    const improvementSuggestions = await this.generateHealthImprovements(recentErrors);
+    const improvementSuggestions =
+      await this.generateHealthImprovements(recentErrors);
 
     return {
       overallHealthScore: Math.round(healthScore),
@@ -351,7 +385,7 @@ export class ErrorAnalyticsManager {
       criticalErrorRate: Math.round(criticalErrorRate * 100) / 100,
       averageResolutionTime: Math.round(averageResolutionTime * 100) / 100,
       mostFrequentErrors,
-      improvementSuggestions
+      improvementSuggestions,
     };
   }
 
@@ -359,10 +393,16 @@ export class ErrorAnalyticsManager {
    * Find correlations between different error types
    */
   async findErrorCorrelations(): Promise<ErrorCorrelation[]> {
-    console.log('🔗 Finding error correlations...');
+    console.log("🔗 Finding error correlations...");
 
     const correlations: ErrorCorrelation[] = [];
-    const errorTypes = [...new Set(this.errorHistory.map(e => e.error.type).filter(type => type !== undefined))];
+    const errorTypes = [
+      ...new Set(
+        this.errorHistory
+          .map((e) => e.error.type)
+          .filter((type) => type !== undefined),
+      ),
+    ];
 
     // Analyze pairs of error types
     for (let i = 0; i < errorTypes.length; i++) {
@@ -371,62 +411,90 @@ export class ErrorAnalyticsManager {
         const type2 = errorTypes[j];
 
         if (type1 && type2) {
-          const correlation = await this.calculateErrorCorrelation(type1, type2);
-          if (correlation.correlationStrength > 0.3) { // Only significant correlations
+          const correlation = await this.calculateErrorCorrelation(
+            type1,
+            type2,
+          );
+          if (correlation.correlationStrength > 0.3) {
+            // Only significant correlations
             correlations.push(correlation);
           }
         }
       }
     }
 
-    return correlations.sort((a, b) => b.correlationStrength - a.correlationStrength);
+    return correlations.sort(
+      (a, b) => b.correlationStrength - a.correlationStrength,
+    );
   }
 
   /**
    * Export analytics data
    */
-  async exportAnalytics(format: 'json' | 'csv' = 'json'): Promise<string> {
+  async exportAnalytics(format: "json" | "csv" = "json"): Promise<string> {
     console.log(`📤 Exporting analytics data as ${format}`);
 
     const analytics = await this.generateAnalytics();
 
-    if (format === 'json') {
+    if (format === "json") {
       return JSON.stringify(analytics, null, 2);
     } else {
       // CSV export (simplified)
-      const csvRows = ['Type,Severity,Category,Timestamp,Resolved'];
-      
-      this.errorHistory.forEach(historyEntry => {
-        csvRows.push([
-          historyEntry.error.type,
-          historyEntry.error.severity,
-          historyEntry.error.category,
-          historyEntry.timestamp.toISOString(),
-          historyEntry.resolved ? 'Yes' : 'No'
-        ].join(','));
+      const csvRows = ["Type,Severity,Category,Timestamp,Resolved"];
+
+      this.errorHistory.forEach((historyEntry) => {
+        csvRows.push(
+          [
+            historyEntry.error.type,
+            historyEntry.error.severity,
+            historyEntry.error.category,
+            historyEntry.timestamp.toISOString(),
+            historyEntry.resolved ? "Yes" : "No",
+          ].join(","),
+        );
       });
 
-      return csvRows.join('\n');
+      return csvRows.join("\n");
     }
   }
 
   /**
    * Get error history
    */
-  getErrorHistory(limit?: number, filters?: {
-    types?: string[];
-    severities?: string[];
-    categories?: string[];
-    resolved?: boolean;
-  }): ErrorHistoryEntry[] {
+  getErrorHistory(
+    limit?: number,
+    filters?: {
+      types?: string[];
+      severities?: string[];
+      categories?: string[];
+      resolved?: boolean;
+    },
+  ): ErrorHistoryEntry[] {
     let filtered = this.errorHistory;
 
     if (filters) {
-      filtered = filtered.filter(historyEntry => {
-        if (filters.types && !filters.types.includes(historyEntry.error.type)) return false;
-        if (filters.severities && !filters.severities.includes(historyEntry.error.severity)) return false;
-        if (filters.categories && !filters.categories.includes(historyEntry.error.category)) return false;
-        if (filters.resolved !== undefined && historyEntry.resolved !== filters.resolved) return false;
+      filtered = filtered.filter((historyEntry) => {
+        if (filters.types && !filters.types.includes(historyEntry.error.type)) {
+          return false;
+        }
+        if (
+          filters.severities &&
+          !filters.severities.includes(historyEntry.error.severity)
+        ) {
+          return false;
+        }
+        if (
+          filters.categories &&
+          !filters.categories.includes(historyEntry.error.category)
+        ) {
+          return false;
+        }
+        if (
+          filters.resolved !== undefined &&
+          historyEntry.resolved !== filters.resolved
+        ) {
+          return false;
+        }
         return true;
       });
     }
@@ -438,7 +506,7 @@ export class ErrorAnalyticsManager {
    * Clear error history
    */
   async clearHistory(): Promise<void> {
-    console.log('🧹 Clearing error history...');
+    console.log("🧹 Clearing error history...");
     this.errorHistory = [];
     this.analyticsCache.clear();
   }
@@ -446,65 +514,97 @@ export class ErrorAnalyticsManager {
   // Private helper methods
 
   private findSimilarError(error: ErrorReport): ErrorHistoryEntry | undefined {
-    return this.errorHistory.find(existing => 
-      existing.error.type === error.type &&
-      existing.error.category === error.category &&
-      existing.error.message === error.message &&
-      existing.error.operation === error.operation &&
-      !existing.resolved
+    return this.errorHistory.find(
+      (existing) =>
+        existing.error.type === error.type &&
+        existing.error.category === error.category &&
+        existing.error.message === error.message &&
+        existing.error.operation === error.operation &&
+        !existing.resolved,
     );
   }
 
   private filterErrors(
-    startDate: Date, 
-    endDate: Date, 
-    options?: { categories?: string[]; severities?: string[]; }
+    startDate: Date,
+    endDate: Date,
+    options?: { categories?: string[]; severities?: string[] },
   ): ErrorHistoryEntry[] {
-    return this.errorHistory.filter(historyEntry => {
-      if (historyEntry.timestamp < startDate || historyEntry.timestamp > endDate) return false;
-      if (options?.categories && !options.categories.includes(historyEntry.error.category)) return false;
-      if (options?.severities && !options.severities.includes(historyEntry.error.severity)) return false;
+    return this.errorHistory.filter((historyEntry) => {
+      if (
+        historyEntry.timestamp < startDate ||
+        historyEntry.timestamp > endDate
+      ) {
+        return false;
+      }
+      if (
+        options?.categories &&
+        !options.categories.includes(historyEntry.error.category)
+      ) {
+        return false;
+      }
+      if (
+        options?.severities &&
+        !options.severities.includes(historyEntry.error.severity)
+      ) {
+        return false;
+      }
       return true;
     });
   }
 
-  private calculateSeverityDistribution(errors: ErrorHistoryEntry[]): Record<string, number> {
-    const distribution: Record<string, number> = { low: 0, medium: 0, high: 0, critical: 0 };
-    
-    errors.forEach(historyEntry => {
-      distribution[historyEntry.error.severity] = (distribution[historyEntry.error.severity] || 0) + 1;
+  private calculateSeverityDistribution(
+    errors: ErrorHistoryEntry[],
+  ): Record<string, number> {
+    const distribution: Record<string, number> = {
+      low: 0,
+      medium: 0,
+      high: 0,
+      critical: 0,
+    };
+
+    errors.forEach((historyEntry) => {
+      distribution[historyEntry.error.severity] =
+        (distribution[historyEntry.error.severity] || 0) + 1;
     });
-    
+
     return distribution;
   }
 
-  private calculateCategoryDistribution(errors: ErrorHistoryEntry[]): Record<string, number> {
+  private calculateCategoryDistribution(
+    errors: ErrorHistoryEntry[],
+  ): Record<string, number> {
     const distribution: Record<string, number> = {};
-    
-    errors.forEach(historyEntry => {
-      distribution[historyEntry.error.category] = (distribution[historyEntry.error.category] || 0) + 1;
+
+    errors.forEach((historyEntry) => {
+      distribution[historyEntry.error.category] =
+        (distribution[historyEntry.error.category] || 0) + 1;
     });
-    
+
     return distribution;
   }
 
   private calculateAverageResolutionTime(errors: ErrorHistoryEntry[]): number {
-    const resolvedErrors = errors.filter(e => e.resolved && e.resolvedAt);
-    
-    if (resolvedErrors.length === 0) return 0;
-    
+    const resolvedErrors = errors.filter((e) => e.resolved && e.resolvedAt);
+
+    if (resolvedErrors.length === 0) {
+      return 0;
+    }
+
     const totalResolutionTime = resolvedErrors.reduce((sum, historyEntry) => {
-      const resolutionTime = (historyEntry.resolvedAt!.getTime() - historyEntry.timestamp.getTime()) / (1000 * 60);
+      const resolutionTime =
+        (historyEntry.resolvedAt!.getTime() -
+          historyEntry.timestamp.getTime()) /
+        (1000 * 60);
       return sum + resolutionTime;
     }, 0);
-    
+
     return totalResolutionTime / resolvedErrors.length;
   }
 
   private generateTimeDistribution(
-    errors: ErrorHistoryEntry[], 
-    startDate: Date, 
-    endDate: Date
+    errors: ErrorHistoryEntry[],
+    startDate: Date,
+    endDate: Date,
   ): Array<{ timestamp: Date; count: number }> {
     const distribution: Array<{ timestamp: Date; count: number }> = [];
     const timeSlots = 24; // 24 hours
@@ -513,9 +613,11 @@ export class ErrorAnalyticsManager {
     for (let i = 0; i < timeSlots; i++) {
       const slotStart = new Date(startDate.getTime() + i * slotDuration);
       const slotEnd = new Date(slotStart.getTime() + slotDuration);
-      
-      const count = errors.filter(historyEntry => 
-        historyEntry.timestamp >= slotStart && historyEntry.timestamp < slotEnd
+
+      const count = errors.filter(
+        (historyEntry) =>
+          historyEntry.timestamp >= slotStart &&
+          historyEntry.timestamp < slotEnd,
       ).length;
 
       distribution.push({ timestamp: slotStart, count });
@@ -525,26 +627,29 @@ export class ErrorAnalyticsManager {
   }
 
   private async generateTrends(
-    errors: ErrorHistoryEntry[], 
-    _startDate: Date, 
-    _endDate: Date
+    errors: ErrorHistoryEntry[],
+    _startDate: Date,
+    _endDate: Date,
   ): Promise<ErrorTrend[]> {
     // Simplified trend analysis - would be more sophisticated in production
     const trends: ErrorTrend[] = [];
-    
+
     const typeCount = new Map<string, number>();
-    errors.forEach(historyEntry => {
-      typeCount.set(historyEntry.error.type, (typeCount.get(historyEntry.error.type) || 0) + 1);
+    errors.forEach((historyEntry) => {
+      typeCount.set(
+        historyEntry.error.type,
+        (typeCount.get(historyEntry.error.type) || 0) + 1,
+      );
     });
 
     Array.from(typeCount.entries()).forEach(([type, count]) => {
       if (count >= this.config.patternDetectionThreshold) {
         trends.push({
-          type: 'frequency',
+          type: "frequency",
           description: `Increased frequency of ${type} errors`,
-          severity: count > 10 ? 'high' : 'medium',
-          trend: 'increasing',
-          confidence: Math.min(count / 20, 1.0)
+          severity: count > 10 ? "high" : "medium",
+          trend: "increasing",
+          confidence: Math.min(count / 20, 1.0),
         });
       }
     });
@@ -552,14 +657,16 @@ export class ErrorAnalyticsManager {
     return trends;
   }
 
-  private async detectPatterns(errors: ErrorHistoryEntry[]): Promise<ErrorPattern[]> {
+  private async detectPatterns(
+    errors: ErrorHistoryEntry[],
+  ): Promise<ErrorPattern[]> {
     // Simplified pattern detection - would be more sophisticated in production
     const patterns: ErrorPattern[] = [];
-    
+
     // Detect recurring error patterns
     const patternMap = new Map<string, ErrorHistoryEntry[]>();
-    
-    errors.forEach(historyEntry => {
+
+    errors.forEach((historyEntry) => {
       const key = `${historyEntry.error.type}:${historyEntry.error.category}`;
       if (!patternMap.has(key)) {
         patternMap.set(key, []);
@@ -573,10 +680,14 @@ export class ErrorAnalyticsManager {
           signature: key,
           frequency: patternErrors.length,
           firstSeen: patternErrors[0]?.timestamp || new Date(),
-          lastSeen: patternErrors[patternErrors.length - 1]?.timestamp || new Date(),
-          avgTimeBetweenOccurrences: this.calculateAvgTimeBetween(patternErrors),
-          associatedOperations: [...new Set(patternErrors.map(e => e.error.operation))],
-          severity: this.calculatePatternSeverity(patternErrors)
+          lastSeen:
+            patternErrors[patternErrors.length - 1]?.timestamp || new Date(),
+          avgTimeBetweenOccurrences:
+            this.calculateAvgTimeBetween(patternErrors),
+          associatedOperations: [
+            ...new Set(patternErrors.map((e) => e.error.operation)),
+          ],
+          severity: this.calculatePatternSeverity(patternErrors),
         });
       }
     });
@@ -584,37 +695,53 @@ export class ErrorAnalyticsManager {
     return patterns.sort((a, b) => b.frequency - a.frequency);
   }
 
-  private async generateCorrelations(_errors: ErrorHistoryEntry[]): Promise<any[]> {
+  private async generateCorrelations(
+    _errors: ErrorHistoryEntry[],
+  ): Promise<any[]> {
     // Placeholder for correlation analysis
     return [];
   }
 
-  private async generateRecommendations(errors: ErrorHistoryEntry[]): Promise<string[]> {
+  private async generateRecommendations(
+    errors: ErrorHistoryEntry[],
+  ): Promise<string[]> {
     const recommendations: string[] = [];
-    
-    const criticalErrors = errors.filter(e => e.error.severity === 'critical');
-    const unresolvedErrors = errors.filter(e => !e.resolved);
-    
+
+    const criticalErrors = errors.filter(
+      (e) => e.error.severity === "critical",
+    );
+    const unresolvedErrors = errors.filter((e) => !e.resolved);
+
     if (criticalErrors.length > 5) {
-      recommendations.push('High number of critical errors detected. Consider implementing additional monitoring and alerting.');
+      recommendations.push(
+        "High number of critical errors detected. Consider implementing additional monitoring and alerting.",
+      );
     }
-    
+
     if (unresolvedErrors.length > errors.length * 0.3) {
-      recommendations.push('Many errors remain unresolved. Review error resolution processes and documentation.');
+      recommendations.push(
+        "Many errors remain unresolved. Review error resolution processes and documentation.",
+      );
     }
-    
+
     const frequentErrors = new Map<string, number>();
-    errors.forEach(historyEntry => {
-      frequentErrors.set(historyEntry.error.type, (frequentErrors.get(historyEntry.error.type) || 0) + 1);
+    errors.forEach((historyEntry) => {
+      frequentErrors.set(
+        historyEntry.error.type,
+        (frequentErrors.get(historyEntry.error.type) || 0) + 1,
+      );
     });
-    
-    const mostFrequent = Array.from(frequentErrors.entries())
-      .sort((a, b) => b[1] - a[1])[0];
-      
+
+    const mostFrequent = Array.from(frequentErrors.entries()).sort(
+      (a, b) => b[1] - a[1],
+    )[0];
+
     if (mostFrequent && mostFrequent[1] > 10) {
-      recommendations.push(`Consider investigating root cause of frequent ${mostFrequent[0]} errors (${mostFrequent[1]} occurrences).`);
+      recommendations.push(
+        `Consider investigating root cause of frequent ${mostFrequent[0]} errors (${mostFrequent[1]} occurrences).`,
+      );
     }
-    
+
     return recommendations;
   }
 
@@ -624,92 +751,134 @@ export class ErrorAnalyticsManager {
   }
 
   private async cleanupOldEntries(): Promise<void> {
-    const cutoffDate = new Date(Date.now() - this.config.retentionPolicyDays * 24 * 60 * 60 * 1000);
+    const cutoffDate = new Date(
+      Date.now() - this.config.retentionPolicyDays * 24 * 60 * 60 * 1000,
+    );
     const originalLength = this.errorHistory.length;
-    
-    this.errorHistory = this.errorHistory.filter(error => error.timestamp >= cutoffDate);
-    
+
+    this.errorHistory = this.errorHistory.filter(
+      (error) => error.timestamp >= cutoffDate,
+    );
+
     if (originalLength > this.errorHistory.length) {
-      console.log(`🧹 Cleaned up ${originalLength - this.errorHistory.length} old error entries`);
+      console.log(
+        `🧹 Cleaned up ${originalLength - this.errorHistory.length} old error entries`,
+      );
     }
   }
 
-  private async calculateErrorCorrelation(type1: string, type2: string): Promise<ErrorCorrelation> {
-    const type1Errors = this.errorHistory.filter(e => e.error.type === type1);
-    const type2Errors = this.errorHistory.filter(e => e.error.type === type2);
-    
+  private async calculateErrorCorrelation(
+    type1: string,
+    type2: string,
+  ): Promise<ErrorCorrelation> {
+    const type1Errors = this.errorHistory.filter((e) => e.error.type === type1);
+    const type2Errors = this.errorHistory.filter((e) => e.error.type === type2);
+
     // Simple correlation calculation - would be more sophisticated in production
     let coOccurrences = 0;
     const timeWindow = 60 * 60 * 1000; // 1 hour
-    
-    type1Errors.forEach(error1 => {
-      const hasType2Nearby = type2Errors.some(error2 => 
-        Math.abs(error1.timestamp.getTime() - error2.timestamp.getTime()) < timeWindow
+
+    type1Errors.forEach((error1) => {
+      const hasType2Nearby = type2Errors.some(
+        (error2) =>
+          Math.abs(error1.timestamp.getTime() - error2.timestamp.getTime()) <
+          timeWindow,
       );
-      if (hasType2Nearby) coOccurrences++;
+      if (hasType2Nearby) {
+        coOccurrences++;
+      }
     });
-    
-    const correlationStrength = Math.min(coOccurrences / Math.max(type1Errors.length, 1), 1.0);
-    
+
+    const correlationStrength = Math.min(
+      coOccurrences / Math.max(type1Errors.length, 1),
+      1.0,
+    );
+
     return {
       errorType1: type1,
       errorType2: type2,
       correlationStrength,
       occurrences: coOccurrences,
-      timeWindow: '1 hour',
-      confidence: correlationStrength
+      timeWindow: "1 hour",
+      confidence: correlationStrength,
     };
   }
 
-  private async generateHealthImprovements(errors: ErrorHistoryEntry[]): Promise<string[]> {
+  private async generateHealthImprovements(
+    errors: ErrorHistoryEntry[],
+  ): Promise<string[]> {
     const suggestions: string[] = [];
-    
+
     const errorRate = errors.length / 24; // per hour
     if (errorRate > 5) {
-      suggestions.push('High error rate detected. Consider implementing better error prevention mechanisms.');
+      suggestions.push(
+        "High error rate detected. Consider implementing better error prevention mechanisms.",
+      );
     }
-    
-    const unresolvedCount = errors.filter(e => !e.resolved).length;
+
+    const unresolvedCount = errors.filter((e) => !e.resolved).length;
     if (unresolvedCount > errors.length * 0.5) {
-      suggestions.push('Many unresolved errors. Improve error resolution workflows and documentation.');
+      suggestions.push(
+        "Many unresolved errors. Improve error resolution workflows and documentation.",
+      );
     }
-    
-    const criticalCount = errors.filter(e => e.error.severity === 'critical').length;
+
+    const criticalCount = errors.filter(
+      (e) => e.error.severity === "critical",
+    ).length;
     if (criticalCount > 2) {
-      suggestions.push('Multiple critical errors. Implement proactive monitoring and alerting systems.');
+      suggestions.push(
+        "Multiple critical errors. Implement proactive monitoring and alerting systems.",
+      );
     }
-    
+
     return suggestions;
   }
 
   private calculateAvgTimeBetween(errors: ErrorHistoryEntry[]): number {
-    if (errors.length < 2) return 0;
-    
-    const sortedErrors = errors.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    if (errors.length < 2) {
+      return 0;
+    }
+
+    const sortedErrors = errors.sort(
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+    );
     const intervals: number[] = [];
-    
+
     for (let i = 1; i < sortedErrors.length; i++) {
       const current = sortedErrors[i];
       const previous = sortedErrors[i - 1];
       if (current && previous) {
-        const interval = current.timestamp.getTime() - previous.timestamp.getTime();
+        const interval =
+          current.timestamp.getTime() - previous.timestamp.getTime();
         intervals.push(interval);
       }
     }
-    
-    return intervals.length > 0 ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length : 0;
+
+    return intervals.length > 0
+      ? intervals.reduce((sum, interval) => sum + interval, 0) /
+          intervals.length
+      : 0;
   }
 
-  private calculatePatternSeverity(errors: ErrorHistoryEntry[]): 'low' | 'medium' | 'high' | 'critical' {
+  private calculatePatternSeverity(
+    errors: ErrorHistoryEntry[],
+  ): "low" | "medium" | "high" | "critical" {
     const severityCounts = { low: 0, medium: 0, high: 0, critical: 0 };
-    
-    errors.forEach(historyEntry => {
+
+    errors.forEach((historyEntry) => {
       severityCounts[historyEntry.error.severity]++;
     });
-    
-    if (severityCounts.critical > 0) return 'critical';
-    if (severityCounts.high > severityCounts.medium + severityCounts.low) return 'high';
-    if (severityCounts.medium > severityCounts.low) return 'medium';
-    return 'low';
+
+    if (severityCounts.critical > 0) {
+      return "critical";
+    }
+    if (severityCounts.high > severityCounts.medium + severityCounts.low) {
+      return "high";
+    }
+    if (severityCounts.medium > severityCounts.low) {
+      return "medium";
+    }
+    return "low";
   }
 }

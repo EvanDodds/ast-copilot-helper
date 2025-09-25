@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CI/CD Pipeline Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f5f6fa;
+        color: #2f3640;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        color: #2f3542;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        color: #57606f;
+        font-size: 1.1em;
+      }
+
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff;
+        padding: 15px 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      .status-item {
+        text-align: center;
+      }
+
+      .status-value {
+        font-size: 1.8em;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .status-label {
+        color: #57606f;
+        font-size: 0.9em;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 25px;
+        margin-bottom: 30px;
+      }
+
+      .metric-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .metric-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3742fa, #2f3542);
+      }
+
+      .metric-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .metric-name {
+        font-size: 1.3em;
+        font-weight: 600;
+        color: #2f3542;
+      }
+
+      .metric-value {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #2f3542;
+        margin: 15px 0;
+      }
+
+      .metric-unit {
+        font-size: 0.8em;
+        color: #57606f;
+        margin-left: 5px;
+      }
+
+      .metric-description {
+        color: #57606f;
+        font-size: 0.95em;
+        margin-bottom: 15px;
+      }
+
+      .trend {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+      }
+
+      .trend.up {
+        background: #fee;
+        color: #e55039;
+      }
+      .trend.down {
+        background: #eff8ff;
+        color: #3742fa;
+      }
+      .trend.stable {
+        background: #f1f2f6;
+        color: #747d8c;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #f1f2f6;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 15px 0;
+      }
+
+      .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+      }
+
+      .progress-good {
+        background: linear-gradient(90deg, #2ed573, #7bed9f);
+      }
+      .progress-warning {
+        background: linear-gradient(90deg, #ffa502, #ff6348);
+      }
+      .progress-critical {
+        background: linear-gradient(90deg, #ff4757, #c44569);
+      }
+
+      .chart-container {
+        position: relative;
+        height: 200px;
+        margin-top: 20px;
+      }
+
+      .alerts-section {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+      }
+
+      .alerts-header {
+        font-size: 1.5em;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #2f3542;
+      }
+
+      .alert-item {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-left: 4px solid;
+      }
+
+      .alert-critical {
+        background: #fee;
+        border-left-color: #e55039;
+      }
+
+      .alert-warning {
+        background: #fff8e1;
+        border-left-color: #ffa502;
+      }
+
+      .alert-info {
+        background: #f8f9ff;
+        border-left-color: #3742fa;
+      }
+
+      .build-history {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+      }
+
+      .build-history h2 {
+        font-size: 1.5em;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #2f3542;
+      }
+
+      .build-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f2f6;
+      }
+
+      .build-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .build-status {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      .status-success {
+        background: #2ed573;
+      }
+      .status-failure {
+        background: #ff4757;
+      }
+      .status-running {
+        background: #ffa502;
+      }
+
+      .build-branch {
+        font-family: monospace;
+        background: #f1f2f6;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+
+      .build-time {
+        color: #57606f;
+        font-size: 0.9em;
+      }
+
+      .refresh-info {
+        text-align: center;
+        color: #57606f;
+        font-size: 0.9em;
+        margin-top: 30px;
+      }
+
+      @media (max-width: 768px) {
+        .metrics-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .status-bar {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .metric-value {
+          font-size: 2em;
+        }
+      }
+
+      .auto-refresh {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #3742fa;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 0.9em;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="auto-refresh">🔄 Auto-refresh: 5m</div>
+
+      <div class="header">
+        <h1>CI/CD Pipeline Dashboard</h1>
+        <p>Comprehensive monitoring and metrics for the CI/CD pipeline</p>
+        <p style="margin-top: 10px; font-size: 0.9em; color: #747d8c">
+          Last updated: 9/23/2025, 10:15:34 PM
+        </p>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-item">
+          <div class="status-value" style="color: #2ed573">0</div>
+          <div class="status-label">Successful Builds</div>
+        </div>
+        <div class="status-item">
+          <div class="status-value" style="color: #ff4757">0</div>
+          <div class="status-label">Active Alerts</div>
+        </div>
+        <div class="status-item">
+          <div class="status-value" style="color: #3742fa">0</div>
+          <div class="status-label">Total Builds</div>
+        </div>
+        <div class="status-item">
+          <div class="status-value" style="color: #ffa502">0s</div>
+          <div class="status-label">Latest Build Time</div>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-name">Build Time</div>
+            <div class="trend stable">→ Stable</div>
+          </div>
+
+          <div class="metric-description">
+            Total time for complete CI/CD pipeline execution
+          </div>
+
+          <div class="metric-value">
+            0
+            <span class="metric-unit">seconds</span>
+          </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill progress-good" style="width: 0%"></div>
+          </div>
+          <div style="font-size: 0.85em; color: #57606f">
+            Target: 300 seconds
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-name">Test Coverage</div>
+            <div class="trend stable">→ Stable</div>
+          </div>
+
+          <div class="metric-description">
+            Percentage of code covered by automated tests
+          </div>
+
+          <div class="metric-value">
+            85
+            <span class="metric-unit">%</span>
+          </div>
+
+          <div class="progress-bar">
+            <div
+              class="progress-fill progress-critical"
+              style="width: 100%"
+            ></div>
+          </div>
+          <div style="font-size: 0.85em; color: #57606f">Target: 80 %</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-name">Build Success Rate</div>
+            <div class="trend stable">→ Stable</div>
+          </div>
+
+          <div class="metric-description">
+            Percentage of successful builds over time
+          </div>
+
+          <div class="metric-value">
+            100
+            <span class="metric-unit">%</span>
+          </div>
+
+          <div class="progress-bar">
+            <div
+              class="progress-fill progress-critical"
+              style="width: 100%"
+            ></div>
+          </div>
+          <div style="font-size: 0.85em; color: #57606f">Target: 95 %</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-name">Deployment Frequency</div>
+            <div class="trend stable">→ Stable</div>
+          </div>
+
+          <div class="metric-description">
+            Average number of deployments per day
+          </div>
+
+          <div class="metric-value">
+            0
+            <span class="metric-unit">per day</span>
+          </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill progress-good" style="width: 0%"></div>
+          </div>
+          <div style="font-size: 0.85em; color: #57606f">Target: 1 per day</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-name">Resource Utilization</div>
+            <div class="trend stable">→ Stable</div>
+          </div>
+
+          <div class="metric-description">
+            Average memory usage during builds
+          </div>
+
+          <div class="metric-value">
+            0
+            <span class="metric-unit">MB</span>
+          </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill progress-good" style="width: 0%"></div>
+          </div>
+          <div style="font-size: 0.85em; color: #57606f">Target: 2,000 MB</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-name">Cache Efficiency</div>
+            <div class="trend stable">→ Stable</div>
+          </div>
+
+          <div class="metric-description">
+            Percentage of cache hits vs. total cache requests
+          </div>
+
+          <div class="metric-value">
+            0
+            <span class="metric-unit">%</span>
+          </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill progress-good" style="width: 0%"></div>
+          </div>
+          <div style="font-size: 0.85em; color: #57606f">Target: 85 %</div>
+        </div>
+      </div>
+
+      <div class="build-history">
+        <h2>📈 Recent Build History</h2>
+      </div>
+
+      <div class="refresh-info">
+        Dashboard will auto-refresh every 5 minutes
+      </div>
+    </div>
+
+    <script>
+      // Initialize charts for metrics with history
+      document.addEventListener("DOMContentLoaded", function () {
+        // Auto-refresh functionality
+        setTimeout(() => {
+          window.location.reload();
+        }, 300000);
+      });
+    </script>
+  </body>
+</html>

@@ -5,25 +5,27 @@
  * Addresses acceptance criteria 28: Performance alerting system
  */
 
-import { execSync } from 'child_process';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
-import * as path from 'path';
-import { PerformanceMetric, PerformanceAlert } from './performance-monitor';
+import { execSync as _execSync } from "child_process";
+import { writeFileSync, readFileSync, existsSync } from "fs";
+import * as path from "path";
+import {
+  PerformanceMetric /* PerformanceAlert */,
+} from "./performance-monitor";
 
 interface AlertRule {
   id: string;
   name: string;
-  type: 'threshold' | 'trend' | 'anomaly';
+  type: "threshold" | "trend" | "anomaly";
   metric: string;
   condition: AlertCondition;
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   enabled: boolean;
   cooldownMinutes: number;
 }
 
 interface AlertCondition {
   threshold?: number;
-  comparison: '>' | '<' | '>=' | '<=' | '==' | '!=';
+  comparison: ">" | "<" | ">=" | "<=" | "==" | "!=";
   trendPeriod?: number; // number of builds to analyze
   percentageChange?: number; // for trend-based alerts
   standardDeviations?: number; // for anomaly detection
@@ -36,22 +38,22 @@ interface Alert {
   buildId: string;
   branch: string;
   commit: string;
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   title: string;
   message: string;
   metric: string;
   currentValue: number;
   thresholdValue?: number;
-  trend?: 'up' | 'down' | 'stable';
+  trend?: "up" | "down" | "stable";
   acknowledged: boolean;
   resolvedAt?: string;
 }
 
 interface AlertChannel {
-  type: 'slack' | 'email' | 'github' | 'webhook';
+  type: "slack" | "email" | "github" | "webhook";
   config: any;
   enabled: boolean;
-  severityFilter: ('info' | 'warning' | 'critical')[];
+  severityFilter: ("info" | "warning" | "critical")[];
 }
 
 interface AlertingConfig {
@@ -74,10 +76,10 @@ class AlertingSystem {
   private logPath: string;
 
   constructor() {
-    this.configPath = path.join(process.cwd(), 'alerting-config.json');
-    this.alertsPath = path.join(process.cwd(), 'active-alerts.json');
-    this.logPath = path.join(process.cwd(), 'alerting.log');
-    
+    this.configPath = path.join(process.cwd(), "alerting-config.json");
+    this.alertsPath = path.join(process.cwd(), "active-alerts.json");
+    this.logPath = path.join(process.cwd(), "alerting.log");
+
     this.config = this.loadConfig();
   }
 
@@ -85,141 +87,143 @@ class AlertingSystem {
     const defaultConfig: AlertingConfig = {
       rules: [
         {
-          id: 'build-time-critical',
-          name: 'Critical Build Time',
-          type: 'threshold',
-          metric: 'totalTime',
-          condition: { threshold: 1800000, comparison: '>' }, // 30 minutes
-          severity: 'critical',
+          id: "build-time-critical",
+          name: "Critical Build Time",
+          type: "threshold",
+          metric: "totalTime",
+          condition: { threshold: 1800000, comparison: ">" }, // 30 minutes
+          severity: "critical",
           enabled: true,
-          cooldownMinutes: 30
+          cooldownMinutes: 30,
         },
         {
-          id: 'build-time-warning',
-          name: 'Elevated Build Time',
-          type: 'threshold',
-          metric: 'totalTime',
-          condition: { threshold: 900000, comparison: '>' }, // 15 minutes
-          severity: 'warning',
+          id: "build-time-warning",
+          name: "Elevated Build Time",
+          type: "threshold",
+          metric: "totalTime",
+          condition: { threshold: 900000, comparison: ">" }, // 15 minutes
+          severity: "warning",
           enabled: true,
-          cooldownMinutes: 60
+          cooldownMinutes: 60,
         },
         {
-          id: 'test-failure-spike',
-          name: 'Test Failure Rate Increase',
-          type: 'trend',
-          metric: 'testFailureRate',
-          condition: { 
-            trendPeriod: 5, 
+          id: "test-failure-spike",
+          name: "Test Failure Rate Increase",
+          type: "trend",
+          metric: "testFailureRate",
+          condition: {
+            trendPeriod: 5,
             percentageChange: 50,
-            comparison: '>'
+            comparison: ">",
           },
-          severity: 'warning',
+          severity: "warning",
           enabled: true,
-          cooldownMinutes: 120
+          cooldownMinutes: 120,
         },
         {
-          id: 'memory-usage-critical',
-          name: 'Critical Memory Usage',
-          type: 'threshold',
-          metric: 'memoryUsage',
-          condition: { threshold: 8000, comparison: '>' }, // 8GB
-          severity: 'critical',
+          id: "memory-usage-critical",
+          name: "Critical Memory Usage",
+          type: "threshold",
+          metric: "memoryUsage",
+          condition: { threshold: 8000, comparison: ">" }, // 8GB
+          severity: "critical",
           enabled: true,
-          cooldownMinutes: 15
+          cooldownMinutes: 15,
         },
         {
-          id: 'build-time-anomaly',
-          name: 'Build Time Anomaly',
-          type: 'anomaly',
-          metric: 'totalTime',
-          condition: { 
+          id: "build-time-anomaly",
+          name: "Build Time Anomaly",
+          type: "anomaly",
+          metric: "totalTime",
+          condition: {
             standardDeviations: 2,
-            comparison: '>'
+            comparison: ">",
           },
-          severity: 'info',
+          severity: "info",
           enabled: true,
-          cooldownMinutes: 180
+          cooldownMinutes: 180,
         },
         {
-          id: 'cache-hit-rate-low',
-          name: 'Low Cache Hit Rate',
-          type: 'threshold',
-          metric: 'cacheHitRate',
-          condition: { threshold: 50, comparison: '<' },
-          severity: 'warning',
+          id: "cache-hit-rate-low",
+          name: "Low Cache Hit Rate",
+          type: "threshold",
+          metric: "cacheHitRate",
+          condition: { threshold: 50, comparison: "<" },
+          severity: "warning",
           enabled: true,
-          cooldownMinutes: 240
+          cooldownMinutes: 240,
         },
         {
-          id: 'artifact-size-bloat',
-          name: 'Artifact Size Bloat',
-          type: 'trend',
-          metric: 'artifactSize',
+          id: "artifact-size-bloat",
+          name: "Artifact Size Bloat",
+          type: "trend",
+          metric: "artifactSize",
           condition: {
             trendPeriod: 3,
             percentageChange: 25,
-            comparison: '>'
+            comparison: ">",
           },
-          severity: 'info',
+          severity: "info",
           enabled: true,
-          cooldownMinutes: 360
-        }
+          cooldownMinutes: 360,
+        },
       ],
       channels: [
         {
-          type: 'slack',
+          type: "slack",
           config: {
-            webhookUrl: process.env.SLACK_WEBHOOK_URL || '',
-            channel: process.env.SLACK_CHANNEL || '#ci-cd-alerts',
-            username: 'CI/CD Bot',
-            iconEmoji: ':warning:'
+            webhookUrl: process.env.SLACK_WEBHOOK_URL || "",
+            channel: process.env.SLACK_CHANNEL || "#ci-cd-alerts",
+            username: "CI/CD Bot",
+            iconEmoji: ":warning:",
           },
           enabled: !!process.env.SLACK_WEBHOOK_URL,
-          severityFilter: ['warning', 'critical']
+          severityFilter: ["warning", "critical"],
         },
         {
-          type: 'email',
+          type: "email",
           config: {
-            smtpServer: process.env.SMTP_SERVER || '',
-            port: parseInt(process.env.SMTP_PORT || '587', 10),
-            username: process.env.SMTP_USERNAME || '',
-            password: process.env.SMTP_PASSWORD || '',
-            from: process.env.ALERT_FROM_EMAIL || 'noreply@ci-cd.example.com',
-            to: (process.env.ALERT_TO_EMAILS || '').split(',').filter(Boolean)
+            smtpServer: process.env.SMTP_SERVER || "",
+            port: parseInt(process.env.SMTP_PORT || "587", 10),
+            username: process.env.SMTP_USERNAME || "",
+            password: process.env.SMTP_PASSWORD || "",
+            from: process.env.ALERT_FROM_EMAIL || "noreply@ci-cd.example.com",
+            to: (process.env.ALERT_TO_EMAILS || "").split(",").filter(Boolean),
           },
           enabled: !!process.env.SMTP_SERVER && !!process.env.ALERT_TO_EMAILS,
-          severityFilter: ['critical']
+          severityFilter: ["critical"],
         },
         {
-          type: 'github',
+          type: "github",
           config: {
-            token: process.env.GITHUB_TOKEN || '',
-            owner: process.env.GITHUB_REPOSITORY?.split('/')[0] || '',
-            repo: process.env.GITHUB_REPOSITORY?.split('/')[1] || '',
-            createIssues: process.env.GITHUB_CREATE_ALERT_ISSUES === 'true'
+            token: process.env.GITHUB_TOKEN || "",
+            owner: process.env.GITHUB_REPOSITORY?.split("/")[0] || "",
+            repo: process.env.GITHUB_REPOSITORY?.split("/")[1] || "",
+            createIssues: process.env.GITHUB_CREATE_ALERT_ISSUES === "true",
           },
           enabled: !!process.env.GITHUB_TOKEN,
-          severityFilter: ['critical']
-        }
+          severityFilter: ["critical"],
+        },
       ],
       globalSettings: {
         defaultCooldownMinutes: 60,
         maxAlertsPerHour: 10,
-        enableQuietHours: process.env.ALERT_QUIET_HOURS === 'true',
-        quietHoursStart: process.env.ALERT_QUIET_START || '22:00',
-        quietHoursEnd: process.env.ALERT_QUIET_END || '08:00',
-        timezone: process.env.TZ || 'UTC'
-      }
+        enableQuietHours: process.env.ALERT_QUIET_HOURS === "true",
+        quietHoursStart: process.env.ALERT_QUIET_START || "22:00",
+        quietHoursEnd: process.env.ALERT_QUIET_END || "08:00",
+        timezone: process.env.TZ || "UTC",
+      },
     };
 
     try {
       if (existsSync(this.configPath)) {
-        const savedConfig = JSON.parse(readFileSync(this.configPath, 'utf8'));
+        const savedConfig = JSON.parse(readFileSync(this.configPath, "utf8"));
         return { ...defaultConfig, ...savedConfig };
       }
     } catch (error) {
-      this.log(`Warning: Could not load alerting config, using defaults: ${error}`);
+      this.log(
+        `Warning: Could not load alerting config, using defaults: ${error}`,
+      );
     }
 
     return defaultConfig;
@@ -237,18 +241,18 @@ class AlertingSystem {
     const timestamp = new Date().toISOString();
     const logEntry = `[${timestamp}] ${message}\n`;
     console.log(message);
-    
+
     try {
-      writeFileSync(this.logPath, logEntry, { flag: 'a' });
+      writeFileSync(this.logPath, logEntry, { flag: "a" });
     } catch (error) {
-      console.warn('Warning: Could not write to alerting log:', error);
+      console.warn("Warning: Could not write to alerting log:", error);
     }
   }
 
   private getActiveAlerts(): Alert[] {
     try {
       if (existsSync(this.alertsPath)) {
-        return JSON.parse(readFileSync(this.alertsPath, 'utf8'));
+        return JSON.parse(readFileSync(this.alertsPath, "utf8"));
       }
     } catch (error) {
       this.log(`Warning: Could not load active alerts: ${error}`);
@@ -278,85 +282,112 @@ class AlertingSystem {
     if (start > end) {
       return currentTime >= start || currentTime <= end;
     }
-    
+
     return currentTime >= start && currentTime <= end;
   }
 
   private isInCooldown(ruleId: string, alerts: Alert[]): boolean {
-    const rule = this.config.rules.find(r => r.id === ruleId);
+    const rule = this.config.rules.find((r) => r.id === ruleId);
     if (!rule) return false;
 
     const cooldownMs = rule.cooldownMinutes * 60 * 1000;
     const cutoff = new Date(Date.now() - cooldownMs);
 
-    return alerts.some(alert => 
-      alert.ruleId === ruleId && 
-      new Date(alert.timestamp) > cutoff &&
-      !alert.resolvedAt
+    return alerts.some(
+      (alert) =>
+        alert.ruleId === ruleId &&
+        new Date(alert.timestamp) > cutoff &&
+        !alert.resolvedAt,
     );
   }
 
   private hasExceededRateLimit(): boolean {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const alerts = this.getActiveAlerts();
-    
-    const recentAlerts = alerts.filter(alert => 
-      new Date(alert.timestamp) > oneHourAgo
+
+    const recentAlerts = alerts.filter(
+      (alert) => new Date(alert.timestamp) > oneHourAgo,
     );
 
     return recentAlerts.length >= this.config.globalSettings.maxAlertsPerHour;
   }
 
-  private evaluateThresholdRule(rule: AlertRule, metric: PerformanceMetric): boolean {
+  private evaluateThresholdRule(
+    rule: AlertRule,
+    metric: PerformanceMetric,
+  ): boolean {
     const value = this.getMetricValue(metric, rule.metric);
     const threshold = rule.condition.threshold!;
 
     switch (rule.condition.comparison) {
-      case '>': return value > threshold;
-      case '<': return value < threshold;
-      case '>=': return value >= threshold;
-      case '<=': return value <= threshold;
-      case '==': return value === threshold;
-      case '!=': return value !== threshold;
-      default: return false;
+      case ">":
+        return value > threshold;
+      case "<":
+        return value < threshold;
+      case ">=":
+        return value >= threshold;
+      case "<=":
+        return value <= threshold;
+      case "==":
+        return value === threshold;
+      case "!=":
+        return value !== threshold;
+      default:
+        return false;
     }
   }
 
-  private evaluateTrendRule(rule: AlertRule, history: PerformanceMetric[]): boolean {
+  private evaluateTrendRule(
+    rule: AlertRule,
+    history: PerformanceMetric[],
+  ): boolean {
     if (history.length < (rule.condition.trendPeriod || 3)) {
       return false;
     }
 
     const period = rule.condition.trendPeriod || 3;
     const recentMetrics = history.slice(-period);
-    const values = recentMetrics.map(m => this.getMetricValue(m, rule.metric));
+    const values = recentMetrics.map((m) =>
+      this.getMetricValue(m, rule.metric),
+    );
 
     const oldValue = values[0];
     const newValue = values[values.length - 1];
-    
+
     if (oldValue === 0) return false;
 
     const percentageChange = ((newValue - oldValue) / oldValue) * 100;
     const threshold = rule.condition.percentageChange || 20;
 
     switch (rule.condition.comparison) {
-      case '>': return percentageChange > threshold;
-      case '<': return percentageChange < threshold;
-      case '>=': return percentageChange >= threshold;
-      case '<=': return percentageChange <= threshold;
-      default: return false;
+      case ">":
+        return percentageChange > threshold;
+      case "<":
+        return percentageChange < threshold;
+      case ">=":
+        return percentageChange >= threshold;
+      case "<=":
+        return percentageChange <= threshold;
+      default:
+        return false;
     }
   }
 
-  private evaluateAnomalyRule(rule: AlertRule, current: PerformanceMetric, history: PerformanceMetric[]): boolean {
+  private evaluateAnomalyRule(
+    rule: AlertRule,
+    current: PerformanceMetric,
+    history: PerformanceMetric[],
+  ): boolean {
     if (history.length < 10) return false; // Need sufficient history
 
-    const values = history.map(m => this.getMetricValue(m, rule.metric));
+    const values = history.map((m) => this.getMetricValue(m, rule.metric));
     const currentValue = this.getMetricValue(current, rule.metric);
 
     // Calculate mean and standard deviation
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+    const variance =
+      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      values.length;
     const stdDev = Math.sqrt(variance);
 
     if (stdDev === 0) return false; // No variance
@@ -367,27 +398,46 @@ class AlertingSystem {
     return zScore > threshold;
   }
 
-  private getMetricValue(metric: PerformanceMetric, metricName: string): number {
+  private getMetricValue(
+    metric: PerformanceMetric,
+    metricName: string,
+  ): number {
     switch (metricName) {
-      case 'totalTime': return metric.metrics.totalTime;
-      case 'buildTime': return metric.metrics.buildTime;
-      case 'testTime': return metric.metrics.testTime;
-      case 'deployTime': return metric.metrics.deployTime || 0;
-      case 'memoryUsage': return metric.metrics.memoryUsage.peak;
-      case 'cpuUsage': return metric.metrics.cpuUsage.peak;
-      case 'artifactSize': return metric.metrics.artifactSize;
-      case 'cacheHitRate': return metric.metrics.cacheHitRate;
-      case 'testFailureRate': 
+      case "totalTime":
+        return metric.metrics.totalTime;
+      case "buildTime":
+        return metric.metrics.buildTime;
+      case "testTime":
+        return metric.metrics.testTime;
+      case "deployTime":
+        return metric.metrics.deployTime || 0;
+      case "memoryUsage":
+        return metric.metrics.memoryUsage.peak;
+      case "cpuUsage":
+        return metric.metrics.cpuUsage.peak;
+      case "artifactSize":
+        return metric.metrics.artifactSize;
+      case "cacheHitRate":
+        return metric.metrics.cacheHitRate;
+      case "testFailureRate": {
         // Calculate failure rate from stages
-        const testStage = metric.stages.find(s => s.name.toLowerCase().includes('test'));
-        return testStage?.status === 'failure' ? 100 : 0;
-      default: return 0;
+        const testStage = metric.stages.find((s) =>
+          s.name.toLowerCase().includes("test"),
+        );
+        return testStage?.status === "failure" ? 100 : 0;
+      }
+      default:
+        return 0;
     }
   }
 
-  private createAlert(rule: AlertRule, metric: PerformanceMetric, context: any = {}): Alert {
+  private createAlert(
+    rule: AlertRule,
+    metric: PerformanceMetric,
+    context: any = {},
+  ): Alert {
     const currentValue = this.getMetricValue(metric, rule.metric);
-    
+
     return {
       id: `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ruleId: rule.id,
@@ -402,24 +452,28 @@ class AlertingSystem {
       currentValue,
       thresholdValue: rule.condition.threshold,
       trend: context.trend,
-      acknowledged: false
+      acknowledged: false,
     };
   }
 
-  private generateAlertMessage(rule: AlertRule, currentValue: number, context: any): string {
+  private generateAlertMessage(
+    rule: AlertRule,
+    currentValue: number,
+    context: any,
+  ): string {
     const formatValue = (val: number, metric: string): string => {
       switch (metric) {
-        case 'totalTime':
-        case 'buildTime':
-        case 'testTime':
-        case 'deployTime':
+        case "totalTime":
+        case "buildTime":
+        case "testTime":
+        case "deployTime":
           return `${Math.round(val / 1000)}s`;
-        case 'memoryUsage':
-        case 'artifactSize':
+        case "memoryUsage":
+        case "artifactSize":
           return `${Math.round(val)}MB`;
-        case 'cpuUsage':
-        case 'cacheHitRate':
-        case 'testFailureRate':
+        case "cpuUsage":
+        case "cacheHitRate":
+        case "testFailureRate":
           return `${Math.round(val)}%`;
         default:
           return val.toString();
@@ -443,86 +497,109 @@ class AlertingSystem {
 
     // Add context-specific recommendations
     message += `\nRecommendations:\n`;
-    message += this.generateRecommendations(rule.metric, currentValue).join('\n');
+    message += this.generateRecommendations(rule.metric, currentValue).join(
+      "\n",
+    );
 
     return message;
   }
 
-  private generateRecommendations(metric: string, value: number): string[] {
+  private generateRecommendations(metric: string, _value: number): string[] {
     const recommendations: string[] = [];
 
     switch (metric) {
-      case 'totalTime':
-      case 'buildTime':
-        recommendations.push('• Review recent changes that might have increased build complexity');
-        recommendations.push('• Consider parallelizing build steps');
-        recommendations.push('• Check for inefficient dependency installations');
+      case "totalTime":
+      case "buildTime":
+        recommendations.push(
+          "• Review recent changes that might have increased build complexity",
+        );
+        recommendations.push("• Consider parallelizing build steps");
+        recommendations.push(
+          "• Check for inefficient dependency installations",
+        );
         break;
 
-      case 'testTime':
-        recommendations.push('• Review test suite for long-running or inefficient tests');
-        recommendations.push('• Consider test parallelization');
-        recommendations.push('• Check for resource contention during test execution');
+      case "testTime":
+        recommendations.push(
+          "• Review test suite for long-running or inefficient tests",
+        );
+        recommendations.push("• Consider test parallelization");
+        recommendations.push(
+          "• Check for resource contention during test execution",
+        );
         break;
 
-      case 'memoryUsage':
-        recommendations.push('• Check for memory leaks in build processes');
-        recommendations.push('• Consider increasing CI runner memory');
-        recommendations.push('• Review memory-intensive build steps');
+      case "memoryUsage":
+        recommendations.push("• Check for memory leaks in build processes");
+        recommendations.push("• Consider increasing CI runner memory");
+        recommendations.push("• Review memory-intensive build steps");
         break;
 
-      case 'artifactSize':
-        recommendations.push('• Review artifact contents for unnecessary files');
-        recommendations.push('• Implement artifact compression');
-        recommendations.push('• Consider splitting large artifacts');
+      case "artifactSize":
+        recommendations.push(
+          "• Review artifact contents for unnecessary files",
+        );
+        recommendations.push("• Implement artifact compression");
+        recommendations.push("• Consider splitting large artifacts");
         break;
 
-      case 'cacheHitRate':
-        recommendations.push('• Check cache configuration and invalidation rules');
-        recommendations.push('• Review dependency changes affecting cache');
-        recommendations.push('• Consider cache warming strategies');
+      case "cacheHitRate":
+        recommendations.push(
+          "• Check cache configuration and invalidation rules",
+        );
+        recommendations.push("• Review dependency changes affecting cache");
+        recommendations.push("• Consider cache warming strategies");
         break;
 
       default:
-        recommendations.push('• Review recent changes to the CI/CD pipeline');
-        recommendations.push('• Check system resources and configuration');
+        recommendations.push("• Review recent changes to the CI/CD pipeline");
+        recommendations.push("• Check system resources and configuration");
     }
 
     return recommendations;
   }
 
-  private async sendSlackAlert(alert: Alert, channel: AlertChannel): Promise<void> {
+  private async sendSlackAlert(
+    alert: Alert,
+    channel: AlertChannel,
+  ): Promise<void> {
     if (!channel.config.webhookUrl) {
-      this.log('Slack webhook URL not configured, skipping Slack notification');
+      this.log("Slack webhook URL not configured, skipping Slack notification");
       return;
     }
 
-    const color = alert.severity === 'critical' ? '#ff0000' : 
-                  alert.severity === 'warning' ? '#ffaa00' : '#00aa00';
+    const color =
+      alert.severity === "critical"
+        ? "#ff0000"
+        : alert.severity === "warning"
+          ? "#ffaa00"
+          : "#00aa00";
 
     const payload = {
       channel: channel.config.channel,
       username: channel.config.username,
       icon_emoji: channel.config.iconEmoji,
-      attachments: [{
-        color,
-        title: `${alert.severity.toUpperCase()}: ${alert.title}`,
-        text: alert.message,
-        fields: [
-          { title: 'Branch', value: alert.branch, short: true },
-          { title: 'Build ID', value: alert.buildId, short: true },
-          { title: 'Commit', value: alert.commit.slice(0, 8), short: true },
-          { title: 'Metric', value: alert.metric, short: true }
-        ],
-        footer: 'CI/CD Alerting System',
-        ts: Math.floor(new Date(alert.timestamp).getTime() / 1000)
-      }]
+      attachments: [
+        {
+          color,
+          title: `${alert.severity.toUpperCase()}: ${alert.title}`,
+          text: alert.message,
+          fields: [
+            { title: "Branch", value: alert.branch, short: true },
+            { title: "Build ID", value: alert.buildId, short: true },
+            { title: "Commit", value: alert.commit.slice(0, 8), short: true },
+            { title: "Metric", value: alert.metric, short: true },
+          ],
+          footer: "CI/CD Alerting System",
+          ts: Math.floor(new Date(alert.timestamp).getTime() / 1000),
+        },
+      ],
     };
 
     try {
       // In a real implementation, this would make an HTTP request to the Slack webhook
       this.log(`Would send Slack alert: ${JSON.stringify(payload, null, 2)}`);
-      await new Promise(resolve => setTimeout(resolve, 100)); // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate API call
       this.log(`Slack alert sent for ${alert.id}`);
     } catch (error: any) {
       this.log(`Failed to send Slack alert: ${error.message}`);
@@ -530,18 +607,21 @@ class AlertingSystem {
     }
   }
 
-  private async sendEmailAlert(alert: Alert, channel: AlertChannel): Promise<void> {
+  private async sendEmailAlert(
+    alert: Alert,
+    channel: AlertChannel,
+  ): Promise<void> {
     if (!channel.config.smtpServer || channel.config.to.length === 0) {
-      this.log('Email configuration incomplete, skipping email notification');
+      this.log("Email configuration incomplete, skipping email notification");
       return;
     }
 
     const subject = `[${alert.severity.toUpperCase()}] CI/CD Alert: ${alert.title}`;
-    const htmlBody = `
+    const _htmlBody = `
       <html>
         <body style="font-family: Arial, sans-serif;">
-          <div style="background: ${alert.severity === 'critical' ? '#fee' : '#fff3cd'}; padding: 20px; border-radius: 5px;">
-            <h2 style="color: ${alert.severity === 'critical' ? '#d32f2f' : '#f57c00'};">
+          <div style="background: ${alert.severity === "critical" ? "#fee" : "#fff3cd"}; padding: 20px; border-radius: 5px;">
+            <h2 style="color: ${alert.severity === "critical" ? "#d32f2f" : "#f57c00"};">
               ${alert.severity.toUpperCase()}: ${alert.title}
             </h2>
             
@@ -579,8 +659,10 @@ class AlertingSystem {
 
     try {
       // In a real implementation, this would use nodemailer or similar to send the email
-      this.log(`Would send email alert to ${channel.config.to.join(', ')}: ${subject}`);
-      await new Promise(resolve => setTimeout(resolve, 200)); // Simulate email sending
+      this.log(
+        `Would send email alert to ${channel.config.to.join(", ")}: ${subject}`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 200)); // Simulate email sending
       this.log(`Email alert sent for ${alert.id}`);
     } catch (error: any) {
       this.log(`Failed to send email alert: ${error.message}`);
@@ -588,14 +670,17 @@ class AlertingSystem {
     }
   }
 
-  private async sendGitHubAlert(alert: Alert, channel: AlertChannel): Promise<void> {
+  private async sendGitHubAlert(
+    alert: Alert,
+    channel: AlertChannel,
+  ): Promise<void> {
     if (!channel.config.token || !channel.config.createIssues) {
-      this.log('GitHub configuration incomplete or issue creation disabled');
+      this.log("GitHub configuration incomplete or issue creation disabled");
       return;
     }
 
     const issueTitle = `[CI/CD Alert] ${alert.title} - ${alert.branch}`;
-    const issueBody = `
+    const _issueBody = `
 ## ${alert.severity.toUpperCase()}: ${alert.title}
 
 **Alert Details:**
@@ -605,7 +690,7 @@ class AlertingSystem {
 - **Timestamp:** ${new Date(alert.timestamp).toLocaleString()}
 - **Metric:** ${alert.metric}
 - **Current Value:** ${alert.currentValue}
-${alert.thresholdValue ? `- **Threshold:** ${alert.thresholdValue}` : ''}
+${alert.thresholdValue ? `- **Threshold:** ${alert.thresholdValue}` : ""}
 
 **Message:**
 \`\`\`
@@ -621,7 +706,7 @@ ${alert.message}
     try {
       // In a real implementation, this would use GitHub API to create an issue
       this.log(`Would create GitHub issue: ${issueTitle}`);
-      await new Promise(resolve => setTimeout(resolve, 150)); // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 150)); // Simulate API call
       this.log(`GitHub issue created for alert ${alert.id}`);
     } catch (error: any) {
       this.log(`Failed to create GitHub issue: ${error.message}`);
@@ -635,22 +720,25 @@ ${alert.message}
     const promises: Promise<void>[] = [];
 
     for (const channel of this.config.channels) {
-      if (!channel.enabled || !channel.severityFilter.includes(alert.severity)) {
+      if (
+        !channel.enabled ||
+        !channel.severityFilter.includes(alert.severity)
+      ) {
         continue;
       }
 
       try {
         switch (channel.type) {
-          case 'slack':
+          case "slack":
             promises.push(this.sendSlackAlert(alert, channel));
             break;
-          case 'email':
+          case "email":
             promises.push(this.sendEmailAlert(alert, channel));
             break;
-          case 'github':
+          case "github":
             promises.push(this.sendGitHubAlert(alert, channel));
             break;
-          case 'webhook':
+          case "webhook":
             // Custom webhook implementation would go here
             this.log(`Webhook notifications not yet implemented`);
             break;
@@ -664,19 +752,24 @@ ${alert.message}
     if (promises.length > 0) {
       await Promise.allSettled(promises);
     } else {
-      this.log('No notification channels configured or enabled for this alert severity');
+      this.log(
+        "No notification channels configured or enabled for this alert severity",
+      );
     }
   }
 
-  async evaluateMetrics(current: PerformanceMetric, history: PerformanceMetric[]): Promise<Alert[]> {
-    this.log('🔍 Evaluating performance metrics against alert rules...');
+  async evaluateMetrics(
+    current: PerformanceMetric,
+    history: PerformanceMetric[],
+  ): Promise<Alert[]> {
+    this.log("🔍 Evaluating performance metrics against alert rules...");
 
     if (this.isInQuietHours()) {
-      this.log('Currently in quiet hours, skipping non-critical alerts');
+      this.log("Currently in quiet hours, skipping non-critical alerts");
     }
 
     if (this.hasExceededRateLimit()) {
-      this.log('Alert rate limit exceeded, suppressing additional alerts');
+      this.log("Alert rate limit exceeded, suppressing additional alerts");
       return [];
     }
 
@@ -692,32 +785,36 @@ ${alert.message}
       }
 
       // Skip non-critical alerts during quiet hours
-      if (this.isInQuietHours() && rule.severity !== 'critical') {
+      if (this.isInQuietHours() && rule.severity !== "critical") {
         continue;
       }
 
       let shouldAlert = false;
-      let context: any = {};
+      const context: any = {};
 
       try {
         switch (rule.type) {
-          case 'threshold':
+          case "threshold":
             shouldAlert = this.evaluateThresholdRule(rule, current);
             break;
 
-          case 'trend':
+          case "trend":
             shouldAlert = this.evaluateTrendRule(rule, [...history, current]);
             if (shouldAlert && history.length >= 2) {
-              const oldValue = this.getMetricValue(history[history.length - 2], rule.metric);
+              const oldValue = this.getMetricValue(
+                history[history.length - 2],
+                rule.metric,
+              );
               const newValue = this.getMetricValue(current, rule.metric);
-              context.percentageChange = oldValue > 0 ? ((newValue - oldValue) / oldValue) * 100 : 0;
-              context.trend = context.percentageChange > 0 ? 'up' : 'down';
+              context.percentageChange =
+                oldValue > 0 ? ((newValue - oldValue) / oldValue) * 100 : 0;
+              context.trend = context.percentageChange > 0 ? "up" : "down";
             }
             break;
 
-          case 'anomaly':
+          case "anomaly":
             shouldAlert = this.evaluateAnomalyRule(rule, current, history);
-            context.anomalyType = 'statistical';
+            context.anomalyType = "statistical";
             break;
         }
 
@@ -726,7 +823,6 @@ ${alert.message}
           newAlerts.push(alert);
           this.log(`Alert triggered: ${rule.name} (${rule.severity})`);
         }
-
       } catch (error: any) {
         this.log(`Error evaluating rule ${rule.id}: ${error.message}`);
       }
@@ -745,13 +841,15 @@ ${alert.message}
       }
     }
 
-    this.log(`Alert evaluation complete: ${newAlerts.length} new alerts generated`);
+    this.log(
+      `Alert evaluation complete: ${newAlerts.length} new alerts generated`,
+    );
     return newAlerts;
   }
 
   acknowledgeAlert(alertId: string, acknowledgedBy: string): boolean {
     const alerts = this.getActiveAlerts();
-    const alert = alerts.find(a => a.id === alertId);
+    const alert = alerts.find((a) => a.id === alertId);
 
     if (!alert) {
       this.log(`Alert ${alertId} not found`);
@@ -766,7 +864,7 @@ ${alert.message}
 
   resolveAlert(alertId: string, resolvedBy: string): boolean {
     const alerts = this.getActiveAlerts();
-    const alert = alerts.find(a => a.id === alertId);
+    const alert = alerts.find((a) => a.id === alertId);
 
     if (!alert) {
       this.log(`Alert ${alertId} not found`);
@@ -779,15 +877,20 @@ ${alert.message}
     return true;
   }
 
-  getActiveAlertsSummary(): { total: number; critical: number; warning: number; info: number } {
+  getActiveAlertsSummary(): {
+    total: number;
+    critical: number;
+    warning: number;
+    info: number;
+  } {
     const alerts = this.getActiveAlerts();
-    const active = alerts.filter(a => !a.resolvedAt);
+    const active = alerts.filter((a) => !a.resolvedAt);
 
     return {
       total: active.length,
-      critical: active.filter(a => a.severity === 'critical').length,
-      warning: active.filter(a => a.severity === 'warning').length,
-      info: active.filter(a => a.severity === 'info').length
+      critical: active.filter((a) => a.severity === "critical").length,
+      warning: active.filter((a) => a.severity === "warning").length,
+      info: active.filter((a) => a.severity === "info").length,
     };
   }
 }
@@ -795,32 +898,34 @@ ${alert.message}
 // Main execution
 async function main(): Promise<void> {
   const alertingSystem = new AlertingSystem();
-  
+
   try {
     // In a real implementation, this would receive performance metrics
     // from the performance monitor or be called as part of the CI/CD pipeline
-    
-    console.log('\n🚨 CI/CD Alerting System');
-    console.log('=======================');
-    
+
+    console.log("\n🚨 CI/CD Alerting System");
+    console.log("=======================");
+
     const summary = alertingSystem.getActiveAlertsSummary();
     console.log(`Active Alerts: ${summary.total}`);
     console.log(`  Critical: ${summary.critical}`);
     console.log(`  Warning: ${summary.warning}`);
     console.log(`  Info: ${summary.info}`);
-    
-    console.log('\nAlerting system initialized and ready for metric evaluation.');
 
+    console.log(
+      "\nAlerting system initialized and ready for metric evaluation.",
+    );
   } catch (error: any) {
-    console.error('Alerting system failed:', error.message);
+    console.error("Alerting system failed:", error.message);
     process.exit(1);
   }
 }
 
 // Run only if this file is executed directly
-if (require.main === module) {
+// ES module equivalent of require.main === module
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    console.error('Unhandled error:', error);
+    console.error("Unhandled error:", error);
     process.exit(1);
   });
 }

@@ -2,17 +2,17 @@
  * Diagnostic manager for coordinating diagnostic data collection
  */
 
-import { 
-  DiagnosticCollector, 
-  DiagnosticCollectorConfig, 
-  DiagnosticCacheEntry, 
+import type {
+  DiagnosticCollector,
+  DiagnosticCollectorConfig,
+  DiagnosticCacheEntry,
   DiagnosticCollectionContext,
-  DiagnosticScope 
-} from './types.js';
-import { DiagnosticData } from '../types.js';
-import { SystemDiagnosticCollector } from './system-collector.js';
-import { RuntimeDiagnosticCollector } from './runtime-collector.js';
-import { CodebaseDiagnosticCollector } from './codebase-collector.js';
+  DiagnosticScope,
+} from "./types.js";
+import type { DiagnosticData } from "../types.js";
+import { SystemDiagnosticCollector } from "./system-collector.js";
+import { RuntimeDiagnosticCollector } from "./runtime-collector.js";
+import { CodebaseDiagnosticCollector } from "./codebase-collector.js";
 
 /**
  * Performance metrics for diagnostic collection
@@ -43,23 +43,23 @@ export class DiagnosticManager {
       timeout: 10000, // 10 seconds
       retryAttempts: 2,
       cacheTTL: 60000, // 1 minute
-      privacyLevel: 'standard',
+      privacyLevel: "standard",
       includeEnvironment: true,
       includeFileSystem: true,
       includeGitInfo: true,
       includeNetworkInfo: true,
       excludePatterns: [
-        'node_modules/**',
-        '.git/**',
-        'dist/**',
-        'build/**',
-        'coverage/**',
-        '**/*.log'
+        "node_modules/**",
+        ".git/**",
+        "dist/**",
+        "build/**",
+        "coverage/**",
+        "**/*.log",
       ],
       maxFileSize: 1024 * 1024, // 1MB
       maxDirectoryDepth: 5,
       performanceThreshold: 5000, // 5 seconds
-      ...config
+      ...config,
     };
 
     this.initializeCollectors();
@@ -99,7 +99,7 @@ export class DiagnosticManager {
    * Collect diagnostic data from all available collectors
    */
   async collectDiagnostics(
-    context?: Partial<DiagnosticCollectionContext>
+    context?: Partial<DiagnosticCollectionContext>,
   ): Promise<{
     data: Partial<DiagnosticData>;
     metrics: CollectionMetrics;
@@ -107,7 +107,7 @@ export class DiagnosticManager {
     if (!this.config.enabled || this.isCollecting) {
       return {
         data: {},
-        metrics: this.createEmptyMetrics()
+        metrics: this.createEmptyMetrics(),
       };
     }
 
@@ -115,7 +115,7 @@ export class DiagnosticManager {
     const startTime = Date.now();
 
     const collectionContext: DiagnosticCollectionContext = {
-      triggeredBy: 'error',
+      triggeredBy: "error",
       timestamp: startTime,
       sessionId: this.generateSessionId(),
       timeout: this.config.timeout,
@@ -123,7 +123,7 @@ export class DiagnosticManager {
       includeCache: true,
       forceRefresh: false,
       collectors: Array.from(this.collectors.keys()),
-      ...context
+      ...context,
     };
 
     const metrics: CollectionMetrics = {
@@ -134,13 +134,14 @@ export class DiagnosticManager {
       collectorsSkipped: 0,
       cacheHits: 0,
       cacheMisses: 0,
-      errors: 0
+      errors: 0,
     };
 
     try {
       // Sort collectors by priority (higher priority first)
-      const sortedCollectors = Array.from(this.collectors.values())
-        .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+      const sortedCollectors = Array.from(this.collectors.values()).sort(
+        (a, b) => (b.priority || 0) - (a.priority || 0),
+      );
 
       const diagnosticData: Partial<DiagnosticData> = {};
 
@@ -150,7 +151,7 @@ export class DiagnosticManager {
           const collectorData = await this.collectFromCollector(
             collector,
             collectionContext,
-            metrics
+            metrics,
           );
 
           if (collectorData) {
@@ -170,7 +171,7 @@ export class DiagnosticManager {
 
       return {
         data: diagnosticData,
-        metrics
+        metrics,
       };
     } finally {
       this.isCollecting = false;
@@ -183,33 +184,33 @@ export class DiagnosticManager {
   private async collectFromCollector(
     collector: DiagnosticCollector,
     context: DiagnosticCollectionContext,
-    metrics: CollectionMetrics
+    metrics: CollectionMetrics,
   ): Promise<Partial<DiagnosticData> | null> {
     // Check cache first
     const cacheKey = this.getCacheKey(collector, context);
     const cachedEntry = this.cache.get(cacheKey);
-    
+
     if (cachedEntry && this.isCacheValid(cachedEntry)) {
       metrics.cacheHits++;
       return cachedEntry.data;
     }
-    
+
     metrics.cacheMisses++;
 
     // Check if collector can run
-    if (!await collector.canCollect()) {
+    if (!(await collector.canCollect())) {
       return null;
     }
 
     // Collect with timeout
     const timeoutPromise = new Promise<null>((_, reject) => {
-      setTimeout(() => reject(new Error('Collector timeout')), context.timeout);
+      setTimeout(() => reject(new Error("Collector timeout")), context.timeout);
     });
 
     try {
       const collectionPromise = collector.collect();
       const data = await Promise.race([collectionPromise, timeoutPromise]);
-      
+
       if (data) {
         // Cache the result
         const cacheEntry: DiagnosticCacheEntry = {
@@ -217,14 +218,14 @@ export class DiagnosticManager {
           timestamp: Date.now(),
           ttl: collector.cacheTTL || this.config.cacheTTL,
           collector: collector.name,
-          version: '1.0.0'
+          version: "1.0.0",
         };
-        
+
         this.cache.set(cacheKey, cacheEntry);
-        
+
         // Clean up old cache entries
         this.cleanupCache();
-        
+
         return data;
       }
     } catch (error) {
@@ -239,14 +240,14 @@ export class DiagnosticManager {
    */
   private getCacheKey(
     collector: DiagnosticCollector,
-    context: DiagnosticCollectionContext
+    context: DiagnosticCollectionContext,
   ): string {
     const contextHash = [
       collector.name,
       context.privacyLevel,
-      context.includeCache ? '1' : '0'
-    ].join('|');
-    
+      context.includeCache ? "1" : "0",
+    ].join("|");
+
     return contextHash;
   }
 
@@ -255,7 +256,7 @@ export class DiagnosticManager {
    */
   private isCacheValid(entry: DiagnosticCacheEntry): boolean {
     const now = Date.now();
-    return (now - entry.timestamp) < entry.ttl;
+    return now - entry.timestamp < entry.ttl;
   }
 
   /**
@@ -295,12 +296,12 @@ export class DiagnosticManager {
       collector: entry.collector,
       timestamp: entry.timestamp,
       age: now - entry.timestamp,
-      valid: this.isCacheValid(entry)
+      valid: this.isCacheValid(entry),
     }));
 
     return {
       size: this.cache.size,
-      entries
+      entries,
     };
   }
 
@@ -322,8 +323,10 @@ export class DiagnosticManager {
    * Get estimated collection time for all collectors
    */
   getEstimatedCollectionTime(): number {
-    return Array.from(this.collectors.values())
-      .reduce((total, collector) => total + collector.estimateCollectionTime(), 0);
+    return Array.from(this.collectors.values()).reduce(
+      (total, collector) => total + collector.estimateCollectionTime(),
+      0,
+    );
   }
 
   /**
@@ -345,7 +348,7 @@ export class DiagnosticManager {
       collectorsSkipped: 0,
       cacheHits: 0,
       cacheMisses: 0,
-      errors: 0
+      errors: 0,
     };
   }
 
@@ -354,7 +357,7 @@ export class DiagnosticManager {
    */
   async collectSpecificDiagnostics(
     scopes: DiagnosticScope[],
-    context?: Partial<DiagnosticCollectionContext>
+    context?: Partial<DiagnosticCollectionContext>,
   ): Promise<{
     data: Partial<DiagnosticData>;
     metrics: CollectionMetrics;
@@ -362,13 +365,13 @@ export class DiagnosticManager {
     if (!this.config.enabled || this.isCollecting) {
       return {
         data: {},
-        metrics: this.createEmptyMetrics()
+        metrics: this.createEmptyMetrics(),
       };
     }
 
     // Temporarily disable collectors not in the requested scopes
     const originalCollectors = new Map(this.collectors);
-    
+
     // Keep only collectors with requested scopes
     for (const [name, collector] of this.collectors) {
       if (!scopes.includes(collector.scope)) {

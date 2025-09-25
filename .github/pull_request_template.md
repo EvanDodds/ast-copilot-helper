@@ -1,14 +1,16 @@
 ## Pull Request Description
 
-<!-- 
+<!--
 Provide a clear and concise description of the changes in this PR.
-Link any related issues using "Fixes #123" or "Closes #123" 
+Link any related issues using "Fixes #123" or "Closes #123"
 -->
 
 **What does this PR do?**
+
 <!-- Brief summary of the changes -->
 
 **Related Issue(s):**
+
 <!-- Link to related issues: Fixes #123, Closes #456 -->
 
 ---
@@ -35,18 +37,22 @@ Link any related issues using "Fixes #123" or "Closes #123"
 <!-- Provide a more detailed breakdown of the changes -->
 
 ### Added
+
 - [ ] New feature A
 - [ ] New component B
 
 ### Changed
+
 - [ ] Modified behavior of X
 - [ ] Updated Y for better Z
 
 ### Removed
+
 - [ ] Deprecated feature A
 - [ ] Unused code B
 
 ### Fixed
+
 - [ ] Issue with X
 - [ ] Bug in Y
 
@@ -57,12 +63,14 @@ Link any related issues using "Fixes #123" or "Closes #123"
 <!-- Describe how the changes have been tested -->
 
 ### Test Coverage
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
 - [ ] End-to-end tests added/updated
 - [ ] Manual testing completed
 
 ### Test Commands Used
+
 ```bash
 # Commands used to test these changes
 npm test
@@ -70,6 +78,7 @@ npm run test:integration
 ```
 
 ### Testing Checklist
+
 - [ ] All existing tests pass
 - [ ] New tests added for new functionality
 - [ ] Edge cases considered and tested
@@ -92,16 +101,18 @@ npm run test:integration
 
 ## Screenshots/Demo
 
-<!-- 
+<!--
 If this PR includes UI changes or new features, please add screenshots or GIFs.
 For CLI changes, include terminal output examples.
 For API changes, include example requests/responses.
 -->
 
 **Before:**
+
 <!-- Screenshots/output before changes -->
 
 **After:**
+
 <!-- Screenshots/output after changes -->
 
 ---
@@ -115,12 +126,15 @@ For API changes, include example requests/responses.
 **If breaking changes exist:**
 
 ### What breaks?
+
 <!-- What existing functionality will stop working? -->
 
 ### Migration path
+
 <!-- How should users update their code? -->
 
 ### Timeline
+
 <!-- When will the old functionality be removed? -->
 
 ---
@@ -134,7 +148,8 @@ For API changes, include example requests/responses.
 - [ ] May impact performance (please describe)
 
 **Performance notes:**
-<!-- 
+
+<!--
 Describe any performance considerations, benchmarks run,
 or potential impacts on memory/CPU usage
 -->
@@ -150,6 +165,7 @@ or potential impacts on memory/CPU usage
 - [ ] This fixes a security issue
 
 **Security notes:**
+
 <!-- Describe any security implications or considerations -->
 
 ---
@@ -165,6 +181,7 @@ or potential impacts on memory/CPU usage
 - [ ] Special deployment steps needed
 
 **Deployment instructions:**
+
 <!-- Provide any special deployment steps -->
 
 ---
@@ -174,6 +191,7 @@ or potential impacts on memory/CPU usage
 <!-- Please review and check off each item -->
 
 ### Code Quality
+
 - [ ] Code follows the project's style guidelines
 - [ ] Self-review completed
 - [ ] Code is properly documented
@@ -181,18 +199,21 @@ or potential impacts on memory/CPU usage
 - [ ] Error handling implemented where needed
 
 ### Testing
+
 - [ ] All tests pass locally
 - [ ] New tests written for new functionality
 - [ ] Existing tests updated if necessary
 - [ ] Manual testing completed
 
 ### Documentation
+
 - [ ] Relevant documentation updated
 - [ ] Code comments added where necessary
 - [ ] API changes documented
 - [ ] Breaking changes documented
 
 ### Review
+
 - [ ] PR title follows conventional commit format
 - [ ] PR description is clear and complete
 - [ ] Changes are focused and atomic
@@ -205,12 +226,15 @@ or potential impacts on memory/CPU usage
 <!-- Additional context for reviewers -->
 
 **Focus Areas:**
+
 <!-- What should reviewers pay special attention to? -->
 
 **Questions for Reviewers:**
+
 <!-- Any specific questions or concerns for the review team? -->
 
 **Known Issues/TODOs:**
+
 <!-- Any known issues or follow-up work needed -->
 
 ---
@@ -220,18 +244,21 @@ or potential impacts on memory/CPU usage
 <!-- Add any other context, motivation, or information that would be helpful -->
 
 **References:**
+
 <!-- Links to specifications, designs, or other relevant materials -->
 
 **Dependencies:**
+
 <!-- Other PRs or changes this depends on -->
 
 ---
 
-<!-- 
+<!--
 Thank you for contributing! 🎉
 Please ensure you've filled out all relevant sections before submitting.
 -->
 
 **🚀 Ready for Review**
+
 - [ ] This PR is ready for review
 - [ ] This PR is a work in progress (convert to draft)

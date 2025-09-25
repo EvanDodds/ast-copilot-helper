@@ -17,57 +17,57 @@ diverse, inclusive, and healthy community.
 Examples of behavior that contributes to a positive environment for our
 community include:
 
-* Demonstrating empathy and kindness toward other people
-* Being respectful of differing opinions, viewpoints, and experiences
-* Giving and gracefully accepting constructive feedback
-* Accepting responsibility and apologizing to those affected by our mistakes,
+- Demonstrating empathy and kindness toward other people
+- Being respectful of differing opinions, viewpoints, and experiences
+- Giving and gracefully accepting constructive feedback
+- Accepting responsibility and apologizing to those affected by our mistakes,
   and learning from the experience
-* Focusing on what is best not just for us as individuals, but for the overall
+- Focusing on what is best not just for us as individuals, but for the overall
   community
-* Using welcoming and inclusive language
-* Being patient with newcomers and helping them learn
-* Sharing knowledge and resources generously
-* Recognizing and celebrating others' contributions
-* Maintaining professional conduct in all interactions
+- Using welcoming and inclusive language
+- Being patient with newcomers and helping them learn
+- Sharing knowledge and resources generously
+- Recognizing and celebrating others' contributions
+- Maintaining professional conduct in all interactions
 
 ### Technical Standards
 
 In addition to general community standards, we expect:
 
-* **Code Quality**: Write clean, well-documented, and tested code
-* **Constructive Reviews**: Provide helpful, specific feedback in code reviews
-* **Knowledge Sharing**: Help others understand technical concepts and solutions
-* **Problem-Solving**: Approach technical challenges collaboratively
-* **Documentation**: Keep documentation current and accessible
-* **Security**: Follow secure coding practices and report vulnerabilities responsibly
+- **Code Quality**: Write clean, well-documented, and tested code
+- **Constructive Reviews**: Provide helpful, specific feedback in code reviews
+- **Knowledge Sharing**: Help others understand technical concepts and solutions
+- **Problem-Solving**: Approach technical challenges collaboratively
+- **Documentation**: Keep documentation current and accessible
+- **Security**: Follow secure coding practices and report vulnerabilities responsibly
 
 ## Unacceptable Behavior
 
 Examples of unacceptable behavior include:
 
-* The use of sexualized language or imagery, and sexual attention or advances of
+- The use of sexualized language or imagery, and sexual attention or advances of
   any kind
-* Trolling, insulting or derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or email address,
+- Trolling, insulting or derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others' private information, such as a physical or email address,
   without their explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
+- Other conduct which could reasonably be considered inappropriate in a
   professional setting
-* Spamming issues or discussions with irrelevant content
-* Deliberately introducing bugs or malicious code
-* Sharing proprietary or confidential information without authorization
-* Impersonating other users or organizations
-* Repeated violations of contribution guidelines after warnings
+- Spamming issues or discussions with irrelevant content
+- Deliberately introducing bugs or malicious code
+- Sharing proprietary or confidential information without authorization
+- Impersonating other users or organizations
+- Repeated violations of contribution guidelines after warnings
 
 ### Technical Misconduct
 
 Technical misconduct includes:
 
-* **Malicious Code**: Introducing harmful, malicious, or deliberately broken code
-* **Security Violations**: Exploiting vulnerabilities or bypassing security measures
-* **Plagiarism**: Copying code without proper attribution or licensing compliance
-* **Resource Abuse**: Excessive use of CI/CD resources or infrastructure
-* **Destructive Actions**: Deliberately breaking builds, tests, or deployment processes
+- **Malicious Code**: Introducing harmful, malicious, or deliberately broken code
+- **Security Violations**: Exploiting vulnerabilities or bypassing security measures
+- **Plagiarism**: Copying code without proper attribution or licensing compliance
+- **Resource Abuse**: Excessive use of CI/CD resources or infrastructure
+- **Destructive Actions**: Deliberately breaking builds, tests, or deployment processes
 
 ## Enforcement Responsibilities
 
@@ -93,11 +93,11 @@ representative at an online or offline event.
 
 This Code of Conduct applies to:
 
-* GitHub repositories and all related spaces (issues, pull requests, discussions, wikis)
-* Official communication channels (if established)
-* Community events and meetups
-* Social media interactions related to the project
-* Private communications between community members regarding project matters
+- GitHub repositories and all related spaces (issues, pull requests, discussions, wikis)
+- Official communication channels (if established)
+- Community events and meetups
+- Social media interactions related to the project
+- Private communications between community members regarding project matters
 
 ## Enforcement
 
@@ -113,17 +113,17 @@ reporter of any incident.
 
 When reporting violations, please include:
 
-* **Description**: Clear description of the incident
-* **Evidence**: Screenshots, links, or other supporting evidence
-* **Impact**: How the behavior affected you or others
-* **Context**: Relevant background information
-* **Preferred Resolution**: What outcome you're seeking
+- **Description**: Clear description of the incident
+- **Evidence**: Screenshots, links, or other supporting evidence
+- **Impact**: How the behavior affected you or others
+- **Context**: Relevant background information
+- **Preferred Resolution**: What outcome you're seeking
 
 Reports can be made:
 
-* **Email**: [conduct@ast-copilot-helper.dev](mailto:conduct@ast-copilot-helper.dev)
-* **GitHub**: Private message to repository maintainers
-* **Anonymous**: Through GitHub's reporting mechanisms
+- **Email**: [conduct@ast-copilot-helper.dev](mailto:conduct@ast-copilot-helper.dev)
+- **GitHub**: Private message to repository maintainers
+- **Anonymous**: Through GitHub's reporting mechanisms
 
 ## Enforcement Guidelines
 
@@ -184,33 +184,33 @@ If you believe you have been unfairly sanctioned, you may appeal the decision by
 
 ### Communication
 
-* **Be Respectful**: Treat all community members with respect and courtesy
-* **Be Constructive**: Focus on building up rather than tearing down
-* **Be Patient**: Remember that everyone is learning and growing
-* **Be Inclusive**: Welcome newcomers and help them get started
-* **Stay On Topic**: Keep discussions relevant to the project and its goals
+- **Be Respectful**: Treat all community members with respect and courtesy
+- **Be Constructive**: Focus on building up rather than tearing down
+- **Be Patient**: Remember that everyone is learning and growing
+- **Be Inclusive**: Welcome newcomers and help them get started
+- **Stay On Topic**: Keep discussions relevant to the project and its goals
 
 ### Collaboration
 
-* **Share Knowledge**: Help others learn and grow
-* **Ask Questions**: Don't hesitate to seek help when needed
-* **Provide Feedback**: Offer constructive criticism and suggestions
-* **Celebrate Success**: Acknowledge and celebrate community achievements
-* **Learn Together**: Embrace opportunities for mutual learning
+- **Share Knowledge**: Help others learn and grow
+- **Ask Questions**: Don't hesitate to seek help when needed
+- **Provide Feedback**: Offer constructive criticism and suggestions
+- **Celebrate Success**: Acknowledge and celebrate community achievements
+- **Learn Together**: Embrace opportunities for mutual learning
 
 ### Technical Conduct
 
-* **Quality First**: Prioritize code quality and maintainability
-* **Test Thoroughly**: Ensure your contributions are well-tested
-* **Document Clearly**: Write clear, helpful documentation
-* **Review Thoughtfully**: Provide meaningful, actionable code reviews
-* **Secure by Design**: Consider security implications in all contributions
+- **Quality First**: Prioritize code quality and maintainability
+- **Test Thoroughly**: Ensure your contributions are well-tested
+- **Document Clearly**: Write clear, helpful documentation
+- **Review Thoughtfully**: Provide meaningful, actionable code reviews
+- **Secure by Design**: Consider security implications in all contributions
 
 ## Resources
 
-* [Contributor Covenant](https://www.contributor-covenant.org/), version 2.1
-* [GitHub Community Guidelines](https://docs.github.com/en/site-policy/github-terms/github-community-guidelines)
-* [Open Source Guide to Building Communities](https://opensource.guide/building-community/)
+- [Contributor Covenant](https://www.contributor-covenant.org/), version 2.1
+- [GitHub Community Guidelines](https://docs.github.com/en/site-policy/github-terms/github-community-guidelines)
+- [Open Source Guide to Building Communities](https://opensource.guide/building-community/)
 
 ## Attribution
 
@@ -224,6 +224,6 @@ Community Impact Guidelines were inspired by
 ---
 
 **Last Updated**: September 22, 2025  
-**Version**: 1.0  
+**Version**: 1.0
 
 For questions about this code of conduct, please contact [conduct@ast-copilot-helper.dev](mailto:conduct@ast-copilot-helper.dev).

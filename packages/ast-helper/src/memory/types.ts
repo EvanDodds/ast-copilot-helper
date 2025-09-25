@@ -61,7 +61,7 @@ export interface MemoryLeakReport {
   leaksDetected: MemoryLeak[];
   heapAnalysis: HeapAnalysis;
   recommendations: string[];
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
 }
 
 export interface MemoryLeak {
@@ -89,7 +89,7 @@ export interface PoolStatus {
   pools: Record<string, ResourcePoolInfo>;
   totalResourcesInUse: number;
   totalResourcesAvailable: number;
-  healthStatus: 'healthy' | 'warning' | 'critical';
+  healthStatus: "healthy" | "warning" | "critical";
 }
 
 export interface ResourcePoolInfo {
@@ -100,7 +100,7 @@ export interface ResourcePoolInfo {
   inUse: number;
   created: number;
   destroyed: number;
-  healthStatus: 'healthy' | 'warning' | 'critical';
+  healthStatus: "healthy" | "warning" | "critical";
 }
 
 export interface ResourceMonitor {
@@ -111,47 +111,52 @@ export interface ResourceMonitor {
 }
 
 export interface MemorySnapshot {
-    timestamp: number;
-    heapUsed: number;
-    heapTotal: number;
-    external: number;
-    rss: number;
-    arrayBuffers: number;
-    heapUtilization: number;
+  timestamp: number;
+  heapUsed: number;
+  heapTotal: number;
+  external: number;
+  rss: number;
+  arrayBuffers: number;
+  heapUtilization: number;
 }
 
-export type AlertSeverity = 'info' | 'warning' | 'critical';
-export type AlertType = 'memory_warning' | 'memory_critical' | 'rapid_growth' | 'potential_leak' | 'gc_needed';
+export type AlertSeverity = "info" | "warning" | "critical";
+export type AlertType =
+  | "memory_warning"
+  | "memory_critical"
+  | "rapid_growth"
+  | "potential_leak"
+  | "gc_needed";
 
 export interface MemoryAlert {
-    id: string;
-    type: AlertType;
-    severity: AlertSeverity;
-    message: string;
-    timestamp: number;
-    memorySnapshot: MemorySnapshot;
-    resolved: boolean;
+  id: string;
+  type: AlertType;
+  severity: AlertSeverity;
+  message: string;
+  timestamp: number;
+  memorySnapshot: MemorySnapshot;
+  resolved: boolean;
 }
 
 export interface MemoryTrend {
-    metric: string;
-    direction: 'increasing' | 'decreasing' | 'stable';
-    rate: number; // Percentage change rate
-    confidence: number; // 0-1, higher is more confident
-    timeWindowMs: number;
+  metric: string;
+  direction: "increasing" | "decreasing" | "stable";
+  rate: number; // Percentage change rate
+  confidence: number; // 0-1, higher is more confident
+  timeWindowMs: number;
 }
 
 /**
  * Memory Monitor Interface - Provides real-time memory monitoring capabilities
  */
 export interface MemoryMonitor {
-    start(): Promise<void>;
-    stop(): Promise<void>;
-    getCurrentUsage(): Promise<MemorySnapshot>;
-    getHistory(): MemorySnapshot[];
-    getTrends(): MemoryTrend[];
-    getAlerts(limit?: number): MemoryAlert[];
-    cleanup(): Promise<void>;
+  start(): Promise<void>;
+  stop(): Promise<void>;
+  getCurrentUsage(): Promise<MemorySnapshot>;
+  getHistory(): MemorySnapshot[];
+  getTrends(): MemoryTrend[];
+  getAlerts(limit?: number): MemoryAlert[];
+  cleanup(): Promise<void>;
 }
 
 export interface AlertThresholds {
@@ -288,35 +293,35 @@ export interface AllocationPoint {
 }
 
 export interface LeakRecommendation {
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   category: RecommendationCategory;
   title: string;
   description: string;
   action: string;
   impact: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
 }
 
-export type LeakType = 
-  | 'closure_leak'
-  | 'event_listener_leak'
-  | 'timer_leak'
-  | 'cache_leak'
-  | 'circular_reference'
-  | 'dom_leak'
-  | 'worker_leak'
-  | 'stream_leak'
-  | 'buffer_leak'
-  | 'unknown';
+export type LeakType =
+  | "closure_leak"
+  | "event_listener_leak"
+  | "timer_leak"
+  | "cache_leak"
+  | "circular_reference"
+  | "dom_leak"
+  | "worker_leak"
+  | "stream_leak"
+  | "buffer_leak"
+  | "unknown";
 
-export type LeakSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type LeakSeverity = "low" | "medium" | "high" | "critical";
 
-export type RecommendationCategory = 
-  | 'cleanup'
-  | 'optimization' 
-  | 'architecture'
-  | 'monitoring'
-  | 'prevention';
+export type RecommendationCategory =
+  | "cleanup"
+  | "optimization"
+  | "architecture"
+  | "monitoring"
+  | "prevention";
 
 /**
  * Resource Pool System Interfaces
@@ -427,7 +432,8 @@ export interface ResourceFactory<T> {
   reset(resource: T): Promise<void>;
 }
 
-export interface DatabaseConnectionFactory extends ResourceFactory<DatabaseConnection> {
+export interface DatabaseConnectionFactory
+  extends ResourceFactory<DatabaseConnection> {
   databaseUrl: string;
   connectionOptions: Record<string, any>;
   maxConnections: number;
@@ -446,7 +452,10 @@ export interface WorkerThreadFactory extends ResourceFactory<WorkerThread> {
 }
 
 export interface PoolManager {
-  createPool<T>(config: PoolConfig, factory: ResourceFactory<T>): ResourcePool<T>;
+  createPool<T>(
+    config: PoolConfig,
+    factory: ResourceFactory<T>,
+  ): ResourcePool<T>;
   getPool(name: string): ResourcePool | undefined;
   removePool(name: string): Promise<boolean>;
   getAllPools(): Map<string, ResourcePool>;
@@ -520,22 +529,51 @@ export interface PerformanceSnapshot {
 }
 
 export interface PoolEvents {
-  'resource.created': { poolName: string; resourceId: string; resource: any };
-  'resource.acquired': { poolName: string; resourceId: string; leaseId: string };
-  'resource.released': { poolName: string; resourceId: string; leaseId: string };
-  'resource.destroyed': { poolName: string; resourceId: string; reason: string };
-  'resource.error': { poolName: string; resourceId?: string; error: PoolError };
-  'pool.resized': { poolName: string; oldSize: number; newSize: number };
-  'pool.drained': { poolName: string; resourcesDestroyed: number };
-  'pool.healthCheck': { poolName: string; healthCheck: PoolHealthCheck };
-  'pool.warning': { poolName: string; message: string; context: any };
-  'pool.critical': { poolName: string; message: string; error: Error };
+  "resource.created": { poolName: string; resourceId: string; resource: any };
+  "resource.acquired": {
+    poolName: string;
+    resourceId: string;
+    leaseId: string;
+  };
+  "resource.released": {
+    poolName: string;
+    resourceId: string;
+    leaseId: string;
+  };
+  "resource.destroyed": {
+    poolName: string;
+    resourceId: string;
+    reason: string;
+  };
+  "resource.error": { poolName: string; resourceId?: string; error: PoolError };
+  "pool.resized": { poolName: string; oldSize: number; newSize: number };
+  "pool.drained": { poolName: string; resourcesDestroyed: number };
+  "pool.healthCheck": { poolName: string; healthCheck: PoolHealthCheck };
+  "pool.warning": { poolName: string; message: string; context: any };
+  "pool.critical": { poolName: string; message: string; error: Error };
 }
 
-export type WorkerType = 'embedding' | 'parsing' | 'indexing' | 'analysis' | 'io' | 'generic';
-export type PoolErrorType = 'creation_failed' | 'validation_failed' | 'timeout' | 'resource_exhausted' | 'health_check_failed' | 'unknown';
-export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
-export type PoolState = 'initializing' | 'active' | 'draining' | 'stopped' | 'error';
+export type WorkerType =
+  | "embedding"
+  | "parsing"
+  | "indexing"
+  | "analysis"
+  | "io"
+  | "generic";
+export type PoolErrorType =
+  | "creation_failed"
+  | "validation_failed"
+  | "timeout"
+  | "resource_exhausted"
+  | "health_check_failed"
+  | "unknown";
+export type ErrorSeverity = "low" | "medium" | "high" | "critical";
+export type PoolState =
+  | "initializing"
+  | "active"
+  | "draining"
+  | "stopped"
+  | "error";
 
 // Default configuration values
 export const DEFAULT_RESOURCE_CONFIG: ResourceConfig = {

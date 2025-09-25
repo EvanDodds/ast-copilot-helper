@@ -4,12 +4,12 @@
  */
 
 // Types
-export * from './types.js';
+export * from "./types.js";
 
 // Collectors
-export { SystemDiagnosticCollector } from './system-collector.js';
-export { RuntimeDiagnosticCollector } from './runtime-collector.js';
-export { CodebaseDiagnosticCollector } from './codebase-collector.js';
+export { SystemDiagnosticCollector } from "./system-collector.js";
+export { RuntimeDiagnosticCollector } from "./runtime-collector.js";
+export { CodebaseDiagnosticCollector } from "./codebase-collector.js";
 
 // Manager
-export { DiagnosticManager } from './manager.js';
+export { DiagnosticManager } from "./manager.js";

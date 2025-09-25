@@ -1,17 +1,13 @@
 /**
  * @fileoverview Performance Monitoring and Caching System
- * 
+ *
  * Implements comprehensive performance tracking, caching mechanisms, and optimization
  * features to meet the <200ms query processing requirement for the MCP Server Query System.
  */
 
-import { createLogger } from '../../../ast-helper/src/logging/index.js';
+import { createLogger } from "../../../ast-helper/src/logging/index.js";
 
-import type {
-  MCPQuery,
-  QueryResponse,
-  PerformanceMetrics,
-} from './types.js';
+import type { MCPQuery, QueryResponse, PerformanceMetrics } from "./types.js";
 
 /**
  * Cache entry structure
@@ -30,16 +26,16 @@ interface CacheEntry<T = any> {
 interface CacheConfig {
   /** Maximum number of entries in cache */
   maxEntries: number;
-  
+
   /** Default TTL in milliseconds */
   defaultTtl: number;
-  
+
   /** Cache cleanup interval in milliseconds */
   cleanupInterval: number;
-  
+
   /** Enable cache compression */
   enableCompression: boolean;
-  
+
   /** Cache hit ratio threshold for performance alerts */
   hitRatioThreshold: number;
 }
@@ -50,16 +46,16 @@ interface CacheConfig {
 interface PerformanceConfig {
   /** Enable detailed performance tracking */
   enableDetailedTracking: boolean;
-  
+
   /** Metric collection interval in milliseconds */
   metricCollectionInterval: number;
-  
+
   /** Alert threshold for query time (ms) */
   queryTimeAlert: number;
-  
+
   /** Alert threshold for memory usage (bytes) */
   memoryUsageAlert: number;
-  
+
   /** Enable performance alerts */
   enableAlerts: boolean;
 }
@@ -81,8 +77,8 @@ interface CacheStats {
  * Performance alert structure
  */
 interface PerformanceAlert {
-  type: 'query_time' | 'memory_usage' | 'cache_hit_ratio' | 'error_rate';
-  severity: 'warning' | 'error' | 'critical';
+  type: "query_time" | "memory_usage" | "cache_hit_ratio" | "error_rate";
+  severity: "warning" | "error" | "critical";
   message: string;
   timestamp: Date;
   metrics: Record<string, number>;
@@ -94,8 +90,8 @@ interface PerformanceAlert {
 class LRUCache<T = any> {
   private cache = new Map<string, CacheEntry<T>>();
   private config: CacheConfig;
-  private logger = createLogger({ operation: 'query-cache' });
-  
+  private logger = createLogger({ operation: "query-cache" });
+
   // Statistics
   private stats: CacheStats = {
     hitCount: 0,
@@ -105,12 +101,12 @@ class LRUCache<T = any> {
     memoryUsage: 0,
     evictionCount: 0,
   };
-  
+
   private cleanupTimer?: NodeJS.Timeout;
 
   constructor(config: CacheConfig) {
     this.config = config;
-    
+
     // Start cleanup timer
     this.cleanupTimer = setInterval(() => {
       this.cleanup();
@@ -122,13 +118,13 @@ class LRUCache<T = any> {
    */
   get(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.stats.missCount++;
       this.updateHitRatio();
       return null;
     }
-    
+
     // Check if entry has expired
     if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
@@ -136,20 +132,20 @@ class LRUCache<T = any> {
       this.updateHitRatio();
       return null;
     }
-    
+
     // Update access information
     entry.accessCount++;
     entry.lastAccessed = Date.now();
-    
+
     // Move to end (most recently used)
     this.cache.delete(key);
     this.cache.set(key, entry);
-    
+
     this.stats.hitCount++;
     this.updateHitRatio();
-    
-    this.logger.debug('Cache hit', { key, accessCount: entry.accessCount });
-    
+
+    this.logger.debug("Cache hit", { key, accessCount: entry.accessCount });
+
     return entry.value;
   }
 
@@ -158,12 +154,12 @@ class LRUCache<T = any> {
    */
   set(key: string, value: T, ttl?: number): void {
     const now = Date.now();
-    
+
     // Remove existing entry if it exists
     if (this.cache.has(key)) {
       this.cache.delete(key);
     }
-    
+
     // Evict least recently used entries if at capacity
     while (this.cache.size >= this.config.maxEntries) {
       const firstKey = this.cache.keys().next().value;
@@ -174,7 +170,7 @@ class LRUCache<T = any> {
         break; // Safety check
       }
     }
-    
+
     const entry: CacheEntry<T> = {
       value,
       timestamp: now,
@@ -182,11 +178,11 @@ class LRUCache<T = any> {
       accessCount: 0,
       lastAccessed: now,
     };
-    
+
     this.cache.set(key, entry);
     this.stats.totalEntries = this.cache.size;
-    
-    this.logger.debug('Cache set', { key, ttl: entry.ttl });
+
+    this.logger.debug("Cache set", { key, ttl: entry.ttl });
   }
 
   /**
@@ -195,21 +191,23 @@ class LRUCache<T = any> {
   private cleanup(): void {
     const now = Date.now();
     const keysToDelete: string[] = [];
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > entry.ttl) {
         keysToDelete.push(key);
       }
     }
-    
+
     for (const key of keysToDelete) {
       this.cache.delete(key);
     }
-    
+
     this.stats.totalEntries = this.cache.size;
-    
+
     if (keysToDelete.length > 0) {
-      this.logger.debug('Cache cleanup', { expiredEntries: keysToDelete.length });
+      this.logger.debug("Cache cleanup", {
+        expiredEntries: keysToDelete.length,
+      });
     }
   }
 
@@ -235,13 +233,13 @@ class LRUCache<T = any> {
    */
   private estimateMemoryUsage(): number {
     let totalSize = 0;
-    
+
     for (const [key, entry] of this.cache.entries()) {
       totalSize += key.length * 2; // UTF-16 encoding
       totalSize += JSON.stringify(entry.value).length * 2;
       totalSize += 48; // Overhead for entry object
     }
-    
+
     return totalSize;
   }
 
@@ -258,8 +256,8 @@ class LRUCache<T = any> {
       memoryUsage: 0,
       evictionCount: 0,
     };
-    
-    this.logger.info('Cache cleared');
+
+    this.logger.info("Cache cleared");
   }
 
   /**
@@ -275,22 +273,22 @@ class LRUCache<T = any> {
 
 /**
  * Performance Monitoring and Caching System
- * 
+ *
  * Central component for tracking query performance, managing caches, and ensuring
  * the <200ms performance requirement is met consistently.
  */
 export class PerformanceMonitor {
-  private logger = createLogger({ operation: 'performance-monitor' });
-  
+  private logger = createLogger({ operation: "performance-monitor" });
+
   // Configuration
   private cacheConfig: CacheConfig;
   private performanceConfig: PerformanceConfig;
-  
+
   // Caches
   private queryCache: LRUCache<QueryResponse>;
   private embeddingCache: LRUCache<number[]>;
   private metadataCache: LRUCache<any>;
-  
+
   // Performance tracking
   private metrics: PerformanceMetrics = {
     p50QueryTime: 0,
@@ -300,11 +298,11 @@ export class PerformanceMonitor {
     peakMemoryUsage: 0,
     concurrentQueries: 0,
   };
-  
+
   private queryTimes: number[] = [];
   private alerts: PerformanceAlert[] = [];
   private metricsTimer?: NodeJS.Timeout;
-  
+
   // Statistics
   private totalQueries = 0;
   private cacheableQueries = 0;
@@ -312,7 +310,7 @@ export class PerformanceMonitor {
 
   constructor(
     cacheConfig: Partial<CacheConfig> = {},
-    performanceConfig: Partial<PerformanceConfig> = {}
+    performanceConfig: Partial<PerformanceConfig> = {},
   ) {
     // Initialize cache configuration with defaults
     this.cacheConfig = {
@@ -323,7 +321,7 @@ export class PerformanceMonitor {
       hitRatioThreshold: 0.7,
       ...cacheConfig,
     };
-    
+
     // Initialize performance configuration with defaults
     this.performanceConfig = {
       enableDetailedTracking: true,
@@ -333,18 +331,18 @@ export class PerformanceMonitor {
       enableAlerts: true,
       ...performanceConfig,
     };
-    
+
     // Initialize caches
     this.queryCache = new LRUCache<QueryResponse>(this.cacheConfig);
     this.embeddingCache = new LRUCache<number[]>(this.cacheConfig);
     this.metadataCache = new LRUCache<any>(this.cacheConfig);
-    
+
     // Start metrics collection
     if (this.performanceConfig.enableDetailedTracking) {
       this.startMetricsCollection();
     }
-    
-    this.logger.info('Performance monitor initialized', {
+
+    this.logger.info("Performance monitor initialized", {
       cacheConfig: this.cacheConfig,
       performanceConfig: this.performanceConfig,
     });
@@ -358,11 +356,11 @@ export class PerformanceMonitor {
       query.type,
       query.text,
       JSON.stringify(query.options || {}),
-      query.maxResults?.toString() || '',
-      query.minScore?.toString() || '',
+      query.maxResults?.toString() || "",
+      query.minScore?.toString() || "",
     ];
-    
-    return `query:${Buffer.from(keyComponents.join('|')).toString('base64')}`;
+
+    return `query:${Buffer.from(keyComponents.join("|")).toString("base64")}`;
   }
 
   /**
@@ -378,7 +376,7 @@ export class PerformanceMonitor {
    */
   cacheQueryResponse(query: MCPQuery, response: QueryResponse): void {
     const cacheKey = this.generateQueryCacheKey(query);
-    
+
     // Cache all responses, including empty ones, but limit very large result sets
     if (response.results.length < 100) {
       this.queryCache.set(cacheKey, response);
@@ -390,7 +388,7 @@ export class PerformanceMonitor {
    * Get cached embedding
    */
   getCachedEmbedding(text: string): number[] | null {
-    const cacheKey = `embedding:${Buffer.from(text).toString('base64')}`;
+    const cacheKey = `embedding:${Buffer.from(text).toString("base64")}`;
     return this.embeddingCache.get(cacheKey);
   }
 
@@ -398,8 +396,12 @@ export class PerformanceMonitor {
    * Cache embedding
    */
   cacheEmbedding(text: string, embedding: number[]): void {
-    const cacheKey = `embedding:${Buffer.from(text).toString('base64')}`;
-    this.embeddingCache.set(cacheKey, embedding, this.cacheConfig.defaultTtl * 2); // Longer TTL for embeddings
+    const cacheKey = `embedding:${Buffer.from(text).toString("base64")}`;
+    this.embeddingCache.set(
+      cacheKey,
+      embedding,
+      this.cacheConfig.defaultTtl * 2,
+    ); // Longer TTL for embeddings
   }
 
   /**
@@ -408,27 +410,30 @@ export class PerformanceMonitor {
   trackQueryPerformance(queryTime: number, query: MCPQuery): void {
     this.totalQueries++;
     this.queryTimes.push(queryTime);
-    
+
     // Keep only recent query times for percentile calculations
     if (this.queryTimes.length > 1000) {
       this.queryTimes = this.queryTimes.slice(-1000);
     }
-    
+
     // Check for performance alerts
-    if (this.performanceConfig.enableAlerts && queryTime > this.performanceConfig.queryTimeAlert) {
+    if (
+      this.performanceConfig.enableAlerts &&
+      queryTime > this.performanceConfig.queryTimeAlert
+    ) {
       this.addAlert({
-        type: 'query_time',
-        severity: queryTime > 200 ? 'critical' : 'warning',
+        type: "query_time",
+        severity: queryTime > 200 ? "critical" : "warning",
         message: `Query processing time ${queryTime}ms exceeds threshold ${this.performanceConfig.queryTimeAlert}ms`,
         timestamp: new Date(),
         metrics: {
           queryTime,
           threshold: this.performanceConfig.queryTimeAlert,
-          queryType: query.type === 'semantic' ? 1 : 0,
+          queryType: query.type === "semantic" ? 1 : 0,
         },
       });
     }
-    
+
     // Update metrics
     this.updatePerformanceMetrics();
   }
@@ -437,25 +442,36 @@ export class PerformanceMonitor {
    * Update performance metrics
    */
   private updatePerformanceMetrics(): void {
-    if (this.queryTimes.length === 0) return;
-    
+    if (this.queryTimes.length === 0) {
+      return;
+    }
+
     const sortedTimes = [...this.queryTimes].sort((a, b) => a - b);
     const count = sortedTimes.length;
-    
+
     this.metrics.p50QueryTime = sortedTimes[Math.floor(count * 0.5)] ?? 0;
     this.metrics.p95QueryTime = sortedTimes[Math.floor(count * 0.95)] ?? 0;
     this.metrics.p99QueryTime = sortedTimes[Math.floor(count * 0.99)] ?? 0;
-    
+
     // Update memory usage
     const memoryUsage = process.memoryUsage();
     this.metrics.memoryUsage = memoryUsage.heapUsed;
-    this.metrics.peakMemoryUsage = Math.max(this.metrics.peakMemoryUsage, memoryUsage.heapUsed);
-    
+    this.metrics.peakMemoryUsage = Math.max(
+      this.metrics.peakMemoryUsage,
+      memoryUsage.heapUsed,
+    );
+
     // Check memory alerts
-    if (this.performanceConfig.enableAlerts && memoryUsage.heapUsed > this.performanceConfig.memoryUsageAlert) {
+    if (
+      this.performanceConfig.enableAlerts &&
+      memoryUsage.heapUsed > this.performanceConfig.memoryUsageAlert
+    ) {
       this.addAlert({
-        type: 'memory_usage',
-        severity: memoryUsage.heapUsed > this.performanceConfig.memoryUsageAlert * 1.5 ? 'critical' : 'warning',
+        type: "memory_usage",
+        severity:
+          memoryUsage.heapUsed > this.performanceConfig.memoryUsageAlert * 1.5
+            ? "critical"
+            : "warning",
         message: `Memory usage ${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB exceeds threshold`,
         timestamp: new Date(),
         metrics: {
@@ -471,13 +487,13 @@ export class PerformanceMonitor {
    */
   private addAlert(alert: PerformanceAlert): void {
     this.alerts.push(alert);
-    
+
     // Keep only recent alerts
     if (this.alerts.length > 100) {
       this.alerts = this.alerts.slice(-100);
     }
-    
-    this.logger.warn('Performance alert', {
+
+    this.logger.warn("Performance alert", {
       type: alert.type,
       severity: alert.severity,
       message: alert.message,
@@ -500,12 +516,12 @@ export class PerformanceMonitor {
   private collectMetrics(): void {
     const queryCacheStats = this.queryCache.getStats();
     const embeddingCacheStats = this.embeddingCache.getStats();
-    
+
     // Check cache hit ratio alerts
     if (queryCacheStats.hitRatio < this.cacheConfig.hitRatioThreshold) {
       this.addAlert({
-        type: 'cache_hit_ratio',
-        severity: 'warning',
+        type: "cache_hit_ratio",
+        severity: "warning",
         message: `Query cache hit ratio ${queryCacheStats.hitRatio.toFixed(2)} below threshold ${this.cacheConfig.hitRatioThreshold}`,
         timestamp: new Date(),
         metrics: {
@@ -514,8 +530,8 @@ export class PerformanceMonitor {
         },
       });
     }
-    
-    this.logger.debug('Performance metrics collected', {
+
+    this.logger.debug("Performance metrics collected", {
       performance: this.metrics,
       queryCache: queryCacheStats,
       embeddingCache: embeddingCacheStats,
@@ -536,7 +552,10 @@ export class PerformanceMonitor {
       totalQueries: this.totalQueries,
       cacheableQueries: this.cacheableQueries,
       optimizedQueries: this.optimizedQueries,
-      cacheHitImprovement: this.cacheableQueries > 0 ? this.optimizedQueries / this.cacheableQueries : 0,
+      cacheHitImprovement:
+        this.cacheableQueries > 0
+          ? this.optimizedQueries / this.cacheableQueries
+          : 0,
       alerts: this.alerts.slice(-10), // Recent alerts
     };
   }
@@ -548,8 +567,8 @@ export class PerformanceMonitor {
     this.queryCache.clear();
     this.embeddingCache.clear();
     this.metadataCache.clear();
-    
-    this.logger.info('All caches cleared');
+
+    this.logger.info("All caches cleared");
   }
 
   /**
@@ -559,12 +578,12 @@ export class PerformanceMonitor {
     if (this.metricsTimer) {
       clearInterval(this.metricsTimer);
     }
-    
+
     this.queryCache.shutdown();
     this.embeddingCache.shutdown();
     this.metadataCache.shutdown();
-    
-    this.logger.info('Performance monitor shut down');
+
+    this.logger.info("Performance monitor shut down");
   }
 
   /**
@@ -579,17 +598,20 @@ export class PerformanceMonitor {
    */
   updateConfiguration(
     cacheConfig?: Partial<CacheConfig>,
-    performanceConfig?: Partial<PerformanceConfig>
+    performanceConfig?: Partial<PerformanceConfig>,
   ): void {
     if (cacheConfig) {
       this.cacheConfig = { ...this.cacheConfig, ...cacheConfig };
     }
-    
+
     if (performanceConfig) {
-      this.performanceConfig = { ...this.performanceConfig, ...performanceConfig };
+      this.performanceConfig = {
+        ...this.performanceConfig,
+        ...performanceConfig,
+      };
     }
-    
-    this.logger.info('Performance monitor configuration updated', {
+
+    this.logger.info("Performance monitor configuration updated", {
       cacheConfig: this.cacheConfig,
       performanceConfig: this.performanceConfig,
     });

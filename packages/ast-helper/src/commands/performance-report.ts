@@ -1,8 +1,8 @@
-import { PerformanceBenchmarkRunner } from '../performance/benchmark-runner.js';
-import { createLogger } from '../logging/index.js';
-import type { Config } from '../types.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { PerformanceBenchmarkRunner } from "../performance/benchmark-runner.js";
+import { createLogger } from "../logging/index.js";
+import type { Config } from "../types.js";
+import * as fs from "fs/promises";
+import * as path from "path";
 
 /**
  * Command handler interface
@@ -26,49 +26,58 @@ export interface PerformanceReportOptions {
 /**
  * Handler for performance report command
  */
-export class PerformanceReportCommandHandler implements CommandHandler<PerformanceReportOptions> {
+export class PerformanceReportCommandHandler
+  implements CommandHandler<PerformanceReportOptions>
+{
   private logger = createLogger();
 
-  async execute(options: PerformanceReportOptions, _config: Config): Promise<void> {
+  async execute(
+    options: PerformanceReportOptions,
+    _config: Config,
+  ): Promise<void> {
     const startTime = Date.now();
-    
+
     try {
-      this.logger.info('📊 Generating performance report...');
-      
+      this.logger.info("📊 Generating performance report...");
+
       // Initialize benchmark runner and generate report
       const runner = new PerformanceBenchmarkRunner();
       const report = await runner.generatePerformanceReport();
-      
+
       // Set up output directory
-      const outputDir = options.outputDir || './performance-report';
-      const format = options.format || 'html';
-      
+      const outputDir = options.outputDir || "./performance-report";
+      const format = options.format || "html";
+
       await fs.mkdir(outputDir, { recursive: true });
-      
+
       // Generate report in requested format
-      if (format === 'html') {
+      if (format === "html") {
         const htmlContent = this.generateHtmlReport(report, options);
-        const htmlPath = path.join(outputDir, 'index.html');
+        const htmlPath = path.join(outputDir, "index.html");
         await fs.writeFile(htmlPath, htmlContent);
         this.logger.info(`📁 HTML report saved to: ${htmlPath}`);
-      } else if (format === 'json') {
-        const jsonPath = path.join(outputDir, 'performance-report.json');
+      } else if (format === "json") {
+        const jsonPath = path.join(outputDir, "performance-report.json");
         await fs.writeFile(jsonPath, JSON.stringify(report, null, 2));
         this.logger.info(`📁 JSON report saved to: ${jsonPath}`);
       } else {
         throw new Error(`Unsupported format: ${format}`);
       }
-      
+
       const duration = Date.now() - startTime;
       this.logger.info(`✅ Report generation completed in ${duration}ms`);
-      
     } catch (error: any) {
-      this.logger.error('Performance report generation failed:', { error: error.message || error });
+      this.logger.error("Performance report generation failed:", {
+        error: error.message || error,
+      });
       throw error;
     }
   }
-  
-  private generateHtmlReport(report: any, options: PerformanceReportOptions): string {
+
+  private generateHtmlReport(
+    report: any,
+    options: PerformanceReportOptions,
+  ): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -96,14 +105,14 @@ export class PerformanceReportCommandHandler implements CommandHandler<Performan
         <div class="header">
             <h1>🚀 Performance Report</h1>
             <p>Generated: ${new Date().toISOString()}</p>
-            <p>Status: <span class="${report.validation?.passed ? 'status-pass' : 'status-fail'}">${report.validation?.passed ? 'PASSED' : 'FAILED'}</span></p>
+            <p>Status: <span class="${report.validation?.passed ? "status-pass" : "status-fail"}">${report.validation?.passed ? "PASSED" : "FAILED"}</span></p>
         </div>
         
         <div class="section">
             <h2>🖥️ System Information</h2>
             <div class="metric-grid">
                 <div class="metric-card">
-                    <div class="metric-value">${report.systemInfo?.platform || 'Unknown'}</div>
+                    <div class="metric-value">${report.systemInfo?.platform || "Unknown"}</div>
                     <div class="metric-label">Platform</div>
                 </div>
                 <div class="metric-card">
@@ -115,7 +124,7 @@ export class PerformanceReportCommandHandler implements CommandHandler<Performan
                     <div class="metric-label">Total Memory</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">${report.systemInfo?.nodeVersion || 'Unknown'}</div>
+                    <div class="metric-value">${report.systemInfo?.nodeVersion || "Unknown"}</div>
                     <div class="metric-label">Node.js Version</div>
                 </div>
             </div>
@@ -125,11 +134,11 @@ export class PerformanceReportCommandHandler implements CommandHandler<Performan
             <h2>📊 Performance Summary</h2>
             <div class="metric-grid">
                 <div class="metric-card">
-                    <div class="metric-value">${report.memoryProfile?.peakUsage?.toFixed(1) || 'N/A'} MB</div>
+                    <div class="metric-value">${report.memoryProfile?.peakUsage?.toFixed(1) || "N/A"} MB</div>
                     <div class="metric-label">Peak Memory Usage</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">${report.concurrencyResults?.maxSustainableConcurrency || 'N/A'}</div>
+                    <div class="metric-value">${report.concurrencyResults?.maxSustainableConcurrency || "N/A"}</div>
                     <div class="metric-label">Max Concurrency</div>
                 </div>
                 <div class="metric-card">
@@ -143,13 +152,18 @@ export class PerformanceReportCommandHandler implements CommandHandler<Performan
             </div>
         </div>
         
-        ${options.includeCharts ? '<div class="section"><h2>📈 Performance Charts</h2><p>Chart functionality would be implemented here</p></div>' : ''}
+        ${options.includeCharts ? '<div class="section"><h2>📈 Performance Charts</h2><p>Chart functionality would be implemented here</p></div>' : ""}
         
         <div class="section">
             <h2>💡 Recommendations</h2>
-            ${report.recommendations?.length > 0 ? 
-              '<ul>' + report.recommendations.map((rec: string) => `<li>${rec}</li>`).join('') + '</ul>' : 
-              '<p>No specific recommendations at this time.</p>'
+            ${
+              report.recommendations?.length > 0
+                ? "<ul>" +
+                  report.recommendations
+                    .map((rec: string) => `<li>${rec}</li>`)
+                    .join("") +
+                  "</ul>"
+                : "<p>No specific recommendations at this time.</p>"
             }
         </div>
     </div>

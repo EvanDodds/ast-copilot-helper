@@ -34,7 +34,7 @@ export enum MCPErrorCode {
   METHOD_NOT_FOUND = -32601,
   INVALID_PARAMS = -32602,
   INTERNAL_ERROR = -32603,
-  
+
   // MCP-specific errors
   INITIALIZATION_FAILED = -32000,
   RESOURCE_NOT_FOUND = -32001,
@@ -53,17 +53,17 @@ export interface MCPError {
 // MCP Server Capabilities
 export interface MCPServerCapabilities {
   tools: {
-    listChanged: boolean;      // Can list available tools
+    listChanged: boolean; // Can list available tools
   };
   resources: {
-    subscribe: boolean;        // Can subscribe to resource changes
-    listChanged: boolean;      // Can list available resources
+    subscribe: boolean; // Can subscribe to resource changes
+    listChanged: boolean; // Can list available resources
   };
   prompts: {
-    listChanged: boolean;      // Can list available prompts
+    listChanged: boolean; // Can list available prompts
   };
   logging: {
-    level: string;            // Supported logging level
+    level: string; // Supported logging level
   };
 }
 
@@ -114,7 +114,7 @@ export interface InitializeRequest extends JSONRPCRequest {
       roots?: {
         listChanged?: boolean;
       };
-      sampling?: {};
+      sampling?: object;
     };
     clientInfo: {
       name: string;
@@ -184,7 +184,7 @@ export interface PingRequest extends JSONRPCRequest {
 }
 
 export interface PingResponse extends JSONRPCResponse {
-  result: {};
+  result: object;
 }
 
 // MCP Handler Interface
@@ -220,22 +220,32 @@ export function isValidMCPNotification(obj: any): obj is JSONRPCNotification {
   );
 }
 
-export function createMCPError(code: MCPErrorCode, message: string, data?: any): MCPError {
+export function createMCPError(
+  code: MCPErrorCode,
+  message: string,
+  data?: any,
+): MCPError {
   return { code, message, data };
 }
 
-export function createErrorResponse(id: string | number, error: MCPError): JSONRPCResponse {
+export function createErrorResponse(
+  id: string | number,
+  error: MCPError,
+): JSONRPCResponse {
   return {
     jsonrpc: "2.0",
     id,
-    error
+    error,
   };
 }
 
-export function createSuccessResponse(id: string | number, result: any): JSONRPCResponse {
+export function createSuccessResponse(
+  id: string | number,
+  result: any,
+): JSONRPCResponse {
   return {
     jsonrpc: "2.0",
     id,
-    result
+    result,
   };
 }

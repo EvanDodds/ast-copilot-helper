@@ -3,7 +3,7 @@
  * Generates metadata, signatures, and complexity metrics from parsed AST nodes
  */
 
-import { ASTNode } from '../parser/types';
+import type { ASTNode } from "../parser/types";
 
 /**
  * Complete annotation data for an AST node
@@ -11,42 +11,43 @@ import { ASTNode } from '../parser/types';
  */
 export interface Annotation {
   // Identity and linking
-  nodeId: string;                    // References ASTNode.id
-  filePath: string;                  // Source file path
-  
+  nodeId: string; // References ASTNode.id
+  filePath: string; // Source file path
+
   // Generated signatures and summaries
-  signature: string;                 // Function/class signature
-  summary: string;                   // "Function X does Y" description
-  
+  signature: string; // Function/class signature
+  summary: string; // "Function X does Y" description
+
   // Code analysis metrics
-  complexity: number;                // Cyclomatic complexity
-  lineCount: number;                // Source lines of code
-  characterCount: number;            // Character count
-  
+  complexity: number; // Cyclomatic complexity
+  lineCount: number; // Source lines of code
+  characterCount: number; // Character count
+
   // Dependencies and relationships
-  dependencies: string[];            // Imported symbols referenced
-  exports: string[];                // Symbols exported
-  calls: string[];                   // Function/method calls made
-  
+  dependencies: string[]; // Imported symbols referenced
+  exports: string[]; // Symbols exported
+  calls: string[]; // Function/method calls made
+
   // Source code context
-  sourceSnippet: string;            // Code excerpt with context
-  contextLines: {                   // Surrounding context
+  sourceSnippet: string; // Code excerpt with context
+  contextLines: {
+    // Surrounding context
     before: string[];
     after: string[];
   };
-  
+
   // Semantic information
-  purpose: string;                  // Inferred purpose/intent
-  tags: string[];                   // Semantic tags (utility, handler, etc.)
-  
+  purpose: string; // Inferred purpose/intent
+  tags: string[]; // Semantic tags (utility, handler, etc.)
+
   // Quality metrics
-  completeness: number;             // How complete the annotation is (0-1)
-  confidence: number;              // Confidence in annotation quality (0-1)
-  
+  completeness: number; // How complete the annotation is (0-1)
+  confidence: number; // Confidence in annotation quality (0-1)
+
   // Metadata
-  language: string;                // Programming language
-  lastUpdated: string;             // ISO timestamp
-  version: string;                 // Annotation schema version
+  language: string; // Programming language
+  lastUpdated: string; // ISO timestamp
+  version: string; // Annotation schema version
 }
 
 /**
@@ -83,23 +84,23 @@ export interface ContextLines {
  */
 export interface AnnotationConfig {
   // Source context settings
-  maxSnippetLines: number;          // Maximum lines to include in snippet
-  contextLinesBefore: number;       // Context lines before the node
-  contextLinesAfter: number;        // Context lines after the node
-  
+  maxSnippetLines: number; // Maximum lines to include in snippet
+  contextLinesBefore: number; // Context lines before the node
+  contextLinesAfter: number; // Context lines after the node
+
   // Performance settings
-  batchSize: number;                // Number of nodes to process in batch
-  maxConcurrency: number;           // Maximum concurrent annotation operations
-  timeoutMs: number;                // Timeout for individual annotation generation
-  
+  batchSize: number; // Number of nodes to process in batch
+  maxConcurrency: number; // Maximum concurrent annotation operations
+  timeoutMs: number; // Timeout for individual annotation generation
+
   // Quality settings
-  minCompleteness: number;          // Minimum completeness score (0-1)
-  minConfidence: number;            // Minimum confidence score (0-1)
-  
+  minCompleteness: number; // Minimum completeness score (0-1)
+  minConfidence: number; // Minimum confidence score (0-1)
+
   // Output settings
-  outputDir: string;                // Directory for annotation JSON files
-  enableValidation: boolean;        // Enable schema validation
-  enableDeduplication: boolean;     // Enable duplicate annotation detection
+  outputDir: string; // Directory for annotation JSON files
+  enableValidation: boolean; // Enable schema validation
+  enableDeduplication: boolean; // Enable duplicate annotation detection
 }
 
 /**
@@ -146,81 +147,81 @@ export interface AnnotationResult {
  */
 export enum SemanticTag {
   // Functional categories
-  UTILITY = 'utility',
-  HANDLER = 'handler',
-  VALIDATOR = 'validator',
-  TRANSFORMER = 'transformer',
-  FACTORY = 'factory',
-  BUILDER = 'builder',
-  
+  UTILITY = "utility",
+  HANDLER = "handler",
+  VALIDATOR = "validator",
+  TRANSFORMER = "transformer",
+  FACTORY = "factory",
+  BUILDER = "builder",
+
   // Architectural patterns
-  MODEL = 'model',
-  CONTROLLER = 'controller',
-  SERVICE = 'service',
-  REPOSITORY = 'repository',
-  MIDDLEWARE = 'middleware',
-  
+  MODEL = "model",
+  CONTROLLER = "controller",
+  SERVICE = "service",
+  REPOSITORY = "repository",
+  MIDDLEWARE = "middleware",
+
   // Data flow
-  GETTER = 'getter',
-  SETTER = 'setter',
-  PREDICATE = 'predicate',
-  PROCESSOR = 'processor',
-  PARSER = 'parser',
-  FORMATTER = 'formatter',
-  
+  GETTER = "getter",
+  SETTER = "setter",
+  PREDICATE = "predicate",
+  PROCESSOR = "processor",
+  PARSER = "parser",
+  FORMATTER = "formatter",
+
   // Infrastructure
-  CONFIG = 'config',
-  HELPER = 'helper',
-  CONSTANT = 'constant',
-  TYPE = 'type',
-  INTERFACE = 'interface',
-  ENUM = 'enum',
-  
+  CONFIG = "config",
+  HELPER = "helper",
+  CONSTANT = "constant",
+  TYPE = "type",
+  INTERFACE = "interface",
+  ENUM = "enum",
+
   // Additional semantic tags
-  EVENT_DRIVEN = 'event-driven',
-  CREATIONAL = 'creational',
-  API_ENDPOINT = 'api-endpoint',
-  HTTP_HANDLER = 'http-handler',
-  DATABASE = 'database',
-  PERSISTENCE = 'persistence',
-  INTERCEPTOR = 'interceptor',
-  COMPONENT = 'component',
-  UI = 'ui',
-  TEST = 'test',
-  VERIFICATION = 'verification',
-  FUNCTION = 'function',
-  CLASS = 'class',
-  METHOD = 'method',
-  VARIABLE = 'variable',
-  HIGH_COMPLEXITY = 'high-complexity',
-  MEDIUM_COMPLEXITY = 'medium-complexity',
-  EXTERNAL_DEPENDENCY = 'external-dependency',
-  CIRCULAR_DEPENDENCY = 'circular-dependency',
-  UNKNOWN = 'unknown'
+  EVENT_DRIVEN = "event-driven",
+  CREATIONAL = "creational",
+  API_ENDPOINT = "api-endpoint",
+  HTTP_HANDLER = "http-handler",
+  DATABASE = "database",
+  PERSISTENCE = "persistence",
+  INTERCEPTOR = "interceptor",
+  COMPONENT = "component",
+  UI = "ui",
+  TEST = "test",
+  VERIFICATION = "verification",
+  FUNCTION = "function",
+  CLASS = "class",
+  METHOD = "method",
+  VARIABLE = "variable",
+  HIGH_COMPLEXITY = "high-complexity",
+  MEDIUM_COMPLEXITY = "medium-complexity",
+  EXTERNAL_DEPENDENCY = "external-dependency",
+  CIRCULAR_DEPENDENCY = "circular-dependency",
+  UNKNOWN = "unknown",
 }
 
 /**
  * Purpose categories for code classification
  */
 export enum PurposeCategory {
-  DATA_PROCESSING = 'data-processing',
-  USER_INTERFACE = 'user-interface',
-  BUSINESS_LOGIC = 'business-logic',
-  INFRASTRUCTURE = 'infrastructure',
-  TESTING = 'testing',
-  CONFIGURATION = 'configuration',
-  UTILITY = 'utility',
-  
+  DATA_PROCESSING = "data-processing",
+  USER_INTERFACE = "user-interface",
+  BUSINESS_LOGIC = "business-logic",
+  INFRASTRUCTURE = "infrastructure",
+  TESTING = "testing",
+  CONFIGURATION = "configuration",
+  UTILITY = "utility",
+
   // Additional purpose categories
-  EVENT_HANDLING = 'event-handling',
-  OBJECT_CREATION = 'object-creation',
-  VALIDATION = 'validation',
-  DATA_TRANSFORMATION = 'data-transformation',
-  API_HANDLING = 'api-handling',
-  DATA_PERSISTENCE = 'data-persistence',
-  REQUEST_PROCESSING = 'request-processing',
-  UI_RENDERING = 'ui-rendering',
-  TYPE_DEFINITION = 'type-definition'
+  EVENT_HANDLING = "event-handling",
+  OBJECT_CREATION = "object-creation",
+  VALIDATION = "validation",
+  DATA_TRANSFORMATION = "data-transformation",
+  API_HANDLING = "api-handling",
+  DATA_PERSISTENCE = "data-persistence",
+  REQUEST_PROCESSING = "request-processing",
+  UI_RENDERING = "ui-rendering",
+  TYPE_DEFINITION = "type-definition",
 }
 
 /**
@@ -230,19 +231,19 @@ export const COMPLEXITY_THRESHOLDS = {
   LOW: 5,
   MEDIUM: 10,
   HIGH: 20,
-  VERY_HIGH: 50
+  VERY_HIGH: 50,
 } as const;
 
 /**
  * Types of dependencies that can be detected
  */
 export enum DependencyType {
-  IMPORT = 'import',
-  EXPORT = 'export',
-  REQUIRE = 'require',
-  CALL = 'call',
-  INHERITANCE = 'inheritance',
-  COMPOSITION = 'composition'
+  IMPORT = "import",
+  EXPORT = "export",
+  REQUIRE = "require",
+  CALL = "call",
+  INHERITANCE = "inheritance",
+  COMPOSITION = "composition",
 }
 
 /**
@@ -274,7 +275,9 @@ export interface DependencyAnalysisConfig {
   detectCycles: boolean;
   followChain: boolean;
   ignoreNodeModules: boolean;
-  customModuleResolver: ((source: string, basePath?: string) => Promise<string | null>) | null;
+  customModuleResolver:
+    | ((source: string, basePath?: string) => Promise<string | null>)
+    | null;
 }
 
 /**
@@ -322,7 +325,7 @@ export const DEFAULT_ANNOTATION_CONFIG: AnnotationConfig = {
   timeoutMs: 30000,
   minCompleteness: 0.7,
   minConfidence: 0.6,
-  outputDir: '.astdb/annotations',
+  outputDir: ".astdb/annotations",
   enableValidation: true,
-  enableDeduplication: true
+  enableDeduplication: true,
 };

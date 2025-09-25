@@ -3,9 +3,14 @@
  * @description SQLite-based event queue for telemetry transmission management
  */
 
-import { EventQueue, QueuedEvent, QueueStats, QueueConfig } from './types.js';
-import { TelemetryEvent } from '../collection/types.js';
-import { SqliteTelemetryStorage } from './database.js';
+import type {
+  EventQueue,
+  QueuedEvent,
+  QueueStats,
+  QueueConfig,
+} from "./types.js";
+import type { TelemetryEvent } from "../collection/types.js";
+import type { SqliteTelemetryStorage } from "./database.js";
 
 /**
  * SQLite-based event queue implementation
@@ -45,18 +50,19 @@ export class SqliteEventQueue implements EventQueue {
     let priority = 0;
 
     // Error events get higher priority
-    if (event.eventType === 'error') {
+    if (event.eventType === "error") {
       priority += 100;
     }
 
     // Performance events get medium priority
-    if (event.eventType === 'performance') {
+    if (event.eventType === "performance") {
       priority += 50;
     }
 
     // Recent events get slight priority boost
     const age = Date.now() - event.timestamp.getTime();
-    if (age < 60000) { // Less than 1 minute old
+    if (age < 60000) {
+      // Less than 1 minute old
       priority += 10;
     }
 
@@ -69,13 +75,13 @@ export class SqliteEventQueue implements EventQueue {
   async dequeue(batchSize: number): Promise<QueuedEvent[]> {
     // Get pending events from storage
     const pendingEvents = await this.storage.getPendingEvents(batchSize);
-    
+
     // Convert to queued events with additional queue metadata
     return pendingEvents.map((event, index) => ({
       ...event,
       priority: this.calculatePriority(event),
       position: index + 1,
-      scheduledAt: new Date()
+      scheduledAt: new Date(),
     })) as QueuedEvent[];
   }
 
@@ -92,7 +98,10 @@ export class SqliteEventQueue implements EventQueue {
   async requeue(eventIds: string[], retryAfter?: Date): Promise<void> {
     // Calculate retry delay based on config
     const retryDelay = retryAfter || this.calculateRetryDelay(1);
-    await this.storage.markFailed(eventIds, `Requeued for retry at ${retryDelay}`);
+    await this.storage.markFailed(
+      eventIds,
+      `Requeued for retry at ${retryDelay}`,
+    );
   }
 
   /**
@@ -102,13 +111,13 @@ export class SqliteEventQueue implements EventQueue {
     let delayMs = this.config.baseRetryDelay;
 
     switch (this.config.retryBackoff) {
-      case 'exponential':
+      case "exponential":
         delayMs = this.config.baseRetryDelay * Math.pow(2, attemptNumber - 1);
         break;
-      case 'linear':
+      case "linear":
         delayMs = this.config.baseRetryDelay * attemptNumber;
         break;
-      case 'fixed':
+      case "fixed":
         delayMs = this.config.baseRetryDelay;
         break;
     }
@@ -126,10 +135,12 @@ export class SqliteEventQueue implements EventQueue {
    */
   async getQueueStats(): Promise<QueueStats> {
     const storageStats = await this.storage.getStats();
-    
-    const totalQueued = storageStats.eventsByStatus.pending || 0 + 
-                       storageStats.eventsByStatus.queued || 0 +
-                       storageStats.eventsByStatus.failed || 0;
+
+    const totalQueued =
+      storageStats.eventsByStatus.pending ||
+      0 + storageStats.eventsByStatus.queued ||
+      0 + storageStats.eventsByStatus.failed ||
+      0;
 
     return {
       totalQueued,
@@ -138,14 +149,14 @@ export class SqliteEventQueue implements EventQueue {
         inProgress: storageStats.eventsByStatus.processing || 0,
         failedLastHour: 0, // Would need time-based query
         successfulLastHour: 0, // Would need time-based query
-        averageProcessingTime: 0 // Would be tracked over time
+        averageProcessingTime: 0, // Would be tracked over time
       },
       health: {
         backlogSize: totalQueued,
         oldestQueuedEvent: storageStats.oldestEvent,
         estimatedProcessingTime: this.estimateProcessingTime(totalQueued),
-        errorRate: this.calculateErrorRate(storageStats)
-      }
+        errorRate: this.calculateErrorRate(storageStats),
+      },
     };
   }
 
@@ -166,9 +177,11 @@ export class SqliteEventQueue implements EventQueue {
     const totalEvents = stats.totalEvents;
     const failedEvents = stats.eventsByStatus.failed || 0;
     const rejectedEvents = stats.eventsByStatus.rejected || 0;
-    
-    if (totalEvents === 0) return 0;
-    
+
+    if (totalEvents === 0) {
+      return 0;
+    }
+
     return (failedEvents + rejectedEvents) / totalEvents;
   }
 
@@ -177,7 +190,7 @@ export class SqliteEventQueue implements EventQueue {
    */
   async clear(): Promise<void> {
     await this.storage.clearQueue();
-    console.log('✅ Queue cleared successfully');
+    console.log("✅ Queue cleared successfully");
   }
 }
 
@@ -190,17 +203,17 @@ export class QueueFactory {
    */
   static createEventQueue(
     storage: SqliteTelemetryStorage,
-    config?: Partial<QueueConfig>
+    config?: Partial<QueueConfig>,
   ): SqliteEventQueue {
     const defaultConfig: QueueConfig = {
       maxQueueSize: 10000,
       defaultBatchSize: 50,
       maxRetryAttempts: 3,
-      retryBackoff: 'exponential',
+      retryBackoff: "exponential",
       baseRetryDelay: 1000,
       maxRetryDelay: 300000,
-      priorityStrategy: 'mixed',
-      processingTimeout: 30000
+      priorityStrategy: "mixed",
+      processingTimeout: 30000,
     };
 
     const finalConfig = { ...defaultConfig, ...config };
@@ -210,25 +223,29 @@ export class QueueFactory {
   /**
    * Create high-throughput queue for production
    */
-  static createProductionQueue(storage: SqliteTelemetryStorage): SqliteEventQueue {
+  static createProductionQueue(
+    storage: SqliteTelemetryStorage,
+  ): SqliteEventQueue {
     return QueueFactory.createEventQueue(storage, {
       maxQueueSize: 50000,
       defaultBatchSize: 100,
       maxRetryAttempts: 5,
-      retryBackoff: 'exponential',
-      priorityStrategy: 'priority'
+      retryBackoff: "exponential",
+      priorityStrategy: "priority",
     });
   }
 
   /**
    * Create simple queue for development
    */
-  static createDevelopmentQueue(storage: SqliteTelemetryStorage): SqliteEventQueue {
+  static createDevelopmentQueue(
+    storage: SqliteTelemetryStorage,
+  ): SqliteEventQueue {
     return QueueFactory.createEventQueue(storage, {
       maxQueueSize: 1000,
       defaultBatchSize: 10,
       maxRetryAttempts: 1,
-      retryBackoff: 'fixed'
+      retryBackoff: "fixed",
     });
   }
 }

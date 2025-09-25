@@ -1,5 +1,20 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+echo "🔍 Running pre-commit validation (scoped to staged files)..."
+echo "⏱️  This should take ~15-30 seconds (faster with staged-only linting)"
+
+# Scoped linting and formatting for staged files only
+echo "🧹 Linting staged files..."
+npx lint-staged || exit 1
+
+# Type checking (full project - faster than previous full lint)
+echo "📝 Type checking..."
+yarn run type-check || exit 1
+
+# Essential unit tests only (fastest subset)
+echo "🧪 Running essential unit tests..."
+yarn run test:precommit || exit 1
+
+echo "✅ Pre-commit validation completed!"
+echo "👉 Pre-push will run more comprehensive tests""$(dirname -- "$0")/_/husky.sh"
 
 echo "🔍 Running pre-commit validation (quick checks)..."
 echo "⏱️  This should take ~30-45 seconds"

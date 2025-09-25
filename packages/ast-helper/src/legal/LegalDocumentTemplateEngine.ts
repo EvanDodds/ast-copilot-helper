@@ -1,16 +1,33 @@
-import { promises as fs } from 'fs';
-import * as path from 'path';
+import { promises as fs } from "fs";
+import * as path from "path";
 
 /**
  * Legal document template types
  */
-export type DocumentType = 'privacy-policy' | 'terms-of-service' | 'cookie-policy' | 'license-agreement' | 'data-processing-agreement' | 'custom';
+export type DocumentType =
+  | "privacy-policy"
+  | "terms-of-service"
+  | "cookie-policy"
+  | "license-agreement"
+  | "data-processing-agreement"
+  | "custom";
+
+/**
+ * Template function type definition
+ */
+export type TemplateFunction = (...args: never[]) => string | number;
 
 /**
  * Variable substitution context for templates
  */
 export interface TemplateVariables {
-  [key: string]: string | string[] | boolean | number | Date | TemplateVariables;
+  [key: string]:
+    | string
+    | string[]
+    | boolean
+    | number
+    | Date
+    | TemplateVariables;
 }
 
 /**
@@ -56,7 +73,7 @@ export interface TemplateValidationResult {
  * Document generation options
  */
 export interface DocumentGenerationOptions {
-  outputFormat: 'markdown' | 'html' | 'plain-text' | 'pdf';
+  outputFormat: "markdown" | "html" | "plain-text" | "pdf";
   includeTableOfContents?: boolean;
   includeLastModified?: boolean;
   includeGeneratedBy?: boolean;
@@ -90,6 +107,7 @@ export interface GeneratedDocument {
 export class LegalDocumentTemplateEngine {
   private templates: Map<string, TemplateMetadata> = new Map();
   private templateContent: Map<string, string> = new Map();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   private customFunctions: Map<string, Function> = new Map();
 
   constructor() {
@@ -102,54 +120,88 @@ export class LegalDocumentTemplateEngine {
    */
   private initializeBuiltInTemplates(): void {
     // Privacy Policy Template
-    this.registerTemplate({
-      id: 'privacy-policy-standard',
-      name: 'Standard Privacy Policy',
-      description: 'GDPR and CCPA compliant privacy policy template',
-      type: 'privacy-policy',
-      version: '1.0.0',
-      lastModified: new Date(),
-      author: 'AST Legal Compliance Framework',
-      jurisdiction: 'US-EU',
-      language: 'en',
-      requiredVariables: ['companyName', 'contactEmail', 'lastUpdated', 'dataTypes', 'purposes'],
-      optionalVariables: ['companyAddress', 'dpoContact', 'cookiePolicy', 'thirdPartyServices'],
-      tags: ['gdpr', 'ccpa', 'privacy', 'standard']
-    }, this.getPrivacyPolicyTemplate());
+    this.registerTemplate(
+      {
+        id: "privacy-policy-standard",
+        name: "Standard Privacy Policy",
+        description: "GDPR and CCPA compliant privacy policy template",
+        type: "privacy-policy",
+        version: "1.0.0",
+        lastModified: new Date(),
+        author: "AST Legal Compliance Framework",
+        jurisdiction: "US-EU",
+        language: "en",
+        requiredVariables: [
+          "companyName",
+          "contactEmail",
+          "lastUpdated",
+          "dataTypes",
+          "purposes",
+        ],
+        optionalVariables: [
+          "companyAddress",
+          "dpoContact",
+          "cookiePolicy",
+          "thirdPartyServices",
+        ],
+        tags: ["gdpr", "ccpa", "privacy", "standard"],
+      },
+      this.getPrivacyPolicyTemplate(),
+    );
 
     // Terms of Service Template
-    this.registerTemplate({
-      id: 'terms-of-service-saas',
-      name: 'SaaS Terms of Service',
-      description: 'Comprehensive terms of service for SaaS applications',
-      type: 'terms-of-service',
-      version: '1.0.0',
-      lastModified: new Date(),
-      author: 'AST Legal Compliance Framework',
-      jurisdiction: 'US',
-      language: 'en',
-      requiredVariables: ['serviceName', 'companyName', 'contactEmail', 'lastUpdated'],
-      optionalVariables: ['pricingUrl', 'supportUrl', 'disputeResolution'],
-      tags: ['saas', 'terms', 'standard']
-    }, this.getTermsOfServiceTemplate());
+    this.registerTemplate(
+      {
+        id: "terms-of-service-saas",
+        name: "SaaS Terms of Service",
+        description: "Comprehensive terms of service for SaaS applications",
+        type: "terms-of-service",
+        version: "1.0.0",
+        lastModified: new Date(),
+        author: "AST Legal Compliance Framework",
+        jurisdiction: "US",
+        language: "en",
+        requiredVariables: [
+          "serviceName",
+          "companyName",
+          "contactEmail",
+          "lastUpdated",
+        ],
+        optionalVariables: ["pricingUrl", "supportUrl", "disputeResolution"],
+        tags: ["saas", "terms", "standard"],
+      },
+      this.getTermsOfServiceTemplate(),
+    );
 
     // Cookie Policy Template
-    this.registerTemplate({
-      id: 'cookie-policy-standard',
-      name: 'Standard Cookie Policy',
-      description: 'GDPR compliant cookie policy template',
-      type: 'cookie-policy',
-      version: '1.0.0',
-      lastModified: new Date(),
-      author: 'AST Legal Compliance Framework',
-      jurisdiction: 'EU',
-      language: 'en',
-      requiredVariables: ['websiteName', 'companyName', 'contactEmail', 'cookieTypes'],
-      optionalVariables: ['cookieSettings', 'analyticsProvider', 'advertisingPartners'],
-      tags: ['gdpr', 'cookies', 'privacy']
-    }, this.getCookiePolicyTemplate());
+    this.registerTemplate(
+      {
+        id: "cookie-policy-standard",
+        name: "Standard Cookie Policy",
+        description: "GDPR compliant cookie policy template",
+        type: "cookie-policy",
+        version: "1.0.0",
+        lastModified: new Date(),
+        author: "AST Legal Compliance Framework",
+        jurisdiction: "EU",
+        language: "en",
+        requiredVariables: [
+          "websiteName",
+          "companyName",
+          "contactEmail",
+          "cookieTypes",
+        ],
+        optionalVariables: [
+          "cookieSettings",
+          "analyticsProvider",
+          "advertisingPartners",
+        ],
+        tags: ["gdpr", "cookies", "privacy"],
+      },
+      this.getCookiePolicyTemplate(),
+    );
 
-    console.log(`Initialized ${this.templates.size} built-in legal document templates`);
+    // console.log(`Initialized ${this.templates.size} built-in legal document templates`);
   }
 
   /**
@@ -157,34 +209,48 @@ export class LegalDocumentTemplateEngine {
    */
   private initializeCustomFunctions(): void {
     // Date formatting function
-    this.customFunctions.set('formatDate', (date: Date | string, _format: string = 'MMMM dd, yyyy') => {
-      const d = typeof date === 'string' ? new Date(date) : date;
-      return d.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    });
+    this.customFunctions.set(
+      "formatDate",
+      (date: Date | string, _format = "MMMM dd, yyyy") => {
+        const d = typeof date === "string" ? new Date(date) : date;
+        return d.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      },
+    );
 
     // List formatting function
-    this.customFunctions.set('formatList', (items: string[], type: 'bullet' | 'numbered' = 'bullet') => {
-      if (type === 'numbered') {
-        return items.map((item, index) => `${index + 1}. ${item}`).join('\n');
-      } else {
-        return items.map(item => `• ${item}`).join('\n');
-      }
-    });
+    this.customFunctions.set(
+      "formatList",
+      (items: string[], type: "bullet" | "numbered" = "bullet") => {
+        if (type === "numbered") {
+          return items.map((item, index) => `${index + 1}. ${item}`).join("\n");
+        } else {
+          return items.map((item) => `• ${item}`).join("\n");
+        }
+      },
+    );
 
     // Conditional inclusion function
-    this.customFunctions.set('ifDefined', (value: any, trueText: string, falseText: string = '') => {
-      return value !== undefined && value !== null && value !== '' ? trueText : falseText;
-    });
+    this.customFunctions.set(
+      "ifDefined",
+      (value: unknown, trueText: string, falseText = "") => {
+        return value !== undefined && value !== null && value !== ""
+          ? trueText
+          : falseText;
+      },
+    );
 
     // Word count estimator
-    this.customFunctions.set('estimateReadingTime', (text: string, wordsPerMinute: number = 200) => {
-      const wordCount = text.split(/\s+/).length;
-      return Math.ceil(wordCount / wordsPerMinute);
-    });
+    this.customFunctions.set(
+      "estimateReadingTime",
+      (text: string, wordsPerMinute = 200) => {
+        const wordCount = text.split(/\s+/).length;
+        return Math.ceil(wordCount / wordsPerMinute);
+      },
+    );
   }
 
   /**
@@ -193,7 +259,7 @@ export class LegalDocumentTemplateEngine {
   registerTemplate(metadata: TemplateMetadata, content: string): void {
     this.templates.set(metadata.id, metadata);
     this.templateContent.set(metadata.id, content);
-    console.log(`Registered legal document template: ${metadata.name} (${metadata.id})`);
+    // console.log(`Registered legal document template: ${metadata.name} (${metadata.id})`);
   }
 
   /**
@@ -207,7 +273,7 @@ export class LegalDocumentTemplateEngine {
    * Get templates by type
    */
   getTemplatesByType(type: DocumentType): TemplateMetadata[] {
-    return Array.from(this.templates.values()).filter(t => t.type === type);
+    return Array.from(this.templates.values()).filter((t) => t.type === type);
   }
 
   /**
@@ -220,24 +286,39 @@ export class LegalDocumentTemplateEngine {
   /**
    * Validate template variables
    */
-  validateTemplate(templateId: string, variables: TemplateVariables): TemplateValidationResult {
+  validateTemplate(
+    templateId: string,
+    variables: TemplateVariables,
+  ): TemplateValidationResult {
     const template = this.templates.get(templateId);
     if (!template) {
       throw new Error(`Template not found: ${templateId}`);
     }
 
     const providedVars = Object.keys(variables);
-    const missingVariables = template.requiredVariables.filter(v => !providedVars.includes(v));
+    const missingVariables = template.requiredVariables.filter(
+      (v) => !providedVars.includes(v),
+    );
     const invalidVariables: string[] = [];
     const warnings: string[] = [];
     const suggestions: string[] = [];
 
     // Check for invalid variable types or formats
     for (const [key, value] of Object.entries(variables)) {
-      if (key === 'lastUpdated' && !(value instanceof Date) && typeof value !== 'string') {
-        invalidVariables.push(`${key}: Expected Date or string, got ${typeof value}`);
+      if (
+        key === "lastUpdated" &&
+        !(value instanceof Date) &&
+        typeof value !== "string"
+      ) {
+        invalidVariables.push(
+          `${key}: Expected Date or string, got ${typeof value}`,
+        );
       }
-      if (key === 'contactEmail' && typeof value === 'string' && !this.isValidEmail(value)) {
+      if (
+        key === "contactEmail" &&
+        typeof value === "string" &&
+        !this.isValidEmail(value)
+      ) {
         invalidVariables.push(`${key}: Invalid email format`);
       }
     }
@@ -245,13 +326,20 @@ export class LegalDocumentTemplateEngine {
     // Generate suggestions for missing optional variables
     for (const optionalVar of template.optionalVariables) {
       if (!providedVars.includes(optionalVar)) {
-        suggestions.push(`Consider providing ${optionalVar} for a more comprehensive document`);
+        suggestions.push(
+          `Consider providing ${optionalVar} for a more comprehensive document`,
+        );
       }
     }
 
     // Check jurisdiction-specific requirements
-    if (template.jurisdiction?.includes('EU') && !variables.dataRetentionPeriod) {
-      warnings.push('GDPR compliance: Consider specifying data retention periods');
+    if (
+      template.jurisdiction?.includes("EU") &&
+      !variables.dataRetentionPeriod
+    ) {
+      warnings.push(
+        "GDPR compliance: Consider specifying data retention periods",
+      );
     }
 
     return {
@@ -259,7 +347,7 @@ export class LegalDocumentTemplateEngine {
       missingVariables,
       invalidVariables,
       warnings,
-      suggestions
+      suggestions,
     };
   }
 
@@ -269,7 +357,7 @@ export class LegalDocumentTemplateEngine {
   async generateDocument(
     templateId: string,
     variables: TemplateVariables,
-    options: DocumentGenerationOptions = { outputFormat: 'markdown' }
+    options: DocumentGenerationOptions = { outputFormat: "markdown" },
   ): Promise<GeneratedDocument> {
     const template = this.templates.get(templateId);
     const content = this.templateContent.get(templateId);
@@ -278,19 +366,25 @@ export class LegalDocumentTemplateEngine {
       throw new Error(`Template not found: ${templateId}`);
     }
 
-    console.log(`Generating ${template.type} document from template: ${template.name}`);
+    // console.log(`Generating ${template.type} document from template: ${template.name}`);
 
     // Validate template variables
     const validation = this.validateTemplate(templateId, variables);
     if (!validation.isValid) {
-      throw new Error(`Template validation failed: ${validation.missingVariables.join(', ')}`);
+      throw new Error(
+        `Template validation failed: ${validation.missingVariables.join(", ")}`,
+      );
     }
 
     // Process template content
     let processedContent = this.processTemplate(content, variables);
 
     // Apply formatting based on output format
-    processedContent = await this.formatOutput(processedContent, options, template);
+    processedContent = await this.formatOutput(
+      processedContent,
+      options,
+      template,
+    );
 
     // Calculate metadata
     const wordCount = processedContent.split(/\s+/).length;
@@ -303,24 +397,29 @@ export class LegalDocumentTemplateEngine {
         templateId,
         generatedAt: new Date(),
         wordCount,
-        estimatedReadingTime
+        estimatedReadingTime,
       },
-      warnings: validation.warnings
+      warnings: validation.warnings,
     };
   }
 
   /**
    * Process template content with variable substitution
    */
-  private processTemplate(content: string, variables: TemplateVariables): string {
+  private processTemplate(
+    content: string,
+    variables: TemplateVariables,
+  ): string {
     let processed = content;
 
     // Simple variable substitution {{variable}}
     processed = processed.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
       const value = variables[varName];
-      if (value === undefined) return match;
+      if (value === undefined) {
+        return match;
+      }
       if (Array.isArray(value)) {
-        return value.join(', ');
+        return value.join(", ");
       }
       if (value instanceof Date) {
         return value.toLocaleDateString();
@@ -329,47 +428,74 @@ export class LegalDocumentTemplateEngine {
     });
 
     // Advanced function calls {{function:arg1:arg2}}
-    processed = processed.replace(/\{\{(\w+):([^}]+)\}\}/g, (match, funcName, args) => {
-      const func = this.customFunctions.get(funcName);
-      if (!func) return match;
-      
-      const argList = args.split(':').map((arg: string) => {
-        // Try to resolve variable reference
-        if (variables[arg] !== undefined) return variables[arg];
-        // Parse as literal
-        if (arg === 'true') return true;
-        if (arg === 'false') return false;
-        if (/^\d+$/.test(arg)) return parseInt(arg);
-        return arg;
-      });
-      
-      try {
-        return func(...argList);
-      } catch (error) {
-        console.warn(`Error executing template function ${funcName}:`, error);
-        return match;
-      }
-    });
+    processed = processed.replace(
+      /\{\{(\w+):([^}]+)\}\}/g,
+      (match, funcName, args) => {
+        const func = this.customFunctions.get(funcName);
+        if (!func) {
+          return match;
+        }
+
+        const argList = args.split(":").map((arg: string) => {
+          // Try to resolve variable reference
+          if (variables[arg] !== undefined) {
+            return variables[arg];
+          }
+          // Parse as literal
+          if (arg === "true") {
+            return true;
+          }
+          if (arg === "false") {
+            return false;
+          }
+          if (/^\d+$/.test(arg)) {
+            return parseInt(arg);
+          }
+          return arg;
+        });
+
+        try {
+          return func(...argList);
+        } catch (_error) {
+          // console.warn(`Error executing template function ${funcName}:`, error);
+          return match;
+        }
+      },
+    );
 
     // Conditional blocks {{#if condition}}...{{/if}}
-    processed = processed.replace(/\{\{#if\s+(\w+)\}\}(.*?)\{\{\/if\}\}/gs, (_match, condition, content) => {
-      const value = variables[condition];
-      const isTrue = value !== undefined && value !== null && value !== '' && value !== false;
-      return isTrue ? content : '';
-    });
+    processed = processed.replace(
+      /\{\{#if\s+(\w+)\}\}(.*?)\{\{\/if\}\}/gs,
+      (_match, condition, content) => {
+        const value = variables[condition];
+        const isTrue =
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          value !== false;
+        return isTrue ? content : "";
+      },
+    );
 
     // Loop blocks {{#each array}}...{{/each}}
-    processed = processed.replace(/\{\{#each\s+(\w+)\}\}(.*?)\{\{\/each\}\}/gs, (_match, arrayName, itemTemplate) => {
-      const array = variables[arrayName];
-      if (!Array.isArray(array)) return '';
-      
-      return array.map((item, index) => {
-        let itemContent = itemTemplate;
-        itemContent = itemContent.replace(/\{\{this\}\}/g, String(item));
-        itemContent = itemContent.replace(/\{\{@index\}\}/g, String(index));
-        return itemContent;
-      }).join('');
-    });
+    processed = processed.replace(
+      /\{\{#each\s+(\w+)\}\}(.*?)\{\{\/each\}\}/gs,
+      (_match, arrayName, itemTemplate) => {
+        const array = variables[arrayName];
+        if (!Array.isArray(array)) {
+          return "";
+        }
+
+        return array
+          .map((item, index) => {
+            let itemContent = itemTemplate;
+            itemContent = itemContent.replace(/\{\{this\}\}/g, String(item));
+            itemContent = itemContent.replace(/\{\{@index\}\}/g, String(index));
+            return itemContent;
+          })
+          .join("");
+      },
+    );
 
     return processed;
   }
@@ -380,21 +506,21 @@ export class LegalDocumentTemplateEngine {
   private async formatOutput(
     content: string,
     options: DocumentGenerationOptions,
-    template: TemplateMetadata
+    template: TemplateMetadata,
   ): Promise<string> {
     let formatted = content;
 
     switch (options.outputFormat) {
-      case 'html':
+      case "html":
         formatted = this.formatAsHTML(formatted, options, template);
         break;
-      case 'plain-text':
+      case "plain-text":
         formatted = this.formatAsPlainText(formatted);
         break;
-      case 'pdf':
+      case "pdf":
         // PDF generation would require additional libraries
-        throw new Error('PDF output not yet implemented');
-      case 'markdown':
+        throw new Error("PDF output not yet implemented");
+      case "markdown":
       default:
         // Already in markdown format
         break;
@@ -417,18 +543,22 @@ export class LegalDocumentTemplateEngine {
   /**
    * Format content as HTML
    */
-  private formatAsHTML(content: string, options: DocumentGenerationOptions, template: TemplateMetadata): string {
+  private formatAsHTML(
+    content: string,
+    options: DocumentGenerationOptions,
+    template: TemplateMetadata,
+  ): string {
     // Basic markdown to HTML conversion
     let html = content
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*)\*/g, '<em>$1</em>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>');
+      .replace(/^# (.*$)/gim, "<h1>$1</h1>")
+      .replace(/^## (.*$)/gim, "<h2>$1</h2>")
+      .replace(/^### (.*$)/gim, "<h3>$1</h3>")
+      .replace(/\*\*(.*)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.*)\*/g, "<em>$1</em>")
+      .replace(/\n\n/g, "</p><p>")
+      .replace(/\n/g, "<br>");
 
-    html = '<p>' + html + '</p>';
+    html = "<p>" + html + "</p>";
 
     // Wrap in HTML document structure
     const styles = options.customStyles || this.getDefaultStyles();
@@ -443,12 +573,12 @@ export class LegalDocumentTemplateEngine {
     <style>${styles}</style>
 </head>
 <body>
-    ${options.headerFooter?.header ? `<header>${options.headerFooter.header}</header>` : ''}
+    ${options.headerFooter?.header ? `<header>${options.headerFooter.header}</header>` : ""}
     <main>
         <h1>${title}</h1>
         ${html}
     </main>
-    ${options.headerFooter?.footer ? `<footer>${options.headerFooter.footer}</footer>` : ''}
+    ${options.headerFooter?.footer ? `<footer>${options.headerFooter.footer}</footer>` : ""}
 </body>
 </html>`;
   }
@@ -458,10 +588,10 @@ export class LegalDocumentTemplateEngine {
    */
   private formatAsPlainText(content: string): string {
     return content
-      .replace(/^#+ /gm, '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+      .replace(/^#+ /gm, "")
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
   }
 
   /**
@@ -493,46 +623,44 @@ export class LegalDocumentTemplateEngine {
    * Load template from file
    */
   async loadTemplateFromFile(filePath: string): Promise<void> {
-    try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      const fileName = path.basename(filePath, path.extname(filePath));
-      
-      // Try to parse metadata from file header
-      const metadataMatch = content.match(/^---\n(.*?)\n---\n/s);
-      let metadata: TemplateMetadata;
-      let templateContent = content;
-      
-      if (metadataMatch) {
-        try {
-          const metadataStr = metadataMatch[1];
-          if (metadataStr) {
-            metadata = JSON.parse(metadataStr);
-            templateContent = content.substring(metadataMatch[0].length);
-          } else {
-            metadata = this.createDefaultMetadata(fileName);
-          }
-        } catch (error) {
-          console.warn(`Failed to parse metadata from ${filePath}:`, error);
+    const content = await fs.readFile(filePath, "utf-8");
+    const fileName = path.basename(filePath, path.extname(filePath));
+
+    // Try to parse metadata from file header
+    const metadataMatch = content.match(/^---\n(.*?)\n---\n/s);
+    let metadata: TemplateMetadata;
+    let templateContent = content;
+
+    if (metadataMatch) {
+      try {
+        const metadataStr = metadataMatch[1];
+        if (metadataStr) {
+          metadata = JSON.parse(metadataStr);
+          templateContent = content.substring(metadataMatch[0].length);
+        } else {
           metadata = this.createDefaultMetadata(fileName);
         }
-      } else {
+      } catch (_error) {
+        // console.warn(`Failed to parse metadata from ${filePath}:`, error);
         metadata = this.createDefaultMetadata(fileName);
       }
-
-      this.registerTemplate(metadata, templateContent);
-    } catch (error) {
-      console.error(`Failed to load template from ${filePath}:`, error);
-      throw error;
+    } else {
+      metadata = this.createDefaultMetadata(fileName);
     }
+
+    this.registerTemplate(metadata, templateContent);
   }
 
   /**
    * Save template to file
    */
-  async saveTemplateToFile(templateId: string, filePath: string): Promise<void> {
+  async saveTemplateToFile(
+    templateId: string,
+    filePath: string,
+  ): Promise<void> {
     const template = this.templates.get(templateId);
     const content = this.templateContent.get(templateId);
-    
+
     if (!template || !content) {
       throw new Error(`Template not found: ${templateId}`);
     }
@@ -542,8 +670,8 @@ ${JSON.stringify(template, null, 2)}
 ---
 ${content}`;
 
-    await fs.writeFile(filePath, fileContent, 'utf-8');
-    console.log(`Template saved to: ${filePath}`);
+    await fs.writeFile(filePath, fileContent, "utf-8");
+    // console.log(`Template saved to: ${filePath}`);
   }
 
   /**
@@ -552,16 +680,18 @@ ${content}`;
   private createDefaultMetadata(fileName: string): TemplateMetadata {
     return {
       id: fileName,
-      name: fileName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      name: fileName
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase()),
       description: `Custom template: ${fileName}`,
-      type: 'custom',
-      version: '1.0.0',
+      type: "custom",
+      version: "1.0.0",
       lastModified: new Date(),
-      author: 'Custom',
-      language: 'en',
+      author: "Custom",
+      language: "en",
       requiredVariables: [],
       optionalVariables: [],
-      tags: ['custom']
+      tags: ["custom"],
     };
   }
 

@@ -265,14 +265,14 @@ async function validateRelease() {
     const nextVersion = await versionManager.calculateNextVersion(
       currentVersion,
       releaseType,
-      changes.entries
+      changes.entries,
     );
 
     console.log(
-      `Validation successful: ${currentVersion} → ${nextVersion} (${releaseType})`
+      `Validation successful: ${currentVersion} → ${nextVersion} (${releaseType})`,
     );
     console.log(
-      `Changes: ${changes.entries.length} commits, ${changes.breakingChanges.length} breaking`
+      `Changes: ${changes.entries.length} commits, ${changes.breakingChanges.length} breaking`,
     );
 
     // Create and validate release plan
@@ -925,7 +925,7 @@ async function interactiveRelease() {
 
     console.log(chalk.gray(`Current version: ${currentVersion}`));
     console.log(
-      chalk.gray(`Pending changes: ${changes.entries.length} commits\n`)
+      chalk.gray(`Pending changes: ${changes.entries.length} commits\n`),
     );
 
     if (changes.entries.length === 0) {
@@ -936,11 +936,11 @@ async function interactiveRelease() {
     // Show change summary
     console.log(chalk.bold("Change Summary:"));
     console.log(
-      `  ${chalk.green("✨ Features:")} ${changes.newFeatures.length}`
+      `  ${chalk.green("✨ Features:")} ${changes.newFeatures.length}`,
     );
     console.log(`  ${chalk.blue("🐛 Bug fixes:")} ${changes.bugFixes.length}`);
     console.log(
-      `  ${chalk.red("💥 Breaking:")} ${changes.breakingChanges.length}`
+      `  ${chalk.red("💥 Breaking:")} ${changes.breakingChanges.length}`,
     );
     console.log();
 
@@ -948,10 +948,10 @@ async function interactiveRelease() {
     const releaseTypeChoices = [
       {
         name: `${chalk.red(
-          "Major"
+          "Major",
         )} - Breaking changes (${currentVersion} → ${incrementVersion(
           currentVersion,
-          "major"
+          "major",
         )})`,
         value: ReleaseType.MAJOR,
         disabled:
@@ -961,10 +961,10 @@ async function interactiveRelease() {
       },
       {
         name: `${chalk.yellow(
-          "Minor"
+          "Minor",
         )} - New features (${currentVersion} → ${incrementVersion(
           currentVersion,
-          "minor"
+          "minor",
         )})`,
         value: ReleaseType.MINOR,
         disabled:
@@ -972,28 +972,28 @@ async function interactiveRelease() {
       },
       {
         name: `${chalk.green(
-          "Patch"
+          "Patch",
         )} - Bug fixes (${currentVersion} → ${incrementVersion(
           currentVersion,
-          "patch"
+          "patch",
         )})`,
         value: ReleaseType.PATCH,
       },
       {
         name: `${chalk.blue(
-          "Prerelease"
+          "Prerelease",
         )} - Alpha/Beta (${currentVersion} → ${incrementVersion(
           currentVersion,
-          "prerelease"
+          "prerelease",
         )})`,
         value: ReleaseType.PRERELEASE,
       },
       {
         name: `${chalk.magenta(
-          "Hotfix"
+          "Hotfix",
         )} - Emergency fix (${currentVersion} → ${incrementVersion(
           currentVersion,
-          "hotfix"
+          "hotfix",
         )})`,
         value: ReleaseType.HOTFIX,
       },
@@ -1013,7 +1013,7 @@ async function interactiveRelease() {
     const nextVersion = await versionManager.calculateNextVersion(
       currentVersion,
       releaseType,
-      changes.entries
+      changes.entries,
     );
 
     // Custom version option
@@ -1053,7 +1053,7 @@ async function interactiveRelease() {
         message: "Select platforms to publish:",
         choices: availablePlatforms,
         default: availablePlatforms.filter(
-          (p) => config.platforms.find((cp) => cp.name === p)?.enabled
+          (p) => config.platforms.find((cp) => cp.name === p)?.enabled,
         ),
       },
     ]);
@@ -1071,12 +1071,12 @@ async function interactiveRelease() {
     // Final confirmation
     console.log(chalk.bold("\n📋 Release Summary:"));
     console.log(
-      `  Version: ${chalk.bold(currentVersion)} → ${chalk.bold(targetVersion)}`
+      `  Version: ${chalk.bold(currentVersion)} → ${chalk.bold(targetVersion)}`,
     );
     console.log(`  Type: ${chalk.bold(releaseType)}`);
     console.log(`  Platforms: ${selectedPlatforms.join(", ")}`);
     console.log(
-      `  Mode: ${dryRun ? chalk.yellow("DRY RUN") : chalk.green("LIVE")}`
+      `  Mode: ${dryRun ? chalk.yellow("DRY RUN") : chalk.green("LIVE")}`,
     );
     console.log();
 
@@ -1122,7 +1122,9 @@ async function interactiveRelease() {
 
     if (result.success) {
       console.log(
-        chalk.green(`\n✅ Release ${result.version} completed successfully! 🎉`)
+        chalk.green(
+          `\n✅ Release ${result.version} completed successfully! 🎉`,
+        ),
       );
       console.log(`Duration: ${result.duration}ms`);
       if (result.publishResults) {
@@ -1131,7 +1133,7 @@ async function interactiveRelease() {
           console.log(
             `  - ${pr.platform}: ${pr.success ? "✅" : "❌"} ${
               pr.url || pr.error || ""
-            }`
+            }`,
           );
         });
       }

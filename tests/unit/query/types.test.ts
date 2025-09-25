@@ -2,7 +2,7 @@
  * @fileoverview Tests for query system type definitions
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import type {
   MCPQuery,
   QueryResponse,
@@ -17,77 +17,79 @@ import type {
   MCPResponse,
   BatchQueryRequest,
   QuerySystemConfig,
-} from '../../../packages/ast-mcp-server/src/query/types.js';
+} from "../../../packages/ast-mcp-server/src/query/types.js";
 
-describe('Query System Types', () => {
-  it('should define MCPQuery with required properties', () => {
+describe("Query System Types", () => {
+  it("should define MCPQuery with required properties", () => {
     const query: MCPQuery = {
-      type: 'semantic',
-      text: 'find function that handles user authentication',
+      type: "semantic",
+      text: "find function that handles user authentication",
     };
 
-    expect(query.type).toBe('semantic');
-    expect(query.text).toBe('find function that handles user authentication');
+    expect(query.type).toBe("semantic");
+    expect(query.text).toBe("find function that handles user authentication");
   });
 
-  it('should define MCPQuery with optional properties', () => {
+  it("should define MCPQuery with optional properties", () => {
     const query: MCPQuery = {
-      type: 'semantic',
-      text: 'find function that handles user authentication',
+      type: "semantic",
+      text: "find function that handles user authentication",
       options: {
-        fileFilter: ['src/**/*.ts'],
-        languageFilter: ['typescript'],
+        fileFilter: ["src/**/*.ts"],
+        languageFilter: ["typescript"],
         confidenceThreshold: 0.8,
         includePrivate: false,
-        rankingMode: 'relevance',
+        rankingMode: "relevance",
       },
       context: {
-        currentFile: 'src/auth/auth.service.ts',
+        currentFile: "src/auth/auth.service.ts",
         cursorPosition: 42,
-        selectedText: 'authenticateUser',
-        recentFiles: ['src/auth/auth.service.ts', 'src/user/user.model.ts'],
+        selectedText: "authenticateUser",
+        recentFiles: ["src/auth/auth.service.ts", "src/user/user.model.ts"],
       },
       maxResults: 20,
       minScore: 0.7,
     };
 
-    expect(query.options?.fileFilter).toEqual(['src/**/*.ts']);
-    expect(query.context?.currentFile).toBe('src/auth/auth.service.ts');
+    expect(query.options?.fileFilter).toEqual(["src/**/*.ts"]);
+    expect(query.context?.currentFile).toBe("src/auth/auth.service.ts");
     expect(query.maxResults).toBe(20);
     expect(query.minScore).toBe(0.7);
   });
 
-  it('should define QueryResponse structure correctly', () => {
+  it("should define QueryResponse structure correctly", () => {
     const response: QueryResponse = {
       results: [
         {
           annotation: {
-            nodeId: 'node_123',
-            signature: 'authenticateUser(username: string, password: string): Promise<User>',
-            summary: 'Authenticates a user with username and password',
-            filePath: 'src/auth/auth.service.ts',
+            nodeId: "node_123",
+            signature:
+              "authenticateUser(username: string, password: string): Promise<User>",
+            summary: "Authenticates a user with username and password",
+            filePath: "src/auth/auth.service.ts",
             lineNumber: 25,
-            language: 'typescript',
+            language: "typescript",
             confidence: 0.95,
             lastUpdated: new Date(),
           },
           score: 0.89,
-          matchReason: 'High semantic similarity to query text',
-          contextSnippet: 'export class AuthService {\n  async authenticateUser(...)',
-          relatedMatches: ['node_124', 'node_125'],
+          matchReason: "High semantic similarity to query text",
+          contextSnippet:
+            "export class AuthService {\n  async authenticateUser(...)",
+          relatedMatches: ["node_124", "node_125"],
         },
       ],
       totalMatches: 5,
       queryTime: 145,
-      searchStrategy: 'semantic_vector_search',
+      searchStrategy: "semantic_vector_search",
       metadata: {
         vectorSearchTime: 45,
         rankingTime: 32,
         totalCandidates: 50,
-        appliedFilters: ['confidence_threshold', 'file_filter'],
+        appliedFilters: ["confidence_threshold", "file_filter"],
         searchParameters: {
-          embedding: 'codebert-base',
-          similarity: 'cosine',
+          embedding: "codebert-base",
+          similarity: "cosine",
           k: 50,
           ef: 100,
         },
@@ -96,16 +98,16 @@ describe('Query System Types', () => {
 
     expect(response.results).toHaveLength(1);
     expect(response.queryTime).toBe(145);
-    expect(response.searchStrategy).toBe('semantic_vector_search');
+    expect(response.searchStrategy).toBe("semantic_vector_search");
     expect(response.metadata.vectorSearchTime).toBe(45);
     expect(response.results[0].score).toBe(0.89);
   });
 
-  it('should define semantic query options with HNSW parameters', () => {
+  it("should define semantic query options with HNSW parameters", () => {
     const options: SemanticQueryOptions = {
-      fileFilter: ['src/**/*.ts'],
+      fileFilter: ["src/**/*.ts"],
       confidenceThreshold: 0.8,
-      rankingMode: 'relevance',
+      rankingMode: "relevance",
       searchEf: 200,
       useContextBoosting: true,
       includeSimilarResults: true,
@@ -116,12 +118,12 @@ describe('Query System Types', () => {
     expect(options.includeSimilarResults).toBe(true);
   });
 
-  it('should define signature query options correctly', () => {
+  it("should define signature query options correctly", () => {
     const options: SignatureQueryOptions = {
       exactMatch: true,
       fuzzyThreshold: 0.9,
       includeReturnType: true,
-      languageFilter: ['typescript', 'javascript'],
+      languageFilter: ["typescript", "javascript"],
     };
 
     expect(options.exactMatch).toBe(true);
@@ -129,12 +131,12 @@ describe('Query System Types', () => {
     expect(options.includeReturnType).toBe(true);
   });
 
-  it('should define file query options correctly', () => {
+  it("should define file query options correctly", () => {
     const options: FileQueryOptions = {
       recursive: true,
       includeHidden: false,
       maxDepth: 3,
-      fileFilter: ['**/*.ts', '**/*.js'],
+      fileFilter: ["**/*.ts", "**/*.js"],
     };
 
     expect(options.recursive).toBe(true);
@@ -142,45 +144,47 @@ describe('Query System Types', () => {
     expect(options.maxDepth).toBe(3);
   });
 
-  it('should define MCP response format for protocol compliance', () => {
+  it("should define MCP response format for protocol compliance", () => {
     const mcpResponse: MCPResponse = {
-      type: 'query_response',
+      type: "query_response",
       data: {
         matches: [
           {
-            id: 'node_123',
-            signature: 'authenticateUser(username: string, password: string): Promise<User>',
-            summary: 'Authenticates a user with username and password',
-            filePath: 'src/auth/auth.service.ts',
+            id: "node_123",
+            signature:
+              "authenticateUser(username: string, password: string): Promise<User>",
+            summary: "Authenticates a user with username and password",
+            filePath: "src/auth/auth.service.ts",
             lineNumber: 25,
             score: 0.89,
-            matchReason: 'High semantic similarity to query text',
-            context: 'export class AuthService {\n  async authenticateUser(...)',
+            matchReason: "High semantic similarity to query text",
+            context:
+              "export class AuthService {\n  async authenticateUser(...)",
           },
         ],
         metadata: {
           totalMatches: 5,
           queryTime: 145,
-          strategy: 'semantic_vector_search',
+          strategy: "semantic_vector_search",
         },
       },
     };
 
-    expect(mcpResponse.type).toBe('query_response');
+    expect(mcpResponse.type).toBe("query_response");
     expect(mcpResponse.data.matches).toHaveLength(1);
     expect(mcpResponse.data.metadata.totalMatches).toBe(5);
   });
 
-  it('should define batch query request structure', () => {
+  it("should define batch query request structure", () => {
     const batchRequest: BatchQueryRequest = {
       queries: [
         {
-          type: 'semantic',
-          text: 'authentication function',
+          type: "semantic",
+          text: "authentication function",
         },
         {
-          type: 'signature',
-          text: 'authenticateUser',
+          type: "signature",
+          text: "authenticateUser",
         },
       ],
       options: {
@@ -195,7 +199,7 @@ describe('Query System Types', () => {
     expect(batchRequest.options?.failOnError).toBe(false);
   });
 
-  it('should define query system configuration structure', () => {
+  it("should define query system configuration structure", () => {
     const config: QuerySystemConfig = {
       cache: {
         maxSize: 1000,
@@ -209,7 +213,7 @@ describe('Query System Types', () => {
         maxConcurrentQueries: 10,
       },
       ranking: {
-        defaultMode: 'relevance',
+        defaultMode: "relevance",
         contextBoostFactor: 0.3,
         confidenceWeight: 0.2,
         recencyWeight: 0.1,
@@ -224,11 +228,11 @@ describe('Query System Types', () => {
 
     expect(config.cache.maxSize).toBe(1000);
     expect(config.performance.maxQueryTime).toBe(200);
-    expect(config.ranking.defaultMode).toBe('relevance');
+    expect(config.ranking.defaultMode).toBe("relevance");
     expect(config.search.defaultMaxResults).toBe(20);
   });
 
-  it('should handle query stats structure for monitoring', () => {
+  it("should handle query stats structure for monitoring", () => {
     const stats: QueryStats = {
       totalQueries: 1234,
       averageQueryTime: 156.7,

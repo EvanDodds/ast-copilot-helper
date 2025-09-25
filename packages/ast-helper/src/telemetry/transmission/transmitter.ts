@@ -3,9 +3,9 @@
  * @description HTTP-based implementation for secure telemetry data transmission
  */
 
-import { gzip } from 'zlib';
-import { promisify } from 'util';
-import {
+import { gzip } from "zlib";
+import { promisify } from "util";
+import type {
   TelemetryTransmitter,
   TransmissionResult,
   ConnectionStatus,
@@ -13,12 +13,12 @@ import {
   TransmissionConfig,
   TransmissionFailure,
   TransmissionMetadata,
-  DEFAULT_TRANSMISSION_CONFIG
-} from './types.js';
-import { StoredEvent } from '../storage/types.js';
-import { HttpRetryManager } from './retry.js';
-import { DiskOfflineQueue } from './offline-queue.js';
-import { RateLimiter } from './rate-limiter.js';
+} from "./types.js";
+import { DEFAULT_TRANSMISSION_CONFIG } from "./types.js";
+import type { StoredEvent } from "../storage/types.js";
+import { HttpRetryManager } from "./retry.js";
+import { DiskOfflineQueue } from "./offline-queue.js";
+import { RateLimiter } from "./rate-limiter.js";
 
 const gzipAsync = promisify(gzip);
 
@@ -39,7 +39,7 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
     this.retryManager = new HttpRetryManager(this.config.retry);
     this.offlineQueue = new DiskOfflineQueue(this.config.offlineQueue);
     this.rateLimiter = new RateLimiter(this.config.rateLimit);
-    
+
     // Initialize statistics
     this.stats = {
       totalAttempts: 0,
@@ -54,7 +54,7 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
       connectionStatus: {
         connected: false,
         lastConnected: undefined,
-        error: undefined
+        error: undefined,
       },
       retryStats: {
         totalAttempts: 0,
@@ -62,10 +62,10 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
         exhaustedRetries: 0,
         averageAttempts: 0,
         retryReasons: {},
-        successRateByAttempt: {}
+        successRateByAttempt: {},
       },
       errorBreakdown: {},
-      hourlyRates: {}
+      hourlyRates: {},
     };
   }
 
@@ -91,7 +91,9 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
 
       this.initialized = true;
     } catch (error) {
-      throw new Error(`Failed to initialize HTTP transmitter: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to initialize HTTP transmitter: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -107,7 +109,7 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
       try {
         await this.processOfflineQueue();
       } catch (error) {
-        console.error('Automatic transmission failed:', error);
+        console.error("Automatic transmission failed:", error);
       }
     }, this.config.transmissionInterval);
   }
@@ -134,10 +136,10 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
     // Process queued events in batches
     const batchSize = Math.min(this.config.maxBatchSize, queueInfo.size);
     const events = await this.offlineQueue.dequeue(batchSize);
-    
+
     if (events.length > 0) {
       const result = await this.transmit(events);
-      
+
       // Remove successfully transmitted events from queue
       if (result.successfulEvents.length > 0) {
         // In a real implementation, we'd need to track which events were dequeued
@@ -151,7 +153,7 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
    */
   async transmit(events: StoredEvent[]): Promise<TransmissionResult> {
     if (!this.initialized) {
-      throw new Error('Transmitter not initialized');
+      throw new Error("Transmitter not initialized");
     }
 
     if (events.length === 0) {
@@ -167,7 +169,7 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
 
       // Prepare payload
       const payload = await this.preparePayload(events);
-      
+
       // Perform transmission with retry logic
       const result = await this.retryManager.execute(
         () => this.performHttpTransmission(payload, events),
@@ -176,26 +178,29 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
           maxAttempts: this.config.retry.maxAttempts,
           baseDelay: this.config.retry.baseDelay,
           maxDelay: this.config.retry.maxDelay,
-          strategy: this.config.retry.strategy
-        }
+          strategy: this.config.retry.strategy,
+        },
       );
 
       const duration = Date.now() - startTime;
-      
+
       // Update statistics
       this.updateStatistics(result, duration, payload.length);
-      
-      return result;
 
+      return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      const failureResult = this.createFailureResult(events, error instanceof Error ? error : new Error('Unknown error'), duration);
-      
+      const failureResult = this.createFailureResult(
+        events,
+        error instanceof Error ? error : new Error("Unknown error"),
+        duration,
+      );
+
       // Queue failed events for offline transmission if enabled
       if (this.config.offlineQueue.enabled) {
         await this.offlineQueue.enqueue(events);
       }
-      
+
       this.updateStatistics(failureResult, duration, 0);
       return failureResult;
     }
@@ -206,7 +211,7 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
    */
   private async preparePayload(events: StoredEvent[]): Promise<string> {
     // Convert events to transmission format
-    const transmissionEvents = events.map(event => ({
+    const transmissionEvents = events.map((event) => ({
       id: event.id,
       sessionId: event.sessionId,
       timestamp: event.timestamp.toISOString(),
@@ -214,24 +219,27 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
       category: event.category,
       privacyLevel: event.privacyLevel,
       data: (event as any).data || {},
-      metadata: event.metadata
+      metadata: event.metadata,
     }));
 
     const payload = JSON.stringify({
-      version: '1.0',
+      version: "1.0",
       timestamp: new Date().toISOString(),
       events: transmissionEvents,
       metadata: {
         batchSize: events.length,
         compression: this.config.enableCompression,
-        source: 'ast-copilot-helper'
-      }
+        source: "ast-copilot-helper",
+      },
     });
 
     // Apply compression if enabled and payload is large enough
-    if (this.config.enableCompression && payload.length > this.config.compressionThreshold) {
-      const compressed = await gzipAsync(Buffer.from(payload, 'utf8'));
-      return compressed.toString('base64');
+    if (
+      this.config.enableCompression &&
+      payload.length > this.config.compressionThreshold
+    ) {
+      const compressed = await gzipAsync(Buffer.from(payload, "utf8"));
+      return compressed.toString("base64");
     }
 
     return payload;
@@ -240,24 +248,27 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
   /**
    * Perform actual HTTP transmission
    */
-  private async performHttpTransmission(payload: string, events: StoredEvent[]): Promise<TransmissionResult> {
+  private async performHttpTransmission(
+    payload: string,
+    events: StoredEvent[],
+  ): Promise<TransmissionResult> {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'User-Agent': 'ast-copilot-helper/1.0',
-      ...this.config.headers
+      "Content-Type": "application/json",
+      "User-Agent": "ast-copilot-helper/1.0",
+      ...this.config.headers,
     };
 
     // Add compression header if payload is compressed
-    if (payload.startsWith('{')) {
+    if (payload.startsWith("{")) {
       // Not compressed
     } else {
-      headers['Content-Encoding'] = 'gzip';
-      headers['Content-Type'] = 'application/json; charset=utf-8';
+      headers["Content-Encoding"] = "gzip";
+      headers["Content-Type"] = "application/json; charset=utf-8";
     }
 
     // Add authentication if available
     if (this.config.apiKey) {
-      headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+      headers["Authorization"] = `Bearer ${this.config.apiKey}`;
     }
 
     const startTime = Date.now();
@@ -265,10 +276,10 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
     try {
       // Use fetch for HTTP request (available in Node.js 18+)
       const response = await fetch(this.config.endpoint, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: payload,
-        signal: AbortSignal.timeout(this.config.timeout)
+        signal: AbortSignal.timeout(this.config.timeout),
       });
 
       const responseText = await response.text();
@@ -284,46 +295,50 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
 
         const metadata: TransmissionMetadata = {
           transmissionId: responseData.transmissionId || `tx-${Date.now()}`,
-          serverTimestamp: responseData.timestamp ? new Date(responseData.timestamp) : new Date(),
+          serverTimestamp: responseData.timestamp
+            ? new Date(responseData.timestamp)
+            : new Date(),
           serverDuration: responseData.processingTime,
           warnings: responseData.warnings,
-          rateLimit: this.parseRateLimitHeaders(response)
+          rateLimit: this.parseRateLimitHeaders(response),
         };
 
         return {
           success: true,
           transmitted: events.length,
           failed: 0,
-          successfulEvents: events.map(e => e.id),
+          successfulEvents: events.map((e) => e.id),
           failedEvents: [],
           duration: Date.now() - startTime,
           payloadSize: payload.length,
-          metadata
+          metadata,
         };
-
       } else {
         // Handle HTTP error
         throw new Error(`HTTP ${response.status}: ${responseText}`);
       }
-
     } catch (error) {
-      throw new Error(`Transmission failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Transmission failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
   /**
    * Parse rate limit headers from response
    */
-  private parseRateLimitHeaders(response: Response): TransmissionMetadata['rateLimit'] {
-    const remaining = response.headers.get('X-RateLimit-Remaining');
-    const limit = response.headers.get('X-RateLimit-Limit');
-    const reset = response.headers.get('X-RateLimit-Reset');
+  private parseRateLimitHeaders(
+    response: Response,
+  ): TransmissionMetadata["rateLimit"] {
+    const remaining = response.headers.get("X-RateLimit-Remaining");
+    const limit = response.headers.get("X-RateLimit-Limit");
+    const reset = response.headers.get("X-RateLimit-Reset");
 
     if (remaining && limit) {
       return {
         remaining: parseInt(remaining, 10),
         limit: parseInt(limit, 10),
-        resetAt: reset ? new Date(parseInt(reset, 10) * 1000) : new Date()
+        resetAt: reset ? new Date(parseInt(reset, 10) * 1000) : new Date(),
       };
     }
 
@@ -336,15 +351,17 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
   async checkConnection(): Promise<ConnectionStatus> {
     try {
       const startTime = Date.now();
-      
+
       // Perform a lightweight health check
-      const healthCheckUrl = `${this.config.endpoint.replace(/\/+$/, '')}/health`;
+      const healthCheckUrl = `${this.config.endpoint.replace(/\/+$/, "")}/health`;
       const response = await fetch(healthCheckUrl, {
-        method: 'HEAD',
+        method: "HEAD",
         signal: AbortSignal.timeout(this.config.timeout / 2),
-        headers: this.config.apiKey ? {
-          'Authorization': `Bearer ${this.config.apiKey}`
-        } : {}
+        headers: this.config.apiKey
+          ? {
+              Authorization: `Bearer ${this.config.apiKey}`,
+            }
+          : {},
       });
 
       const latency = Date.now() - startTime;
@@ -353,24 +370,33 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
       let serverInfo;
       if (connected) {
         try {
-          const infoResponse = await fetch(`${this.config.endpoint.replace(/\/+$/, '')}/info`, {
-            method: 'GET',
-            signal: AbortSignal.timeout(this.config.timeout / 2),
-            headers: this.config.apiKey ? {
-              'Authorization': `Bearer ${this.config.apiKey}`
-            } : {}
-          });
+          const infoResponse = await fetch(
+            `${this.config.endpoint.replace(/\/+$/, "")}/info`,
+            {
+              method: "GET",
+              signal: AbortSignal.timeout(this.config.timeout / 2),
+              headers: this.config.apiKey
+                ? {
+                    Authorization: `Bearer ${this.config.apiKey}`,
+                  }
+                : {},
+            },
+          );
 
           if (infoResponse.ok) {
             const info: any = await infoResponse.json();
             serverInfo = {
-              version: info.version || 'unknown',
+              version: info.version || "unknown",
               capabilities: info.capabilities || [],
               limits: {
-                maxBatchSize: info.limits?.maxBatchSize || this.config.maxBatchSize,
-                maxPayloadSize: info.limits?.maxPayloadSize || this.config.maxPayloadSize,
-                rateLimitPerMinute: info.limits?.rateLimitPerMinute || this.config.rateLimit.requestsPerMinute
-              }
+                maxBatchSize:
+                  info.limits?.maxBatchSize || this.config.maxBatchSize,
+                maxPayloadSize:
+                  info.limits?.maxPayloadSize || this.config.maxPayloadSize,
+                rateLimitPerMinute:
+                  info.limits?.rateLimitPerMinute ||
+                  this.config.rateLimit.requestsPerMinute,
+              },
             };
           }
         } catch (infoError) {
@@ -381,19 +407,20 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
       const status: ConnectionStatus = {
         connected,
         latency: connected ? latency : undefined,
-        lastConnected: connected ? new Date() : this.stats.connectionStatus.lastConnected,
+        lastConnected: connected
+          ? new Date()
+          : this.stats.connectionStatus.lastConnected,
         error: connected ? undefined : `HTTP ${response.status}`,
-        serverInfo
+        serverInfo,
       };
 
       this.stats.connectionStatus = status;
       return status;
-
     } catch (error) {
       const status: ConnectionStatus = {
         connected: false,
         lastConnected: this.stats.connectionStatus.lastConnected,
-        error: error instanceof Error ? error.message : 'Connection failed'
+        error: error instanceof Error ? error.message : "Connection failed",
       };
 
       this.stats.connectionStatus = status;
@@ -407,13 +434,17 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
   async getStats(): Promise<TransmissionStats> {
     // Update retry stats from retry manager
     this.stats.retryStats = await this.retryManager.getRetryStats();
-    
+
     // Calculate derived statistics
-    this.stats.successRate = this.stats.totalAttempts > 0 ? 
-      (this.stats.totalSuccessful / this.stats.totalAttempts) * 100 : 0;
-    
-    this.stats.averageBatchSize = this.stats.totalSuccessful > 0 ?
-      this.stats.eventsTransmitted / this.stats.totalSuccessful : 0;
+    this.stats.successRate =
+      this.stats.totalAttempts > 0
+        ? (this.stats.totalSuccessful / this.stats.totalAttempts) * 100
+        : 0;
+
+    this.stats.averageBatchSize =
+      this.stats.totalSuccessful > 0
+        ? this.stats.eventsTransmitted / this.stats.totalSuccessful
+        : 0;
 
     return { ...this.stats };
   }
@@ -423,12 +454,12 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
    */
   async updateConfig(config: Partial<TransmissionConfig>): Promise<void> {
     this.config = { ...this.config, ...config };
-    
+
     // Update dependent components
     if (config.retry) {
       this.retryManager.updateConfig(config.retry);
     }
-    
+
     if (config.rateLimit) {
       this.rateLimiter.updateConfig(config.rateLimit);
     }
@@ -469,19 +500,23 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
       successfulEvents: [],
       failedEvents: [],
       duration: 0,
-      payloadSize: 0
+      payloadSize: 0,
     };
   }
 
   /**
    * Create failure transmission result
    */
-  private createFailureResult(events: StoredEvent[], error: Error, duration: number): TransmissionResult {
-    const failures: TransmissionFailure[] = events.map(event => ({
+  private createFailureResult(
+    events: StoredEvent[],
+    error: Error,
+    duration: number,
+  ): TransmissionResult {
+    const failures: TransmissionFailure[] = events.map((event) => ({
       eventId: event.id,
       error: error.message,
       retryable: this.isRetryableError(error),
-      retryAfter: this.calculateRetryDelay(error)
+      retryAfter: this.calculateRetryDelay(error),
     }));
 
     return {
@@ -491,7 +526,7 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
       successfulEvents: [],
       failedEvents: failures,
       duration,
-      payloadSize: 0
+      payloadSize: 0,
     };
   }
 
@@ -500,24 +535,26 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
    */
   private isRetryableError(error: Error): boolean {
     const message = error.message.toLowerCase();
-    
+
     // Network errors are generally retryable
-    if (message.includes('network') || 
-        message.includes('timeout') || 
-        message.includes('connection')) {
+    if (
+      message.includes("network") ||
+      message.includes("timeout") ||
+      message.includes("connection")
+    ) {
       return true;
     }
-    
+
     // HTTP 5xx errors are retryable
     const httpMatch = message.match(/http (\d{3})/);
     if (httpMatch && httpMatch[1]) {
       const statusCode = parseInt(httpMatch[1], 10);
       return this.config.retry.retryableStatusCodes.includes(statusCode);
     }
-    
+
     // Specific error codes
-    return this.config.retry.retryableErrors.some(retryableError => 
-      message.includes(retryableError.toLowerCase())
+    return this.config.retry.retryableErrors.some((retryableError) =>
+      message.includes(retryableError.toLowerCase()),
     );
   }
 
@@ -538,32 +575,39 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
   /**
    * Update transmission statistics
    */
-  private updateStatistics(result: TransmissionResult, duration: number, payloadSize: number): void {
+  private updateStatistics(
+    result: TransmissionResult,
+    duration: number,
+    payloadSize: number,
+  ): void {
     if (result.success) {
       this.stats.totalSuccessful++;
       this.stats.eventsTransmitted += result.transmitted;
       this.stats.lastSuccessfulTransmission = new Date();
     } else {
       this.stats.totalFailed++;
-      
+
       // Update error breakdown
       for (const failure of result.failedEvents) {
         const errorType = this.categorizeError(failure.error);
-        this.stats.errorBreakdown[errorType] = (this.stats.errorBreakdown[errorType] || 0) + 1;
+        this.stats.errorBreakdown[errorType] =
+          (this.stats.errorBreakdown[errorType] || 0) + 1;
       }
     }
 
     this.stats.lastAttempt = new Date();
-    
+
     // Update averages
-    const totalDuration = (this.stats.averageDuration * (this.stats.totalAttempts - 1)) + duration;
+    const totalDuration =
+      this.stats.averageDuration * (this.stats.totalAttempts - 1) + duration;
     this.stats.averageDuration = totalDuration / this.stats.totalAttempts;
-    
+
     this.stats.totalPayloadBytes += payloadSize;
-    
+
     // Update hourly rates
     const currentHour = new Date().toISOString().substr(0, 13); // YYYY-MM-DDTHH
-    this.stats.hourlyRates[currentHour] = (this.stats.hourlyRates[currentHour] || 0) + result.transmitted;
+    this.stats.hourlyRates[currentHour] =
+      (this.stats.hourlyRates[currentHour] || 0) + result.transmitted;
   }
 
   /**
@@ -571,15 +615,27 @@ export class HttpTelemetryTransmitter implements TelemetryTransmitter {
    */
   private categorizeError(error: string): string {
     const lowerError = error.toLowerCase();
-    
-    if (lowerError.includes('timeout')) return 'timeout';
-    if (lowerError.includes('network') || lowerError.includes('connection')) return 'network';
-    if (lowerError.includes('401') || lowerError.includes('unauthorized')) return 'auth';
-    if (lowerError.includes('429') || lowerError.includes('rate limit')) return 'rate_limit';
-    if (lowerError.includes('500') || lowerError.includes('internal server')) return 'server_error';
-    if (lowerError.includes('400') || lowerError.includes('bad request')) return 'client_error';
-    
-    return 'unknown';
+
+    if (lowerError.includes("timeout")) {
+      return "timeout";
+    }
+    if (lowerError.includes("network") || lowerError.includes("connection")) {
+      return "network";
+    }
+    if (lowerError.includes("401") || lowerError.includes("unauthorized")) {
+      return "auth";
+    }
+    if (lowerError.includes("429") || lowerError.includes("rate limit")) {
+      return "rate_limit";
+    }
+    if (lowerError.includes("500") || lowerError.includes("internal server")) {
+      return "server_error";
+    }
+    if (lowerError.includes("400") || lowerError.includes("bad request")) {
+      return "client_error";
+    }
+
+    return "unknown";
   }
 }
 
@@ -590,7 +646,9 @@ export class TransmitterFactory {
   /**
    * Create HTTP transmitter with custom configuration
    */
-  static createHttpTransmitter(config?: Partial<TransmissionConfig>): HttpTelemetryTransmitter {
+  static createHttpTransmitter(
+    config?: Partial<TransmissionConfig>,
+  ): HttpTelemetryTransmitter {
     return new HttpTelemetryTransmitter(config);
   }
 
@@ -599,33 +657,36 @@ export class TransmitterFactory {
    */
   static createDevelopmentTransmitter(): HttpTelemetryTransmitter {
     return new HttpTelemetryTransmitter({
-      endpoint: 'http://localhost:8080/telemetry',
+      endpoint: "http://localhost:8080/telemetry",
       timeout: 5000,
       retry: {
         enabled: true,
         maxAttempts: 1,
         baseDelay: 100,
         maxDelay: 1000,
-        strategy: 'fixed',
+        strategy: "fixed",
         jitter: 0,
         retryableStatusCodes: [429, 500, 502, 503, 504],
-        retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND']
+        retryableErrors: ["ECONNRESET", "ETIMEDOUT", "ENOTFOUND"],
       },
       offlineQueue: {
         enabled: false,
         maxSize: 100,
         maxSizeBytes: 1024 * 1024,
-        storageType: 'memory',
+        storageType: "memory",
         persistent: false,
-        cleanupOnStartup: true
-      }
+        cleanupOnStartup: true,
+      },
     });
   }
 
   /**
    * Create production transmitter
    */
-  static createProductionTransmitter(endpoint: string, apiKey: string): HttpTelemetryTransmitter {
+  static createProductionTransmitter(
+    endpoint: string,
+    apiKey: string,
+  ): HttpTelemetryTransmitter {
     return new HttpTelemetryTransmitter({
       endpoint,
       apiKey,
@@ -635,26 +696,26 @@ export class TransmitterFactory {
         maxAttempts: 5,
         baseDelay: 2000,
         maxDelay: 120000,
-        strategy: 'jittered',
+        strategy: "jittered",
         jitter: 0.2,
         retryableStatusCodes: [429, 500, 502, 503, 504],
-        retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND']
+        retryableErrors: ["ECONNRESET", "ETIMEDOUT", "ENOTFOUND"],
       },
       offlineQueue: {
         enabled: true,
         maxSize: 50000,
         maxSizeBytes: 100 * 1024 * 1024, // 100MB
-        storageType: 'disk',
+        storageType: "disk",
         persistent: true,
-        cleanupOnStartup: true
+        cleanupOnStartup: true,
       },
       rateLimit: {
         enabled: true,
         requestsPerMinute: 120,
         bytesPerMinute: 50 * 1024 * 1024, // 50MB
-        strategy: 'delay',
-        burstLimit: 10
-      }
+        strategy: "delay",
+        burstLimit: 10,
+      },
     });
   }
 }

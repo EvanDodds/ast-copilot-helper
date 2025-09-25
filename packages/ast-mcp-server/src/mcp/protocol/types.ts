@@ -4,14 +4,14 @@
  */
 
 export interface MCPRequest {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id?: string | number | null;
   method: string;
   params?: any;
 }
 
 export interface MCPResponse {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id: string | number | null;
   result?: any;
   error?: MCPError;
@@ -24,7 +24,7 @@ export interface MCPError {
 }
 
 export interface MCPNotification {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   method: string;
   params?: any;
 }
@@ -36,7 +36,7 @@ export enum MCPErrorCode {
   METHOD_NOT_FOUND = -32601,
   INVALID_PARAMS = -32602,
   INTERNAL_ERROR = -32603,
-  
+
   // MCP-specific error codes
   RESOURCE_NOT_FOUND = -32001,
   RESOURCE_UNAVAILABLE = -32002,
@@ -56,7 +56,7 @@ export interface ServerCapabilities {
   prompts?: {
     listChanged?: boolean;
   };
-  logging?: {};
+  logging?: object;
   experimental?: {
     [key: string]: any;
   };
@@ -95,7 +95,7 @@ export interface MCPServerConfig {
   version: string;
   description: string;
   capabilities: ServerCapabilities;
-  transport: 'stdio' | 'websocket' | 'http';
+  transport: "stdio" | "websocket" | "http";
   port?: number;
   maxConnections?: number;
   requestTimeout?: number;
@@ -120,13 +120,16 @@ export interface MCPTool {
   name: string;
   description: string;
   inputSchema?: JSONSchema;
-  handler: (params: Record<string, any>, context?: ToolExecutionContext) => Promise<CallToolResult>;
+  handler: (
+    params: Record<string, any>,
+    context?: ToolExecutionContext,
+  ) => Promise<CallToolResult>;
   capabilities?: ToolCapabilities[];
 }
 
 // Tool request/response types
 export interface CallToolRequest extends MCPRequest {
-  method: 'tools/call';
+  method: "tools/call";
   params: {
     name: string;
     arguments?: Record<string, any>;
@@ -135,7 +138,7 @@ export interface CallToolRequest extends MCPRequest {
 
 export interface CallToolResult {
   content: Array<{
-    type: 'text' | 'image' | 'resource';
+    type: "text" | "image" | "resource";
     text?: string;
     data?: string;
     mimeType?: string;
@@ -145,7 +148,8 @@ export interface CallToolResult {
 
 export interface MCPToolResult extends CallToolResult {
   errorMessage?: string;
-}export interface ToolExecutionContext {
+}
+export interface ToolExecutionContext {
   requestId?: string;
   timestamp: Date;
   clientInfo?: {
@@ -173,13 +177,13 @@ export interface ToolMetadata {
   config: Record<string, any>;
 }
 
-export type ToolCapabilities = 
-  | 'read-only'
-  | 'write'
-  | 'system-access'
-  | 'network-access'
-  | 'file-access'
-  | 'database-access';
+export type ToolCapabilities =
+  | "read-only"
+  | "write"
+  | "system-access"
+  | "network-access"
+  | "file-access"
+  | "database-access";
 
 export interface MCPResource {
   uri: string;

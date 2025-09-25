@@ -1,18 +1,18 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { FileQueryProcessor } from '../../../packages/ast-mcp-server/src/query/file-processor';
-import { FileQuery } from '../../../packages/ast-mcp-server/src/query/types';
-import { ASTDatabaseReader } from '../../../packages/ast-mcp-server/src/database/reader';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { FileQueryProcessor } from "../../../packages/ast-mcp-server/src/query/file-processor";
+import { FileQuery } from "../../../packages/ast-mcp-server/src/query/types";
+import { ASTDatabaseReader } from "../../../packages/ast-mcp-server/src/database/reader";
 
 // Mock the database reader
-vi.mock('../../../packages/ast-mcp-server/src/database/reader');
+vi.mock("../../../packages/ast-mcp-server/src/database/reader");
 
-describe('FileQueryProcessor', () => {
+describe("FileQueryProcessor", () => {
   let processor: FileQueryProcessor;
   let mockDatabaseReader: any;
 
   beforeEach(() => {
     mockDatabaseReader = {
-      isReady: vi.fn().mockReturnValue(true)
+      isReady: vi.fn().mockReturnValue(true),
     };
 
     processor = new FileQueryProcessor(mockDatabaseReader);
@@ -22,11 +22,11 @@ describe('FileQueryProcessor', () => {
     vi.clearAllMocks();
   });
 
-  describe('processQuery', () => {
-    it('should handle basic file queries', async () => {
+  describe("processQuery", () => {
+    it("should handle basic file queries", async () => {
       const query: FileQuery = {
-        type: 'file',
-        text: 'test.ts'
+        type: "file",
+        text: "test.ts",
       };
 
       const result = await processor.processQuery(query);
@@ -39,14 +39,14 @@ describe('FileQueryProcessor', () => {
       expect(result.performance.totalTime).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle queries with file criteria', async () => {
+    it("should handle queries with file criteria", async () => {
       const query: FileQuery = {
-        type: 'file',
-        text: '*.test.ts',
+        type: "file",
+        text: "*.test.ts",
         criteria: {
-          extensions: ['.ts', '.tsx'],
-          includeContent: false
-        }
+          extensions: [".ts", ".tsx"],
+          includeContent: false,
+        },
       };
 
       const result = await processor.processQuery(query);
@@ -57,13 +57,13 @@ describe('FileQueryProcessor', () => {
       expect(result.performance.resultCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle content search queries', async () => {
+    it("should handle content search queries", async () => {
       const query: FileQuery = {
-        type: 'file',
-        text: 'useState',
+        type: "file",
+        text: "useState",
         criteria: {
-          includeContent: true
-        }
+          includeContent: true,
+        },
       };
 
       const result = await processor.processQuery(query);
@@ -74,14 +74,14 @@ describe('FileQueryProcessor', () => {
       expect(result.performance.resultCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle queries with directory filters', async () => {
+    it("should handle queries with directory filters", async () => {
       const query: FileQuery = {
-        type: 'file',
-        text: 'component',
+        type: "file",
+        text: "component",
         criteria: {
-          directories: ['/src/components'],
-          extensions: ['.tsx', '.ts']
-        }
+          directories: ["/src/components"],
+          extensions: [".tsx", ".ts"],
+        },
       };
 
       const result = await processor.processQuery(query);
@@ -92,13 +92,13 @@ describe('FileQueryProcessor', () => {
       expect(result.performance.resultCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle queries with exclude patterns', async () => {
+    it("should handle queries with exclude patterns", async () => {
       const query: FileQuery = {
-        type: 'file',
-        text: '*.js',
+        type: "file",
+        text: "*.js",
         criteria: {
-          excludePatterns: ['*.test.js', '*.spec.js']
-        }
+          excludePatterns: ["*.test.js", "*.spec.js"],
+        },
       };
 
       const result = await processor.processQuery(query);
@@ -109,10 +109,10 @@ describe('FileQueryProcessor', () => {
       expect(result.performance.resultCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle empty search results gracefully', async () => {
+    it("should handle empty search results gracefully", async () => {
       const query: FileQuery = {
-        type: 'file',
-        text: 'nonexistent-file-123456'
+        type: "file",
+        text: "nonexistent-file-123456",
       };
 
       const result = await processor.processQuery(query);
@@ -123,13 +123,13 @@ describe('FileQueryProcessor', () => {
       expect(result.performance.resultCount).toBe(0);
     });
 
-    it('should handle queries with file size limits', async () => {
+    it("should handle queries with file size limits", async () => {
       const query: FileQuery = {
-        type: 'file',
-        text: '*.ts',
+        type: "file",
+        text: "*.ts",
         criteria: {
-          maxFileSize: 10000 // 10KB limit
-        }
+          maxFileSize: 10000, // 10KB limit
+        },
       };
 
       const result = await processor.processQuery(query);
@@ -140,10 +140,10 @@ describe('FileQueryProcessor', () => {
       expect(result.performance.resultCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should include performance metrics in all responses', async () => {
+    it("should include performance metrics in all responses", async () => {
       const query: FileQuery = {
-        type: 'file',
-        text: 'test'
+        type: "file",
+        text: "test",
       };
 
       const result = await processor.processQuery(query);
@@ -158,34 +158,37 @@ describe('FileQueryProcessor', () => {
     });
   });
 
-  describe('initialization', () => {
-    it('should initialize with database reader', () => {
+  describe("initialization", () => {
+    it("should initialize with database reader", () => {
       expect(processor).toBeDefined();
       expect(processor).toBeInstanceOf(FileQueryProcessor);
     });
 
-    it('should initialize with custom configuration', () => {
+    it("should initialize with custom configuration", () => {
       const customConfig = {
         maxResults: 50,
         caseSensitive: true,
-        includeHidden: true
+        includeHidden: true,
       };
 
-      const customProcessor = new FileQueryProcessor(mockDatabaseReader, customConfig);
+      const customProcessor = new FileQueryProcessor(
+        mockDatabaseReader,
+        customConfig,
+      );
       expect(customProcessor).toBeDefined();
     });
 
-    it('should inherit from EventEmitter', () => {
+    it("should inherit from EventEmitter", () => {
       expect(processor.on).toBeDefined();
       expect(processor.emit).toBeDefined();
       expect(processor.removeListener).toBeDefined();
     });
   });
 
-  describe('error handling', () => {
-    it('should handle invalid queries gracefully', async () => {
+  describe("error handling", () => {
+    it("should handle invalid queries gracefully", async () => {
       const query: any = {
-        type: 'file',
+        type: "file",
         // Missing required 'text' property
       };
 

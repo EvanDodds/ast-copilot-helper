@@ -5,9 +5,9 @@
  * Addresses acceptance criteria 25-26: Build failure notifications
  */
 
-import { execSync } from 'child_process';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
-import * as path from 'path';
+// import { execSync } from "child_process"; // Currently unused
+import { writeFileSync, readFileSync, existsSync } from "fs";
+import * as path from "path";
 
 interface NotificationConfig {
   channels: NotificationChannel[];
@@ -17,7 +17,7 @@ interface NotificationConfig {
 }
 
 interface NotificationChannel {
-  type: 'slack' | 'email' | 'teams' | 'webhook' | 'github';
+  type: "slack" | "email" | "teams" | "webhook" | "github";
   name: string;
   config: {
     url?: string;
@@ -25,12 +25,16 @@ interface NotificationChannel {
     recipients?: string[];
     channel?: string;
   };
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: "low" | "medium" | "high" | "critical";
   enabled: boolean;
 }
 
 interface EscalationRule {
-  trigger: 'consecutive_failures' | 'critical_branch' | 'security_issue' | 'performance_degradation';
+  trigger:
+    | "consecutive_failures"
+    | "critical_branch"
+    | "security_issue"
+    | "performance_degradation";
   threshold: number;
   escalateTo: string[];
   channels: string[];
@@ -42,8 +46,8 @@ interface BuildFailureEvent {
   branch: string;
   commit: string;
   author: string;
-  failureType: 'build' | 'test' | 'security' | 'quality' | 'deployment';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  failureType: "build" | "test" | "security" | "quality" | "deployment";
+  severity: "low" | "medium" | "high" | "critical";
   details: {
     step: string;
     error: string;
@@ -65,7 +69,7 @@ class BuildFailureNotifier {
   private logPath: string;
 
   constructor() {
-    this.logPath = path.join(process.cwd(), 'notification.log');
+    this.logPath = path.join(process.cwd(), "notification.log");
     this.config = this.loadConfiguration();
   }
 
@@ -73,63 +77,75 @@ class BuildFailureNotifier {
     const defaultConfig: NotificationConfig = {
       channels: [
         {
-          type: 'slack',
-          name: 'dev-team',
+          type: "slack",
+          name: "dev-team",
           config: {
             url: process.env.SLACK_WEBHOOK_URL,
-            channel: '#dev-notifications'
+            channel: "#dev-notifications",
           },
-          priority: 'medium',
-          enabled: !!process.env.SLACK_WEBHOOK_URL
+          priority: "medium",
+          enabled: !!process.env.SLACK_WEBHOOK_URL,
         },
         {
-          type: 'email',
-          name: 'team-email',
+          type: "email",
+          name: "team-email",
           config: {
-            recipients: (process.env.NOTIFICATION_EMAILS || '').split(',').filter(Boolean)
+            recipients: (process.env.NOTIFICATION_EMAILS || "")
+              .split(",")
+              .filter(Boolean),
           },
-          priority: 'high',
-          enabled: !!(process.env.NOTIFICATION_EMAILS && process.env.SMTP_CONFIG)
+          priority: "high",
+          enabled: !!(
+            process.env.NOTIFICATION_EMAILS && process.env.SMTP_CONFIG
+          ),
         },
         {
-          type: 'github',
-          name: 'github-status',
+          type: "github",
+          name: "github-status",
           config: {
-            token: process.env.GITHUB_TOKEN
+            token: process.env.GITHUB_TOKEN,
           },
-          priority: 'low',
-          enabled: !!process.env.GITHUB_TOKEN
-        }
+          priority: "low",
+          enabled: !!process.env.GITHUB_TOKEN,
+        },
       ],
       escalationRules: [
         {
-          trigger: 'consecutive_failures',
+          trigger: "consecutive_failures",
           threshold: 3,
-          escalateTo: (process.env.ESCALATION_CONTACTS || '').split(',').filter(Boolean),
-          channels: ['slack', 'email']
+          escalateTo: (process.env.ESCALATION_CONTACTS || "")
+            .split(",")
+            .filter(Boolean),
+          channels: ["slack", "email"],
         },
         {
-          trigger: 'critical_branch',
+          trigger: "critical_branch",
           threshold: 1,
-          escalateTo: (process.env.CRITICAL_CONTACTS || '').split(',').filter(Boolean),
-          channels: ['slack', 'email']
-        }
+          escalateTo: (process.env.CRITICAL_CONTACTS || "")
+            .split(",")
+            .filter(Boolean),
+          channels: ["slack", "email"],
+        },
       ],
       retryAttempts: 3,
-      quietHours: process.env.QUIET_HOURS ? {
-        start: process.env.QUIET_HOURS.split('-')[0] || '22:00',
-        end: process.env.QUIET_HOURS.split('-')[1] || '08:00'
-      } : undefined
+      quietHours: process.env.QUIET_HOURS
+        ? {
+            start: process.env.QUIET_HOURS.split("-")[0] || "22:00",
+            end: process.env.QUIET_HOURS.split("-")[1] || "08:00",
+          }
+        : undefined,
     };
 
     // Try to load custom config if available
-    const configPath = path.join(process.cwd(), 'notification-config.json');
+    const configPath = path.join(process.cwd(), "notification-config.json");
     if (existsSync(configPath)) {
       try {
-        const customConfig = JSON.parse(readFileSync(configPath, 'utf8'));
+        const customConfig = JSON.parse(readFileSync(configPath, "utf8"));
         return { ...defaultConfig, ...customConfig };
-      } catch (error) {
-        this.log('Warning: Could not load custom notification config, using defaults');
+      } catch (_error) {
+        this.log(
+          "Warning: Could not load custom notification config, using defaults",
+        );
       }
     }
 
@@ -140,11 +156,11 @@ class BuildFailureNotifier {
     const timestamp = new Date().toISOString();
     const logEntry = `[${timestamp}] ${message}\n`;
     console.log(message);
-    
+
     try {
-      writeFileSync(this.logPath, logEntry, { flag: 'a' });
+      writeFileSync(this.logPath, logEntry, { flag: "a" });
     } catch (error) {
-      console.warn('Warning: Could not write to notification log:', error);
+      console.warn("Warning: Could not write to notification log:", error);
     }
   }
 
@@ -153,125 +169,150 @@ class BuildFailureNotifier {
 
     const now = new Date();
     const currentTime = now.toTimeString().substring(0, 5); // HH:MM format
-    
+
     const { start, end } = this.config.quietHours;
-    
+
     // Handle overnight quiet hours (e.g., 22:00 to 08:00)
     if (start > end) {
       return currentTime >= start || currentTime <= end;
     }
-    
+
     // Handle same-day quiet hours (e.g., 12:00 to 14:00)
     return currentTime >= start && currentTime <= end;
   }
 
-  private async sendSlackNotification(channel: NotificationChannel, event: BuildFailureEvent): Promise<NotificationResult> {
+  private async sendSlackNotification(
+    channel: NotificationChannel,
+    event: BuildFailureEvent,
+  ): Promise<NotificationResult> {
     const result: NotificationResult = {
       success: false,
       channel: channel.name,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     try {
       if (!channel.config.url) {
-        throw new Error('Slack webhook URL not configured');
+        throw new Error("Slack webhook URL not configured");
       }
 
       const color = this.getSeverityColor(event.severity);
-      const payload = {
+      const _payload = {
         channel: channel.config.channel,
-        username: 'CI/CD Bot',
-        icon_emoji: ':warning:',
+        username: "CI/CD Bot",
+        icon_emoji: ":warning:",
         attachments: [
           {
             color,
             title: `Build Failure: ${event.branch}`,
             title_link: event.workflowUrl,
             fields: [
-              { title: 'Branch', value: event.branch, short: true },
-              { title: 'Author', value: event.author, short: true },
-              { title: 'Failure Type', value: event.failureType, short: true },
-              { title: 'Severity', value: event.severity.toUpperCase(), short: true },
-              { title: 'Step', value: event.details.step, short: false },
-              { title: 'Error', value: event.details.error.substring(0, 500), short: false }
+              { title: "Branch", value: event.branch, short: true },
+              { title: "Author", value: event.author, short: true },
+              { title: "Failure Type", value: event.failureType, short: true },
+              {
+                title: "Severity",
+                value: event.severity.toUpperCase(),
+                short: true,
+              },
+              { title: "Step", value: event.details.step, short: false },
+              {
+                title: "Error",
+                value: event.details.error.substring(0, 500),
+                short: false,
+              },
             ],
-            footer: 'CI/CD Pipeline',
-            ts: Math.floor(new Date(event.timestamp).getTime() / 1000)
-          }
-        ]
+            footer: "CI/CD Pipeline",
+            ts: Math.floor(new Date(event.timestamp).getTime() / 1000),
+          },
+        ],
       };
 
       // Simulate HTTP request (in real implementation, use fetch or axios)
       this.log(`Sending Slack notification to ${channel.config.channel}`);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
 
       // For this implementation, assume success
       result.success = true;
       this.log(`✅ Slack notification sent successfully to ${channel.name}`);
-
     } catch (error: any) {
       result.error = error.message;
-      this.log(`❌ Slack notification failed for ${channel.name}: ${error.message}`);
+      this.log(
+        `❌ Slack notification failed for ${channel.name}: ${error.message}`,
+      );
     }
 
     return result;
   }
 
-  private async sendEmailNotification(channel: NotificationChannel, event: BuildFailureEvent): Promise<NotificationResult> {
+  private async sendEmailNotification(
+    channel: NotificationChannel,
+    event: BuildFailureEvent,
+  ): Promise<NotificationResult> {
     const result: NotificationResult = {
       success: false,
       channel: channel.name,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     try {
-      if (!channel.config.recipients || channel.config.recipients.length === 0) {
-        throw new Error('No email recipients configured');
+      if (
+        !channel.config.recipients ||
+        channel.config.recipients.length === 0
+      ) {
+        throw new Error("No email recipients configured");
       }
 
-      const subject = `🚨 Build Failure: ${event.branch} - ${event.failureType}`;
-      const body = this.generateEmailBody(event);
+      const _subject = `🚨 Build Failure: ${event.branch} - ${event.failureType}`;
+      const _body = this.generateEmailBody(event);
 
-      this.log(`Sending email notification to ${channel.config.recipients.length} recipients`);
-      
+      this.log(
+        `Sending email notification to ${channel.config.recipients.length} recipients`,
+      );
+
       // Simulate email sending (in real implementation, use nodemailer or similar)
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate SMTP
+      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate SMTP
 
       result.success = true;
       this.log(`✅ Email notification sent successfully to ${channel.name}`);
-
     } catch (error: any) {
       result.error = error.message;
-      this.log(`❌ Email notification failed for ${channel.name}: ${error.message}`);
+      this.log(
+        `❌ Email notification failed for ${channel.name}: ${error.message}`,
+      );
     }
 
     return result;
   }
 
-  private async sendGitHubNotification(channel: NotificationChannel, event: BuildFailureEvent): Promise<NotificationResult> {
+  private async sendGitHubNotification(
+    channel: NotificationChannel,
+    event: BuildFailureEvent,
+  ): Promise<NotificationResult> {
     const result: NotificationResult = {
       success: false,
       channel: channel.name,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     try {
       if (!channel.config.token) {
-        throw new Error('GitHub token not configured');
+        throw new Error("GitHub token not configured");
       }
 
       // Create or update commit status
       this.log(`Updating GitHub status for commit ${event.commit}`);
-      
+
       // Simulate GitHub API call
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       result.success = true;
       this.log(`✅ GitHub status updated successfully`);
-
     } catch (error: any) {
       result.error = error.message;
-      this.log(`❌ GitHub notification failed for ${channel.name}: ${error.message}`);
+      this.log(
+        `❌ GitHub notification failed for ${channel.name}: ${error.message}`,
+      );
     }
 
     return result;
@@ -322,11 +363,16 @@ class BuildFailureNotifier {
 
   private getSeverityColor(severity: string): string {
     switch (severity) {
-      case 'critical': return '#ff0000';
-      case 'high': return '#ff6600';
-      case 'medium': return '#ffaa00';
-      case 'low': return '#ffdd00';
-      default: return '#cccccc';
+      case "critical":
+        return "#ff0000";
+      case "high":
+        return "#ff6600";
+      case "medium":
+        return "#ffaa00";
+      case "low":
+        return "#ffdd00";
+      default:
+        return "#cccccc";
     }
   }
 
@@ -334,7 +380,9 @@ class BuildFailureNotifier {
     // Check for escalation triggers
     for (const rule of this.config.escalationRules) {
       if (this.shouldEscalate(rule, event)) {
-        this.log(`🚨 Escalation triggered: ${rule.trigger} (threshold: ${rule.threshold})`);
+        this.log(
+          `🚨 Escalation triggered: ${rule.trigger} (threshold: ${rule.threshold})`,
+        );
         await this.executeEscalation(rule, event);
         return true;
       }
@@ -342,16 +390,24 @@ class BuildFailureNotifier {
     return false;
   }
 
-  private shouldEscalate(rule: EscalationRule, event: BuildFailureEvent): boolean {
+  private shouldEscalate(
+    rule: EscalationRule,
+    event: BuildFailureEvent,
+  ): boolean {
     switch (rule.trigger) {
-      case 'consecutive_failures':
+      case "consecutive_failures":
         return this.getConsecutiveFailures() >= rule.threshold;
-      case 'critical_branch':
-        return ['main', 'master', 'production'].includes(event.branch.toLowerCase());
-      case 'security_issue':
-        return event.failureType === 'security';
-      case 'performance_degradation':
-        return event.failureType === 'test' && event.details.error.includes('performance');
+      case "critical_branch":
+        return ["main", "master", "production"].includes(
+          event.branch.toLowerCase(),
+        );
+      case "security_issue":
+        return event.failureType === "security";
+      case "performance_degradation":
+        return (
+          event.failureType === "test" &&
+          event.details.error.includes("performance")
+        );
       default:
         return false;
     }
@@ -360,49 +416,59 @@ class BuildFailureNotifier {
   private getConsecutiveFailures(): number {
     // In a real implementation, this would query the build history
     // For this demo, we'll simulate it
-    return parseInt(process.env.CONSECUTIVE_FAILURES || '0', 10);
+    return parseInt(process.env.CONSECUTIVE_FAILURES || "0", 10);
   }
 
-  private async executeEscalation(rule: EscalationRule, event: BuildFailureEvent): Promise<void> {
+  private async executeEscalation(
+    rule: EscalationRule,
+    event: BuildFailureEvent,
+  ): Promise<void> {
     this.log(`Executing escalation for ${rule.trigger}`);
-    
+
     // Send high-priority notifications to escalation contacts
-    const escalationChannels = this.config.channels.filter(channel => 
-      rule.channels.includes(channel.type) && channel.enabled
+    const escalationChannels = this.config.channels.filter(
+      (channel) => rule.channels.includes(channel.type) && channel.enabled,
     );
 
     for (const channel of escalationChannels) {
       // Override priority for escalation
-      const escalationChannel = { ...channel, priority: 'critical' as const };
+      const escalationChannel = { ...channel, priority: "critical" as const };
       await this.sendNotification(escalationChannel, event);
     }
   }
 
-  private async sendNotification(channel: NotificationChannel, event: BuildFailureEvent): Promise<NotificationResult> {
+  private async sendNotification(
+    channel: NotificationChannel,
+    event: BuildFailureEvent,
+  ): Promise<NotificationResult> {
     switch (channel.type) {
-      case 'slack':
+      case "slack":
         return this.sendSlackNotification(channel, event);
-      case 'email':
+      case "email":
         return this.sendEmailNotification(channel, event);
-      case 'github':
+      case "github":
         return this.sendGitHubNotification(channel, event);
       default:
         return {
           success: false,
           channel: channel.name,
           timestamp: new Date().toISOString(),
-          error: `Unsupported channel type: ${channel.type}`
+          error: `Unsupported channel type: ${channel.type}`,
         };
     }
   }
 
-  async notifyBuildFailure(event: BuildFailureEvent): Promise<{ success: boolean; results: NotificationResult[] }> {
+  async notifyBuildFailure(
+    event: BuildFailureEvent,
+  ): Promise<{ success: boolean; results: NotificationResult[] }> {
     this.log(`🚨 Processing build failure notification: ${event.id}`);
-    this.log(`Branch: ${event.branch}, Type: ${event.failureType}, Severity: ${event.severity}`);
+    this.log(
+      `Branch: ${event.branch}, Type: ${event.failureType}, Severity: ${event.severity}`,
+    );
 
     // Check if it's quiet hours for non-critical alerts
-    if (this.isQuietHours() && event.severity !== 'critical') {
-      this.log('⏰ Quiet hours active, delaying non-critical notifications');
+    if (this.isQuietHours() && event.severity !== "critical") {
+      this.log("⏰ Quiet hours active, delaying non-critical notifications");
       // In a real implementation, this would queue the notification for later
       return { success: true, results: [] };
     }
@@ -414,11 +480,13 @@ class BuildFailureNotifier {
     const escalated = await this.checkEscalation(event);
 
     // Send notifications through enabled channels
-    const enabledChannels = this.config.channels.filter(channel => channel.enabled);
-    
+    const enabledChannels = this.config.channels.filter(
+      (channel) => channel.enabled,
+    );
+
     for (const channel of enabledChannels) {
       // Skip lower priority channels if escalated (they're handled in escalation)
-      if (escalated && channel.priority !== 'critical') {
+      if (escalated && channel.priority !== "critical") {
         continue;
       }
 
@@ -427,17 +495,19 @@ class BuildFailureNotifier {
 
       while (attempts < this.config.retryAttempts && !success) {
         attempts++;
-        this.log(`Attempt ${attempts}/${this.config.retryAttempts} for ${channel.name}`);
-        
+        this.log(
+          `Attempt ${attempts}/${this.config.retryAttempts} for ${channel.name}`,
+        );
+
         const result = await this.sendNotification(channel, event);
         results.push(result);
-        
+
         success = result.success;
-        
+
         if (!success && attempts < this.config.retryAttempts) {
           const delay = Math.pow(2, attempts) * 1000; // Exponential backoff
           this.log(`Retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
 
@@ -449,32 +519,42 @@ class BuildFailureNotifier {
     // Save notification history
     this.saveNotificationHistory(event, results);
 
-    const successCount = results.filter(r => r.success).length;
-    this.log(`Notification complete: ${successCount}/${results.length} channels successful`);
+    const successCount = results.filter((r) => r.success).length;
+    this.log(
+      `Notification complete: ${successCount}/${results.length} channels successful`,
+    );
 
     return { success: overallSuccess, results };
   }
 
-  private saveNotificationHistory(event: BuildFailureEvent, results: NotificationResult[]): void {
-    const historyPath = path.join(process.cwd(), 'notification-history.json');
-    
+  private saveNotificationHistory(
+    event: BuildFailureEvent,
+    results: NotificationResult[],
+  ): void {
+    const historyPath = path.join(process.cwd(), "notification-history.json");
+
     try {
-      let history: Array<{ event: BuildFailureEvent; results: NotificationResult[] }> = [];
-      
+      let history: Array<{
+        event: BuildFailureEvent;
+        results: NotificationResult[];
+      }> = [];
+
       if (existsSync(historyPath)) {
-        history = JSON.parse(readFileSync(historyPath, 'utf8'));
+        history = JSON.parse(readFileSync(historyPath, "utf8"));
       }
-      
+
       history.push({ event, results });
-      
+
       // Keep only last 100 notifications
       if (history.length > 100) {
         history = history.slice(-100);
       }
-      
+
       writeFileSync(historyPath, JSON.stringify(history, null, 2));
     } catch (error: any) {
-      this.log(`Warning: Could not save notification history: ${error.message}`);
+      this.log(
+        `Warning: Could not save notification history: ${error.message}`,
+      );
     }
   }
 }
@@ -482,41 +562,50 @@ class BuildFailureNotifier {
 // Main execution function
 async function main(): Promise<void> {
   const notifier = new BuildFailureNotifier();
-  
+
   // Get event details from environment or command line
   const event: BuildFailureEvent = {
     id: process.env.GITHUB_RUN_ID || `failure-${Date.now()}`,
     timestamp: new Date().toISOString(),
-    branch: process.env.GITHUB_REF_NAME || process.argv[2] || 'unknown',
-    commit: process.env.GITHUB_SHA || 'unknown',
-    author: process.env.GITHUB_ACTOR || 'unknown',
-    failureType: (process.argv[3] as any) || 'build',
-    severity: (process.argv[4] as any) || 'medium',
+    branch: process.env.GITHUB_REF_NAME || process.argv[2] || "unknown",
+    commit: process.env.GITHUB_SHA || "unknown",
+    author: process.env.GITHUB_ACTOR || "unknown",
+    failureType: (process.argv[3] as any) || "build",
+    severity: (process.argv[4] as any) || "medium",
     details: {
-      step: process.argv[5] || 'Build',
-      error: process.argv[6] || 'Build process failed',
-      duration: parseInt(process.argv[7] || '300000', 10)
+      step: process.argv[5] || "Build",
+      error: process.argv[6] || "Build process failed",
+      duration: parseInt(process.argv[7] || "300000", 10),
     },
-    workflowUrl: process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID
-      ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
-      : 'https://github.com'
+    workflowUrl:
+      process.env.GITHUB_SERVER_URL &&
+      process.env.GITHUB_REPOSITORY &&
+      process.env.GITHUB_RUN_ID
+        ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+        : "https://github.com",
   };
 
   try {
     const result = await notifier.notifyBuildFailure(event);
     process.exit(result.success ? 0 : 1);
   } catch (error: any) {
-    console.error('Notification failed:', error.message);
+    console.error("Notification failed:", error.message);
     process.exit(1);
   }
 }
 
 // Run only if this file is executed directly
-if (require.main === module) {
+// ES module equivalent of require.main === module
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    console.error('Unhandled error:', error);
+    console.error("Unhandled error:", error);
     process.exit(1);
   });
 }
 
-export { BuildFailureNotifier, BuildFailureEvent, NotificationResult, NotificationConfig };
+export {
+  BuildFailureNotifier,
+  BuildFailureEvent,
+  NotificationResult,
+  NotificationConfig,
+};

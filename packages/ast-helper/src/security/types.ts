@@ -6,12 +6,12 @@
 /**
  * Severity levels for security findings
  */
-export type SecuritySeverity = 'low' | 'medium' | 'high' | 'critical';
+export type SecuritySeverity = "low" | "medium" | "high" | "critical";
 
 /**
  * Audit levels determine depth and scope of security analysis
  */
-export type AuditLevel = 'basic' | 'comprehensive' | 'enterprise';
+export type AuditLevel = "basic" | "comprehensive" | "enterprise";
 
 /**
  * Main security auditor interface
@@ -83,7 +83,7 @@ export interface SecurityConfig {
     /** Enable compliance reporting */
     enabled: boolean;
     /** Output format for reports */
-    reportFormat: 'json' | 'xml' | 'html' | 'pdf';
+    reportFormat: "json" | "xml" | "html" | "pdf";
     /** Include remediation suggestions */
     includeRemediation: boolean;
   };
@@ -98,7 +98,10 @@ export interface ValidationRule {
   name: string;
   description: string;
   enabled: boolean;
-  validate: (input: unknown, context?: ValidationContext) => Promise<{ isValid: boolean; message: string }>;
+  validate: (
+    input: unknown,
+    context?: ValidationContext,
+  ) => Promise<{ isValid: boolean; message: string }>;
 }
 
 export interface SanitizationRule {
@@ -110,15 +113,15 @@ export interface SanitizationRule {
 }
 
 export interface ValidationContext {
-  inputType?: 'text' | 'path' | 'command' | 'sql' | 'html' | 'url' | 'email';
+  inputType?: "text" | "path" | "command" | "sql" | "html" | "url" | "email";
   source?: string;
   userRole?: string;
   additionalRules?: string[];
 }
 
 export interface SanitizationContext {
-  inputType?: 'text' | 'path' | 'command' | 'sql' | 'html' | 'url' | 'email';
-  outputFormat?: 'plain' | 'html' | 'json' | 'xml';
+  inputType?: "text" | "path" | "command" | "sql" | "html" | "url" | "email";
+  outputFormat?: "plain" | "html" | "json" | "xml";
   preserveFormatting?: boolean;
   strictMode?: boolean;
 }
@@ -190,7 +193,7 @@ export interface InputValidationConfig {
     normalizeUnicode: boolean;
     maxInputSize: number;
     enableLogging: boolean;
-    logLevel: 'error' | 'warn' | 'info' | 'debug';
+    logLevel: "error" | "warn" | "info" | "debug";
   };
 }
 
@@ -323,7 +326,15 @@ export interface VulnerabilityFinding {
   title: string;
   description: string;
   severity: SecuritySeverity;
-  category: 'injection' | 'xss' | 'cryptographic' | 'authentication' | 'authorization' | 'configuration' | 'dependency' | 'other';
+  category:
+    | "injection"
+    | "xss"
+    | "cryptographic"
+    | "authentication"
+    | "authorization"
+    | "configuration"
+    | "dependency"
+    | "other";
   location: {
     file: string;
     line: number;
@@ -335,7 +346,7 @@ export interface VulnerabilityFinding {
   cweIds?: string[];
   remediation: string;
   references: string[];
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
   firstDetected: string;
 }
 
@@ -347,7 +358,7 @@ export interface SecurityHotspot {
   title: string;
   description: string;
   severity: SecuritySeverity;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
   location: {
     file: string;
     line: number;
@@ -439,7 +450,7 @@ export interface ValidationIssue {
  * Injection threat detection result
  */
 export interface InjectionThreat {
-  type: 'sql_injection' | 'path_traversal' | 'command_injection' | 'xss';
+  type: "sql_injection" | "path_traversal" | "command_injection" | "xss";
   severity: SecuritySeverity;
   pattern: string;
   matchedText: string;

@@ -43,17 +43,23 @@ export interface SearchResult {
 export interface DatabaseReader {
   initialize(): Promise<void>;
   close(): Promise<void>;
-  
+
   // Core query methods
-  queryByIntent(intent: string, options?: QueryOptions): Promise<ASTNodeMatch[]>;
+  queryByIntent(
+    intent: string,
+    options?: QueryOptions,
+  ): Promise<ASTNodeMatch[]>;
   getNodeById(nodeId: string): Promise<ASTNode | null>;
   getChildNodes(nodeId: string): Promise<ASTNode[]>;
   getFileNodes(filePath: string): Promise<ASTNode[]>;
   searchNodes(query: string, options?: QueryOptions): Promise<ASTNodeMatch[]>;
-  
+
   // Change tracking
-  getRecentChanges(since: Date | string, options?: QueryOptions): Promise<ASTNode[]>;
-  
+  getRecentChanges(
+    since: Date | string,
+    options?: QueryOptions,
+  ): Promise<ASTNode[]>;
+
   // Index management
   isIndexReady(): Promise<boolean>;
   getIndexStats(): Promise<{
@@ -69,30 +75,30 @@ export interface McpServerConfig {
   serverName: string;
   serverVersion: string;
   protocolVersion: string;
-  
+
   // Database settings
   databasePath: string;
   hotReload: boolean;
-  
+
   // Transport settings
-  transport: 'stdio' | 'tcp';
+  transport: "stdio" | "tcp";
   tcpPort?: number;
   tcpHost?: string;
-  
+
   // Performance settings
   maxQueryResults: number;
   queryTimeoutMs: number;
-  
+
   // Logging settings
-  logLevel: 'debug' | 'info' | 'warn' | 'error';
+  logLevel: "debug" | "info" | "warn" | "error";
   enableRequestLogging: boolean;
-  
+
   initialized: boolean;
 }
 
 // Transport Configuration
 export interface TransportConfig {
-  type: 'stdio' | 'tcp';
+  type: "stdio" | "tcp";
   tcpPort?: number;
   tcpHost?: string;
   messageTimeout?: number;

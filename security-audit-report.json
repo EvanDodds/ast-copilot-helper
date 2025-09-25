@@ -1,0 +1,48 @@
+{
+  "score": 9.4,
+  "vulnerabilities": 0,
+  "moderate": 0,
+  "high": 0,
+  "critical": 0,
+  "details": {
+    "npmAudit": {
+      "auditReportVersion": 2,
+      "vulnerabilities": {},
+      "metadata": {
+        "vulnerabilities": {
+          "info": 0,
+          "low": 0,
+          "moderate": 0,
+          "high": 0,
+          "critical": 0,
+          "total": 0
+        },
+        "dependencies": {
+          "prod": 109,
+          "dev": 522,
+          "optional": 83,
+          "peer": 43,
+          "peerOptional": 0,
+          "total": 664
+        }
+      }
+    },
+    "additionalChecks": {
+      "packageSecurity": {
+        "score": 6,
+        "issues": [
+          "Potentially dangerous script: clean",
+          "Potentially dangerous script: clean:all"
+        ]
+      },
+      "dependencyDepth": {
+        "score": 8,
+        "dependencyCount": 58
+      },
+      "licenseSecurity": {
+        "score": 10,
+        "issues": []
+      }
+    }
+  }
+}

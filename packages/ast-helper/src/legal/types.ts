@@ -3,47 +3,51 @@
  */
 
 // Core License Types
-export type LicenseType = 
-  | 'MIT' 
-  | 'Apache-2.0' 
-  | 'GPL-3.0' 
-  | 'BSD-3-Clause' 
-  | 'ISC' 
-  | 'GPL-2.0'
-  | 'LGPL-3.0'
-  | 'LGPL-2.1'
-  | 'BSD-2-Clause'
-  | 'MPL-2.0'
-  | 'CC0-1.0'
-  | 'Unlicense'
+export type LicenseType =
+  | "MIT"
+  | "Apache-2.0"
+  | "GPL-3.0"
+  | "BSD-3-Clause"
+  | "ISC"
+  | "GPL-2.0"
+  | "LGPL-3.0"
+  | "LGPL-2.1"
+  | "BSD-2-Clause"
+  | "MPL-2.0"
+  | "CC0-1.0"
+  | "Unlicense"
   | string;
 
-export type ComplianceSeverity = 'low' | 'medium' | 'high' | 'critical';
-export type ComplianceStandard = 'SPDX' | 'REUSE' | 'OpenChain' | 'ClearlyDefined';
+export type ComplianceSeverity = "low" | "medium" | "high" | "critical";
+export type ComplianceStandard =
+  | "SPDX"
+  | "REUSE"
+  | "OpenChain"
+  | "ClearlyDefined";
 
 // Permission, Condition, and Limitation Types
-export type Permission = 
-  | 'commercial-use'
-  | 'modifications'
-  | 'distribution'
-  | 'private-use'
-  | 'patent-use';
+export type Permission =
+  | "commercial-use"
+  | "modifications"
+  | "distribution"
+  | "private-use"
+  | "patent-use";
 
-export type Condition = 
-  | 'include-copyright'
-  | 'include-copyright--source'
-  | 'document-changes'
-  | 'disclose-source'
-  | 'network-use-disclose'
-  | 'same-license'
-  | 'same-license--file'
-  | 'same-license--library';
+export type Condition =
+  | "include-copyright"
+  | "include-copyright--source"
+  | "document-changes"
+  | "disclose-source"
+  | "network-use-disclose"
+  | "same-license"
+  | "same-license--file"
+  | "same-license--library";
 
-export type Limitation = 
-  | 'trademark-use'
-  | 'patent-use'
-  | 'liability'
-  | 'warranty';
+export type Limitation =
+  | "trademark-use"
+  | "patent-use"
+  | "liability"
+  | "warranty";
 
 // Core Interfaces
 export interface LicenseInfo {
@@ -64,7 +68,7 @@ export interface LicenseCompatibility {
   requiresSourceDisclosure: boolean;
   allowsLinking: boolean;
   isCopeyleft: boolean;
-  copyleftScope: 'file' | 'library' | 'project' | 'network' | null;
+  copyleftScope: "file" | "library" | "project" | "network" | null;
 }
 
 export interface DependencyLicense {
@@ -100,12 +104,12 @@ export interface AttributionConfig {
 }
 
 export interface ReportingConfig {
-  formats: ('json' | 'html' | 'pdf' | 'markdown')[];
+  formats: ("json" | "html" | "pdf" | "markdown")[];
   includeFullLicenseTexts: boolean;
   includeVulnerabilityInfo: boolean;
   outputDirectory: string;
   scheduledReports: boolean;
-  reportFrequency?: 'daily' | 'weekly' | 'monthly';
+  reportFrequency?: "daily" | "weekly" | "monthly";
 }
 
 export interface MonitoringConfig {
@@ -115,7 +119,7 @@ export interface MonitoringConfig {
   alertOnRestrictedLicenses: boolean;
   webhookUrl?: string;
   emailRecipients: string[];
-  checkFrequency: 'hourly' | 'daily' | 'weekly';
+  checkFrequency: "hourly" | "daily" | "weekly";
 }
 
 // Scan and Analysis Results
@@ -131,7 +135,13 @@ export interface LicenseScanResult {
 }
 
 export interface LicenseScanIssue {
-  type: 'scan_error' | 'license_missing' | 'license_ambiguous' | 'compatibility_issue' | 'restricted_license' | 'system_error';
+  type:
+    | "scan_error"
+    | "license_missing"
+    | "license_ambiguous"
+    | "compatibility_issue"
+    | "restricted_license"
+    | "system_error";
   severity: ComplianceSeverity;
   packageName: string;
   version: string;
@@ -150,7 +160,7 @@ export interface AttributionResult {
 export interface AttributionDocument {
   filename: string;
   content: string;
-  type: 'notice' | 'license' | 'credits' | 'metadata';
+  type: "notice" | "license" | "credits" | "metadata";
 }
 
 export interface CompatibilityResult {
@@ -215,7 +225,7 @@ export interface DocumentationResult {
 export interface DocumentationFile {
   filename: string;
   path: string;
-  type: 'license' | 'cla' | 'coc' | 'tos' | 'privacy' | 'disclaimer';
+  type: "license" | "cla" | "coc" | "tos" | "privacy" | "disclaimer";
   content: string;
 }
 

@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 # Pre-push validation: comprehensive testing before sharing
 echo "🚀 Running pre-push validation (comprehensive checks)..."
 echo "⏱️  This may take 2-3 minutes (use 'yarn run test:all' for full testing)"

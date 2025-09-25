@@ -1,8 +1,8 @@
-import { ChildProcess, spawn } from 'child_process';
-import { EventEmitter } from 'events';
-import { promises as fs } from 'fs';
-import { tmpdir } from 'os';
-import { join, resolve } from 'path';
+import { ChildProcess, spawn } from "child_process";
+import { EventEmitter } from "events";
+import { promises as fs } from "fs";
+import { tmpdir } from "os";
+import { join, resolve } from "path";
 
 /**
  * Core interfaces for the integration test suite
@@ -98,14 +98,14 @@ export interface TestFailure {
  * Configuration for integration tests
  */
 export interface TestConfiguration {
-  testWorkspaceSize: 'small' | 'medium' | 'large';
+  testWorkspaceSize: "small" | "medium" | "large";
   enablePerformanceTests: boolean;
   enableStressTests: boolean;
   parallelTestCount: number;
   timeoutMs: number;
   retryCount: number;
   generateReports: boolean;
-  reportFormat: 'json' | 'html' | 'junit';
+  reportFormat: "json" | "html" | "junit";
 }
 
 /**
@@ -139,7 +139,10 @@ export interface PerformanceMonitor {
 /**
  * Base implementation of the integration test suite
  */
-export class BaseIntegrationTestSuite extends EventEmitter implements IntegrationTestSuite {
+export class BaseIntegrationTestSuite
+  extends EventEmitter
+  implements IntegrationTestSuite
+{
   protected testEnv?: TestEnvironment;
   protected config: TestConfiguration;
   protected testResults: TestResults;
@@ -147,14 +150,14 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
   constructor(config?: Partial<TestConfiguration>) {
     super();
     this.config = {
-      testWorkspaceSize: 'medium',
+      testWorkspaceSize: "medium",
       enablePerformanceTests: true,
       enableStressTests: false,
       parallelTestCount: 4,
       timeoutMs: 30000,
       retryCount: 3,
       generateReports: true,
-      reportFormat: 'json',
+      reportFormat: "json",
       ...config,
     };
 
@@ -162,15 +165,21 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
       tests: [],
       totalDuration: 0,
       coverage: { statements: 0, branches: 0, functions: 0, lines: 0 },
-      performance: { parseTime: 0, indexTime: 0, queryTime: 0, memoryUsage: 0, diskUsage: 0 },
+      performance: {
+        parseTime: 0,
+        indexTime: 0,
+        queryTime: 0,
+        memoryUsage: 0,
+        diskUsage: 0,
+      },
     };
   }
 
   async setupTestEnvironment(): Promise<TestEnvironment> {
-    console.log('Setting up integration test environment...');
-    
+    console.log("Setting up integration test environment...");
+
     const tempDirectory = join(tmpdir(), `ast-integration-test-${Date.now()}`);
-    const testWorkspace = join(tempDirectory, 'workspace');
+    const testWorkspace = join(tempDirectory, "workspace");
 
     await fs.mkdir(tempDirectory, { recursive: true });
     await fs.mkdir(testWorkspace, { recursive: true });
@@ -190,47 +199,49 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
       performanceMonitor,
     };
 
-    this.emit('environment-setup', this.testEnv);
+    this.emit("environment-setup", this.testEnv);
     return this.testEnv;
   }
 
   async runEndToEndTests(): Promise<TestResults> {
     if (!this.testEnv) {
-      throw new Error('Test environment not setup. Call setupTestEnvironment() first.');
+      throw new Error(
+        "Test environment not setup. Call setupTestEnvironment() first.",
+      );
     }
 
-    console.log('Running end-to-end integration tests...');
+    console.log("Running end-to-end integration tests...");
     const startTime = Date.now();
 
     try {
       // This will be implemented by specific test suites
       await this.runTestSuites();
-      
+
       this.testResults.totalDuration = Date.now() - startTime;
-      this.emit('tests-completed', this.testResults);
-      
+      this.emit("tests-completed", this.testResults);
+
       return this.testResults;
     } catch (error) {
-      this.emit('tests-failed', error);
+      this.emit("tests-failed", error);
       throw error;
     }
   }
 
   async validateWorkflows(): Promise<WorkflowValidation[]> {
     if (!this.testEnv) {
-      throw new Error('Test environment not setup.');
+      throw new Error("Test environment not setup.");
     }
 
-    console.log('Validating integration workflows...');
+    console.log("Validating integration workflows...");
     const validations: WorkflowValidation[] = [];
 
     // Base workflow validations - to be extended by subclasses
     const baseWorkflows = [
-      'CLI-to-MCP-to-VSCode',
-      'File-Parsing-Pipeline',
-      'Vector-Search-Accuracy',
-      'File-Watching-Integration',
-      'Cross-Component-Data-Flow',
+      "CLI-to-MCP-to-VSCode",
+      "File-Parsing-Pipeline",
+      "Vector-Search-Accuracy",
+      "File-Watching-Integration",
+      "Cross-Component-Data-Flow",
     ];
 
     for (const workflowName of baseWorkflows) {
@@ -242,14 +253,16 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
   }
 
   async cleanupTestEnvironment(): Promise<void> {
-    if (!this.testEnv) return;
+    if (!this.testEnv) {
+      return;
+    }
 
-    console.log('Cleaning up test environment...');
+    console.log("Cleaning up test environment...");
 
     try {
       // Stop server process if running
       if (this.testEnv.serverProcess) {
-        this.testEnv.serverProcess.kill('SIGTERM');
+        this.testEnv.serverProcess.kill("SIGTERM");
       }
 
       // Close database connections
@@ -259,11 +272,11 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
 
       // Clean up temporary directory
       await fs.rm(this.testEnv.tempDirectory, { recursive: true, force: true });
-      
-      this.emit('cleanup-completed');
+
+      this.emit("cleanup-completed");
     } catch (error) {
-      console.error('Error during cleanup:', error);
-      this.emit('cleanup-failed', error);
+      console.error("Error during cleanup:", error);
+      this.emit("cleanup-failed", error);
     } finally {
       this.testEnv = undefined;
     }
@@ -271,32 +284,39 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
 
   generateTestReport(): TestReport {
     const failures = this.testResults.tests
-      .filter(test => !test.success)
-      .map(test => ({
+      .filter((test) => !test.success)
+      .map((test) => ({
         testName: test.name,
-        error: test.error || 'Unknown error',
-        stackTrace: test.stackTrace || '',
+        error: test.error || "Unknown error",
+        stackTrace: test.stackTrace || "",
       }));
 
     const recommendations: string[] = [];
-    
+
     // Generate recommendations based on test results
     if (failures.length > 0) {
-      recommendations.push(`${failures.length} tests failed. Review error logs for details.`);
+      recommendations.push(
+        `${failures.length} tests failed. Review error logs for details.`,
+      );
     }
 
-    if (this.testResults.performance.memoryUsage > 1000000000) { // 1GB
-      recommendations.push('Memory usage is high. Consider optimizing memory-intensive operations.');
+    if (this.testResults.performance.memoryUsage > 1000000000) {
+      // 1GB
+      recommendations.push(
+        "Memory usage is high. Consider optimizing memory-intensive operations.",
+      );
     }
 
     if (this.testResults.performance.queryTime > 200) {
-      recommendations.push('Query response time exceeds 200ms threshold. Optimize query performance.');
+      recommendations.push(
+        "Query response time exceeds 200ms threshold. Optimize query performance.",
+      );
     }
 
     return {
       summary: {
         totalTests: this.testResults.tests.length,
-        passed: this.testResults.tests.filter(t => t.success).length,
+        passed: this.testResults.tests.filter((t) => t.success).length,
         failed: failures.length,
         duration: this.testResults.totalDuration,
         coverage: this.testResults.coverage,
@@ -309,10 +329,12 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
 
   protected async runTestSuites(): Promise<void> {
     // To be implemented by subclasses
-    console.log('Base test suite - override in subclasses');
+    console.log("Base test suite - override in subclasses");
   }
 
-  protected async validateWorkflow(workflowName: string): Promise<WorkflowValidation> {
+  protected async validateWorkflow(
+    workflowName: string,
+  ): Promise<WorkflowValidation> {
     const startTime = Date.now();
     const steps: TestStep[] = [];
     const errors: string[] = [];
@@ -320,10 +342,10 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
     try {
       // Base workflow validation logic
       steps.push({
-        name: 'Initialize',
-        action: 'setup-workflow',
-        expected: 'success',
-        actual: 'success',
+        name: "Initialize",
+        action: "setup-workflow",
+        expected: "success",
+        actual: "success",
         success: true,
         duration: 10,
       });
@@ -352,30 +374,39 @@ export class BaseIntegrationTestSuite extends EventEmitter implements Integratio
         success: false,
         duration: Date.now() - startTime,
         errors,
-        performance: { parseTime: 0, indexTime: 0, queryTime: 0, memoryUsage: 0, diskUsage: 0 },
+        performance: {
+          parseTime: 0,
+          indexTime: 0,
+          queryTime: 0,
+          memoryUsage: 0,
+          diskUsage: 0,
+        },
       };
     }
   }
 
-  protected async executeCliCommand(command: string, args: string[]): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+  protected async executeCliCommand(
+    command: string,
+    args: string[],
+  ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
     return new Promise((resolve) => {
-      const process = spawn(command, args, { 
+      const process = spawn(command, args, {
         cwd: this.testEnv?.testWorkspace,
-        stdio: 'pipe',
+        stdio: "pipe",
       });
 
-      let stdout = '';
-      let stderr = '';
+      let stdout = "";
+      let stderr = "";
 
-      process.stdout?.on('data', (data) => {
+      process.stdout?.on("data", (data) => {
         stdout += data.toString();
       });
 
-      process.stderr?.on('data', (data) => {
+      process.stderr?.on("data", (data) => {
         stderr += data.toString();
       });
 
-      process.on('close', (exitCode) => {
+      process.on("close", (exitCode) => {
         resolve({ exitCode: exitCode || 0, stdout, stderr });
       });
     });
@@ -395,8 +426,8 @@ export class MockVectorDatabase implements VectorDatabase {
   async search(query: string): Promise<any[]> {
     // Mock search results
     return [
-      { id: 'result1', score: 0.9, content: 'Mock result 1' },
-      { id: 'result2', score: 0.8, content: 'Mock result 2' },
+      { id: "result1", score: 0.9, content: "Mock result 1" },
+      { id: "result2", score: 0.8, content: "Mock result 2" },
     ];
   }
 
@@ -430,15 +461,15 @@ export class MockMCPClient implements MCPClient {
 
   async callTool(toolName: string, params: any): Promise<any> {
     if (!this.connected) {
-      throw new Error('MCP client not connected');
+      throw new Error("MCP client not connected");
     }
 
     // Mock tool responses
     switch (toolName) {
-      case 'search-similar':
+      case "search-similar":
         return {
           matches: [
-            { signature: 'mockFunction', filePath: 'mock.ts', score: 0.9 },
+            { signature: "mockFunction", filePath: "mock.ts", score: 0.9 },
           ],
         };
       default:
@@ -493,7 +524,7 @@ export class MockPerformanceMonitor implements PerformanceMonitor {
 export class MockIntegrationTestSuite extends BaseIntegrationTestSuite {
   constructor() {
     super({
-      testWorkspaceSize: 'small',
+      testWorkspaceSize: "small",
       timeoutMs: 5000,
       enablePerformanceTests: false,
       enableStressTests: false,
@@ -502,30 +533,31 @@ export class MockIntegrationTestSuite extends BaseIntegrationTestSuite {
 
   async runTests(): Promise<TestResults> {
     const startTime = Date.now();
-    
+
     // Run mock tests
     const testResults: TestResult[] = [
       {
-        name: 'Mock Test 1',
+        name: "Mock Test 1",
         success: true,
         duration: 100,
       },
       {
-        name: 'Mock Test 2',
+        name: "Mock Test 2",
         success: true,
         duration: 150,
       },
       {
-        name: 'Mock Test 3',
+        name: "Mock Test 3",
         success: false,
         duration: 200,
-        error: 'Mock test failure for testing',
-        stackTrace: 'Error: Mock test failure for testing\n    at MockTest.run (mock.ts:1:1)',
+        error: "Mock test failure for testing",
+        stackTrace:
+          "Error: Mock test failure for testing\n    at MockTest.run (mock.ts:1:1)",
       },
     ];
 
     const totalDuration = Date.now() - startTime;
-    
+
     const results: TestResults = {
       tests: testResults,
       totalDuration,

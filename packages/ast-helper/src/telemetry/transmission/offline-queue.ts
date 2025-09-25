@@ -3,14 +3,10 @@
  * @description Disk-based offline queue for telemetry events
  */
 
-import { promises as fs } from 'fs';
-import { resolve, dirname } from 'path';
-import {
-  OfflineQueue,
-  QueueInfo,
-  OfflineQueueConfig
-} from './types.js';
-import { StoredEvent } from '../storage/types.js';
+import { promises as fs } from "fs";
+import { resolve, dirname } from "path";
+import type { OfflineQueue, QueueInfo, OfflineQueueConfig } from "./types.js";
+import type { StoredEvent } from "../storage/types.js";
 
 /**
  * Disk-based offline queue implementation
@@ -23,7 +19,7 @@ export class DiskOfflineQueue implements OfflineQueue {
 
   constructor(config: OfflineQueueConfig) {
     this.config = config;
-    this.queuePath = config.storagePath || './telemetry-queue.json';
+    this.queuePath = config.storagePath || "./telemetry-queue.json";
   }
 
   /**
@@ -40,7 +36,7 @@ export class DiskOfflineQueue implements OfflineQueue {
       await fs.mkdir(queueDir, { recursive: true });
 
       // Load existing queue if persistent
-      if (this.config.persistent && this.config.storageType === 'disk') {
+      if (this.config.persistent && this.config.storageType === "disk") {
         await this.loadQueue();
       }
 
@@ -51,7 +47,9 @@ export class DiskOfflineQueue implements OfflineQueue {
 
       this.initialized = true;
     } catch (error) {
-      throw new Error(`Failed to initialize offline queue: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to initialize offline queue: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -66,9 +64,11 @@ export class DiskOfflineQueue implements OfflineQueue {
     // Check queue capacity
     const currentInfo = await this.getQueueInfo();
     const newEventsSize = this.calculateEventsSize(events);
-    
-    if (currentInfo.size + events.length > this.config.maxSize ||
-        currentInfo.totalSize + newEventsSize > this.config.maxSizeBytes) {
+
+    if (
+      currentInfo.size + events.length > this.config.maxSize ||
+      currentInfo.totalSize + newEventsSize > this.config.maxSizeBytes
+    ) {
       // Remove oldest events to make room
       await this.evictOldEvents(events.length, newEventsSize);
     }
@@ -77,7 +77,7 @@ export class DiskOfflineQueue implements OfflineQueue {
     this.queue.push(...events);
 
     // Persist to disk if configured
-    if (this.config.storageType === 'disk' && this.config.persistent) {
+    if (this.config.storageType === "disk" && this.config.persistent) {
       await this.saveQueue();
     }
   }
@@ -94,7 +94,7 @@ export class DiskOfflineQueue implements OfflineQueue {
     const events = this.queue.splice(0, actualBatchSize);
 
     // Persist changes if configured
-    if (this.config.storageType === 'disk' && this.config.persistent) {
+    if (this.config.storageType === "disk" && this.config.persistent) {
       await this.saveQueue();
     }
 
@@ -114,14 +114,18 @@ export class DiskOfflineQueue implements OfflineQueue {
   async getQueueInfo(): Promise<QueueInfo> {
     const size = this.queue.length;
     const totalSize = this.calculateEventsSize(this.queue);
-    const oldestEvent = this.queue.length > 0 && this.queue[0] ? this.queue[0].timestamp : undefined;
-    
+    const oldestEvent =
+      this.queue.length > 0 && this.queue[0]
+        ? this.queue[0].timestamp
+        : undefined;
+
     return {
       size,
       totalSize,
       oldestEvent,
       utilization: size / this.config.maxSize,
-      atCapacity: size >= this.config.maxSize || totalSize >= this.config.maxSizeBytes
+      atCapacity:
+        size >= this.config.maxSize || totalSize >= this.config.maxSizeBytes,
     };
   }
 
@@ -130,8 +134,8 @@ export class DiskOfflineQueue implements OfflineQueue {
    */
   async clear(): Promise<void> {
     this.queue = [];
-    
-    if (this.config.storageType === 'disk' && this.config.persistent) {
+
+    if (this.config.storageType === "disk" && this.config.persistent) {
       try {
         await fs.unlink(resolve(this.queuePath));
       } catch (error) {
@@ -150,18 +154,21 @@ export class DiskOfflineQueue implements OfflineQueue {
   private async loadQueue(): Promise<void> {
     try {
       const queueFile = resolve(this.queuePath);
-      const data = await fs.readFile(queueFile, 'utf8');
+      const data = await fs.readFile(queueFile, "utf8");
       const parsed = JSON.parse(data);
-      
+
       // Validate and restore queue
       if (Array.isArray(parsed.events)) {
         this.queue = parsed.events.map((event: any) => ({
           ...event,
           timestamp: new Date(event.timestamp),
           storedAt: new Date(event.storedAt),
-          lastTransmissionAttempt: event.lastTransmissionAttempt ? 
-            new Date(event.lastTransmissionAttempt) : undefined,
-          nextRetryAt: event.nextRetryAt ? new Date(event.nextRetryAt) : undefined
+          lastTransmissionAttempt: event.lastTransmissionAttempt
+            ? new Date(event.lastTransmissionAttempt)
+            : undefined,
+          nextRetryAt: event.nextRetryAt
+            ? new Date(event.nextRetryAt)
+            : undefined,
         }));
       }
     } catch (error) {
@@ -176,19 +183,19 @@ export class DiskOfflineQueue implements OfflineQueue {
   private async saveQueue(): Promise<void> {
     try {
       const queueData = {
-        version: '1.0',
+        version: "1.0",
         timestamp: new Date().toISOString(),
         events: this.queue,
         metadata: {
           size: this.queue.length,
-          totalSize: this.calculateEventsSize(this.queue)
-        }
+          totalSize: this.calculateEventsSize(this.queue),
+        },
       };
 
       const queueFile = resolve(this.queuePath);
-      await fs.writeFile(queueFile, JSON.stringify(queueData, null, 2), 'utf8');
+      await fs.writeFile(queueFile, JSON.stringify(queueData, null, 2), "utf8");
     } catch (error) {
-      console.error('Failed to save offline queue:', error);
+      console.error("Failed to save offline queue:", error);
     }
   }
 
@@ -202,18 +209,24 @@ export class DiskOfflineQueue implements OfflineQueue {
   /**
    * Evict oldest events to make room for new ones
    */
-  private async evictOldEvents(newEventsCount: number, newEventsSize: number): Promise<void> {
+  private async evictOldEvents(
+    newEventsCount: number,
+    newEventsSize: number,
+  ): Promise<void> {
     const currentInfo = await this.getQueueInfo();
-    
+
     // Calculate how many events to remove
     let eventsToRemove = 0;
     let sizeToRemove = 0;
-    
+
     // Remove events until we have enough space
-    while (eventsToRemove < this.queue.length &&
-           (currentInfo.size - eventsToRemove + newEventsCount > this.config.maxSize ||
-            currentInfo.totalSize - sizeToRemove + newEventsSize > this.config.maxSizeBytes)) {
-      
+    while (
+      eventsToRemove < this.queue.length &&
+      (currentInfo.size - eventsToRemove + newEventsCount >
+        this.config.maxSize ||
+        currentInfo.totalSize - sizeToRemove + newEventsSize >
+          this.config.maxSizeBytes)
+    ) {
       const eventToRemove = this.queue[eventsToRemove];
       if (eventToRemove) {
         sizeToRemove += eventToRemove.eventSize;
@@ -223,9 +236,9 @@ export class DiskOfflineQueue implements OfflineQueue {
 
     if (eventsToRemove > 0) {
       this.queue.splice(0, eventsToRemove);
-      
+
       // Persist changes if configured
-      if (this.config.storageType === 'disk' && this.config.persistent) {
+      if (this.config.storageType === "disk" && this.config.persistent) {
         await this.saveQueue();
       }
     }

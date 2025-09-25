@@ -5,6 +5,7 @@ A comprehensive Model Context Protocol (MCP) server implementation for Abstract 
 ## Features
 
 ### 🔧 Comprehensive Tool System
+
 - **AST Parsing**: Parse files into Abstract Syntax Trees using multiple language parsers
 - **Code Analysis**: Extract functions, classes, imports, and structural information
 - **Search & Query**: Semantic search across codebases with embedding-based matching
@@ -12,17 +13,20 @@ A comprehensive Model Context Protocol (MCP) server implementation for Abstract 
 - **Git Integration**: Repository analysis and version control operations
 
 ### 📦 Rich Resource System
+
 - **Code Resources**: Access parsed AST data, semantic information, and code structures
 - **Documentation**: Auto-generated documentation from code analysis
 - **Metadata**: File statistics, complexity metrics, and code quality indicators
 - **Search Results**: Persistent search results and query history
 
 ### 🚀 Multiple Transport Options
+
 - **STDIO**: Standard input/output for direct integration
 - **WebSocket**: Real-time bidirectional communication
 - **HTTP**: RESTful API endpoints (coming soon)
 
 ### ⚙️ Flexible Configuration
+
 - **Environment-specific**: Development, production, and test configurations
 - **Multi-source**: File-based, environment variables, and programmatic configuration
 - **Hot-reload**: Dynamic configuration updates without server restart
@@ -218,17 +222,17 @@ The AST MCP Server follows a layered architecture:
 
 ```typescript
 interface MCPServerConfig {
-  name: string;                    // Server display name
-  version: string;                 // Server version
-  description?: string;            // Server description
-  
-  transport: TransportConfig;      // Transport layer settings
-  performance: PerformanceConfig;  // Performance tuning
-  logging: LoggingConfig;          // Logging configuration
-  security: SecurityConfig;        // Security settings
-  features: FeatureConfig;         // Feature toggles
-  database: DatabaseConfig;        // Database settings
-  environment: EnvironmentConfig;  // Environment settings
+  name: string; // Server display name
+  version: string; // Server version
+  description?: string; // Server description
+
+  transport: TransportConfig; // Transport layer settings
+  performance: PerformanceConfig; // Performance tuning
+  logging: LoggingConfig; // Logging configuration
+  security: SecurityConfig; // Security settings
+  features: FeatureConfig; // Feature toggles
+  database: DatabaseConfig; // Database settings
+  environment: EnvironmentConfig; // Environment settings
 }
 ```
 
@@ -236,11 +240,11 @@ interface MCPServerConfig {
 
 ```typescript
 interface TransportConfig {
-  type: 'stdio' | 'websocket' | 'http';  // Transport type
-  port?: number;                         // Port for network transports
-  host?: string;                         // Host binding
-  maxConnections?: number;               // Max concurrent connections
-  timeout?: number;                      // Connection timeout
+  type: "stdio" | "websocket" | "http"; // Transport type
+  port?: number; // Port for network transports
+  host?: string; // Host binding
+  maxConnections?: number; // Max concurrent connections
+  timeout?: number; // Connection timeout
 }
 ```
 
@@ -248,12 +252,12 @@ interface TransportConfig {
 
 ```typescript
 interface PerformanceConfig {
-  maxConcurrentRequests: number;    // Request concurrency limit
-  requestTimeout: number;           // Individual request timeout
-  maxQueryResults: number;          // Max results per query
-  cacheSize: number;                // Cache size in MB
-  cacheEnabled: boolean;            // Enable/disable caching
-  gcThreshold: number;              // Garbage collection threshold
+  maxConcurrentRequests: number; // Request concurrency limit
+  requestTimeout: number; // Individual request timeout
+  maxQueryResults: number; // Max results per query
+  cacheSize: number; // Cache size in MB
+  cacheEnabled: boolean; // Enable/disable caching
+  gcThreshold: number; // Garbage collection threshold
 }
 ```
 
@@ -261,12 +265,12 @@ interface PerformanceConfig {
 
 ```typescript
 interface LoggingConfig {
-  level: 'debug' | 'info' | 'warn' | 'error';  // Log level
-  enableFile: boolean;                         // File logging
-  filePath?: string;                          // Log file path
-  enableRequestLogging: boolean;              // Request logging
-  logRequestBody: boolean;                   // Log request bodies
-  enableStructuredLogging: boolean;          // JSON structured logs
+  level: "debug" | "info" | "warn" | "error"; // Log level
+  enableFile: boolean; // File logging
+  filePath?: string; // Log file path
+  enableRequestLogging: boolean; // Request logging
+  logRequestBody: boolean; // Log request bodies
+  enableStructuredLogging: boolean; // JSON structured logs
 }
 ```
 
@@ -274,13 +278,13 @@ interface LoggingConfig {
 
 ```typescript
 interface SecurityConfig {
-  enableAuthentication: boolean;    // Enable auth
-  enableRateLimit: boolean;         // Enable rate limiting
-  rateLimitRequests: number;        // Requests per window
-  rateLimitWindow: number;          // Rate limit window (ms)
-  enableCors: boolean;              // Enable CORS
-  enableTls: boolean;               // Enable TLS/SSL
-  allowedOrigins: string[];         // CORS allowed origins
+  enableAuthentication: boolean; // Enable auth
+  enableRateLimit: boolean; // Enable rate limiting
+  rateLimitRequests: number; // Requests per window
+  rateLimitWindow: number; // Rate limit window (ms)
+  enableCors: boolean; // Enable CORS
+  enableTls: boolean; // Enable TLS/SSL
+  allowedOrigins: string[]; // CORS allowed origins
 }
 ```
 
@@ -327,7 +331,7 @@ CMD ["npm", "start"]
 ### Docker Compose
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   ast-mcp-server:
     build: .
@@ -349,22 +353,22 @@ services:
 
 ```javascript
 // Parse a file
-const parseResult = await client.callTool('parse_file', {
-  filePath: './src/index.ts',
-  includeComments: true
+const parseResult = await client.callTool("parse_file", {
+  filePath: "./src/index.ts",
+  includeComments: true,
 });
 
 // Semantic search
-const searchResult = await client.callTool('semantic_search', {
-  query: 'authentication logic',
-  fileTypes: ['.ts', '.js'],
-  maxResults: 10
+const searchResult = await client.callTool("semantic_search", {
+  query: "authentication logic",
+  fileTypes: [".ts", ".js"],
+  maxResults: 10,
 });
 
 // Analyze functions
-const functions = await client.callTool('analyze_functions', {
-  filePath: './src/auth.ts',
-  includePrivate: false
+const functions = await client.callTool("analyze_functions", {
+  filePath: "./src/auth.ts",
+  includePrivate: false,
 });
 ```
 
@@ -372,13 +376,13 @@ const functions = await client.callTool('analyze_functions', {
 
 ```javascript
 // Get AST for a file
-const ast = await client.readResource('ast://file/src/index.ts');
+const ast = await client.readResource("ast://file/src/index.ts");
 
 // Get code complexity metrics
-const metrics = await client.readResource('analysis://complexity/src/auth.ts');
+const metrics = await client.readResource("analysis://complexity/src/auth.ts");
 
 // Get search results
-const results = await client.readResource('search://results/query_123');
+const results = await client.readResource("search://results/query_123");
 ```
 
 ## Troubleshooting
@@ -386,6 +390,7 @@ const results = await client.readResource('search://results/query_123');
 ### Common Issues
 
 #### Connection Issues
+
 ```bash
 # Check if server is running
 netstat -an | grep 3001
@@ -398,6 +403,7 @@ tail -f ./logs/server.log
 ```
 
 #### Performance Issues
+
 ```bash
 # Monitor resource usage
 top -p $(pgrep ast-mcp-server)
@@ -410,6 +416,7 @@ tail -f ./logs/server.log | grep "slow"
 ```
 
 #### Configuration Issues
+
 ```bash
 # Validate configuration
 ast-mcp-server --validate-config

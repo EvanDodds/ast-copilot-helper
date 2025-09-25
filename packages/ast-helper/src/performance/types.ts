@@ -1,6 +1,6 @@
 /**
  * Performance Testing Framework for AST Copilot Helper
- * 
+ *
  * Provides comprehensive performance validation, benchmarking, and optimization
  * validation to ensure the system meets specified performance targets.
  */
@@ -27,59 +27,59 @@ export interface ParsingBenchmark {
   fileCount: number;
   totalNodes: number;
   significantNodes: number;
-  parseTime: number;           // Total parsing time in ms
-  nodesPerSecond: number;      // Processing rate
-  memoryUsage: number;         // Peak memory usage in MB
-  cpuUsage: number;           // Average CPU usage percentage
-  language: string;           // Programming language tested
+  parseTime: number; // Total parsing time in ms
+  nodesPerSecond: number; // Processing rate
+  memoryUsage: number; // Peak memory usage in MB
+  cpuUsage: number; // Average CPU usage percentage
+  language: string; // Programming language tested
 }
 
 export interface QueryBenchmark {
   testName: string;
-  queryType: 'semantic' | 'signature' | 'file';
+  queryType: "semantic" | "signature" | "file";
   query: string;
   resultCount: number;
-  responseTime: number;        // Query response time in ms
-  vectorSearchTime: number;    // Vector search portion
-  rankingTime: number;         // Result ranking portion
-  databaseTime: number;        // Database query portion
-  memoryAllocated: number;     // Memory allocated during query
+  responseTime: number; // Query response time in ms
+  vectorSearchTime: number; // Vector search portion
+  rankingTime: number; // Result ranking portion
+  databaseTime: number; // Database query portion
+  memoryAllocated: number; // Memory allocated during query
 }
 
 export interface EmbeddingBenchmark {
   testName: string;
   nodeCount: number;
-  embeddingTime: number;       // Time to generate embeddings in ms
+  embeddingTime: number; // Time to generate embeddings in ms
   embeddingsPerSecond: number; // Processing rate
-  memoryUsage: number;         // Memory usage in MB
-  modelSize: string;           // Embedding model used
+  memoryUsage: number; // Memory usage in MB
+  modelSize: string; // Embedding model used
 }
 
 export interface VectorSearchBenchmark {
   testName: string;
   vectorCount: number;
   queryVectorDimensions: number;
-  searchTime: number;          // Vector search time in ms
-  accuracy: number;            // Search accuracy percentage
-  memoryUsage: number;         // Memory usage in MB
+  searchTime: number; // Vector search time in ms
+  accuracy: number; // Search accuracy percentage
+  memoryUsage: number; // Memory usage in MB
 }
 
 export interface SystemBenchmark {
   testName: string;
   operation: string;
-  duration: number;            // Operation duration in ms
-  memoryUsage: number;         // Memory usage in MB
-  cpuUsage: number;           // CPU usage percentage
-  diskIO: number;             // Disk I/O in MB/s
+  duration: number; // Operation duration in ms
+  memoryUsage: number; // Memory usage in MB
+  cpuUsage: number; // CPU usage percentage
+  diskIO: number; // Disk I/O in MB/s
 }
 
 export interface PerformanceTargets {
-  maxParseTimeFor100k: number;     // 100k nodes in X milliseconds
-  maxMCPQueryTime: number;         // <200ms for MCP queries
-  maxCLIQueryTime: number;         // <500ms for CLI queries
-  maxMemoryUsage: number;          // Peak memory limit in MB
-  minThroughput: number;           // Nodes processed per second
-  maxConcurrentQueries: number;    // Concurrent query limit
+  maxParseTimeFor100k: number; // 100k nodes in X milliseconds
+  maxMCPQueryTime: number; // <200ms for MCP queries
+  maxCLIQueryTime: number; // <500ms for CLI queries
+  maxMemoryUsage: number; // Peak memory limit in MB
+  minThroughput: number; // Nodes processed per second
+  maxConcurrentQueries: number; // Concurrent query limit
 }
 
 export interface PerformanceValidation {
@@ -122,12 +122,12 @@ export interface ConcurrencyLevel {
 /**
  * Node count specifications for benchmarks
  */
-export type NodeCount = 'small' | 'medium' | 'large' | 'xlarge' | number;
+export type NodeCount = "small" | "medium" | "large" | "xlarge" | number;
 
 /**
  * Query type specifications for benchmarks
  */
-export type QueryType = 'file' | 'ast' | 'semantic';
+export type QueryType = "file" | "ast" | "semantic";
 
 /**
  * Individual benchmark run result
@@ -166,9 +166,6 @@ export interface QueryBenchmarkConfig {
   cliTimeout: number; // CLI response timeout in ms (target: <500ms)
   iterations: number;
 }
-
-
-
 
 /**
  * Single benchmark result
@@ -225,7 +222,7 @@ export interface PhaseMemoryProfile {
 
 export interface MemoryLeak {
   location: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   leakRate: number; // MB/s
   description: string;
 }
@@ -269,7 +266,7 @@ export interface ConcurrencyBenchmarkConfig {
 }
 
 export interface ConcurrencyBenchmarkResult {
-  benchmarkType: 'concurrency';
+  benchmarkType: "concurrency";
   totalWorkers: number;
   totalTasks: number;
   successfulTasks: number;

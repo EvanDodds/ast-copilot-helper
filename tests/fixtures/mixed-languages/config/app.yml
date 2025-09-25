@@ -44,7 +44,7 @@ environments:
   development:
     debug: true
     hot_reload: true
-  
+
   production:
     debug: false
     compression: true
@@ -58,7 +58,7 @@ external_services:
     base_url: https://api.example.com
     timeout: 5000
     retries: 3
-  
+
   storage:
     provider: s3
     bucket: test-bucket

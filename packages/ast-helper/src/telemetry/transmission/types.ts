@@ -3,7 +3,7 @@
  * @description Type definitions for secure telemetry data transmission
  */
 
-import { StoredEvent } from '../storage/types.js';
+import type { StoredEvent } from "../storage/types.js";
 
 // ============================================================================
 // Transmission Interfaces
@@ -293,10 +293,10 @@ export interface RetryContext {
  * Retry strategy types
  */
 export type RetryStrategy =
-  | 'exponential'    // Exponential backoff
-  | 'linear'         // Linear backoff
-  | 'fixed'          // Fixed delay
-  | 'jittered';      // Jittered exponential backoff
+  | "exponential" // Exponential backoff
+  | "linear" // Linear backoff
+  | "fixed" // Fixed delay
+  | "jittered"; // Jittered exponential backoff
 
 /**
  * Retry statistics
@@ -588,7 +588,7 @@ export interface OfflineQueueConfig {
   /**
    * Queue storage type
    */
-  storageType: 'memory' | 'disk';
+  storageType: "memory" | "disk";
 
   /**
    * Disk storage path (if using disk storage)
@@ -633,7 +633,7 @@ export interface RateLimitConfig {
   /**
    * Rate limit enforcement strategy
    */
-  strategy: 'reject' | 'delay' | 'queue';
+  strategy: "reject" | "delay" | "queue";
 }
 
 /**
@@ -682,7 +682,7 @@ export interface SecurityConfig {
  * Default transmission configuration
  */
 export const DEFAULT_TRANSMISSION_CONFIG: TransmissionConfig = {
-  endpoint: '',
+  endpoint: "",
   timeout: 30000, // 30 seconds
   maxBatchSize: 100,
   maxPayloadSize: 1024 * 1024, // 1MB
@@ -694,27 +694,27 @@ export const DEFAULT_TRANSMISSION_CONFIG: TransmissionConfig = {
     maxAttempts: 3,
     baseDelay: 1000, // 1 second
     maxDelay: 60000, // 1 minute
-    strategy: 'exponential',
+    strategy: "exponential",
     jitter: 0.1,
     retryableStatusCodes: [408, 429, 500, 502, 503, 504],
-    retryableErrors: ['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND']
+    retryableErrors: ["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND"],
   },
   offlineQueue: {
     enabled: true,
     maxSize: 10000,
     maxSizeBytes: 50 * 1024 * 1024, // 50MB
-    storageType: 'disk',
+    storageType: "disk",
     persistent: true,
-    cleanupOnStartup: false
+    cleanupOnStartup: false,
   },
   rateLimit: {
     enabled: true,
     requestsPerMinute: 60,
     bytesPerMinute: 10 * 1024 * 1024, // 10MB
     burstLimit: 10,
-    strategy: 'delay'
+    strategy: "delay",
   },
   security: {
-    validateSSL: true
-  }
+    validateSSL: true,
+  },
 };

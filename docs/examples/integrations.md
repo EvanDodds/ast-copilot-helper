@@ -24,6 +24,7 @@ Setup MCP server and connect Claude:
 ```
 
 Example Claude conversation:
+
 ```
 Human: Analyze the complexity of functions in my src directory
 
@@ -33,7 +34,7 @@ Claude: I'll analyze the function complexity in your src directory using the AST
 
 Found 23 functions with the following complexity distribution:
 - Low complexity (1-5): 15 functions
-- Medium complexity (6-10): 6 functions  
+- Medium complexity (6-10): 6 functions
 - High complexity (11+): 2 functions
 
 High complexity functions that may need refactoring:
@@ -52,7 +53,7 @@ description: Analyzes code using AST parsing
 instructions: |
   You are a code analysis assistant that uses ast-copilot-helper to analyze codebases.
   When users ask about code analysis, use the MCP server connection to query their code.
-  
+
   Always:
   - Provide specific examples from their codebase
   - Suggest concrete improvements
@@ -70,26 +71,26 @@ Create a Copilot Chat extension:
 
 ```typescript
 // copilot-chat-extension.ts
-import { CopilotChat } from '@vscode/copilot-chat';
-import { ASTHelper } from 'ast-copilot-helper';
+import { CopilotChat } from "@vscode/copilot-chat";
+import { ASTHelper } from "ast-copilot-helper";
 
 export class ASTCopilotChat {
-  @CopilotChat.command('analyze')
+  @CopilotChat.command("analyze")
   async analyzeCode(request: ChatRequest): Promise<ChatResponse> {
     const activeFile = vscode.window.activeTextEditor?.document;
-    if (!activeFile) return { content: 'No file selected' };
+    if (!activeFile) return { content: "No file selected" };
 
     const ast = await ASTHelper.parse(activeFile.getText());
     const analysis = await ASTHelper.analyze(ast);
-    
+
     return {
       content: `Code Analysis Results:
       
 **Complexity**: ${analysis.complexity}
 **Issues Found**: ${analysis.issues.length}
-**Suggestions**: ${analysis.suggestions.join(', ')}
+**Suggestions**: ${analysis.suggestions.join(", ")}
 
-Would you like me to explain any specific findings?`
+Would you like me to explain any specific findings?`,
     };
   }
 }
@@ -103,16 +104,16 @@ Create custom ESLint rules using AST data:
 
 ```typescript
 // eslint-plugin-ast-helper.js
-const { ASTHelper } = require('ast-copilot-helper');
+const { ASTHelper } = require("ast-copilot-helper");
 
 module.exports = {
   rules: {
-    'complexity-threshold': {
+    "complexity-threshold": {
       meta: {
-        type: 'suggestion',
+        type: "suggestion",
         docs: {
-          description: 'Enforce complexity threshold using AST analysis'
-        }
+          description: "Enforce complexity threshold using AST analysis",
+        },
       },
       create(context) {
         return {
@@ -121,14 +122,14 @@ module.exports = {
             if (complexity > 10) {
               context.report({
                 node,
-                message: `Function complexity (${complexity}) exceeds threshold (10)`
+                message: `Function complexity (${complexity}) exceeds threshold (10)`,
               });
             }
-          }
+          },
         };
-      }
-    }
-  }
+      },
+    },
+  },
 };
 ```
 
@@ -138,29 +139,34 @@ Analyze code during build process:
 
 ```javascript
 // webpack-ast-analyzer-plugin.js
-const { ASTHelper } = require('ast-copilot-helper');
+const { ASTHelper } = require("ast-copilot-helper");
 
 class ASTAnalyzerPlugin {
   apply(compiler) {
-    compiler.hooks.compilation.tap('ASTAnalyzerPlugin', (compilation) => {
-      compilation.hooks.optimize.tapAsync('ASTAnalyzerPlugin', async (callback) => {
-        const modules = Array.from(compilation.modules);
-        
-        for (const module of modules) {
-          if (module.resource && module.resource.endsWith('.ts')) {
-            const source = module._source.source();
-            const analysis = await ASTHelper.analyze(source);
-            
-            if (analysis.complexity > 15) {
-              compilation.warnings.push(
-                new Error(`High complexity in ${module.resource}: ${analysis.complexity}`)
-              );
+    compiler.hooks.compilation.tap("ASTAnalyzerPlugin", (compilation) => {
+      compilation.hooks.optimize.tapAsync(
+        "ASTAnalyzerPlugin",
+        async (callback) => {
+          const modules = Array.from(compilation.modules);
+
+          for (const module of modules) {
+            if (module.resource && module.resource.endsWith(".ts")) {
+              const source = module._source.source();
+              const analysis = await ASTHelper.analyze(source);
+
+              if (analysis.complexity > 15) {
+                compilation.warnings.push(
+                  new Error(
+                    `High complexity in ${module.resource}: ${analysis.complexity}`,
+                  ),
+                );
+              }
             }
           }
-        }
-        
-        callback();
-      });
+
+          callback();
+        },
+      );
     });
   }
 }
@@ -172,34 +178,34 @@ module.exports = ASTAnalyzerPlugin;
 
 ```typescript
 // vite-ast-analyzer.ts
-import { Plugin } from 'vite';
-import { ASTHelper } from 'ast-copilot-helper';
+import { Plugin } from "vite";
+import { ASTHelper } from "ast-copilot-helper";
 
 export function astAnalyzer(): Plugin {
   return {
-    name: 'ast-analyzer',
+    name: "ast-analyzer",
     buildStart() {
-      console.log('Starting AST analysis...');
+      console.log("Starting AST analysis...");
     },
     transform(code, id) {
-      if (id.endsWith('.ts') || id.endsWith('.js')) {
-        ASTHelper.analyze(code).then(analysis => {
+      if (id.endsWith(".ts") || id.endsWith(".js")) {
+        ASTHelper.analyze(code).then((analysis) => {
           if (analysis.issues.length > 0) {
             console.warn(`Issues found in ${id}:`, analysis.issues);
           }
         });
       }
       return null;
-    }
+    },
   };
 }
 
 // vite.config.ts
-import { defineConfig } from 'vite';
-import { astAnalyzer } from './plugins/vite-ast-analyzer';
+import { defineConfig } from "vite";
+import { astAnalyzer } from "./plugins/vite-ast-analyzer";
 
 export default defineConfig({
-  plugins: [astAnalyzer()]
+  plugins: [astAnalyzer()],
 });
 ```
 
@@ -213,74 +219,74 @@ name: Code Analysis with AST Helper
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Install AST Helper
-      run: npm install -g ast-copilot-helper
-      
-    - name: Run AST Analysis
-      run: |
-        ast-helper analyze src/ \
-          --format json \
-          --output analysis-results.json \
-          --fail-on-issues
-          
-    - name: Generate Report
-      run: |
-        ast-helper report analysis-results.json \
-          --format html \
-          --output analysis-report.html
-          
-    - name: Upload Analysis Results
-      uses: actions/upload-artifact@v3
-      with:
-        name: analysis-results
-        path: |
-          analysis-results.json
-          analysis-report.html
-          
-    - name: Comment on PR
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const fs = require('fs');
-          const analysis = JSON.parse(fs.readFileSync('analysis-results.json', 'utf8'));
-          
-          const comment = `## 🔍 Code Analysis Results
-          
-          **Complexity Score**: ${analysis.overallComplexity}
-          **Issues Found**: ${analysis.totalIssues}
-          **Files Analyzed**: ${analysis.filesAnalyzed}
-          
-          ### Top Issues:
-          ${analysis.topIssues.map(issue => `- ${issue.type}: ${issue.message}`).join('\n')}
-          
-          [View Full Report](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})`;
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install AST Helper
+        run: npm install -g ast-copilot-helper
+
+      - name: Run AST Analysis
+        run: |
+          ast-helper analyze src/ \
+            --format json \
+            --output analysis-results.json \
+            --fail-on-issues
+
+      - name: Generate Report
+        run: |
+          ast-helper report analysis-results.json \
+            --format html \
+            --output analysis-report.html
+
+      - name: Upload Analysis Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: analysis-results
+          path: |
+            analysis-results.json
+            analysis-report.html
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const analysis = JSON.parse(fs.readFileSync('analysis-results.json', 'utf8'));
+
+            const comment = `## 🔍 Code Analysis Results
+
+            **Complexity Score**: ${analysis.overallComplexity}
+            **Issues Found**: ${analysis.totalIssues}
+            **Files Analyzed**: ${analysis.filesAnalyzed}
+
+            ### Top Issues:
+            ${analysis.topIssues.map(issue => `- ${issue.type}: ${issue.message}`).join('\n')}
+
+            [View Full Report](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
 ```
 
 ### GitLab CI
@@ -322,7 +328,7 @@ quality-report:
 // Jenkinsfile
 pipeline {
     agent any
-    
+
     stages {
         stage('Install Dependencies') {
             steps {
@@ -330,7 +336,7 @@ pipeline {
                 sh 'npm install -g ast-copilot-helper'
             }
         }
-        
+
         stage('AST Analysis') {
             steps {
                 sh '''
@@ -342,21 +348,21 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Generate Reports') {
             steps {
                 sh '''
                     ast-helper report analysis-results.json \
                         --format html \
                         --output analysis-report.html
-                        
+
                     ast-helper report analysis-results.json \
                         --format junit \
                         --output test-results.xml
                 '''
             }
         }
-        
+
         stage('Quality Gate') {
             steps {
                 script {
@@ -371,7 +377,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             publishHTML([
@@ -382,7 +388,7 @@ pipeline {
                 reportFiles: 'analysis-report.html',
                 reportName: 'AST Analysis Report'
             ])
-            
+
             publishTestResults testResultsPattern: 'test-results.xml'
         }
     }
@@ -400,29 +406,29 @@ class ASTHelperPlugin : AnAction() {
         val project = event.project ?: return
         val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
         val document = editor.document
-        
+
         val analysisTask = object : Task.Backgroundable(project, "Analyzing Code", false) {
             override fun run(indicator: ProgressIndicator) {
                 val result = runASTAnalysis(document.text)
-                
+
                 ApplicationManager.getApplication().invokeLater {
                     showAnalysisResults(result, project)
                 }
             }
         }
-        
+
         ProgressManager.getInstance().run(analysisTask)
     }
-    
+
     private fun runASTAnalysis(code: String): AnalysisResult {
         // Call ast-copilot-helper via CLI or API
         val process = ProcessBuilder("ast-helper", "analyze", "--stdin")
             .start()
-            
+
         process.outputStream.use { output ->
             output.write(code.toByteArray())
         }
-        
+
         val result = process.inputStream.bufferedReader().readText()
         return gson.fromJson(result, AnalysisResult::class.java)
     }
@@ -443,7 +449,7 @@ class AstHelperAnalyzeCommand(sublime_plugin.TextCommand):
         # Get current file content
         region = sublime.Region(0, self.view.size())
         content = self.view.substr(region)
-        
+
         # Run AST analysis
         try:
             result = subprocess.run(
@@ -453,30 +459,30 @@ class AstHelperAnalyzeCommand(sublime_plugin.TextCommand):
                 capture_output=True,
                 check=True
             )
-            
+
             analysis = json.loads(result.stdout)
             self.show_results(analysis)
-            
+
         except subprocess.CalledProcessError as e:
             sublime.error_message(f"AST analysis failed: {e}")
-    
+
     def show_results(self, analysis):
         # Create results panel
         window = sublime.active_window()
         panel = window.create_output_panel('ast_analysis')
-        
+
         # Format results
         output = f"""AST Analysis Results:
-        
+
 Complexity: {analysis.get('complexity', 'N/A')}
 Issues: {len(analysis.get('issues', []))}
 
 Issues Found:
 """
-        
+
         for issue in analysis.get('issues', []):
             output += f"- Line {issue.get('line', '?')}: {issue.get('message', '')}\n"
-        
+
         panel.run_command('append', {'characters': output})
         window.run_command('show_panel', {'panel': 'output.ast_analysis'})
 ```
@@ -489,28 +495,28 @@ Store analysis metrics over time:
 
 ```typescript
 // influx-integration.ts
-import { InfluxDB, Point } from '@influxdata/influxdb-client';
-import { ASTHelper } from 'ast-copilot-helper';
+import { InfluxDB, Point } from "@influxdata/influxdb-client";
+import { ASTHelper } from "ast-copilot-helper";
 
 export class ASTMetricsCollector {
   private influx: InfluxDB;
-  
+
   constructor(url: string, token: string, org: string) {
     this.influx = new InfluxDB({ url, token });
   }
-  
+
   async collectAndStoreMetrics(projectPath: string) {
     const analysis = await ASTHelper.analyze(projectPath);
-    const writeApi = this.influx.getWriteApi('my-org', 'code-metrics');
-    
-    const point = new Point('code_analysis')
-      .tag('project', projectPath)
-      .intField('complexity', analysis.overallComplexity)
-      .intField('issues_count', analysis.totalIssues)
-      .intField('files_count', analysis.filesAnalyzed)
-      .intField('lines_of_code', analysis.linesOfCode)
+    const writeApi = this.influx.getWriteApi("my-org", "code-metrics");
+
+    const point = new Point("code_analysis")
+      .tag("project", projectPath)
+      .intField("complexity", analysis.overallComplexity)
+      .intField("issues_count", analysis.totalIssues)
+      .intField("files_count", analysis.filesAnalyzed)
+      .intField("lines_of_code", analysis.linesOfCode)
       .timestamp(new Date());
-    
+
     writeApi.writePoint(point);
     await writeApi.close();
   }
@@ -520,10 +526,10 @@ export class ASTMetricsCollector {
 const collector = new ASTMetricsCollector(
   process.env.INFLUX_URL!,
   process.env.INFLUX_TOKEN!,
-  'my-org'
+  "my-org",
 );
 
-await collector.collectAndStoreMetrics('./src');
+await collector.collectAndStoreMetrics("./src");
 ```
 
 ### Grafana Dashboard
@@ -562,19 +568,19 @@ await collector.collectAndStoreMetrics('./src');
 
 ```javascript
 // jest-ast-helper.js
-const { ASTHelper } = require('ast-copilot-helper');
+const { ASTHelper } = require("ast-copilot-helper");
 
 class ASTHelperReporter {
   onRunComplete(contexts, results) {
-    const testFiles = results.testResults.map(result => result.testFilePath);
-    
+    const testFiles = results.testResults.map((result) => result.testFilePath);
+
     Promise.all(
       testFiles.map(async (file) => {
         const analysis = await ASTHelper.analyze(file);
         if (analysis.complexity > 10) {
           console.warn(`High complexity in test file: ${file}`);
         }
-      })
+      }),
     );
   }
 }
@@ -586,13 +592,13 @@ module.exports = ASTHelperReporter;
 
 ```typescript
 // vitest-ast-plugin.ts
-import { defineConfig } from 'vitest/config';
-import { ASTHelper } from 'ast-copilot-helper';
+import { defineConfig } from "vitest/config";
+import { ASTHelper } from "ast-copilot-helper";
 
 export default defineConfig({
   test: {
     reporters: [
-      'default',
+      "default",
       {
         onFinished: async (files) => {
           for (const file of files) {
@@ -601,10 +607,10 @@ export default defineConfig({
               console.log(`Issues in ${file}:`, analysis.issues);
             }
           }
-        }
-      }
-    ]
-  }
+        },
+      },
+    ],
+  },
 });
 ```
 

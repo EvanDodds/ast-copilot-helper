@@ -3,9 +3,9 @@
  * Provides generic pooling functionality with lifecycle management, metrics, and health monitoring
  */
 
-import { EventEmitter } from 'events';
-import { performance } from 'perf_hooks';
-import {
+import { EventEmitter } from "events";
+import { performance } from "perf_hooks";
+import type {
   ResourcePool as IResourcePool,
   PoolConfig,
   PoolStats,
@@ -18,7 +18,7 @@ import {
   ErrorSeverity,
   PoolState,
   PooledResource,
-} from '../types.js';
+} from "../types.js";
 
 export interface BasePoolConfig extends PoolConfig {
   enableAutoScaling?: boolean;
@@ -33,7 +33,10 @@ interface InternalLease<T> {
   resourceId: string;
 }
 
-export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T> {
+export class BaseResourcePool<T>
+  extends EventEmitter
+  implements IResourcePool<T>
+{
   private resources: Map<string, PooledResource> = new Map();
   private availableResources: Set<string> = new Set();
   private inUseResources: Map<string, InternalLease<T>> = new Map();
@@ -42,7 +45,7 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
     reject: (error: Error) => void;
     timestamp: number;
   }> = [];
-  
+
   private metrics: {
     acquisitionTimes: number[];
     creationTimes: number[];
@@ -61,7 +64,7 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
     lastActivity: Date.now(),
   };
 
-  private state: PoolState = 'initializing';
+  private state: PoolState = "initializing";
   private healthCheckTimer?: NodeJS.Timeout;
   private idleCheckTimer?: NodeJS.Timeout;
   private autoScaleTimer?: NodeJS.Timeout;
@@ -69,7 +72,7 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
 
   constructor(
     private config: BasePoolConfig,
-    private factory: ResourceFactory<T>
+    private factory: ResourceFactory<T>,
   ) {
     super();
     this.validateConfig();
@@ -77,12 +80,14 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
   }
 
   async acquire(): Promise<T> {
-    if (this.isDraining || this.state === 'stopped') {
-      throw new Error(`Pool "${this.config.name}" is not available (state: ${this.state})`);
+    if (this.isDraining || this.state === "stopped") {
+      throw new Error(
+        `Pool "${this.config.name}" is not available (state: ${this.state})`,
+      );
     }
 
     const startTime = performance.now();
-    
+
     try {
       // Check if there's an available resource
       const availableId = Array.from(this.availableResources)[0];
@@ -102,7 +107,7 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       // Wait for an available resource
       return await this.waitForResource(startTime);
     } catch (error) {
-      this.recordError('resource_exhausted', error as Error);
+      this.recordError("resource_exhausted", error as Error);
       throw error;
     }
   }
@@ -110,12 +115,12 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
   async release(resource: T): Promise<void> {
     const internalLease = this.findLeaseByResource(resource);
     if (!internalLease) {
-      throw new Error('Resource not found in pool or already released');
+      throw new Error("Resource not found in pool or already released");
     }
 
     const pooledResource = this.resources.get(internalLease.resourceId);
     if (!pooledResource) {
-      throw new Error('Pooled resource not found');
+      throw new Error("Pooled resource not found");
     }
 
     try {
@@ -123,9 +128,12 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       if (this.config.validateOnRelease) {
         const isValid = await this.factory.validate(resource);
         if (!isValid) {
-          await this.destroyResource(internalLease.resourceId, 'validation_failed');
+          await this.destroyResource(
+            internalLease.resourceId,
+            "validation_failed",
+          );
           this.processWaitingQueue();
-          throw new Error('Resource validation failed during release');
+          throw new Error("Resource validation failed during release");
         }
       }
 
@@ -135,12 +143,12 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       // Return to available pool
       this.inUseResources.delete(internalLease.lease.leaseId);
       this.availableResources.add(internalLease.resourceId);
-      
+
       pooledResource.lastUsedAt = Date.now();
       pooledResource.useCount++;
       this.metrics.lastActivity = Date.now();
 
-      this.emit('resource.released', {
+      this.emit("resource.released", {
         poolName: this.config.name,
         resourceId: internalLease.resourceId,
         leaseId: internalLease.lease.leaseId,
@@ -150,8 +158,12 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       this.processWaitingQueue();
     } catch (error) {
       // If reset fails, destroy the resource
-      await this.destroyResource(internalLease.resourceId, 'reset_failed');
-      this.recordError('validation_failed', error as Error, internalLease.resourceId);
+      await this.destroyResource(internalLease.resourceId, "reset_failed");
+      this.recordError(
+        "validation_failed",
+        error as Error,
+        internalLease.resourceId,
+      );
       this.processWaitingQueue();
     }
   }
@@ -159,10 +171,10 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
   async destroy(resource: T): Promise<void> {
     const internalLease = this.findLeaseByResource(resource);
     if (!internalLease) {
-      throw new Error('Resource not found in pool');
+      throw new Error("Resource not found in pool");
     }
 
-    await this.destroyResource(internalLease.resourceId, 'manual_destroy');
+    await this.destroyResource(internalLease.resourceId, "manual_destroy");
     this.processWaitingQueue();
   }
 
@@ -174,17 +186,29 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       createdResources: this.metrics.totalCreations,
       destroyedResources: this.metrics.totalDestroyed,
       acquisitionWaiting: this.waitingQueue.length,
-      acquisitionTime: this.calculatePerformanceMetrics(this.metrics.acquisitionTimes),
-      creationTime: this.calculatePerformanceMetrics(this.metrics.creationTimes),
-      utilizationRate: this.resources.size > 0 ? this.inUseResources.size / this.resources.size : 0,
-      errorRate: this.metrics.totalAcquisitions > 0 ? this.metrics.totalErrors / this.metrics.totalAcquisitions : 0,
+      acquisitionTime: this.calculatePerformanceMetrics(
+        this.metrics.acquisitionTimes,
+      ),
+      creationTime: this.calculatePerformanceMetrics(
+        this.metrics.creationTimes,
+      ),
+      utilizationRate:
+        this.resources.size > 0
+          ? this.inUseResources.size / this.resources.size
+          : 0,
+      errorRate:
+        this.metrics.totalAcquisitions > 0
+          ? this.metrics.totalErrors / this.metrics.totalAcquisitions
+          : 0,
       lastActivity: this.metrics.lastActivity,
     };
   }
 
   async resize(newSize: number): Promise<void> {
     if (newSize < this.config.minSize) {
-      throw new Error(`New size ${newSize} is below minimum size ${this.config.minSize}`);
+      throw new Error(
+        `New size ${newSize} is below minimum size ${this.config.minSize}`,
+      );
     }
 
     const currentSize = this.resources.size;
@@ -201,16 +225,16 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       // Scale down - destroy excess available resources
       const excessCount = currentSize - newSize;
       const availableIds = Array.from(this.availableResources);
-      
+
       for (let i = 0; i < Math.min(excessCount, availableIds.length); i++) {
         const resourceId = availableIds[i];
         if (resourceId) {
-          await this.destroyResource(resourceId, 'pool_resize');
+          await this.destroyResource(resourceId, "pool_resize");
         }
       }
     }
 
-    this.emit('pool.resized', {
+    this.emit("pool.resized", {
       poolName: this.config.name,
       oldSize: oldMaxSize,
       newSize: newSize,
@@ -219,37 +243,42 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
 
   async drain(): Promise<void> {
     this.isDraining = true;
-    this.state = 'draining';
+    this.state = "draining";
 
     // Reject all waiting requests
     const waitingRequests = [...this.waitingQueue];
     this.waitingQueue = [];
-    
+
     for (const request of waitingRequests) {
-      request.reject(new Error('Pool is being drained'));
+      request.reject(new Error("Pool is being drained"));
     }
 
     // Wait for in-use resources to be released or force cleanup after timeout
     const drainTimeout = 30000; // 30 seconds
     const startTime = Date.now();
-    
-    while (this.inUseResources.size > 0 && (Date.now() - startTime) < drainTimeout) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+
+    while (
+      this.inUseResources.size > 0 &&
+      Date.now() - startTime < drainTimeout
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     // Force destroy any remaining in-use resources
-    const inUseIds = Array.from(this.inUseResources.values()).map(item => item.resourceId);
+    const inUseIds = Array.from(this.inUseResources.values()).map(
+      (item) => item.resourceId,
+    );
     for (const resourceId of inUseIds) {
-      await this.destroyResource(resourceId, 'forced_drain');
+      await this.destroyResource(resourceId, "forced_drain");
     }
 
     // Destroy all available resources
     const availableIds = Array.from(this.availableResources);
     for (const resourceId of availableIds) {
-      await this.destroyResource(resourceId, 'pool_drain');
+      await this.destroyResource(resourceId, "pool_drain");
     }
 
-    this.emit('pool.drained', {
+    this.emit("pool.drained", {
       poolName: this.config.name,
       resourcesDestroyed: availableIds.length + inUseIds.length,
     });
@@ -275,29 +304,29 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       await this.drain();
     }
 
-    this.state = 'stopped';
+    this.state = "stopped";
     this.removeAllListeners();
   }
 
   // Private methods
   private validateConfig(): void {
     if (this.config.minSize < 0) {
-      throw new Error('minSize must be non-negative');
+      throw new Error("minSize must be non-negative");
     }
     if (this.config.maxSize < this.config.minSize) {
-      throw new Error('maxSize must be >= minSize');
+      throw new Error("maxSize must be >= minSize");
     }
     if (this.config.acquireTimeoutMs <= 0) {
-      throw new Error('acquireTimeoutMs must be positive');
+      throw new Error("acquireTimeoutMs must be positive");
     }
     if (this.config.maxQueueSize < 0) {
-      throw new Error('maxQueueSize must be non-negative');
+      throw new Error("maxQueueSize must be non-negative");
     }
   }
 
   private async initialize(): Promise<void> {
     try {
-      this.state = 'initializing';
+      this.state = "initializing";
 
       // Create minimum number of resources
       for (let i = 0; i < this.config.minSize; i++) {
@@ -307,27 +336,27 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       // Start background processes
       this.startHealthCheck();
       this.startIdleCheck();
-      
+
       if (this.config.autoResize) {
         this.startAutoScaling();
       }
 
-      this.state = 'active';
+      this.state = "active";
       this.metrics.lastActivity = Date.now();
     } catch (error) {
-      this.state = 'error';
-      this.recordError('creation_failed', error as Error);
+      this.state = "error";
+      this.recordError("creation_failed", error as Error);
       throw error;
     }
   }
 
   private async createNewResource(): Promise<T> {
     const startTime = performance.now();
-    
+
     try {
       const resourceData = await this.factory.create();
       const resourceId = this.generateResourceId();
-      
+
       const pooledResource: PooledResource = {
         id: resourceId,
         resource: resourceData,
@@ -339,21 +368,21 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       };
 
       this.resources.set(resourceId, pooledResource);
-      
+
       const lease = this.createLease(pooledResource);
       const internalLease: InternalLease<T> = { lease, resourceId };
       this.inUseResources.set(lease.leaseId, internalLease);
-      
+
       this.metrics.totalCreations++;
       this.recordCreationTime(performance.now() - startTime);
-      
-      this.emit('resource.created', {
+
+      this.emit("resource.created", {
         poolName: this.config.name,
         resourceId,
         resource: resourceData,
       });
 
-      this.emit('resource.acquired', {
+      this.emit("resource.acquired", {
         poolName: this.config.name,
         resourceId,
         leaseId: lease.leaseId,
@@ -361,7 +390,7 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
 
       return resourceData;
     } catch (error) {
-      this.recordError('creation_failed', error as Error);
+      this.recordError("creation_failed", error as Error);
       throw error;
     }
   }
@@ -369,15 +398,15 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
   private async acquireExistingResource(resourceId: string): Promise<T> {
     const pooledResource = this.resources.get(resourceId);
     if (!pooledResource) {
-      throw new Error('Resource not found');
+      throw new Error("Resource not found");
     }
 
     // Validate resource if configured
     if (this.config.validateOnAcquire) {
       const isValid = await this.factory.validate(pooledResource.resource);
       if (!isValid) {
-        await this.destroyResource(resourceId, 'validation_failed');
-        throw new Error('Resource validation failed');
+        await this.destroyResource(resourceId, "validation_failed");
+        throw new Error("Resource validation failed");
       }
     }
 
@@ -390,7 +419,7 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
     this.metrics.lastActivity = Date.now();
     this.metrics.totalAcquisitions++;
 
-    this.emit('resource.acquired', {
+    this.emit("resource.acquired", {
       poolName: this.config.name,
       resourceId,
       leaseId: lease.leaseId,
@@ -402,16 +431,18 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
   private async waitForResource(startTime: number): Promise<T> {
     return new Promise((resolve, reject) => {
       if (this.waitingQueue.length >= this.config.maxQueueSize) {
-        reject(new Error('Pool queue is full'));
+        reject(new Error("Pool queue is full"));
         return;
       }
 
       const timeout = setTimeout(() => {
-        const index = this.waitingQueue.findIndex(item => item.resolve === resolve);
+        const index = this.waitingQueue.findIndex(
+          (item) => item.resolve === resolve,
+        );
         if (index >= 0) {
           this.waitingQueue.splice(index, 1);
         }
-        reject(new Error('Resource acquisition timeout'));
+        reject(new Error("Resource acquisition timeout"));
       }, this.config.acquireTimeoutMs);
 
       const wrappedResolve = (resource: T) => {
@@ -436,7 +467,9 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
   private async processWaitingQueue(): Promise<void> {
     while (this.waitingQueue.length > 0 && this.availableResources.size > 0) {
       const request = this.waitingQueue.shift();
-      if (!request) break;
+      if (!request) {
+        break;
+      }
 
       try {
         const availableId = Array.from(this.availableResources)[0];
@@ -450,9 +483,14 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
     }
 
     // Try to create new resources if queue is not empty and under max size
-    while (this.waitingQueue.length > 0 && this.resources.size < this.config.maxSize) {
+    while (
+      this.waitingQueue.length > 0 &&
+      this.resources.size < this.config.maxSize
+    ) {
       const request = this.waitingQueue.shift();
-      if (!request) break;
+      if (!request) {
+        break;
+      }
 
       try {
         const resource = await this.createNewResource();
@@ -465,11 +503,11 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
 
   private async createResource(): Promise<void> {
     const startTime = performance.now();
-    
+
     try {
       const resourceData = await this.factory.create();
       const resourceId = this.generateResourceId();
-      
+
       const pooledResource: PooledResource = {
         id: resourceId,
         resource: resourceData,
@@ -482,22 +520,25 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
 
       this.resources.set(resourceId, pooledResource);
       this.availableResources.add(resourceId);
-      
+
       this.metrics.totalCreations++;
       this.recordCreationTime(performance.now() - startTime);
-      
-      this.emit('resource.created', {
+
+      this.emit("resource.created", {
         poolName: this.config.name,
         resourceId,
         resource: resourceData,
       });
     } catch (error) {
-      this.recordError('creation_failed', error as Error);
+      this.recordError("creation_failed", error as Error);
       throw error;
     }
   }
 
-  private async destroyResource(resourceId: string, reason: string): Promise<void> {
+  private async destroyResource(
+    resourceId: string,
+    reason: string,
+  ): Promise<void> {
     const pooledResource = this.resources.get(resourceId);
     if (!pooledResource) {
       return;
@@ -506,13 +547,13 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
     try {
       await this.factory.destroy(pooledResource.resource);
     } catch (error) {
-      this.recordError('unknown', error as Error, resourceId);
+      this.recordError("unknown", error as Error, resourceId);
     }
 
     // Clean up references
     this.resources.delete(resourceId);
     this.availableResources.delete(resourceId);
-    
+
     // Find and remove any lease
     for (const [leaseId, internalLease] of this.inUseResources) {
       if (internalLease.resourceId === resourceId) {
@@ -523,7 +564,7 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
 
     this.metrics.totalDestroyed++;
 
-    this.emit('resource.destroyed', {
+    this.emit("resource.destroyed", {
       poolName: this.config.name,
       resourceId,
       reason,
@@ -533,12 +574,15 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
   private createLease(pooledResource: PooledResource): ResourceLease<T> {
     const leaseId = this.generateLeaseId();
     const now = Date.now();
-    
+
     return {
       resource: pooledResource.resource,
       leaseId,
       acquiredAt: now,
-      expiresAt: this.config.idleTimeoutMs > 0 ? now + this.config.idleTimeoutMs : undefined,
+      expiresAt:
+        this.config.idleTimeoutMs > 0
+          ? now + this.config.idleTimeoutMs
+          : undefined,
       autoRelease: false,
     };
   }
@@ -575,9 +619,13 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
     }
   }
 
-  private recordError(type: PoolErrorType, error: Error, resourceId?: string): void {
+  private recordError(
+    type: PoolErrorType,
+    error: Error,
+    resourceId?: string,
+  ): void {
     this.metrics.totalErrors++;
-    
+
     const poolError: PoolError = {
       id: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       poolName: this.config.name,
@@ -590,7 +638,7 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       context: { state: this.state },
     };
 
-    this.emit('resource.error', {
+    this.emit("resource.error", {
       poolName: this.config.name,
       resourceId,
       error: poolError,
@@ -599,16 +647,16 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
 
   private determineSeverity(errorType: PoolErrorType): ErrorSeverity {
     switch (errorType) {
-      case 'resource_exhausted':
-      case 'health_check_failed':
-        return 'critical';
-      case 'creation_failed':
-      case 'timeout':
-        return 'high';
-      case 'validation_failed':
-        return 'medium';
+      case "resource_exhausted":
+      case "health_check_failed":
+        return "critical";
+      case "creation_failed":
+      case "timeout":
+        return "high";
+      case "validation_failed":
+        return "medium";
       default:
-        return 'low';
+        return "low";
     }
   }
 
@@ -650,9 +698,9 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       try {
         await this.performHealthCheck();
       } catch (error) {
-        this.emit('pool.warning', {
+        this.emit("pool.warning", {
           poolName: this.config.name,
-          message: 'Health check failed',
+          message: "Health check failed",
           context: { error: (error as Error).message },
         });
       }
@@ -664,30 +712,35 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       return;
     }
 
-    this.idleCheckTimer = setInterval(async () => {
-      const now = Date.now();
-      const idleResourceIds = [];
+    this.idleCheckTimer = setInterval(
+      async () => {
+        const now = Date.now();
+        const idleResourceIds = [];
 
-      for (const [resourceId, resource] of this.resources) {
-        if (this.availableResources.has(resourceId) && 
-            (now - resource.lastUsedAt) > this.config.idleTimeoutMs) {
-          idleResourceIds.push(resourceId);
+        for (const [resourceId, resource] of this.resources) {
+          if (
+            this.availableResources.has(resourceId) &&
+            now - resource.lastUsedAt > this.config.idleTimeoutMs
+          ) {
+            idleResourceIds.push(resourceId);
+          }
         }
-      }
 
-      // Keep minimum resources but destroy excess idle ones
-      const minToKeep = this.config.minSize;
-      const currentAvailable = this.availableResources.size;
-      const canDestroy = Math.max(0, currentAvailable - minToKeep);
-      const toDestroy = Math.min(idleResourceIds.length, canDestroy);
+        // Keep minimum resources but destroy excess idle ones
+        const minToKeep = this.config.minSize;
+        const currentAvailable = this.availableResources.size;
+        const canDestroy = Math.max(0, currentAvailable - minToKeep);
+        const toDestroy = Math.min(idleResourceIds.length, canDestroy);
 
-      for (let i = 0; i < toDestroy; i++) {
-        const resourceId = idleResourceIds[i];
-        if (resourceId) {
-          await this.destroyResource(resourceId, 'idle_timeout');
+        for (let i = 0; i < toDestroy; i++) {
+          const resourceId = idleResourceIds[i];
+          if (resourceId) {
+            await this.destroyResource(resourceId, "idle_timeout");
+          }
         }
-      }
-    }, Math.min(this.config.idleTimeoutMs / 2, 60000)); // Check every half timeout or max 1 minute
+      },
+      Math.min(this.config.idleTimeoutMs / 2, 60000),
+    ); // Check every half timeout or max 1 minute
   }
 
   private startAutoScaling(): void {
@@ -699,9 +752,9 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       try {
         await this.checkAutoScaling();
       } catch (error) {
-        this.emit('pool.warning', {
+        this.emit("pool.warning", {
           poolName: this.config.name,
-          message: 'Auto-scaling check failed',
+          message: "Auto-scaling check failed",
           context: { error: (error as Error).message },
         });
       }
@@ -723,24 +776,24 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
         } else {
           unhealthyResources++;
           pooledResource.isHealthy = false;
-          
+
           // Destroy unhealthy resources if they're available
           if (this.availableResources.has(resourceId)) {
-            await this.destroyResource(resourceId, 'health_check_failed');
+            await this.destroyResource(resourceId, "health_check_failed");
           }
         }
       } catch (error) {
         unhealthyResources++;
         pooledResource.isHealthy = false;
-        
+
         const poolError: PoolError = {
           id: `healthcheck_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           poolName: this.config.name,
           resourceId,
-          errorType: 'health_check_failed',
+          errorType: "health_check_failed",
           message: (error as Error).message,
           timestamp: Date.now(),
-          severity: 'medium',
+          severity: "medium",
           context: {},
         };
         errors.push(poolError);
@@ -758,7 +811,7 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
       checkDuration: performance.now() - startTime,
     };
 
-    this.emit('pool.healthCheck', {
+    this.emit("pool.healthCheck", {
       poolName: this.config.name,
       healthCheck,
     });
@@ -770,36 +823,39 @@ export class BaseResourcePool<T> extends EventEmitter implements IResourcePool<T
     const waitingCount = this.waitingQueue.length;
 
     // Scale up if utilization is high or there are waiting requests
-    if ((utilizationRate > (this.config.scaleUpThreshold || 0.8) || waitingCount > 0) &&
-        this.resources.size < this.config.maxSize) {
-      
+    if (
+      (utilizationRate > (this.config.scaleUpThreshold || 0.8) ||
+        waitingCount > 0) &&
+      this.resources.size < this.config.maxSize
+    ) {
       const scaleUpAmount = Math.min(
         Math.max(1, Math.ceil(waitingCount / 2)),
-        this.config.maxSize - this.resources.size
+        this.config.maxSize - this.resources.size,
       );
 
       for (let i = 0; i < scaleUpAmount; i++) {
         try {
           await this.createResource();
-        } catch (error) {
+        } catch (_error) {
           break; // Stop scaling up if creation fails
         }
       }
-    }
-    
-    // Scale down if utilization is low and we have excess resources
-    else if (utilizationRate < (this.config.scaleDownThreshold || 0.2) &&
-             this.availableResources.size > this.config.minSize &&
-             waitingCount === 0) {
-      
-      const excessResources = this.availableResources.size - this.config.minSize;
+
+      // Scale down if utilization is low and we have excess resources
+    } else if (
+      utilizationRate < (this.config.scaleDownThreshold || 0.2) &&
+      this.availableResources.size > this.config.minSize &&
+      waitingCount === 0
+    ) {
+      const excessResources =
+        this.availableResources.size - this.config.minSize;
       const scaleDownAmount = Math.min(1, excessResources);
-      
+
       const availableIds = Array.from(this.availableResources);
       for (let i = 0; i < scaleDownAmount; i++) {
         const resourceId = availableIds[i];
         if (resourceId) {
-          await this.destroyResource(resourceId, 'auto_scale_down');
+          await this.destroyResource(resourceId, "auto_scale_down");
         }
       }
     }

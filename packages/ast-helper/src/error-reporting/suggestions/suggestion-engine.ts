@@ -2,18 +2,18 @@
  * Main suggestion engine that orchestrates different suggestion generators
  */
 
-import {
+import type {
   SuggestionGenerator,
   SuggestionContext,
   ResolutionSuggestion,
   SuggestionEngineConfig,
   SuggestionEngineResult,
   MLPrediction,
-  CommunitySuggestion
-} from './types.js';
+  CommunitySuggestion,
+} from "./types.js";
 
-import { PatternBasedSuggestionGenerator } from './pattern-generator.js';
-import { StaticAnalysisGenerator } from './static-analysis-generator.js';
+import { PatternBasedSuggestionGenerator } from "./pattern-generator.js";
+import { StaticAnalysisGenerator } from "./static-analysis-generator.js";
 
 /**
  * Generator performance metrics
@@ -56,7 +56,7 @@ export class SuggestionEngine {
       enableCommunityData: config?.enableCommunityData ?? false,
       generatorTimeout: config?.generatorTimeout ?? 5000,
       parallelGeneration: config?.parallelGeneration ?? true,
-      adaptiveLearning: config?.adaptiveLearning ?? true
+      adaptiveLearning: config?.adaptiveLearning ?? true,
     };
 
     this.initializeDefaultGenerators();
@@ -70,7 +70,9 @@ export class SuggestionEngine {
     this.addGenerator(new PatternBasedSuggestionGenerator());
     this.addGenerator(new StaticAnalysisGenerator());
 
-    console.log(`SuggestionEngine initialized with ${this.generators.size} generators`);
+    console.log(
+      `SuggestionEngine initialized with ${this.generators.size} generators`,
+    );
   }
 
   /**
@@ -78,7 +80,7 @@ export class SuggestionEngine {
    */
   addGenerator(generator: SuggestionGenerator): void {
     this.generators.set(generator.name, generator);
-    
+
     // Initialize metrics for new generator
     this.metrics.set(generator.name, {
       generatorName: generator.name,
@@ -86,10 +88,12 @@ export class SuggestionEngine {
       successfulSuggestions: 0,
       averageConfidence: 0,
       averageProcessingTime: 0,
-      lastUsed: new Date().toISOString()
+      lastUsed: new Date().toISOString(),
     });
 
-    console.log(`Added generator: ${generator.name} (priority: ${generator.priority})`);
+    console.log(
+      `Added generator: ${generator.name} (priority: ${generator.priority})`,
+    );
   }
 
   /**
@@ -107,9 +111,11 @@ export class SuggestionEngine {
   /**
    * Generate suggestions for the given context
    */
-  async generateSuggestions(context: SuggestionContext): Promise<SuggestionEngineResult> {
+  async generateSuggestions(
+    context: SuggestionContext,
+  ): Promise<SuggestionEngineResult> {
     const startTime = Date.now();
-    
+
     try {
       // Check cache first
       if (this.config.enableCaching) {
@@ -121,14 +127,14 @@ export class SuggestionEngine {
             generatorsUsed: [],
             cacheHit: true,
             mlPredictions: [],
-            communityData: []
+            communityData: [],
           };
         }
       }
 
       // Get applicable generators
       const applicableGenerators = await this.getApplicableGenerators(context);
-      
+
       if (applicableGenerators.length === 0) {
         return {
           suggestions: [],
@@ -136,13 +142,16 @@ export class SuggestionEngine {
           generatorsUsed: [],
           cacheHit: false,
           mlPredictions: [],
-          communityData: []
+          communityData: [],
         };
       }
 
       // Generate suggestions from all applicable generators
-      const generatorResults = await this.executeGenerators(applicableGenerators, context);
-      
+      const generatorResults = await this.executeGenerators(
+        applicableGenerators,
+        context,
+      );
+
       // Combine and rank all suggestions
       let allSuggestions: ResolutionSuggestion[] = [];
       const generatorsUsed: string[] = [];
@@ -150,27 +159,46 @@ export class SuggestionEngine {
       for (const result of generatorResults) {
         allSuggestions.push(...result.suggestions);
         generatorsUsed.push(result.generatorName);
-        this.updateGeneratorMetrics(result.generatorName, result.suggestions, result.processingTime);
+        this.updateGeneratorMetrics(
+          result.generatorName,
+          result.suggestions,
+          result.processingTime,
+        );
       }
 
       // Apply ML predictions if enabled
       const mlPredictions: MLPrediction[] = [];
       if (this.config.enableMLIntegration) {
-        const predictions = await this.applyMLPredictions(allSuggestions, context);
+        const predictions = await this.applyMLPredictions(
+          allSuggestions,
+          context,
+        );
         mlPredictions.push(...predictions);
-        allSuggestions = this.adjustSuggestionsWithML(allSuggestions, predictions);
+        allSuggestions = this.adjustSuggestionsWithML(
+          allSuggestions,
+          predictions,
+        );
       }
 
       // Enrich with community data if enabled
       const communityData: CommunitySuggestion[] = [];
       if (this.config.enableCommunityData) {
-        const communityResults = await this.enrichWithCommunityData(allSuggestions, context);
+        const communityResults = await this.enrichWithCommunityData(
+          allSuggestions,
+          context,
+        );
         communityData.push(...communityResults);
-        allSuggestions = this.adjustSuggestionsWithCommunity(allSuggestions, communityResults);
+        allSuggestions = this.adjustSuggestionsWithCommunity(
+          allSuggestions,
+          communityResults,
+        );
       }
 
       // Rank and filter suggestions
-      const rankedSuggestions = await this.rankAndFilterSuggestions(allSuggestions, context);
+      const rankedSuggestions = await this.rankAndFilterSuggestions(
+        allSuggestions,
+        context,
+      );
 
       // Cache results
       if (this.config.enableCaching) {
@@ -183,14 +211,13 @@ export class SuggestionEngine {
         generatorsUsed,
         cacheHit: false,
         mlPredictions,
-        communityData
+        communityData,
       };
 
       return result;
-
     } catch (error) {
-      console.error('Error generating suggestions:', error);
-      
+      console.error("Error generating suggestions:", error);
+
       return {
         suggestions: [],
         totalProcessingTime: Date.now() - startTime,
@@ -198,7 +225,7 @@ export class SuggestionEngine {
         cacheHit: false,
         mlPredictions: [],
         communityData: [],
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -206,23 +233,31 @@ export class SuggestionEngine {
   /**
    * Get generators that can handle the given context
    */
-  private async getApplicableGenerators(context: SuggestionContext): Promise<SuggestionGenerator[]> {
+  private async getApplicableGenerators(
+    context: SuggestionContext,
+  ): Promise<SuggestionGenerator[]> {
     const applicable: SuggestionGenerator[] = [];
 
     for (const generator of this.generators.values()) {
       try {
         const canHandle = await Promise.race([
           generator.canHandle(context),
-          new Promise<boolean>((_, reject) => 
-            setTimeout(() => reject(new Error('Generator canHandle timeout')), 1000)
-          )
+          new Promise<boolean>((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Generator canHandle timeout")),
+              1000,
+            ),
+          ),
         ]);
 
         if (canHandle) {
           applicable.push(generator);
         }
       } catch (error) {
-        console.warn(`Generator ${generator.name} canHandle check failed:`, error);
+        console.warn(
+          `Generator ${generator.name} canHandle check failed:`,
+          error,
+        );
       }
     }
 
@@ -234,68 +269,71 @@ export class SuggestionEngine {
    * Execute suggestion generators
    */
   private async executeGenerators(
-    generators: SuggestionGenerator[], 
-    context: SuggestionContext
-  ): Promise<Array<{
-    generatorName: string;
-    suggestions: ResolutionSuggestion[];
-    processingTime: number;
-    error?: string;
-  }>> {
+    generators: SuggestionGenerator[],
+    context: SuggestionContext,
+  ): Promise<
+    Array<{
+      generatorName: string;
+      suggestions: ResolutionSuggestion[];
+      processingTime: number;
+      error?: string;
+    }>
+  > {
     const results = [];
 
     if (this.config.parallelGeneration) {
       // Execute generators in parallel
       const promises = generators.map(async (generator) => {
         const startTime = Date.now();
-        
+
         try {
           const suggestions = await Promise.race([
             generator.generateSuggestions(context),
-            new Promise<ResolutionSuggestion[]>((_, reject) => 
-              setTimeout(() => reject(new Error('Generator timeout')), this.config.generatorTimeout)
-            )
+            new Promise<ResolutionSuggestion[]>((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Generator timeout")),
+                this.config.generatorTimeout,
+              ),
+            ),
           ]);
 
           return {
             generatorName: generator.name,
             suggestions: suggestions || [],
-            processingTime: Date.now() - startTime
+            processingTime: Date.now() - startTime,
           };
-
         } catch (error) {
           console.warn(`Generator ${generator.name} failed:`, error);
           return {
             generatorName: generator.name,
             suggestions: [],
             processingTime: Date.now() - startTime,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : "Unknown error",
           };
         }
       });
 
-      results.push(...await Promise.all(promises));
+      results.push(...(await Promise.all(promises)));
     } else {
       // Execute generators sequentially
       for (const generator of generators) {
         const startTime = Date.now();
-        
+
         try {
           const suggestions = await generator.generateSuggestions(context);
-          
+
           results.push({
             generatorName: generator.name,
             suggestions: suggestions || [],
-            processingTime: Date.now() - startTime
+            processingTime: Date.now() - startTime,
           });
-
         } catch (error) {
           console.warn(`Generator ${generator.name} failed:`, error);
           results.push({
             generatorName: generator.name,
             suggestions: [],
             processingTime: Date.now() - startTime,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
@@ -308,29 +346,35 @@ export class SuggestionEngine {
    * Apply ML predictions to suggestions (placeholder for future ML integration)
    */
   private async applyMLPredictions(
-    suggestions: ResolutionSuggestion[], 
-    context: SuggestionContext
+    suggestions: ResolutionSuggestion[],
+    context: SuggestionContext,
   ): Promise<MLPrediction[]> {
     // Placeholder for ML integration
     // In a real implementation, this would call ML models to predict suggestion effectiveness
-    
-    if (suggestions.length === 0) return [];
+
+    if (suggestions.length === 0) {
+      return [];
+    }
 
     const prediction: MLPrediction = {
-      suggestionIds: suggestions.map(s => s.id),
+      suggestionIds: suggestions.map((s) => s.id),
       confidence: Math.random() * 0.4 + 0.6, // Random between 0.6-1.0
       reasoning: [
         `Based on error type: ${context.error.type}`,
-        `User experience level: ${context.user.experienceLevel || 'unknown'}`,
-        `Code context: ${context.codebase.languages.join(', ')}`
+        `User experience level: ${context.user.experienceLevel || "unknown"}`,
+        `Code context: ${context.codebase.languages.join(", ")}`,
       ],
-      features: suggestions.reduce((acc, suggestion, index) => {
-        acc[`suggestion_${index}_type`] = suggestion.type === 'code-fix' ? 1 : 0;
-        acc[`suggestion_${index}_priority`] = suggestion.priority / 100;
-        return acc;
-      }, {} as Record<string, number>),
-      modelVersion: 'placeholder-v1.0.0',
-      timestamp: new Date().toISOString()
+      features: suggestions.reduce(
+        (acc, suggestion, index) => {
+          acc[`suggestion_${index}_type`] =
+            suggestion.type === "code-fix" ? 1 : 0;
+          acc[`suggestion_${index}_priority`] = suggestion.priority / 100;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+      modelVersion: "placeholder-v1.0.0",
+      timestamp: new Date().toISOString(),
     };
 
     return [prediction];
@@ -340,12 +384,12 @@ export class SuggestionEngine {
    * Enrich suggestions with community data (placeholder)
    */
   private async enrichWithCommunityData(
-    _suggestions: ResolutionSuggestion[], 
-    _context: SuggestionContext
+    _suggestions: ResolutionSuggestion[],
+    _context: SuggestionContext,
   ): Promise<CommunitySuggestion[]> {
     // Placeholder for community data integration
     // In a real implementation, this would query Stack Overflow, GitHub issues, etc.
-    
+
     return []; // Return empty array for now
   }
 
@@ -353,27 +397,29 @@ export class SuggestionEngine {
    * Adjust suggestions based on ML predictions
    */
   private adjustSuggestionsWithML(
-    suggestions: ResolutionSuggestion[], 
-    predictions: MLPrediction[]
+    suggestions: ResolutionSuggestion[],
+    predictions: MLPrediction[],
   ): ResolutionSuggestion[] {
-    if (predictions.length === 0) return suggestions;
-    
+    if (predictions.length === 0) {
+      return suggestions;
+    }
+
     const prediction = predictions[0]!; // Use the first (and likely only) prediction
     const suggestionIds = new Set(prediction.suggestionIds);
 
-    return suggestions.map(suggestion => {
+    return suggestions.map((suggestion) => {
       if (suggestionIds.has(suggestion.id)) {
         // Adjust relevance score based on ML prediction confidence
         const adjustedScore = suggestion.relevanceScore * prediction.confidence;
-        
+
         return {
           ...suggestion,
           relevanceScore: Math.min(adjustedScore, 1.0),
           contextualFactors: [
             ...suggestion.contextualFactors,
             `ML confidence: ${(prediction.confidence * 100).toFixed(1)}%`,
-            `ML reasoning: ${prediction.reasoning[0] || 'Model prediction available'}`
-          ]
+            `ML reasoning: ${prediction.reasoning[0] || "Model prediction available"}`,
+          ],
         };
       }
       return suggestion;
@@ -384,8 +430,8 @@ export class SuggestionEngine {
    * Adjust suggestions based on community data
    */
   private adjustSuggestionsWithCommunity(
-    suggestions: ResolutionSuggestion[], 
-    _communityData: CommunitySuggestion[]
+    suggestions: ResolutionSuggestion[],
+    _communityData: CommunitySuggestion[],
   ): ResolutionSuggestion[] {
     // Placeholder for community data integration
     return suggestions;
@@ -395,26 +441,26 @@ export class SuggestionEngine {
    * Rank and filter suggestions based on various criteria
    */
   private async rankAndFilterSuggestions(
-    suggestions: ResolutionSuggestion[], 
-    context: SuggestionContext
+    suggestions: ResolutionSuggestion[],
+    context: SuggestionContext,
   ): Promise<ResolutionSuggestion[]> {
-    
     // Filter out low confidence suggestions
-    const filtered = suggestions.filter(suggestion => 
-      suggestion.relevanceScore >= this.config.minConfidenceThreshold
+    const filtered = suggestions.filter(
+      (suggestion) =>
+        suggestion.relevanceScore >= this.config.minConfidenceThreshold,
     );
 
     // Calculate composite scores for ranking
-    const scored = filtered.map(suggestion => ({
+    const scored = filtered.map((suggestion) => ({
       suggestion,
-      score: this.calculateCompositeScore(suggestion, context)
+      score: this.calculateCompositeScore(suggestion, context),
     }));
 
     // Sort by composite score (highest first)
     scored.sort((a, b) => b.score - a.score);
 
     // Apply diversity filtering to avoid too many similar suggestions
-    const diverse = this.applyDiversityFilter(scored.map(s => s.suggestion));
+    const diverse = this.applyDiversityFilter(scored.map((s) => s.suggestion));
 
     return diverse;
   }
@@ -422,7 +468,10 @@ export class SuggestionEngine {
   /**
    * Calculate composite score for suggestion ranking
    */
-  private calculateCompositeScore(suggestion: ResolutionSuggestion, context: SuggestionContext): number {
+  private calculateCompositeScore(
+    suggestion: ResolutionSuggestion,
+    context: SuggestionContext,
+  ): number {
     let score = 0;
 
     // Base score from relevance
@@ -436,18 +485,31 @@ export class SuggestionEngine {
     score += (suggestion.priority / 100) * 0.2;
 
     // Type preference (prefer automated fixes)
-    if (suggestion.type === 'code-fix') score += 0.05;
-    if (suggestion.type === 'dependency') score += 0.03;
+    if (suggestion.type === "code-fix") {
+      score += 0.05;
+    }
+    if (suggestion.type === "dependency") {
+      score += 0.03;
+    }
 
     // User experience adjustment
-    if (context.user.experienceLevel === 'beginner' && suggestion.difficulty === 'beginner') {
+    if (
+      context.user.experienceLevel === "beginner" &&
+      suggestion.difficulty === "beginner"
+    ) {
       score += 0.05;
-    } else if (context.user.experienceLevel === 'advanced' && suggestion.difficulty === 'advanced') {
+    } else if (
+      context.user.experienceLevel === "advanced" &&
+      suggestion.difficulty === "advanced"
+    ) {
       score += 0.03;
     }
 
     // Recency boost for recently successful patterns
-    if (suggestion.evidence?.successRate && suggestion.evidence.successRate > 0.8) {
+    if (
+      suggestion.evidence?.successRate &&
+      suggestion.evidence.successRate > 0.8
+    ) {
       score += 0.05;
     }
 
@@ -457,7 +519,9 @@ export class SuggestionEngine {
   /**
    * Apply diversity filter to avoid too many similar suggestions
    */
-  private applyDiversityFilter(suggestions: ResolutionSuggestion[]): ResolutionSuggestion[] {
+  private applyDiversityFilter(
+    suggestions: ResolutionSuggestion[],
+  ): ResolutionSuggestion[] {
     const diverse: ResolutionSuggestion[] = [];
     const seenTypes = new Set<string>();
     const seenTitles = new Set<string>();
@@ -467,18 +531,26 @@ export class SuggestionEngine {
       const titleKey = suggestion.title.toLowerCase();
 
       // Skip if we already have too many of this type
-      const typeCount = diverse.filter(s => `${s.type}_${s.source}` === typeKey).length;
-      if (typeCount >= 3) continue;
+      const typeCount = diverse.filter(
+        (s) => `${s.type}_${s.source}` === typeKey,
+      ).length;
+      if (typeCount >= 3) {
+        continue;
+      }
 
       // Skip if we have a very similar title
-      if (seenTitles.has(titleKey)) continue;
+      if (seenTitles.has(titleKey)) {
+        continue;
+      }
 
       diverse.push(suggestion);
       seenTypes.add(typeKey);
       seenTitles.add(titleKey);
 
       // Stop if we have enough diverse suggestions
-      if (diverse.length >= this.config.maxSuggestions * 2) break;
+      if (diverse.length >= this.config.maxSuggestions * 2) {
+        break;
+      }
     }
 
     return diverse;
@@ -487,11 +559,16 @@ export class SuggestionEngine {
   /**
    * Get cached suggestions if available and valid
    */
-  private getCachedSuggestions(context: SuggestionContext): ResolutionSuggestion[] | null {
+  private getCachedSuggestions(
+    context: SuggestionContext,
+  ): ResolutionSuggestion[] | null {
     const contextHash = this.createContextHash(context);
     const cached = this.cache.get(contextHash);
 
-    if (cached && Date.now() - cached.timestamp < this.config.cacheExpirationMs) {
+    if (
+      cached &&
+      Date.now() - cached.timestamp < this.config.cacheExpirationMs
+    ) {
       return cached.suggestions;
     }
 
@@ -506,12 +583,15 @@ export class SuggestionEngine {
   /**
    * Cache suggestion results
    */
-  private cacheResults(context: SuggestionContext, suggestions: ResolutionSuggestion[]): void {
+  private cacheResults(
+    context: SuggestionContext,
+    suggestions: ResolutionSuggestion[],
+  ): void {
     const contextHash = this.createContextHash(context);
     this.cache.set(contextHash, {
       suggestions,
       timestamp: Date.now(),
-      contextHash
+      contextHash,
     });
 
     // Clean up old cache entries
@@ -528,10 +608,12 @@ export class SuggestionEngine {
       errorCode: context.error.code,
       currentFile: context.codebase.currentFile,
       languages: context.codebase.languages.sort(),
-      nodeVersion: context.environment.nodeVersion
+      nodeVersion: context.environment.nodeVersion,
     };
 
-    return Buffer.from(JSON.stringify(relevant)).toString('base64').substring(0, 32);
+    return Buffer.from(JSON.stringify(relevant))
+      .toString("base64")
+      .substring(0, 32);
   }
 
   /**
@@ -550,28 +632,32 @@ export class SuggestionEngine {
    * Update generator metrics
    */
   private updateGeneratorMetrics(
-    generatorName: string, 
-    suggestions: ResolutionSuggestion[], 
-    processingTime: number
+    generatorName: string,
+    suggestions: ResolutionSuggestion[],
+    processingTime: number,
   ): void {
     const metrics = this.metrics.get(generatorName);
-    if (!metrics) return;
+    if (!metrics) {
+      return;
+    }
 
     metrics.totalCalls++;
     metrics.successfulSuggestions += suggestions.length;
     metrics.lastUsed = new Date().toISOString();
 
     // Update average processing time
-    metrics.averageProcessingTime = 
+    metrics.averageProcessingTime =
       (metrics.averageProcessingTime + processingTime) / 2;
 
     // Update average confidence
     if (suggestions.length > 0) {
-      const avgConfidence = suggestions.reduce((sum, s) => 
-        sum + this.confidenceToNumber(s.confidence), 0
-      ) / suggestions.length;
-      
-      metrics.averageConfidence = 
+      const avgConfidence =
+        suggestions.reduce(
+          (sum, s) => sum + this.confidenceToNumber(s.confidence),
+          0,
+        ) / suggestions.length;
+
+      metrics.averageConfidence =
         (metrics.averageConfidence + avgConfidence) / 2;
     }
   }
@@ -581,11 +667,16 @@ export class SuggestionEngine {
    */
   private confidenceToNumber(confidence: string): number {
     switch (confidence) {
-      case 'critical': return 1.0;
-      case 'high': return 0.8;
-      case 'medium': return 0.6;
-      case 'low': return 0.4;
-      default: return 0.5;
+      case "critical":
+        return 1.0;
+      case "high":
+        return 0.8;
+      case "medium":
+        return 0.6;
+      case "low":
+        return 0.4;
+      default:
+        return 0.5;
     }
   }
 
@@ -608,7 +699,7 @@ export class SuggestionEngine {
    */
   updateConfiguration(newConfig: Partial<SuggestionEngineConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log('SuggestionEngine configuration updated');
+    console.log("SuggestionEngine configuration updated");
   }
 
   /**
@@ -616,7 +707,7 @@ export class SuggestionEngine {
    */
   clearCache(): void {
     this.cache.clear();
-    console.log('SuggestionEngine cache cleared');
+    console.log("SuggestionEngine cache cleared");
   }
 
   /**
@@ -630,7 +721,7 @@ export class SuggestionEngine {
     return {
       size: this.cache.size,
       hitRate: 0, // Would need to track hits/misses to calculate
-      totalEntries: this.cache.size
+      totalEntries: this.cache.size,
     };
   }
 
@@ -638,7 +729,7 @@ export class SuggestionEngine {
    * Record suggestion feedback for adaptive learning
    */
   recordFeedback(
-    suggestionId: string, 
+    suggestionId: string,
     feedback: {
       helpful: boolean;
       applied: boolean;
@@ -646,12 +737,15 @@ export class SuggestionEngine {
       timeToResolve?: number;
       userRating?: number;
       comments?: string;
-    }
+    },
   ): void {
     if (this.config.adaptiveLearning) {
       // Placeholder for feedback recording
       // In a real implementation, this would update ML models or pattern weights
-      console.log(`Recorded feedback for suggestion ${suggestionId}:`, feedback);
+      console.log(
+        `Recorded feedback for suggestion ${suggestionId}:`,
+        feedback,
+      );
     }
   }
 
@@ -666,16 +760,21 @@ export class SuggestionEngine {
     cacheHitRate: number;
   } {
     const metrics = Array.from(this.metrics.values());
-    const totalSuggestions = metrics.reduce((sum, m) => sum + m.successfulSuggestions, 0);
+    const totalSuggestions = metrics.reduce(
+      (sum, m) => sum + m.successfulSuggestions,
+      0,
+    );
     const totalCalls = metrics.reduce((sum, m) => sum + m.totalCalls, 0);
-    const avgProcessingTime = metrics.reduce((sum, m) => sum + m.averageProcessingTime, 0) / metrics.length;
+    const avgProcessingTime =
+      metrics.reduce((sum, m) => sum + m.averageProcessingTime, 0) /
+      metrics.length;
 
     return {
       totalSuggestions,
       totalProcessingTime: totalCalls * avgProcessingTime,
       averageResponseTime: avgProcessingTime,
       generatorCount: this.generators.size,
-      cacheHitRate: 0 // Would need to track hits to calculate
+      cacheHitRate: 0, // Would need to track hits to calculate
     };
   }
 }

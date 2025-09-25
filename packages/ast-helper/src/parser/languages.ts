@@ -3,8 +3,8 @@
  * Defines supported languages with their grammars and detection rules
  */
 
-import * as path from 'path';
-import { LanguageConfig } from './types.js';
+import * as path from "path";
+import type { LanguageConfig } from "./types.js";
 
 /**
  * Supported languages configuration
@@ -12,28 +12,31 @@ import { LanguageConfig } from './types.js';
  */
 export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   {
-    name: 'typescript',
-    extensions: ['.ts', '.tsx'],
-    grammarUrl: 'https://unpkg.com/tree-sitter-typescript@0.20.4/tree-sitter-typescript.wasm',
-    grammarHash: '', // Will be computed at runtime for production safety
-    parserModule: 'tree-sitter-typescript',
-    wasmPath: 'tree-sitter-typescript.wasm',
+    name: "typescript",
+    extensions: [".ts", ".tsx"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-typescript@0.20.4/tree-sitter-typescript.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-typescript",
+    wasmPath: "tree-sitter-typescript.wasm",
   },
   {
-    name: 'javascript',
-    extensions: ['.js', '.jsx', '.mjs', '.cjs'],
-    grammarUrl: 'https://unpkg.com/tree-sitter-javascript@0.21.4/tree-sitter-javascript.wasm',
-    grammarHash: '', // Will be computed at runtime for production safety
-    parserModule: 'tree-sitter-javascript',
-    wasmPath: 'tree-sitter-javascript.wasm',
+    name: "javascript",
+    extensions: [".js", ".jsx", ".mjs", ".cjs"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-javascript@0.21.4/tree-sitter-javascript.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-javascript",
+    wasmPath: "tree-sitter-javascript.wasm",
   },
   {
-    name: 'python',
-    extensions: ['.py', '.pyi', '.pyw'],
-    grammarUrl: 'https://unpkg.com/tree-sitter-python@0.20.4/tree-sitter-python.wasm',
-    grammarHash: '', // Will be computed at runtime for production safety
-    parserModule: 'tree-sitter-python',
-    wasmPath: 'tree-sitter-python.wasm',
+    name: "python",
+    extensions: [".py", ".pyi", ".pyw"],
+    grammarUrl:
+      "https://unpkg.com/tree-sitter-python@0.20.4/tree-sitter-python.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-python",
+    wasmPath: "tree-sitter-python.wasm",
   },
 ];
 
@@ -108,15 +111,21 @@ export class LanguageDetector {
   static addLanguage(config: LanguageConfig): void {
     // Validate configuration
     if (!config.name || !config.extensions || config.extensions.length === 0) {
-      throw new Error('Invalid language configuration: name and extensions are required');
+      throw new Error(
+        "Invalid language configuration: name and extensions are required",
+      );
     }
 
     if (!config.grammarUrl && !config.parserModule) {
-      throw new Error('Invalid language configuration: either grammarUrl or parserModule is required');
+      throw new Error(
+        "Invalid language configuration: either grammarUrl or parserModule is required",
+      );
     }
 
     // Add to internal arrays and rebuild maps
-    const existingIndex = SUPPORTED_LANGUAGES.findIndex(lang => lang.name === config.name);
+    const existingIndex = SUPPORTED_LANGUAGES.findIndex(
+      (lang) => lang.name === config.name,
+    );
     if (existingIndex >= 0) {
       SUPPORTED_LANGUAGES[existingIndex] = config;
     } else {
@@ -130,7 +139,9 @@ export class LanguageDetector {
    * Remove a language configuration
    */
   static removeLanguage(languageName: string): boolean {
-    const index = SUPPORTED_LANGUAGES.findIndex(lang => lang.name === languageName);
+    const index = SUPPORTED_LANGUAGES.findIndex(
+      (lang) => lang.name === languageName,
+    );
     if (index >= 0) {
       SUPPORTED_LANGUAGES.splice(index, 1);
       this.buildMaps();
@@ -143,7 +154,10 @@ export class LanguageDetector {
    * Detect language from file content (advanced detection)
    * This could be extended to analyze file content for better detection
    */
-  static detectLanguageFromContent(filePath: string, content: string): string | null {
+  static detectLanguageFromContent(
+    filePath: string,
+    content: string,
+  ): string | null {
     // First try extension-based detection
     const extLang = this.detectLanguage(filePath);
     if (extLang) {
@@ -153,22 +167,28 @@ export class LanguageDetector {
     // Content-based detection patterns
     const contentPatterns: Array<{ pattern: RegExp; language: string }> = [
       // TypeScript-specific patterns
-      { pattern: /^import\s+.*\s+from\s+['"].*['"];?\s*$/m, language: 'typescript' },
-      { pattern: /interface\s+\w+\s*\{/, language: 'typescript' },
-      { pattern: /type\s+\w+\s*=/, language: 'typescript' },
-      { pattern: /:\s*(string|number|boolean|any)\s*[;,}]/, language: 'typescript' },
+      {
+        pattern: /^import\s+.*\s+from\s+['"].*['"];?\s*$/m,
+        language: "typescript",
+      },
+      { pattern: /interface\s+\w+\s*\{/, language: "typescript" },
+      { pattern: /type\s+\w+\s*=/, language: "typescript" },
+      {
+        pattern: /:\s*(string|number|boolean|any)\s*[;,}]/,
+        language: "typescript",
+      },
 
-      // JavaScript-specific patterns  
-      { pattern: /require\s*\(['"].*['"]\)/, language: 'javascript' },
-      { pattern: /module\.exports\s*=/, language: 'javascript' },
-      { pattern: /exports\.\w+\s*=/, language: 'javascript' },
+      // JavaScript-specific patterns
+      { pattern: /require\s*\(['"].*['"]\)/, language: "javascript" },
+      { pattern: /module\.exports\s*=/, language: "javascript" },
+      { pattern: /exports\.\w+\s*=/, language: "javascript" },
 
       // Python-specific patterns
-      { pattern: /^from\s+\w+\s+import\s+/m, language: 'python' },
-      { pattern: /^import\s+\w+/m, language: 'python' },
-      { pattern: /def\s+\w+\s*\([^)]*\)\s*:/, language: 'python' },
-      { pattern: /class\s+\w+\s*(\([^)]*\))?\s*:/, language: 'python' },
-      { pattern: /if\s+__name__\s*==\s*['"]__main__['"]/, language: 'python' },
+      { pattern: /^from\s+\w+\s+import\s+/m, language: "python" },
+      { pattern: /^import\s+\w+/m, language: "python" },
+      { pattern: /def\s+\w+\s*\([^)]*\)\s*:/, language: "python" },
+      { pattern: /class\s+\w+\s*(\([^)]*\))?\s*:/, language: "python" },
+      { pattern: /if\s+__name__\s*==\s*['"]__main__['"]/, language: "python" },
     ];
 
     // Check content against patterns
@@ -186,9 +206,15 @@ export class LanguageDetector {
   /**
    * Get language statistics
    */
-  static getLanguageStats(): Record<string, { extensions: number; hasNative: boolean; hasWasm: boolean }> {
-    const stats: Record<string, { extensions: number; hasNative: boolean; hasWasm: boolean }> = {};
-    
+  static getLanguageStats(): Record<
+    string,
+    { extensions: number; hasNative: boolean; hasWasm: boolean }
+  > {
+    const stats: Record<
+      string,
+      { extensions: number; hasNative: boolean; hasWasm: boolean }
+    > = {};
+
     for (const config of SUPPORTED_LANGUAGES) {
       stats[config.name] = {
         extensions: config.extensions.length,

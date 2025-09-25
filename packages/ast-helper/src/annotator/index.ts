@@ -4,7 +4,7 @@
  */
 
 // Main engine
-export { AnnotationEngine } from './annotation-engine.js';
+export { AnnotationEngine } from "./annotation-engine.js";
 
 // Core types and interfaces
 export type {
@@ -16,24 +16,24 @@ export type {
   DependencyAnalysisConfig,
   SummaryTemplate,
   SummaryPattern,
-  SummaryGenerationConfig
-} from './types.js';
+  SummaryGenerationConfig,
+} from "./types.js";
 
 export {
   SemanticTag,
   PurposeCategory,
   DependencyType,
-  DEFAULT_ANNOTATION_CONFIG
-} from './types.js';
+  DEFAULT_ANNOTATION_CONFIG,
+} from "./types.js";
 
 // Language-specific extractors
 export {
   TypeScriptExtractor,
   JavaScriptExtractor,
-  ExtractionUtils
-} from './extractors/index.js';
+  ExtractionUtils,
+} from "./extractors/index.js";
 
 // Analysis components
-export { ComplexityAnalyzer } from './complexity-analyzer.js';
-export { DependencyAnalyzer } from './dependency-analyzer.js';
-export { SummaryGenerator } from './summary-generator.js';
+export { ComplexityAnalyzer } from "./complexity-analyzer.js";
+export { DependencyAnalyzer } from "./dependency-analyzer.js";
+export { SummaryGenerator } from "./summary-generator.js";

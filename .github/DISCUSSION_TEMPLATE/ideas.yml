@@ -4,10 +4,10 @@ body:
     attributes:
       value: |
         Have an idea for improving ast-copilot-helper? We'd love to hear it!
-        
+
         This is the place to discuss new features, enhancements, and creative ideas.
         Before posting, please check if your idea has already been discussed.
-        
+
   - type: input
     id: title
     attributes:
@@ -16,7 +16,7 @@ body:
       placeholder: e.g., "Add support for Python AST analysis"
     validations:
       required: true
-      
+
   - type: textarea
     id: description
     attributes:
@@ -28,7 +28,7 @@ body:
         What are the benefits?
     validations:
       required: true
-      
+
   - type: textarea
     id: use-cases
     attributes:
@@ -37,7 +37,7 @@ body:
       placeholder: |
         Example 1: ...
         Example 2: ...
-        
+
   - type: dropdown
     id: scope
     attributes:
@@ -53,7 +53,7 @@ body:
         - Multiple components
     validations:
       required: true
-      
+
   - type: dropdown
     id: complexity
     attributes:
@@ -67,7 +67,7 @@ body:
         - Unknown
     validations:
       required: false
-      
+
   - type: checkboxes
     id: implementation
     attributes:
@@ -77,7 +77,7 @@ body:
         - label: I'm willing to help implement this feature
         - label: I need guidance on how to get started
         - label: I prefer to just suggest the idea
-        
+
   - type: checkboxes
     id: terms
     attributes:

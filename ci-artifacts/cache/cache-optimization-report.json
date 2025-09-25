@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-09-22T02:54:24.033Z",
+  "timestamp": "2025-09-24T02:16:33.337Z",
   "statistics": {
     "totalEntries": 0,
     "totalSize": 0,
@@ -11,16 +11,9 @@
   "strategies": [
     {
       "name": "Node.js Dependencies",
-      "pattern": [
-        "~/.npm",
-        "node_modules",
-        "**/node_modules"
-      ],
+      "pattern": ["~/.npm", "node_modules", "**/node_modules"],
       "keyPattern": "${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}",
-      "restoreKeys": [
-        "${{ runner.os }}-node-",
-        "${{ runner.os }}-"
-      ],
+      "restoreKeys": ["${{ runner.os }}-node-", "${{ runner.os }}-"],
       "ttl": 168,
       "compression": true,
       "priority": "high",
@@ -28,12 +21,7 @@
     },
     {
       "name": "Build Artifacts",
-      "pattern": [
-        "dist",
-        "build",
-        "packages/*/dist",
-        "packages/*/build"
-      ],
+      "pattern": ["dist", "build", "packages/*/dist", "packages/*/build"],
       "keyPattern": "${{ runner.os }}-build-${{ github.sha }}",
       "restoreKeys": [
         "${{ runner.os }}-build-${{ github.ref_name }}-",
@@ -46,11 +34,7 @@
     },
     {
       "name": "Test Results",
-      "pattern": [
-        "coverage",
-        "test-results",
-        ".nyc_output"
-      ],
+      "pattern": ["coverage", "test-results", ".nyc_output"],
       "keyPattern": "${{ runner.os }}-test-${{ hashFiles('**/*.test.ts', '**/*.test.js') }}-${{ github.sha }}",
       "restoreKeys": [
         "${{ runner.os }}-test-${{ hashFiles('**/*.test.ts', '**/*.test.js') }}-",
@@ -63,14 +47,9 @@
     },
     {
       "name": "TypeScript Compilation",
-      "pattern": [
-        "**/*.tsbuildinfo",
-        ".tscache"
-      ],
+      "pattern": ["**/*.tsbuildinfo", ".tscache"],
       "keyPattern": "${{ runner.os }}-tsc-${{ hashFiles('**/tsconfig*.json', '**/*.ts') }}",
-      "restoreKeys": [
-        "${{ runner.os }}-tsc-"
-      ],
+      "restoreKeys": ["${{ runner.os }}-tsc-"],
       "ttl": 12,
       "compression": false,
       "priority": "high",
@@ -78,15 +57,9 @@
     },
     {
       "name": "Package Manager Cache",
-      "pattern": [
-        "~/.yarn/cache",
-        "~/.pnpm-store",
-        "~/.cache/pip"
-      ],
+      "pattern": ["~/.yarn/cache", "~/.pnpm-store", "~/.cache/pip"],
       "keyPattern": "${{ runner.os }}-pkg-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}",
-      "restoreKeys": [
-        "${{ runner.os }}-pkg-"
-      ],
+      "restoreKeys": ["${{ runner.os }}-pkg-"],
       "ttl": 168,
       "compression": true,
       "priority": "medium",
@@ -94,14 +67,9 @@
     },
     {
       "name": "Tool Binaries",
-      "pattern": [
-        "~/.local/bin",
-        "/usr/local/bin/tools"
-      ],
+      "pattern": ["~/.local/bin", "/usr/local/bin/tools"],
       "keyPattern": "${{ runner.os }}-tools-${{ hashFiles('.tool-versions', '**/tool-config.json') }}",
-      "restoreKeys": [
-        "${{ runner.os }}-tools-"
-      ],
+      "restoreKeys": ["${{ runner.os }}-tools-"],
       "ttl": 720,
       "compression": true,
       "priority": "low",

@@ -73,7 +73,7 @@ const report = await errorManager.generateErrorReport(
   {
     operation: "data-processing",
     component: "UserService",
-  }
+  },
 );
 
 const result = await errorManager.reportError(report);
@@ -480,12 +480,12 @@ const history = await errorManager.getErrorHistory();
 
 // Filter by severity
 const criticalErrors = history.filter(
-  (entry) => entry.error.severity === "critical"
+  (entry) => entry.error.severity === "critical",
 );
 
 // Filter by time range
 const recentErrors = history.filter(
-  (entry) => entry.error.timestamp > new Date(Date.now() - 24 * 60 * 60 * 1000)
+  (entry) => entry.error.timestamp > new Date(Date.now() - 24 * 60 * 60 * 1000),
 );
 ```
 
@@ -495,11 +495,14 @@ const recentErrors = history.filter(
 const history = await errorManager.getErrorHistory();
 
 // Group by category
-const errorsByCategory = history.reduce((acc, entry) => {
-  const category = entry.error.category;
-  acc[category] = (acc[category] || 0) + 1;
-  return acc;
-}, {} as Record<string, number>);
+const errorsByCategory = history.reduce(
+  (acc, entry) => {
+    const category = entry.error.category;
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  },
+  {} as Record<string, number>,
+);
 
 // Find most frequent errors
 const mostFrequent = Object.entries(errorsByCategory)
@@ -718,18 +721,15 @@ const errorId = result.errorId;
    ```
 
 2. **Update Configuration**:
-
    - Review and update configuration object structure
    - Set appropriate privacy settings
    - Configure diagnostic data collection options
 
 3. **Update Error Reporting**:
-
    - Replace direct `reportError()` calls with `generateErrorReport()` + `reportError()`
    - Update code expecting simple error ID return to handle `ReportResult` objects
 
 4. **Add Cleanup**:
-
    - Add `await errorManager.cleanup()` before application shutdown
 
 5. **Test Privacy Features**:

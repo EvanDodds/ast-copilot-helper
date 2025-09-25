@@ -3,7 +3,12 @@
  * Temporary implementation for testing CLI functionality without full database integration
  */
 
-import { DatabaseReader, ASTNode, ASTNodeMatch, QueryOptions } from '../types';
+import type {
+  DatabaseReader,
+  ASTNode,
+  ASTNodeMatch,
+  QueryOptions,
+} from "../types";
 
 /**
  * Mock implementation of DatabaseReader for CLI testing
@@ -18,7 +23,7 @@ export class MockDatabaseReader implements DatabaseReader {
   async initialize(): Promise<void> {
     // Mock initialization - just check if path exists
     try {
-      const { access } = await import('fs/promises');
+      const { access } = await import("fs/promises");
       await access(this.databasePath);
     } catch (error) {
       // Database path doesn't exist - that's ok for now
@@ -29,7 +34,10 @@ export class MockDatabaseReader implements DatabaseReader {
     // Mock close - nothing to cleanup
   }
 
-  async queryByIntent(_intent: string, _options?: QueryOptions): Promise<ASTNodeMatch[]> {
+  async queryByIntent(
+    _intent: string,
+    _options?: QueryOptions,
+  ): Promise<ASTNodeMatch[]> {
     // Mock query - return empty results
     return [];
   }
@@ -49,12 +57,18 @@ export class MockDatabaseReader implements DatabaseReader {
     return [];
   }
 
-  async getRecentChanges(_since: Date | string, _options?: QueryOptions): Promise<ASTNode[]> {
+  async getRecentChanges(
+    _since: Date | string,
+    _options?: QueryOptions,
+  ): Promise<ASTNode[]> {
     // Mock recent changes - return empty array
     return [];
   }
 
-  async searchNodes(_query: string, _options?: QueryOptions): Promise<ASTNodeMatch[]> {
+  async searchNodes(
+    _query: string,
+    _options?: QueryOptions,
+  ): Promise<ASTNodeMatch[]> {
     // Mock search - return empty results
     return [];
   }
@@ -64,12 +78,16 @@ export class MockDatabaseReader implements DatabaseReader {
     return true;
   }
 
-  async getIndexStats(): Promise<{ nodeCount: number; fileCount: number; lastUpdated: Date }> {
+  async getIndexStats(): Promise<{
+    nodeCount: number;
+    fileCount: number;
+    lastUpdated: Date;
+  }> {
     // Mock stats
     return {
       nodeCount: 0,
       fileCount: 0,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 }

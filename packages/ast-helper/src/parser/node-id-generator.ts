@@ -1,12 +1,13 @@
 /**
  * Node ID Generation System
- * 
+ *
  * Provides deterministic, stable node ID generation using SHA-256 hashing
  * with collision detection and performance optimizations for large-scale processing.
  */
 
-import { createHash } from 'crypto';
-import { Position, NodeType, AST_CONFIG } from './ast-schema';
+import { createHash } from "crypto";
+import type { Position, NodeType } from "./ast-schema";
+import { AST_CONFIG } from "./ast-schema";
 
 /**
  * Interface for the minimal node data required for ID generation
@@ -70,7 +71,7 @@ export interface IDGenerationOptions {
 
 /**
  * Deterministic Node ID Generator
- * 
+ *
  * Generates stable, unique identifiers for AST nodes using SHA-256 hashing
  * of normalized node data. Provides collision detection and performance monitoring.
  */
@@ -79,7 +80,7 @@ export class NodeIDGenerator {
     enableCollisionDetection: true,
     maxCollisionEntries: 1000,
     enablePerformanceTracking: false,
-    salt: '',
+    salt: "",
   };
 
   private options: Required<IDGenerationOptions>;
@@ -99,24 +100,26 @@ export class NodeIDGenerator {
 
   /**
    * Generate a deterministic ID for an AST node
-   * 
+   *
    * @param node - Node identity data for ID generation
    * @returns 64-character SHA-256 hash string
    */
   generateId(node: NodeIdentityData): string {
-    const startTime = this.options.enablePerformanceTracking ? performance.now() : 0;
+    const startTime = this.options.enablePerformanceTracking
+      ? performance.now()
+      : 0;
 
     try {
       // Normalize and validate input data
       const normalizedNode = this.normalizeNodeData(node);
-      
+
       // Create deterministic content for hashing
       const hashContent = this.createHashContent(normalizedNode);
-      
+
       // Generate SHA-256 hash
       const id = createHash(AST_CONFIG.HASH_ALGORITHM)
-        .update(hashContent, 'utf-8')
-        .digest('hex');
+        .update(hashContent, "utf-8")
+        .digest("hex");
 
       // Handle collision detection
       if (this.options.enableCollisionDetection) {
@@ -128,18 +131,22 @@ export class NodeIDGenerator {
 
       return id;
     } catch (error) {
-      throw new Error(`Failed to generate node ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate node ID: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
   /**
    * Generate IDs for multiple nodes efficiently
-   * 
+   *
    * @param nodes - Array of node identity data
    * @returns Array of generated IDs in same order
    */
   generateBatch(nodes: NodeIdentityData[]): string[] {
-    const startTime = this.options.enablePerformanceTracking ? performance.now() : 0;
+    const startTime = this.options.enablePerformanceTracking
+      ? performance.now()
+      : 0;
     const ids: string[] = [];
 
     for (const node of nodes) {
@@ -150,7 +157,7 @@ export class NodeIDGenerator {
     if (this.options.enablePerformanceTracking && startTime > 0) {
       const duration = performance.now() - startTime;
       const rate = (nodes.length / duration) * 1000; // IDs per second
-      
+
       if (rate > this.stats.peakGenerationRate) {
         this.stats.peakGenerationRate = rate;
       }
@@ -161,12 +168,12 @@ export class NodeIDGenerator {
 
   /**
    * Validate that a string is a properly formatted node ID
-   * 
+   *
    * @param id - String to validate
    * @returns True if valid SHA-256 hex string
    */
   static validateId(id: string): boolean {
-    if (typeof id !== 'string') {
+    if (typeof id !== "string") {
       return false;
     }
 
@@ -181,23 +188,26 @@ export class NodeIDGenerator {
 
   /**
    * Check if two node data objects would generate the same ID
-   * 
+   *
    * @param node1 - First node data
    * @param node2 - Second node data
    * @returns True if IDs would be identical
    */
-  static wouldCollide(node1: NodeIdentityData, node2: NodeIdentityData): boolean {
+  static wouldCollide(
+    node1: NodeIdentityData,
+    node2: NodeIdentityData,
+  ): boolean {
     const generator = new NodeIDGenerator({ enableCollisionDetection: false });
-    
+
     const id1 = generator.generateId(node1);
     const id2 = generator.generateId(node2);
-    
+
     return id1 === id2;
   }
 
   /**
    * Get collision detection results
-   * 
+   *
    * @returns Array of all detected collisions
    */
   getCollisions(): CollisionData[] {
@@ -206,7 +216,7 @@ export class NodeIDGenerator {
 
   /**
    * Get generation statistics and performance metrics
-   * 
+   *
    * @returns Current statistics object
    */
   getStats(): IDGenerationStats {
@@ -236,25 +246,31 @@ export class NodeIDGenerator {
   private normalizeNodeData(node: NodeIdentityData): NodeIdentityData {
     // Validate required fields
     if (!node.filePath || !node.type || !node.start || !node.end) {
-      throw new Error('Node data missing required fields (filePath, type, start, end)');
+      throw new Error(
+        "Node data missing required fields (filePath, type, start, end)",
+      );
     }
 
     // Validate position data
-    if (node.start.line < 1 || node.start.column < 0 ||
-        node.end.line < 1 || node.end.column < 0) {
-      throw new Error('Invalid position data in node');
+    if (
+      node.start.line < 1 ||
+      node.start.column < 0 ||
+      node.end.line < 1 ||
+      node.end.column < 0
+    ) {
+      throw new Error("Invalid position data in node");
     }
 
     // Normalize file path (ensure consistent path separators)
-    const normalizedFilePath = node.filePath.replace(/\\/g, '/');
+    const normalizedFilePath = node.filePath.replace(/\\/g, "/");
 
     return {
       filePath: normalizedFilePath,
       type: node.type,
-      name: node.name || '',
+      name: node.name || "",
       start: node.start,
       end: node.end,
-      discriminator: node.discriminator || '',
+      discriminator: node.discriminator || "",
     };
   }
 
@@ -266,15 +282,15 @@ export class NodeIDGenerator {
     const components = [
       node.filePath,
       node.type,
-      node.name || '',
+      node.name || "",
       `${node.start.line}:${node.start.column}`,
       `${node.end.line}:${node.end.column}`,
-      node.discriminator || '',
+      node.discriminator || "",
       this.options.salt, // Include salt for additional uniqueness if needed
     ];
 
     // Join with null separator to prevent ambiguity
-    return components.join('\0');
+    return components.join("\0");
   }
 
   /**
@@ -284,10 +300,10 @@ export class NodeIDGenerator {
     if (this.collisionMap.has(id)) {
       // Collision detected
       const existing = this.collisionMap.get(id)!;
-      
+
       // Check if this is genuinely different node data
-      const isDuplicate = existing.nodes.some(existingNode => 
-        this.nodesAreEquivalent(existingNode, node)
+      const isDuplicate = existing.nodes.some((existingNode) =>
+        this.nodesAreEquivalent(existingNode, node),
       );
 
       if (!isDuplicate) {
@@ -315,7 +331,10 @@ export class NodeIDGenerator {
   /**
    * Check if two node data objects are equivalent
    */
-  private nodesAreEquivalent(node1: NodeIdentityData, node2: NodeIdentityData): boolean {
+  private nodesAreEquivalent(
+    node1: NodeIdentityData,
+    node2: NodeIdentityData,
+  ): boolean {
     return (
       node1.filePath === node2.filePath &&
       node1.type === node2.type &&
@@ -344,8 +363,8 @@ export class NodeIDGenerator {
       }
 
       // Calculate average generation time
-      this.stats.averageGenerationTime = 
-        this.generationTimes.reduce((sum, time) => sum + time, 0) / 
+      this.stats.averageGenerationTime =
+        this.generationTimes.reduce((sum, time) => sum + time, 0) /
         this.generationTimes.length;
     }
   }
@@ -366,34 +385,34 @@ export class NodeIDGenerator {
 export class NodeIDUtils {
   /**
    * Extract file path hash from a node ID (for partitioning)
-   * 
+   *
    * @param id - Node ID to extract from
    * @returns First 8 characters as file path hash
    */
   static extractFilePathHash(id: string): string {
     if (!NodeIDGenerator.validateId(id)) {
-      throw new Error('Invalid node ID format');
+      throw new Error("Invalid node ID format");
     }
     return id.substring(0, 8);
   }
 
   /**
    * Generate a short display ID for debugging
-   * 
+   *
    * @param id - Full node ID
    * @param length - Number of characters to include (default: 8)
    * @returns Shortened ID for display
    */
-  static shortId(id: string, length: number = 8): string {
+  static shortId(id: string, length = 8): string {
     if (!NodeIDGenerator.validateId(id)) {
-      throw new Error('Invalid node ID format');
+      throw new Error("Invalid node ID format");
     }
     return id.substring(0, Math.max(4, Math.min(length, 64)));
   }
 
   /**
    * Compare two node IDs lexicographically
-   * 
+   *
    * @param id1 - First ID
    * @param id2 - Second ID
    * @returns -1, 0, or 1 for sorting

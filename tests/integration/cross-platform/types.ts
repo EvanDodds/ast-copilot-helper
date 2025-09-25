@@ -33,17 +33,17 @@ export interface PlatformResult {
 /**
  * Test result categories for cross-platform compatibility testing
  */
-export type TestCategory = 
-  | 'parsing' 
-  | 'indexing' 
-  | 'querying' 
-  | 'file_operations' 
-  | 'mcp_server' 
-  | 'platform_specific'
-  | 'filesystem'
-  | 'binary'
-  | 'nodejs'
-  | 'performance';
+export type TestCategory =
+  | "parsing"
+  | "indexing"
+  | "querying"
+  | "file_operations"
+  | "mcp_server"
+  | "platform_specific"
+  | "filesystem"
+  | "binary"
+  | "nodejs"
+  | "performance";
 
 /**
  * Core test result interface
@@ -188,7 +188,7 @@ export interface PlatformPerformanceMetrics {
 }
 
 export interface PlatformIssue {
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   description: string;
   platform: string;
   workaround?: string;

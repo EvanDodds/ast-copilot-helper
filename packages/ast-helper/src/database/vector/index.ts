@@ -1,14 +1,14 @@
 /**
  * Vector Database Module
- * 
+ *
  * Exports types, configuration, and utilities for HNSW vector database
  */
 
 // Core types
-export * from './types.js';
+export * from "./types.js";
 
 // Configuration management
-export * from './vector-config.js';
+export * from "./vector-config.js";
 
 // Re-export key interfaces for convenience
 export type {
@@ -19,14 +19,14 @@ export type {
   VectorInsert,
   VectorDBStats,
   SearchOptions,
-} from './types.js';
+} from "./types.js";
 
 export {
   VectorConfigManager,
   createVectorConfig,
   loadVectorConfig,
-} from './vector-config.js';
+} from "./vector-config.js";
 
 // Storage and database implementations
-export { SQLiteVectorStorage } from './sqlite-storage.js';
-export { HNSWVectorDatabase } from './hnsw-database.js';
+export { SQLiteVectorStorage } from "./sqlite-storage.js";
+export { HNSWVectorDatabase } from "./hnsw-database.js";

@@ -7,12 +7,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.main = main;
 function main() {
-    console.log('ast-mcp-server CLI - Structure initialized');
-    console.log('This MCP server will serve AST data from .astdb/ database');
+  console.log("ast-mcp-server CLI - Structure initialized");
+  console.log("This MCP server will serve AST data from .astdb/ database");
 }
 // Only execute if this file is run directly
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-var isMainModule = require.main === module;
+
+const isMainModule = require.main === module;
 if (isMainModule) {
-    main();
+  main();
 }

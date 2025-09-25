@@ -11,9 +11,10 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 ### 🔧 Core Development Secrets
 
 #### `GITHUB_TOKEN`
+
 - **Description**: GitHub personal access token for repository operations
 - **Used by**: Most workflows for GitHub API access, releases, and repository management
-- **Required permissions**: 
+- **Required permissions**:
   - `repo` (full control of private repositories)
   - `write:packages` (upload packages to GitHub Package Registry)
   - `read:org` (read organization membership)
@@ -23,6 +24,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 ### 📦 Package Distribution Secrets
 
 #### `NPM_TOKEN`
+
 - **Description**: NPM authentication token for publishing packages
 - **Used by**: Publishing AST Helper CLI and core packages to npm registry
 - **Setup Instructions**:
@@ -33,6 +35,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 - **Workflows**: `ci-cd.yml`, `release.yml`, `distribution.yml`
 
 #### `VSCE_PAT` / `VSCE_TOKEN`
+
 - **Description**: Visual Studio Code Extension (VSCE) Personal Access Token
 - **Used by**: Publishing VSCode extensions to the marketplace
 - **Setup Instructions**:
@@ -46,6 +49,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 ### 🔒 Code Signing Secrets
 
 #### `WIN_CERT_PASSWORD`
+
 - **Description**: Password for Windows code signing certificate
 - **Used by**: Signing Windows binaries and installers
 - **Setup Instructions**:
@@ -55,6 +59,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 - **Workflows**: `distribution.yml`
 
 #### `MACOS_CERT_PASSWORD`
+
 - **Description**: Password for macOS code signing certificate
 - **Used by**: Signing macOS applications and packages
 - **Setup Instructions**:
@@ -64,6 +69,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 - **Workflows**: `distribution.yml`
 
 #### `LINUX_GPG_PASSPHRASE`
+
 - **Description**: Passphrase for GPG key used for Linux package signing
 - **Used by**: Signing Linux packages and repositories
 - **Setup Instructions**:
@@ -75,6 +81,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 ### 🚀 Deployment Secrets
 
 #### `STAGING_HEALTH_CHECK_URL`
+
 - **Description**: URL endpoint for staging environment health checks
 - **Used by**: Verifying staging deployment health
 - **Setup Instructions**:
@@ -84,6 +91,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 - **Workflows**: `ci-cd.yml`
 
 #### `PRODUCTION_HEALTH_CHECK_URLS`
+
 - **Description**: Comma-separated URLs for production environment health checks
 - **Used by**: Verifying production deployment health across multiple instances
 - **Setup Instructions**:
@@ -93,6 +101,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 - **Workflows**: `ci-cd.yml`
 
 #### `DEPLOYMENT_APPROVAL_TOKEN`
+
 - **Description**: Token for automated deployment approvals
 - **Used by**: Production deployment approval workflows
 - **Setup Instructions**:
@@ -102,6 +111,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 - **Workflows**: `ci-cd.yml`
 
 #### `BLUE_GREEN_DEPLOYMENT`
+
 - **Description**: Configuration for blue-green deployment strategy
 - **Used by**: Managing zero-downtime deployments
 - **Setup Instructions**:
@@ -113,6 +123,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 ### 📢 Notification Secrets
 
 #### `SLACK_WEBHOOK_URL`
+
 - **Description**: Slack webhook URL for deployment notifications
 - **Used by**: Sending deployment status updates to Slack channels
 - **Setup Instructions**:
@@ -123,6 +134,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
 - **Workflows**: `distribution.yml`
 
 #### `TEAMS_WEBHOOK_URL`
+
 - **Description**: Microsoft Teams webhook URL for deployment notifications
 - **Used by**: Sending deployment status updates to Teams channels
 - **Setup Instructions**:
@@ -185,26 +197,26 @@ curl -X PUT \
 
 ### Secret Priority Matrix
 
-| Secret | Priority | Impact if Missing | Setup Complexity |
-|--------|----------|------------------|------------------|
-| `GITHUB_TOKEN` | Critical | CI/CD fails completely | Auto-generated |
-| `NPM_TOKEN` | High | Can't publish packages | Medium |
-| `VSCE_PAT` | High | Can't publish VS Code extension | Medium |
-| `SLACK_WEBHOOK_URL` | Medium | No notifications | Low |
-| `TEAMS_WEBHOOK_URL` | Medium | No notifications | Low |
-| `WIN_CERT_PASSWORD` | High | Unsigned Windows binaries | High |
-| `MACOS_CERT_PASSWORD` | High | Unsigned macOS binaries | High |
-| `LINUX_GPG_PASSPHRASE` | Medium | Unsigned Linux packages | Medium |
-| `STAGING_HEALTH_CHECK_URL` | Medium | Can't verify staging | Low |
-| `PRODUCTION_HEALTH_CHECK_URLS` | High | Can't verify production | Low |
-| `DEPLOYMENT_APPROVAL_TOKEN` | Medium | Manual approval required | Medium |
-| `BLUE_GREEN_DEPLOYMENT` | Low | Standard deployment only | High |
+| Secret                         | Priority | Impact if Missing               | Setup Complexity |
+| ------------------------------ | -------- | ------------------------------- | ---------------- |
+| `GITHUB_TOKEN`                 | Critical | CI/CD fails completely          | Auto-generated   |
+| `NPM_TOKEN`                    | High     | Can't publish packages          | Medium           |
+| `VSCE_PAT`                     | High     | Can't publish VS Code extension | Medium           |
+| `SLACK_WEBHOOK_URL`            | Medium   | No notifications                | Low              |
+| `TEAMS_WEBHOOK_URL`            | Medium   | No notifications                | Low              |
+| `WIN_CERT_PASSWORD`            | High     | Unsigned Windows binaries       | High             |
+| `MACOS_CERT_PASSWORD`          | High     | Unsigned macOS binaries         | High             |
+| `LINUX_GPG_PASSPHRASE`         | Medium   | Unsigned Linux packages         | Medium           |
+| `STAGING_HEALTH_CHECK_URL`     | Medium   | Can't verify staging            | Low              |
+| `PRODUCTION_HEALTH_CHECK_URLS` | High     | Can't verify production         | Low              |
+| `DEPLOYMENT_APPROVAL_TOKEN`    | Medium   | Manual approval required        | Medium           |
+| `BLUE_GREEN_DEPLOYMENT`        | Low      | Standard deployment only        | High             |
 
 ## Quick Setup Checklist
 
 - [ ] `GITHUB_TOKEN` - Usually auto-configured ✓
 - [ ] `NPM_TOKEN` - Get from npmjs.com
-- [ ] `VSCE_PAT` - Get from dev.azure.com  
+- [ ] `VSCE_PAT` - Get from dev.azure.com
 - [ ] `SLACK_WEBHOOK_URL` - Configure Slack webhook
 - [ ] `TEAMS_WEBHOOK_URL` - Configure Teams webhook
 - [ ] `WIN_CERT_PASSWORD` - Windows signing certificate
@@ -220,16 +232,19 @@ curl -X PUT \
 ### Common Issues
 
 **"Secret not found" errors**:
+
 - Verify secret name matches exactly (case-sensitive)
 - Check that secret is set at repository level, not organization level
 - Ensure the workflow has permission to access secrets
 
 **Authentication failures**:
+
 - Verify token hasn't expired
 - Check token permissions/scopes
 - Regenerate token if necessary
 
 **Deployment failures**:
+
 - Validate health check URLs are accessible
 - Verify deployment configuration format
 - Check environment-specific settings
@@ -237,8 +252,9 @@ curl -X PUT \
 ### Support
 
 For additional help:
+
 - Check GitHub Actions documentation
-- Review workflow logs for specific error messages  
+- Review workflow logs for specific error messages
 - Contact project maintainers via GitHub Issues
 - Reference the [TROUBLESHOOTING.md](../troubleshooting.md) guide
 

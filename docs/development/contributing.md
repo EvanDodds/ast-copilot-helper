@@ -249,13 +249,13 @@ Follow these guidelines while making changes:
  */
 export async function parseTypeScriptFile(
   filePath: string,
-  options: ParseOptions = {}
+  options: ParseOptions = {},
 ): Promise<ASTAnnotation[]> {
   const source = await readFile(filePath, "utf8");
   const sourceFile = ts.createSourceFile(
     filePath,
     source,
-    ts.ScriptTarget.Latest
+    ts.ScriptTarget.Latest,
   );
 
   const visitor = new TypeScriptASTVisitor(options);
@@ -399,21 +399,18 @@ Related to #456
 ### 7. Code Review Process
 
 1. **Automated checks** must pass:
-
    - All tests
    - Code linting
    - Type checking
    - Security scans
 
 2. **Maintainer review**:
-
    - Code quality and style
    - Test coverage
    - Documentation completeness
    - Breaking change assessment
 
 3. **Address feedback**:
-
    - Make requested changes
    - Push updates to your branch
    - Respond to review comments
@@ -460,7 +457,7 @@ class ParseError extends Error {
   constructor(
     message: string,
     public readonly filePath: string,
-    public readonly line?: number
+    public readonly line?: number,
   ) {
     super(message);
     this.name = "ParseError";
@@ -475,7 +472,7 @@ async function parseFile(filePath: string): Promise<ASTAnnotation[]> {
     if (error instanceof SyntaxError) {
       throw new ParseError(
         `Syntax error in ${filePath}: ${error.message}`,
-        filePath
+        filePath,
       );
     }
     throw error;

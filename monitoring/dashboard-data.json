@@ -1,0 +1,115 @@
+{
+  "id": "dashboard-1758680134197",
+  "title": "CI/CD Pipeline Dashboard",
+  "description": "Comprehensive monitoring and metrics for the CI/CD pipeline",
+  "lastUpdated": "2025-09-24T02:15:34.197Z",
+  "metrics": [
+    {
+      "id": "build-time",
+      "name": "Build Time",
+      "description": "Total time for complete CI/CD pipeline execution",
+      "type": "gauge",
+      "unit": "seconds",
+      "value": 0,
+      "target": 300,
+      "threshold": {
+        "warning": 900,
+        "critical": 1800
+      },
+      "trend": "stable",
+      "trendPercentage": 0,
+      "history": []
+    },
+    {
+      "id": "test-coverage",
+      "name": "Test Coverage",
+      "description": "Percentage of code covered by automated tests",
+      "type": "gauge",
+      "unit": "%",
+      "value": 85,
+      "target": 80,
+      "threshold": {
+        "warning": 70,
+        "critical": 60
+      },
+      "trend": "stable",
+      "trendPercentage": 0,
+      "history": []
+    },
+    {
+      "id": "success-rate",
+      "name": "Build Success Rate",
+      "description": "Percentage of successful builds over time",
+      "type": "line",
+      "unit": "%",
+      "value": 100,
+      "target": 95,
+      "threshold": {
+        "warning": 85,
+        "critical": 75
+      },
+      "trend": "stable",
+      "trendPercentage": 0,
+      "history": []
+    },
+    {
+      "id": "deployment-frequency",
+      "name": "Deployment Frequency",
+      "description": "Average number of deployments per day",
+      "type": "bar",
+      "unit": "per day",
+      "value": 0,
+      "target": 1,
+      "threshold": {
+        "warning": 0.5,
+        "critical": 0.2
+      },
+      "trend": "stable",
+      "trendPercentage": 0,
+      "history": []
+    },
+    {
+      "id": "resource-utilization",
+      "name": "Resource Utilization",
+      "description": "Average memory usage during builds",
+      "type": "line",
+      "unit": "MB",
+      "value": 0,
+      "target": 2000,
+      "threshold": {
+        "warning": 4000,
+        "critical": 6000
+      },
+      "trend": "stable",
+      "trendPercentage": 0,
+      "history": []
+    },
+    {
+      "id": "cache-efficiency",
+      "name": "Cache Efficiency",
+      "description": "Percentage of cache hits vs. total cache requests",
+      "type": "gauge",
+      "unit": "%",
+      "value": 0,
+      "target": 85,
+      "threshold": {
+        "warning": 70,
+        "critical": 50
+      },
+      "trend": "stable",
+      "trendPercentage": 0,
+      "history": []
+    }
+  ],
+  "alerts": [],
+  "buildHistory": [],
+  "config": {
+    "refreshIntervalMinutes": 5,
+    "historyRetentionDays": 30,
+    "autoRefresh": true,
+    "theme": "light",
+    "enableRealTimeUpdates": false,
+    "customMetrics": []
+  },
+  "generated": "2025-09-24T02:15:34.215Z"
+}

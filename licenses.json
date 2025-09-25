@@ -1,0 +1,896 @@
+{
+  "generatedAt": "2025-09-25T02:27:42.337Z",
+  "generator": "ast-copilot-helper-legal-compliance",
+  "totalDependencies": 54,
+  "dependencies": [
+    {
+      "name": "vue",
+      "version": "^3.3.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Evan You"],
+      "sourceUrl": "git+https://github.com/vuejs/core.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/vue/LICENSE"
+    },
+    {
+      "name": "@vue/theme",
+      "version": "^2.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Evan You"],
+      "sourceUrl": "git+https://github.com/vuejs/theme.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@vue/theme/LICENSE"
+    },
+    {
+      "name": "vitepress",
+      "version": "^1.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Evan You"],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/vitepress/LICENSE"
+    },
+    {
+      "name": "@eslint/js",
+      "version": "^9.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [],
+      "sourceUrl": "https://github.com/eslint/eslint.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@eslint/js/LICENSE"
+    },
+    {
+      "name": "@types/js-yaml",
+      "version": "^4.0.9",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Bart van der Schoor",
+        "Sebastian Clausen",
+        "ExE Boss",
+        "Armaan Tobaccowalla",
+        "Linus Unnebäck"
+      ],
+      "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@types/js-yaml/LICENSE"
+    },
+    {
+      "name": "@types/node",
+      "version": "^20.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Microsoft TypeScript",
+        "Alberto Schiabel",
+        "Andrew Makarov",
+        "Benjamin Toueg",
+        "David Junger",
+        "Mohsen Azimi",
+        "Nikita Galkin",
+        "Sebastian Silbermann",
+        "Wilco Bakker",
+        "Marcin Kopacz",
+        "Trivikram Kamat",
+        "Junxiao Shi",
+        "Ilia Baryshnikov",
+        "ExE Boss",
+        "Piotr Błażejewicz",
+        "Anna Henningsen",
+        "Victor Perin",
+        "NodeJS Contributors",
+        "Linus Unnebäck",
+        "wafuwafu13",
+        "Matteo Collina",
+        "Dmitry Semigradsky"
+      ],
+      "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@types/node/LICENSE"
+    },
+    {
+      "name": "@types/tmp",
+      "version": "^0.2.6",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Jared Klopper",
+        "Gyusun Yeom",
+        "Alan Plum",
+        "Carsten Klein",
+        "BendingBender"
+      ],
+      "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@types/tmp/LICENSE"
+    },
+    {
+      "name": "@typescript-eslint/eslint-plugin",
+      "version": "^8.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["typescript-eslint and other contributors"],
+      "sourceUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@typescript-eslint/eslint-plugin/LICENSE"
+    },
+    {
+      "name": "@typescript-eslint/parser",
+      "version": "^8.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["typescript-eslint and other contributors"],
+      "sourceUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@typescript-eslint/parser/LICENSE"
+    },
+    {
+      "name": "@vitest/coverage-v8",
+      "version": "^3.2.4",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Anthony Fu <anthonyfu117@hotmail.com>"],
+      "sourceUrl": "git+https://github.com/vitest-dev/vitest.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@vitest/coverage-v8/LICENSE"
+    },
+    {
+      "name": "@vitest/ui",
+      "version": "^3.2.4",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [],
+      "sourceUrl": "git+https://github.com/vitest-dev/vitest.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@vitest/ui/LICENSE"
+    },
+    {
+      "name": "eslint",
+      "version": "^9.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Nicholas C. Zakas <nicholas+npm@nczconsulting.com>"
+      ],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/eslint/LICENSE"
+    },
+    {
+      "name": "globals",
+      "version": "^16.4.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Sindre Sorhus"],
+      "attributionRequired": true
+    },
+    {
+      "name": "husky",
+      "version": "^8.0.3",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Typicode <typicode@gmail.com>", "typicode"],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/husky/LICENSE"
+    },
+    {
+      "name": "js-yaml",
+      "version": "^4.1.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Vladimir Zapparov <dervus.grim@gmail.com>",
+        "Aleksey V Zapparov <ixti@member.fsf.org> (http://www.ixti.net/)",
+        "Vitaly Puzrin <vitaly@rcdesign.ru> (https://github.com/puzrin)",
+        "Martin Grenfell <martin.grenfell@gmail.com> (http://got-ravings.blogspot.com)",
+        "by Vitaly Puzrin"
+      ],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/js-yaml/LICENSE"
+    },
+    {
+      "name": "lint-staged",
+      "version": "^16.2.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Andrey Okonetchnikov <andrey@okonet.ru>",
+        "Andrey Okonetchnikov"
+      ],
+      "sourceUrl": "git+https://github.com/lint-staged/lint-staged.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/lint-staged/LICENSE"
+    },
+    {
+      "name": "tmp",
+      "version": "^0.2.3",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "KARASZI István <github@spam.raszi.hu>",
+        "Carsten Klein <trancesilken@gmail.com> (https://github.com/silkentrance)",
+        "KARASZI István"
+      ],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/tmp/LICENSE"
+    },
+    {
+      "name": "ts-node",
+      "version": "^10.9.2",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Blake Embrey",
+        "Andrew Bradley",
+        "Blake Embrey (hello@blakeembrey.com)"
+      ],
+      "sourceUrl": "git://github.com/TypeStrong/ts-node.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/ts-node/LICENSE"
+    },
+    {
+      "name": "tsx",
+      "version": "^4.20.5",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Hiroki Osame"],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/tsx/LICENSE"
+    },
+    {
+      "name": "typescript",
+      "version": "^5.5.0",
+      "license": {
+        "spdxId": "Apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "copyrightHolders": ["Microsoft Corp."],
+      "sourceUrl": "https://github.com/microsoft/TypeScript.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/typescript/LICENSE.txt"
+    },
+    {
+      "name": "typescript-eslint",
+      "version": "^8.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["typescript-eslint and other contributors"],
+      "sourceUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/typescript-eslint/LICENSE"
+    },
+    {
+      "name": "vitest",
+      "version": "^3.2.4",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Anthony Fu <anthonyfu117@hotmail.com>",
+        "Anthony Fu <https://github.com/antfu>",
+        "by various contributors (see AUTHORS)",
+        ">",
+        "Robert Kieffer",
+        "Terkel Gjervig Nielsen",
+        "Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)",
+        "Einar Otto Stangvik <einaros@gmail.com>",
+        "Arnout Kazemier and contributors",
+        "Luigi Pinca and contributors"
+      ],
+      "sourceUrl": "git+https://github.com/vitest-dev/vitest.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/vitest/LICENSE.md"
+    },
+    {
+      "name": "@types/node",
+      "version": "^20.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Microsoft TypeScript",
+        "Alberto Schiabel",
+        "Andrew Makarov",
+        "Benjamin Toueg",
+        "David Junger",
+        "Mohsen Azimi",
+        "Nikita Galkin",
+        "Sebastian Silbermann",
+        "Wilco Bakker",
+        "Marcin Kopacz",
+        "Trivikram Kamat",
+        "Junxiao Shi",
+        "Ilia Baryshnikov",
+        "ExE Boss",
+        "Piotr Błażejewicz",
+        "Anna Henningsen",
+        "Victor Perin",
+        "NodeJS Contributors",
+        "Linus Unnebäck",
+        "wafuwafu13",
+        "Matteo Collina",
+        "Dmitry Semigradsky"
+      ],
+      "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@types/node/LICENSE"
+    },
+    {
+      "name": "@xenova/transformers",
+      "version": "^2.17.2",
+      "license": {
+        "spdxId": "Apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "copyrightHolders": ["Xenova"],
+      "sourceUrl": "git+https://github.com/xenova/transformers.js.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@xenova/transformers/LICENSE"
+    },
+    {
+      "name": "better-sqlite3",
+      "version": "^12.1.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Joshua Wise <joshuathomaswise@gmail.com>",
+        "Joshua Wise"
+      ],
+      "sourceUrl": "git://github.com/WiseLibs/better-sqlite3.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/better-sqlite3/LICENSE"
+    },
+    {
+      "name": "chokidar",
+      "version": "^4.0.3",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Paul Miller (https://paulmillr.com)",
+        "Paul Miller (https://paulmillr.com), Elan Shanker"
+      ],
+      "sourceUrl": "git+https://github.com/paulmillr/chokidar.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/chokidar/LICENSE"
+    },
+    {
+      "name": "commander",
+      "version": "^14.0.1",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["TJ Holowaychuk <tj@vision-media.ca>"],
+      "sourceUrl": "git+https://github.com/tj/commander.js.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/commander/LICENSE"
+    },
+    {
+      "name": "hnswlib-node",
+      "version": "^3.0.0",
+      "license": {
+        "spdxId": "Apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "copyrightHolders": ["Atsushi Tatsuma"],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/hnswlib-node/LICENSE.txt"
+    },
+    {
+      "name": "minimatch",
+      "version": "^10.0.3",
+      "license": {
+        "spdxId": "ISC",
+        "name": "ISC License",
+        "url": "https://opensource.org/licenses/ISC"
+      },
+      "copyrightHolders": [
+        "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)",
+        "Isaac Z. Schlueter and Contributors"
+      ],
+      "sourceUrl": "git://github.com/isaacs/minimatch.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/minimatch/LICENSE"
+    },
+    {
+      "name": "@types/better-sqlite3",
+      "version": "^7.6.11",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Ben Davies",
+        "Mathew Rumsey",
+        "Santiago Aguilar",
+        "Alessandro Vergani",
+        "Andrew Kaiser",
+        "Mark Stewart",
+        "Florian Stamer",
+        "Beeno Tung"
+      ],
+      "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@types/better-sqlite3/LICENSE"
+    },
+    {
+      "name": "@types/minimatch",
+      "version": "^5.1.2",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["vvakame", "Shant Marouti", "BendingBender"],
+      "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@types/minimatch/LICENSE"
+    },
+    {
+      "name": "ts-node",
+      "version": "^10.9.2",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Blake Embrey",
+        "Andrew Bradley",
+        "Blake Embrey (hello@blakeembrey.com)"
+      ],
+      "sourceUrl": "git://github.com/TypeStrong/ts-node.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/ts-node/LICENSE"
+    },
+    {
+      "name": "typescript",
+      "version": "^5.5.0",
+      "license": {
+        "spdxId": "Apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "copyrightHolders": ["Microsoft Corp."],
+      "sourceUrl": "https://github.com/microsoft/TypeScript.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/typescript/LICENSE.txt"
+    },
+    {
+      "name": "vitest",
+      "version": "^3.2.4",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Anthony Fu <anthonyfu117@hotmail.com>",
+        "Anthony Fu <https://github.com/antfu>",
+        "by various contributors (see AUTHORS)",
+        ">",
+        "Robert Kieffer",
+        "Terkel Gjervig Nielsen",
+        "Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)",
+        "Einar Otto Stangvik <einaros@gmail.com>",
+        "Arnout Kazemier and contributors",
+        "Luigi Pinca and contributors"
+      ],
+      "sourceUrl": "git+https://github.com/vitest-dev/vitest.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/vitest/LICENSE.md"
+    },
+    {
+      "name": "@types/node",
+      "version": "^20.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Microsoft TypeScript",
+        "Alberto Schiabel",
+        "Andrew Makarov",
+        "Benjamin Toueg",
+        "David Junger",
+        "Mohsen Azimi",
+        "Nikita Galkin",
+        "Sebastian Silbermann",
+        "Wilco Bakker",
+        "Marcin Kopacz",
+        "Trivikram Kamat",
+        "Junxiao Shi",
+        "Ilia Baryshnikov",
+        "ExE Boss",
+        "Piotr Błażejewicz",
+        "Anna Henningsen",
+        "Victor Perin",
+        "NodeJS Contributors",
+        "Linus Unnebäck",
+        "wafuwafu13",
+        "Matteo Collina",
+        "Dmitry Semigradsky"
+      ],
+      "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@types/node/LICENSE"
+    },
+    {
+      "name": "ts-node",
+      "version": "^10.9.2",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Blake Embrey",
+        "Andrew Bradley",
+        "Blake Embrey (hello@blakeembrey.com)"
+      ],
+      "sourceUrl": "git://github.com/TypeStrong/ts-node.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/ts-node/LICENSE"
+    },
+    {
+      "name": "typescript",
+      "version": "^5.5.0",
+      "license": {
+        "spdxId": "Apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "copyrightHolders": ["Microsoft Corp."],
+      "sourceUrl": "https://github.com/microsoft/TypeScript.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/typescript/LICENSE.txt"
+    },
+    {
+      "name": "vitest",
+      "version": "^3.2.4",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Anthony Fu <anthonyfu117@hotmail.com>",
+        "Anthony Fu <https://github.com/antfu>",
+        "by various contributors (see AUTHORS)",
+        ">",
+        "Robert Kieffer",
+        "Terkel Gjervig Nielsen",
+        "Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)",
+        "Einar Otto Stangvik <einaros@gmail.com>",
+        "Arnout Kazemier and contributors",
+        "Luigi Pinca and contributors"
+      ],
+      "sourceUrl": "git+https://github.com/vitest-dev/vitest.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/vitest/LICENSE.md"
+    },
+    {
+      "name": "@modelcontextprotocol/sdk",
+      "version": "^0.5.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Anthropic, PBC (https://anthropic.com)",
+        "Anthropic, PBC."
+      ],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@modelcontextprotocol/sdk/LICENSE"
+    },
+    {
+      "name": "@types/node",
+      "version": "^20.0.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Microsoft TypeScript",
+        "Alberto Schiabel",
+        "Andrew Makarov",
+        "Benjamin Toueg",
+        "David Junger",
+        "Mohsen Azimi",
+        "Nikita Galkin",
+        "Sebastian Silbermann",
+        "Wilco Bakker",
+        "Marcin Kopacz",
+        "Trivikram Kamat",
+        "Junxiao Shi",
+        "Ilia Baryshnikov",
+        "ExE Boss",
+        "Piotr Błażejewicz",
+        "Anna Henningsen",
+        "Victor Perin",
+        "NodeJS Contributors",
+        "Linus Unnebäck",
+        "wafuwafu13",
+        "Matteo Collina",
+        "Dmitry Semigradsky"
+      ],
+      "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@types/node/LICENSE"
+    },
+    {
+      "name": "@types/vscode",
+      "version": "^1.80.0",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Visual Studio Code Team, Microsoft"],
+      "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@types/vscode/LICENSE"
+    },
+    {
+      "name": "@vscode/test-cli",
+      "version": "^0.0.4",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Connor Peet <connor@peet.io>"],
+      "sourceUrl": "git+https://github.com/Microsoft/vscode-test-cli.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@vscode/test-cli/LICENSE"
+    },
+    {
+      "name": "@vscode/test-electron",
+      "version": "^2.3.6",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Visual Studio Code Team"],
+      "sourceUrl": "https://github.com/Microsoft/vscode-test.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@vscode/test-electron/LICENSE"
+    },
+    {
+      "name": "@vscode/vsce",
+      "version": "^2.21.1",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Microsoft Corporation"],
+      "sourceUrl": "https://github.com/Microsoft/vsce",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@vscode/vsce/LICENSE"
+    },
+    {
+      "name": "ts-node",
+      "version": "^10.9.2",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Blake Embrey",
+        "Andrew Bradley",
+        "Blake Embrey (hello@blakeembrey.com)"
+      ],
+      "sourceUrl": "git://github.com/TypeStrong/ts-node.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/ts-node/LICENSE"
+    },
+    {
+      "name": "typescript",
+      "version": "^5.5.0",
+      "license": {
+        "spdxId": "Apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "copyrightHolders": ["Microsoft Corp."],
+      "sourceUrl": "https://github.com/microsoft/TypeScript.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/typescript/LICENSE.txt"
+    },
+    {
+      "name": "vitest",
+      "version": "^3.2.4",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": [
+        "Anthony Fu <anthonyfu117@hotmail.com>",
+        "Anthony Fu <https://github.com/antfu>",
+        "by various contributors (see AUTHORS)",
+        ">",
+        "Robert Kieffer",
+        "Terkel Gjervig Nielsen",
+        "Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)",
+        "Einar Otto Stangvik <einaros@gmail.com>",
+        "Arnout Kazemier and contributors",
+        "Luigi Pinca and contributors"
+      ],
+      "sourceUrl": "git+https://github.com/vitest-dev/vitest.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/vitest/LICENSE.md"
+    },
+    {
+      "name": "express",
+      "version": "^4.18.0",
+      "license": {
+        "spdxId": "UNKNOWN",
+        "name": "UNKNOWN",
+        "url": ""
+      },
+      "copyrightHolders": [],
+      "attributionRequired": true
+    },
+    {
+      "name": "lodash",
+      "version": "^4.17.21",
+      "license": {
+        "spdxId": "UNKNOWN",
+        "name": "UNKNOWN",
+        "url": ""
+      },
+      "copyrightHolders": [],
+      "attributionRequired": true
+    },
+    {
+      "name": "moment",
+      "version": "^2.29.4",
+      "license": {
+        "spdxId": "UNKNOWN",
+        "name": "UNKNOWN",
+        "url": ""
+      },
+      "copyrightHolders": [],
+      "attributionRequired": true
+    },
+    {
+      "name": "jest",
+      "version": "^29.0.0",
+      "license": {
+        "spdxId": "UNKNOWN",
+        "name": "UNKNOWN",
+        "url": ""
+      },
+      "copyrightHolders": [],
+      "attributionRequired": true
+    },
+    {
+      "name": "webpack",
+      "version": "^5.74.0",
+      "license": {
+        "spdxId": "UNKNOWN",
+        "name": "UNKNOWN",
+        "url": ""
+      },
+      "copyrightHolders": [],
+      "attributionRequired": true
+    },
+    {
+      "name": "webpack-cli",
+      "version": "^4.10.0",
+      "license": {
+        "spdxId": "UNKNOWN",
+        "name": "UNKNOWN",
+        "url": ""
+      },
+      "copyrightHolders": [],
+      "attributionRequired": true
+    },
+    {
+      "name": "webpack-dev-server",
+      "version": "^4.11.0",
+      "license": {
+        "spdxId": "UNKNOWN",
+        "name": "UNKNOWN",
+        "url": ""
+      },
+      "copyrightHolders": [],
+      "attributionRequired": true
+    }
+  ],
+  "licenseSummary": {
+    "MIT": 40,
+    "Apache-2.0": 6,
+    "ISC": 1,
+    "UNKNOWN": 7
+  },
+  "complianceInfo": {
+    "attributionRequiredCount": 54,
+    "uniqueLicenses": ["MIT", "Apache-2.0", "ISC", "UNKNOWN"],
+    "copyleftDependencies": 0
+  }
+}
