@@ -1,6 +1,21 @@
 # AST Copilot Helper
 
-A monorepo fo
+A comprehensive monorepo for Abstract Syntax Tree analysis tools and Model Context Protocol (MCP) server implementation with **15-language support**.
+
+## 🚀 Multi-Language AST Analysis
+
+**Supports 15 programming languages** across 3 tiers:
+
+### 🏢 Tier 1: Enterprise (6 languages)
+TypeScript • JavaScript • Python • Java • C++ • C#
+
+### 👩‍💻 Tier 2: Developer (5 languages)  
+Go • Rust • PHP • Ruby • Swift
+
+### 🎯 Tier 3: Specialized (4 languages)
+Kotlin • Scala • Dart • Lua
+
+**[📚 Complete Language Guide →](docs/guide/multi-language-support.md)**
 
 ## Prerequisites
 
@@ -22,7 +37,7 @@ This will:
 
 1. Install all dependencies using Yarn v4 workspaces
 2. Set up inter-package linking
-3. Build all packages automaticallylysis tools and Model Context Protocol (MCP) server implementation.
+3. Build all packages automatically
 
 ## Overview
 
@@ -56,6 +71,36 @@ ast-copilot-helper/
 ├─ tsconfig.base.json        # Base TypeScript configuration
 └─ README.md                 # This file
 ```
+
+## 🌐 Language Support
+
+AST Copilot Helper supports **15 programming languages** organized into 3 tiers:
+
+| Tier | Languages | Use Cases |
+|------|-----------|-----------|
+| **🏢 Enterprise** | TypeScript, JavaScript, Python, Java, C++, C# | Production applications, enterprise codebases |
+| **👩‍💻 Developer** | Go, Rust, PHP, Ruby, Swift | Popular development languages, strong community |
+| **🎯 Specialized** | Kotlin, Scala, Dart, Lua | Domain-specific, emerging technologies |
+
+### Quick Example
+
+```typescript
+import { ParserFactory } from '@ast-copilot-helper/ast-helper';
+
+// Create parser for any supported language
+const parser = await ParserFactory.createParser();
+
+// Parse TypeScript
+const tsResult = await parser.parseCode('function hello(): string { return "world"; }', 'typescript');
+
+// Parse Python  
+const pyResult = await parser.parseCode('def hello() -> str:\n    return "world"', 'python');
+
+// Parse Go
+const goResult = await parser.parseCode('func hello() string {\n    return "world"\n}', 'go');
+```
+
+**[📖 Complete Language Guide](docs/guide/multi-language-support.md)** • **[⚡ Performance Benchmarks](docs/guide/performance.md)** • **[🔧 API Reference](docs/api/interfaces.md)**
 
 ## Requirements
 

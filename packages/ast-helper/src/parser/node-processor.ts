@@ -593,7 +593,22 @@ export class NodeProcessor {
             rawNodeData,
             context,
           );
-          return { ...node, ...classification };
+
+          // Transform classification result to match ASTNode interface
+          return {
+            ...node,
+            type: classification.nodeType, // Keep as NodeType enum
+            // Keep the original metadata structure but add classification info
+            metadata: {
+              ...node.metadata,
+              classification: {
+                confidence: classification.confidence,
+                reason: classification.reason,
+                method: classification.metadata?.method,
+                cached: classification.metadata?.cached,
+              },
+            },
+          };
         });
       }
 

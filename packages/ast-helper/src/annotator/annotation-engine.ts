@@ -9,6 +9,19 @@ import {
   TypeScriptExtractor,
   JavaScriptExtractor,
   PythonExtractor,
+  JavaExtractor,
+  CSharpExtractor,
+  GoExtractor,
+  RustExtractor,
+  CppExtractor,
+  PhpExtractor,
+  RubyExtractor,
+  KotlinExtractor,
+  SwiftExtractor,
+  DartExtractor,
+  ScalaExtractor,
+  LuaExtractor,
+  BashExtractor,
 } from "./extractors/index.js";
 import { ComplexityAnalyzer } from "./complexity-analyzer.js";
 import { DependencyAnalyzer } from "./dependency-analyzer.js";
@@ -36,9 +49,28 @@ export class AnnotationEngine {
     this.config = { ...DEFAULT_ANNOTATION_CONFIG, ...config };
 
     // Initialize language-specific extractors
+    // Tier 1 extractors (Enterprise Priority)
     this.extractors.set("typescript", new TypeScriptExtractor());
     this.extractors.set("javascript", new JavaScriptExtractor());
     this.extractors.set("python", new PythonExtractor());
+    this.extractors.set("java", new JavaExtractor());
+    this.extractors.set("csharp", new CSharpExtractor());
+    this.extractors.set("go", new GoExtractor());
+
+    // Tier 2 extractors (Developer Priority)
+    this.extractors.set("rust", new RustExtractor());
+    this.extractors.set("cpp", new CppExtractor());
+    this.extractors.set("c", new CppExtractor()); // Both C and C++ use CppExtractor
+    this.extractors.set("php", new PhpExtractor());
+    this.extractors.set("ruby", new RubyExtractor());
+    this.extractors.set("kotlin", new KotlinExtractor());
+
+    // Tier 3 extractors (Specialized Priority)
+    this.extractors.set("swift", new SwiftExtractor());
+    this.extractors.set("dart", new DartExtractor());
+    this.extractors.set("scala", new ScalaExtractor());
+    this.extractors.set("lua", new LuaExtractor());
+    this.extractors.set("bash", new BashExtractor());
 
     // Initialize analysis components
     this.complexityAnalyzer = new ComplexityAnalyzer({
