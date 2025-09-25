@@ -138,5 +138,8 @@
     "x64",
     "arm64"
   ],
-  "packageManager": "yarn@4.9.4"
+  "packageManager": "yarn@4.9.4",
+  "resolutions": {
+    "esbuild": "^0.25.10"
+  }
 }
