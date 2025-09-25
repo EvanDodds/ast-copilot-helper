@@ -90,6 +90,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
+      "npx prettier --write",
       "eslint --fix --quiet"
     ]
   },
