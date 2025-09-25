@@ -29,11 +29,11 @@
     "arm64"
   ],
   "dependencies": {
-    "@types/node": "^20.0.0"
+    "@types/node": "^24.5.2"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.0",
+    "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
   "files": [

@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🔍 Running pre-commit validation (scoped to staged files)..."
 echo "⏱️  This should take ~15-30 seconds (faster with staged-only linting)"
 
