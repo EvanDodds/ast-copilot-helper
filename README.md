@@ -7,17 +7,20 @@ A comprehensive toolkit for Abstract Syntax Tree analysis and Model Context Prot
 Transform your codebase into an AI-accessible knowledge base:
 
 - **🔍 Semantic Search**: Query code using natural language
-- **🤖 MCP Integration**: Enable AI agents to understand your code structure  
+- **🤖 MCP Integration**: Enable AI agents to understand your code structure
 - **⚡ Performance**: Fast parsing with intelligent caching and incremental updates
 - **🌐 Multi-Language**: Support for 15 programming languages across 3 tiers
 
 ### 🏢 Tier 1: Enterprise (6 languages)
+
 TypeScript • JavaScript • Python • Java • C++ • C#
 
-### 👩‍💻 Tier 2: Developer (5 languages)  
+### 👩‍💻 Tier 2: Developer (5 languages)
+
 Go • Rust • PHP • Ruby • Swift
 
 ### 🎯 Tier 3: Specialized (4 languages)
+
 Kotlin • Scala • Dart • Lua
 
 **[📚 Complete Language Guide →](docs/guide/multi-language-support.md)**
@@ -39,8 +42,9 @@ yarn install
 ```
 
 This automatically:
+
 - Installs all dependencies using Yarn workspaces
-- Links packages together  
+- Links packages together
 - Builds all components
 
 ## Overview
@@ -48,7 +52,7 @@ This automatically:
 AST Copilot Helper bridges the gap between your codebase and AI agents by providing semantic understanding through Abstract Syntax Tree analysis. The toolkit consists of three integrated components:
 
 - **`@ast-copilot-helper/ast-copilot-helper`** - Core CLI tool that parses source code and builds semantic databases
-- **`@ast-copilot-helper/ast-mcp-server`** - Model Context Protocol server enabling AI agents to query code semantically  
+- **`@ast-copilot-helper/ast-mcp-server`** - Model Context Protocol server enabling AI agents to query code semantically
 - **`@ast-copilot-helper/vscode-extension`** - VS Code extension for seamless integration (optional)
 
 ## Architecture
@@ -60,7 +64,7 @@ ast-copilot-helper/                 # Monorepo root
 │  │  ├─ src/                       # TypeScript source
 │  │  ├─ bin/ast-copilot-helper             # CLI executable
 │  │  └─ dist/                      # Compiled output
-│  ├─ ast-mcp-server/               # 🤖 MCP protocol server  
+│  ├─ ast-mcp-server/               # 🤖 MCP protocol server
 │  │  ├─ src/                       # TypeScript source
 │  │  ├─ bin/ast-mcp-server         # Server executable
 │  │  └─ dist/                      # Compiled output
@@ -69,7 +73,7 @@ ast-copilot-helper/                 # Monorepo root
 │     └─ dist/                      # Compiled output
 ├─ docs/                            # 📚 Documentation
 │  ├─ guide/                        # User guides
-│  ├─ api/                          # API references  
+│  ├─ api/                          # API references
 │  └─ examples/                     # Usage examples
 ├─ tests/                           # 🧪 Test suites
 │  ├─ integration/                  # Integration tests
@@ -355,7 +359,7 @@ Extract semantic information from your codebase:
 # Initialize configuration
 yarn ast-copilot-helper init
 
-# Parse a directory  
+# Parse a directory
 yarn ast-copilot-helper parse src/
 
 # Parse with natural language query
@@ -377,14 +381,14 @@ code --install-extension ast-copilot-helper
 ### 3. Explore Documentation
 
 - **[Getting Started](docs/guide/getting-started.md)** - Complete setup guide
-- **[CLI Usage](docs/guide/cli-usage.md)** - Command-line interface  
+- **[CLI Usage](docs/guide/cli-usage.md)** - Command-line interface
 - **[VS Code Extension](docs/guide/vscode-extension.md)** - IDE integration
 - **[API Reference](docs/api/)** - Programmatic usage
 
 ## Technical Foundation
 
 - **🏗️ Monorepo**: Yarn v4 workspaces with TypeScript project references
-- **⚡ TypeScript**: Strict configuration targeting ES2022 with full type safety  
+- **⚡ TypeScript**: Strict configuration targeting ES2022 with full type safety
 - **🧪 Testing**: Comprehensive test suite with Vitest (unit, integration, benchmarks)
 - **🔄 CI/CD**: Automated testing, quality gates, and deployment pipeline
 - **🌐 Cross-Platform**: Full Windows, macOS, and Linux support (x64, arm64)
@@ -392,8 +396,9 @@ code --install-extension ast-copilot-helper
 ## Current Status
 
 AST Copilot Helper is **production-ready** with:
+
 - ✅ **Complete AST processing** for 15 programming languages
-- ✅ **Functional MCP server** with semantic query capabilities  
+- ✅ **Functional MCP server** with semantic query capabilities
 - ✅ **VS Code extension** with integrated workflow
 - ✅ **Comprehensive security framework** with vulnerability scanning
 - ✅ **Advanced CI/CD pipeline** with monitoring and automated deployments

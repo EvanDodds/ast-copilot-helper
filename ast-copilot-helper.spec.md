@@ -1043,7 +1043,8 @@ function formatError(code: ErrorCodes, details?: string): string {
 // CLI help suggestions
 const ErrorHelp: Partial<Record<ErrorCodes, string>> = {
   [ErrorCodes.CONFIG_MISSING]: "Try: ast-copilot-helper init",
-  [ErrorCodes.INDEX_NOT_FOUND]: "Try: ast-copilot-helper parse && ast-copilot-helper embed",
+  [ErrorCodes.INDEX_NOT_FOUND]:
+    "Try: ast-copilot-helper parse && ast-copilot-helper embed",
   [ErrorCodes.GRAMMAR_DOWNLOAD_FAILED]:
     "Check network connection and try again",
   [ErrorCodes.MODEL_DOWNLOAD_FAILED]:

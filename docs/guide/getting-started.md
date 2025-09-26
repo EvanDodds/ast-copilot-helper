@@ -53,6 +53,7 @@ ast-copilot-helper init
 ```
 
 This command:
+
 - Creates configuration files (`.ast-copilot-helper.json`)
 - Analyzes your project structure across supported languages
 - Sets up appropriate language parsers for your codebase
@@ -108,7 +109,7 @@ async function getUserById(id: string): Promise<User | null> {
 // Extracted annotation
 {
   "id": "func_getUserById_abc123",
-  "type": "function", 
+  "type": "function",
   "name": "getUserById",
   "description": "Retrieves user by ID from database with error handling",
   "parameters": [{"name": "id", "type": "string"}],
@@ -158,13 +159,15 @@ The `.ast-copilot-helper.json` file controls behavior:
 ```json
 {
   "parser": {
-    "includePatterns": ["**/*.{ts,js,py,rs,go,java,cpp,c,rb,php,cs,kt,scala,swift}"],
+    "includePatterns": [
+      "**/*.{ts,js,py,rs,go,java,cpp,c,rb,php,cs,kt,scala,swift}"
+    ],
     "excludePatterns": ["node_modules/**", "dist/**", "build/**", "target/**"],
     "languages": ["typescript", "javascript", "python", "rust", "go"],
     "maxFileSize": "1MB"
   },
   "embeddings": {
-    "model": "text-embedding-3-small", 
+    "model": "text-embedding-3-small",
     "similarityThreshold": 0.75,
     "batchSize": 100
   },
@@ -183,7 +186,7 @@ Find specific functionality in large codebases:
 
 ```bash
 ast-copilot-helper query "password validation logic"
-ast-copilot-helper query "file upload handlers" 
+ast-copilot-helper query "file upload handlers"
 ast-copilot-helper query "caching mechanisms"
 ```
 
@@ -204,7 +207,7 @@ ast-copilot-helper server --transport stdio
 Extract information for documentation:
 
 ```bash
-# Query for API endpoints  
+# Query for API endpoints
 ast-copilot-helper query "public API methods" --format json > api-endpoints.json
 
 # Find all interfaces and types

@@ -251,7 +251,10 @@ Create `models.config.json`:
 ### Basic Model Download
 
 ```typescript
-import { ModelRegistry, ModelDownloader } from "@ast-copilot-helper/ast-copilot-helper";
+import {
+  ModelRegistry,
+  ModelDownloader,
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 async function downloadModel() {
   const registry = ModelRegistry.getInstance();
@@ -276,7 +279,10 @@ async function downloadModel() {
 ### Advanced Caching Workflow
 
 ```typescript
-import { ModelCache, ModelConfig } from "@ast-copilot-helper/ast-copilot-helper";
+import {
+  ModelCache,
+  ModelConfig,
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 async function manageCachedModels() {
   const cache = new ModelCache({
@@ -344,7 +350,10 @@ async function optimizedDownload() {
 ### Error Handling and Recovery
 
 ```typescript
-import { ErrorHandler, ModelDownloader } from "@ast-copilot-helper/ast-copilot-helper";
+import {
+  ErrorHandler,
+  ModelDownloader,
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 async function robustDownload(model: ModelConfig) {
   const errorHandler = new ErrorHandler({

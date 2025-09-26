@@ -50,7 +50,7 @@ Get up and running in minutes:
 
 ::: code-group
 
-```bash [Development Setup]  
+```bash [Development Setup]
 # Clone and setup
 git clone https://github.com/EvanDodds/ast-copilot-helper.git
 cd ast-copilot-helper
@@ -59,7 +59,7 @@ yarn install && yarn build
 # Initialize in your project
 yarn ast-copilot-helper init
 
-# Parse your codebase  
+# Parse your codebase
 yarn ast-copilot-helper parse src/
 
 # Query with natural language
@@ -85,28 +85,35 @@ yarn ast-mcp-server --port 3000
 ## Use Cases
 
 ### 🔍 **Code Discovery & Navigation**
+
 Find specific functionality across large, multi-language codebases using natural language queries instead of grep or IDE search.
 
-### 🤖 **AI Agent Enhancement** 
+### 🤖 **AI Agent Enhancement**
+
 Provide AI coding assistants with rich contextual understanding of your codebase structure, patterns, and semantic relationships.
 
 ### 📚 **Automated Documentation**
+
 Generate intelligent documentation from AST analysis, code comments, and semantic understanding across all supported languages.
 
 ### 🧪 **Code Analysis & Refactoring**
+
 Perform sophisticated code analysis, pattern detection, and refactoring guidance with deep semantic insights.
 
 ### 🔗 **CI/CD Integration**
+
 Integrate semantic code analysis into build pipelines for automated code quality checks and documentation updates.
 
 ## Resources
 
 **📖 Documentation**
+
 - [Getting Started Guide](/guide/getting-started) - Complete setup walkthrough
-- [CLI Usage](/guide/cli-usage) - Command-line interface  
+- [CLI Usage](/guide/cli-usage) - Command-line interface
 - [API Reference](/api/) - Programmatic integration
 
-**🤝 Community**  
+**🤝 Community**
+
 - [GitHub Repository](https://github.com/EvanDodds/ast-copilot-helper) - Source & issues
 - [Discussions](https://github.com/EvanDodds/ast-copilot-helper/discussions) - Q&A & ideas
 - [Contributing Guide](/development/contributing) - How to contribute

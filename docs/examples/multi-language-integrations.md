@@ -151,7 +151,10 @@ async function processMultiLanguageProject(projectPath: string) {
 ### Language-Specific Code Analysis
 
 ```typescript
-import { ParserFactory, NodeClassifier } from "@ast-copilot-helper/ast-copilot-helper";
+import {
+  ParserFactory,
+  NodeClassifier,
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 interface CodeMetrics {
   functions: number;

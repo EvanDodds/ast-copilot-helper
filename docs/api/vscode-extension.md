@@ -30,11 +30,14 @@ Parse all files in the current workspace and extract AST annotations.
 
 ```typescript
 // Extension API
-vscode.commands.registerCommand("ast-copilot-helper.parse.workspace", async () => {
-  const config = await getConfiguration();
-  const result = await parseWorkspace(config);
-  showParseResults(result);
-});
+vscode.commands.registerCommand(
+  "ast-copilot-helper.parse.workspace",
+  async () => {
+    const config = await getConfiguration();
+    const result = await parseWorkspace(config);
+    showParseResults(result);
+  },
+);
 ```
 
 #### `ast-copilot-helper.parse.file`
@@ -63,17 +66,20 @@ vscode.commands.registerCommand("ast-copilot-helper.parse.file", async () => {
 Open an interactive query interface for searching code.
 
 ```typescript
-vscode.commands.registerCommand("ast-copilot-helper.query.interactive", async () => {
-  const query = await vscode.window.showInputBox({
-    prompt: "Enter natural language query",
-    placeHolder: 'e.g., "functions that handle HTTP requests"',
-  });
+vscode.commands.registerCommand(
+  "ast-copilot-helper.query.interactive",
+  async () => {
+    const query = await vscode.window.showInputBox({
+      prompt: "Enter natural language query",
+      placeHolder: 'e.g., "functions that handle HTTP requests"',
+    });
 
-  if (query) {
-    const results = await executeQuery(query);
-    showQueryResults(results);
-  }
-});
+    if (query) {
+      const results = await executeQuery(query);
+      showQueryResults(results);
+    }
+  },
+);
 ```
 
 #### `ast-copilot-helper.config.open`

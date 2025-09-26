@@ -764,7 +764,10 @@ describe("CLI Parse Command Integration", () => {
     await mkdir(testProjectDir, { recursive: true });
 
     // Build CLI if not already built
-    cliPath = join(__dirname, "../../../packages/ast-copilot-helper/bin/ast-copilot-helper.js");
+    cliPath = join(
+      __dirname,
+      "../../../packages/ast-copilot-helper/bin/ast-copilot-helper.js",
+    );
   });
 
   afterEach(async () => {
@@ -780,7 +783,9 @@ describe("CLI Parse Command Integration", () => {
 
     // Assert
     expect(output).toContain("Initialized ast-copilot-helper");
-    expect(existsSync(join(testProjectDir, ".ast-copilot-helper.json"))).toBe(true);
+    expect(existsSync(join(testProjectDir, ".ast-copilot-helper.json"))).toBe(
+      true,
+    );
 
     const config = JSON.parse(
       readFileSync(join(testProjectDir, ".ast-copilot-helper.json"), "utf8"),
@@ -826,7 +831,9 @@ describe("CLI Parse Command Integration", () => {
     // Assert
     expect(output).toContain("Successfully parsed");
     expect(output).toContain("2 annotations"); // function + interface
-    expect(existsSync(join(testProjectDir, ".ast-copilot-helper.db"))).toBe(true);
+    expect(existsSync(join(testProjectDir, ".ast-copilot-helper.db"))).toBe(
+      true,
+    );
 
     // Verify database contents
     const queryOutput = execSync(`node ${cliPath} query "auth" --format json`, {
@@ -1164,7 +1171,10 @@ describe("New Project Setup E2E Workflow", () => {
   beforeEach(async () => {
     projectDir = join(getTempDir(), "e2e-project");
     await mkdir(projectDir, { recursive: true });
-    cliPath = join(__dirname, "../../../packages/ast-copilot-helper/bin/ast-copilot-helper.js");
+    cliPath = join(
+      __dirname,
+      "../../../packages/ast-copilot-helper/bin/ast-copilot-helper.js",
+    );
   });
 
   afterEach(async () => {

@@ -10,14 +10,14 @@ The `ast-copilot-helper` CLI provides powerful tools for parsing, querying, and 
 
 These options work with all commands:
 
-| Option            | Description                | Default                     |
-| ----------------- | -------------------------- | --------------------------- |
+| Option            | Description                | Default                    |
+| ----------------- | -------------------------- | -------------------------- |
 | `--config <file>` | Path to configuration file | `.ast-copilot-helper.json` |
-| `--verbose, -v`   | Enable verbose logging     | `false`                     |
-| `--quiet, -q`     | Suppress non-error output  | `false`                     |
-| `--debug, -d`     | Enable debug mode          | `false`                     |
-| `--help, -h`      | Show help for command      | -                           |
-| `--version`       | Show version information   | -                           |
+| `--verbose, -v`   | Enable verbose logging     | `false`                    |
+| `--quiet, -q`     | Suppress non-error output  | `false`                    |
+| `--debug, -d`     | Enable debug mode          | `false`                    |
+| `--help, -h`      | Show help for command      | -                          |
+| `--version`       | Show version information   | -                          |
 
 ## Core Commands
 
@@ -85,17 +85,17 @@ ast-copilot-helper parse src/ --progress
 
 #### Options
 
-| Option                 | Description                      | Default                     |
-| ---------------------- | -------------------------------- | --------------------------- |
-| `--include <patterns>` | File patterns to include         | Config default              |
-| `--exclude <patterns>` | File patterns to exclude         | Config default              |
-| `--language <lang>`    | Force specific language          | Auto-detect                 |
-| `--output, -o <file>`  | Output database file             | `.ast-copilot-helper.db`   |
-| `--format <type>`      | Output format (db, json)         | `db`                        |
-| `--progress`           | Show parsing progress            | `false`                     |
-| `--parallel <num>`     | Max parallel processes           | CPU count                   |
-| `--force`              | Overwrite existing database      | `false`                     |
-| `--embeddings`         | Generate semantic embeddings     | `true`                      |
+| Option                 | Description                  | Default                  |
+| ---------------------- | ---------------------------- | ------------------------ |
+| `--include <patterns>` | File patterns to include     | Config default           |
+| `--exclude <patterns>` | File patterns to exclude     | Config default           |
+| `--language <lang>`    | Force specific language      | Auto-detect              |
+| `--output, -o <file>`  | Output database file         | `.ast-copilot-helper.db` |
+| `--format <type>`      | Output format (db, json)     | `db`                     |
+| `--progress`           | Show parsing progress        | `false`                  |
+| `--parallel <num>`     | Max parallel processes       | CPU count                |
+| `--force`              | Overwrite existing database  | `false`                  |
+| `--embeddings`         | Generate semantic embeddings | `true`                   |
 
 #### Examples
 
@@ -155,15 +155,15 @@ ast-copilot-helper query "database operations" --limit 5 --threshold 0.8
 
 #### Options
 
-| Option               | Description                           | Default   |
-| -------------------- | ------------------------------------- | --------- |
-| `--type <type>`      | Filter by annotation type             | All types |
-| `--file <pattern>`   | Filter by file pattern                | All files |
-| `--limit, -l <num>`  | Maximum results to return             | 10        |
+| Option              | Description                           | Default   |
+| ------------------- | ------------------------------------- | --------- |
+| `--type <type>`     | Filter by annotation type             | All types |
+| `--file <pattern>`  | Filter by file pattern                | All files |
+| `--limit, -l <num>` | Maximum results to return             | 10        |
 | `--threshold <num>` | Similarity threshold (0-1)            | 0.7       |
-| `--format <type>`    | Output format (table, json, detailed) | `table`   |
-| `--sort <field>`     | Sort by field (score, name, file)     | `score`   |
-| `--no-embeddings`    | Use text search instead of semantic   | `false`   |
+| `--format <type>`   | Output format (table, json, detailed) | `table`   |
+| `--sort <field>`    | Sort by field (score, name, file)     | `score`   |
+| `--no-embeddings`   | Use text search instead of semantic   | `false`   |
 
 #### Query Types
 

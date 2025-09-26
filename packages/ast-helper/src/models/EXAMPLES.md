@@ -16,7 +16,10 @@ Practical examples and code snippets for using the AST Copilot Helper model mana
 ### Simple Model Download
 
 ```typescript
-import { ModelRegistry, ModelDownloader } from "@ast-copilot-helper/ast-copilot-helper";
+import {
+  ModelRegistry,
+  ModelDownloader,
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 async function downloadBasicModel() {
   // Get model configuration
@@ -40,7 +43,10 @@ downloadBasicModel()
 ### Basic Caching
 
 ```typescript
-import { ModelCache, ModelRegistry } from "@ast-copilot-helper/ast-copilot-helper";
+import {
+  ModelCache,
+  ModelRegistry,
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 async function basicCaching() {
   // Initialize cache
@@ -387,7 +393,10 @@ async function addCustomModel() {
 ### Comprehensive Error Recovery
 
 ```typescript
-import { ErrorHandler, ConnectivityInfo } from "@ast-copilot-helper/ast-copilot-helper";
+import {
+  ErrorHandler,
+  ConnectivityInfo,
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 async function robustModelDownload(modelName: string): Promise<string> {
   const errorHandler = new ErrorHandler({
