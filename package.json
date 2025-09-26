@@ -92,10 +92,10 @@
     "ci:validate": "tsx scripts/ci-cd/validation-suite.ts",
     "ci:validate-all": "yarn run ci:validate && echo '✅ All validation completed'",
     "install:all": "yarn install",
-    "postinstall": "yarn run build && yarn run prepare:husky",
-    "prepare:husky": "husky install",
+    "postinstall": "yarn run prepare:husky",
+    "prepare:husky": "husky install || echo 'Husky install failed (expected in CI)'",
     "prepack": "yarn run build && yarn run test:ci",
-    "prepare": "yarn run build",
+    "prepare": "echo 'Prepare hook - build moved to explicit commands'",
     "release:dry": "echo 'Dry run - would publish to npm'",
     "release": "yarn run prepack && npm publish --access=public"
   },
