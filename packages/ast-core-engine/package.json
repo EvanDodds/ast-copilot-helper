@@ -52,5 +52,16 @@
   "files": [
     "index.d.ts",
     "index.js"
-  ]
+  ],
+  "optionalDependencies": {
+    "@ast-helper/core-engine-win32-x64-msvc": "0.1.0",
+    "@ast-helper/core-engine-win32-ia32-msvc": "0.1.0",
+    "@ast-helper/core-engine-win32-arm64-msvc": "0.1.0",
+    "@ast-helper/core-engine-darwin-x64": "0.1.0",
+    "@ast-helper/core-engine-darwin-arm64": "0.1.0",
+    "@ast-helper/core-engine-linux-x64-gnu": "0.1.0",
+    "@ast-helper/core-engine-linux-arm64-gnu": "0.1.0",
+    "@ast-helper/core-engine-linux-arm64-musl": "0.1.0",
+    "@ast-helper/core-engine-linux-x64-musl": "0.1.0"
+  }
 }
