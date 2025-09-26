@@ -9,7 +9,10 @@ import { createLogger } from "../../../ast-helper/src/logging/index.js";
 import type { XenovaEmbeddingGenerator } from "../../../ast-helper/src/embedder/index.js";
 import type { HNSWVectorDatabase } from "../../../ast-helper/src/database/vector/index.js";
 import type { ASTDatabaseReader } from "../database/reader.js";
-import type { AstCoreEngineApi } from "../../../ast-core-engine/index.js";
+import type {
+  AstCoreEngineApi,
+  NodeMetadata,
+} from "../../../ast-core-engine/index.js";
 
 import type {
   SemanticQueryOptions,
@@ -320,7 +323,7 @@ export class SemanticQueryProcessor {
           );
 
           // Convert Rust engine results to expected format
-          vectorResults = rustResults.map((result) => ({
+          vectorResults = rustResults.map((result: NodeMetadata) => ({
             nodeId: result.nodeId,
             filePath: result.filePath,
             signature: result.signature,

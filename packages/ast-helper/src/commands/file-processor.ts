@@ -24,6 +24,7 @@ import {
   createDefaultEngine,
   type AstCoreEngineApi,
   type BatchResult,
+  type ProcessingError,
 } from "../../../ast-core-engine/index.js";
 
 /**
@@ -521,8 +522,8 @@ export class FileProcessor {
         filePath,
         parseTime: rustResult.processingTimeMs / rustResult.processedFiles,
         errors: rustResult.errors
-          .filter((error) => error.filePath === filePath)
-          .map((error) => ({
+          .filter((error: ProcessingError) => error.filePath === filePath)
+          .map((error: ProcessingError) => ({
             message: error.message,
             type: error.errorType,
             line: 0,
