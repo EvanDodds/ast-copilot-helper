@@ -15,6 +15,10 @@ import { SignatureQueryProcessor } from "./signature-processor.js";
 import { FileQueryProcessor } from "./file-processor.js";
 import { ResponseAssembler } from "./response-assembler.js";
 import { PerformanceMonitor } from "./performance-monitor.js";
+import {
+  createDefaultEngine,
+  type AstCoreEngineApi,
+} from "../../../ast-core-engine/index.js";
 
 import type {
   QueryProcessor,
@@ -165,14 +169,15 @@ class QueryPreprocessor {
 /**
  * Main Query Processor implementation
  */
-export class MCPQueryProcessor implements QueryProcessor {
+export class MainQueryProcessor implements QueryProcessor {
   private logger = createLogger({ operation: "query-processor" });
   private isInitialized = false;
 
-  // Dependencies
+  // Core dependencies
+  private annotationDatabase: ASTDatabaseReader;
   private embeddingGenerator?: XenovaEmbeddingGenerator;
   private vectorDatabase?: HNSWVectorDatabase;
-  private annotationDatabase: ASTDatabaseReader;
+  private rustEngine?: AstCoreEngineApi;
 
   // Specialized processors
   private semanticProcessor?: SemanticQueryProcessor;
@@ -230,18 +235,23 @@ export class MCPQueryProcessor implements QueryProcessor {
     this.signatureProcessor = new SignatureQueryProcessor(
       this.annotationDatabase,
       this.config,
+      this.rustEngine,
     );
 
     // Initialize file processor
-    this.fileProcessor = new FileQueryProcessor(this.annotationDatabase, {
-      maxResults: this.config.search.defaultMaxResults,
-      caseSensitive: false,
-      includeHidden: false,
-      maxDepth: 10,
-      enableGlobPatterns: true,
-      fuzzyMatching: true,
-      fuzzyThreshold: 0.6,
-    });
+    this.fileProcessor = new FileQueryProcessor(
+      this.annotationDatabase,
+      {
+        maxResults: this.config.search.defaultMaxResults,
+        caseSensitive: false,
+        includeHidden: false,
+        maxDepth: 10,
+        enableGlobPatterns: true,
+        fuzzyMatching: true,
+        fuzzyThreshold: 0.6,
+      },
+      this.rustEngine,
+    );
   }
 
   /**
@@ -257,6 +267,19 @@ export class MCPQueryProcessor implements QueryProcessor {
       hasVectorDatabase: !!this.vectorDatabase,
       config: this.config,
     });
+
+    // Initialize Rust core engine
+    try {
+      this.logger.info("Initializing Rust core engine...");
+      this.rustEngine = await createDefaultEngine();
+      await this.rustEngine.initialize();
+      this.logger.info("Rust core engine initialized successfully");
+    } catch (error) {
+      this.logger.warn(
+        "Failed to initialize Rust core engine, falling back to TypeScript implementations",
+        { error },
+      );
+    }
 
     // Initialize dependencies if available
     if (this.embeddingGenerator && !this.embeddingGenerator.isReady()) {
@@ -287,6 +310,7 @@ export class MCPQueryProcessor implements QueryProcessor {
         this.annotationDatabase,
         this.config,
         this.performanceMonitor,
+        this.rustEngine,
       );
     }
 
@@ -663,3 +687,6 @@ export class MCPQueryProcessor implements QueryProcessor {
     return filters;
   }
 }
+
+// Export alias for backward compatibility
+export { MainQueryProcessor as MCPQueryProcessor };

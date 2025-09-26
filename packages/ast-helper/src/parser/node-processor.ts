@@ -155,6 +155,10 @@ export const DEFAULT_PROCESSING_CONFIG: ProcessingConfig = {
 
 /**
  * Main AST Node Processing Pipeline
+ *
+ * @deprecated This TypeScript implementation is deprecated in favor of the Rust-based
+ * AstCoreEngineApi for better performance and consistency. Use packages/ast-core-engine instead.
+ * This class will be removed in a future version.
  */
 export class NodeProcessor {
   private config: ProcessingConfig;
