@@ -8,6 +8,11 @@ export default defineConfig({
   description: "AI-powered AST analysis and code understanding tool",
   lang: "en-US",
 
+  // Ignore dead links in symlinked files from root directory
+  ignoreDeadLinks: [
+    /^\.\/.*/, // Ignore relative links in symlinked files
+  ],
+
   head: [
     ["link", { rel: "icon", href: "/favicon.ico" }],
     ["meta", { name: "theme-color", content: "#3c3c3c" }],
@@ -213,7 +218,4 @@ export default defineConfig({
 
   // Enable clean URLs
   cleanUrls: true,
-
-  // Temporarily ignore dead links to allow pushing important infrastructure changes
-  ignoreDeadLinks: true,
 });
