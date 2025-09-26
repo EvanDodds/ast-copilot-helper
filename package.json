@@ -12,9 +12,9 @@
     "docs"
   ],
   "scripts": {
-    "build": "yarn workspaces foreach --all --parallel --topological --verbose run build",
+    "build": "yarn run prepare:symlinks && yarn run prepare:rust-engine && yarn workspaces foreach --all --parallel --topological --verbose run build",
     "build:all": "yarn run build",
-    "build:release": "yarn workspaces foreach --all --parallel --topological --verbose run build:release",
+    "build:release": "yarn run prepare:symlinks && yarn run prepare:rust-engine && yarn workspaces foreach --all --parallel --topological --verbose run build:release",
     "build:watch": "yarn workspaces foreach --all --parallel --verbose run build:watch",
     "test": "node --max-old-space-size=6144 --expose-gc ./node_modules/.bin/vitest run --exclude='tests/integration/**'",
     "test:all": "echo '🧪 Running ALL tests (unit + integration + benchmarks + rust)...' && yarn run test && yarn run test:integration && yarn run test:benchmarks && yarn run test:rust:all",
@@ -48,7 +48,7 @@
     "lint-staged": "lint-staged",
     "lint:workspaces": "yarn workspaces foreach --all --parallel --verbose run lint",
     "lint:fix:workspaces": "yarn workspaces foreach --all --parallel --verbose run lint:fix",
-    "type-check": "tsc --build --verbose",
+    "type-check": "yarn run prepare:symlinks && yarn run prepare:rust-engine && tsc --build --verbose",
     "typecheck": "yarn run type-check",
     "security:audit": "yarn npm audit --severity moderate",
     "security:fix": "yarn npm audit --severity moderate --json",
