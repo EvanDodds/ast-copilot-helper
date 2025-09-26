@@ -531,7 +531,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 Package: @napi-rs/cli
-Version: ^2.18.4
+Version: ^3.2.0
 License: MIT License
 Copyright: LongYinan <lynweklm@gmail.com>, LongYinan
 Source: git+https://github.com/napi-rs/napi-rs.git
@@ -1163,4 +1163,4 @@ License: UNKNOWN
 
 License text not available
 
-Generated on: 2025-09-26T01:48:07.161Z
+Generated on: 2025-09-26T02:41:13.175Z
