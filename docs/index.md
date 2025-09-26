@@ -1,7 +1,5 @@
 ---
-name: AST Copilot Helper
-text: AST Copilot Helper
-tagline: Transform Your Codebase into AI-Accessible Knowledgeout: home
+layout: home
 
 hero:
   name: "AST Copilot Helper"
@@ -39,7 +37,7 @@ features:
     title: 15 Languages Supported
     details: Enterprise tier (TypeScript, Python, Java, C++), Developer tier (Go, Rust, PHP, Ruby), and Specialized languages (Kotlin, Scala, Dart).
 
-  - icon: �
+  - icon: 🚀
     title: Production Ready
     details: Comprehensive security framework, 573+ passing tests, automated CI/CD pipeline, and enterprise-grade reliability.
 ---
