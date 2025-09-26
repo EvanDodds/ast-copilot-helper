@@ -1,10 +1,10 @@
 # AI Integration Guide
 
-Unlock the full potential of ast-copilot-helper by integrating it with AI agents. This comprehensive guide covers Model Context Protocol (MCP) setup, AI agent connections, and advanced AI-powered workflows.
+Unlock the full potential of AST Copilot Helper by integrating it with AI agents. This comprehensive guide covers Model Context Protocol (MCP) setup, AI agent connections, and advanced AI-powered workflows.
 
 ## Overview
 
-ast-copilot-helper implements the Model Context Protocol (MCP) to enable AI agents to understand your codebase structure, navigate code relationships, and provide contextual assistance. This creates a seamless bridge between your code and AI-powered development tools.
+AST Copilot Helper implements the Model Context Protocol (MCP) to enable AI agents to understand your codebase structure, navigate code relationships, and provide contextual assistance. This creates a seamless bridge between your code and AI-powered development tools.
 
 ### What You'll Achieve
 
@@ -17,7 +17,7 @@ ast-copilot-helper implements the Model Context Protocol (MCP) to enable AI agen
 
 ### What is MCP?
 
-The Model Context Protocol is a standard that allows AI agents to access external data sources and tools. ast-copilot-helper acts as an MCP server, providing your codebase information to AI clients.
+The Model Context Protocol is a standard that allows AI agents to access external data sources and tools. AST Copilot Helper acts as an MCP server, providing your codebase information to AI clients.
 
 **Benefits:**
 
@@ -30,7 +30,7 @@ The Model Context Protocol is a standard that allows AI agents to access externa
 
 ```mermaid
 graph LR
-    A[AI Agent] -->|MCP Protocol| B[ast-copilot-helper MCP Server]
+    A[AI Agent] -->|MCP Protocol| B[AST Copilot Helper MCP Server]
     B -->|Queries| C[Code Database]
     B -->|Embeddings| D[Vector Store]
     B -->|File System| E[Source Code]
@@ -50,20 +50,20 @@ The MCP server can run in different transport modes depending on your AI client:
 
 ```bash
 # For desktop AI clients like Claude Desktop
-ast-helper server --transport stdio
+ast-copilot-helper server --transport stdio
 
 # Verify server is running
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | ast-helper server --transport stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | ast-copilot-helper server --transport stdio
 ```
 
 **HTTP Transport:**
 
 ```bash
 # For web-based AI agents
-ast-helper server --transport http --port 3001 --cors
+ast-copilot-helper server --transport http --port 3001 --cors
 
 # With authentication
-ast-helper server --transport http --port 3001 --auth-token "your-secure-token"
+ast-copilot-helper server --transport http --port 3001 --auth-token "your-secure-token"
 
 # Check server status
 curl http://localhost:3001/health
@@ -73,12 +73,12 @@ curl http://localhost:3001/health
 
 ```bash
 # For real-time streaming applications
-ast-helper server --transport sse --port 3002
+ast-copilot-helper server --transport sse --port 3002
 ```
 
 ### Server Configuration
 
-Create `.ast-helper.json` with MCP-specific settings:
+Create `.ast-copilot-helper.json` with MCP-specific settings:
 
 ```json
 {
@@ -153,7 +153,7 @@ Claude Desktop is one of the most popular MCP clients. Here's how to connect it 
    {
      "mcpServers": {
        "ast-copilot-helper": {
-         "command": "ast-helper",
+         "command": "ast-copilot-helper",
          "args": ["server", "--transport", "stdio"],
          "cwd": "/path/to/your/project"
        }
@@ -167,12 +167,12 @@ Claude Desktop is one of the most popular MCP clients. Here's how to connect it 
    {
      "mcpServers": {
        "my-typescript-project": {
-         "command": "ast-helper",
+         "command": "ast-copilot-helper",
          "args": ["server", "--transport", "stdio"],
          "cwd": "/home/user/projects/my-app"
        },
        "python-ml-project": {
-         "command": "ast-helper",
+         "command": "ast-copilot-helper",
          "args": [
            "server",
            "--transport",
@@ -221,7 +221,7 @@ Cursor IDE supports MCP servers through extensions:
      "mcp.servers": [
        {
          "name": "ast-copilot-helper",
-         "command": "ast-helper",
+         "command": "ast-copilot-helper",
          "args": ["server", "--transport", "stdio"],
          "cwd": "."
        }
@@ -239,7 +239,7 @@ export default {
   mcp: [
     {
       name: "ast-copilot-helper",
-      command: "ast-helper",
+      command: "ast-copilot-helper",
       args: ["server", "--transport", "stdio"],
       cwd: process.cwd(),
     },
@@ -260,7 +260,7 @@ from mcp import Client
 async def main():
     # Connect to MCP server
     client = Client()
-    await client.connect("stdio", ["ast-helper", "server", "--transport", "stdio"])
+    await client.connect("stdio", ["ast-copilot-helper", "server", "--transport", "stdio"])
 
     # Query codebase
     response = await client.call_tool("query_codebase", {
@@ -285,7 +285,7 @@ async function queryCodebase() {
   const client = new Client();
 
   await client.connect({
-    command: "ast-helper",
+    command: "ast-copilot-helper",
     args: ["server", "--transport", "stdio"],
   });
 
@@ -419,7 +419,7 @@ MCP resources provide persistent access to codebase information:
 #### Code Database Resource
 
 ```
-resource://ast-helper/database
+resource://ast-copilot-helper/database
 ```
 
 Provides access to the complete parsed codebase with metadata, annotations, and relationships.
@@ -427,7 +427,7 @@ Provides access to the complete parsed codebase with metadata, annotations, and 
 #### Project Configuration Resource
 
 ```
-resource://ast-helper/config
+resource://ast-copilot-helper/config
 ```
 
 Exposes current ast-copilot-helper configuration including parsing rules, AI settings, and project metadata.
@@ -649,10 +649,10 @@ For your payment service, follow the same pattern:
 
 ```bash
 # Start server with performance monitoring
-ast-helper server --transport http --verbose --profile
+ast-copilot-helper server --transport http --verbose --profile
 
 # Check memory usage
-ps aux | grep ast-helper
+ps aux | grep ast-copilot-helper
 
 # Monitor query response times
 curl -w "%{time_total}" http://localhost:3001/health
@@ -748,7 +748,7 @@ export MCP_AUTH_TOKEN=$(cat .mcp-token)
 
 ```bash
 # Behind reverse proxy (nginx, apache)
-ast-helper server --transport http --host 127.0.0.1 --port 3001
+ast-copilot-helper server --transport http --host 127.0.0.1 --port 3001
 
 # Configure nginx/apache for HTTPS termination
 ```
@@ -781,10 +781,10 @@ ast-helper server --transport http --host 127.0.0.1 --port 3001
 lsof -i :3001
 
 # Test server manually
-ast-helper server --transport stdio --verbose
+ast-copilot-helper server --transport stdio --verbose
 
 # Check configuration
-ast-helper config validate
+ast-copilot-helper config validate
 ```
 
 **Claude Desktop Connection Issues:**
@@ -794,12 +794,12 @@ ast-helper config validate
 ls ~/Library/Application\ Support/Claude/claude_desktop_config.json  # macOS
 ls ~/.config/Claude/claude_desktop_config.json                        # Linux
 
-# Check ast-helper is in PATH
-which ast-helper
+# Check ast-copilot-helper is in PATH
+which ast-copilot-helper
 
 # Test server command manually
 cd /path/to/your/project
-ast-helper server --transport stdio
+ast-copilot-helper server --transport stdio
 ```
 
 ### Performance Issues
@@ -808,13 +808,13 @@ ast-helper server --transport stdio
 
 ```bash
 # Check database size
-ls -lh .ast-helper.db
+ls -lh .ast-copilot-helper.db
 
 # Optimize database
-ast-helper analyze --optimize-db
+ast-copilot-helper analyze --optimize-db
 
 # Reduce context size
-ast-helper config set ai.maxContextSize 4096
+ast-copilot-helper config set ai.maxContextSize 4096
 ```
 
 **High Memory Usage:**
@@ -846,14 +846,14 @@ ast-helper config set ai.maxContextSize 4096
 2. **Check Parsing Status:**
 
    ```bash
-   ast-helper query "*" --limit 5
+   ast-copilot-helper query "*" --limit 5
    # Should return parsed code elements
    ```
 
 3. **Test MCP Tools Manually:**
    ```bash
    echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | \
-     ast-helper server --transport stdio
+     ast-copilot-helper server --transport stdio
    ```
 
 ## Future AI Integration
@@ -922,14 +922,14 @@ With AI integration configured:
 
 ```bash
 # Start MCP server for Claude Desktop
-ast-helper server --transport stdio
+ast-copilot-helper server --transport stdio
 
 # Start HTTP server for web clients
-ast-helper server --transport http --port 3001 --cors
+ast-copilot-helper server --transport http --port 3001 --cors
 
 # Test server connectivity
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | \
-  ast-helper server --transport stdio
+  ast-copilot-helper server --transport stdio
 ```
 
 ### Claude Desktop Config
@@ -938,7 +938,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | \
 {
   "mcpServers": {
     "ast-copilot-helper": {
-      "command": "ast-helper",
+      "command": "ast-copilot-helper",
       "args": ["server", "--transport", "stdio"],
       "cwd": "/path/to/your/project"
     }
@@ -950,5 +950,5 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | \
 
 ```bash
 export MCP_AUTH_TOKEN="secure-token-here"
-ast-helper server --auth-token "$MCP_AUTH_TOKEN"
+ast-copilot-helper server --auth-token "$MCP_AUTH_TOKEN"
 ```

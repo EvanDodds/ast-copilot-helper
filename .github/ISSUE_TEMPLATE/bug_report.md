@@ -58,4 +58,4 @@ Add any other context about the problem here.
 
 ## Diagnostic Information
 
-Please run `ast-helper diagnostic --export` and attach the output (remove any sensitive information).
+Please run `ast-copilot-helper diagnostic --export` and attach the output (remove any sensitive information).

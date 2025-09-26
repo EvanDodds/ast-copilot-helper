@@ -39,7 +39,7 @@ The ast-copilot-helper VS Code extension provides:
 After installation, verify the extension is active:
 
 1. Open Command Palette (Ctrl/Cmd+Shift+P)
-2. Type "ast-helper" - you should see available commands
+2. Type "ast-copilot-helper" - you should see available commands
 3. Check the Activity Bar for the AST Helper icon 🌳
 
 ## Getting Started
@@ -250,7 +250,7 @@ Command Palette → "AST Helper: Start MCP Server"
 {
   "mcpServers": {
     "ast-copilot-helper": {
-      "command": "ast-helper",
+      "command": "ast-copilot-helper",
       "args": ["server", "--transport", "stdio"],
       "cwd": "/path/to/your/project"
     }
@@ -346,11 +346,11 @@ Access via File → Preferences → Settings → Extensions → AST Helper
 
 ```json
 {
-  "ast-helper.parser.autoParseOnSave": true,
-  "ast-helper.parser.includePatterns": ["**/*.{ts,js,tsx,jsx}"],
-  "ast-helper.parser.excludePatterns": ["node_modules/**", "dist/**"],
-  "ast-helper.parser.maxFileSize": "1MB",
-  "ast-helper.parser.enableProgressNotifications": true
+  "ast-copilot-helper.parser.autoParseOnSave": true,
+  "ast-copilot-helper.parser.includePatterns": ["**/*.{ts,js,tsx,jsx}"],
+  "ast-copilot-helper.parser.excludePatterns": ["node_modules/**", "dist/**"],
+  "ast-copilot-helper.parser.maxFileSize": "1MB",
+  "ast-copilot-helper.parser.enableProgressNotifications": true
 }
 ```
 
@@ -358,10 +358,10 @@ Access via File → Preferences → Settings → Extensions → AST Helper
 
 ```json
 {
-  "ast-helper.search.defaultSimilarityThreshold": 0.7,
-  "ast-helper.search.maxResults": 20,
-  "ast-helper.search.enableSemanticSearch": true,
-  "ast-helper.search.highlightMatches": true
+  "ast-copilot-helper.search.defaultSimilarityThreshold": 0.7,
+  "ast-copilot-helper.search.maxResults": 20,
+  "ast-copilot-helper.search.enableSemanticSearch": true,
+  "ast-copilot-helper.search.highlightMatches": true
 }
 ```
 
@@ -369,11 +369,11 @@ Access via File → Preferences → Settings → Extensions → AST Helper
 
 ```json
 {
-  "ast-helper.ai.autoStartMCPServer": false,
-  "ast-helper.ai.mcpServerPort": 3001,
-  "ast-helper.ai.enableCORS": true,
-  "ast-helper.ai.authToken": "",
-  "ast-helper.ai.maxContextSize": 8192
+  "ast-copilot-helper.ai.autoStartMCPServer": false,
+  "ast-copilot-helper.ai.mcpServerPort": 3001,
+  "ast-copilot-helper.ai.enableCORS": true,
+  "ast-copilot-helper.ai.authToken": "",
+  "ast-copilot-helper.ai.maxContextSize": 8192
 }
 ```
 
@@ -381,11 +381,11 @@ Access via File → Preferences → Settings → Extensions → AST Helper
 
 ```json
 {
-  "ast-helper.ui.showTreeView": true,
-  "ast-helper.ui.showStatusBar": true,
-  "ast-helper.ui.enableHoverInfo": true,
-  "ast-helper.ui.showComplexityMetrics": true,
-  "ast-helper.ui.colorTheme": "auto"
+  "ast-copilot-helper.ui.showTreeView": true,
+  "ast-copilot-helper.ui.showStatusBar": true,
+  "ast-copilot-helper.ui.enableHoverInfo": true,
+  "ast-copilot-helper.ui.showComplexityMetrics": true,
+  "ast-copilot-helper.ui.colorTheme": "auto"
 }
 ```
 
@@ -395,19 +395,19 @@ Create `.vscode/settings.json` in your project:
 
 ```json
 {
-  "ast-helper.parser.includePatterns": [
+  "ast-copilot-helper.parser.includePatterns": [
     "src/**/*.ts",
     "lib/**/*.js",
     "**/*.tsx"
   ],
-  "ast-helper.parser.excludePatterns": [
+  "ast-copilot-helper.parser.excludePatterns": [
     "**/*.test.*",
     "**/*.spec.*",
     "dist/**",
     "build/**"
   ],
-  "ast-helper.search.defaultSimilarityThreshold": 0.75,
-  "ast-helper.ai.autoStartMCPServer": true
+  "ast-copilot-helper.search.defaultSimilarityThreshold": 0.75,
+  "ast-copilot-helper.ai.autoStartMCPServer": true
 }
 ```
 
@@ -432,12 +432,12 @@ Add to `keybindings.json`:
 [
   {
     "key": "ctrl+shift+f",
-    "command": "ast-helper.searchSimilarCode",
+    "command": "ast-copilot-helper.searchSimilarCode",
     "when": "editorTextFocus"
   },
   {
     "key": "ctrl+shift+a",
-    "command": "ast-helper.analyzeComplexity",
+    "command": "ast-copilot-helper.analyzeComplexity",
     "when": "editorTextFocus"
   }
 ]
@@ -514,7 +514,7 @@ Add to `keybindings.json`:
 
 ```
 1. Check file patterns:
-   Settings → ast-helper.parser.includePatterns
+   Settings → ast-copilot-helper.parser.includePatterns
 
 2. Manually trigger parse:
    Command Palette → "AST Helper: Parse Workspace"
@@ -534,7 +534,7 @@ Add to `keybindings.json`:
    Check Tree View for content
 
 2. Lower similarity threshold:
-   Settings → ast-helper.search.defaultSimilarityThreshold
+   Settings → ast-copilot-helper.search.defaultSimilarityThreshold
 
 3. Try exact text search:
    Disable semantic search temporarily
@@ -563,15 +563,15 @@ Add to `keybindings.json`:
 
 ```json
 {
-  "ast-helper.parser.maxFileSize": "500KB",
-  "ast-helper.parser.excludePatterns": [
+  "ast-copilot-helper.parser.maxFileSize": "500KB",
+  "ast-copilot-helper.parser.excludePatterns": [
     "node_modules/**",
     "dist/**",
     "build/**",
     "**/*.min.js",
     "**/vendor/**"
   ],
-  "ast-helper.search.maxResults": 10
+  "ast-copilot-helper.search.maxResults": 10
 }
 ```
 
@@ -579,9 +579,9 @@ Add to `keybindings.json`:
 
 ```json
 {
-  "ast-helper.parser.enableParallelProcessing": false,
-  "ast-helper.search.enableSemanticSearch": false,
-  "ast-helper.ui.showComplexityMetrics": false
+  "ast-copilot-helper.parser.enableParallelProcessing": false,
+  "ast-copilot-helper.search.enableSemanticSearch": false,
+  "ast-copilot-helper.ui.showComplexityMetrics": false
 }
 ```
 
@@ -593,7 +593,7 @@ Extend support for additional languages:
 
 ```json
 {
-  "ast-helper.parser.customLanguages": [
+  "ast-copilot-helper.parser.customLanguages": [
     {
       "id": "rust",
       "extensions": [".rs"],
@@ -635,7 +635,7 @@ Set up automated workflows:
 
 ```json
 {
-  "ast-helper.automation.webhooks": [
+  "ast-copilot-helper.automation.webhooks": [
     {
       "event": "parse-complete",
       "url": "https://your-server.com/webhook",
@@ -691,7 +691,7 @@ Master the VS Code extension and explore:
 ### Essential Commands
 
 ```
-AST Helper: Initialize Project    - Set up ast-helper in workspace
+AST Helper: Initialize Project    - Set up ast-copilot-helper in workspace
 AST Helper: Parse Workspace      - Analyze all project files
 AST Helper: Query Codebase       - Search with natural language
 AST Helper: Start MCP Server     - Enable AI integration

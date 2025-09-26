@@ -156,13 +156,13 @@ export class AuthService {
 EOF
 
 # 4. Initialize ast-copilot-helper
-ast-helper init
+ast-copilot-helper init
 
 # 5. Parse your code
-ast-helper parse src/
+ast-copilot-helper parse src/
 
 # 6. Start exploring!
-ast-helper stats
+ast-copilot-helper stats
 ```
 
 **Expected Output:**
@@ -183,19 +183,19 @@ Now let's explore your code with intelligent queries:
 
 ```bash
 # Find user-related functionality
-ast-helper query "user management"
+ast-copilot-helper query "user management"
 
 # Look for authentication functions
-ast-helper query "authentication and login"
+ast-copilot-helper query "authentication and login"
 
 # Search for specific types
-ast-helper query "token" --type interface
+ast-copilot-helper query "token" --type interface
 
 # Find all classes
-ast-helper query "*" --type class
+ast-copilot-helper query "*" --type class
 
 # Search in specific files
-ast-helper query "validation" --file "src/auth.ts"
+ast-copilot-helper query "validation" --file "src/auth.ts"
 ```
 
 **Sample Results:**
@@ -274,21 +274,21 @@ EOF
 npm install -g ast-copilot-helper
 
 # Initialize project
-ast-helper init
+ast-copilot-helper init
 
 # Parse code
-ast-helper parse src/
+ast-copilot-helper parse src/
 ```
 
 **Step 3: Basic Text Search** (2 minutes)
 
 ```bash
 # Find all functions
-ast-helper query "*" --type method
+ast-copilot-helper query "*" --type method
 
 # Search for specific functionality
-ast-helper query "addition"
-ast-helper query "math operations"
+ast-copilot-helper query "addition"
+ast-copilot-helper query "math operations"
 ```
 
 **Step 4: Enable Semantic Search** (2 minutes)
@@ -298,23 +298,23 @@ ast-helper query "math operations"
 export OPENAI_API_KEY="your-key-here"
 
 # Enable embeddings
-ast-helper config set ai.enableEmbeddings true
+ast-copilot-helper config set ai.enableEmbeddings true
 
 # Generate embeddings
-ast-helper embeddings generate src/
+ast-copilot-helper embeddings generate src/
 ```
 
 **Step 5: Try Semantic Search** (2 minutes)
 
 ```bash
 # These queries understand meaning, not just keywords:
-ast-helper query "mathematical operations"
-ast-helper query "arithmetic functions"
-ast-helper query "number calculations"
+ast-copilot-helper query "mathematical operations"
+ast-copilot-helper query "arithmetic functions"
+ast-copilot-helper query "number calculations"
 
 # Compare with text search:
-ast-helper query "mathematical operations" --mode text
-ast-helper query "mathematical operations" --mode semantic
+ast-copilot-helper query "mathematical operations" --mode text
+ast-copilot-helper query "mathematical operations" --mode semantic
 ```
 
 **🎉 Success!** You now have semantic search working on your codebase!
@@ -381,7 +381,7 @@ Create `.vscode/settings.json`:
 {
   "mcp_servers": {
     "tutorial-project": {
-      "command": "ast-helper",
+      "command": "ast-copilot-helper",
       "args": ["server"],
       "cwd": "/path/to/tutorial-project"
     }
@@ -393,7 +393,7 @@ Create `.vscode/settings.json`:
 
 ```bash
 cd tutorial-project
-ast-helper server --transport stdio
+ast-copilot-helper server --transport stdio
 ```
 
 **Step 3: Test AI Integration** (5 minutes)

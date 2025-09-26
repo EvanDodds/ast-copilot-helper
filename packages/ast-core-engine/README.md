@@ -13,13 +13,13 @@ High-performance Rust core engine for AST processing, vector operations, and bat
 ## Installation
 
 ```bash
-npm install @ast-helper/core-engine
+npm install @ast-copilot-helper/core-engine
 ```
 
 ## Usage
 
 ```typescript
-import { initEngine, ASTCoreEngine } from "@ast-helper/core-engine";
+import { initEngine, ASTCoreEngine } from "@ast-copilot-helper/core-engine";
 
 // Initialize the engine
 await initEngine();

@@ -28,7 +28,7 @@ A comprehensive error reporting and diagnostics system for the AST Copilot Helpe
 The error reporting system is included as part of the AST Helper package:
 
 ```bash
-npm install @ast-copilot-helper/ast-helper
+npm install @ast-copilot-helper/ast-copilot-helper
 ```
 
 ## 🔧 Quick Start
@@ -36,7 +36,7 @@ npm install @ast-copilot-helper/ast-helper
 ### Basic Usage
 
 ```typescript
-import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-helper";
+import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-copilot-helper";
 
 // Initialize the error reporting system
 const errorManager = new ComprehensiveErrorReportingManager({
@@ -295,7 +295,7 @@ suggestions.forEach((suggestion) => {
 Run the comprehensive integration test suite:
 
 ```bash
-npm test -- packages/ast-helper/src/test/error-reporting/integration.test.ts
+npm test -- packages/ast-copilot-helper/src/test/error-reporting/integration.test.ts
 ```
 
 ### Unit Tests
@@ -304,13 +304,13 @@ Run individual component tests:
 
 ```bash
 # Test core error reporting
-npm test -- packages/ast-helper/src/test/error-reporting/manager.test.ts
+npm test -- packages/ast-copilot-helper/src/test/error-reporting/manager.test.ts
 
 # Test crash detection
-npm test -- packages/ast-helper/src/test/error-reporting/crash/detector.test.ts
+npm test -- packages/ast-copilot-helper/src/test/error-reporting/crash/detector.test.ts
 
 # Test privacy controls
-npm test -- packages/ast-helper/src/test/error-reporting/privacy/privacy-manager.test.ts
+npm test -- packages/ast-copilot-helper/src/test/error-reporting/privacy/privacy-manager.test.ts
 ```
 
 ## 🚀 Performance Optimization

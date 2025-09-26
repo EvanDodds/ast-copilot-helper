@@ -1132,7 +1132,7 @@ export const DEFAULT_CONFIG: Configuration = {
     languageConfigs: {},
   },
   database: {
-    path: ".ast-helper.db",
+    path: ".ast-copilot-helper.db",
     cacheSize: 100,
     enableWAL: true,
     backup: {
@@ -1163,7 +1163,7 @@ export const DEFAULT_CONFIG: Configuration = {
   },
   logging: {
     level: "info",
-    file: "ast-helper.log",
+    file: "ast-copilot-helper.log",
   },
 };
 

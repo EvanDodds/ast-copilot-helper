@@ -72,7 +72,7 @@ The project is organized as a monorepo with distinct packages:
 
 ```
 packages/
-├── ast-helper/              # Core CLI package
+├── ast-copilot-helper/              # Core CLI package
 │   ├── src/
 │   │   ├── parser/         # AST parsing logic
 │   │   ├── ai/            # AI and embeddings

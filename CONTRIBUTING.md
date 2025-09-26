@@ -69,7 +69,7 @@ yarn run lint
 ```
 ast-copilot-helper/
 ├── packages/
-│   ├── ast-helper/          # CLI tool and core library
+│   ├── ast-copilot-helper/          # CLI tool and core library
 │   │   ├── src/            # Source code
 │   │   ├── bin/            # CLI executables
 │   │   └── test/           # Package-specific tests
@@ -436,7 +436,7 @@ Contributors are recognized in:
 yarn run debug:cli -- parse --file example.ts --verbose
 
 # Use Node.js debugging
-node --inspect-brk packages/ast-helper/bin/ast-helper.js parse --file example.ts
+node --inspect-brk packages/ast-copilot-helper/bin/ast-copilot-helper.js parse --file example.ts
 ```
 
 #### MCP Server

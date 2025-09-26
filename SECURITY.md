@@ -12,7 +12,7 @@ The security framework is built around four primary components that work togethe
 
 #### 1. ComprehensiveSecurityAuditor
 
-**Location**: `packages/ast-helper/src/security/auditor.ts`
+**Location**: `packages/ast-copilot-helper/src/security/auditor.ts`
 
 The security auditor performs comprehensive security assessments with the following capabilities:
 
@@ -32,7 +32,7 @@ The security auditor performs comprehensive security assessments with the follow
 
 #### 2. ComprehensiveInputValidator
 
-**Location**: `packages/ast-helper/src/security/input-validator.ts`
+**Location**: `packages/ast-copilot-helper/src/security/input-validator.ts`
 
 Advanced input validation and sanitization engine with the following protections:
 
@@ -54,7 +54,7 @@ Advanced input validation and sanitization engine with the following protections
 
 #### 3. VulnerabilityScanner
 
-**Location**: `packages/ast-helper/src/security/vulnerability-scanner.ts`
+**Location**: `packages/ast-copilot-helper/src/security/vulnerability-scanner.ts`
 
 Pattern-based vulnerability detection system with comprehensive coverage:
 
@@ -73,7 +73,7 @@ Pattern-based vulnerability detection system with comprehensive coverage:
 
 #### 4. SecurityHardeningFramework
 
-**Location**: `packages/ast-helper/src/security/security-hardening-framework.ts`
+**Location**: `packages/ast-copilot-helper/src/security/security-hardening-framework.ts`
 
 Security policy enforcement and configuration management system:
 
@@ -117,7 +117,7 @@ The security framework includes comprehensive test coverage with multiple testin
 
 ```bash
 # Run all security unit tests
-yarn test packages/ast-helper/src/security/
+yarn test packages/ast-copilot-helper/src/security/
 
 # Run security integration tests
 yarn test tests/integration/security-integration.test.ts
@@ -139,7 +139,7 @@ yarn run test:security
 The security framework uses a comprehensive default configuration that can be customized:
 
 ```typescript
-import { DEFAULT_SECURITY_CONFIG } from "packages/ast-helper/src/security/config";
+import { DEFAULT_SECURITY_CONFIG } from "packages/ast-copilot-helper/src/security/config";
 
 const config = {
   // Audit Configuration
@@ -176,7 +176,7 @@ const config = {
 You can define custom security policies by extending the base configuration:
 
 ```typescript
-import { SecurityConfig } from "packages/ast-helper/src/security/types";
+import { SecurityConfig } from "packages/ast-copilot-helper/src/security/types";
 
 const customConfig: SecurityConfig = {
   ...DEFAULT_SECURITY_CONFIG,

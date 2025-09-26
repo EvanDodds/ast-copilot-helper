@@ -26,7 +26,7 @@ This guide covers the development workflow, architecture details, testing strate
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/ast-copilot-helper.git
+git clone https://github.com/EvanDodds/ast-copilot-helper.git
 cd ast-copilot-helper
 
 # Install dependencies

@@ -42,7 +42,7 @@ Language Performance Benchmarks (10,000 lines of code):
 ### 1. Grammar Management Optimization
 
 ```typescript
-import { TreeSitterGrammarManager } from "@ast-copilot-helper/ast-helper";
+import { TreeSitterGrammarManager } from "@ast-copilot-helper/ast-copilot-helper";
 
 class OptimizedGrammarManager extends TreeSitterGrammarManager {
   private preloadedGrammars = new Set<string>();
@@ -111,7 +111,7 @@ class OptimizedGrammarManager extends TreeSitterGrammarManager {
 ### 2. Batching and Concurrency Optimization
 
 ```typescript
-import { ParserFactory } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
 import { Worker } from "worker_threads";
 import { cpus } from "os";
 

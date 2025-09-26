@@ -6,7 +6,7 @@ The ast-copilot-helper VS Code extension provides a rich IDE integration for cod
 
 The extension activates automatically when:
 
-- A workspace contains a `.ast-helper.json` configuration file
+- A workspace contains a `.ast-copilot-helper.json` configuration file
 - Any supported language file is opened (TypeScript, JavaScript, Python, etc.)
 - The command palette command `AST Helper: Activate` is run
 
@@ -16,7 +16,7 @@ All commands are accessible via the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift
 
 ### Core Commands
 
-#### `ast-helper.parse.workspace`
+#### `ast-copilot-helper.parse.workspace`
 
 **Command**: `AST Helper: Parse Workspace`
 
@@ -30,21 +30,21 @@ Parse all files in the current workspace and extract AST annotations.
 
 ```typescript
 // Extension API
-vscode.commands.registerCommand("ast-helper.parse.workspace", async () => {
+vscode.commands.registerCommand("ast-copilot-helper.parse.workspace", async () => {
   const config = await getConfiguration();
   const result = await parseWorkspace(config);
   showParseResults(result);
 });
 ```
 
-#### `ast-helper.parse.file`
+#### `ast-copilot-helper.parse.file`
 
 **Command**: `AST Helper: Parse Current File`
 
 Parse the currently active file.
 
 ```typescript
-vscode.commands.registerCommand("ast-helper.parse.file", async () => {
+vscode.commands.registerCommand("ast-copilot-helper.parse.file", async () => {
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor) {
     vscode.window.showErrorMessage("No active file to parse");
@@ -56,14 +56,14 @@ vscode.commands.registerCommand("ast-helper.parse.file", async () => {
 });
 ```
 
-#### `ast-helper.query.interactive`
+#### `ast-copilot-helper.query.interactive`
 
 **Command**: `AST Helper: Interactive Query`
 
 Open an interactive query interface for searching code.
 
 ```typescript
-vscode.commands.registerCommand("ast-helper.query.interactive", async () => {
+vscode.commands.registerCommand("ast-copilot-helper.query.interactive", async () => {
   const query = await vscode.window.showInputBox({
     prompt: "Enter natural language query",
     placeHolder: 'e.g., "functions that handle HTTP requests"',
@@ -76,19 +76,19 @@ vscode.commands.registerCommand("ast-helper.query.interactive", async () => {
 });
 ```
 
-#### `ast-helper.config.open`
+#### `ast-copilot-helper.config.open`
 
 **Command**: `AST Helper: Open Configuration`
 
 Open the configuration file for editing.
 
-#### `ast-helper.server.start`
+#### `ast-copilot-helper.server.start`
 
 **Command**: `AST Helper: Start MCP Server`
 
 Start the local MCP server for AI agent integration.
 
-#### `ast-helper.server.stop`
+#### `ast-copilot-helper.server.stop`
 
 **Command**: `AST Helper: Stop MCP Server`
 
@@ -130,7 +130,7 @@ class ASTExplorerProvider implements vscode.TreeDataProvider<ASTNode> {
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None,
       command: {
-        command: "ast-helper.goToDefinition",
+        command: "ast-copilot-helper.goToDefinition",
         title: "Go to Definition",
         arguments: [element],
       },
@@ -174,32 +174,32 @@ The extension contributes the following settings to VS Code:
 
 ```json
 {
-  "ast-helper.autoParseOnSave": {
+  "ast-copilot-helper.autoParseOnSave": {
     "type": "boolean",
     "default": true,
     "description": "Automatically parse files when they are saved"
   },
-  "ast-helper.showDecorations": {
+  "ast-copilot-helper.showDecorations": {
     "type": "boolean",
     "default": true,
     "description": "Show AST annotations as decorations in the editor"
   },
-  "ast-helper.server.autoStart": {
+  "ast-copilot-helper.server.autoStart": {
     "type": "boolean",
     "default": false,
     "description": "Automatically start MCP server when extension activates"
   },
-  "ast-helper.server.port": {
+  "ast-copilot-helper.server.port": {
     "type": "number",
     "default": 3001,
     "description": "Port for MCP server"
   },
-  "ast-helper.query.maxResults": {
+  "ast-copilot-helper.query.maxResults": {
     "type": "number",
     "default": 50,
     "description": "Maximum number of query results to display"
   },
-  "ast-helper.diagnostics.enabled": {
+  "ast-copilot-helper.diagnostics.enabled": {
     "type": "boolean",
     "default": true,
     "description": "Enable diagnostic messages for code analysis"
@@ -209,11 +209,11 @@ The extension contributes the following settings to VS Code:
 
 ### Configuration Schema
 
-The extension validates `.ast-helper.json` configuration files:
+The extension validates `.ast-copilot-helper.json` configuration files:
 
 ```typescript
 const configurationSchema: vscode.JSONSchemaContribution = {
-  fileMatch: [".ast-helper.json"],
+  fileMatch: [".ast-copilot-helper.json"],
   schema: {
     type: "object",
     properties: {
@@ -398,7 +398,7 @@ Provide diagnostic information based on AST analysis.
 ```typescript
 class ASTDiagnosticsProvider {
   private diagnosticCollection =
-    vscode.languages.createDiagnosticCollection("ast-helper");
+    vscode.languages.createDiagnosticCollection("ast-copilot-helper");
 
   updateDiagnostics(document: vscode.TextDocument) {
     const diagnostics: vscode.Diagnostic[] = [];
@@ -417,7 +417,7 @@ class ASTDiagnosticsProvider {
       );
 
       diagnostic.code = issue.code;
-      diagnostic.source = "ast-helper";
+      diagnostic.source = "ast-copilot-helper";
 
       diagnostics.push(diagnostic);
     });
@@ -481,7 +481,7 @@ class ASTCodeActionProvider implements vscode.CodeActionProvider {
         );
 
         extractAction.command = {
-          command: "ast-helper.refactor.extractToFile",
+          command: "ast-copilot-helper.refactor.extractToFile",
           title: "Extract to file",
           arguments: [annotation],
         };
@@ -638,7 +638,7 @@ suite("Extension Test Suite", () => {
     await vscode.window.showTextDocument(document);
 
     // Execute parse command
-    await vscode.commands.executeCommand("ast-helper.parse.file");
+    await vscode.commands.executeCommand("ast-copilot-helper.parse.file");
 
     // Verify results
     const annotations = await api.parseFile(testFile.fsPath);
@@ -661,7 +661,7 @@ suite("Extension Test Suite", () => {
 
 1. **Extension not activating**
    - Check if workspace contains supported file types
-   - Verify `.ast-helper.json` configuration is valid
+   - Verify `.ast-copilot-helper.json` configuration is valid
    - Check Output panel for error messages
 
 2. **MCP server won't start**
@@ -680,7 +680,7 @@ Enable debug logging by setting:
 
 ```json
 {
-  "ast-helper.logging.level": "debug"
+  "ast-copilot-helper.logging.level": "debug"
 }
 ```
 

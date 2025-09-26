@@ -167,7 +167,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   // Create temp directory for each test
-  tempDir = await mkdtemp(join(tmpdir(), "ast-helper-test-"));
+  tempDir = await mkdtemp(join(tmpdir(), "ast-copilot-helper-test-"));
 });
 
 afterEach(async () => {
@@ -189,8 +189,8 @@ global.getTempDir = () => tempDir;
 
 ```typescript
 import { describe, it, expect, beforeEach } from "vitest";
-import { TypeScriptParser } from "../../../packages/ast-helper/src/parser/typescript";
-import { ASTAnnotation } from "../../../packages/ast-helper/src/types";
+import { TypeScriptParser } from "../../../packages/ast-copilot-helper/src/parser/typescript";
+import { ASTAnnotation } from "../../../packages/ast-copilot-helper/src/types";
 
 describe("TypeScriptParser", () => {
   let parser: TypeScriptParser;
@@ -389,14 +389,14 @@ describe("TypeScriptParser", () => {
 
 ```typescript
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { QueryEngine } from "../../../packages/ast-helper/src/query/engine";
-import { DatabaseManager } from "../../../packages/ast-helper/src/database/manager";
-import { EmbeddingGenerator } from "../../../packages/ast-helper/src/ai/embedding-generator";
+import { QueryEngine } from "../../../packages/ast-copilot-helper/src/query/engine";
+import { DatabaseManager } from "../../../packages/ast-copilot-helper/src/database/manager";
+import { EmbeddingGenerator } from "../../../packages/ast-copilot-helper/src/ai/embedding-generator";
 import { createMockAnnotations } from "../../utils/mock-factories";
 
 // Mock dependencies
-vi.mock("../../../packages/ast-helper/src/database/manager");
-vi.mock("../../../packages/ast-helper/src/ai/embedding-generator");
+vi.mock("../../../packages/ast-copilot-helper/src/database/manager");
+vi.mock("../../../packages/ast-copilot-helper/src/ai/embedding-generator");
 
 describe("QueryEngine", () => {
   let queryEngine: QueryEngine;
@@ -564,8 +564,8 @@ describe("QueryEngine", () => {
 
 ```typescript
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { DatabaseManager } from "../../../packages/ast-helper/src/database/manager";
-import { ASTAnnotation } from "../../../packages/ast-helper/src/types";
+import { DatabaseManager } from "../../../packages/ast-copilot-helper/src/database/manager";
+import { ASTAnnotation } from "../../../packages/ast-copilot-helper/src/types";
 import { join } from "path";
 import { rm } from "fs/promises";
 
@@ -764,7 +764,7 @@ describe("CLI Parse Command Integration", () => {
     await mkdir(testProjectDir, { recursive: true });
 
     // Build CLI if not already built
-    cliPath = join(__dirname, "../../../packages/ast-helper/bin/ast-helper.js");
+    cliPath = join(__dirname, "../../../packages/ast-copilot-helper/bin/ast-copilot-helper.js");
   });
 
   afterEach(async () => {
@@ -780,10 +780,10 @@ describe("CLI Parse Command Integration", () => {
 
     // Assert
     expect(output).toContain("Initialized ast-copilot-helper");
-    expect(existsSync(join(testProjectDir, ".ast-helper.json"))).toBe(true);
+    expect(existsSync(join(testProjectDir, ".ast-copilot-helper.json"))).toBe(true);
 
     const config = JSON.parse(
-      readFileSync(join(testProjectDir, ".ast-helper.json"), "utf8"),
+      readFileSync(join(testProjectDir, ".ast-copilot-helper.json"), "utf8"),
     );
     expect(config).toHaveProperty("parser");
     expect(config).toHaveProperty("ai");
@@ -826,7 +826,7 @@ describe("CLI Parse Command Integration", () => {
     // Assert
     expect(output).toContain("Successfully parsed");
     expect(output).toContain("2 annotations"); // function + interface
-    expect(existsSync(join(testProjectDir, ".ast-helper.db"))).toBe(true);
+    expect(existsSync(join(testProjectDir, ".ast-copilot-helper.db"))).toBe(true);
 
     // Verify database contents
     const queryOutput = execSync(`node ${cliPath} query "auth" --format json`, {
@@ -1089,7 +1089,7 @@ describe("MCP Server Protocol Integration", () => {
     const { execSync } = require("child_process");
     const cliPath = join(
       __dirname,
-      "../../../packages/ast-helper/bin/ast-helper.js",
+      "../../../packages/ast-copilot-helper/bin/ast-copilot-helper.js",
     );
 
     execSync(`node ${cliPath} init --yes`, { cwd: projectDir });
@@ -1164,7 +1164,7 @@ describe("New Project Setup E2E Workflow", () => {
   beforeEach(async () => {
     projectDir = join(getTempDir(), "e2e-project");
     await mkdir(projectDir, { recursive: true });
-    cliPath = join(__dirname, "../../../packages/ast-helper/bin/ast-helper.js");
+    cliPath = join(__dirname, "../../../packages/ast-copilot-helper/bin/ast-copilot-helper.js");
   });
 
   afterEach(async () => {
@@ -1182,7 +1182,7 @@ describe("New Project Setup E2E Workflow", () => {
     });
 
     expect(initOutput).toContain("Initialized ast-copilot-helper");
-    expect(existsSync(join(projectDir, ".ast-helper.json"))).toBe(true);
+    expect(existsSync(join(projectDir, ".ast-copilot-helper.json"))).toBe(true);
 
     // Step 3: Parse the entire project
     const parseOutput = execSync(`node ${cliPath} parse src/`, {
@@ -1192,7 +1192,7 @@ describe("New Project Setup E2E Workflow", () => {
 
     expect(parseOutput).toContain("Successfully parsed");
     expect(parseOutput).toMatch(/\d+ annotations/);
-    expect(existsSync(join(projectDir, ".ast-helper.db"))).toBe(true);
+    expect(existsSync(join(projectDir, ".ast-copilot-helper.db"))).toBe(true);
 
     // Step 4: Perform various queries
     const authQuery = execSync(
@@ -1674,7 +1674,7 @@ describe("New Project Setup E2E Workflow", () => {
 
 ```typescript
 import { describe, bench } from "vitest";
-import { TypeScriptParser } from "../../../packages/ast-helper/src/parser/typescript";
+import { TypeScriptParser } from "../../../packages/ast-copilot-helper/src/parser/typescript";
 import { generateLargeTypeScriptFile } from "../../utils/test-helpers";
 
 describe("Large File Parsing Benchmarks", () => {
@@ -1735,7 +1735,7 @@ describe("Memory Usage Tests", () => {
 import {
   ASTAnnotation,
   QueryResult,
-} from "../../packages/ast-helper/src/types";
+} from "../../packages/ast-copilot-helper/src/types";
 
 export function createMockAnnotation(
   overrides: Partial<ASTAnnotation> = {},
@@ -1784,7 +1784,7 @@ import { mkdtemp, writeFile, rm } from "fs/promises";
 import { join } from "path";
 
 export async function createTempProject(): Promise<string> {
-  const tempDir = await mkdtemp(join(tmpdir(), "ast-helper-test-"));
+  const tempDir = await mkdtemp(join(tmpdir(), "ast-copilot-helper-test-"));
   return tempDir;
 }
 
@@ -1823,7 +1823,7 @@ export class TestProject {
 
   async initialize(): Promise<void> {
     await this.writeFile(
-      ".ast-helper.json",
+      ".ast-copilot-helper.json",
       JSON.stringify(
         {
           parser: {
@@ -1864,7 +1864,7 @@ npm run test:watch
 npm run test:coverage
 
 # Run tests for specific package
-npm run test:ast-helper
+npm run test:ast-copilot-helper
 npm run test:mcp-server
 npm run test:vscode-extension
 

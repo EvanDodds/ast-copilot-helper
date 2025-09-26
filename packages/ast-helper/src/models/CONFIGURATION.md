@@ -101,7 +101,7 @@ AST_MODEL_DEBUG="false"
 AST_MODEL_LOG_LEVEL="warn"
 AST_MODEL_STRICT_VALIDATION="true"
 AST_MODEL_ENABLE_METRICS="true"
-AST_MODEL_LOG_FILE="/var/log/ast-helper/models.log"
+AST_MODEL_LOG_FILE="/var/log/ast-copilot-helper/models.log"
 
 # Production Performance
 AST_MODEL_MAX_CONCURRENT="6"
@@ -204,7 +204,7 @@ AST_MODEL_CACHE_SIZE="50GB"
     },
     "production": {
       "cache": {
-        "directory": "/var/cache/ast-helper/models",
+        "directory": "/var/cache/ast-copilot-helper/models",
         "maxSize": "100GB",
         "cleanupStrategy": "lru",
         "compressionEnabled": true
@@ -225,7 +225,7 @@ AST_MODEL_CACHE_SIZE="50GB"
       "logging": {
         "level": "warn",
         "enableFile": true,
-        "filePath": "/var/log/ast-helper/models.log"
+        "filePath": "/var/log/ast-copilot-helper/models.log"
       }
     },
     "testing": {
@@ -331,7 +331,7 @@ network:
 ### ModelDownloader Configuration
 
 ```typescript
-import { ModelDownloader } from "@ast-copilot-helper/ast-helper";
+import { ModelDownloader } from "@ast-copilot-helper/ast-copilot-helper";
 
 const downloader = new ModelDownloader({
   // Basic settings
@@ -381,7 +381,7 @@ const downloader = new ModelDownloader({
 ### ModelCache Configuration
 
 ```typescript
-import { ModelCache } from "@ast-copilot-helper/ast-helper";
+import { ModelCache } from "@ast-copilot-helper/ast-copilot-helper";
 
 const cache = new ModelCache({
   // Basic settings
@@ -418,7 +418,7 @@ const cache = new ModelCache({
 ### FileVerifier Configuration
 
 ```typescript
-import { FileVerifier } from "@ast-copilot-helper/ast-helper";
+import { FileVerifier } from "@ast-copilot-helper/ast-copilot-helper";
 
 const verifier = new FileVerifier("./quarantine", {
   // Basic validation
@@ -455,7 +455,7 @@ const verifier = new FileVerifier("./quarantine", {
 ### PerformanceOptimizer Configuration
 
 ```typescript
-import { PerformanceOptimizer } from "@ast-copilot-helper/ast-helper";
+import { PerformanceOptimizer } from "@ast-copilot-helper/ast-copilot-helper";
 
 const optimizer = new PerformanceOptimizer({
   // Download limits
@@ -494,7 +494,7 @@ const optimizer = new PerformanceOptimizer({
 ### ErrorHandler Configuration
 
 ```typescript
-import { ErrorHandler } from "@ast-copilot-helper/ast-helper";
+import { ErrorHandler } from "@ast-copilot-helper/ast-copilot-helper";
 
 const errorHandler = new ErrorHandler({
   // Retry settings
@@ -772,7 +772,7 @@ spec:
 module.exports = {
   apps: [
     {
-      name: "ast-helper",
+      name: "ast-copilot-helper",
       script: "./dist/index.js",
       env: {
         NODE_ENV: "production",
@@ -783,7 +783,7 @@ module.exports = {
       },
       env_production: {
         NODE_ENV: "production",
-        AST_MODEL_CACHE_DIR: "/var/lib/ast-helper/models",
+        AST_MODEL_CACHE_DIR: "/var/lib/ast-copilot-helper/models",
         AST_MODEL_CACHE_SIZE: "100GB",
         AST_MODEL_LOG_LEVEL: "error",
         AST_MODEL_MAX_CONCURRENT: "8",
@@ -796,21 +796,21 @@ module.exports = {
 ### Systemd Service Configuration
 
 ```ini
-# /etc/systemd/system/ast-helper.service
+# /etc/systemd/system/ast-copilot-helper.service
 [Unit]
 Description=AST Copilot Helper
 After=network.target
 
 [Service]
 Type=simple
-User=ast-helper
-WorkingDirectory=/opt/ast-helper
+User=ast-copilot-helper
+WorkingDirectory=/opt/ast-copilot-helper
 ExecStart=/usr/bin/node dist/index.js
 Restart=always
 
 # Environment variables
 Environment=NODE_ENV=production
-Environment=AST_MODEL_CACHE_DIR=/var/cache/ast-helper/models
+Environment=AST_MODEL_CACHE_DIR=/var/cache/ast-copilot-helper/models
 Environment=AST_MODEL_CACHE_SIZE=50GB
 Environment=AST_MODEL_LOG_LEVEL=warn
 Environment=AST_MODEL_MAX_CONCURRENT=6

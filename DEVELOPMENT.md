@@ -164,7 +164,7 @@ yarn run clean:all         # Deep clean including node_modules
 
 ## Package Architecture
 
-### AST Helper (`packages/ast-helper`)
+### AST Helper (`packages/ast-copilot-helper`)
 
 - **Purpose**: CLI tool for AST analysis and code querying
 - **Key Features**: Configuration management, logging, file locking

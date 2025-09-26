@@ -19,7 +19,7 @@ Complete API documentation for the comprehensive error reporting and diagnostics
 The main class that orchestrates all error reporting functionality.
 
 ```typescript
-import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-helper";
+import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-copilot-helper";
 
 const errorManager = new ComprehensiveErrorReportingManager();
 ```
@@ -515,7 +515,7 @@ const mostFrequent = Object.entries(errorsByCategory)
 ### Basic Usage
 
 ```typescript
-import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-helper";
+import { ComprehensiveErrorReportingManager } from "@ast-copilot-helper/ast-copilot-helper";
 
 async function basicExample() {
   const errorManager = new ComprehensiveErrorReportingManager();

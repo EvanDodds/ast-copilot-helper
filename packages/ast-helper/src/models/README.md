@@ -22,7 +22,7 @@ import {
   ModelDownloader,
   ModelCache,
   PerformanceOptimizer,
-} from "@ast-copilot-helper/ast-helper";
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 // Initialize the model management system
 const registry = ModelRegistry.getInstance();
@@ -251,7 +251,7 @@ Create `models.config.json`:
 ### Basic Model Download
 
 ```typescript
-import { ModelRegistry, ModelDownloader } from "@ast-copilot-helper/ast-helper";
+import { ModelRegistry, ModelDownloader } from "@ast-copilot-helper/ast-copilot-helper";
 
 async function downloadModel() {
   const registry = ModelRegistry.getInstance();
@@ -276,7 +276,7 @@ async function downloadModel() {
 ### Advanced Caching Workflow
 
 ```typescript
-import { ModelCache, ModelConfig } from "@ast-copilot-helper/ast-helper";
+import { ModelCache, ModelConfig } from "@ast-copilot-helper/ast-copilot-helper";
 
 async function manageCachedModels() {
   const cache = new ModelCache({
@@ -312,7 +312,7 @@ async function manageCachedModels() {
 ### Performance Optimization
 
 ```typescript
-import { PerformanceOptimizer } from "@ast-copilot-helper/ast-helper";
+import { PerformanceOptimizer } from "@ast-copilot-helper/ast-copilot-helper";
 
 async function optimizedDownload() {
   const optimizer = new PerformanceOptimizer({
@@ -344,7 +344,7 @@ async function optimizedDownload() {
 ### Error Handling and Recovery
 
 ```typescript
-import { ErrorHandler, ModelDownloader } from "@ast-copilot-helper/ast-helper";
+import { ErrorHandler, ModelDownloader } from "@ast-copilot-helper/ast-copilot-helper";
 
 async function robustDownload(model: ModelConfig) {
   const errorHandler = new ErrorHandler({
@@ -747,7 +747,7 @@ const errorHandler = new ErrorHandler({
 
 ## Support
 
-For issues, questions, or contributions, please visit our [GitHub repository](https://github.com/your-org/ast-copilot-helper) or contact the development team.
+For issues, questions, or contributions, please visit our [GitHub repository](https://github.com/EvanDodds/ast-copilot-helper) or contact the development team.
 
 **Version**: 1.0.0  
 **Last Updated**: December 2024  

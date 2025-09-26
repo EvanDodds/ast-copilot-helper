@@ -36,7 +36,7 @@ tests/
 │   ├── mcp-cli.test.ts      # MCP server + CLI interaction
 │   └── end-to-end.test.ts   # Complete workflow tests
 └── unit/                  # Individual component tests
-    ├── ast-helper/           # CLI package tests
+    ├── ast-copilot-helper/           # CLI package tests
     ├── ast-mcp-server/       # MCP server tests
     └── vscode-extension/     # Extension tests
 ```
@@ -55,7 +55,7 @@ tests/
 yarn run test:unit
 
 # Run unit tests for specific package
-npx vitest tests/unit/ast-helper/
+npx vitest tests/unit/ast-copilot-helper/
 ```
 
 #### 2. Integration Tests (`tests/integration/`)
@@ -324,7 +324,7 @@ describe("YourModule", () => {
 ```typescript
 import { describe, it, expect } from "vitest";
 import { McpServer } from "../../packages/ast-mcp-server/src";
-import { CliHelper } from "../../packages/ast-helper/src";
+import { CliHelper } from "../../packages/ast-copilot-helper/src";
 
 describe("MCP-CLI Integration", () => {
   it("should query MCP server from CLI", async () => {

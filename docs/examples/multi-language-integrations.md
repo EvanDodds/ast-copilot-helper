@@ -7,7 +7,7 @@ This document provides comprehensive examples for integrating AST Copilot Helper
 ### Simple Parser Usage
 
 ```typescript
-import { ParserFactory } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
 
 async function basicParsing() {
   // Create parser instance
@@ -37,7 +37,7 @@ async function basicParsing() {
 ### Multi-Language File Processing
 
 ```typescript
-import { ParserFactory } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -151,7 +151,7 @@ async function processMultiLanguageProject(projectPath: string) {
 ### Language-Specific Code Analysis
 
 ```typescript
-import { ParserFactory, NodeClassifier } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory, NodeClassifier } from "@ast-copilot-helper/ast-copilot-helper";
 
 interface CodeMetrics {
   functions: number;
@@ -345,7 +345,7 @@ async function compareImplementations() {
 import {
   ParserFactory,
   TreeSitterGrammarManager,
-} from "@ast-copilot-helper/ast-helper";
+} from "@ast-copilot-helper/ast-copilot-helper";
 import { Worker } from "worker_threads";
 import { cpus } from "os";
 
@@ -508,7 +508,7 @@ async function processLargeProject() {
 
 ```typescript
 import express from "express";
-import { ParserFactory } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
 import multer from "multer";
 
 const app = express();
@@ -655,7 +655,7 @@ process.on("SIGINT", async () => {
 ```typescript
 #!/usr/bin/env node
 import { Command } from "commander";
-import { ParserFactory } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
 import { promises as fs } from "fs";
 import path from "path";
 import glob from "glob";
@@ -900,7 +900,7 @@ program.parse();
 
 ```typescript
 import * as vscode from "vscode";
-import { ParserFactory } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
 
 class MultiLanguageASTProvider {
   private parser: any;
@@ -914,15 +914,15 @@ class MultiLanguageASTProvider {
     // Register commands
     this.disposables.push(
       vscode.commands.registerCommand(
-        "ast-helper.parseCurrentFile",
+        "ast-copilot-helper.parseCurrentFile",
         this.parseCurrentFile.bind(this),
       ),
       vscode.commands.registerCommand(
-        "ast-helper.parseWorkspace",
+        "ast-copilot-helper.parseWorkspace",
         this.parseWorkspace.bind(this),
       ),
       vscode.commands.registerCommand(
-        "ast-helper.showLanguageStats",
+        "ast-copilot-helper.showLanguageStats",
         this.showLanguageStats.bind(this),
       ),
     );

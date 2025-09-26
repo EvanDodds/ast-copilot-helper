@@ -79,7 +79,7 @@ _Domain-specific and emerging languages_
 ### Basic Usage
 
 ```typescript
-import { ParserFactory } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
 
 // Create a parser instance
 const parser = await ParserFactory.createParser();
@@ -101,7 +101,7 @@ console.log(result.errors); // Parse errors (if any)
 ### Multi-Language Processing
 
 ```typescript
-import { ParserFactory } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
 
 const parser = await ParserFactory.createParser();
 
@@ -169,7 +169,7 @@ fn fibonacci(n: u32) -> u32 {
 ### Grammar Management
 
 ```typescript
-import { TreeSitterGrammarManager } from "@ast-copilot-helper/ast-helper";
+import { TreeSitterGrammarManager } from "@ast-copilot-helper/ast-copilot-helper";
 
 const grammarManager = new TreeSitterGrammarManager();
 
@@ -184,7 +184,7 @@ console.log("Available grammars:", available);
 ### Runtime Configuration
 
 ```typescript
-import { ParserFactory } from "@ast-copilot-helper/ast-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
 
 // Get runtime information
 const runtimeInfo = await ParserFactory.getRuntimeInfo();
@@ -339,13 +339,13 @@ const parser = await ParserFactory.createParser(grammarManager);
 import {
   TreeSitterParser,
   TreeSitterManager,
-} from "@ast-copilot-helper/ast-helper";
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 // NEW
 import {
   ParserFactory,
   TreeSitterGrammarManager,
-} from "@ast-copilot-helper/ast-helper";
+} from "@ast-copilot-helper/ast-copilot-helper";
 ```
 
 2. **Update parser creation**:

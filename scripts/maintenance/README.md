@@ -26,7 +26,7 @@ node scripts/maintenance/update-dependencies.mjs
 node scripts/maintenance/update-dependencies.mjs --apply
 
 # Update only specific packages
-node scripts/maintenance/update-dependencies.mjs --packages ast-helper,ast-mcp-server
+node scripts/maintenance/update-dependencies.mjs --packages ast-copilot-helper,ast-mcp-server
 
 # Include pre-release versions
 node scripts/maintenance/update-dependencies.mjs --include-prerelease

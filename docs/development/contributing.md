@@ -87,7 +87,7 @@ Before contributing, ensure you have:
 ```
 ast-copilot-helper/
 ├── packages/
-│   ├── ast-helper/         # Core CLI package
+│   ├── ast-copilot-helper/         # Core CLI package
 │   ├── ast-mcp-server/     # MCP server implementation
 │   └── vscode-extension/   # VS Code extension
 ├── docs/                   # Documentation
@@ -154,7 +154,7 @@ npm run type-check
 **Core CLI package:**
 
 ```bash
-cd packages/ast-helper
+cd packages/ast-copilot-helper
 
 # Build package
 npm run build
@@ -309,7 +309,7 @@ npm run test:integration
 npm run test:e2e
 
 # Run tests for specific package
-npm run test:ast-helper
+npm run test:ast-copilot-helper
 npm run test:mcp-server
 npm run test:vscode-extension
 
@@ -324,13 +324,13 @@ Test your changes manually:
 ```bash
 # Test CLI functionality
 npm run build
-./packages/ast-helper/bin/ast-helper.js init
-./packages/ast-helper/bin/ast-helper.js parse examples/
+./packages/ast-copilot-helper/bin/ast-copilot-helper.js init
+./packages/ast-copilot-helper/bin/ast-copilot-helper.js parse examples/
 
 # Test MCP server
 npm run build:mcp-server
 cd examples/test-project
-ast-helper server --transport stdio
+ast-copilot-helper server --transport stdio
 
 # Test VS Code extension
 cd packages/vscode-extension

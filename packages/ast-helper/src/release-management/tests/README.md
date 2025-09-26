@@ -29,10 +29,10 @@ The test suite covers:
 
 ```bash
 # Run all release management tests
-npm test -- packages/ast-helper/src/release-management/tests/
+npm test -- packages/ast-copilot-helper/src/release-management/tests/
 
 # Run specific test file
-npm test -- packages/ast-helper/src/release-management/tests/release-manager.test.ts
+npm test -- packages/ast-copilot-helper/src/release-management/tests/release-manager.test.ts
 
 # Run with coverage
 npm run test:coverage
