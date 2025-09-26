@@ -7,7 +7,7 @@ This page provides comprehensive examples of using the ast-copilot-helper CLI to
 AST Copilot Helper supports 15 programming languages organized in 3 performance tiers:
 
 - **Tier 1 (Enterprise)**: TypeScript, JavaScript, Python, Java, C++, C#
-- **Tier 2 (Developer)**: Go, Rust, PHP, Ruby, Swift  
+- **Tier 2 (Developer)**: Go, Rust, PHP, Ruby, Swift
 - **Tier 3 (Specialized)**: Kotlin, Scala, Dart, Lua
 
 ## Basic Multi-Language Usage
@@ -17,7 +17,7 @@ AST Copilot Helper supports 15 programming languages organized in 3 performance 
 ```bash
 # Enterprise Tier Languages
 ast-helper parse main.ts                    # TypeScript
-ast-helper parse app.js                     # JavaScript  
+ast-helper parse app.js                     # JavaScript
 ast-helper parse main.py                    # Python
 ast-helper parse Main.java                  # Java
 ast-helper parse main.cpp                   # C++
@@ -218,7 +218,7 @@ ast-helper parse ./ --streaming --progress
 # Process enterprise languages with larger batches
 ast-helper parse ./ --tier 1 --batch-size 50 --parallel 4
 
-# Process specialized languages with smaller batches  
+# Process specialized languages with smaller batches
 ast-helper parse ./ --tier 3 --batch-size 10 --parallel 2
 
 # Mixed processing with adaptive batching
