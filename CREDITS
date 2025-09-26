@@ -3,9 +3,10 @@ CREDITS
 
 This software is made possible by the following open source contributors:
 
-## Contributors (86 total)
+## Contributors (96 total)
 
 - >
+- Aaron Heckmann <aaron.heckmann+github@gmail.com>
 - Alan Plum
 - Alberto Schiabel
 - Aleksey V Zapparov <ixti@member.fsf.org> (http://www.ixti.net/)
@@ -18,8 +19,8 @@ This software is made possible by the following open source contributors:
 - Anna Henningsen
 - Anthony Fu <anthonyfu117@hotmail.com>
 - Anthony Fu <https://github.com/antfu>
+- Anthropic, PBC
 - Anthropic, PBC (https://anthropic.com)
-- Anthropic, PBC.
 - Armaan Tobaccowalla
 - Arnout Kazemier and contributors
 - Atsushi Tatsuma
@@ -32,13 +33,16 @@ This software is made possible by the following open source contributors:
 - Blake Embrey (hello@blakeembrey.com)
 - Carsten Klein
 - Carsten Klein <trancesilken@gmail.com> (https://github.com/silkentrance)
+- Ciaran Jessup <ciaranj@gmail.com>
 - Connor Peet <connor@peet.io>
 - David Junger
 - Dmitry Semigradsky
+- Douglas Christopher Wilson <doug@somethingdoug.com>
 - Einar Otto Stangvik <einaros@gmail.com>
 - Evan You
 - ExE Boss
 - Florian Stamer
+- Guillermo Rauch <rauchg@gmail.com>
 - Gyusun Yeom
 - Hiroki Osame
 - Ilia Baryshnikov
@@ -46,17 +50,22 @@ This software is made possible by the following open source contributors:
 - Isaac Z. Schlueter and Contributors
 - Jake Luer <jake@alogicalparadox.com> (http://alogicalparadox.com)
 - Jared Klopper
+- John-David Dalton <john.david.dalton@gmail.com>
+- Jonathan Ong <me@jongleberry.com>
 - Joshua Wise
 - Joshua Wise <joshuathomaswise@gmail.com>
 - Junxiao Shi
 - KARASZI István
 - KARASZI István <github@spam.raszi.hu>
 - Linus Unnebäck
+- LongYinan
+- LongYinan <lynweklm@gmail.com>
 - Luigi Pinca and contributors
 - Marcin Kopacz
 - Mark Stewart
 - Martin Grenfell <martin.grenfell@gmail.com> (http://got-ravings.blogspot.com)
 - Mathew Rumsey
+- Mathias Bynens <mathias@qiwi.be>
 - Matteo Collina
 - Microsoft Corp.
 - Microsoft Corporation
@@ -68,16 +77,16 @@ This software is made possible by the following open source contributors:
 - Paul Miller (https://paulmillr.com)
 - Paul Miller (https://paulmillr.com), Elan Shanker
 - Piotr Błażejewicz
+- René
 - Robert Kieffer
+- Roman Shtylman <shtylman+expressjs@gmail.com>
 - Santiago Aguilar
 - Sebastian Clausen
 - Sebastian Silbermann
-- Shant Marouti
 - Sindre Sorhus
 - TJ Holowaychuk <tj@vision-media.ca>
 - Terkel Gjervig Nielsen
 - Trivikram Kamat
-- Typicode <typicode@gmail.com>
 - Victor Perin
 - Visual Studio Code Team
 - Visual Studio Code Team, Microsoft
@@ -85,18 +94,23 @@ This software is made possible by the following open source contributors:
 - Vladimir Zapparov <dervus.grim@gmail.com>
 - Wilco Bakker
 - Xenova
+- Yagiz Nizipli
+- Young Jae Sim <hanul@hanul.me>
 - by Vitaly Puzrin
 - by various contributors (see AUTHORS)
 - typescript-eslint and other contributors
 - typicode
-- vvakame
 - wafuwafu13
 
 ## Package Contributors
 
 ### @modelcontextprotocol/sdk
 - Anthropic, PBC (https://anthropic.com)
-- Anthropic, PBC.
+- Anthropic, PBC
+
+### @napi-rs/cli
+- LongYinan <lynweklm@gmail.com>
+- LongYinan
 
 ### @types/better-sqlite3
 - Ben Davies
@@ -114,11 +128,6 @@ This software is made possible by the following open source contributors:
 - ExE Boss
 - Armaan Tobaccowalla
 - Linus Unnebäck
-
-### @types/minimatch
-- vvakame
-- Shant Marouti
-- BendingBender
 
 ### @types/node
 - Microsoft TypeScript
@@ -143,6 +152,8 @@ This software is made possible by the following open source contributors:
 - wafuwafu13
 - Matteo Collina
 - Dmitry Semigradsky
+- René
+- Yagiz Nizipli
 - Microsoft TypeScript
 - Alberto Schiabel
 - Andrew Makarov
@@ -165,6 +176,8 @@ This software is made possible by the following open source contributors:
 - wafuwafu13
 - Matteo Collina
 - Dmitry Semigradsky
+- René
+- Yagiz Nizipli
 - Microsoft TypeScript
 - Alberto Schiabel
 - Andrew Makarov
@@ -187,6 +200,8 @@ This software is made possible by the following open source contributors:
 - wafuwafu13
 - Matteo Collina
 - Dmitry Semigradsky
+- René
+- Yagiz Nizipli
 - Microsoft TypeScript
 - Alberto Schiabel
 - Andrew Makarov
@@ -209,6 +224,8 @@ This software is made possible by the following open source contributors:
 - wafuwafu13
 - Matteo Collina
 - Dmitry Semigradsky
+- René
+- Yagiz Nizipli
 
 ### @types/tmp
 - Jared Klopper
@@ -258,6 +275,16 @@ This software is made possible by the following open source contributors:
 ### eslint
 - Nicholas C. Zakas <nicholas+npm@nczconsulting.com>
 
+### express
+- TJ Holowaychuk <tj@vision-media.ca>
+- Aaron Heckmann <aaron.heckmann+github@gmail.com>
+- Ciaran Jessup <ciaranj@gmail.com>
+- Douglas Christopher Wilson <doug@somethingdoug.com>
+- Guillermo Rauch <rauchg@gmail.com>
+- Jonathan Ong <me@jongleberry.com>
+- Roman Shtylman <shtylman+expressjs@gmail.com>
+- Young Jae Sim <hanul@hanul.me>
+
 ### globals
 - Sindre Sorhus
 
@@ -265,7 +292,6 @@ This software is made possible by the following open source contributors:
 - Atsushi Tatsuma
 
 ### husky
-- Typicode <typicode@gmail.com>
 - typicode
 
 ### js-yaml
@@ -278,6 +304,10 @@ This software is made possible by the following open source contributors:
 ### lint-staged
 - Andrey Okonetchnikov <andrey@okonet.ru>
 - Andrey Okonetchnikov
+
+### lodash
+- John-David Dalton <john.david.dalton@gmail.com>
+- Mathias Bynens <mathias@qiwi.be>
 
 ### minimatch
 - Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)
@@ -363,5 +393,5 @@ This software is made possible by the following open source contributors:
 - Evan You
 
 
-Generated on: 2025-09-25T02:27:42.337Z
+Generated on: 2025-09-26T02:41:13.175Z
 By: ast-copilot-helper legal compliance system

@@ -122,6 +122,24 @@ describe("TreeSitterGrammarManager", () => {
         // Corrupt the file
         await fs.writeFile(grammarPath, "corrupted content");
 
+        // Also need to update the metadata to have a real hash instead of mock
+        const languageDir = path.join(testBaseDir, "grammars", "python");
+        const metadataPath = path.join(languageDir, "metadata.json");
+
+        const metadata = {
+          version: "1.0.0",
+          hash: "real_expected_hash_that_wont_match_corrupted_content",
+          url: "https://example.com/python.wasm",
+          downloadedAt: new Date().toISOString(),
+          lastVerified: new Date().toISOString(),
+        };
+
+        await fs.writeFile(
+          metadataPath,
+          JSON.stringify(metadata, null, 2),
+          "utf-8",
+        );
+
         // Verify should fail
         const isValid = await grammarManager.verifyGrammarIntegrity("python");
         expect(isValid).toBe(false);

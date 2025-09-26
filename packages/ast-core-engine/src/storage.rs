@@ -315,7 +315,7 @@ impl StorageLayer {
             updated_at: timestamp,
         };
 
-        let mut cache = self.cache.write().await;
+        let cache = self.cache.write().await;
         cache.cache_file(file_path.to_string(), file_record);
 
         Ok(file_id)
@@ -475,7 +475,7 @@ impl StorageLayer {
 
         // Cache the result if found
         if let Some(ref record) = record {
-            let mut cache = self.cache.write().await;
+            let cache = self.cache.write().await;
             cache.cache_file(file_path.to_string(), record.clone());
         }
 

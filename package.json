@@ -14,6 +14,7 @@
   "scripts": {
     "build": "yarn workspaces foreach --all --parallel --topological --verbose run build",
     "build:all": "yarn run build",
+    "build:release": "yarn workspaces foreach --all --parallel --topological --verbose run build:release",
     "build:watch": "yarn workspaces foreach --all --parallel --verbose run build:watch",
     "test": "node --max-old-space-size=6144 --expose-gc ./node_modules/.bin/vitest run --exclude='tests/integration/**'",
     "test:all": "echo '🧪 Running ALL tests (unit + integration + benchmarks)...' && yarn run test && yarn run test:integration && yarn run test:benchmarks",

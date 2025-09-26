@@ -3,7 +3,7 @@
 //! This module contains the main engine implementation.
 //! Individual components will be implemented in separate modules.
 
-use crate::{error::EngineError, types::*, config::EngineConfig};
+use crate::{error::EngineError, config::EngineConfig};
 
 /// Main AST Core Engine structure
 pub struct ASTCoreEngine {

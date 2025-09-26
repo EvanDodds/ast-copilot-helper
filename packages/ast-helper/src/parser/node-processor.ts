@@ -240,8 +240,18 @@ export class NodeProcessor {
 
       // For demonstration, create a sample root node
       // In real implementation, this would be populated by a tree-sitter parser
+      // Create a raw node that will be properly classified
+      const rawRootNode: RawNodeData = {
+        type: language === "typescript" ? "source_file" : "program", // Use appropriate raw type
+        name: path.basename(filePath),
+        language,
+      };
+
+      // Classify the raw node to get the proper normalized type
+      const classification = this.classifier.classifyNode(rawRootNode);
+
       const rootNode: Partial<ASTNode> = {
-        type: NodeType.FILE,
+        type: classification.nodeType, // Use classified type
         name: path.basename(filePath),
         filePath,
         start: { line: 1, column: 0 },
@@ -580,6 +590,23 @@ export class NodeProcessor {
       // Stage 2: Classify nodes
       if (this.config.classifyNodes) {
         processedNodes = processedNodes.map((node) => {
+          // Skip classification if node already has a valid NodeType (already classified)
+          if (Object.values(NodeType).includes(node.type as NodeType)) {
+            // Node is already properly classified, just add default classification metadata
+            return {
+              ...node,
+              metadata: {
+                ...node.metadata,
+                classification: {
+                  confidence: 1.0,
+                  reason: "Pre-classified node",
+                  method: "direct" as const,
+                  cached: false,
+                },
+              },
+            };
+          }
+
           // Create RawNodeData for classification
           const rawNodeData: RawNodeData = {
             type: node.type,

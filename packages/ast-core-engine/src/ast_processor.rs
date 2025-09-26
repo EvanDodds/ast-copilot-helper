@@ -3,7 +3,7 @@ use crate::types::ProcessingOptions;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tree_sitter::{Language, Parser, Tree, Node};
+use tree_sitter::Parser;
 
 // Language support - simplified for testing without external language parsers
 /// Supported programming languages for AST processing

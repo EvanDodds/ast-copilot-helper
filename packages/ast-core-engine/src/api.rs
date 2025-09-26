@@ -6,8 +6,7 @@
 use crate::{
     ast_processor::AstProcessor,
     batch_processor::BatchProcessor,
-    config::{EngineConfig, StorageConfig, HnswConfig},
-    error::EngineError,
+    config::{EngineConfig, HnswConfig},
     performance_monitor::PerformanceMonitor,
     storage::StorageLayer,
     types::{EngineHealth, NodeMetadata, ProcessingOptions, BatchResult},
@@ -133,7 +132,7 @@ impl AstCoreEngineApi {
         let batch_processor = self.batch_processor.as_ref()
             .ok_or_else(|| napi::Error::from_reason("Batch processor not initialized"))?;
 
-        let options = options.unwrap_or(ProcessingOptions {
+        let _options = options.unwrap_or(ProcessingOptions {
             max_memory_mb: 1024,
             batch_size: 100,
             parallel_workers: 4,
@@ -215,7 +214,7 @@ impl AstCoreEngineApi {
     #[napi]
     pub async fn search_similar(
         &self,
-        query: String,
+        _query: String,
         limit: Option<u32>,
     ) -> Result<Vec<NodeMetadata>> {
         let _vector_db = self.vector_db.as_ref()
