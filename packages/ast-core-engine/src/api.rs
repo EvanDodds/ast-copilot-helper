@@ -6,8 +6,7 @@
 use crate::{
     ast_processor::AstProcessor,
     batch_processor::BatchProcessor,
-    config::{EngineConfig, StorageConfig, HnswConfig},
-    error::EngineError,
+    config::{EngineConfig, HnswConfig},
     performance_monitor::PerformanceMonitor,
     storage::StorageLayer,
     types::{EngineHealth, NodeMetadata, ProcessingOptions, BatchResult},

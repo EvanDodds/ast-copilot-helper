@@ -8,7 +8,6 @@
 //!
 //! Designed to integrate with TypeScript via NAPI-RS bindings.
 
-use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 pub mod config;
