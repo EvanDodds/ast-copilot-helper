@@ -1,0 +1,22 @@
+Package: ast-copilot-helper
+Version: 1.0.0
+Section: development
+Priority: optional
+Architecture: amd64
+Depends: libc6 (>= 2.17)
+Maintainer: AST Copilot Helper Team <support@example.com>
+Description: Advanced AST-powered development assistant for intelligent code analysis
+ AST Copilot Helper is a powerful command-line tool that provides advanced
+ Abstract Syntax Tree (AST) analysis and intelligent code insights for multiple
+ programming languages. It helps developers understand code structure, identify
+ patterns, and improve code quality through sophisticated static analysis.
+ .
+ Key Features:
+ * Multi-language Support: Supports 15+ programming languages including
+   JavaScript, TypeScript, Python, Go, Rust, and more
+ * AST Analysis: Deep structural code analysis using native parsers
+ * Intelligent Insights: AI-powered code suggestions and improvements
+ * VS Code Integration: Seamless integration with Visual Studio Code
+ * Performance Optimized: Built with Rust for maximum performance
+ * Cross-platform: Works on Windows, macOS, and Linux
+Homepage: https://github.com/your-org/ast-copilot-helper

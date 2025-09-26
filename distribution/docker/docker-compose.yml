@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  ast-copilot-helper:
+    build:
+      context: ../..
+      dockerfile: distribution/docker/Dockerfile
+    image: astcopilot/helper:latest
+    container_name: ast-copilot-helper
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # Mount your project directory
+      - ./workspace:/workspace:ro
+      # Mount output directory
+      - ./output:/data
+    working_dir: /workspace
+    command: ["analyze", "--output", "/data/analysis-report.json"]
+    
+  ast-copilot-helper-dev:
+    build:
+      context: ../..
+      dockerfile: distribution/docker/Dockerfile
+    image: astcopilot/helper:dev
+    container_name: ast-copilot-helper-dev
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./workspace:/workspace
+      - ./output:/data
+    working_dir: /workspace
+    command: ["--help"]
+    stdin_open: true
+    tty: true
+
+networks:
+  default:
+    name: ast-copilot-network

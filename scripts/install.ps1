@@ -13,7 +13,7 @@ param(
 
 # Configuration
 $ErrorActionPreference = "Stop"
-$Repo = "EvanDodds/ast-copilot-helper"
+$Repo = "your-org/ast-copilot-helper"
 $BinaryName = "ast-copilot-helper"
 
 # Colors for output
@@ -128,8 +128,8 @@ function Install-Binary {
         [string]$TargetDir
     )
     
-    # Construct download URL
-    $archiveName = "$BinaryName-win-$Architecture.zip"
+    # Construct download URL (match our binary builder naming)
+    $archiveName = "$BinaryName-win32-$Architecture.zip"
     $downloadUrl = "https://github.com/$Repo/releases/download/$InstallVersion/$archiveName"
     
     Write-Info "Downloading $BinaryName $InstallVersion for Windows $Architecture..."

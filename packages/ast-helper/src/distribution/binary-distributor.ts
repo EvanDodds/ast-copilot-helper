@@ -283,11 +283,9 @@ export class BinaryDistributor implements Publisher {
 
   private async buildBinary(platform: Platform): Promise<BinaryBuildResult> {
     const buildConfig = this.getBuildConfig(platform);
-    const outputName = this.getBinaryName(platform);
-    const outputPath = join(this.outputDir, outputName);
 
-    // Execute build command
-    const buildCommand = this.getBuildCommand(platform, outputPath);
+    // Execute build command - our script builds to dist/binaries with its own naming
+    const buildCommand = this.getBuildCommand(platform, "");
     console.log(`Executing: ${buildCommand}`);
 
     try {
@@ -295,9 +293,17 @@ export class BinaryDistributor implements Publisher {
         stdio: "inherit",
         env: { ...process.env, ...buildConfig.env },
       });
-    } catch (error: any) {
-      throw new Error(`Build failed for ${platform}: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`Build failed for ${platform}: ${errorMessage}`);
     }
+
+    // Find the actual output binary (our builder uses its own naming convention)
+    const arch = "x64";
+    const extension = platform === "win32" ? ".exe" : "";
+    const expectedBinaryName = `ast-copilot-helper-${platform}-${arch}${extension}`;
+    const outputPath = join(this.outputDir, expectedBinaryName);
 
     // Verify binary was created
     const stats = await stat(outputPath);
@@ -556,12 +562,12 @@ export class BinaryDistributor implements Publisher {
 
   private getRequiredTools(platform: Platform): string[] {
     const tools: { [key in Platform]: string[] } = {
-      win32: ["zip"],
-      darwin: ["zip", "hdiutil"],
-      linux: ["tar", "gzip"],
+      win32: ["zip", "npx"],
+      darwin: ["zip", "hdiutil", "npx"],
+      linux: ["tar", "gzip", "npx"],
     };
 
-    const baseDependencies = ["node"];
+    const baseDependencies = ["node", "npm", "tsx"];
     const platformTools = tools[platform] || [];
 
     return [...baseDependencies, ...platformTools];
@@ -570,23 +576,16 @@ export class BinaryDistributor implements Publisher {
   private getBuildConfig(platform: Platform): any {
     return {
       env: {
-        GOOS: this.getGOOS(platform),
-        GOARCH: this.getGOARCH(platform),
-        CGO_ENABLED: "0",
+        NODE_ENV: "production",
+        TARGET_PLATFORM: platform,
       },
     };
   }
 
-  private getBuildCommand(_platform: Platform, outputPath: string): string {
-    // For now, assuming we're building a Go binary
-    return `go build -o "${outputPath}" ./cmd/main.go`;
-  }
-
-  private getBinaryName(platform: Platform): string {
-    const baseName = this.config.name;
-    const version = this.config.version;
-    const extension = platform === "win32" ? ".exe" : "";
-    return `${baseName}-v${version}-${platform}${extension}`;
+  private getBuildCommand(platform: Platform, _outputPath: string): string {
+    // Use our new Node.js binary builder
+    const scriptPath = join(process.cwd(), "scripts/build/build-binaries.ts");
+    return `tsx "${scriptPath}" --platform ${platform}`;
   }
 
   private getPackageFormat(platform: Platform): string {
@@ -609,19 +608,6 @@ export class BinaryDistributor implements Publisher {
   private getArchitecture(_platform: Platform): string {
     // Default to amd64, can be made configurable
     return "amd64";
-  }
-
-  private getGOOS(platform: Platform): string {
-    const osMap: { [key in Platform]: string } = {
-      win32: "windows",
-      darwin: "darwin",
-      linux: "linux",
-    };
-    return osMap[platform];
-  }
-
-  private getGOARCH(_platform: Platform): string {
-    return "amd64"; // Default architecture
   }
 
   private generateDebControlFile(_binary: BinaryBuildResult): string {

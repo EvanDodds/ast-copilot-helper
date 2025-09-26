@@ -1,0 +1,35 @@
+#!/bin/bash
+set -e
+
+# Post-installation script for AST Copilot Helper
+
+case "$1" in
+    configure)
+        # Ensure binary is executable
+        chmod +x /usr/local/bin/ast-copilot-helper
+        
+        # Create symlink if it doesn't exist
+        if [ ! -L /usr/bin/ast-copilot-helper ]; then
+            ln -sf /usr/local/bin/ast-copilot-helper /usr/bin/ast-copilot-helper
+        fi
+        
+        echo "AST Copilot Helper has been installed successfully!"
+        echo ""
+        echo "To get started:"
+        echo "  1. Navigate to your project directory"
+        echo "  2. Run: ast-copilot-helper init"
+        echo "  3. Run: ast-copilot-helper analyze"
+        echo ""
+        echo "For help: ast-copilot-helper --help"
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

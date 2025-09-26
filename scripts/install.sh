@@ -4,10 +4,30 @@
 # Usage: curl -fsSL https://install.ast-copilot-helper.dev | bash
 # Or: bash install.sh [options]
 
-set -e
-
-# Configuration
-REPO="EvanDodds/ast-copilot-helper"
+set    # Determine file extension and archive name based on platform
+    # Our binary builder creates: ast-copilot-helper-{platform}-{arch}{.exe}
+    case "$platform" in
+        win32-x64)
+            file_ext="zip"
+            archive_name="${BINARY_NAME}-${platform}.${file_ext}"
+            binary_path="${BINARY_NAME}.exe"
+            ;;
+        darwin-*)
+            file_ext="zip"  
+            archive_name="${BINARY_NAME}-${platform}.${file_ext}"
+            binary_path="${BINARY_NAME}"
+            ;;
+        linux-*)
+            file_ext="tar.gz"
+            archive_name="${BINARY_NAME}-${platform}.${file_ext}"
+            binary_path="${BINARY_NAME}"
+            ;;
+        *)
+            log_error "Unsupported platform: $platform"
+            exit 1
+            ;;
+    esacuration
+REPO="your-org/ast-copilot-helper"
 BINARY_NAME="ast-copilot-helper"
 DEFAULT_INSTALL_DIR="/usr/local/bin"
 VERSION="latest"
@@ -104,7 +124,7 @@ detect_platform() {
             os="darwin"
             ;;
         CYGWIN*|MINGW*|MSYS*)
-            os="win"
+            os="win32"
             ;;
         *)
             log_error "Unsupported operating system: $(uname -s)"
