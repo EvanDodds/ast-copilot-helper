@@ -5,22 +5,18 @@
   "main": "index.js",
   "types": "index.d.ts",
   "napi": {
-    "name": "ast-core-engine",
-    "triples": {
-      "defaults": true,
-      "additional": [
-        "x86_64-pc-windows-msvc",
-        "i686-pc-windows-msvc",
-        "aarch64-pc-windows-msvc",
-        "x86_64-apple-darwin",
-        "aarch64-apple-darwin",
-        "x86_64-unknown-linux-gnu",
-        "aarch64-unknown-linux-gnu",
-        "aarch64-unknown-linux-musl",
-        "x86_64-unknown-linux-musl"
-      ]
-    },
-    "binaryName": "ast-core-engine"
+    "binaryName": "ast-core-engine",
+    "targets": [
+      "x86_64-pc-windows-msvc",
+      "i686-pc-windows-msvc",
+      "aarch64-pc-windows-msvc",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl",
+      "x86_64-unknown-linux-musl"
+    ]
   },
   "license": "MIT",
   "devDependencies": {
