@@ -12,8 +12,6 @@ For CI/CD enhancements, create dedicated validation jobs for each language that 
 
 Always update DEVELOPMENT.md or equivalent documentation when implementing workflow changes, including specific command examples and technical constraints like NAPI linking limitations.
 
-When pre-commit hooks fail due to technical limitations, use `git commit --no-verify` with detailed commit messages explaining the bypass reason and the underlying technical constraint.
-
 Before committing workflow enhancements, test the complete validation pipeline to ensure it catches real issues and works correctly across different development scenarios.
 
 We use Husky for git hooks, Yarn for package management, Vitest for TypeScript testing, and Cargo for Rust toolchain management including clippy for linting and rustfmt for code formatting.
