@@ -1,6 +1,5 @@
 //! Core types and data structures
 
-use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use serde::{Deserialize, Serialize};
 

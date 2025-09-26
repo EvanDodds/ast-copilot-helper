@@ -323,7 +323,7 @@ impl PerformanceMonitor {
         let benchmark_start = Instant::now();
 
         // Warmup iterations
-        for i in 0..config.warmup_iterations {
+        for _i in 0..config.warmup_iterations {
             let _ = tokio::time::timeout(config.iteration_timeout, operation()).await;
         }
 

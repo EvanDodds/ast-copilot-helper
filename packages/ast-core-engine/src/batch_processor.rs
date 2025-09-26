@@ -191,7 +191,7 @@ impl BatchProcessor {
         // Spawn progress tracking task
         let progress_clone = Arc::clone(&self.progress);
         let progress_interval = self.config.progress_interval;
-        let start_time_clone = Arc::clone(&self.start_time);
+        let _start_time_clone = Arc::clone(&self.start_time);
         let cancellation_clone = self.cancellation_token.clone();
         
         tokio::spawn(async move {
@@ -346,10 +346,10 @@ impl BatchProcessor {
 
     /// Process a single file and return (nodes_count, vectors_count)
     async fn process_single_file(
-        ast_processor: &AstProcessor,
+        _ast_processor: &AstProcessor,
         storage: &StorageLayer,
         file_path: &PathBuf,
-        file_size: u64,
+        _file_size: u64,
     ) -> Result<(usize, usize), EngineError> {
         // Read file content
         let content = tokio::fs::read_to_string(file_path)
@@ -381,7 +381,7 @@ impl BatchProcessor {
                 // Simulate vector generation for significant lines
                 if line.len() > 10 {
                     // Generate mock vector (in reality, this would come from the AST processor)
-                    let vector: Vec<f32> = (0..768).map(|i| (i as f32 * line.len() as f32) % 1000.0 / 1000.0).collect();
+                    let _vector: Vec<f32> = (0..768).map(|i| (i as f32 * line.len() as f32) % 1000.0 / 1000.0).collect();
 
                     // For now, we'll skip actual vector storage since the API needs to be updated
                     // This is a placeholder for the vector storage functionality
