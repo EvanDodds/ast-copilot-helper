@@ -154,6 +154,60 @@ jobs:
           path: security-audit-report.json
           retention-days: 30
 
+  rust-validation:
+    name: Rust Validation
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+          override: true
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            packages/ast-core-engine/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Run Rust validation
+        working-directory: packages/ast-core-engine
+        run: |
+          echo "🦀 Running Rust code validation..."
+          echo "  → Checking Rust code compilation..."
+          cargo check --verbose
+          echo "  → Running Rust tests..."
+          cargo test --verbose
+          echo "  → Running Rust linting (Clippy)..."
+          cargo clippy -- -D warnings
+          echo "  → Checking Rust formatting..."
+          cargo fmt -- --check
+
+      - name: Upload Rust test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rust-validation-results
+          path: |
+            packages/ast-core-engine/target/debug/deps/
+            packages/ast-core-engine/Cargo.lock
+          retention-days: 7
+
   unit-tests:
     name: Unit Tests
     needs: validate

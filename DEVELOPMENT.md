@@ -106,7 +106,59 @@ yarn run test:ui
 
 # Watch mode for development
 yarn run test:watch
+
+# Rust testing (core engine validation)
+yarn run test:rust:all
 ```
+
+### Rust Core Engine Testing
+
+The AST core engine is written in Rust for high performance. We have comprehensive testing and validation:
+
+#### Rust Testing Commands
+
+```bash
+# Full Rust validation suite (recommended)
+yarn run test:rust:all        # Runs all Rust validations
+
+# Individual Rust checks
+yarn run test:rust:check      # Compilation check (cargo check)
+yarn run test:rust            # Run Rust unit tests (cargo test)
+yarn run test:rust:clippy     # Linting with Clippy
+yarn run test:rust:fmt        # Code formatting check (cargo fmt --check)
+```
+
+#### Rust Validation in Development Workflow
+
+1. **Pre-commit Hooks**
+   - Automatically detects changes to `.rs` or `.toml` files
+   - Runs `cargo check`, `cargo test`, and `cargo fmt --check`
+   - Prevents commits with Rust compilation or formatting issues
+
+2. **CI Pipeline**
+   - Dedicated `rust-validation` job runs in parallel with other checks
+   - Complete Rust toolchain setup with caching for faster builds
+   - Comprehensive validation including compilation, tests, linting, and formatting
+
+3. **Local Development**
+   - Run `yarn test:rust:all` before committing Rust changes
+   - Use `cargo fmt` to auto-format Rust code
+   - Address Clippy warnings for code quality
+
+#### Rust Testing Strategy
+
+- **Compilation**: Ensures all Rust code compiles without errors
+- **Unit Tests**: Validates core engine functionality and edge cases
+- **Integration Tests**: Tests NAPI bindings and Node.js integration
+- **Code Quality**: Clippy linting catches common issues and suggests improvements
+- **Formatting**: Consistent code style with `rustfmt`
+
+#### Performance Considerations
+
+The Rust core engine is optimized for development speed:
+- Development builds skip full optimization for faster iteration
+- Production builds use full optimization for maximum performance
+- Testing validates both compilation correctness and runtime behavior
 
 ### Performance Requirements
 

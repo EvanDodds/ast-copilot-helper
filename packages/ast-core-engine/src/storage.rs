@@ -1,14 +1,14 @@
 //! High-performance async storage layer with SQLite backend
 
-use crate::error::{EngineError, StorageError};
-use crate::types::NodeMetadata;
 use crate::ast_processor::{AstNode, SupportedLanguage};
 use crate::config::StorageConfig;
+use crate::error::{EngineError, StorageError};
+use crate::types::NodeMetadata;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use sqlx::{
-    sqlite::{SqlitePoolOptions, SqliteConnectOptions},
-    Sqlite, Pool, Row,
+    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
+    Pool, Row, Sqlite,
 };
 use std::path::Path;
 use std::sync::Arc;
@@ -155,12 +155,16 @@ impl StorageLayer {
         // Create connection pool
         let pool = SqlitePoolOptions::new()
             .max_connections(config.max_connections)
-            .acquire_timeout(std::time::Duration::from_secs(config.connection_timeout_secs as u64))
+            .acquire_timeout(std::time::Duration::from_secs(
+                config.connection_timeout_secs as u64,
+            ))
             .connect_with(connect_options)
             .await
             .map_err(|e| EngineError::Storage(StorageError::Connection(e.to_string())))?;
 
-        let cache = Arc::new(RwLock::new(StorageCache::new(config.cache_size_mb as usize * 100)));
+        let cache = Arc::new(RwLock::new(StorageCache::new(
+            config.cache_size_mb as usize * 100,
+        )));
 
         let storage = Self {
             pool,
@@ -247,10 +251,12 @@ impl StorageLayer {
         ];
 
         for query in queries {
-            sqlx::query(query)
-                .execute(&self.pool)
-                .await
-                .map_err(|e| EngineError::Storage(StorageError::Migration(format!("Schema initialization failed: {}", e))))?;
+            sqlx::query(query).execute(&self.pool).await.map_err(|e| {
+                EngineError::Storage(StorageError::Migration(format!(
+                    "Schema initialization failed: {}",
+                    e
+                )))
+            })?;
         }
 
         Ok(())
@@ -265,8 +271,11 @@ impl StorageLayer {
         ast_node_count: u32,
         processing_time_ms: u32,
     ) -> Result<i64, EngineError> {
-        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
-        
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+
         let result = sqlx::query(
             r#"
             INSERT INTO files (file_path, language, content_hash, ast_node_count, processing_time_ms, created_at, updated_at)
@@ -327,10 +336,16 @@ impl StorageLayer {
         file_id: i64,
         nodes: &[AstNode],
     ) -> Result<Vec<i64>, EngineError> {
-        let mut tx = self.pool.begin().await
+        let mut tx = self
+            .pool
+            .begin()
+            .await
             .map_err(|e| EngineError::Storage(StorageError::Transaction(e.to_string())))?;
 
-        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
         let mut node_ids = Vec::new();
 
         for node in nodes {
@@ -340,7 +355,7 @@ impl StorageLayer {
                     file_id, node_type, start_byte, end_byte, start_row, end_row,
                     start_column, end_column, text_content, is_named, created_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                "#
+                "#,
             )
             .bind(file_id)
             .bind(&node.node_type)
@@ -360,7 +375,8 @@ impl StorageLayer {
             node_ids.push(result.last_insert_rowid());
         }
 
-        tx.commit().await
+        tx.commit()
+            .await
             .map_err(|e| EngineError::Storage(StorageError::Transaction(e.to_string())))?;
 
         Ok(node_ids)
@@ -373,9 +389,12 @@ impl StorageLayer {
         vector_data: &[f64],
         model_name: &str,
     ) -> Result<i64, EngineError> {
-        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
-        let vector_json = serde_json::to_string(vector_data)
-            .map_err(|e| EngineError::Serialization(e))?;
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        let vector_json =
+            serde_json::to_string(vector_data).map_err(|e| EngineError::Serialization(e))?;
 
         let result = sqlx::query(
             r#"
@@ -386,7 +405,7 @@ impl StorageLayer {
                 model_name = excluded.model_name,
                 dimensions = excluded.dimensions,
                 created_at = excluded.created_at
-            "#
+            "#,
         )
         .bind(node_id)
         .bind(vector_json)
@@ -402,7 +421,10 @@ impl StorageLayer {
 
     /// Store node metadata (compatible with existing API)
     pub async fn store_metadata(&self, metadata: &NodeMetadata) -> Result<(), StorageError> {
-        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
         let metadata_json = serde_json::to_string(metadata)
             .map_err(|e| StorageError::Query(format!("Serialization failed: {}", e)))?;
 
@@ -413,7 +435,7 @@ impl StorageLayer {
             ON CONFLICT(node_id) DO UPDATE SET
                 metadata_json = excluded.metadata_json,
                 updated_at = excluded.updated_at
-            "#
+            "#,
         )
         .bind(&metadata.node_id)
         .bind(metadata_json)
@@ -491,28 +513,31 @@ impl StorageLayer {
             FROM ast_nodes 
             WHERE file_id = ? 
             ORDER BY start_byte
-            "#
+            "#,
         )
         .bind(file_id)
         .fetch_all(&self.pool)
         .await
         .map_err(|e| EngineError::Storage(StorageError::Query(e.to_string())))?;
 
-        let nodes: Vec<NodeRecord> = rows.into_iter().map(|row| NodeRecord {
-            id: row.get(0),
-            file_id: row.get(1),
-            node_type: row.get(2),
-            start_byte: row.get(3),
-            end_byte: row.get(4),
-            start_row: row.get(5),
-            end_row: row.get(6),
-            start_column: row.get(7),
-            end_column: row.get(8),
-            text_content: row.get(9),
-            parent_id: row.get(10),
-            is_named: row.get(11),
-            created_at: row.get(12),
-        }).collect();
+        let nodes: Vec<NodeRecord> = rows
+            .into_iter()
+            .map(|row| NodeRecord {
+                id: row.get(0),
+                file_id: row.get(1),
+                node_type: row.get(2),
+                start_byte: row.get(3),
+                end_byte: row.get(4),
+                start_row: row.get(5),
+                end_row: row.get(6),
+                start_column: row.get(7),
+                end_column: row.get(8),
+                text_content: row.get(9),
+                parent_id: row.get(10),
+                is_named: row.get(11),
+                created_at: row.get(12),
+            })
+            .collect();
 
         Ok(nodes)
     }
@@ -531,7 +556,7 @@ impl StorageLayer {
             WHERE node_type LIKE ? 
             ORDER BY created_at DESC
             LIMIT ?
-            "#
+            "#,
         )
         .bind(type_pattern)
         .bind(limit as i64)
@@ -539,21 +564,24 @@ impl StorageLayer {
         .await
         .map_err(|e| EngineError::Storage(StorageError::Query(e.to_string())))?;
 
-        let nodes: Vec<NodeRecord> = rows.into_iter().map(|row| NodeRecord {
-            id: row.get(0),
-            file_id: row.get(1),
-            node_type: row.get(2),
-            start_byte: row.get(3),
-            end_byte: row.get(4),
-            start_row: row.get(5),
-            end_row: row.get(6),
-            start_column: row.get(7),
-            end_column: row.get(8),
-            text_content: row.get(9),
-            parent_id: row.get(10),
-            is_named: row.get(11),
-            created_at: row.get(12),
-        }).collect();
+        let nodes: Vec<NodeRecord> = rows
+            .into_iter()
+            .map(|row| NodeRecord {
+                id: row.get(0),
+                file_id: row.get(1),
+                node_type: row.get(2),
+                start_byte: row.get(3),
+                end_byte: row.get(4),
+                start_row: row.get(5),
+                end_row: row.get(6),
+                start_column: row.get(7),
+                end_column: row.get(8),
+                text_content: row.get(9),
+                parent_id: row.get(10),
+                is_named: row.get(11),
+                created_at: row.get(12),
+            })
+            .collect();
 
         Ok(nodes)
     }
@@ -637,12 +665,11 @@ pub struct StorageStats {
 mod tests {
     use super::*;
     use crate::ast_processor::AstNode;
-    use tempfile::tempdir;
 
     async fn create_test_storage() -> StorageLayer {
         let config = StorageConfig {
             db_path: ":memory:".to_string(), // Use in-memory database for tests
-            max_connections: 1, // Use single connection for tests
+            max_connections: 1,              // Use single connection for tests
             connection_timeout_secs: 10,
             cache_size_mb: 16,
             enable_wal: false, // Disable WAL for tests
@@ -655,54 +682,48 @@ mod tests {
     async fn test_storage_creation() {
         let storage = create_test_storage().await;
         let stats = storage.get_storage_stats().await.unwrap();
-        
+
         assert_eq!(stats.file_count, 0);
         assert_eq!(stats.node_count, 0);
         assert_eq!(stats.vector_count, 0);
-        
+
         storage.close().await;
     }
 
     #[tokio::test]
     async fn test_file_operations() {
         let storage = create_test_storage().await;
-        
+
         // Store a file
-        let file_id = storage.store_file(
-            "test.js",
-            SupportedLanguage::JavaScript,
-            "hash123",
-            5,
-            150,
-        ).await.unwrap();
-        
+        let file_id = storage
+            .store_file("test.js", SupportedLanguage::JavaScript, "hash123", 5, 150)
+            .await
+            .unwrap();
+
         assert!(file_id > 0);
-        
+
         // Retrieve the file
         let file_record = storage.get_file("test.js").await.unwrap();
         assert!(file_record.is_some());
-        
+
         let file = file_record.unwrap();
         assert_eq!(file.file_path, "test.js");
         assert_eq!(file.language, "JavaScript");
         assert_eq!(file.content_hash, "hash123");
-        
+
         storage.close().await;
     }
 
     #[tokio::test]
     async fn test_ast_node_operations() {
         let storage = create_test_storage().await;
-        
+
         // Store a file first
-        let file_id = storage.store_file(
-            "test.js",
-            SupportedLanguage::JavaScript,
-            "hash123",
-            2,
-            100,
-        ).await.unwrap();
-        
+        let file_id = storage
+            .store_file("test.js", SupportedLanguage::JavaScript, "hash123", 2, 100)
+            .await
+            .unwrap();
+
         // Create test AST nodes
         let nodes = vec![
             AstNode {
@@ -730,33 +751,30 @@ mod tests {
                 is_named: true,
             },
         ];
-        
+
         // Store AST nodes
         let node_ids = storage.store_ast_nodes(file_id, &nodes).await.unwrap();
         assert_eq!(node_ids.len(), 2);
-        
+
         // Retrieve AST nodes
         let stored_nodes = storage.get_ast_nodes(file_id).await.unwrap();
         assert_eq!(stored_nodes.len(), 2);
         assert_eq!(stored_nodes[0].node_type, "function_declaration");
         assert_eq!(stored_nodes[1].node_type, "identifier");
-        
+
         storage.close().await;
     }
 
     #[tokio::test]
     async fn test_vector_operations() {
         let storage = create_test_storage().await;
-        
+
         // Store file and nodes first
-        let file_id = storage.store_file(
-            "test.js",
-            SupportedLanguage::JavaScript,
-            "hash123",
-            1,
-            100,
-        ).await.unwrap();
-        
+        let file_id = storage
+            .store_file("test.js", SupportedLanguage::JavaScript, "hash123", 1, 100)
+            .await
+            .unwrap();
+
         let nodes = vec![AstNode {
             node_type: "identifier".to_string(),
             start_byte: 0,
@@ -769,35 +787,35 @@ mod tests {
             children_count: 0,
             is_named: true,
         }];
-        
+
         let node_ids = storage.store_ast_nodes(file_id, &nodes).await.unwrap();
         let node_id = node_ids[0];
-        
+
         // Store vector
         let vector = vec![0.1, 0.2, 0.3, 0.4, 0.5];
-        let vector_id = storage.store_vector(node_id, &vector, "test_model").await.unwrap();
+        let vector_id = storage
+            .store_vector(node_id, &vector, "test_model")
+            .await
+            .unwrap();
         assert!(vector_id > 0);
-        
+
         // Verify storage stats
         let stats = storage.get_storage_stats().await.unwrap();
         assert_eq!(stats.vector_count, 1);
-        
+
         storage.close().await;
     }
 
     #[tokio::test]
     async fn test_search_operations() {
         let storage = create_test_storage().await;
-        
+
         // Store file and multiple nodes
-        let file_id = storage.store_file(
-            "test.js",
-            SupportedLanguage::JavaScript,
-            "hash123",
-            3,
-            100,
-        ).await.unwrap();
-        
+        let file_id = storage
+            .store_file("test.js", SupportedLanguage::JavaScript, "hash123", 3, 100)
+            .await
+            .unwrap();
+
         let nodes = vec![
             AstNode {
                 node_type: "function_declaration".to_string(),
@@ -836,58 +854,67 @@ mod tests {
                 is_named: true,
             },
         ];
-        
+
         storage.store_ast_nodes(file_id, &nodes).await.unwrap();
-        
+
         // Search for function declarations
-        let function_nodes = storage.search_nodes_by_type("function_%", 10).await.unwrap();
+        let function_nodes = storage
+            .search_nodes_by_type("function_%", 10)
+            .await
+            .unwrap();
         assert_eq!(function_nodes.len(), 2);
-        
+
         // Search for variable declarations
-        let variable_nodes = storage.search_nodes_by_type("variable_%", 10).await.unwrap();
+        let variable_nodes = storage
+            .search_nodes_by_type("variable_%", 10)
+            .await
+            .unwrap();
         assert_eq!(variable_nodes.len(), 1);
-        
+
         storage.close().await;
     }
 
     #[tokio::test]
     async fn test_cache_operations() {
         let storage = create_test_storage().await;
-        
+
         // Store a file
-        storage.store_file(
-            "cached_test.js",
-            SupportedLanguage::JavaScript,
-            "hash456",
-            1,
-            50,
-        ).await.unwrap();
-        
+        storage
+            .store_file(
+                "cached_test.js",
+                SupportedLanguage::JavaScript,
+                "hash456",
+                1,
+                50,
+            )
+            .await
+            .unwrap();
+
         // First access - should load from database
         let file1 = storage.get_file("cached_test.js").await.unwrap();
         assert!(file1.is_some());
-        
+
         // Second access - should load from cache
         let file2 = storage.get_file("cached_test.js").await.unwrap();
         assert!(file2.is_some());
         assert_eq!(file1.unwrap().id, file2.unwrap().id);
-        
+
         // Check cache stats
         let stats = storage.get_storage_stats().await.unwrap();
         assert_eq!(stats.cache_stats.file_count, 1);
-        
+
         // Clear cache
         storage.clear_cache().await;
         let stats_after = storage.get_storage_stats().await.unwrap();
         assert_eq!(stats_after.cache_stats.file_count, 0);
-        
+
         storage.close().await;
     }
 
     #[tokio::test]
     async fn test_node_metadata_compatibility() {
         let storage = create_test_storage().await;
-        
+
         // Create mock node metadata to test compatibility with existing API
         let metadata = NodeMetadata {
             node_id: "test_node_123".to_string(),
@@ -898,19 +925,19 @@ mod tests {
             complexity: 1,
             language: "JavaScript".to_string(),
         };
-        
+
         // Store metadata
         storage.store_metadata(&metadata).await.unwrap();
-        
+
         // Retrieve metadata
         let retrieved = storage.get_metadata("test_node_123").await.unwrap();
         assert!(retrieved.is_some());
-        
+
         let retrieved_metadata = retrieved.unwrap();
         assert_eq!(retrieved_metadata.node_id, "test_node_123");
         assert_eq!(retrieved_metadata.file_path, "test.js");
         assert_eq!(retrieved_metadata.signature, "function test()");
-        
+
         storage.close().await;
     }
 
@@ -918,30 +945,32 @@ mod tests {
     async fn test_concurrent_operations() {
         let storage = Arc::new(create_test_storage().await);
         let mut handles = Vec::new();
-        
+
         // Spawn multiple concurrent file storage operations
         for i in 0..10 {
             let storage_clone = Arc::clone(&storage);
             let handle = tokio::spawn(async move {
-                storage_clone.store_file(
-                    &format!("concurrent_test_{}.js", i),
-                    SupportedLanguage::JavaScript,
-                    &format!("hash_{}", i),
-                    i + 1,
-                    (i + 1) * 10,
-                ).await
+                storage_clone
+                    .store_file(
+                        &format!("concurrent_test_{}.js", i),
+                        SupportedLanguage::JavaScript,
+                        &format!("hash_{}", i),
+                        i + 1,
+                        (i + 1) * 10,
+                    )
+                    .await
             });
             handles.push(handle);
         }
-        
+
         // Wait for all operations to complete
         let results: Result<Vec<_>, _> = futures::future::try_join_all(handles).await;
         assert!(results.is_ok());
-        
+
         // Verify all files were stored
         let stats = storage.get_storage_stats().await.unwrap();
         assert_eq!(stats.file_count, 10);
-        
+
         storage.close().await;
     }
 }

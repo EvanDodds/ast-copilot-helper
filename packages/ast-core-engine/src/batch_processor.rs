@@ -182,8 +182,10 @@ impl BatchProcessor {
         }
 
         // Create semaphore to limit concurrent processing
-        let semaphore = Arc::new(tokio::sync::Semaphore::new(self.config.max_concurrent_files));
-        
+        let semaphore = Arc::new(tokio::sync::Semaphore::new(
+            self.config.max_concurrent_files,
+        ));
+
         // Create channels for results and progress updates
         let (result_tx, mut result_rx) = mpsc::unbounded_channel::<FileProcessingResult>();
         let (progress_tx, mut progress_rx) = mpsc::unbounded_channel::<(usize, usize, u64)>();
@@ -193,7 +195,7 @@ impl BatchProcessor {
         let progress_interval = self.config.progress_interval;
         let _start_time_clone = Arc::clone(&self.start_time);
         let cancellation_clone = self.cancellation_token.clone();
-        
+
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(progress_interval);
             loop {
@@ -226,7 +228,7 @@ impl BatchProcessor {
 
             let task = tokio::spawn(async move {
                 let _permit = semaphore_permit.acquire().await.unwrap();
-                
+
                 if cancellation_token.is_cancelled().await {
                     return;
                 }
@@ -237,12 +239,9 @@ impl BatchProcessor {
                     .map(|m| m.len())
                     .unwrap_or(0);
 
-                let result = Self::process_single_file(
-                    &ast_processor,
-                    &storage,
-                    &file_path,
-                    file_size,
-                ).await;
+                let result =
+                    Self::process_single_file(&ast_processor, &storage, &file_path, file_size)
+                        .await;
 
                 let processing_time = start_time.elapsed();
                 let (nodes_count, vectors_count, success, error) = match result {
@@ -306,17 +305,18 @@ impl BatchProcessor {
                 let mut progress = self.progress.lock().await;
                 progress.processed_files = processed_count;
                 progress.failed_files = failed_count;
-                
+
                 if let Some(start_time) = *self.start_time.lock().await {
                     progress.elapsed_time = start_time.elapsed();
-                    
+
                     // Estimate remaining time
                     let completed = processed_count + failed_count;
                     if completed > 0 {
-                        let avg_time_per_file = progress.elapsed_time.as_secs_f64() / completed as f64;
+                        let avg_time_per_file =
+                            progress.elapsed_time.as_secs_f64() / completed as f64;
                         let remaining_files = total_files - completed;
                         progress.estimated_remaining = Some(Duration::from_secs_f64(
-                            avg_time_per_file * remaining_files as f64
+                            avg_time_per_file * remaining_files as f64,
                         ));
                     }
                 }
@@ -352,9 +352,12 @@ impl BatchProcessor {
         _file_size: u64,
     ) -> Result<(usize, usize), EngineError> {
         // Read file content
-        let content = tokio::fs::read_to_string(file_path)
-            .await
-            .map_err(|e| EngineError::Storage(StorageError::Connection(format!("Failed to read file: {}", e))))?;
+        let content = tokio::fs::read_to_string(file_path).await.map_err(|e| {
+            EngineError::Storage(StorageError::Connection(format!(
+                "Failed to read file: {}",
+                e
+            )))
+        })?;
 
         // Process AST (simplified - in a real implementation, this would use the full AST processor)
         let mut nodes_count = 0;
@@ -375,13 +378,18 @@ impl BatchProcessor {
                     language: "javascript".to_string(), // Simplified for testing
                 };
 
-                storage.store_metadata(&metadata).await.map_err(EngineError::Storage)?;
+                storage
+                    .store_metadata(&metadata)
+                    .await
+                    .map_err(EngineError::Storage)?;
                 nodes_count += 1;
 
                 // Simulate vector generation for significant lines
                 if line.len() > 10 {
                     // Generate mock vector (in reality, this would come from the AST processor)
-                    let _vector: Vec<f32> = (0..768).map(|i| (i as f32 * line.len() as f32) % 1000.0 / 1000.0).collect();
+                    let _vector: Vec<f32> = (0..768)
+                        .map(|i| (i as f32 * line.len() as f32) % 1000.0 / 1000.0)
+                        .collect();
 
                     // For now, we'll skip actual vector storage since the API needs to be updated
                     // This is a placeholder for the vector storage functionality
@@ -404,17 +412,24 @@ impl BatchProcessor {
             }
 
             // Check file size
-            let metadata = tokio::fs::metadata(&path)
-                .await
-                .map_err(|e| EngineError::Storage(StorageError::Connection(format!("Failed to read metadata: {}", e))))?;
-            
+            let metadata = tokio::fs::metadata(&path).await.map_err(|e| {
+                EngineError::Storage(StorageError::Connection(format!(
+                    "Failed to read metadata: {}",
+                    e
+                )))
+            })?;
+
             if metadata.len() > self.config.max_file_size {
                 continue;
             }
 
             // Check file extension
             if let Some(extension) = path.extension().and_then(|e| e.to_str()) {
-                if self.config.supported_extensions.contains(&extension.to_lowercase()) {
+                if self
+                    .config
+                    .supported_extensions
+                    .contains(&extension.to_lowercase())
+                {
                     filtered.push(path);
                 }
             }
@@ -450,27 +465,28 @@ impl BatchProcessor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::EngineConfig;
+    use crate::StorageConfig;
     use tempfile::tempdir;
     use tokio::fs;
+    use tokio::time::sleep;
 
     async fn create_test_setup() -> (BatchProcessor, tempfile::TempDir) {
         let temp_dir = tempdir().unwrap();
-        
+
         let ast_processor = Arc::new(AstProcessor::new(4)); // 4 parsers per language
-        
+
         let storage_config = StorageConfig {
             db_path: ":memory:".to_string(), // Use in-memory database for tests
-            max_connections: 1, // Use single connection for tests
+            max_connections: 1,              // Use single connection for tests
             connection_timeout_secs: 10,
             cache_size_mb: 16,
             enable_wal: false, // Disable WAL for tests
         };
         let storage = Arc::new(StorageLayer::new(storage_config).await.unwrap());
-        
+
         let batch_config = BatchConfig::default();
         let processor = BatchProcessor::new(ast_processor, storage, batch_config);
-        
+
         (processor, temp_dir)
     }
 
@@ -478,7 +494,7 @@ mod tests {
     async fn test_batch_processor_creation() {
         let (processor, _temp_dir) = create_test_setup().await;
         assert!(!processor.is_cancelled().await);
-        
+
         let progress = processor.get_progress().await;
         assert_eq!(progress.total_files, 0);
         assert_eq!(progress.processed_files, 0);
@@ -487,19 +503,21 @@ mod tests {
     #[tokio::test]
     async fn test_file_filtering() {
         let (processor, temp_dir) = create_test_setup().await;
-        
+
         // Create test files
         let js_file = temp_dir.path().join("test.js");
         let txt_file = temp_dir.path().join("test.txt");
         let large_file = temp_dir.path().join("large.js");
-        
+
         fs::write(&js_file, "console.log('Hello');").await.unwrap();
         fs::write(&txt_file, "This is a text file").await.unwrap();
-        fs::write(&large_file, "x".repeat(15 * 1024 * 1024)).await.unwrap(); // 15MB file
-        
+        fs::write(&large_file, "x".repeat(15 * 1024 * 1024))
+            .await
+            .unwrap(); // 15MB file
+
         let files = vec![js_file.clone(), txt_file, large_file];
         let filtered = processor.filter_files(files).await.unwrap();
-        
+
         // Only js file should pass (txt excluded by extension, large file excluded by size)
         assert_eq!(filtered.len(), 1);
         assert_eq!(filtered[0], js_file);
@@ -508,28 +526,27 @@ mod tests {
     #[tokio::test]
     async fn test_single_file_processing() {
         let temp_dir = tempdir().unwrap();
-        
+
         let ast_processor = AstProcessor::new(4);
         let storage_config = StorageConfig {
             db_path: ":memory:".to_string(), // Use in-memory database for tests
-            max_connections: 1, // Use single connection for tests
+            max_connections: 1,              // Use single connection for tests
             connection_timeout_secs: 10,
             cache_size_mb: 16,
             enable_wal: false, // Disable WAL for tests
         };
         let storage = StorageLayer::new(storage_config).await.unwrap();
-        
+
         // Create test file
         let test_file = temp_dir.path().join("test.js");
-        fs::write(&test_file, "function hello() {\n  console.log('Hello');\n}").await.unwrap();
-        
-        let result = BatchProcessor::process_single_file(
-            &ast_processor,
-            &storage,
-            &test_file,
-            100,
-        ).await.unwrap();
-        
+        fs::write(&test_file, "function hello() {\n  console.log('Hello');\n}")
+            .await
+            .unwrap();
+
+        let result = BatchProcessor::process_single_file(&ast_processor, &storage, &test_file, 100)
+            .await
+            .unwrap();
+
         assert!(result.0 > 0); // nodes_count
         assert!(result.1 > 0); // vectors_count
     }
@@ -537,19 +554,21 @@ mod tests {
     #[tokio::test]
     async fn test_batch_processing() {
         let (mut processor, temp_dir) = create_test_setup().await;
-        
+
         // Create test files
         let files = vec![
             temp_dir.path().join("file1.js"),
             temp_dir.path().join("file2.ts"),
         ];
-        
+
         for (i, file) in files.iter().enumerate() {
-            fs::write(file, format!("// File {}\nconsole.log('test');", i)).await.unwrap();
+            fs::write(file, format!("// File {}\nconsole.log('test');", i))
+                .await
+                .unwrap();
         }
-        
+
         let results = processor.process_files(files, None).await.unwrap();
-        
+
         assert_eq!(results.len(), 2);
         for result in results {
             assert!(result.success);
@@ -560,29 +579,29 @@ mod tests {
     #[tokio::test]
     async fn test_cancellation() {
         let (mut processor, temp_dir) = create_test_setup().await;
-        
+
         // Create many test files to ensure we can cancel
         let mut files = Vec::new();
         for i in 0..10 {
             let file = temp_dir.path().join(format!("file{}.js", i));
-            fs::write(&file, "console.log('test');".repeat(100)).await.unwrap();
+            fs::write(&file, "console.log('test');".repeat(100))
+                .await
+                .unwrap();
             files.push(file);
         }
-        
+
         // Clone the cancellation token for separate task
         let cancellation_token = processor.cancellation_token.clone();
-        
+
         // Start processing
-        let process_task = tokio::spawn(async move {
-            processor.process_files(files, None).await
-        });
-        
+        let process_task = tokio::spawn(async move { processor.process_files(files, None).await });
+
         // Cancel after a short delay
         tokio::spawn(async move {
             sleep(Duration::from_millis(10)).await;
             cancellation_token.cancel().await;
         });
-        
+
         let results = process_task.await.unwrap().unwrap();
         // Some files might have been processed before cancellation
         assert!(results.len() <= 10);
@@ -591,12 +610,12 @@ mod tests {
     #[tokio::test]
     async fn test_progress_tracking() {
         let (mut processor, temp_dir) = create_test_setup().await;
-        
+
         let files = vec![temp_dir.path().join("test.js")];
         fs::write(&files[0], "console.log('test');").await.unwrap();
-        
+
         let _results = processor.process_files(files, None).await.unwrap();
-        
+
         let progress = processor.get_progress().await;
         assert_eq!(progress.total_files, 1);
         assert_eq!(progress.processed_files, 1);

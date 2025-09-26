@@ -2,15 +2,15 @@
 //! These tests validate core functionality without requiring NAPI runtime
 
 use ast_core_engine::{
-    core::ASTCoreEngine,
-    config::{EngineConfig, StorageConfig, HnswConfig},
     ast_processor::{AstProcessor, SupportedLanguage},
-    storage::StorageLayer,
-    vector_db::SimpleVectorDb,
-    performance_monitor::{PerformanceMonitor, BenchmarkConfig},
-    batch_processor::{BatchProcessor, BatchConfig},
-    types::{ProcessingOptions, NodeMetadata},
+    batch_processor::{BatchConfig, BatchProcessor},
+    config::{EngineConfig, HnswConfig, StorageConfig},
+    core::ASTCoreEngine,
     error::EngineError,
+    performance_monitor::{BenchmarkConfig, PerformanceMonitor},
+    storage::StorageLayer,
+    types::{NodeMetadata, ProcessingOptions},
+    vector_db::SimpleVectorDb,
 };
 use std::sync::Arc;
 
@@ -18,14 +18,14 @@ use std::sync::Arc;
 #[tokio::test]
 async fn test_engine_config_creation() {
     println!("🧪 Testing engine config creation...");
-    
+
     let config = EngineConfig::default();
-    
+
     assert_eq!(config.hnsw_config.embedding_dimension, 384);
     assert_eq!(config.storage_config.db_path, ".astdb/index.db");
     assert!(config.storage_config.enable_wal);
     assert_eq!(config.max_memory_mb, 1024);
-    
+
     println!("✅ Engine config test passed");
 }
 
@@ -33,9 +33,9 @@ async fn test_engine_config_creation() {
 #[tokio::test]
 async fn test_ast_processor_creation() {
     println!("🧪 Testing AST processor creation...");
-    
+
     let processor = AstProcessor::new(4); // max_parsers_per_language
-    
+
     // Test that the processor was created successfully
     // In a real implementation we would test specific functionality
     println!("✅ AST processor creation test passed");
@@ -45,7 +45,7 @@ async fn test_ast_processor_creation() {
 #[tokio::test]
 async fn test_storage_layer_creation() {
     println!("🧪 Testing storage layer creation...");
-    
+
     let config = StorageConfig {
         db_path: ":memory:".to_string(), // Use in-memory database for tests
         max_connections: 5,
@@ -53,12 +53,12 @@ async fn test_storage_layer_creation() {
         enable_wal: false,
         cache_size_mb: 128,
     };
-    
+
     let storage = StorageLayer::new(config).await;
     assert!(storage.is_ok(), "Storage layer creation should succeed");
-    
+
     let storage = storage.unwrap();
-    
+
     // Test basic storage operations with mock data
     let test_metadata = NodeMetadata {
         node_id: "test_001".to_string(),
@@ -69,21 +69,21 @@ async fn test_storage_layer_creation() {
         complexity: 1,
         language: "rust".to_string(),
     };
-    
+
     let result = storage.store_metadata(&test_metadata).await;
     assert!(result.is_ok(), "Metadata storage should succeed");
-    
+
     // Test retrieval
     let retrieved = storage.get_metadata("test_001").await;
     assert!(retrieved.is_ok(), "Metadata retrieval should succeed");
-    
+
     let retrieved = retrieved.unwrap();
     assert!(retrieved.is_some(), "Retrieved metadata should exist");
-    
+
     let retrieved = retrieved.unwrap();
     assert_eq!(retrieved.node_id, test_metadata.node_id);
     assert_eq!(retrieved.file_path, test_metadata.file_path);
-    
+
     println!("✅ Storage layer test passed");
 }
 
@@ -91,7 +91,7 @@ async fn test_storage_layer_creation() {
 #[tokio::test]
 async fn test_vector_database_creation() {
     println!("🧪 Testing vector database creation...");
-    
+
     let config = HnswConfig {
         embedding_dimension: 4,
         m: 16,
@@ -99,13 +99,16 @@ async fn test_vector_database_creation() {
         ef_search: 100,
         max_elements: 10000,
     };
-    
+
     let vector_db = SimpleVectorDb::new(config);
-    
+
     // Initialize vector database
     let init_result = vector_db.initialize();
-    assert!(init_result.is_ok(), "Vector database initialization should succeed");
-    
+    assert!(
+        init_result.is_ok(),
+        "Vector database initialization should succeed"
+    );
+
     // Test basic functionality by checking the configuration
     println!("✅ Vector database test passed");
 }
@@ -114,24 +117,29 @@ async fn test_vector_database_creation() {
 #[tokio::test]
 async fn test_performance_monitor() {
     println!("🧪 Testing performance monitor...");
-    
+
     let monitor = PerformanceMonitor::new();
-    
+
     // Test timer operations
     monitor.start_timer("test_operation".to_string()).await;
-    
+
     // Simulate some work
     tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-    
-    let duration = monitor.end_timer("test_operation".to_string(), "test_operation".to_string()).await;
+
+    let duration = monitor
+        .end_timer("test_operation".to_string(), "test_operation".to_string())
+        .await;
     assert!(duration.is_ok(), "Timer should complete successfully");
     let duration = duration.unwrap();
-    assert!(duration.as_millis() >= 10, "Timer should measure at least 10ms");
-    
+    assert!(
+        duration.as_millis() >= 10,
+        "Timer should measure at least 10ms"
+    );
+
     // Test metrics collection
     let metrics = monitor.get_metrics("test_operation").await;
     assert!(!metrics.is_empty(), "Metrics should contain data");
-    
+
     println!("✅ Performance monitor test passed");
 }
 
@@ -139,24 +147,24 @@ async fn test_performance_monitor() {
 #[tokio::test]
 async fn test_batch_processor() {
     println!("🧪 Testing batch processor...");
-    
+
     let storage_config = StorageConfig::default();
     let batch_config = BatchConfig::default();
-    
+
     // Create necessary components
     let ast_processor = Arc::new(AstProcessor::new(4)); // Max depth 4
     let storage_layer = Arc::new(StorageLayer::new(storage_config).await.unwrap());
-    
+
     // Create batch processor with required arguments
     let processor = BatchProcessor::new(ast_processor, storage_layer, batch_config);
-    
+
     // Test batch processor creation (just verify it compiles and runs)
     println!("Batch processor created successfully");
-    
+
     // Test cancellation token functionality
     let is_cancelled = processor.cancellation_token.is_cancelled().await;
     assert!(!is_cancelled, "Should not be cancelled initially");
-    
+
     println!("✅ Batch processor test passed");
 }
 
@@ -164,18 +172,24 @@ async fn test_batch_processor() {
 #[tokio::test]
 async fn test_core_engine_creation() {
     println!("🧪 Testing core engine creation...");
-    
+
     let config = EngineConfig::default();
     let engine = ASTCoreEngine::new(config);
     assert!(engine.is_ok(), "Should create core engine successfully");
-    
+
     let engine = engine.unwrap();
-    
+
     // Test accessing configuration
     let engine_config = engine.config();
-    assert_eq!(engine_config.max_memory_mb, 1024, "Should have correct default memory limit");
-    assert_eq!(engine_config.parallel_workers, 4, "Should have correct default worker count");
-    
+    assert_eq!(
+        engine_config.max_memory_mb, 1024,
+        "Should have correct default memory limit"
+    );
+    assert_eq!(
+        engine_config.parallel_workers, 4,
+        "Should have correct default worker count"
+    );
+
     println!("✅ Core engine test passed");
 }
 
@@ -183,18 +197,18 @@ async fn test_core_engine_creation() {
 #[tokio::test]
 async fn test_error_handling() {
     println!("🧪 Testing error handling...");
-    
+
     // Test different error types
     let vector_error = EngineError::VectorDbError("Test vector error".to_string());
     assert!(matches!(vector_error, EngineError::VectorDbError(_)));
-    
+
     let config_error = EngineError::Configuration("Test config error".to_string());
     assert!(matches!(config_error, EngineError::Configuration(_)));
-    
+
     // Test error display
     let error_message = format!("{}", vector_error);
     assert!(error_message.contains("Test vector error"));
-    
+
     println!("✅ Error handling test passed");
 }
 
@@ -202,7 +216,7 @@ async fn test_error_handling() {
 #[tokio::test]
 async fn test_processing_options() {
     println!("🧪 Testing processing options...");
-    
+
     let options = ProcessingOptions {
         max_memory_mb: 512,
         batch_size: 50,
@@ -215,13 +229,13 @@ async fn test_processing_options() {
         max_node_length: 500,
         enable_caching: true,
     };
-    
+
     assert_eq!(options.max_memory_mb, 512);
     assert_eq!(options.batch_size, 50);
     assert_eq!(options.max_depth, 5);
     assert!(!options.include_unnamed_nodes);
     assert!(options.enable_caching);
-    
+
     // Test default options
     let default_options = ProcessingOptions::default();
     assert_eq!(default_options.max_memory_mb, 1024);
@@ -229,7 +243,7 @@ async fn test_processing_options() {
     assert_eq!(default_options.max_depth, 10);
     assert!(!default_options.include_unnamed_nodes);
     assert!(default_options.enable_caching);
-    
+
     println!("✅ Processing options test passed");
 }
 
@@ -237,7 +251,7 @@ async fn test_processing_options() {
 #[tokio::test]
 async fn test_benchmark_configuration() {
     println!("🧪 Testing benchmark configuration...");
-    
+
     let benchmark_config = BenchmarkConfig {
         iterations: 100,
         warmup_iterations: 10,
@@ -246,18 +260,18 @@ async fn test_benchmark_configuration() {
         collect_system_stats: true,
         sample_interval: std::time::Duration::from_millis(100),
     };
-    
+
     assert_eq!(benchmark_config.iterations, 100);
     assert_eq!(benchmark_config.warmup_iterations, 10);
     assert!(benchmark_config.collect_memory_stats);
     assert!(benchmark_config.collect_system_stats);
-    
+
     // Test default benchmark config
     let default_config = BenchmarkConfig::default();
     assert_eq!(default_config.iterations, 1000);
     assert_eq!(default_config.warmup_iterations, 100);
     assert!(default_config.collect_memory_stats);
     assert!(default_config.collect_system_stats);
-    
+
     println!("✅ Benchmark configuration test passed");
 }

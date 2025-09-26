@@ -38,7 +38,10 @@ impl PerformanceMetrics {
             throughput_ops_per_sec: 0.0,
             error_count: 0,
             success_rate: 1.0,
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             metadata: HashMap::new(),
         }
     }
@@ -124,7 +127,8 @@ impl BenchmarkResults {
         }
 
         // Sort durations for percentile calculations
-        let mut durations: Vec<u64> = self.individual_results
+        let mut durations: Vec<u64> = self
+            .individual_results
             .iter()
             .filter(|r| r.success)
             .map(|r| r.duration_ms)
@@ -138,7 +142,7 @@ impl BenchmarkResults {
         // Basic statistics
         self.min_duration_ms = durations[0];
         self.max_duration_ms = *durations.last().unwrap();
-        
+
         // Mean
         let sum: u64 = durations.iter().sum();
         self.mean_duration_ms = sum / durations.len() as u64;
@@ -158,7 +162,8 @@ impl BenchmarkResults {
                 let diff = x as f64 - self.mean_duration_ms as f64;
                 diff * diff
             })
-            .sum::<f64>() / durations.len() as f64;
+            .sum::<f64>()
+            / durations.len() as f64;
         self.stddev_duration_ms = variance.sqrt();
 
         // Percentiles
@@ -176,7 +181,7 @@ impl BenchmarkResults {
         if sorted_durations.is_empty() {
             return 0;
         }
-        
+
         let index = (sorted_durations.len() as f64 * percentile) as usize;
         let clamped_index = index.min(sorted_durations.len() - 1);
         sorted_durations[clamped_index]
@@ -234,7 +239,11 @@ impl PerformanceMonitor {
     }
 
     /// End timing and record metrics
-    pub async fn end_timer(&self, operation_id: String, operation_name: String) -> Result<Duration, EngineError> {
+    pub async fn end_timer(
+        &self,
+        operation_id: String,
+        operation_name: String,
+    ) -> Result<Duration, EngineError> {
         let start_time = {
             let mut timers = self.active_timers.write().await;
             timers.remove(&operation_id)
@@ -247,18 +256,24 @@ impl PerformanceMonitor {
                 metric.duration_ms = duration.as_millis() as u64;
                 metric.operations_count = 1;
                 metric.calculate_throughput();
-                
+
                 self.record_metric(metric).await;
                 Ok(duration)
             }
-            None => Err(EngineError::ValidationError(format!("No active timer found for operation: {}", operation_id)))
+            None => Err(EngineError::ValidationError(format!(
+                "No active timer found for operation: {}",
+                operation_id
+            ))),
         }
     }
 
     /// Record a performance metric
     pub async fn record_metric(&self, metric: PerformanceMetrics) {
         let mut metrics = self.metrics.write().await;
-        metrics.entry(metric.operation.clone()).or_insert_with(Vec::new).push(metric);
+        metrics
+            .entry(metric.operation.clone())
+            .or_insert_with(Vec::new)
+            .push(metric);
     }
 
     /// Get all metrics for an operation
@@ -275,10 +290,11 @@ impl PerformanceMonitor {
         }
 
         let mut aggregated = PerformanceMetrics::new(operation_name.to_string());
-        
+
         for metric in &metrics {
             aggregated.duration_ms += metric.duration_ms;
-            aggregated.memory_usage_bytes = aggregated.memory_usage_bytes.max(metric.memory_usage_bytes);
+            aggregated.memory_usage_bytes =
+                aggregated.memory_usage_bytes.max(metric.memory_usage_bytes);
             aggregated.operations_count += metric.operations_count;
             aggregated.error_count += metric.error_count;
         }
@@ -346,7 +362,10 @@ impl PerformanceMonitor {
                         duration_ms: duration.as_millis() as u64,
                         memory_usage_bytes: end_memory.saturating_sub(start_memory),
                         error_message: None,
-                        timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                        timestamp: SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs(),
                     }
                 }
                 Ok(Err(e)) => {
@@ -357,7 +376,10 @@ impl PerformanceMonitor {
                         duration_ms: duration.as_millis() as u64,
                         memory_usage_bytes: end_memory.saturating_sub(start_memory),
                         error_message: Some(e.to_string()),
-                        timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                        timestamp: SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs(),
                     }
                 }
                 Err(_) => {
@@ -368,7 +390,10 @@ impl PerformanceMonitor {
                         duration_ms: config.iteration_timeout.as_millis() as u64,
                         memory_usage_bytes: 0,
                         error_message: Some("Operation timed out".to_string()),
-                        timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                        timestamp: SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs(),
                     }
                 }
             };
@@ -407,17 +432,14 @@ impl PerformanceMonitor {
     async fn get_current_memory_usage(&self) -> u64 {
         // In a real implementation, this would use system APIs
         // For now, return a placeholder value
-        
-        
+
         // This is a simplified approach - in production you'd want more accurate memory tracking
         std::process::id() as u64 * 1024 // Placeholder
     }
 
     /// Collect memory statistics from iteration results
     async fn collect_memory_stats(&self, results: &[IterationResult]) -> MemoryStats {
-        let memory_values: Vec<u64> = results.iter()
-            .map(|r| r.memory_usage_bytes)
-            .collect();
+        let memory_values: Vec<u64> = results.iter().map(|r| r.memory_usage_bytes).collect();
 
         if memory_values.is_empty() {
             return MemoryStats::default();
@@ -441,7 +463,7 @@ impl PerformanceMonitor {
     async fn collect_system_stats(&self) -> SystemStats {
         // In a real implementation, this would use sysinfo crate or similar
         SystemStats {
-            cpu_usage_percent: 0.0, // Placeholder
+            cpu_usage_percent: 0.0,    // Placeholder
             memory_usage_percent: 0.0, // Placeholder
             disk_io_bytes_per_sec: 0,
             network_io_bytes_per_sec: 0,
@@ -463,8 +485,7 @@ impl PerformanceMonitor {
     /// Export metrics to JSON format
     pub async fn export_metrics_json(&self) -> Result<String, EngineError> {
         let metrics = self.metrics.read().await;
-        serde_json::to_string_pretty(&*metrics)
-            .map_err(EngineError::from)
+        serde_json::to_string_pretty(&*metrics).map_err(EngineError::from)
     }
 }
 
@@ -489,13 +510,16 @@ mod tests {
     #[tokio::test]
     async fn test_timer_functionality() {
         let monitor = PerformanceMonitor::new();
-        
+
         monitor.start_timer("test_op".to_string()).await;
         sleep(Duration::from_millis(10)).await;
-        let duration = monitor.end_timer("test_op".to_string(), "test_operation".to_string()).await.unwrap();
-        
+        let duration = monitor
+            .end_timer("test_op".to_string(), "test_operation".to_string())
+            .await
+            .unwrap();
+
         assert!(duration.as_millis() >= 10);
-        
+
         let metrics = monitor.get_metrics("test_operation").await;
         assert_eq!(metrics.len(), 1);
         assert_eq!(metrics[0].operation, "test_operation");
@@ -505,16 +529,16 @@ mod tests {
     #[tokio::test]
     async fn test_metric_recording() {
         let monitor = PerformanceMonitor::new();
-        
+
         let mut metric = PerformanceMetrics::new("test_op".to_string());
         metric.duration_ms = 100;
         metric.operations_count = 5;
         metric.error_count = 1;
         metric.calculate_throughput();
         metric.calculate_success_rate();
-        
+
         monitor.record_metric(metric).await;
-        
+
         let metrics = monitor.get_metrics("test_op").await;
         assert_eq!(metrics.len(), 1);
         assert_eq!(metrics[0].duration_ms, 100);
@@ -525,7 +549,7 @@ mod tests {
     #[tokio::test]
     async fn test_aggregated_metrics() {
         let monitor = PerformanceMonitor::new();
-        
+
         // Record multiple metrics
         for i in 0..3 {
             let mut metric = PerformanceMetrics::new("batch_op".to_string());
@@ -534,7 +558,7 @@ mod tests {
             metric.error_count = i;
             monitor.record_metric(metric).await;
         }
-        
+
         let aggregated = monitor.get_aggregated_metrics("batch_op").await.unwrap();
         assert_eq!(aggregated.duration_ms, 600); // 100 + 200 + 300
         assert_eq!(aggregated.operations_count, 30); // 10 * 3
@@ -544,7 +568,7 @@ mod tests {
     #[tokio::test]
     async fn test_benchmark_functionality() {
         let monitor = PerformanceMonitor::new();
-        
+
         let config = BenchmarkConfig {
             iterations: 3,
             warmup_iterations: 1,
@@ -553,16 +577,15 @@ mod tests {
             collect_system_stats: false,
             sample_interval: Duration::from_millis(100),
         };
-        
-        let results = monitor.benchmark(
-            "test_benchmark".to_string(),
-            config,
-            || async {
+
+        let results = monitor
+            .benchmark("test_benchmark".to_string(), config, || async {
                 sleep(Duration::from_millis(10)).await;
                 Ok::<(), EngineError>(())
-            }
-        ).await.unwrap();
-        
+            })
+            .await
+            .unwrap();
+
         assert_eq!(results.operation_name, "test_benchmark");
         assert_eq!(results.total_iterations, 3);
         assert_eq!(results.successful_iterations, 3);
@@ -574,51 +597,54 @@ mod tests {
     #[tokio::test]
     async fn test_benchmark_with_failures() {
         let monitor = PerformanceMonitor::new();
-        
+
         let config = BenchmarkConfig::default();
-        
+
         let mut call_count = 0;
-        let results = monitor.benchmark(
-            "failing_benchmark".to_string(),
-            config,
-            || {
+        let results = monitor
+            .benchmark("failing_benchmark".to_string(), config, || {
                 call_count += 1;
                 async move {
                     if call_count % 2 == 0 {
-                        Err(EngineError::ValidationError("Simulated failure".to_string()))
+                        Err(EngineError::ValidationError(
+                            "Simulated failure".to_string(),
+                        ))
                     } else {
                         Ok(())
                     }
                 }
-            }
-        ).await.unwrap();
-        
+            })
+            .await
+            .unwrap();
+
         assert!(results.failed_iterations > 0);
         assert!(results.successful_iterations > 0);
-        assert_eq!(results.total_iterations, results.successful_iterations + results.failed_iterations);
+        assert_eq!(
+            results.total_iterations,
+            results.successful_iterations + results.failed_iterations
+        );
     }
 
     #[tokio::test]
     async fn test_benchmark_statistics() {
         let monitor = PerformanceMonitor::new();
-        
+
         let config = BenchmarkConfig {
             iterations: 5,
             warmup_iterations: 0,
             ..Default::default()
         };
-        
-        let results = monitor.benchmark(
-            "stats_benchmark".to_string(),
-            config,
-            || async {
+
+        let results = monitor
+            .benchmark("stats_benchmark".to_string(), config, || async {
                 // Variable delay to create different durations
                 let delay = fastrand::u64(5..15);
                 sleep(Duration::from_millis(delay)).await;
                 Ok::<(), EngineError>(())
-            }
-        ).await.unwrap();
-        
+            })
+            .await
+            .unwrap();
+
         assert!(results.min_duration_ms > 0);
         assert!(results.max_duration_ms >= results.min_duration_ms);
         assert!(results.mean_duration_ms > 0);
@@ -630,10 +656,10 @@ mod tests {
     #[tokio::test]
     async fn test_metrics_export() {
         let monitor = PerformanceMonitor::new();
-        
+
         let metric = PerformanceMetrics::new("export_test".to_string());
         monitor.record_metric(metric).await;
-        
+
         let json = monitor.export_metrics_json().await.unwrap();
         assert!(json.contains("export_test"));
         assert!(json.contains("duration_ms"));
