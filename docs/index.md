@@ -22,7 +22,7 @@ features:
     details: Query your codebase with natural language. Find functions, patterns, and logic using AI-powered semantic understanding across 15 programming languages.
 
   - icon: 🤖
-    title: MCP Server Integration  
+    title: MCP Server Integration
     details: Enable AI agents to understand your code via Model Context Protocol. Provides structured access to AST data and semantic queries.
 
   - icon: ⚡

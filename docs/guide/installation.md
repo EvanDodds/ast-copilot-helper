@@ -23,14 +23,14 @@ This guide provides detailed installation instructions for AST Copilot Helper ac
 
 ### Quick Method Comparison
 
-| Method | Best For | Node.js Required | Update Management | Performance |
-|--------|----------|------------------|-------------------|-------------|
-| **Pre-built Binaries** | End users, CI/CD | ❌ No | Package managers or manual | ⚡ Fastest |
-| **NPM Global** | Developers, Node.js users | ✅ Yes | `npm update -g` | 🔄 Good |
-| **PNPM Global** | Performance-focused developers | ✅ Yes | `pnpm update -g` | 🚀 Better |
-| **NPX** | One-time usage, testing | ✅ Yes | Always latest | 🐌 Slower (downloads each time) |
-| **Local Project** | Project-specific installs | ✅ Yes | `npm update` | 🔄 Good |
-| **Docker** | Containerized environments | ❌ No | `docker pull` | 🔄 Good (after initial pull) |
+| Method                 | Best For                       | Node.js Required | Update Management          | Performance                     |
+| ---------------------- | ------------------------------ | ---------------- | -------------------------- | ------------------------------- |
+| **Pre-built Binaries** | End users, CI/CD               | ❌ No            | Package managers or manual | ⚡ Fastest                      |
+| **NPM Global**         | Developers, Node.js users      | ✅ Yes           | `npm update -g`            | 🔄 Good                         |
+| **PNPM Global**        | Performance-focused developers | ✅ Yes           | `pnpm update -g`           | 🚀 Better                       |
+| **NPX**                | One-time usage, testing        | ✅ Yes           | Always latest              | 🐌 Slower (downloads each time) |
+| **Local Project**      | Project-specific installs      | ✅ Yes           | `npm update`               | 🔄 Good                         |
+| **Docker**             | Containerized environments     | ❌ No            | `docker pull`              | 🔄 Good (after initial pull)    |
 
 ### Method 1: Pre-built Binaries (Recommended for End Users)
 
@@ -200,6 +200,7 @@ curl -fsSL https://install.ast-copilot-helper.dev | bash -s -- --version=v1.2.0
 ```
 
 This script will:
+
 - Detect your operating system and architecture
 - Download the appropriate binary
 - Install it to the correct system location
@@ -209,7 +210,7 @@ This script will:
 #### Binary Installation Benefits
 
 - ✅ **No Node.js required** - Standalone executable
-- ✅ **Fast startup** - Pre-compiled binaries  
+- ✅ **Fast startup** - Pre-compiled binaries
 - ✅ **Consistent performance** - No dependency conflicts
 - ✅ **Easy distribution** - Single file installation
 - ✅ **Offline capable** - No internet required after download
@@ -219,7 +220,7 @@ This script will:
 
 #### Binary Installation Limitations
 
-- ⚠️ **Platform-specific** - Must download correct architecture  
+- ⚠️ **Platform-specific** - Must download correct architecture
 - ⚠️ **Update management** - Manual updates (unless using package manager)
 - ⚠️ **Plugin limitations** - Some advanced plugins may require Node.js
 - ⚠️ **File size** - Larger than npm installation due to bundled runtime
@@ -754,7 +755,7 @@ ast-copilot-helper --version --verbose
 which ast-copilot-helper
 file $(which ast-copilot-helper)  # Shows if it's a binary or script
 
-# For npm installations  
+# For npm installations
 npm list -g ast-copilot-helper
 
 # For development installations

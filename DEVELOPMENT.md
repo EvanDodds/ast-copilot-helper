@@ -156,6 +156,7 @@ yarn run test:rust:fmt        # Code formatting check (cargo fmt --check)
 #### Performance Considerations
 
 The Rust core engine is optimized for development speed:
+
 - Development builds skip full optimization for faster iteration
 - Production builds use full optimization for maximum performance
 - Testing validates both compilation correctness and runtime behavior

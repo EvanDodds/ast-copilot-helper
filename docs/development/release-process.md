@@ -82,21 +82,25 @@ pnpm run license:check
 ## Release Types
 
 ### Major Release (Breaking Changes)
+
 - API changes that break backward compatibility
 - Removal of deprecated features
 - Major architecture changes
 
 ### Minor Release (New Features)
+
 - New features that are backward compatible
 - New language support
 - Performance improvements
 
 ### Patch Release (Bug Fixes)
+
 - Bug fixes
 - Security patches
 - Documentation updates
 
 ### Pre-Release
+
 - Alpha/beta versions for testing
 - Release candidates before stable release
 
@@ -129,6 +133,7 @@ pnpm run version:bump --type minor  # patch, minor, major, prerelease
 ```
 
 This script updates:
+
 - Root `package.json`
 - All package `package.json` files
 - VS Code extension `package.json`
@@ -183,6 +188,7 @@ gh pr create \
 ### Step 6: Final Review and Approval
 
 Release PRs require:
+
 - [ ] All automated checks pass
 - [ ] Manual testing on supported platforms
 - [ ] Review by at least 2 maintainers

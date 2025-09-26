@@ -43,22 +43,30 @@ Add the MCP server configuration to your AI agent (e.g., Claude Desktop):
 The MCP server provides several tools for code analysis:
 
 ### `analyze_codebase`
+
 Perform semantic analysis of your codebase
+
 - **Input**: Directory path, analysis options
 - **Output**: AST data, code metrics, dependencies
 
 ### `search_code`
+
 Search for specific patterns or functions
+
 - **Input**: Search query, file patterns
 - **Output**: Matching code snippets with context
 
 ### `get_file_info`
+
 Get detailed information about a specific file
+
 - **Input**: File path
 - **Output**: AST structure, imports, exports, functions
 
 ### `query_dependencies`
+
 Analyze project dependencies and relationships
+
 - **Input**: Package or module name
 - **Output**: Dependency tree, usage patterns
 
@@ -118,16 +126,19 @@ Once configured, you can ask Claude to analyze your code:
 ## Troubleshooting
 
 ### Server Won't Start
+
 - Check that Node.js is installed and accessible
 - Verify the workspace path exists and is readable
 - Check port availability (default: 3000)
 
 ### Agent Can't Connect
+
 - Ensure the MCP server is running
 - Verify the configuration file syntax
 - Check agent logs for connection errors
 
 ### Poor Analysis Results
+
 - Ensure your project is built/compiled
 - Check that supported languages are detected
 - Verify file permissions for the workspace
