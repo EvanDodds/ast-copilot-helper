@@ -23,7 +23,7 @@ function ensureEngineAccessible() {
         const resolvedTarget = path.resolve(rootDir, linkTarget);
         if (resolvedTarget === sourceDir) {
           console.log('Symlink already exists and is correct');
-          return true;
+          return 'symlink';
         } else {
           console.log('Removing incorrect symlink');
           fs.unlinkSync(targetPath);
@@ -54,7 +54,7 @@ function ensureEngineAccessible() {
         
         if (isValid) {
           console.log('Directory copy is up-to-date');
-          return true;
+          return 'copy';
         } else {
           console.log('Removing stale directory copy');
           fs.rmSync(targetPath, { recursive: true, force: true });
@@ -77,7 +77,7 @@ function ensureEngineAccessible() {
   try {
     fs.symlinkSync('packages/ast-core-engine', targetPath);
     console.log('✅ Symlink created successfully');
-    return true;
+    return 'symlink';
   } catch (symlinkError) {
     console.log('Symlink failed, trying directory copy:', symlinkError.message);
   }
@@ -105,7 +105,7 @@ function ensureEngineAccessible() {
     }
     
     console.log('✅ Directory copy created successfully');
-    return true;
+    return 'copy';
   } catch (copyError) {
     console.error('❌ Both symlink and copy failed:', copyError.message);
     return false;
@@ -119,25 +119,33 @@ if (!fs.existsSync(sourceDir)) {
 }
 
 // Ensure the engine is accessible
-if (!ensureEngineAccessible()) {
+const result = ensureEngineAccessible();
+if (!result) {
   console.error('❌ Failed to make ast-core-engine accessible');
   process.exit(1);
 }
 
-// Final verification
+// Final verification - only for directory copies, symlinks work once Rust is built
 const indexJsPath = path.join(targetPath, 'index.js');
 const indexDtsPath = path.join(targetPath, 'index.d.ts');
 
-if (!fs.existsSync(indexJsPath)) {
-  console.error('❌ Verification failed: index.js not accessible at', indexJsPath);
-  process.exit(1);
-}
+if (result === 'copy') {
+  // For directory copies, verify the files are actually there
+  if (!fs.existsSync(indexJsPath)) {
+    console.error('❌ Verification failed: index.js not accessible at', indexJsPath);
+    process.exit(1);
+  }
 
-if (!fs.existsSync(indexDtsPath)) {
-  console.error('❌ Verification failed: index.d.ts not accessible at', indexDtsPath);
-  process.exit(1);
+  if (!fs.existsSync(indexDtsPath)) {
+    console.error('❌ Verification failed: index.d.ts not accessible at', indexDtsPath);
+    process.exit(1);
+  }
+  
+  console.log('✅ ast-core-engine is accessible from root directory');
+  console.log('   - index.js:', fs.existsSync(indexJsPath) ? 'OK' : 'MISSING');
+  console.log('   - index.d.ts:', fs.existsSync(indexDtsPath) ? 'OK' : 'MISSING');
+} else if (result === 'symlink') {
+  // For symlinks, just confirm the symlink exists - files will be available once Rust builds
+  console.log('✅ ast-core-engine is accessible from root directory');
+  console.log('   - Symlink created, files will be available after Rust engine build');
 }
-
-console.log('✅ ast-core-engine is accessible from root directory');
-console.log('   - index.js:', fs.existsSync(indexJsPath) ? 'OK' : 'MISSING');
-console.log('   - index.d.ts:', fs.existsSync(indexDtsPath) ? 'OK' : 'MISSING');
