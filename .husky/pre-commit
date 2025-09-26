@@ -34,24 +34,4 @@ else
 fi
 
 echo "✅ Pre-commit validation completed!"
-echo "👉 Pre-push will run more comprehensive tests""$(dirname -- "$0")/_/husky.sh"
-
-echo "🔍 Running pre-commit validation (quick checks)..."
-echo "⏱️  This should take ~30-45 seconds"
-
-# Type checking
-echo "📝 Type checking..."
-yarn run type-check || exit 1
-
-# Linting
-echo "🧹 Linting code..."
-yarn run lint || exit 1
-
-# Essential unit tests only (fastest subset)
-echo "🧪 Running essential unit tests..."
-yarn run test:precommit || exit 1
-
-echo "✅ Pre-commit validation completed!"
-echo "� Pre-push will run more comprehensive tests"
-
-echo "✅ Pre-commit hooks completed successfully!"
+echo "👉 Pre-push will run more comprehensive tests"
