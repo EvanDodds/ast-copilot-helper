@@ -51,107 +51,38 @@ function isMusl() {
   }
 }
 
-function requireNativeBinding(name) {
-  try {
-    return require(name)
-  } catch (error) {
-    loadError = error
-    return null
-  }
-}
+// Since we're using a custom binding approach with local .node files,
+// we skip platform-specific package resolution and go directly to local files
 
-switch (platform) {
-  case 'android':
-    if (arch === 'arm64') {
-      nativeBinding = requireNativeBinding('@ast-helper/core-engine-android-arm64')
-    } else if (arch === 'arm') {
-      nativeBinding = requireNativeBinding('@ast-helper/core-engine-android-arm-eabi')
-    } else {
-      throw new Error(\`Unsupported architecture on Android \${arch}\`)
-    }
-    break
-  case 'win32':
-    if (arch === 'x64') {
-      nativeBinding = requireNativeBinding('@ast-helper/core-engine-win32-x64-msvc')
-    } else if (arch === 'ia32') {
-      nativeBinding = requireNativeBinding('@ast-helper/core-engine-win32-ia32-msvc')
-    } else if (arch === 'arm64') {
-      nativeBinding = requireNativeBinding('@ast-helper/core-engine-win32-arm64-msvc')
-    } else {
-      throw new Error(\`Unsupported architecture on Windows: \${arch}\`)
-    }
-    break
-  case 'darwin':
-    if (arch === 'x64') {
-      nativeBinding = requireNativeBinding('@ast-helper/core-engine-darwin-x64')
-    } else if (arch === 'arm64') {
-      nativeBinding = requireNativeBinding('@ast-helper/core-engine-darwin-arm64')
-    } else {
-      throw new Error(\`Unsupported architecture on macOS: \${arch}\`)
-    }
-    break
-  case 'freebsd':
-    if (arch === 'x64') {
-      nativeBinding = requireNativeBinding('@ast-helper/core-engine-freebsd-x64')
-    } else {
-      throw new Error(\`Unsupported architecture on FreeBSD: \${arch}\`)
-    }
-    break
-  case 'linux':
-    if (arch === 'x64') {
-      if (isMusl()) {
-        nativeBinding = requireNativeBinding('@ast-helper/core-engine-linux-x64-musl')
-      } else {
-        nativeBinding = requireNativeBinding('@ast-helper/core-engine-linux-x64-gnu')
-      }
-    } else if (arch === 'arm64') {
-      if (isMusl()) {
-        nativeBinding = requireNativeBinding('@ast-helper/core-engine-linux-arm64-musl')
-      } else {
-        nativeBinding = requireNativeBinding('@ast-helper/core-engine-linux-arm64-gnu')
-      }
-    } else if (arch === 'arm') {
-      nativeBinding = requireNativeBinding('@ast-helper/core-engine-linux-arm-gnueabihf')
-    } else {
-      throw new Error(\`Unsupported architecture on Linux: \${arch}\`)
-    }
-    break
-  default:
-    throw new Error(\`Unsupported platform: \${platform}\`)
-}
+// Try to find a local .node file
+const localNodeFiles = [
+  \`ast-core-engine.\${platform}-\${arch}\${isMusl() ? '-musl' : arch === 'x64' && platform === 'linux' ? '-gnu' : ''}.node\`,
+  'ast-core-engine.linux-x64-gnu.node',
+  'ast-core-engine.node'
+]
 
-// Fallback to local .node file if platform-specific package isn't available
-if (!nativeBinding) {
-  // Try to find a local .node file
-  const localNodeFiles = [
-    'ast-core-engine.linux-x64-gnu.node',
-    'ast-core-engine.node'
-  ]
-  
-  for (const nodeFile of localNodeFiles) {
-    const localPath = join(__dirname, nodeFile)
-    if (existsSync(localPath)) {
-      try {
-        nativeBinding = require(localPath)
-        localFileExisted = true
-        console.log(\`Loaded local native binding: \${nodeFile}\`)
-        break
-      } catch (error) {
-        console.warn(\`Failed to load \${nodeFile}:\`, error.message)
-      }
+for (const nodeFile of localNodeFiles) {
+  const localPath = join(__dirname, nodeFile)
+  if (existsSync(localPath)) {
+    try {
+      nativeBinding = require(localPath)
+      localFileExisted = true
+      console.log(\`Loaded local native binding: \${nodeFile}\`)
+      break
+    } catch (error) {
+      console.warn(\`Failed to load \${nodeFile}:\`, error.message)
     }
   }
 }
 
 if (!nativeBinding) {
-  if (loadError) {
-    console.error('Failed to load native binding:', loadError.message)
-    console.error('This may indicate a missing or incompatible native module.')
-    console.error(\`Platform: \${platform}, Architecture: \${arch}\`)
-    if (platform === 'linux') {
-      console.error(\`Musl detected: \${isMusl()}\`)
-    }
+  console.error('Failed to load native binding from local .node files')
+  console.error('This may indicate a missing or incompatible native module.')
+  console.error(\`Platform: \${platform}, Architecture: \${arch}\`)
+  if (platform === 'linux') {
+    console.error(\`Musl detected: \${isMusl()}\`)
   }
+  console.error('Available .node files should be built using: cargo build --release')
   throw new Error(\`Failed to load native binding for \${platform}-\${arch}\`)
 }
 
