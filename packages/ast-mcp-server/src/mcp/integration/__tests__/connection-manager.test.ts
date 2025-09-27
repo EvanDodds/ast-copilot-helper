@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { EventEmitter } from "events";
-import {
-  MCPConnectionManager,
-  type ClientConnection,
-} from "../connection-manager.js";
+import { ConnectionManager, ClientConnection } from "../connection-manager.js";
 import { ASTMCPServer } from "../../server-core.js";
 import { Transport, type ConnectionInfo } from "../../transport/base.js";
 import {

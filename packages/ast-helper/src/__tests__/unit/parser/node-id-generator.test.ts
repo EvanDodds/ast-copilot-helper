@@ -4,9 +4,9 @@ import {
   NodeIDUtils,
   NodeIdentityData,
   defaultNodeIDGenerator,
-  IDGenerationOptions,
+  IDGenerationOptions as _IDGenerationOptions,
 } from "../../../parser/node-id-generator";
-import { NodeType, Position } from "../../../parser/ast-schema";
+import { NodeType, Position as _Position } from "../../../parser/ast-schema";
 
 describe("Node ID Generator", () => {
   let generator: NodeIDGenerator;

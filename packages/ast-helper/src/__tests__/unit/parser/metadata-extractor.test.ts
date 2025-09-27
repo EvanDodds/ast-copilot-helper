@@ -15,7 +15,10 @@ import {
   ExportInfo,
   RawASTNode,
 } from "../../../parser/metadata-extractor";
-import { NodeMetadata, Position } from "../../../parser/ast-schema";
+import {
+  NodeMetadata as _NodeMetadata,
+  Position as _Position,
+} from "../../../parser/ast-schema";
 
 describe("MetadataExtractor", () => {
   let extractor: MetadataExtractor;
