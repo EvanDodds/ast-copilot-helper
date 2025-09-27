@@ -85,6 +85,11 @@ jobs:
       - name: Run Prettier format check
         run: yarn run format:check
 
+      - name: Setup Rust for binding generation
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
       - name: Run TypeScript type check
         run: yarn run type-check
 

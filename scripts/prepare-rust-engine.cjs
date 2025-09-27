@@ -137,16 +137,20 @@ function updateEngineAccessAfterBuild() {
 
 try {
   if (needsRebuild()) {
-    console.log('Building Rust engine with release optimizations...');
-    process.chdir(engineDir);
-    execSync('yarn build:release', { stdio: 'inherit' });
-    console.log('✅ Rust engine build completed');
+    console.log('🔧 Generating NAPI binding files for development/CI...');
+    
+    // Instead of building with NAPI (which doesn't work in our setup),
+    // generate the binding files using our custom generator
+    const generateScript = path.resolve(__dirname, 'generate-napi-bindings.cjs');
+    execSync(`node "${generateScript}"`, { stdio: 'inherit' });
+    
+    console.log('✅ NAPI binding files generated');
     
     // Update the root directory copy if it exists
     updateEngineAccessAfterBuild();
   }
 } catch (error) {
-  console.error('❌ Rust build failed:', error.message);
-  console.error('This may be expected in environments without Rust/Cargo installed');
+  console.error('❌ Binding generation failed:', error.message);
+  console.error('This may be expected in environments without Node.js properly configured');
   process.exit(0); // Don't fail the entire install process
 }

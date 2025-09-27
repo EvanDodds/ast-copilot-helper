@@ -29,8 +29,8 @@
     "artifacts": "napi artifacts",
     "bench": "node -r @swc-node/register benchmark/bench.ts",
     "build": "echo 'Rust build skipped for development - use build:release for production builds'",
-    "build:release": "napi build --platform --release --strip",
-    "build:debug": "napi build --platform",
+    "build:release": "napi build --platform --release --strip --js index.js --dts index.d.ts",
+    "build:debug": "napi build --platform --js index.js --dts index.d.ts",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "cargo test",
     "clean": "cargo clean && rm -f *.node index.js index.d.ts",
@@ -53,5 +53,16 @@
     "index.d.ts",
     "index.js",
     "*.node"
-  ]
+  ],
+  "optionalDependencies": {
+    "@ast-helper/core-engine-win32-x64-msvc": "0.1.0",
+    "@ast-helper/core-engine-win32-ia32-msvc": "0.1.0",
+    "@ast-helper/core-engine-win32-arm64-msvc": "0.1.0",
+    "@ast-helper/core-engine-darwin-x64": "0.1.0",
+    "@ast-helper/core-engine-darwin-arm64": "0.1.0",
+    "@ast-helper/core-engine-linux-x64-gnu": "0.1.0",
+    "@ast-helper/core-engine-linux-arm64-gnu": "0.1.0",
+    "@ast-helper/core-engine-linux-arm64-musl": "0.1.0",
+    "@ast-helper/core-engine-linux-x64-musl": "0.1.0"
+  }
 }

@@ -95,6 +95,7 @@
     "postinstall": "yarn run prepare:symlinks && yarn run prepare:husky",
     "prepare:symlinks": "node scripts/prepare-symlinks.cjs",
     "prepare:rust-engine": "node scripts/prepare-rust-engine.cjs",
+    "prepare:bindings": "node scripts/generate-napi-bindings.cjs",
     "prepare:husky": "echo 'Husky v9+ is properly initialized'",
     "verify:engine-access": "node scripts/verify-engine-access.cjs",
     "test:ci-simulation": "node scripts/test-ci-simulation.cjs",
