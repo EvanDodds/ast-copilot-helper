@@ -108,6 +108,9 @@
     "*.{ts,tsx,js,jsx}": [
       "npx prettier --write",
       "eslint --fix --quiet"
+    ],
+    "*.{json,md}": [
+      "npx prettier --write"
     ]
   },
   "devDependencies": {
