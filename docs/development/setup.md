@@ -97,7 +97,7 @@ Recommended IDE with excellent TypeScript support.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ast-copilot-helper.git
+git clone https://github.com/EvanDodds/ast-copilot-helper.git
 cd ast-copilot-helper
 
 # If you're contributing, fork first and clone your fork
@@ -118,7 +118,7 @@ npm install
 
 # This will install dependencies for:
 # - Root workspace
-# - packages/ast-helper
+# - packages/ast-copilot-helper
 # - packages/ast-mcp-server
 # - packages/vscode-extension
 ```
@@ -130,7 +130,7 @@ npm install
 npm run build
 
 # Build specific package
-npm run build:ast-helper
+npm run build:ast-copilot-helper
 npm run build:mcp-server
 npm run build:vscode-extension
 
@@ -182,7 +182,7 @@ npm install
 npm run dev
 
 # Or start specific services
-npm run dev:ast-helper
+npm run dev:ast-copilot-helper
 npm run dev:mcp-server
 npm run dev:vscode-extension
 ```
@@ -222,20 +222,20 @@ npm run format             # Format code with Prettier
 npm run type-check         # TypeScript type checking
 
 # Package-specific commands
-npm run ast-helper:dev     # Start ast-helper in dev mode
+npm run ast-copilot-helper:dev     # Start ast-copilot-helper in dev mode
 npm run mcp-server:dev     # Start MCP server in dev mode
 npm run vscode:dev         # Start VS Code extension dev
 ```
 
 ## Package Structure and Development
 
-### packages/ast-helper
+### packages/ast-copilot-helper
 
 Core library for parsing and analyzing code.
 
 ```bash
 # Development
-cd packages/ast-helper
+cd packages/ast-copilot-helper
 npm run dev                # Watch mode compilation
 npm run test:watch         # Tests in watch mode
 
@@ -321,7 +321,7 @@ Create `.vscode/settings.json`:
     "source.organizeImports": true
   },
   "eslint.workingDirectories": [
-    "packages/ast-helper",
+    "packages/ast-copilot-helper",
     "packages/ast-mcp-server",
     "packages/vscode-extension"
   ],
@@ -495,11 +495,11 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | node dist/bi
 
 ```bash
 # Profile CPU usage
-node --prof packages/ast-helper/dist/bin/cli.js parse large-file.ts
+node --prof packages/ast-copilot-helper/dist/bin/cli.js parse large-file.ts
 node --prof-process isolate-*.log > profile.txt
 
 # Memory profiling
-node --inspect packages/ast-helper/dist/bin/cli.js parse large-file.ts
+node --inspect packages/ast-copilot-helper/dist/bin/cli.js parse large-file.ts
 # Open chrome://inspect in Chrome
 ```
 
@@ -651,7 +651,7 @@ After setting up your development environment:
 1. **Read the [Contributing Guide](./contributing.md)**
 2. **Review the [Architecture Overview](./architecture.md)**
 3. **Check [Testing Guide](./testing.md) for testing practices**
-4. **Look at [Good First Issues](https://github.com/yourusername/ast-copilot-helper/labels/good%20first%20issue)**
+4. **Look at [Good First Issues](https://github.com/EvanDodds/ast-copilot-helper/labels/good%20first%20issue)**
 5. **Join community discussions**
 
 ## Getting Help
@@ -659,7 +659,7 @@ After setting up your development environment:
 If you encounter issues during setup:
 
 1. **Check [Troubleshooting section](#debugging-and-troubleshooting)**
-2. **Search existing [GitHub issues](https://github.com/yourusername/ast-copilot-helper/issues)**
+2. **Search existing [GitHub issues](https://github.com/EvanDodds/ast-copilot-helper/issues)**
 3. **Create new issue with detailed description**
 4. **Join community discussions**
 5. **Contact maintainers**

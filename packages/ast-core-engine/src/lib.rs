@@ -10,33 +10,32 @@
 
 use napi_derive::napi;
 
-pub mod config;
-pub mod types;
-pub mod error;
-pub mod utils;
-pub mod core;
-pub mod storage;
-pub mod vector_db;
+pub mod api;
 pub mod ast_processor;
 pub mod batch_processor;
+pub mod config;
+pub mod core;
+pub mod error;
 pub mod performance_monitor;
-pub mod api;
+pub mod storage;
+pub mod types;
+pub mod utils;
+pub mod vector_db;
 
 #[cfg(test)]
 mod tests;
 
 // Re-export main types and functions
+pub use ast_processor::{
+    AstNode, AstProcessingResult, AstProcessor, EngineStats, SupportedLanguage,
+};
 pub use config::*;
 pub use core::*;
 pub use error::*;
 pub use storage::*;
 pub use types::*;
 pub use utils::*;
-pub use vector_db::{SimpleVectorDb};
-pub use ast_processor::{
-    AstProcessor, AstNode, AstProcessingResult, 
-    SupportedLanguage, EngineStats
-};
+pub use vector_db::SimpleVectorDb;
 
 /// Initialize the Rust core engine with tracing
 #[napi]
@@ -66,7 +65,7 @@ pub fn get_engine_version() -> String {
 #[napi]
 pub async fn health_check() -> napi::Result<EngineHealth> {
     let memory_info = utils::get_memory_usage();
-    
+
     Ok(EngineHealth {
         status: "healthy".to_string(),
         memory_usage_mb: (memory_info / (1024 * 1024)) as u32,
@@ -77,3 +76,4 @@ pub async fn health_check() -> napi::Result<EngineHealth> {
             .as_millis() as u32,
     })
 }
+// Testing Rust validation

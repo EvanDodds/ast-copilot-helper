@@ -1,139 +1,124 @@
 # Getting Started
 
-Welcome to ast-copilot-helper! This comprehensive guide will help you get up and running with our AI-powered code analysis tool.
+Welcome to AST Copilot Helper! This guide will get you up and running with AI-powered code analysis in just a few minutes.
 
-## What is ast-copilot-helper?
+## What is AST Copilot Helper?
 
-ast-copilot-helper is a powerful toolkit that bridges the gap between your codebase and AI agents by:
+AST Copilot Helper transforms your codebase into an AI-accessible knowledge base by:
 
-🔍 **Parsing and Understanding Code**  
-Extracts meaningful annotations from your source code using Abstract Syntax Tree (AST) analysis
+🔍 **Semantic Code Analysis**  
+Parse and understand code across 15 programming languages using Abstract Syntax Tree analysis with intelligent annotations
 
-🤖 **Enabling AI Integration**  
-Provides a Model Context Protocol (MCP) server that allows AI agents to understand your code structure and semantics
+🤖 **AI Agent Integration**  
+Enable AI agents to query and understand your codebase via Model Context Protocol (MCP) server integration
 
-⚡ **Powering Semantic Search**  
-Creates searchable embeddings that enable natural language queries over your codebase
+⚡ **Natural Language Queries**  
+Search your code using plain English instead of complex regex patterns or manual file browsing
 
-🛠️ **Offering Multiple Interfaces**  
-Available as a CLI tool, VS Code extension, and programmatic API
+🛠️ **Multi-Interface Access**  
+Use via CLI, VS Code extension, MCP server, or programmatic API - whatever fits your workflow
 
 ## Quick Start (5 minutes)
 
-### 1. Install ast-copilot-helper
+### 1. Install AST Copilot Helper
 
 Choose your preferred installation method:
 
 ::: code-group
 
-```bash [npm (Recommended)]
-npm install -g @ast-copilot-helper/cli
+```bash [npm Global Install]
+npm install -g ast-copilot-helper
 ```
 
-```bash [VS Code Extension]
-# Install from marketplace
-code --install-extension ast-copilot-helper
+```bash [pnpm (Recommended)]
+pnpm add -g ast-copilot-helper
+```
 
-# Or install from command palette:
-# Extensions → Search "ast-copilot-helper" → Install
+```bash [Development Install]
+git clone https://github.com/EvanDodds/ast-copilot-helper.git
+cd ast-copilot-helper
+pnpm install
+pnpm build
 ```
 
 :::
 
 ### 2. Initialize Your Project
 
-Navigate to your project directory and set up ast-copilot-helper:
+Navigate to your project directory and set up AST Copilot Helper:
 
 ```bash
 cd your-project
-ast-helper init
+ast-copilot-helper init
 ```
 
-This creates a `.ast-helper.json` configuration file with sensible defaults for your project type.
+This command:
 
-### 3. Parse Your Codebase
+- Creates configuration files (`.ast-copilot-helper.json`)
+- Analyzes your project structure across supported languages
+- Sets up appropriate language parsers for your codebase
+- Generates semantic embeddings for intelligent search
 
-Extract semantic information from your code:
+### 3. Start Exploring
+
+Once initialized, explore your code with natural language queries:
 
 ```bash
-# Parse all supported files in src directory
-ast-helper parse src/
+# Search for specific functionality
+ast-copilot-helper query "authentication functions"
 
-# Or parse specific files
-ast-helper parse src/index.ts src/utils.ts
+# Find code patterns
+ast-copilot-helper query "error handling patterns"
+
+# Discover API endpoints
+ast-copilot-helper query "REST API endpoints and routes"
 ```
 
-You'll see output like:
+### 5. Enable AI Agent Integration
 
-```
-✅ Successfully parsed 42 files
-📊 Extracted 156 annotations (89 functions, 23 classes, 44 interfaces)
-🎯 Generated 156 embeddings for semantic search
-💾 Saved to .ast-helper.db
-```
-
-### 4. Query Your Code
-
-Now you can search your codebase using natural language:
-
-```bash
-# Find authentication-related code
-ast-helper query "functions that handle user authentication"
-
-# Find error handling patterns
-ast-helper query "error handling and exception management"
-
-# Find API endpoints
-ast-helper query "HTTP request handlers and API routes"
-```
-
-Example output:
-
-```
-🔍 Found 3 results for "functions that handle user authentication":
-
-1. loginUser (src/auth.ts:23) - Authenticates user with email/password [Score: 0.89]
-2. validateToken (src/auth.ts:45) - Validates JWT authentication token [Score: 0.85]
-3. refreshToken (src/auth.ts:67) - Refreshes expired authentication token [Score: 0.82]
-```
-
-### 5. Enable AI Integration (Optional)
-
-To use with AI agents, start the MCP server:
+To use with AI agents via Model Context Protocol (MCP):
 
 ```bash
 # Start MCP server with stdio transport (for Claude Desktop)
-ast-helper server --transport stdio
+ast-copilot-helper server --transport stdio
 
-# Or start HTTP server for web-based agents
-ast-helper server --transport sse --port 3001 --cors
+# Or start HTTP server for web-based AI agents
+ast-copilot-helper server --transport sse --port 3001 --cors
 ```
 
-Then configure your AI agent to connect to the MCP server.
+Then configure your AI agent to connect to the MCP server for intelligent code assistance.
 
 ## Core Concepts
 
 ### AST Annotations
 
-ast-copilot-helper extracts structured information from your code:
+AST Copilot Helper extracts structured information from your code:
 
 ```typescript
 // Original code
-function getUserById(id: string): Promise<User> {
-  // Retrieves user by ID from database
-  return database.users.findById(id);
+async function getUserById(id: string): Promise<User | null> {
+  // Retrieves user by ID from database with error handling
+  try {
+    return await database.users.findById(id);
+  } catch (error) {
+    console.error('Failed to get user:', error);
+    return null;
+  }
 }
 
 // Extracted annotation
 {
-  "id": "func_getUserById_123",
+  "id": "func_getUserById_abc123",
   "type": "function",
   "name": "getUserById",
-  "description": "Retrieves user by ID from database",
+  "description": "Retrieves user by ID from database with error handling",
   "parameters": [{"name": "id", "type": "string"}],
-  "returnType": "Promise<User>",
+  "returnType": "Promise<User | null>",
+  "async": true,
   "file": "src/users.ts",
-  "line": 15
+  "startLine": 15,
+  "endLine": 23,
+  "complexity": "medium"
 }
 ```
 
@@ -160,26 +145,35 @@ After initialization, your project will contain:
 
 ```
 your-project/
-├── .ast-helper.json     # Configuration file
-├── .ast-helper.db       # Parsed annotations database
-├── .gitignore           # Updated with ast-helper entries
+├── .ast-copilot-helper.json    # Configuration file
+├── .ast-copilot-helper.db      # Parsed annotations database
+├── ast-embeddings/             # Semantic embedding cache
+├── .gitignore                  # Updated with tool entries
 └── your existing code...
 ```
 
 ## Configuration Overview
 
-The `.ast-helper.json` file controls behavior:
+The `.ast-copilot-helper.json` file controls behavior:
 
 ```json
 {
   "parser": {
-    "includePatterns": ["**/*.{ts,js,py}"],
-    "excludePatterns": ["node_modules/**", "dist/**"],
-    "languages": ["typescript", "javascript", "python"]
+    "includePatterns": [
+      "**/*.{ts,js,py,rs,go,java,cpp,c,rb,php,cs,kt,scala,swift}"
+    ],
+    "excludePatterns": ["node_modules/**", "dist/**", "build/**", "target/**"],
+    "languages": ["typescript", "javascript", "python", "rust", "go"],
+    "maxFileSize": "1MB"
   },
-  "ai": {
-    "embeddingModel": "text-embedding-3-small",
-    "similarityThreshold": 0.7
+  "embeddings": {
+    "model": "text-embedding-3-small",
+    "similarityThreshold": 0.75,
+    "batchSize": 100
+  },
+  "mcp": {
+    "port": 3001,
+    "enableCors": true
   }
 }
 ```
@@ -191,9 +185,9 @@ The `.ast-helper.json` file controls behavior:
 Find specific functionality in large codebases:
 
 ```bash
-ast-helper query "password validation logic"
-ast-helper query "file upload handlers"
-ast-helper query "caching mechanisms"
+ast-copilot-helper query "password validation logic"
+ast-copilot-helper query "file upload handlers"
+ast-copilot-helper query "caching mechanisms"
 ```
 
 ### 2. AI-Assisted Development
@@ -202,7 +196,7 @@ Enable AI agents to understand your codebase:
 
 ```bash
 # Start MCP server for Claude Desktop
-ast-helper server --transport stdio
+ast-copilot-helper server --transport stdio
 
 # Configure Claude to use the server
 # Now Claude can answer questions about your code!
@@ -214,22 +208,25 @@ Extract information for documentation:
 
 ```bash
 # Query for API endpoints
-ast-helper query "public API methods" --format json > api-endpoints.json
+ast-copilot-helper query "public API methods" --format json > api-endpoints.json
 
-# Find all interfaces
-ast-helper query "type definitions and interfaces" --type interface
+# Find all interfaces and types
+ast-copilot-helper query "type definitions and interfaces" --filter "type=interface"
 ```
 
-### 4. Code Analysis
+### 4. Code Analysis & Insights
 
-Understand code patterns and structure:
+Understand code patterns and architecture:
 
 ```bash
 # Find complex functions
-ast-helper query "functions with many parameters"
+ast-copilot-helper query "functions with high cyclomatic complexity"
 
 # Locate deprecated code
-ast-helper query "deprecated methods or legacy code"
+ast-copilot-helper query "deprecated methods or legacy code patterns"
+
+# Identify potential refactoring opportunities
+ast-copilot-helper query "duplicate code patterns that could be refactored"
 ```
 
 ## Next Steps
@@ -238,9 +235,9 @@ Now that you're up and running, explore these guides:
 
 📖 **[Installation Guide](installation)** - Detailed setup for all platforms  
 🚀 **[CLI Usage Guide](cli-usage)** - Master the command-line interface  
-🎨 **[VS Code Extension](vscode-extension)** - Visual Studio Code integration  
-⚙️ **[Configuration Guide](configuration)** - Customize for your needs  
-🤖 **[AI Integration](ai-integration)** - Connect with AI agents
+⚙️ **[Configuration Guide](configuration)** - Customize parsing and behavior  
+🤖 **[MCP Integration](./mcp-integration)** - Connect with AI agents via Model Context Protocol  
+🔍 **[API Reference](../api/)** - Programmatic usage and API documentation
 
 ## Troubleshooting
 
@@ -249,31 +246,40 @@ Now that you're up and running, explore these guides:
 **Command not found:**
 
 ```bash
-# Reinstall globally
-npm install -g @ast-copilot-helper/cli
+# Check if installed correctly
+npm list -g | grep ast-copilot-helper
 
-# Or use npx
-npx @ast-copilot-helper/cli --version
+# Or try with npx
+npx ast-copilot-helper --version
+
+# Verify PATH includes npm global bin
+echo $PATH | grep npm
 ```
 
 **Parse errors:**
 
 ```bash
 # Check configuration
-ast-helper config validate
+ast-copilot-helper config validate
 
 # Parse with debug output
-ast-helper parse src/ --verbose
+ast-copilot-helper parse --verbose
+
+# Test parsing specific files
+ast-copilot-helper parse src/specific-file.ts --debug
 ```
 
 **No query results:**
 
 ```bash
 # Lower similarity threshold
-ast-helper query "your query" --similarity 0.5
+ast-copilot-helper query "your query" --threshold 0.5
 
 # Check what was parsed
-ast-helper query "*" --limit 5
+ast-copilot-helper list --limit 10
+
+# Verify embeddings were created
+ast-copilot-helper status
 ```
 
 ### Getting Help
@@ -284,13 +290,13 @@ ast-helper query "*" --limit 5
 
 ## What's Next?
 
-Congratulations! You now have ast-copilot-helper working with your project. Here are some next steps to explore:
+Congratulations! You now have AST Copilot Helper working with your project. Here are your next steps:
 
-1. **Customize Configuration** - Tailor parsing behavior to your project
-2. **Integrate with AI Tools** - Connect Claude, ChatGPT, or other AI agents
-3. **Explore Advanced Queries** - Learn sophisticated search patterns
-4. **Automate Workflows** - Set up continuous parsing and analysis
-5. **Contribute** - Help improve the project for everyone
+1. **Customize Configuration** - Tailor parsing behavior for your codebase
+2. **Integrate with AI Agents** - Connect Claude Desktop, Cursor, or other MCP-compatible tools
+3. **Master Advanced Queries** - Learn sophisticated semantic search patterns
+4. **Automate Workflows** - Set up continuous parsing and CI/CD integration
+5. **Contribute** - Help improve the project for the community
 
 Ready to dive deeper? Choose your path:
 
@@ -298,14 +304,14 @@ Ready to dive deeper? Choose your path:
 Start with the [CLI Usage Guide](cli-usage) to learn all available commands and options.
 :::
 
-::: tip For VS Code Users  
-Install the [VS Code Extension](vscode-extension) for a visual, integrated experience.
-:::
-
 ::: tip For AI Enthusiasts
-Jump to the [AI Integration Guide](ai-integration) to connect with your favorite AI agents.
+Jump to the [MCP Integration Guide](./mcp-integration) to connect with Claude Desktop and other AI agents.
 :::
 
 ::: tip For Developers
-Check out the [Configuration Guide](configuration) to fine-tune ast-copilot-helper for your specific needs.
+Check out the [Configuration Guide](configuration) to fine-tune AST Copilot Helper for your specific needs.
+:::
+
+::: tip For Contributors
+Visit the [Contributing Guide](../CONTRIBUTING) to help improve the project.
 :::

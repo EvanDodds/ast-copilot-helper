@@ -1,0 +1,46 @@
+# Lightweight Dockerfile using pre-built binary
+FROM alpine:3.19
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    && rm -rf /var/cache/apk/*
+
+# Create non-root user
+RUN addgroup -g 1001 -S asthelper && \
+    adduser -S asthelper -u 1001 -G asthelper
+
+# Set working directory
+WORKDIR /app
+
+# Copy binary from host (will be built by CI)
+COPY ast-copilot-helper /usr/local/bin/ast-copilot-helper
+
+# Make binary executable
+RUN chmod +x /usr/local/bin/ast-copilot-helper
+
+# Create data directory
+RUN mkdir -p /data && chown asthelper:asthelper /data
+
+# Switch to non-root user
+USER asthelper
+
+# Set environment variables
+ENV PATH="/usr/local/bin:$PATH"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ast-copilot-helper --version || exit 1
+
+# Default command
+ENTRYPOINT ["ast-copilot-helper"]
+CMD ["--help"]
+
+# Labels for metadata
+LABEL org.opencontainers.image.title="AST Copilot Helper"
+LABEL org.opencontainers.image.description="Advanced AST-powered development assistant (binary distribution)"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.source="https://github.com/your-org/ast-copilot-helper"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.vendor="AST Copilot Helper Team"

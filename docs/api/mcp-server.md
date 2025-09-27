@@ -454,7 +454,7 @@ The server returns standard JSON-RPC 2.0 error responses:
 Standard input/output transport for command-line usage:
 
 ```bash
-ast-helper server --transport stdio
+ast-copilot-helper server --transport stdio
 ```
 
 The server reads JSON-RPC messages from stdin and writes responses to stdout.
@@ -464,7 +464,7 @@ The server reads JSON-RPC messages from stdin and writes responses to stdout.
 HTTP-based transport using Server-Sent Events:
 
 ```bash
-ast-helper server --transport sse --port 3001
+ast-copilot-helper server --transport sse --port 3001
 ```
 
 **Client Connection:**
@@ -495,7 +495,7 @@ Content-Type: application/json
 WebSocket transport for real-time communication:
 
 ```bash
-ast-helper server --transport websocket --port 8080
+ast-copilot-helper server --transport websocket --port 8080
 ```
 
 **Client Connection:**
@@ -516,7 +516,7 @@ ws.send(JSON.stringify({
 Optional token-based authentication:
 
 ```bash
-ast-helper server --auth mySecretToken
+ast-copilot-helper server --auth mySecretToken
 ```
 
 **Request with Authentication:**
@@ -551,7 +551,7 @@ The server implements rate limiting to prevent abuse:
 
 ## Configuration
 
-Server configuration via `.ast-helper.json`:
+Server configuration via `.ast-copilot-helper.json`:
 
 ```json
 {

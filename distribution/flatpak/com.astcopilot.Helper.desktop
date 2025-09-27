@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=AST Copilot Helper
+Comment=Advanced AST-powered development assistant
+Exec=ast-copilot-helper
+Icon=ast-copilot-helper
+Categories=Development;Programming;
+Terminal=true
+Keywords=ast;code;analysis;development;cli;

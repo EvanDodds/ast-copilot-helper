@@ -13,25 +13,26 @@ yarn run type-check || exit 1
 echo "🧪 Running essential unit tests..."
 yarn run test:precommit || exit 1
 
+# Check for Rust files changes and run Rust validation if needed
+if git diff --cached --name-only | grep -E '\.(rs|toml)$' > /dev/null 2>&1; then
+  echo "🦀 Rust files detected, running Rust validation..."
+  if command -v cargo > /dev/null 2>&1; then
+    cd packages/ast-core-engine
+    echo "  → Checking Rust code compilation..."
+    cargo check --quiet || exit 1
+    echo "  → Running Rust linting..."
+    cargo clippy --quiet -- --deny warnings || exit 1
+    echo "  → Checking Rust formatting..."
+    cargo fmt -- --check || exit 1
+    echo "  💡 Note: NAPI tests require Node.js runtime, use 'yarn test:rust:all' for full validation"
+    cd ../..
+  else
+    echo "  ⚠️  Cargo not found, skipping Rust validation"
+    echo "  💡 Install Rust: https://rustup.rs/"
+  fi
+else
+  echo "🦀 No Rust files changed, skipping Rust validation"
+fi
+
 echo "✅ Pre-commit validation completed!"
-echo "👉 Pre-push will run more comprehensive tests""$(dirname -- "$0")/_/husky.sh"
-
-echo "🔍 Running pre-commit validation (quick checks)..."
-echo "⏱️  This should take ~30-45 seconds"
-
-# Type checking
-echo "📝 Type checking..."
-yarn run type-check || exit 1
-
-# Linting
-echo "🧹 Linting code..."
-yarn run lint || exit 1
-
-# Essential unit tests only (fastest subset)
-echo "🧪 Running essential unit tests..."
-yarn run test:precommit || exit 1
-
-echo "✅ Pre-commit validation completed!"
-echo "� Pre-push will run more comprehensive tests"
-
-echo "✅ Pre-commit hooks completed successfully!"
+echo "👉 Pre-push will run more comprehensive tests"

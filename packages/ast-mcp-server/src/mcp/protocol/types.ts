@@ -7,26 +7,26 @@ export interface MCPRequest {
   jsonrpc: "2.0";
   id?: string | number | null;
   method: string;
-  params?: any;
+  params?: Record<string, unknown>;
 }
 
 export interface MCPResponse {
   jsonrpc: "2.0";
   id: string | number | null;
-  result?: any;
+  result?: unknown;
   error?: MCPError;
 }
 
 export interface MCPError {
   code: number;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 export interface MCPNotification {
   jsonrpc: "2.0";
   method: string;
-  params?: any;
+  params?: Record<string, unknown>;
 }
 
 // Standard JSON-RPC 2.0 Error Codes
@@ -58,16 +58,16 @@ export interface ServerCapabilities {
   };
   logging?: object;
   experimental?: {
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
 // Client Capabilities (received during initialization)
 export interface ClientCapabilities {
   experimental?: {
-    [key: string]: any;
+    [key: string]: unknown;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Initialization Request/Response
@@ -109,10 +109,10 @@ export interface JSONSchema {
   properties?: Record<string, JSONSchema>;
   required?: string[];
   items?: JSONSchema;
-  enum?: any[];
-  const?: any;
+  enum?: unknown[];
+  const?: unknown;
   description?: string;
-  default?: any;
+  default?: unknown;
 }
 
 // Tool and Resource types
@@ -121,7 +121,7 @@ export interface MCPTool {
   description: string;
   inputSchema?: JSONSchema;
   handler: (
-    params: Record<string, any>,
+    params: Record<string, unknown>,
     context?: ToolExecutionContext,
   ) => Promise<CallToolResult>;
   capabilities?: ToolCapabilities[];
@@ -132,7 +132,7 @@ export interface CallToolRequest extends MCPRequest {
   method: "tools/call";
   params: {
     name: string;
-    arguments?: Record<string, any>;
+    arguments?: Record<string, unknown>;
   };
 }
 
@@ -156,7 +156,7 @@ export interface ToolExecutionContext {
     name: string;
     version: string;
   };
-  environment?: Record<string, any>;
+  environment?: Record<string, unknown>;
 }
 
 export interface ToolValidationResult {
@@ -174,7 +174,7 @@ export interface ToolMetadata {
   lastModified: Date;
   version: string;
   author: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
 }
 
 export type ToolCapabilities =
@@ -194,7 +194,7 @@ export interface MCPResource {
 
 export interface ToolCallParams {
   name: string;
-  arguments?: any;
+  arguments?: Record<string, unknown>;
 }
 
 export interface ResourceReadParams {
@@ -251,7 +251,7 @@ export interface ResourceMetadata {
   /** Resource author/creator */
   author: string;
   /** Additional configuration */
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   /** Whether resource supports caching */
   cacheable: boolean;
   /** Cache TTL in milliseconds */

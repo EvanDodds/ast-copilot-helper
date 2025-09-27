@@ -68,7 +68,7 @@ pub fn get_memory_usage() -> u64 {
     // Fallback: use sysinfo crate
     let mut sys = System::new();
     sys.refresh_all();
-    
+
     let pid = sysinfo::get_current_pid().unwrap();
     if let Some(process) = sys.process(pid) {
         process.memory() * 1024 // sysinfo returns KB, convert to bytes
@@ -78,7 +78,9 @@ pub fn get_memory_usage() -> u64 {
 }
 
 /// Detect programming language from file path
-pub fn detect_language_from_path(file_path: &str) -> Result<String, crate::error::ASTProcessingError> {
+pub fn detect_language_from_path(
+    file_path: &str,
+) -> Result<String, crate::error::ASTProcessingError> {
     let extension = std::path::Path::new(file_path)
         .extension()
         .and_then(|ext| ext.to_str())
@@ -92,9 +94,11 @@ pub fn detect_language_from_path(file_path: &str) -> Result<String, crate::error
         "java" => "java",
         "cpp" | "cc" | "cxx" | "c++" | "hpp" | "hh" | "hxx" => "cpp",
         "c" | "h" => "c",
-        _ => return Err(crate::error::ASTProcessingError::UnsupportedLanguage(
-            format!("No language mapping found for extension: {}", extension)
-        )),
+        _ => {
+            return Err(crate::error::ASTProcessingError::UnsupportedLanguage(
+                format!("No language mapping found for extension: {}", extension),
+            ))
+        }
     };
 
     Ok(language.to_string())

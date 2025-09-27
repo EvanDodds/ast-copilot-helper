@@ -6,11 +6,11 @@ This guide provides optimization strategies and best practices for achieving opt
 
 ### Language Tier Performance Characteristics
 
-| Tier | Languages | Parse Speed | Memory Usage | Grammar Size |
-|------|-----------|-------------|--------------|--------------|
-| **Enterprise** | TypeScript, JavaScript, Python, Java, C++, C# | Fast (1-5ms) | Low (2-8MB) | Optimized |
-| **Developer** | Go, Rust, PHP, Ruby, Swift | Medium (5-15ms) | Medium (8-20MB) | Standard |
-| **Specialized** | Kotlin, Scala, Dart, Lua | Variable (10-50ms) | Higher (15-40MB) | Full-featured |
+| Tier            | Languages                                     | Parse Speed        | Memory Usage     | Grammar Size  |
+| --------------- | --------------------------------------------- | ------------------ | ---------------- | ------------- |
+| **Enterprise**  | TypeScript, JavaScript, Python, Java, C++, C# | Fast (1-5ms)       | Low (2-8MB)      | Optimized     |
+| **Developer**   | Go, Rust, PHP, Ruby, Swift                    | Medium (5-15ms)    | Medium (8-20MB)  | Standard      |
+| **Specialized** | Kotlin, Scala, Dart, Lua                      | Variable (10-50ms) | Higher (15-40MB) | Full-featured |
 
 ### Benchmark Results
 
@@ -42,42 +42,54 @@ Language Performance Benchmarks (10,000 lines of code):
 ### 1. Grammar Management Optimization
 
 ```typescript
-import { TreeSitterGrammarManager } from '@ast-copilot-helper/ast-helper';
+import { TreeSitterGrammarManager } from "@ast-copilot-helper/ast-copilot-helper";
 
 class OptimizedGrammarManager extends TreeSitterGrammarManager {
   private preloadedGrammars = new Set<string>();
-  
+
   async optimizeForWorkspace(languages: string[]) {
     // Pre-install grammars for detected languages
     const prioritizedLanguages = this.prioritizeLanguages(languages);
-    
+
     // Install high-priority grammars first
     for (const language of prioritizedLanguages.slice(0, 3)) {
       await this.installGrammar(language);
       this.preloadedGrammars.add(language);
     }
-    
+
     // Install remaining grammars in background
     this.installRemainingGrammars(prioritizedLanguages.slice(3));
   }
-  
+
   private prioritizeLanguages(languages: string[]): string[] {
     const tierPriority = {
       // Enterprise tier - highest priority
-      typescript: 1, javascript: 1, python: 1, java: 1, cpp: 1, c_sharp: 1,
-      // Developer tier - medium priority  
-      go: 2, rust: 2, php: 2, ruby: 2, swift: 2,
+      typescript: 1,
+      javascript: 1,
+      python: 1,
+      java: 1,
+      cpp: 1,
+      c_sharp: 1,
+      // Developer tier - medium priority
+      go: 2,
+      rust: 2,
+      php: 2,
+      ruby: 2,
+      swift: 2,
       // Specialized tier - lower priority
-      kotlin: 3, scala: 3, dart: 3, lua: 3
+      kotlin: 3,
+      scala: 3,
+      dart: 3,
+      lua: 3,
     };
-    
+
     return languages.sort((a, b) => {
       const priorityA = tierPriority[a as keyof typeof tierPriority] || 4;
       const priorityB = tierPriority[b as keyof typeof tierPriority] || 4;
       return priorityA - priorityB;
     });
   }
-  
+
   private async installRemainingGrammars(languages: string[]) {
     // Install in background with throttling
     for (const language of languages) {
@@ -99,26 +111,26 @@ class OptimizedGrammarManager extends TreeSitterGrammarManager {
 ### 2. Batching and Concurrency Optimization
 
 ```typescript
-import { ParserFactory } from '@ast-copilot-helper/ast-helper';
-import { Worker } from 'worker_threads';
-import { cpus } from 'os';
+import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
+import { Worker } from "worker_threads";
+import { cpus } from "os";
 
 class HighPerformanceParser {
   private workerPool: Worker[] = [];
   private maxWorkers: number;
-  
+
   constructor() {
     this.maxWorkers = Math.min(8, Math.max(2, cpus().length - 1));
   }
-  
+
   async processLargeCodebase(files: string[]): Promise<Map<string, any>> {
     // Optimize batch sizes based on language characteristics
     const optimizedBatches = this.createOptimizedBatches(files);
-    
+
     // Process batches with optimal concurrency
     const results = new Map();
     const semaphore = new Semaphore(this.maxWorkers);
-    
+
     const batchPromises = optimizedBatches.map(async (batch) => {
       await semaphore.acquire();
       try {
@@ -127,23 +139,23 @@ class HighPerformanceParser {
         semaphore.release();
       }
     });
-    
+
     const batchResults = await Promise.all(batchPromises);
-    
+
     // Merge results
     for (const batchResult of batchResults) {
       for (const [file, result] of batchResult) {
         results.set(file, result);
       }
     }
-    
+
     return results;
   }
-  
+
   private createOptimizedBatches(files: string[]): string[][] {
     // Group files by language for better cache utilization
     const languageGroups = new Map<string, string[]>();
-    
+
     for (const file of files) {
       const language = this.detectLanguage(file);
       if (!languageGroups.has(language)) {
@@ -151,43 +163,55 @@ class HighPerformanceParser {
       }
       languageGroups.get(language)!.push(file);
     }
-    
+
     const batches: string[][] = [];
-    
+
     // Create optimized batches based on language performance characteristics
     for (const [language, langFiles] of languageGroups) {
       const batchSize = this.getOptimalBatchSize(language);
-      
+
       for (let i = 0; i < langFiles.length; i += batchSize) {
         batches.push(langFiles.slice(i, i + batchSize));
       }
     }
-    
+
     return batches;
   }
-  
+
   private getOptimalBatchSize(language: string): number {
     const batchSizes = {
       // Fast languages - larger batches
-      typescript: 50, javascript: 50, python: 40, java: 35, cpp: 30, c_sharp: 35,
+      typescript: 50,
+      javascript: 50,
+      python: 40,
+      java: 35,
+      cpp: 30,
+      c_sharp: 35,
       // Medium languages - moderate batches
-      go: 25, rust: 20, php: 25, ruby: 20, swift: 15,
+      go: 25,
+      rust: 20,
+      php: 25,
+      ruby: 20,
+      swift: 15,
       // Slower languages - smaller batches
-      kotlin: 10, scala: 8, dart: 12, lua: 10
+      kotlin: 10,
+      scala: 8,
+      dart: 12,
+      lua: 10,
     };
-    
+
     return batchSizes[language as keyof typeof batchSizes] || 15;
   }
-  
+
   private async processBatch(files: string[]): Promise<Map<string, any>> {
     const parser = await ParserFactory.createParser();
-    
+
     try {
       // Use streaming processing for memory efficiency
       return await parser.batchParseFiles(files, {
         streaming: true,
         memoryLimit: 256 * 1024 * 1024, // 256MB per batch
-        timeout: 30000 // 30 second timeout per file
+        timeout: 30000, // 30 second timeout per file
       });
     } finally {
       await parser.dispose();
@@ -198,22 +222,22 @@ class HighPerformanceParser {
 class Semaphore {
   private permits: number;
   private waitQueue: (() => void)[] = [];
-  
+
   constructor(permits: number) {
     this.permits = permits;
   }
-  
+
   async acquire(): Promise<void> {
     if (this.permits > 0) {
       this.permits--;
       return;
     }
-    
+
     return new Promise<void>((resolve) => {
       this.waitQueue.push(resolve);
     });
   }
-  
+
   release(): void {
     if (this.waitQueue.length > 0) {
       const next = this.waitQueue.shift()!;
@@ -228,69 +252,92 @@ class Semaphore {
 ### 3. Memory Management
 
 ```typescript
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 class MemoryOptimizedParser extends EventEmitter {
   private memoryThreshold = 1024 * 1024 * 1024; // 1GB
   private activeParses = new Set<string>();
   private memoryUsage = new Map<string, number>();
-  
-  async parseWithMemoryManagement(code: string, language: string, filename?: string): Promise<any> {
+
+  async parseWithMemoryManagement(
+    code: string,
+    language: string,
+    filename?: string,
+  ): Promise<any> {
     const parseId = filename || `parse-${Date.now()}-${Math.random()}`;
-    
+
     try {
       // Check memory before parsing
       await this.checkMemoryUsage();
-      
+
       this.activeParses.add(parseId);
-      
+
       // Estimate memory requirement
       const estimatedMemory = this.estimateMemoryUsage(code, language);
       this.memoryUsage.set(parseId, estimatedMemory);
-      
+
       // Parse with memory monitoring
       const result = await this.parseWithMonitoring(code, language, parseId);
-      
+
       return result;
     } finally {
       this.activeParses.delete(parseId);
       this.memoryUsage.delete(parseId);
     }
   }
-  
+
   private async checkMemoryUsage(): Promise<void> {
-    const totalMemory = Array.from(this.memoryUsage.values()).reduce((sum, mem) => sum + mem, 0);
-    
+    const totalMemory = Array.from(this.memoryUsage.values()).reduce(
+      (sum, mem) => sum + mem,
+      0,
+    );
+
     if (totalMemory > this.memoryThreshold) {
       // Wait for some parses to complete
       await this.waitForMemoryRelease();
     }
   }
-  
+
   private estimateMemoryUsage(code: string, language: string): number {
     const baseMemory = {
-      typescript: 8, javascript: 6, python: 10, java: 12, cpp: 15, c_sharp: 12,
-      go: 20, rust: 25, php: 18, ruby: 22, swift: 30,
-      kotlin: 35, scala: 40, dart: 28, lua: 25
+      typescript: 8,
+      javascript: 6,
+      python: 10,
+      java: 12,
+      cpp: 15,
+      c_sharp: 12,
+      go: 20,
+      rust: 25,
+      php: 18,
+      ruby: 22,
+      swift: 30,
+      kotlin: 35,
+      scala: 40,
+      dart: 28,
+      lua: 25,
     };
-    
+
     const baseMB = baseMemory[language as keyof typeof baseMemory] || 20;
     const codeSizeMB = code.length / (1024 * 1024);
-    
+
     // Estimate: base + (code size * multiplier)
     return (baseMB + codeSizeMB * 2) * 1024 * 1024; // Convert to bytes
   }
-  
+
   private async waitForMemoryRelease(): Promise<void> {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
-        const totalMemory = Array.from(this.memoryUsage.values()).reduce((sum, mem) => sum + mem, 0);
-        if (totalMemory < this.memoryThreshold * 0.7) { // Wait for 70% threshold
+        const totalMemory = Array.from(this.memoryUsage.values()).reduce(
+          (sum, mem) => sum + mem,
+          0,
+        );
+        if (totalMemory < this.memoryThreshold * 0.7) {
+          // Wait for 70% threshold
           clearInterval(checkInterval);
           resolve();
         }
       }, 100);
-      
+
       // Timeout after 10 seconds
       setTimeout(() => {
         clearInterval(checkInterval);
@@ -298,35 +345,39 @@ class MemoryOptimizedParser extends EventEmitter {
       }, 10000);
     });
   }
-  
-  private async parseWithMonitoring(code: string, language: string, parseId: string): Promise<any> {
+
+  private async parseWithMonitoring(
+    code: string,
+    language: string,
+    parseId: string,
+  ): Promise<any> {
     const startTime = performance.now();
-    
+
     // Monitor memory during parsing
     const memoryMonitor = setInterval(() => {
       const memoryUsed = process.memoryUsage();
-      this.emit('memoryUpdate', {
+      this.emit("memoryUpdate", {
         parseId,
         heapUsed: memoryUsed.heapUsed,
         heapTotal: memoryUsed.heapTotal,
-        external: memoryUsed.external
+        external: memoryUsed.external,
       });
     }, 1000);
-    
+
     try {
       const parser = await ParserFactory.createParser();
       const result = await parser.parseCode(code, language);
-      
+
       const parseTime = performance.now() - startTime;
-      
-      this.emit('parseComplete', {
+
+      this.emit("parseComplete", {
         parseId,
         language,
         parseTime,
         nodeCount: result.nodes.length,
-        errorCount: result.errors.length
+        errorCount: result.errors.length,
       });
-      
+
       return result;
     } finally {
       clearInterval(memoryMonitor);
@@ -338,8 +389,8 @@ class MemoryOptimizedParser extends EventEmitter {
 ### 4. Caching Strategies
 
 ```typescript
-import LRU from 'lru-cache';
-import crypto from 'crypto';
+import LRU from "lru-cache";
+import crypto from "crypto";
 
 class CachedParser {
   private astCache: LRU<string, any>;
@@ -347,38 +398,42 @@ class CachedParser {
   private cacheStats = {
     hits: 0,
     misses: 0,
-    evictions: 0
+    evictions: 0,
   };
-  
+
   constructor() {
     this.astCache = new LRU({
       max: 1000, // Maximum 1000 cached parse results
       maxAge: 1000 * 60 * 30, // 30 minutes
-      dispose: () => this.cacheStats.evictions++
+      dispose: () => this.cacheStats.evictions++,
     });
-    
+
     this.grammarCache = new LRU({
       max: 15, // All supported languages
       maxAge: 1000 * 60 * 60 * 4, // 4 hours
     });
   }
-  
-  async parseWithCache(code: string, language: string, filename?: string): Promise<any> {
+
+  async parseWithCache(
+    code: string,
+    language: string,
+    filename?: string,
+  ): Promise<any> {
     // Generate cache key based on content and language
     const cacheKey = this.generateCacheKey(code, language);
-    
+
     // Check cache first
     const cached = this.astCache.get(cacheKey);
     if (cached) {
       this.cacheStats.hits++;
       return { ...cached, fromCache: true };
     }
-    
+
     this.cacheStats.misses++;
-    
+
     // Parse and cache result
     const result = await this.parseUncached(code, language, filename);
-    
+
     // Only cache successful parses
     if (result.errors.length === 0) {
       this.astCache.set(cacheKey, {
@@ -386,21 +441,25 @@ class CachedParser {
         errors: result.errors,
         parseTime: result.parseTime,
         language,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
-    
+
     return result;
   }
-  
+
   private generateCacheKey(code: string, language: string): string {
-    const hash = crypto.createHash('sha256');
+    const hash = crypto.createHash("sha256");
     hash.update(code);
     hash.update(language);
-    return `${language}:${hash.digest('hex')}`;
+    return `${language}:${hash.digest("hex")}`;
   }
-  
-  private async parseUncached(code: string, language: string, filename?: string): Promise<any> {
+
+  private async parseUncached(
+    code: string,
+    language: string,
+    filename?: string,
+  ): Promise<any> {
     const parser = await ParserFactory.createParser();
     try {
       return await parser.parseCode(code, language, filename);
@@ -408,17 +467,18 @@ class CachedParser {
       await parser.dispose();
     }
   }
-  
+
   getCacheStats() {
     const totalRequests = this.cacheStats.hits + this.cacheStats.misses;
     return {
       ...this.cacheStats,
-      hitRate: totalRequests > 0 ? (this.cacheStats.hits / totalRequests) * 100 : 0,
+      hitRate:
+        totalRequests > 0 ? (this.cacheStats.hits / totalRequests) * 100 : 0,
       astCacheSize: this.astCache.itemCount,
-      grammarCacheSize: this.grammarCache.itemCount
+      grammarCacheSize: this.grammarCache.itemCount,
     };
   }
-  
+
   clearCache() {
     this.astCache.reset();
     this.grammarCache.reset();
@@ -434,17 +494,17 @@ class CachedParser {
 ```typescript
 // Prioritize languages by performance tier
 const languagePriority = {
-  high: ['typescript', 'javascript', 'python', 'java'],
-  medium: ['cpp', 'c_sharp', 'go', 'php', 'ruby'],
-  low: ['rust', 'swift', 'kotlin', 'scala', 'dart', 'lua']
+  high: ["typescript", "javascript", "python", "java"],
+  medium: ["cpp", "c_sharp", "go", "php", "ruby"],
+  low: ["rust", "swift", "kotlin", "scala", "dart", "lua"],
 };
 
 // Process high-priority languages first
 async function optimizedProcessing(files: string[]) {
   const groupedFiles = groupFilesByPriority(files);
-  
+
   // Process high-priority first for faster user feedback
-  for (const priority of ['high', 'medium', 'low']) {
+  for (const priority of ["high", "medium", "low"]) {
     if (groupedFiles[priority].length > 0) {
       await processFileGroup(groupedFiles[priority]);
     }
@@ -456,9 +516,11 @@ async function optimizedProcessing(files: string[]) {
 
 ```typescript
 class StreamingParser {
-  async *parseFilesStream(files: string[]): AsyncGenerator<ParseResult, void, unknown> {
+  async *parseFilesStream(
+    files: string[],
+  ): AsyncGenerator<ParseResult, void, unknown> {
     const parser = await ParserFactory.createParser();
-    
+
     try {
       for (const file of files) {
         try {
@@ -468,8 +530,8 @@ class StreamingParser {
             result,
             progress: {
               completed: files.indexOf(file) + 1,
-              total: files.length
-            }
+              total: files.length,
+            },
           };
         } catch (error) {
           yield {
@@ -477,8 +539,8 @@ class StreamingParser {
             error,
             progress: {
               completed: files.indexOf(file) + 1,
-              total: files.length
-            }
+              total: files.length,
+            },
           };
         }
       }
@@ -491,17 +553,19 @@ class StreamingParser {
 // Usage with real-time progress
 async function processWithProgress(files: string[]) {
   const parser = new StreamingParser();
-  
+
   for await (const result of parser.parseFilesStream(files)) {
     if (result.error) {
       console.error(`Error processing ${result.file}:`, result.error);
     } else {
-      console.log(`Processed ${result.file}: ${result.result.nodes.length} nodes`);
-      
+      console.log(
+        `Processed ${result.file}: ${result.result.nodes.length} nodes`,
+      );
+
       // Update UI or save intermediate results
       await saveIntermediateResult(result);
     }
-    
+
     // Update progress bar
     updateProgress(result.progress.completed, result.progress.total);
   }
@@ -515,30 +579,30 @@ class ParserPool {
   private pool: any[] = [];
   private busy = new Set<any>();
   private maxSize = 4;
-  
+
   async acquire(): Promise<any> {
     // Try to get an available parser
     let parser = this.pool.pop();
-    
-    if (!parser && (this.pool.length + this.busy.size) < this.maxSize) {
+
+    if (!parser && this.pool.length + this.busy.size < this.maxSize) {
       // Create new parser if under limit
       parser = await ParserFactory.createParser();
     }
-    
+
     if (!parser) {
       // Wait for one to become available
       parser = await this.waitForAvailable();
     }
-    
+
     this.busy.add(parser);
     return parser;
   }
-  
+
   release(parser: any): void {
     this.busy.delete(parser);
     this.pool.push(parser);
   }
-  
+
   private async waitForAvailable(): Promise<any> {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
@@ -550,7 +614,7 @@ class ParserPool {
       }, 10);
     });
   }
-  
+
   async dispose(): Promise<void> {
     // Dispose all parsers
     for (const parser of [...this.pool, ...this.busy]) {
@@ -566,23 +630,26 @@ class ParserPool {
 
 ```typescript
 class PerformanceMonitor {
-  private metrics = new Map<string, {
-    count: number;
-    totalTime: number;
-    avgTime: number;
-    maxTime: number;
-    minTime: number;
-  }>();
-  
+  private metrics = new Map<
+    string,
+    {
+      count: number;
+      totalTime: number;
+      avgTime: number;
+      maxTime: number;
+      minTime: number;
+    }
+  >();
+
   startTiming(operation: string): () => void {
     const start = performance.now();
-    
+
     return () => {
       const duration = performance.now() - start;
       this.recordMetric(operation, duration);
     };
   }
-  
+
   recordMetric(operation: string, duration: number): void {
     if (!this.metrics.has(operation)) {
       this.metrics.set(operation, {
@@ -590,10 +657,10 @@ class PerformanceMonitor {
         totalTime: 0,
         avgTime: 0,
         maxTime: 0,
-        minTime: Infinity
+        minTime: Infinity,
       });
     }
-    
+
     const metric = this.metrics.get(operation)!;
     metric.count++;
     metric.totalTime += duration;
@@ -601,11 +668,11 @@ class PerformanceMonitor {
     metric.maxTime = Math.max(metric.maxTime, duration);
     metric.minTime = Math.min(metric.minTime, duration);
   }
-  
+
   getReport(): string {
-    let report = 'Performance Report:\n';
-    report += '==================\n\n';
-    
+    let report = "Performance Report:\n";
+    report += "==================\n\n";
+
     for (const [operation, metric] of this.metrics) {
       report += `${operation}:\n`;
       report += `  Count: ${metric.count}\n`;
@@ -614,7 +681,7 @@ class PerformanceMonitor {
       report += `  Max Time: ${metric.maxTime.toFixed(2)}ms\n`;
       report += `  Total Time: ${metric.totalTime.toFixed(2)}ms\n\n`;
     }
-    
+
     return report;
   }
 }
@@ -624,7 +691,7 @@ const monitor = new PerformanceMonitor();
 
 async function monitoredParsing(code: string, language: string) {
   const stopTiming = monitor.startTiming(`parse_${language}`);
-  
+
   try {
     const result = await parseCode(code, language);
     return result;

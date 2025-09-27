@@ -1,4 +1,4 @@
-use crate::error::{EngineError, ASTProcessingError};
+use crate::error::{ASTProcessingError, EngineError};
 use crate::types::ProcessingOptions;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
@@ -59,25 +59,25 @@ impl ParserPool {
 
     /// Get a parser for the specified language, creating if necessary
     pub fn get_parser(&self, language: SupportedLanguage) -> Result<Parser, EngineError> {
-        let mut parser_entry = self.parsers.entry(language.clone()).or_insert_with(Vec::new);
-        
+        let mut parser_entry = self.parsers.entry(language.clone()).or_default();
+
         if let Some(parser) = parser_entry.pop() {
             return Ok(parser);
         }
-        
+
         // Create new parser if pool is empty
         let parser = Parser::new();
-        
+
         // For now, we'll just return the parser without setting language
         // This allows compilation while we focus on the structure
         // TODO: Add language setting when Tree-sitter grammars are available
-        
+
         Ok(parser)
     }
 
     /// Return parser to pool for reuse
     pub fn return_parser(&self, language: SupportedLanguage, parser: Parser) {
-        let mut parser_entry = self.parsers.entry(language).or_insert_with(Vec::new);
+        let mut parser_entry = self.parsers.entry(language).or_default();
         if parser_entry.len() < self.max_pool_size {
             parser_entry.push(parser);
         }
@@ -107,23 +107,21 @@ impl AstProcessor {
         _options: &ProcessingOptions,
     ) -> Result<AstProcessingResult, EngineError> {
         let start_time = std::time::Instant::now();
-        
+
         // For now, return a mock result to test the structure
         // TODO: Implement actual Tree-sitter parsing when grammars are available
-        let nodes = vec![
-            AstNode {
-                node_type: "program".to_string(),
-                start_byte: 0,
-                end_byte: source_code.len() as u32,
-                start_row: 0,
-                end_row: source_code.lines().count() as u32,
-                start_column: 0,
-                end_column: 0,
-                text: source_code.chars().take(100).collect::<String>() + "...",
-                children_count: 1,
-                is_named: true,
-            }
-        ];
+        let nodes = vec![AstNode {
+            node_type: "program".to_string(),
+            start_byte: 0,
+            end_byte: source_code.len() as u32,
+            start_row: 0,
+            end_row: source_code.lines().count() as u32,
+            start_column: 0,
+            end_column: 0,
+            text: source_code.chars().take(100).collect::<String>() + "...",
+            children_count: 1,
+            is_named: true,
+        }];
 
         let processing_time = start_time.elapsed().as_millis() as u32;
 
@@ -144,24 +142,28 @@ impl AstProcessor {
         options: ProcessingOptions,
     ) -> Result<Vec<AstProcessingResult>, EngineError> {
         use tokio::task::spawn_blocking;
-        
+
         let mut tasks = Vec::new();
 
         for (content, path, language) in files {
             let processor_clone = self.clone();
             let options_clone = options.clone();
-            
+
             let task = spawn_blocking(move || {
                 processor_clone.parse_code(&content, language, &path, &options_clone)
             });
-            
+
             tasks.push(task);
         }
 
         let mut results = Vec::new();
         for task in tasks {
-            let result = task.await
-                .map_err(|e| EngineError::ASTProcessing(ASTProcessingError::TreeSitter(format!("Task join error: {}", e))))?;
+            let result = task.await.map_err(|e| {
+                EngineError::ASTProcessing(ASTProcessingError::TreeSitter(format!(
+                    "Task join error: {}",
+                    e
+                )))
+            })?;
             results.push(result?);
         }
 
@@ -208,14 +210,14 @@ mod tests {
     #[test]
     fn test_parser_pool() {
         let pool = ParserPool::new(2);
-        
+
         // Get parser for JavaScript
         let parser1 = pool.get_parser(SupportedLanguage::JavaScript);
         assert!(parser1.is_ok());
-        
+
         // Return parser to pool
         pool.return_parser(SupportedLanguage::JavaScript, parser1.unwrap());
-        
+
         // Get parser again (should reuse from pool)
         let parser2 = pool.get_parser(SupportedLanguage::JavaScript);
         assert!(parser2.is_ok());
@@ -238,12 +240,8 @@ mod tests {
             index_m: 16,
         };
 
-        let result = processor.parse_code(
-            source,
-            SupportedLanguage::JavaScript,
-            "test.js",
-            &options,
-        );
+        let result =
+            processor.parse_code(source, SupportedLanguage::JavaScript, "test.js", &options);
 
         assert!(result.is_ok());
         let ast_result = result.unwrap();
@@ -257,10 +255,18 @@ mod tests {
     async fn test_batch_processing() {
         let processor = Arc::new(AstProcessor::new(2));
         let files = vec![
-            ("function a() {}".to_string(), "a.js".to_string(), SupportedLanguage::JavaScript),
-            ("def b(): pass".to_string(), "b.py".to_string(), SupportedLanguage::Python),
+            (
+                "function a() {}".to_string(),
+                "a.js".to_string(),
+                SupportedLanguage::JavaScript,
+            ),
+            (
+                "def b(): pass".to_string(),
+                "b.py".to_string(),
+                SupportedLanguage::Python,
+            ),
         ];
-        
+
         let options = ProcessingOptions {
             max_depth: 10,
             include_unnamed_nodes: false,
@@ -276,7 +282,7 @@ mod tests {
 
         let results = processor.process_files_batch(files, options).await;
         assert!(results.is_ok());
-        
+
         let batch_results = results.unwrap();
         assert_eq!(batch_results.len(), 2);
         assert_eq!(batch_results[0].file_path, "a.js");
@@ -305,7 +311,7 @@ mod tests {
     fn test_engine_stats() {
         let processor = AstProcessor::new(3);
         let stats = processor.get_stats();
-        
+
         assert_eq!(stats.max_pool_size, 3);
         assert_eq!(stats.total_parsers, 0); // No parsers created yet
         assert_eq!(stats.languages_available, 0); // No parsers requested yet

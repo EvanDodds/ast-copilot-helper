@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if "Ω" doesn't appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>ast-copilot-helper</id>
+    <version>1.0.0</version>
+    <packageSourceUrl>https://github.com/your-org/ast-copilot-helper</packageSourceUrl>
+    <owners>AST Copilot Helper Team</owners>
+    <title>AST Copilot Helper</title>
+    <authors>AST Copilot Helper Team</authors>
+    <projectUrl>https://github.com/your-org/ast-copilot-helper</projectUrl>
+    <iconUrl>https://cdn.jsdelivr.net/gh/your-org/ast-copilot-helper@main/assets/icon.png</iconUrl>
+    <copyright>2024 AST Copilot Helper Team</copyright>
+    <licenseUrl>https://github.com/your-org/ast-copilot-helper/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/your-org/ast-copilot-helper</projectSourceUrl>
+    <docsUrl>https://github.com/your-org/ast-copilot-helper/blob/main/README.md</docsUrl>
+    <bugTrackerUrl>https://github.com/your-org/ast-copilot-helper/issues</bugTrackerUrl>
+    <tags>ast code-analysis development-tools copilot cli</tags>
+    <summary>Advanced AST-powered development assistant for intelligent code analysis</summary>
+    <description><![CDATA[
+AST Copilot Helper is a powerful command-line tool that provides advanced Abstract Syntax Tree (AST) analysis 
+and intelligent code insights for multiple programming languages. It helps developers understand code structure, 
+identify patterns, and improve code quality through sophisticated static analysis.
+
+## Features
+
+- **Multi-language Support**: Supports 15+ programming languages including JavaScript, TypeScript, Python, Go, Rust, and more
+- **AST Analysis**: Deep structural code analysis using native parsers
+- **Intelligent Insights**: AI-powered code suggestions and improvements
+- **VS Code Integration**: Seamless integration with Visual Studio Code
+- **Performance Optimized**: Built with Rust for maximum performance
+- **Cross-platform**: Works on Windows, macOS, and Linux
+
+## Usage
+
+After installation, use the tool from the command line:
+
+```
+ast-copilot-helper init          # Initialize in your project
+ast-copilot-helper analyze       # Run code analysis
+ast-copilot-helper --help        # View all commands
+```
+
+## Requirements
+
+- Windows 10 or later (x64)
+- No additional dependencies required
+
+## Documentation
+
+Visit https://github.com/your-org/ast-copilot-helper for complete documentation and examples.
+]]></description>
+    <releaseNotes>
+## 1.0.0 Release Notes
+
+### New Features
+- Initial stable release
+- Complete AST analysis engine
+- Multi-language parser support
+- VS Code extension integration
+- Cross-platform binary distribution
+
+### Improvements
+- Optimized performance for large codebases
+- Enhanced error reporting and diagnostics
+- Improved CLI user experience
+
+### Bug Fixes
+- Fixed edge cases in TypeScript parsing
+- Resolved memory leaks in long-running analysis
+- Corrected path handling on Windows
+    </releaseNotes>
+    <dependencies>
+      <!-- No runtime dependencies for standalone binary -->
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

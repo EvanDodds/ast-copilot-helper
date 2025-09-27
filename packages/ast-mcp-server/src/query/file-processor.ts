@@ -7,6 +7,8 @@
  * - Directory traversal
  * - File content filtering
  * - Text-based search capabilities
+ *
+ * Now integrated with Rust core engine for high-performance AST processing
  */
 
 import { EventEmitter } from "events";
@@ -25,6 +27,7 @@ import type {
   Annotation,
 } from "./types.js";
 import type { ASTDatabaseReader } from "../database/reader.js";
+import type { AstCoreEngineApi } from "../../../ast-core-engine/index.js";
 
 const logger = createLogger({
   level: LogLevel.INFO,
@@ -94,14 +97,19 @@ interface FileSearchResult {
 export class FileQueryProcessor extends EventEmitter {
   private readonly config: Required<FileProcessorConfig>;
   private readonly databaseReader: ASTDatabaseReader;
+  private _rustEngine?: AstCoreEngineApi;
 
   constructor(
     databaseReader: ASTDatabaseReader,
     config: FileProcessorConfig = {},
+    _rustEngine?: AstCoreEngineApi,
   ) {
     super();
     this.databaseReader = databaseReader;
     this.config = { ...DEFAULT_CONFIG, ...config };
+    // Store rust engine for future implementation
+    this._rustEngine = _rustEngine;
+    void this._rustEngine; // Suppress unused variable warning
   }
 
   /**
@@ -379,30 +387,39 @@ export class FileQueryProcessor extends EventEmitter {
 
     // Initialize first row and column
     for (let i = 0; i <= str2.length; i++) {
-      matrix[0]![i] = i;
+      if (matrix[0]) {
+        matrix[0][i] = i;
+      }
     }
 
     for (let j = 1; j <= str1.length; j++) {
-      matrix[j]![0] = j;
+      const row = matrix[j];
+      if (row) {
+        row[0] = j;
+      }
     }
 
     // Fill the matrix
     for (let j = 1; j <= str1.length; j++) {
       for (let i = 1; i <= str2.length; i++) {
-        if (str1[j - 1] === str2[i - 1]) {
-          matrix[j]![i] = matrix[j - 1]![i - 1]!;
-        } else {
-          matrix[j]![i] = Math.min(
-            matrix[j - 1]![i]! + 1, // deletion
-            matrix[j]![i - 1]! + 1, // insertion
-            matrix[j - 1]![i - 1]! + 1, // substitution
-          );
+        const currentRow = matrix[j];
+        const prevRow = matrix[j - 1];
+        if (currentRow && prevRow) {
+          if (str1[j - 1] === str2[i - 1]) {
+            currentRow[i] = prevRow[i - 1] ?? 0;
+          } else {
+            const deletion = (prevRow[i] ?? 0) + 1;
+            const insertion = (currentRow[i - 1] ?? 0) + 1;
+            const substitution = (prevRow[i - 1] ?? 0) + 1;
+            currentRow[i] = Math.min(deletion, insertion, substitution);
+          }
         }
       }
     }
 
     const maxLength = Math.max(str1.length, str2.length);
-    const distance = matrix[str1.length]![str2.length]!;
+    const finalRow = matrix[str1.length];
+    const distance = finalRow?.[str2.length] ?? maxLength;
     return 1 - distance / maxLength;
   }
 

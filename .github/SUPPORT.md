@@ -1,17 +1,17 @@
 # Community Support Guide
 
-Welcome to the ast-copilot-helper community! This guide helps you find the right place to get help and contribute to supporting others.
+Welcome to the AST Copilot Helper community! This guide helps you find the right place to get help and contribute to supporting others.
 
 ## 🆘 Getting Help
 
 ### Where to Ask for Help
 
 1. **GitHub Discussions** - For general questions and community support
-   - [Questions & Help](https://github.com/yourusername/ast-copilot-helper/discussions/categories/q-a) - Technical questions and usage help
-   - [General](https://github.com/yourusername/ast-copilot-helper/discussions/categories/general) - General discussion about the project
+   - [Questions & Help](https://github.com/EvanDodds/ast-copilot-helper/discussions/categories/q-a) - Technical questions and usage help
+   - [General](https://github.com/EvanDodds/ast-copilot-helper/discussions/categories/general) - General discussion about the project
 
 2. **GitHub Issues** - For bugs and specific problems
-   - Use our [issue templates](https://github.com/yourusername/ast-copilot-helper/issues/new/choose) to report bugs
+   - Use our [issue templates](https://github.com/EvanDodds/ast-copilot-helper/issues/new/choose) to report bugs
    - Search existing issues first to avoid duplicates
 
 3. **Documentation** - Check our comprehensive docs
@@ -27,8 +27,8 @@ Welcome to the ast-copilot-helper community! This guide helps you find the right
 To get the best help quickly, please:
 
 1. **Search First**
-   - Check existing [issues](https://github.com/yourusername/ast-copilot-helper/issues)
-   - Browse [discussions](https://github.com/yourusername/ast-copilot-helper/discussions)
+   - Check existing [issues](https://github.com/EvanDodds/ast-copilot-helper/issues)
+   - Browse [discussions](https://github.com/EvanDodds/ast-copilot-helper/discussions)
    - Read the [FAQ](../docs/faq.md)
 
 2. **Provide Context**
@@ -48,7 +48,7 @@ To get the best help quickly, please:
 ### How to Help Others
 
 1. **Monitor Discussions**
-   - Check [Questions & Help](https://github.com/yourusername/ast-copilot-helper/discussions/categories/q-a) regularly
+   - Check [Questions & Help](https://github.com/EvanDodds/ast-copilot-helper/discussions/categories/q-a) regularly
    - Look for questions you can answer based on your experience
 
 2. **Share Knowledge**

@@ -143,7 +143,7 @@ export class ASTMCPServer extends EventEmitter implements MCPServer {
       switch (request.method) {
         case "initialize":
           result = await this.handleInitialize(
-            request.params as InitializeParams,
+            request.params as unknown as InitializeParams,
           );
           break;
 
@@ -157,7 +157,9 @@ export class ASTMCPServer extends EventEmitter implements MCPServer {
           break;
 
         case "tools/call":
-          result = await this.handleCallTool(request.params as ToolCallParams);
+          result = await this.handleCallTool(
+            request.params as unknown as ToolCallParams,
+          );
           break;
 
         case "resources/list":
@@ -166,7 +168,7 @@ export class ASTMCPServer extends EventEmitter implements MCPServer {
 
         case "resources/read":
           result = await this.handleReadResource(
-            request.params as ResourceReadParams,
+            request.params as unknown as ResourceReadParams,
           );
           break;
 

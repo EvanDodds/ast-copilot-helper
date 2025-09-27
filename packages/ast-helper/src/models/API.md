@@ -950,7 +950,7 @@ import {
   parseSize,
   formatBytes,
   calculateChecksum,
-} from "@ast-copilot-helper/ast-helper";
+} from "@ast-copilot-helper/ast-copilot-helper";
 
 // Convert size
 const bytes = parseSize("10GB"); // 10737418240

@@ -32,7 +32,7 @@ mod tests {
     async fn test_health_check() {
         let health = health_check().await.unwrap();
         assert_eq!(health.status, "healthy");
-        assert!(health.memory_usage_mb >= 0);
+        // memory_usage_mb is u32, so it's always non-negative by type
         assert!(health.version.contains("ast-core-engine"));
     }
 
@@ -56,13 +56,13 @@ mod tests {
         use tempfile::tempdir;
         let temp_dir = tempdir().unwrap();
         let db_path = temp_dir.path().join("test.db");
-        
+
         let mut storage_config = StorageConfig::default();
         storage_config.db_path = db_path.to_string_lossy().to_string();
-        
+
         let storage = StorageLayer::new(storage_config).await;
         assert!(storage.is_ok());
-        
+
         let storage = storage.unwrap();
         storage.close().await;
     }

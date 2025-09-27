@@ -124,8 +124,8 @@ Post-deployment monitoring includes:
 
 - 📚 [Troubleshooting Guide](../troubleshooting.md)
 - 🔧 [CI/CD Pipeline Documentation](../CI-CD-PIPELINE.md)
-- 🐛 [GitHub Issues](https://github.com/yourusername/ast-copilot-helper/issues)
-- 💬 [Discussion Forum](https://github.com/yourusername/ast-copilot-helper/discussions)
+- 🐛 [GitHub Issues](https://github.com/EvanDodds/ast-copilot-helper/issues)
+- 💬 [Discussion Forum](https://github.com/EvanDodds/ast-copilot-helper/discussions)
 
 ## Security Considerations
 

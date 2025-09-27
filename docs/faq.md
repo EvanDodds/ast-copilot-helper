@@ -71,7 +71,7 @@ npx ast-copilot-helper init
 
 # Or install locally in project
 npm install ast-copilot-helper
-npx ast-helper init
+npx ast-copilot-helper init
 ```
 
 **Q**: The Python dependencies fail to install. Help?
@@ -83,7 +83,7 @@ npx ast-helper init
 AST_HELPER_NO_PYTHON=1 npm install -g ast-copilot-helper
 
 # Or skip Python parsing in config
-ast-helper config set parser.languages '["typescript", "javascript"]'
+ast-copilot-helper config set parser.languages '["typescript", "javascript"]'
 ```
 
 ## Configuration
@@ -98,14 +98,14 @@ ast-helper config set parser.languages '["typescript", "javascript"]'
 # Navigate to your project
 cd my-project
 
-# Initialize (creates .ast-helper.json)
-ast-helper init
+# Initialize (creates .ast-copilot-helper.json)
+ast-copilot-helper init
 
 # Parse your code
-ast-helper parse src/
+ast-copilot-helper parse src/
 
 # Start querying
-ast-helper query "authentication functions"
+ast-copilot-helper query "authentication functions"
 ```
 
 **Q**: Can I use this with monorepos?
@@ -136,10 +136,10 @@ ast-helper query "authentication functions"
 ```bash
 # Enable AI features (optional)
 export OPENAI_API_KEY="your-key-here"
-ast-helper config set ai.enableEmbeddings true
+ast-copilot-helper config set ai.enableEmbeddings true
 
 # Or use without AI
-ast-helper config set ai.enableEmbeddings false
+ast-copilot-helper config set ai.enableEmbeddings false
 ```
 
 **Q**: How much does AI integration cost?
@@ -175,11 +175,11 @@ ast-helper config set ai.enableEmbeddings false
 
 ```bash
 # Exclude unnecessary files
-echo "*.test.ts" >> .ast-helper-ignore
-echo "node_modules/" >> .ast-helper-ignore
+echo "*.test.ts" >> .ast-copilot-helper-ignore
+echo "node_modules/" >> .ast-copilot-helper-ignore
 
 # Use incremental parsing
-ast-helper parse src/ --incremental
+ast-copilot-helper parse src/ --incremental
 ```
 
 **Q**: What file types are supported?
@@ -203,16 +203,16 @@ ast-helper parse src/ --incremental
 
 ```bash
 # Good queries
-ast-helper query "user authentication functions"
-ast-helper query "database connection setup"
-ast-helper query "error handling utilities"
+ast-copilot-helper query "user authentication functions"
+ast-copilot-helper query "database connection setup"
+ast-copilot-helper query "error handling utilities"
 
 # Filter by type
-ast-helper query "user" --type class
-ast-helper query "config" --type interface
+ast-copilot-helper query "user" --type class
+ast-copilot-helper query "config" --type interface
 
 # Filter by file
-ast-helper query "auth" --file "src/auth/**"
+ast-copilot-helper query "auth" --file "src/auth/**"
 ```
 
 **Q**: Why aren't my search results accurate?
@@ -222,22 +222,22 @@ ast-helper query "auth" --file "src/auth/**"
 1. **Database not populated**:
 
    ```bash
-   ast-helper stats  # Check if files are parsed
-   ast-helper parse src/  # Re-parse if needed
+   ast-copilot-helper stats  # Check if files are parsed
+   ast-copilot-helper parse src/  # Re-parse if needed
    ```
 
 2. **Search mode mismatch**:
 
    ```bash
    # Try different search modes
-   ast-helper query "auth" --mode text
-   ast-helper query "auth" --mode semantic
+   ast-copilot-helper query "auth" --mode text
+   ast-copilot-helper query "auth" --mode semantic
    ```
 
 3. **Query too specific**:
    ```bash
    # Use broader terms
-   ast-helper query "user" instead of "getUserById"
+   ast-copilot-helper query "user" instead of "getUserById"
    ```
 
 ### VS Code Integration
@@ -262,8 +262,8 @@ code --install-extension publisher.ast-copilot-helper
 **A**: Troubleshooting checklist:
 
 1. **Extension enabled**: Check Extensions panel
-2. **Project initialized**: Run `ast-helper init` in your project
-3. **Files parsed**: Run `ast-helper parse src/`
+2. **Project initialized**: Run `ast-copilot-helper init` in your project
+3. **Files parsed**: Run `ast-copilot-helper parse src/`
 4. **Reload window**: `Cmd/Ctrl + Shift + P` → "Reload Window"
 
 **Q**: What features are available in the VS Code extension?
@@ -294,14 +294,14 @@ code --install-extension publisher.ast-copilot-helper
 
 ```bash
 # Start MCP server
-ast-helper server
+ast-copilot-helper server
 
 # Configure your AI client (e.g., Claude Desktop)
 # Add to ~/.claude/config.json:
 {
   "mcp_servers": {
     "ast-copilot-helper": {
-      "command": "ast-helper",
+      "command": "ast-copilot-helper",
       "args": ["server"],
       "cwd": "/path/to/your/project"
     }
@@ -356,17 +356,17 @@ ast-helper server
 
 ```bash
 # Reduce parsing batch size
-ast-helper config set parser.batchSize 50
+ast-copilot-helper config set parser.batchSize 50
 
 # Limit concurrent processing
-ast-helper config set parser.maxConcurrency 2
+ast-copilot-helper config set parser.maxConcurrency 2
 
 # Exclude large files
-echo "*.min.js" >> .ast-helper-ignore
-echo "*.bundle.js" >> .ast-helper-ignore
+echo "*.min.js" >> .ast-copilot-helper-ignore
+echo "*.bundle.js" >> .ast-copilot-helper-ignore
 
 # Use incremental parsing
-ast-helper parse src/ --incremental --watch
+ast-copilot-helper parse src/ --incremental --watch
 ```
 
 **Q**: Database is getting large. How do I manage it?
@@ -375,21 +375,21 @@ ast-helper parse src/ --incremental --watch
 
 ```bash
 # Check database size
-ls -lh .ast-helper.db
+ls -lh .ast-copilot-helper.db
 
 # Vacuum/optimize database
-ast-helper db --vacuum
+ast-copilot-helper db --vacuum
 
 # Set retention policy
-ast-helper config set database.retention "30 days"
+ast-copilot-helper config set database.retention "30 days"
 
 # Clean old embeddings
-ast-helper embeddings --cleanup
+ast-copilot-helper embeddings --cleanup
 ```
 
 ### Common Problems
 
-**Q**: "Command not found: ast-helper"
+**Q**: "Command not found: ast-copilot-helper"
 
 **A**: Path/installation issue:
 
@@ -414,13 +414,13 @@ npx ast-copilot-helper --help
 
 ```bash
 # Kill any running processes
-pkill -f ast-helper
+pkill -f ast-copilot-helper
 
 # Remove lock files
-rm -f .ast-helper.db-wal .ast-helper.db-shm
+rm -f .ast-copilot-helper.db-wal .ast-copilot-helper.db-shm
 
 # Restart if needed
-ast-helper db --check
+ast-copilot-helper db --check
 ```
 
 **Q**: Parsing fails with "Out of memory" error
@@ -432,10 +432,10 @@ ast-helper db --check
 export NODE_OPTIONS="--max-old-space-size=4096"
 
 # Process in smaller batches
-ast-helper parse src/ --batch-size 10
+ast-copilot-helper parse src/ --batch-size 10
 
 # Exclude large files
-ast-helper config set parser.excludePatterns '["**/*.min.*", "**/dist/**", "**/build/**"]'
+ast-copilot-helper config set parser.excludePatterns '["**/*.min.*", "**/dist/**", "**/build/**"]'
 ```
 
 ## Advanced Usage
@@ -473,15 +473,15 @@ ast-helper config set parser.excludePatterns '["**/*.min.*", "**/dist/**", "**/b
 ```bash
 # Project-specific config
 cd project-a
-ast-helper init
-ast-helper config set parser.languages '["typescript"]'
+ast-copilot-helper init
+ast-copilot-helper config set parser.languages '["typescript"]'
 
 cd ../project-b
-ast-helper init
-ast-helper config set parser.languages '["python"]'
+ast-copilot-helper init
+ast-copilot-helper config set parser.languages '["python"]'
 
 # Global defaults
-ast-helper config set --global parser.batchSize 100
+ast-copilot-helper config set --global parser.batchSize 100
 ```
 
 ### Integration with Other Tools
@@ -495,9 +495,9 @@ ast-helper config set --global parser.batchSize 100
 - name: Update Code Index
   run: |
     npm install -g ast-copilot-helper
-    ast-helper init
-    ast-helper parse src/
-    ast-helper stats
+    ast-copilot-helper init
+    ast-copilot-helper parse src/
+    ast-copilot-helper stats
 ```
 
 **Q**: How do I export data for other tools?
@@ -506,13 +506,13 @@ ast-helper config set --global parser.batchSize 100
 
 ```bash
 # Export to JSON
-ast-helper export --format json > codebase.json
+ast-copilot-helper export --format json > codebase.json
 
 # Export specific data
-ast-helper export --type functions --format csv > functions.csv
+ast-copilot-helper export --type functions --format csv > functions.csv
 
 # Export for documentation tools
-ast-helper export --format markdown > API.md
+ast-copilot-helper export --format markdown > API.md
 ```
 
 ## Getting Support
@@ -534,8 +534,8 @@ ast-helper export --format markdown > API.md
 
 **A**: Multiple channels:
 
-- **GitHub Issues**: [Bug reports and feature requests](https://github.com/yourusername/ast-copilot-helper/issues)
-- **GitHub Discussions**: [Questions and community help](https://github.com/yourusername/ast-copilot-helper/discussions)
+- **GitHub Issues**: [Bug reports and feature requests](https://github.com/EvanDodds/ast-copilot-helper/issues)
+- **GitHub Discussions**: [Questions and community help](https://github.com/EvanDodds/ast-copilot-helper/discussions)
 - **Discord/Slack**: [Real-time community chat] (link when available)
 
 ### Diagnostic Information
@@ -546,16 +546,16 @@ ast-helper export --format markdown > API.md
 
 ```bash
 # System information
-ast-helper doctor
+ast-copilot-helper doctor
 
 # Configuration dump
-ast-helper config --export
+ast-copilot-helper config --export
 
 # Project statistics
-ast-helper stats --verbose
+ast-copilot-helper stats --verbose
 
 # Recent logs
-tail -n 50 ~/.ast-helper/logs/error.log
+tail -n 50 ~/.ast-copilot-helper/logs/error.log
 ```
 
 ### Contributing
@@ -615,4 +615,4 @@ tail -n 50 ~/.ast-helper/logs/error.log
 - Active community engagement
 - Continuous improvement based on user feedback
 
-Have more questions? Check our [GitHub Discussions](https://github.com/yourusername/ast-copilot-helper/discussions) or [create a new issue](https://github.com/yourusername/ast-copilot-helper/issues/new)!
+Have more questions? Check our [GitHub Discussions](https://github.com/EvanDodds/ast-copilot-helper/discussions) or [create a new issue](https://github.com/EvanDodds/ast-copilot-helper/issues/new)!

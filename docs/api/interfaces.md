@@ -11,14 +11,20 @@ Factory for creating parser instances with automatic runtime detection.
 ```typescript
 class ParserFactory {
   /** Create parser with automatic runtime detection */
-  static createParser(grammarManager?: TreeSitterGrammarManager): Promise<ASTParser>;
-  
+  static createParser(
+    grammarManager?: TreeSitterGrammarManager,
+  ): Promise<ASTParser>;
+
   /** Create native parser (requires native Tree-sitter) */
-  static createNativeParser(grammarManager?: TreeSitterGrammarManager): Promise<NativeTreeSitterParser>;
-  
+  static createNativeParser(
+    grammarManager?: TreeSitterGrammarManager,
+  ): Promise<NativeTreeSitterParser>;
+
   /** Create WASM parser (fallback runtime) */
-  static createWASMParser(grammarManager?: TreeSitterGrammarManager): Promise<WASMTreeSitterParser>;
-  
+  static createWASMParser(
+    grammarManager?: TreeSitterGrammarManager,
+  ): Promise<WASMTreeSitterParser>;
+
   /** Get runtime availability information */
   static getRuntimeInfo(): Promise<{
     native: { available: boolean; error?: string };
@@ -35,24 +41,32 @@ Main parser interface supporting all 15 languages.
 ```typescript
 interface ASTParser {
   /** Parse code string for specified language */
-  parseCode(code: string, language: string, filePath?: string): Promise<ParseResult>;
-  
+  parseCode(
+    code: string,
+    language: string,
+    filePath?: string,
+  ): Promise<ParseResult>;
+
   /** Parse file from disk */
   parseFile(filePath: string): Promise<ParseResult>;
-  
+
   /** Batch parse multiple files with options */
   batchParseFiles(
     files: string[],
     options?: {
       concurrency?: number;
-      onProgress?: (completed: number, total: number, currentFile: string) => void;
+      onProgress?: (
+        completed: number,
+        total: number,
+        currentFile: string,
+      ) => void;
       continueOnError?: boolean;
-    }
+    },
   ): Promise<Map<string, ParseResult>>;
-  
+
   /** Get runtime information */
   getRuntime(): ParserRuntime;
-  
+
   /** Dispose parser resources */
   dispose(): Promise<void>;
 }
@@ -66,13 +80,13 @@ Result of parsing operation with AST nodes and metadata.
 interface ParseResult {
   /** Extracted AST nodes with normalized types */
   nodes: ASTNode[];
-  
+
   /** Parse errors encountered */
   errors: ParseError[];
-  
+
   /** Source language */
   language: string;
-  
+
   /** Parse duration in milliseconds */
   parseTime: number;
 }
@@ -86,36 +100,36 @@ Normalized AST node representation across all languages.
 interface ASTNode {
   /** Deterministic node ID: sha256(filePath + position + type) */
   id: string;
-  
+
   /** Normalized node type (function, class, method, etc.) */
   type: string;
-  
+
   /** Identifier name if available */
   name?: string;
-  
+
   /** Absolute file path */
   filePath: string;
-  
+
   /** Start position */
   start: NodePosition;
-  
+
   /** End position */
   end: NodePosition;
-  
+
   /** Child nodes for hierarchy */
   children?: ASTNode[];
-  
+
   /** Language-specific metadata */
   metadata: {
     /** Source language */
     language: string;
-    
+
     /** Scope chain (module, class, function) */
     scope: string[];
-    
+
     /** Access modifiers, async, static, etc. */
     modifiers: string[];
-    
+
     /** Cyclomatic complexity (calculated separately) */
     complexity?: number;
   };
@@ -130,7 +144,7 @@ Position information for AST nodes.
 interface NodePosition {
   /** Line number (1-based) */
   line: number;
-  
+
   /** Column number (0-based) */
   column: number;
 }
@@ -143,14 +157,23 @@ Parse error with detailed type information.
 ```typescript
 interface ParseError {
   /** Error type classification */
-  type: "syntax" | "grammar" | "runtime" | "timeout" | "memory" | "file_system" | "network" | "configuration" | "validation";
-  
+  type:
+    | "syntax"
+    | "grammar"
+    | "runtime"
+    | "timeout"
+    | "memory"
+    | "file_system"
+    | "network"
+    | "configuration"
+    | "validation";
+
   /** Error message */
   message: string;
-  
+
   /** Error position if available */
   position?: NodePosition;
-  
+
   /** Additional context */
   context?: string;
 }
@@ -164,16 +187,16 @@ Grammar management for all 15 supported languages.
 class TreeSitterGrammarManager {
   /** Install grammar for specific language */
   installGrammar(language: string): Promise<void>;
-  
+
   /** Get available grammars */
   getAvailableGrammars(): Promise<string[]>;
-  
+
   /** Check if grammar is installed */
   hasGrammar(language: string): Promise<boolean>;
-  
+
   /** Get grammar path */
   getGrammarPath(language: string): Promise<string>;
-  
+
   /** Clear grammar cache */
   clearCache(): Promise<void>;
 }
@@ -187,10 +210,10 @@ Enhanced node classification system.
 class NodeClassifier {
   /** Classify raw node to normalized type */
   classifyNode(rawNode: RawNodeData): ClassificationResult;
-  
+
   /** Get classification statistics */
   getStats(): ClassificationStats;
-  
+
   /** Clear classification cache */
   clearCache(): void;
 }
@@ -204,22 +227,22 @@ Raw node data from Tree-sitter parsers.
 interface RawNodeData {
   /** Raw node type from parser */
   type: string;
-  
+
   /** Node name or identifier */
   name?: string;
-  
+
   /** Source language */
   language: string;
-  
+
   /** Parser-specific properties */
   properties?: Record<string, unknown>;
-  
+
   /** Child nodes */
   children?: RawNodeData[];
-  
+
   /** Parent node */
   parent?: RawNodeData;
-  
+
   /** Position information */
   position?: {
     startRow: number;
@@ -227,10 +250,10 @@ interface RawNodeData {
     endRow: number;
     endColumn: number;
   };
-  
+
   /** Text content */
   text?: string;
-  
+
   /** AST depth */
   depth?: number;
 }
@@ -244,20 +267,20 @@ Enhanced classification result with confidence.
 interface ClassificationResult {
   /** Normalized node type */
   nodeType: NodeType;
-  
+
   /** Confidence level (0-1) */
   confidence: number;
-  
+
   /** Classification reason */
   reason: string;
-  
+
   /** Alternative classifications */
   alternatives?: Array<{
     nodeType: NodeType;
     confidence: number;
     reason: string;
   }>;
-  
+
   /** Language-specific metadata */
   languageMetadata?: Record<string, unknown>;
 }
@@ -270,37 +293,49 @@ interface ClassificationResult {
 const SUPPORTED_LANGUAGES = {
   /** Tier 1: Enterprise Languages (6) */
   TIER_1_ENTERPRISE: [
-    "typescript",  // TypeScript (.ts, .tsx)
-    "javascript",  // JavaScript (.js, .jsx)
-    "python",      // Python (.py, .pyi)
-    "java",        // Java (.java)
-    "cpp",         // C++ (.cpp, .hpp, .cc, .h)
-    "c_sharp",     // C# (.cs)
+    "typescript", // TypeScript (.ts, .tsx)
+    "javascript", // JavaScript (.js, .jsx)
+    "python", // Python (.py, .pyi)
+    "java", // Java (.java)
+    "cpp", // C++ (.cpp, .hpp, .cc, .h)
+    "c_sharp", // C# (.cs)
   ],
-  
+
   /** Tier 2: Developer Languages (5) */
   TIER_2_DEVELOPER: [
-    "go",     // Go (.go)
-    "rust",   // Rust (.rs)
-    "php",    // PHP (.php)
-    "ruby",   // Ruby (.rb)
-    "swift",  // Swift (.swift)
+    "go", // Go (.go)
+    "rust", // Rust (.rs)
+    "php", // PHP (.php)
+    "ruby", // Ruby (.rb)
+    "swift", // Swift (.swift)
   ],
-  
+
   /** Tier 3: Specialized Languages (4) */
   TIER_3_SPECIALIZED: [
     "kotlin", // Kotlin (.kt, .kts)
-    "scala",  // Scala (.scala)
-    "dart",   // Dart (.dart)
-    "lua",    // Lua (.lua)
-  ]
+    "scala", // Scala (.scala)
+    "dart", // Dart (.dart)
+    "lua", // Lua (.lua)
+  ],
 } as const;
 
 /** Union type of all supported languages */
-type SupportedLanguage = 
-  | "typescript" | "javascript" | "python" | "java" | "cpp" | "c_sharp"
-  | "go" | "rust" | "php" | "ruby" | "swift"
-  | "kotlin" | "scala" | "dart" | "lua";
+type SupportedLanguage =
+  | "typescript"
+  | "javascript"
+  | "python"
+  | "java"
+  | "cpp"
+  | "c_sharp"
+  | "go"
+  | "rust"
+  | "php"
+  | "ruby"
+  | "swift"
+  | "kotlin"
+  | "scala"
+  | "dart"
+  | "lua";
 ```
 
 ## Core Types
@@ -1097,7 +1132,7 @@ export const DEFAULT_CONFIG: Configuration = {
     languageConfigs: {},
   },
   database: {
-    path: ".ast-helper.db",
+    path: ".ast-copilot-helper.db",
     cacheSize: 100,
     enableWAL: true,
     backup: {
@@ -1128,7 +1163,7 @@ export const DEFAULT_CONFIG: Configuration = {
   },
   logging: {
     level: "info",
-    file: "ast-helper.log",
+    file: "ast-copilot-helper.log",
   },
 };
 

@@ -3,7 +3,7 @@
 //! This module contains the main engine implementation.
 //! Individual components will be implemented in separate modules.
 
-use crate::{error::EngineError, config::EngineConfig};
+use crate::{config::EngineConfig, error::EngineError};
 
 /// Main AST Core Engine structure
 pub struct ASTCoreEngine {
@@ -30,7 +30,7 @@ pub mod vector_db {
     use super::*;
 
     pub struct VectorDatabase;
-    
+
     impl VectorDatabase {
         pub fn new(_config: &EngineConfig) -> Result<Self, EngineError> {
             // TODO: Implement HNSW vector database
@@ -44,7 +44,7 @@ pub mod ast_processor {
     use super::*;
 
     pub struct ASTProcessor;
-    
+
     impl ASTProcessor {
         pub fn new(_config: &EngineConfig) -> Result<Self, EngineError> {
             // TODO: Implement Tree-sitter AST processor
@@ -58,7 +58,7 @@ pub mod batch_processor {
     use super::*;
 
     pub struct BatchProcessor;
-    
+
     impl BatchProcessor {
         pub fn new(_config: &EngineConfig) -> Result<Self, EngineError> {
             // TODO: Implement memory-efficient batch processor

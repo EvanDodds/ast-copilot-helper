@@ -36,7 +36,7 @@ This design dramatically cuts Copilot’s token usage, improves suggestion relev
 
 ```txt
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   ast-helper    │    │   .astdb/ Store  │    │ ast-mcp-server  │
+│   ast-copilot-helper    │    │   .astdb/ Store  │    │ ast-mcp-server  │
 │   (CLI Tool)    │    │  (File System)   │    │ (MCP Protocol)  │
 │                 │    │                  │    │                 │
 │ • parse         │───▶│ asts/           │◀───│ • query_ast     │
@@ -79,11 +79,11 @@ Your Repo/
 
 ### 3.3 Data Processing Pipeline
 
-1. **Parse Phase**: `ast-helper parse` reads git-changed files, generates normalized AST JSON under `asts/`
-2. **Annotation Phase**: `ast-helper annotate` processes ASTs, computes signatures/summaries/complexity, writes to `annots/`
-3. **Embedding Phase**: `ast-helper embed` vectorizes annotations using CodeBERT, builds HNSW index in `index.*`
+1. **Parse Phase**: `ast-copilot-helper parse` reads git-changed files, generates normalized AST JSON under `asts/`
+2. **Annotation Phase**: `ast-copilot-helper annotate` processes ASTs, computes signatures/summaries/complexity, writes to `annots/`
+3. **Embedding Phase**: `ast-copilot-helper embed` vectorizes annotations using CodeBERT, builds HNSW index in `index.*`
 4. **Query Phase**: `ast-mcp-server` reads database, serves context via MCP protocol to AI clients
-5. **Watch Phase**: `ast-helper watch` monitors file changes, triggers pipeline updates in real-time
+5. **Watch Phase**: `ast-copilot-helper watch` monitors file changes, triggers pipeline updates in real-time
 
 ### 3.4 Inter-Process Communication
 
@@ -97,7 +97,7 @@ Your Repo/
 
 ## 4. Module Specifications
 
-### 4.1 CLI Data Processor (`ast-helper`)
+### 4.1 CLI Data Processor (`ast-copilot-helper`)
 
 - **Purpose**: Builds and maintains AST database that MCP server reads from
 - **Language**: TypeScript, compiled to JS.
@@ -136,13 +136,13 @@ Your Repo/
 
 ```bash
 # Init command - Initialize AST database directory structure
-ast-helper init [options]
+ast-copilot-helper init [options]
   --workspace <path>     Workspace directory to initialize (default: current)
   --force, -f            Force reinitialization of existing .astdb
   --help, -h             Show command help
 
 # Parse command - Extract AST from source files
-ast-helper parse [options]
+ast-copilot-helper parse [options]
   --changed, -c          Process only changed files since last commit
   --glob <pattern>       File pattern to parse (overrides config)
   --base <ref>           Git reference for change detection (default: HEAD)
@@ -151,13 +151,13 @@ ast-helper parse [options]
   --help, -h             Show command help
 
 # Annotate command - Generate metadata for parsed AST nodes
-ast-helper annotate [options]
+ast-copilot-helper annotate [options]
   --changed, -c          Process only nodes from changed files
   --force, -f            Force re-annotation of existing nodes
   --help, -h             Show command help
 
 # Embed command - Generate vector embeddings for annotations
-ast-helper embed [options]
+ast-copilot-helper embed [options]
   --changed, -c          Process only changed annotations
   --model <path>         Path to custom embedding model
   --runtime <type>       Runtime: wasm (default) or onnx
@@ -166,7 +166,7 @@ ast-helper embed [options]
   --help, -h             Show command help
 
 # Query command - Search for relevant code context
-ast-helper query <intent> [options]
+ast-copilot-helper query <intent> [options]
   <intent>               Query text describing desired functionality (required)
   --top <num>            Number of results to return (default: 5)
   --format <type>        Output format: plain (default), json, markdown
@@ -174,7 +174,7 @@ ast-helper query <intent> [options]
   --help, -h             Show command help
 
 # Watch command - Monitor files for changes and auto-update
-ast-helper watch [options]
+ast-copilot-helper watch [options]
   --glob <pattern>       File pattern to watch (overrides config)
   --debounce <ms>        Debounce delay in milliseconds (default: 200)
   --batch                Enable batch processing for rapid changes
@@ -310,7 +310,7 @@ ast-mcp-server status [options]
 - **CLI**:
 
   ```bash
-  ast-helper query \
+  ast-copilot-helper query \
     "refactor payment module logging" \
     --top 5 \
     --format json
@@ -392,8 +392,8 @@ ast-mcp-server status [options]
         "properties": {
           "astCopilotHelper.astHelperPath": {
             "type": "string",
-            "default": "ast-helper",
-            "description": "Path to ast-helper CLI executable"
+            "default": "ast-copilot-helper",
+            "description": "Path to ast-copilot-helper CLI executable"
           },
           "astCopilotHelper.mcpServerPath": {
             "type": "string",
@@ -408,7 +408,7 @@ ast-mcp-server status [options]
           "astCopilotHelper.autoIndex": {
             "type": "boolean",
             "default": true,
-            "description": "Automatically run ast-helper when files change"
+            "description": "Automatically run ast-copilot-helper when files change"
           }
         }
       }
@@ -418,7 +418,7 @@ ast-mcp-server status [options]
 - **Dual Tool Management Implementation**:
 
   ```typescript
-  // VS Code extension manages both ast-helper and ast-mcp-server
+  // VS Code extension manages both ast-copilot-helper and ast-mcp-server
   import { ChildProcess, spawn } from "child_process";
 
   class ASTHelperManager {
@@ -427,11 +427,11 @@ ast-mcp-server status [options]
     constructor() {
       this.astHelperPath = vscode.workspace
         .getConfiguration()
-        .get("astCopilotHelper.astHelperPath", "ast-helper");
+        .get("astCopilotHelper.astHelperPath", "ast-copilot-helper");
     }
 
     async ensureIndexed(workspaceRoot: string): Promise<void> {
-      // Run ast-helper parse && ast-helper embed to build database
+      // Run ast-copilot-helper parse && ast-copilot-helper embed to build database
       await this.runCommand(["parse", "--workspace", workspaceRoot]);
       await this.runCommand(["embed", "--workspace", workspaceRoot]);
     }
@@ -453,7 +453,7 @@ ast-mcp-server status [options]
   ```
 
 - **Workflow**:
-  1. `ast-helper` processes codebase → builds `.astdb/` database
+  1. `ast-copilot-helper` processes codebase → builds `.astdb/` database
   2. `ast-mcp-server` reads from `.astdb/` → serves via MCP protocol
   3. External AI models (Claude, GPT-4) connect to MCP server via stdio
   4. MCP server returns AST context data from pre-built database
@@ -468,7 +468,7 @@ ast-mcp-server status [options]
 ```txt
 ast-copilot-helper/
 ├─ packages/
-│  ├─ ast-helper/            # CLI data processor (builds AST database)
+│  ├─ ast-copilot-helper/            # CLI data processor (builds AST database)
 │  │  ├─ src/
 │  │  │  ├─ modules/
 │  │  │  │  ├─ parser.ts     # AST parsing with Tree-sitter
@@ -483,7 +483,7 @@ ast-copilot-helper/
 │  │  │     ├─ git.ts
 │  │  │     └─ crypto.ts
 │  │  ├─ bin/
-│  │  │  └─ ast-helper       # CLI executable
+│  │  │  └─ ast-copilot-helper       # CLI executable
 │  │  └─ package.json
 │  ├─ ast-mcp-server/        # MCP protocol server (serves AST data)
 │  │  ├─ src/
@@ -500,7 +500,7 @@ ast-copilot-helper/
 │  └─ vscode-extension/      # optional management layer
 │     ├─ src/
 │     │  ├─ activate.ts
-│     │  ├─ astHelperManager.ts  # manages ast-helper CLI
+│     │  ├─ astHelperManager.ts  # manages ast-copilot-helper CLI
 │     │  ├─ mcpServerManager.ts  # manages ast-mcp-server
 │     │  └─ ui/              # status indicators, settings
 │     └─ package.json
@@ -634,10 +634,10 @@ The `.astdb/` directory should be excluded from version control to avoid:
 git clone <repo>
 cd <repo>
 npm install ast-copilot-helper -g   # or use npx
-ast-helper init                     # creates .astdb/ structure
-ast-helper parse                    # process all source files (~5-10 min for 100k nodes)
-ast-helper annotate                 # generate metadata (~2-3 min)
-ast-helper embed                    # build vector index (~3-5 min)
+ast-copilot-helper init                     # creates .astdb/ structure
+ast-copilot-helper parse                    # process all source files (~5-10 min for 100k nodes)
+ast-copilot-helper annotate                 # generate metadata (~2-3 min)
+ast-copilot-helper embed                    # build vector index (~3-5 min)
 ```
 
 **Total cold setup time: < 15 minutes for 100k significant nodes**
@@ -665,7 +665,7 @@ jobs:
           restore-keys: |
             astdb-v1-${{ runner.os }}-
 
-      # Install ast-helper
+      # Install ast-copilot-helper
       - name: Setup AST Helper
         run: npm install -g ast-copilot-helper
 
@@ -673,15 +673,15 @@ jobs:
       - name: Initialize AST Database
         run: |
           if [ ! -d ".astdb" ]; then
-            ast-helper init
+            ast-copilot-helper init
           fi
 
       # Incremental update (fast on cache hit)
       - name: Update AST Context
         run: |
-          ast-helper parse --changed --base origin/main
-          ast-helper annotate --changed  
-          ast-helper embed --changed
+          ast-copilot-helper parse --changed --base origin/main
+          ast-copilot-helper annotate --changed  
+          ast-copilot-helper embed --changed
 
       # Your build/test steps can now use AST context
       - name: Run Tests with AST Context
@@ -714,14 +714,14 @@ jobs:
 
 ```bash
 # Team lead creates snapshot
-ast-helper parse --all && ast-helper annotate && ast-helper embed
+ast-copilot-helper parse --all && ast-copilot-helper annotate && ast-copilot-helper embed
 tar -czf astdb-snapshot-v1.2.0.tar.gz .astdb/
 # Upload to GitHub Releases
 
 # New team member uses snapshot
 wget https://github.com/org/repo/releases/download/v1.2.0/astdb-snapshot-v1.2.0.tar.gz
 tar -xzf astdb-snapshot-v1.2.0.tar.gz
-ast-helper parse --changed  # catch up to current state
+ast-copilot-helper parse --changed  # catch up to current state
 ```
 
 ---
@@ -738,7 +738,7 @@ ast-helper parse --changed  # catch up to current state
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "ast-helper": "bin/ast-helper.js"
+    "ast-copilot-helper": "bin/ast-copilot-helper.js"
   },
   "scripts": {
     "build": "tsc && cp -r extension dist/",
@@ -884,24 +884,24 @@ npm install -D ast-copilot-helper husky
 
 # Setup git hooks (recommended)
 npx husky install
-npx husky add .husky/pre-commit "ast-helper parse --changed && ast-helper annotate --changed"
-npx husky add .husky/pre-push   "ast-helper embed --changed"
+npx husky add .husky/pre-commit "ast-copilot-helper parse --changed && ast-copilot-helper annotate --changed"
+npx husky add .husky/pre-push   "ast-copilot-helper embed --changed"
 
 # Manual operations
-ast-helper parse --glob "src/**/*.{ts,js,py}"    # Parse specific files
-ast-helper annotate --changed                    # Annotate changed files
-ast-helper embed --changed                       # Update embeddings
-ast-helper query "error handling" --top 5           # Search for relevant code
+ast-copilot-helper parse --glob "src/**/*.{ts,js,py}"    # Parse specific files
+ast-copilot-helper annotate --changed                    # Annotate changed files
+ast-copilot-helper embed --changed                       # Update embeddings
+ast-copilot-helper query "error handling" --top 5           # Search for relevant code
 
 # Development workflow
-ast-helper watch                  # Live updates during development
+ast-copilot-helper watch                  # Live updates during development
 # AI models connect to MCP server for context-aware assistance
 
 # CI/CD workflow
-ast-helper parse --changed        # Parse changed files
-ast-helper annotate --changed     # Generate annotations
-ast-helper embed --changed        # Update vector index
-ast-helper query "test coverage" --format json > context.json       # Export for other tools
+ast-copilot-helper parse --changed        # Parse changed files
+ast-copilot-helper annotate --changed     # Generate annotations
+ast-copilot-helper embed --changed        # Update vector index
+ast-copilot-helper query "test coverage" --format json > context.json       # Export for other tools
 ```
 
 ---
@@ -1042,8 +1042,9 @@ function formatError(code: ErrorCodes, details?: string): string {
 
 // CLI help suggestions
 const ErrorHelp: Partial<Record<ErrorCodes, string>> = {
-  [ErrorCodes.CONFIG_MISSING]: "Try: ast-helper init",
-  [ErrorCodes.INDEX_NOT_FOUND]: "Try: ast-helper parse && ast-helper embed",
+  [ErrorCodes.CONFIG_MISSING]: "Try: ast-copilot-helper init",
+  [ErrorCodes.INDEX_NOT_FOUND]:
+    "Try: ast-copilot-helper parse && ast-copilot-helper embed",
   [ErrorCodes.GRAMMAR_DOWNLOAD_FAILED]:
     "Check network connection and try again",
   [ErrorCodes.MODEL_DOWNLOAD_FAILED]:
@@ -1372,16 +1373,16 @@ const securityChecks: SecurityCheck[] = [
 
 ```bash
 # System requirements validation
-ast-helper doctor                 # Check system compatibility
-ast-helper doctor --fix          # Attempt to resolve common issues
+ast-copilot-helper doctor                 # Check system compatibility
+ast-copilot-helper doctor --fix          # Attempt to resolve common issues
 ```
 
 **Step-by-Step Setup**
 
-1. **Install Data Processor**: `npm install -g ast-helper`
+1. **Install Data Processor**: `npm install -g ast-copilot-helper`
 2. **Install MCP Server**: `npm install -g ast-mcp-server`
-3. **Initialize Repository**: `ast-helper init` (creates `.astdb/` and default config)
-4. **Build AST Database**: `ast-helper parse && ast-helper embed` (processes entire repository)
+3. **Initialize Repository**: `ast-copilot-helper init` (creates `.astdb/` and default config)
+4. **Build AST Database**: `ast-copilot-helper parse && ast-copilot-helper embed` (processes entire repository)
 5. **Start MCP Server**: `ast-mcp-server start` (launches MCP server for AI clients)
 6. **Optional VS Code Extension**: Install from marketplace for managing both tools
 
@@ -1390,19 +1391,19 @@ ast-helper doctor --fix          # Attempt to resolve common issues
 **Common Issues & Solutions**
 | Issue | Symptoms | Solution |
 |-------|----------|----------|
-| Parse failures | "Unknown language" errors | Run `ast-helper grammar install <language>` |
+| Parse failures | "Unknown language" errors | Run `ast-copilot-helper grammar install <language>` |
 | Slow performance | High CPU/memory usage | Adjust batch size in config, use `--changed` flag |
 | VS Code server management | Server won't start/stop | Check server binary in PATH, verify workspace permissions |
-| Index corruption | Query errors | Run `ast-helper rebuild` to reconstruct index |
+| Index corruption | Query errors | Run `ast-copilot-helper rebuild` to reconstruct index |
 | Model download fails | Network/checksum errors | Check internet connection, verify firewall settings |
 
 **Diagnostic Commands**
 
 ```bash
-ast-helper status               # System status and configuration
-ast-helper validate             # Check .astdb integrity
-ast-helper debug --query "test" # Verbose query execution
-ast-helper logs --tail 50       # View recent operation logs
+ast-copilot-helper status               # System status and configuration
+ast-copilot-helper validate             # Check .astdb integrity
+ast-copilot-helper debug --query "test" # Verbose query execution
+ast-copilot-helper logs --tail 50       # View recent operation logs
 ```
 
 ### 16.3 Configuration Examples

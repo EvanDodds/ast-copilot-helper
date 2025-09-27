@@ -741,7 +741,7 @@ Corresponding automation script:
 const {
   ComprehensiveReleaseManager,
   ReleaseType,
-} = require("../packages/ast-helper/src/release-management");
+} = require("../packages/ast-copilot-helper/src/release-management");
 
 async function main() {
   const manager = new ComprehensiveReleaseManager();

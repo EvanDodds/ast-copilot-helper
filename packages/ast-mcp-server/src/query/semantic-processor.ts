@@ -9,6 +9,10 @@ import { createLogger } from "../../../ast-helper/src/logging/index.js";
 import type { XenovaEmbeddingGenerator } from "../../../ast-helper/src/embedder/index.js";
 import type { HNSWVectorDatabase } from "../../../ast-helper/src/database/vector/index.js";
 import type { ASTDatabaseReader } from "../database/reader.js";
+import type {
+  AstCoreEngineApi,
+  NodeMetadata,
+} from "../../../ast-core-engine/index.js";
 
 import type {
   SemanticQueryOptions,
@@ -69,6 +73,7 @@ export class SemanticQueryProcessor {
   // Dependencies
   private embeddingGenerator: XenovaEmbeddingGenerator;
   private annotationDatabase: ASTDatabaseReader;
+  private rustEngine?: AstCoreEngineApi;
 
   // Configuration
   private config: QuerySystemConfig;
@@ -88,11 +93,13 @@ export class SemanticQueryProcessor {
     annotationDatabase: ASTDatabaseReader,
     config: QuerySystemConfig,
     performanceMonitor?: any, // Using any to avoid circular import for now
+    rustEngine?: AstCoreEngineApi,
   ) {
     this.embeddingGenerator = embeddingGenerator;
     this.annotationDatabase = annotationDatabase;
     this.config = config;
     this.performanceMonitor = performanceMonitor;
+    this.rustEngine = rustEngine;
 
     // Initialize default ranking configuration
     this.rankingConfig = {
@@ -302,10 +309,54 @@ export class SemanticQueryProcessor {
           queryOptions.useContextBoosting;
       }
 
-      const vectorResults = await this.annotationDatabase.vectorSearch(
-        queryText,
-        vectorSearchOptions,
-      );
+      let vectorResults: any;
+
+      // Prefer Rust engine if available for faster vector search
+      if (this.rustEngine) {
+        try {
+          this.logger.debug("Using Rust engine for semantic search", {
+            queryText,
+          });
+          const rustResults = await this.rustEngine.searchSimilar(
+            queryText,
+            queryMaxResults || 50,
+          );
+
+          // Convert Rust engine results to expected format
+          vectorResults = rustResults.map((result: NodeMetadata) => ({
+            nodeId: result.nodeId,
+            filePath: result.filePath,
+            signature: result.signature,
+            summary: result.summary,
+            sourceSnippet: result.sourceSnippet,
+            similarity: 1.0, // Rust engine provides normalized results
+            language: result.language,
+            complexity: result.complexity,
+          }));
+
+          this.logger.debug("Rust engine search completed", {
+            resultCount: vectorResults.length,
+          });
+        } catch (error) {
+          this.logger.warn(
+            "Rust engine search failed, falling back to TypeScript",
+            {
+              error: String(error),
+            },
+          );
+          // Fall back to original implementation
+          vectorResults = await this.annotationDatabase.vectorSearch(
+            queryText,
+            vectorSearchOptions,
+          );
+        }
+      } else {
+        // Use original TypeScript implementation
+        vectorResults = await this.annotationDatabase.vectorSearch(
+          queryText,
+          vectorSearchOptions,
+        );
+      }
 
       this.vectorSearchTime = Date.now() - vectorSearchStartTime;
 
@@ -593,25 +644,35 @@ export class SemanticQueryProcessor {
       .map(() => Array(str1.length + 1).fill(0));
 
     for (let i = 0; i <= str1.length; i++) {
-      matrix[0]![i] = i;
+      const row = matrix[0];
+      if (row) {
+        row[i] = i;
+      }
     }
 
     for (let j = 0; j <= str2.length; j++) {
-      matrix[j]![0] = j;
+      const row = matrix[j];
+      if (row) {
+        row[0] = j;
+      }
     }
 
     for (let j = 1; j <= str2.length; j++) {
       for (let i = 1; i <= str1.length; i++) {
         const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-        matrix[j]![i] = Math.min(
-          matrix[j]![i - 1]! + 1, // deletion
-          matrix[j - 1]![i]! + 1, // insertion
-          matrix[j - 1]![i - 1]! + indicator, // substitution
-        );
+        const currentRow = matrix[j];
+        const prevRow = matrix[j - 1];
+        if (currentRow && prevRow) {
+          const deletion = (currentRow[i - 1] ?? 0) + 1;
+          const insertion = (prevRow[i] ?? 0) + 1;
+          const substitution = (prevRow[i - 1] ?? 0) + indicator;
+          currentRow[i] = Math.min(deletion, insertion, substitution);
+        }
       }
     }
 
-    return matrix[str2.length]![str1.length]!;
+    const finalRow = matrix[str2.length];
+    return finalRow?.[str1.length] ?? Math.max(str1.length, str2.length);
   }
 
   /**

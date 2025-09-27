@@ -13,13 +13,13 @@ High-performance Rust core engine for AST processing, vector operations, and bat
 ## Installation
 
 ```bash
-npm install @ast-helper/core-engine
+npm install @ast-copilot-helper/core-engine
 ```
 
 ## Usage
 
 ```typescript
-import { initEngine, ASTCoreEngine } from '@ast-helper/core-engine';
+import { initEngine, ASTCoreEngine } from "@ast-copilot-helper/core-engine";
 
 // Initialize the engine
 await initEngine();
@@ -29,12 +29,14 @@ const engine = new ASTCoreEngine({
   maxMemoryMb: 1024,
   parallelWorkers: 4,
   batchSize: 100,
-  vectorDimensions: 768
+  vectorDimensions: 768,
 });
 
 // Process files
 const result = await engine.processBatch(files);
-console.log(`Processed ${result.processedFiles} files in ${result.processingTimeMs}ms`);
+console.log(
+  `Processed ${result.processedFiles} files in ${result.processingTimeMs}ms`,
+);
 ```
 
 ## Building
@@ -73,6 +75,7 @@ cargo test
 ## Architecture
 
 The engine uses a hybrid architecture:
+
 - **Rust Core**: Performance-critical computations
 - **TypeScript Interface**: User-facing APIs and orchestration
 - **NAPI-RS Bindings**: Zero-overhead Node.js integration

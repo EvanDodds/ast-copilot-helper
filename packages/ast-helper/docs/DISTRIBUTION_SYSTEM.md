@@ -139,9 +139,9 @@ const config: DistributionConfig = {
   version: "1.0.0",
   packages: [
     {
-      name: "@ast-copilot-helper/ast-helper",
+      name: "@ast-copilot-helper/ast-copilot-helper",
       type: "npm",
-      path: "./packages/ast-helper",
+      path: "./packages/ast-copilot-helper",
       publishConfig: {
         registry: "https://registry.npmjs.org",
         access: "public",
@@ -208,7 +208,7 @@ const config: DistributionConfig = {
 ### Basic Distribution Workflow
 
 ```typescript
-import { DistributionOrchestrator } from "@ast-copilot-helper/ast-helper";
+import { DistributionOrchestrator } from "@ast-copilot-helper/ast-copilot-helper";
 
 async function distribute() {
   const orchestrator = new DistributionOrchestrator();

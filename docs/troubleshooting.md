@@ -128,7 +128,7 @@ npm install
 
 ### Project Initialization Problems
 
-#### Problem: `.ast-helper.json` not created
+#### Problem: `.ast-copilot-helper.json` not created
 
 ```
 Error: Configuration file not found
@@ -138,10 +138,10 @@ Error: Configuration file not found
 
 ```bash
 # Initialize configuration manually
-ast-helper init
+ast-copilot-helper init
 
 # Or create configuration file manually
-cat > .ast-helper.json << 'EOF'
+cat > .ast-copilot-helper.json << 'EOF'
 {
   "parser": {
     "languages": ["typescript", "javascript", "python"],
@@ -154,7 +154,7 @@ cat > .ast-helper.json << 'EOF'
     "enableEmbeddings": true
   },
   "database": {
-    "path": "./.ast-helper.db"
+    "path": "./.ast-copilot-helper.db"
   }
 }
 EOF
@@ -163,14 +163,14 @@ EOF
 #### Problem: Invalid configuration format
 
 ```
-Error: Invalid configuration in .ast-helper.json
+Error: Invalid configuration in .ast-copilot-helper.json
 ```
 
 **Solution:**
 
 ```bash
 # Validate JSON format
-cat .ast-helper.json | python -m json.tool
+cat .ast-copilot-helper.json | python -m json.tool
 
 # Common issues and fixes:
 # - Trailing commas (remove them)
@@ -178,8 +178,8 @@ cat .ast-helper.json | python -m json.tool
 # - Incorrect file paths
 
 # Reset to default configuration
-rm .ast-helper.json
-ast-helper init --reset
+rm .ast-copilot-helper.json
+ast-copilot-helper init --reset
 ```
 
 ### AI Integration Issues
@@ -200,7 +200,7 @@ echo $OPENAI_API_KEY
 export OPENAI_API_KEY="sk-your-key-here"
 
 # Or set in configuration file
-ast-helper config set ai.apiKey "sk-your-key-here"
+ast-copilot-helper config set ai.apiKey "sk-your-key-here"
 
 # Test API key
 curl -H "Authorization: Bearer $OPENAI_API_KEY" \
@@ -217,13 +217,13 @@ Error: OpenAI API rate limit exceeded
 
 ```bash
 # Reduce batch size in configuration
-ast-helper config set ai.batchSize 10
+ast-copilot-helper config set ai.batchSize 10
 
 # Add delays between requests
-ast-helper config set ai.requestDelay 1000
+ast-copilot-helper config set ai.requestDelay 1000
 
 # Use different model tier
-ast-helper config set ai.model "gpt-3.5-turbo"
+ast-copilot-helper config set ai.model "gpt-3.5-turbo"
 ```
 
 #### Problem: Embedding generation fails
@@ -236,13 +236,13 @@ Error: Failed to generate embeddings
 
 ```bash
 # Check if embeddings are enabled
-ast-helper config get ai.enableEmbeddings
+ast-copilot-helper config get ai.enableEmbeddings
 
 # Disable embeddings if not needed
-ast-helper config set ai.enableEmbeddings false
+ast-copilot-helper config set ai.enableEmbeddings false
 
 # Try different embedding model
-ast-helper config set ai.embeddingModel "text-embedding-ada-002"
+ast-copilot-helper config set ai.embeddingModel "text-embedding-ada-002"
 ```
 
 ## Parsing Issues
@@ -265,7 +265,7 @@ npm list typescript
 npm update @typescript-eslint/parser
 
 # Configure parser options
-cat > .ast-helper.json << 'EOF'
+cat > .ast-copilot-helper.json << 'EOF'
 {
   "parser": {
     "typescript": {
@@ -292,7 +292,7 @@ npm uninstall tree-sitter-python
 npm install tree-sitter-python
 
 # Check Python parser installation
-ast-helper doctor --parsers
+ast-copilot-helper doctor --parsers
 
 # Manual parser rebuild
 npx tree-sitter build --wasm
@@ -311,11 +311,11 @@ Error: JavaScript heap out of memory
 export NODE_OPTIONS="--max-old-space-size=8192"
 
 # Process files in smaller chunks
-ast-helper parse src/ --batch-size 10
+ast-copilot-helper parse src/ --batch-size 10
 
 # Exclude large files
-echo "*.min.js" >> .ast-helper-ignore
-echo "*.bundle.js" >> .ast-helper-ignore
+echo "*.min.js" >> .ast-copilot-helper-ignore
+echo "*.bundle.js" >> .ast-copilot-helper-ignore
 ```
 
 ### File Processing Issues
@@ -330,16 +330,16 @@ Warning: No files found matching pattern
 
 ```bash
 # Check file patterns
-ast-helper config get parser.includePatterns
+ast-copilot-helper config get parser.includePatterns
 
 # List files that would be parsed
-ast-helper parse --dry-run src/
+ast-copilot-helper parse --dry-run src/
 
 # Update include patterns
-ast-helper config set parser.includePatterns '["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]'
+ast-copilot-helper config set parser.includePatterns '["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]'
 
 # Check for ignore files
-ls -la .ast-helper-ignore
+ls -la .ast-copilot-helper-ignore
 ls -la .gitignore
 ```
 
@@ -377,17 +377,17 @@ Error: database disk image is malformed
 
 ```bash
 # Backup existing database
-cp .ast-helper.db .ast-helper.db.backup
+cp .ast-copilot-helper.db .ast-copilot-helper.db.backup
 
 # Recreate database
-rm .ast-helper.db
-ast-helper init
+rm .ast-copilot-helper.db
+ast-copilot-helper init
 
 # Re-parse project
-ast-helper parse src/
+ast-copilot-helper parse src/
 
 # If backup needed, try recovery
-sqlite3 .ast-helper.db.backup ".dump" | sqlite3 .ast-helper.db.recovered
+sqlite3 .ast-copilot-helper.db.backup ".dump" | sqlite3 .ast-copilot-helper.db.recovered
 ```
 
 #### Problem: Database locking issues
@@ -400,16 +400,16 @@ Error: database is locked
 
 ```bash
 # Check for running processes
-ps aux | grep ast-helper
+ps aux | grep ast-copilot-helper
 
 # Kill hanging processes
-pkill -f ast-helper
+pkill -f ast-copilot-helper
 
 # Remove lock files
-rm -f .ast-helper.db-wal .ast-helper.db-shm
+rm -f .ast-copilot-helper.db-wal .ast-copilot-helper.db-shm
 
 # Restart database
-ast-helper db --rebuild
+ast-copilot-helper db --rebuild
 ```
 
 #### Problem: Disk space issues
@@ -425,13 +425,13 @@ Error: database or disk is full
 df -h
 
 # Check database size
-ls -lh .ast-helper.db
+ls -lh .ast-copilot-helper.db
 
 # Clean up database
-ast-helper db --vacuum
+ast-copilot-helper db --vacuum
 
 # Reduce stored data
-ast-helper config set database.retention "30 days"
+ast-copilot-helper config set database.retention "30 days"
 ```
 
 ## Query Issues
@@ -448,17 +448,17 @@ No results found for query: "function authentication"
 
 ```bash
 # Check if database is populated
-ast-helper stats
+ast-copilot-helper stats
 
 # Re-index database
-ast-helper db --reindex
+ast-copilot-helper db --reindex
 
 # Try broader search terms
-ast-helper query "auth"
+ast-copilot-helper query "auth"
 
 # Use different search modes
-ast-helper query "auth" --mode text
-ast-helper query "auth" --mode semantic
+ast-copilot-helper query "auth" --mode text
+ast-copilot-helper query "auth" --mode semantic
 ```
 
 #### Problem: Slow search performance
@@ -471,17 +471,17 @@ Search taking longer than expected
 
 ```bash
 # Check database statistics
-ast-helper stats --verbose
+ast-copilot-helper stats --verbose
 
 # Optimize database
-ast-helper db --optimize
+ast-copilot-helper db --optimize
 
 # Reduce search scope
-ast-helper query "auth" --type function
-ast-helper query "auth" --file "src/**"
+ast-copilot-helper query "auth" --type function
+ast-copilot-helper query "auth" --file "src/**"
 
 # Disable embeddings for faster text search
-ast-helper config set ai.enableEmbeddings false
+ast-copilot-helper config set ai.enableEmbeddings false
 ```
 
 #### Problem: Semantic search not working
@@ -494,16 +494,16 @@ Error: Semantic search requires embeddings
 
 ```bash
 # Enable embeddings
-ast-helper config set ai.enableEmbeddings true
+ast-copilot-helper config set ai.enableEmbeddings true
 
 # Generate embeddings for existing data
-ast-helper embeddings --generate
+ast-copilot-helper embeddings --generate
 
 # Check embedding status
-ast-helper embeddings --status
+ast-copilot-helper embeddings --status
 
 # Test with simpler query
-ast-helper query "hello" --mode semantic
+ast-copilot-helper query "hello" --mode semantic
 ```
 
 ## MCP Server Issues
@@ -524,13 +524,13 @@ lsof -ti:3001
 netstat -tlnp | grep 3001
 
 # Use different port
-ast-helper server --port 3002
+ast-copilot-helper server --port 3002
 
 # Check for permission issues
-ast-helper server --port 8080
+ast-copilot-helper server --port 8080
 
 # Debug server startup
-DEBUG=ast-mcp-server* ast-helper server
+DEBUG=ast-mcp-server* ast-copilot-helper server
 ```
 
 #### Problem: Client connection refused
@@ -546,13 +546,13 @@ Error: Connection refused when connecting to MCP server
 ps aux | grep mcp-server
 
 # Check server logs
-tail -f ~/.ast-helper/logs/mcp-server.log
+tail -f ~/.ast-copilot-helper/logs/mcp-server.log
 
 # Test server connectivity
 curl http://localhost:3001/health
 
 # Restart server
-ast-helper server --restart
+ast-copilot-helper server --restart
 ```
 
 ### Protocol Issues
@@ -567,10 +567,10 @@ Error: Invalid JSON-RPC message format
 
 ```bash
 # Check MCP client compatibility
-ast-helper server --version
+ast-copilot-helper server --version
 
 # Update MCP protocol version
-ast-helper config set mcp.protocolVersion "2024-11-05"
+ast-copilot-helper config set mcp.protocolVersion "2024-11-05"
 
 # Test with simple request
 echo '{"jsonrpc":"2.0","id":1,"method":"ping"}' | \
@@ -587,16 +587,16 @@ Error: Tool 'query_codebase' execution failed
 
 ```bash
 # List available tools
-ast-helper tools list
+ast-copilot-helper tools list
 
 # Test tool directly
-ast-helper tools test query_codebase '{"query": "test"}'
+ast-copilot-helper tools test query_codebase '{"query": "test"}'
 
 # Check tool configuration
-ast-helper config get mcp.tools
+ast-copilot-helper config get mcp.tools
 
 # Reset tool configuration
-ast-helper tools --reset
+ast-copilot-helper tools --reset
 ```
 
 ## VS Code Extension Issues
@@ -681,7 +681,7 @@ Extension not providing code suggestions
 
 ```bash
 # Initialize project for extension
-ast-helper init
+ast-copilot-helper init
 
 # Verify language server is running
 # Output panel -> Language Servers
@@ -707,14 +707,14 @@ Process using excessive memory (>2GB)
 
 ```bash
 # Monitor memory usage
-top -p $(pgrep ast-helper)
-htop -p $(pgrep ast-helper)
+top -p $(pgrep ast-copilot-helper)
+htop -p $(pgrep ast-copilot-helper)
 
 # Reduce batch size
-ast-helper config set parser.batchSize 50
+ast-copilot-helper config set parser.batchSize 50
 
 # Process files incrementally
-ast-helper parse src/ --incremental
+ast-copilot-helper parse src/ --incremental
 
 # Increase Node.js memory limit
 export NODE_OPTIONS="--max-old-space-size=4096"
@@ -730,16 +730,16 @@ Process using 100% CPU for extended periods
 
 ```bash
 # Check for infinite loops
-strace -p $(pgrep ast-helper)
+strace -p $(pgrep ast-copilot-helper)
 
 # Reduce concurrency
-ast-helper config set parser.maxConcurrency 2
+ast-copilot-helper config set parser.maxConcurrency 2
 
 # Profile performance
-ast-helper --profile parse src/
+ast-copilot-helper --profile parse src/
 
 # Use incremental parsing
-ast-helper parse src/ --watch --debounce 5000
+ast-copilot-helper parse src/ --watch --debounce 5000
 ```
 
 ### Disk I/O Issues
@@ -757,14 +757,14 @@ File parsing taking longer than expected
 iostat -x 1 5
 
 # Monitor file operations
-lsof | grep ast-helper
+lsof | grep ast-copilot-helper
 
 # Optimize file patterns
-ast-helper config set parser.excludePatterns '["**/node_modules/**", "**/dist/**", "**/*.min.*"]'
+ast-copilot-helper config set parser.excludePatterns '["**/node_modules/**", "**/dist/**", "**/*.min.*"]'
 
 # Use SSD if available
-mv .ast-helper.db /path/to/ssd/
-ln -s /path/to/ssd/.ast-helper.db .ast-helper.db
+mv .ast-copilot-helper.db /path/to/ssd/
+ln -s /path/to/ssd/.ast-copilot-helper.db .ast-copilot-helper.db
 ```
 
 ## Diagnostic Tools
@@ -775,29 +775,29 @@ ln -s /path/to/ssd/.ast-helper.db .ast-helper.db
 
 ```bash
 # Run comprehensive diagnostics
-ast-helper doctor
+ast-copilot-helper doctor
 
 # Check specific components
-ast-helper doctor --parsers
-ast-helper doctor --database
-ast-helper doctor --ai
-ast-helper doctor --mcp
+ast-copilot-helper doctor --parsers
+ast-copilot-helper doctor --database
+ast-copilot-helper doctor --ai
+ast-copilot-helper doctor --mcp
 ```
 
 #### Statistics and Status
 
 ```bash
 # Project statistics
-ast-helper stats
+ast-copilot-helper stats
 
 # Database status
-ast-helper db --status
+ast-copilot-helper db --status
 
 # Configuration status
-ast-helper config --list
+ast-copilot-helper config --list
 
 # Server status
-ast-helper server --status
+ast-copilot-helper server --status
 ```
 
 ### Debug Modes
@@ -806,26 +806,26 @@ ast-helper server --status
 
 ```bash
 # Enable debug logging
-export DEBUG=ast-helper:*
-ast-helper parse src/
+export DEBUG=ast-copilot-helper:*
+ast-copilot-helper parse src/
 
 # Component-specific logging
-export DEBUG=ast-helper:parser
-export DEBUG=ast-helper:database
-export DEBUG=ast-helper:ai
+export DEBUG=ast-copilot-helper:parser
+export DEBUG=ast-copilot-helper:database
+export DEBUG=ast-copilot-helper:ai
 ```
 
 #### Performance Profiling
 
 ```bash
 # Profile parsing performance
-ast-helper parse src/ --profile
+ast-copilot-helper parse src/ --profile
 
 # Profile query performance
-ast-helper query "function" --profile
+ast-copilot-helper query "function" --profile
 
 # Memory profiling
-node --inspect-brk $(which ast-helper) parse src/
+node --inspect-brk $(which ast-copilot-helper) parse src/
 # Open chrome://inspect
 ```
 
@@ -835,9 +835,9 @@ node --inspect-brk $(which ast-helper) parse src/
 
 Check these locations for log files:
 
-- `~/.ast-helper/logs/` (main logs)
+- `~/.ast-copilot-helper/logs/` (main logs)
 - `~/.vscode/logs/` (VS Code extension logs)
-- Project root: `.ast-helper.log`
+- Project root: `.ast-copilot-helper.log`
 
 ### Issue Reporting
 
@@ -849,19 +849,19 @@ When reporting issues, include:
    uname -a
    node --version
    npm --version
-   ast-helper --version
+   ast-copilot-helper --version
    ```
 
 2. **Configuration:**
 
    ```bash
-   ast-helper config --export
+   ast-copilot-helper config --export
    ```
 
 3. **Logs:**
 
    ```bash
-   tail -n 100 ~/.ast-helper/logs/error.log
+   tail -n 100 ~/.ast-copilot-helper/logs/error.log
    ```
 
 4. **Reproduction Steps:**
@@ -871,8 +871,8 @@ When reporting issues, include:
 
 ### Community Support
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/yourusername/ast-copilot-helper/issues)
-- **Discussions**: [Ask questions and share ideas](https://github.com/yourusername/ast-copilot-helper/discussions)
+- **GitHub Issues**: [Report bugs and request features](https://github.com/EvanDodds/ast-copilot-helper/issues)
+- **Discussions**: [Ask questions and share ideas](https://github.com/EvanDodds/ast-copilot-helper/discussions)
 - **Documentation**: [Browse comprehensive docs](https://yourusername.github.io/ast-copilot-helper/)
 
 ### Emergency Recovery
@@ -881,12 +881,12 @@ If everything breaks:
 
 ```bash
 # Nuclear option - complete reset
-rm -rf .ast-helper*
+rm -rf .ast-copilot-helper*
 rm -rf node_modules
 npm cache clean --force
 npm install ast-copilot-helper@latest
-ast-helper init
-ast-helper parse src/
+ast-copilot-helper init
+ast-copilot-helper parse src/
 ```
 
 Remember: Most issues have simple solutions. Check this troubleshooting guide first, then reach out to the community if needed!

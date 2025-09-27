@@ -6,24 +6,24 @@ The ast-copilot-helper CLI provides powerful commands for parsing source code an
 
 All commands support these global options:
 
-| Option            | Description              | Default            |
-| ----------------- | ------------------------ | ------------------ |
-| `--config <file>` | Configuration file path  | `.ast-helper.json` |
-| `--verbose, -v`   | Enable verbose logging   | `false`            |
-| `--silent, -s`    | Suppress output messages | `false`            |
-| `--help, -h`      | Show help information    | -                  |
-| `--version`       | Show version information | -                  |
+| Option            | Description              | Default                    |
+| ----------------- | ------------------------ | -------------------------- |
+| `--config <file>` | Configuration file path  | `.ast-copilot-helper.json` |
+| `--verbose, -v`   | Enable verbose logging   | `false`                    |
+| `--silent, -s`    | Suppress output messages | `false`                    |
+| `--help, -h`      | Show help information    | -                          |
+| `--version`       | Show version information | -                          |
 
 ## Commands
 
-### `ast-helper parse`
+### `ast-copilot-helper parse`
 
 Parse source code files and extract AST annotations.
 
 #### Usage
 
 ```bash
-ast-helper parse [options] <files...>
+ast-copilot-helper parse [options] <files...>
 ```
 
 #### Options
@@ -45,31 +45,31 @@ ast-helper parse [options] <files...>
 **Parse TypeScript files in src directory:**
 
 ```bash
-ast-helper parse src/**/*.ts
+ast-copilot-helper parse src/**/*.ts
 ```
 
 **Parse with JSON output:**
 
 ```bash
-ast-helper parse --output annotations.json --format json src/
+ast-copilot-helper parse --output annotations.json --format json src/
 ```
 
 **Watch for changes and reparse:**
 
 ```bash
-ast-helper parse --watch --recursive src/
+ast-copilot-helper parse --watch --recursive src/
 ```
 
 **Parse with exclusions:**
 
 ```bash
-ast-helper parse --exclude "**/*.test.ts" --exclude "**/node_modules/**" src/
+ast-copilot-helper parse --exclude "**/*.test.ts" --exclude "**/node_modules/**" src/
 ```
 
 **Incremental parsing for large codebases:**
 
 ```bash
-ast-helper parse --incremental --max-files 5000 src/
+ast-copilot-helper parse --incremental --max-files 5000 src/
 ```
 
 #### Output Format
@@ -135,52 +135,52 @@ annotations:
 
 :::
 
-### `ast-helper query`
+### `ast-copilot-helper query`
 
 Query parsed annotations using natural language or structured queries.
 
 #### Usage
 
 ```bash
-ast-helper query [options] <query>
+ast-copilot-helper query [options] <query>
 ```
 
 #### Options
 
-| Option                     | Alias | Description                              | Default          |
-| -------------------------- | ----- | ---------------------------------------- | ---------------- |
-| `--database <file>`        | `-d`  | Database file with parsed annotations    | `.ast-helper.db` |
-| `--limit <number>`         | `-l`  | Maximum number of results to return      | `10`             |
-| `--similarity <threshold>` | `-s`  | Similarity threshold for semantic search | `0.7`            |
-| `--format <format>`        | `-f`  | Output format for results                | `json`           |
-| `--explain`                |       | Explain how the query was processed      | `false`          |
-| `--type <type>`            | `-t`  | Filter by annotation type                | `all`            |
-| `--file <pattern>`         |       | Filter by file pattern                   | `*`              |
+| Option                     | Alias | Description                              | Default                  |
+| -------------------------- | ----- | ---------------------------------------- | ------------------------ |
+| `--database <file>`        | `-d`  | Database file with parsed annotations    | `.ast-copilot-helper.db` |
+| `--limit <number>`         | `-l`  | Maximum number of results to return      | `10`                     |
+| `--similarity <threshold>` | `-s`  | Similarity threshold for semantic search | `0.7`                    |
+| `--format <format>`        | `-f`  | Output format for results                | `json`                   |
+| `--explain`                |       | Explain how the query was processed      | `false`                  |
+| `--type <type>`            | `-t`  | Filter by annotation type                | `all`                    |
+| `--file <pattern>`         |       | Filter by file pattern                   | `*`                      |
 
 #### Examples
 
 **Find authentication functions:**
 
 ```bash
-ast-helper query "functions that handle user authentication"
+ast-copilot-helper query "functions that handle user authentication"
 ```
 
 **Find error handling patterns:**
 
 ```bash
-ast-helper query --limit 5 "error handling patterns"
+ast-copilot-helper query --limit 5 "error handling patterns"
 ```
 
 **Find specific function type:**
 
 ```bash
-ast-helper query --type function --file "src/**/*.ts" "database queries"
+ast-copilot-helper query --type function --file "src/**/*.ts" "database queries"
 ```
 
 **Query with explanation:**
 
 ```bash
-ast-helper query --explain "API endpoints for user management"
+ast-copilot-helper query --explain "API endpoints for user management"
 ```
 
 #### Query Types
@@ -192,14 +192,14 @@ The query command supports multiple query types:
 3. **Structural**: `type:function name:get*`
 4. **Combined**: `"user management" AND type:class`
 
-### `ast-helper analyze`
+### `ast-copilot-helper analyze`
 
 Analyze code patterns, quality metrics, and potential issues.
 
 #### Usage
 
 ```bash
-ast-helper analyze [options] <files...>
+ast-copilot-helper analyze [options] <files...>
 ```
 
 #### Options
@@ -219,29 +219,29 @@ ast-helper analyze [options] <files...>
 **Analyze code quality:**
 
 ```bash
-ast-helper analyze src/ --metrics --complexity
+ast-copilot-helper analyze src/ --metrics --complexity
 ```
 
 **Security analysis:**
 
 ```bash
-ast-helper analyze src/ --security --format json
+ast-copilot-helper analyze src/ --security --format json
 ```
 
 **Performance analysis:**
 
 ```bash
-ast-helper analyze src/ --performance --threshold 5
+ast-copilot-helper analyze src/ --performance --threshold 5
 ```
 
-### `ast-helper init`
+### `ast-copilot-helper init`
 
-Initialize ast-helper configuration in the current directory.
+Initialize ast-copilot-helper configuration in the current directory.
 
 #### Usage
 
 ```bash
-ast-helper init [options]
+ast-copilot-helper init [options]
 ```
 
 #### Options
@@ -267,70 +267,70 @@ Available configuration templates:
 **Initialize with default template:**
 
 ```bash
-ast-helper init
+ast-copilot-helper init
 ```
 
 **Initialize with TypeScript template:**
 
 ```bash
-ast-helper init --template typescript
+ast-copilot-helper init --template typescript
 ```
 
 **Force overwrite existing config:**
 
 ```bash
-ast-helper init --force --template monorepo
+ast-copilot-helper init --force --template monorepo
 ```
 
-### `ast-helper server`
+### `ast-copilot-helper server`
 
 Start the MCP (Model Context Protocol) server for AI agent integration.
 
 #### Usage
 
 ```bash
-ast-helper server [options]
+ast-copilot-helper server [options]
 ```
 
 #### Options
 
-| Option               | Description                            | Default          |
-| -------------------- | -------------------------------------- | ---------------- |
-| `--port <port>`      | Server port                            | `3001`           |
-| `--host <host>`      | Server host                            | `localhost`      |
-| `--transport <type>` | Transport type (stdio, sse, websocket) | `stdio`          |
-| `--database <file>`  | Database file path                     | `.ast-helper.db` |
-| `--cors`             | Enable CORS for web clients            | `false`          |
-| `--auth <token>`     | Authentication token                   | `none`           |
+| Option               | Description                            | Default                  |
+| -------------------- | -------------------------------------- | ------------------------ |
+| `--port <port>`      | Server port                            | `3001`                   |
+| `--host <host>`      | Server host                            | `localhost`              |
+| `--transport <type>` | Transport type (stdio, sse, websocket) | `stdio`                  |
+| `--database <file>`  | Database file path                     | `.ast-copilot-helper.db` |
+| `--cors`             | Enable CORS for web clients            | `false`                  |
+| `--auth <token>`     | Authentication token                   | `none`                   |
 
 #### Examples
 
 **Start server with stdio transport:**
 
 ```bash
-ast-helper server --transport stdio
+ast-copilot-helper server --transport stdio
 ```
 
 **Start HTTP server with CORS:**
 
 ```bash
-ast-helper server --transport sse --port 3001 --cors
+ast-copilot-helper server --transport sse --port 3001 --cors
 ```
 
 **Start WebSocket server:**
 
 ```bash
-ast-helper server --transport websocket --host 0.0.0.0 --port 8080
+ast-copilot-helper server --transport websocket --host 0.0.0.0 --port 8080
 ```
 
-### `ast-helper config`
+### `ast-copilot-helper config`
 
 Manage configuration settings.
 
 #### Usage
 
 ```bash
-ast-helper config <command> [options]
+ast-copilot-helper config <command> [options]
 ```
 
 #### Subcommands
@@ -348,29 +348,29 @@ ast-helper config <command> [options]
 **Set configuration value:**
 
 ```bash
-ast-helper config set parser.maxFileSize 20
+ast-copilot-helper config set parser.maxFileSize 20
 ```
 
 **Get configuration value:**
 
 ```bash
-ast-helper config get parser.includePatterns
+ast-copilot-helper config get parser.includePatterns
 ```
 
 **List all configuration:**
 
 ```bash
-ast-helper config list
+ast-copilot-helper config list
 ```
 
-### `ast-helper diagnose`
+### `ast-copilot-helper diagnose`
 
 Generate diagnostic information for troubleshooting.
 
 #### Usage
 
 ```bash
-ast-helper diagnose [options]
+ast-copilot-helper diagnose [options]
 ```
 
 #### Options
@@ -387,13 +387,13 @@ ast-helper diagnose [options]
 **Generate diagnostic report:**
 
 ```bash
-ast-helper diagnose --output diagnostic.json
+ast-copilot-helper diagnose --output diagnostic.json
 ```
 
 **Full diagnostic with environment:**
 
 ```bash
-ast-helper diagnose --include-env --include-logs
+ast-copilot-helper diagnose --include-env --include-logs
 ```
 
 ## Exit Codes
@@ -413,7 +413,7 @@ The CLI uses the following exit codes:
 
 ## Configuration File
 
-The CLI reads configuration from `.ast-helper.json`:
+The CLI reads configuration from `.ast-copilot-helper.json`:
 
 ```json
 {
@@ -425,7 +425,7 @@ The CLI reads configuration from `.ast-helper.json`:
     "languages": ["typescript", "javascript", "python"]
   },
   "database": {
-    "path": ".ast-helper.db",
+    "path": ".ast-copilot-helper.db",
     "cacheSize": 100,
     "enableWAL": true
   },
@@ -445,9 +445,9 @@ The CLI reads configuration from `.ast-helper.json`:
 
 ## Environment Variables
 
-| Variable               | Description                          | Default             |
-| ---------------------- | ------------------------------------ | ------------------- |
-| `AST_HELPER_CONFIG`    | Configuration file path              | `.ast-helper.json`  |
-| `AST_HELPER_DB`        | Database file path                   | `.ast-helper.db`    |
-| `AST_HELPER_LOG_LEVEL` | Log level (debug, info, warn, error) | `info`              |
-| `AST_HELPER_CACHE_DIR` | Cache directory                      | `.ast-helper/cache` |
+| Variable               | Description                          | Default                     |
+| ---------------------- | ------------------------------------ | --------------------------- |
+| `AST_HELPER_CONFIG`    | Configuration file path              | `.ast-copilot-helper.json`  |
+| `AST_HELPER_DB`        | Database file path                   | `.ast-copilot-helper.db`    |
+| `AST_HELPER_LOG_LEVEL` | Log level (debug, info, warn, error) | `info`                      |
+| `AST_HELPER_CACHE_DIR` | Cache directory                      | `.ast-copilot-helper/cache` |

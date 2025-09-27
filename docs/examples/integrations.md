@@ -12,7 +12,7 @@ Setup MCP server and connect Claude:
 // claude_desktop_config.json
 {
   "mcpServers": {
-    "ast-helper": {
+    "ast-copilot-helper": {
       "command": "npx",
       "args": ["ast-copilot-helper", "server"],
       "env": {
@@ -103,7 +103,7 @@ Would you like me to explain any specific findings?`,
 Create custom ESLint rules using AST data:
 
 ```typescript
-// eslint-plugin-ast-helper.js
+// eslint-plugin-ast-copilot-helper.js
 const { ASTHelper } = require("ast-copilot-helper");
 
 module.exports = {
@@ -243,14 +243,14 @@ jobs:
 
       - name: Run AST Analysis
         run: |
-          ast-helper analyze src/ \
+          ast-copilot-helper analyze src/ \
             --format json \
             --output analysis-results.json \
             --fail-on-issues
 
       - name: Generate Report
         run: |
-          ast-helper report analysis-results.json \
+          ast-copilot-helper report analysis-results.json \
             --format html \
             --output analysis-report.html
 
@@ -302,7 +302,7 @@ ast-analysis:
   image: node:18
   script:
     - npm install -g ast-copilot-helper
-    - ast-helper analyze src/ --format json --output analysis.json
+    - ast-copilot-helper analyze src/ --format json --output analysis.json
   artifacts:
     reports:
       junit: analysis.json
@@ -316,7 +316,7 @@ quality-report:
   dependencies:
     - ast-analysis
   script:
-    - ast-helper report analysis.json --format gitlab --output quality-report.json
+    - ast-copilot-helper report analysis.json --format gitlab --output quality-report.json
   artifacts:
     reports:
       codequality: quality-report.json
@@ -340,7 +340,7 @@ pipeline {
         stage('AST Analysis') {
             steps {
                 sh '''
-                    ast-helper analyze src/ \
+                    ast-copilot-helper analyze src/ \
                         --format json \
                         --output analysis-results.json \
                         --complexity-threshold 10 \
@@ -352,11 +352,11 @@ pipeline {
         stage('Generate Reports') {
             steps {
                 sh '''
-                    ast-helper report analysis-results.json \
+                    ast-copilot-helper report analysis-results.json \
                         --format html \
                         --output analysis-report.html
 
-                    ast-helper report analysis-results.json \
+                    ast-copilot-helper report analysis-results.json \
                         --format junit \
                         --output test-results.xml
                 '''
@@ -422,7 +422,7 @@ class ASTHelperPlugin : AnAction() {
 
     private fun runASTAnalysis(code: String): AnalysisResult {
         // Call ast-copilot-helper via CLI or API
-        val process = ProcessBuilder("ast-helper", "analyze", "--stdin")
+        val process = ProcessBuilder("ast-copilot-helper", "analyze", "--stdin")
             .start()
 
         process.outputStream.use { output ->
@@ -453,7 +453,7 @@ class AstHelperAnalyzeCommand(sublime_plugin.TextCommand):
         # Run AST analysis
         try:
             result = subprocess.run(
-                ['ast-helper', 'analyze', '--stdin', '--format', 'json'],
+                ['ast-copilot-helper', 'analyze', '--stdin', '--format', 'json'],
                 input=content,
                 text=True,
                 capture_output=True,
@@ -567,7 +567,7 @@ await collector.collectAndStoreMetrics("./src");
 ### Jest Integration
 
 ```javascript
-// jest-ast-helper.js
+// jest-ast-copilot-helper.js
 const { ASTHelper } = require("ast-copilot-helper");
 
 class ASTHelperReporter {

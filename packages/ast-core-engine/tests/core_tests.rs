@@ -1,8 +1,8 @@
 // Pure Rust unit tests for core functionality without NAPI dependencies
 // These tests validate the core Rust modules independently
 
-use std::path::PathBuf;
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[cfg(test)]
 mod tests {
@@ -114,7 +114,8 @@ mod tests {
         assert_eq!(metrics.total_processing_time_ms, 1000);
         assert_eq!(metrics.memory_usage_bytes, 1024 * 1024);
 
-        let cache_hit_ratio = metrics.cache_hits as f64 / (metrics.cache_hits + metrics.cache_misses) as f64;
+        let cache_hit_ratio =
+            metrics.cache_hits as f64 / (metrics.cache_hits + metrics.cache_misses) as f64;
         assert!((cache_hit_ratio - 0.8).abs() < f64::EPSILON);
 
         println!("✅ Basic performance metrics test passed");
@@ -207,7 +208,8 @@ mod tests {
             }
 
             pub fn dot_product(&self, other: &Vector) -> f32 {
-                self.data.iter()
+                self.data
+                    .iter()
                     .zip(other.data.iter())
                     .map(|(a, b)| a * b)
                     .sum()
@@ -221,7 +223,7 @@ mod tests {
                 let dot = self.dot_product(other);
                 let mag_a = self.magnitude();
                 let mag_b = other.magnitude();
-                
+
                 if mag_a == 0.0 || mag_b == 0.0 {
                     0.0
                 } else {
@@ -282,7 +284,9 @@ mod tests {
         assert_eq!(store.count(), 0);
 
         // Test insert
-        store.insert("key1".to_string(), "value1".to_string()).unwrap();
+        store
+            .insert("key1".to_string(), "value1".to_string())
+            .unwrap();
         assert_eq!(store.count(), 1);
 
         // Test get
@@ -334,7 +338,11 @@ mod tests {
             }
 
             pub fn count_nodes(&self) -> u32 {
-                1 + self.children.iter().map(|child| child.count_nodes()).sum::<u32>()
+                1 + self
+                    .children
+                    .iter()
+                    .map(|child| child.count_nodes())
+                    .sum::<u32>()
             }
 
             pub fn find_functions(&self) -> Vec<&str> {
@@ -409,8 +417,17 @@ mod tests {
         assert_eq!(ast_parsing.improvement_factor(), 20.0);
 
         println!("✅ Performance benchmark simulation test passed");
-        println!("  File processing improvement: {}x", file_processing.improvement_factor());
-        println!("  Vector search improvement: {}x", vector_search.improvement_factor());
-        println!("  AST parsing improvement: {}x", ast_parsing.improvement_factor());
+        println!(
+            "  File processing improvement: {}x",
+            file_processing.improvement_factor()
+        );
+        println!(
+            "  Vector search improvement: {}x",
+            vector_search.improvement_factor()
+        );
+        println!(
+            "  AST parsing improvement: {}x",
+            ast_parsing.improvement_factor()
+        );
     }
 }

@@ -230,7 +230,7 @@ jobs:
 const {
   ComprehensiveReleaseManager,
   ReleaseType,
-} = require("../packages/ast-helper/src/release-management");
+} = require("../packages/ast-copilot-helper/src/release-management");
 const { readFileSync } = require("fs");
 const { join } = require("path");
 
@@ -907,7 +907,7 @@ const inquirer = require("inquirer");
 const {
   ComprehensiveReleaseManager,
   ReleaseType,
-} = require("../packages/ast-helper/src/release-management");
+} = require("../packages/ast-copilot-helper/src/release-management");
 const { readFileSync } = require("fs");
 const chalk = require("chalk");
 

@@ -1,19 +1,19 @@
 # Configuration Guide
 
-Master ast-copilot-helper configuration to tailor the tool perfectly for your project needs. This comprehensive guide covers all configuration options, patterns, and best practices.
+Master AST Copilot Helper configuration to tailor the tool perfectly for your project needs. This comprehensive guide covers all configuration options, patterns, and best practices.
 
 ## Configuration Overview
 
-ast-copilot-helper uses a hierarchical configuration system:
+AST Copilot Helper uses a hierarchical configuration system:
 
 1. **Default Configuration** - Built-in sensible defaults
-2. **Global Configuration** - User-wide settings (`~/.ast-helper.json`)
-3. **Project Configuration** - Project-specific (`.ast-helper.json`)
+2. **Global Configuration** - User-wide settings (`~/.ast-copilot-helper.json`)
+3. **Project Configuration** - Project-specific (`.ast-copilot-helper.json`)
 4. **CLI Overrides** - Command-line arguments (highest priority)
 
 ## Configuration File Structure
 
-The main configuration file `.ast-helper.json` contains these sections:
+The main configuration file `.ast-copilot-helper.json` contains these sections:
 
 ```json
 {
@@ -410,7 +410,7 @@ The main configuration file `.ast-helper.json` contains these sections:
     "lazyLoading": true,
     "cacheSize": "100MB",
     "diskCache": true,
-    "tempDirectory": "/tmp/ast-helper"
+    "tempDirectory": "/tmp/ast-copilot-helper"
   }
 }
 ```
@@ -442,7 +442,7 @@ The main configuration file `.ast-helper.json` contains these sections:
   "logging": {
     "level": "info", // "error", "warn", "info", "debug", "trace"
     "outputs": ["console", "file"],
-    "file": ".ast-helper.log",
+    "file": ".ast-copilot-helper.log",
     "maxFileSize": "10MB",
     "maxFiles": 5,
     "format": "json", // "text", "json"
@@ -485,7 +485,7 @@ export MCP_PORT=3001
 export MCP_HOST="0.0.0.0"
 
 # Database
-export AST_HELPER_DB_PATH="/custom/path/ast-helper.db"
+export AST_HELPER_DB_PATH="/custom/path/ast-copilot-helper.db"
 export AST_HELPER_CACHE_DIR="/custom/cache"
 
 # Performance
@@ -494,7 +494,7 @@ export AST_HELPER_MAX_MEMORY="4GB"
 
 # Logging
 export AST_HELPER_LOG_LEVEL="debug"
-export AST_HELPER_LOG_FILE="/var/log/ast-helper.log"
+export AST_HELPER_LOG_FILE="/var/log/ast-copilot-helper.log"
 ```
 
 ### Configuration with Environment Variables
@@ -647,14 +647,14 @@ export AST_HELPER_LOG_FILE="/var/log/ast-helper.log"
 
 ```bash
 # Check configuration validity
-ast-helper config validate
+ast-copilot-helper config validate
 
 # Show computed configuration
-ast-helper config show
+ast-copilot-helper config show
 
 # Test specific settings
-ast-helper config test --section parser
-ast-helper config test --section ai
+ast-copilot-helper config test --section parser
+ast-copilot-helper config test --section ai
 ```
 
 ### Common Validation Errors
@@ -765,7 +765,7 @@ ast-helper config test --section ai
   "logging": {
     "level": "warn",
     "outputs": ["file"],
-    "file": "/var/log/ast-helper.log"
+    "file": "/var/log/ast-copilot-helper.log"
   }
 }
 ```
@@ -776,12 +776,12 @@ ast-helper config test --section ai
 
 ```
 project/
-├── .ast-helper.json              # Main configuration
-├── .ast-helper.local.json        # Local overrides (gitignored)
+├── .ast-copilot-helper.json              # Main configuration
+├── .ast-copilot-helper.local.json        # Local overrides (gitignored)
 ├── config/
-│   ├── ast-helper.dev.json      # Development config
-│   ├── ast-helper.prod.json     # Production config
-│   └── ast-helper.test.json     # Testing config
+│   ├── ast-copilot-helper.dev.json      # Development config
+│   ├── ast-copilot-helper.prod.json     # Production config
+│   └── ast-copilot-helper.test.json     # Testing config
 └── .env                         # Environment variables
 ```
 
@@ -866,8 +866,8 @@ project/
 
 ```bash
 # Use different configs for different environments
-ast-helper parse --config config/ast-helper.dev.json
-ast-helper parse --config config/ast-helper.prod.json
+ast-copilot-helper parse --config config/ast-copilot-helper.dev.json
+ast-copilot-helper parse --config config/ast-copilot-helper.prod.json
 
 # Environment-specific commands
 npm run dev:parse    # Uses dev config
@@ -897,10 +897,10 @@ npm run prod:parse   # Uses prod config
 
 ```bash
 # Override settings via environment
-SIMILARITY_THRESHOLD=0.8 ast-helper query "auth functions"
+SIMILARITY_THRESHOLD=0.8 ast-copilot-helper query "auth functions"
 
 # Use config from different location
-ast-helper parse --config /path/to/config.json
+ast-copilot-helper parse --config /path/to/config.json
 ```
 
 ## Troubleshooting Configuration
@@ -911,17 +911,17 @@ ast-helper parse --config /path/to/config.json
 
 ```bash
 # Check current config location
-ast-helper config show --source
+ast-copilot-helper config show --source
 
 # Use explicit config path
-ast-helper parse --config .ast-helper.json
+ast-copilot-helper parse --config .ast-copilot-helper.json
 ```
 
 **Invalid JSON syntax:**
 
 ```bash
 # Validate JSON syntax
-ast-helper config validate
+ast-copilot-helper config validate
 # Or use online JSON validator
 ```
 
@@ -932,17 +932,17 @@ ast-helper config validate
 echo $OPENAI_API_KEY
 
 # Test variable resolution
-ast-helper config show | grep apiKey
+ast-copilot-helper config show | grep apiKey
 ```
 
 **Performance issues:**
 
 ```bash
 # Check current settings
-ast-helper config show --section performance
+ast-copilot-helper config show --section performance
 
 # Profile parsing performance
-ast-helper parse --verbose --profile
+ast-copilot-helper parse --verbose --profile
 ```
 
 ## Next Steps
@@ -986,7 +986,7 @@ export AST_HELPER_LOG_LEVEL="info"
 ### Validation Commands
 
 ```bash
-ast-helper config validate    # Check configuration
-ast-helper config show       # Display current config
-ast-helper config test       # Test specific sections
+ast-copilot-helper config validate    # Check configuration
+ast-copilot-helper config show       # Display current config
+ast-copilot-helper config test       # Test specific sections
 ```

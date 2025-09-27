@@ -14,7 +14,7 @@ Step-by-step interactive tutorials to help you learn ast-copilot-helper through 
 ```bash
 npm install -g ast-copilot-helper
 # Verify installation
-ast-helper --version
+ast-copilot-helper --version
 ```
 
 ### Step 2: Basic File Parsing
@@ -50,7 +50,7 @@ function createCalculator(): Calculator {
 Parse the file:
 
 ```bash
-ast-helper parse sample.ts
+ast-copilot-helper parse sample.ts
 ```
 
 **Expected Output**: AST structure showing class declaration, methods, and properties.
@@ -60,13 +60,13 @@ ast-helper parse sample.ts
 Find all methods in the class:
 
 ```bash
-ast-helper query sample.ts --type "MethodDefinition"
+ast-copilot-helper query sample.ts --type "MethodDefinition"
 ```
 
 Find async functions:
 
 ```bash
-ast-helper query sample.ts --type "MethodDefinition" --async
+ast-copilot-helper query sample.ts --type "MethodDefinition" --async
 ```
 
 ### Step 4: Analysis
@@ -74,7 +74,7 @@ ast-helper query sample.ts --type "MethodDefinition" --async
 Run code analysis:
 
 ```bash
-ast-helper analyze sample.ts
+ast-copilot-helper analyze sample.ts
 ```
 
 **What to Look For**:
@@ -112,7 +112,7 @@ Parse the entire project:
 
 ```bash
 cd my-app
-ast-helper parse src/ --recursive
+ast-copilot-helper parse src/ --recursive
 ```
 
 ### Step 3: Find Dependencies
@@ -120,7 +120,7 @@ ast-helper parse src/ --recursive
 List all import statements:
 
 ```bash
-ast-helper query src/ --type "ImportDeclaration" --format table
+ast-copilot-helper query src/ --type "ImportDeclaration" --format table
 ```
 
 ### Step 4: Component Analysis
@@ -128,7 +128,7 @@ ast-helper query src/ --type "ImportDeclaration" --format table
 Find React components (assuming TSX files):
 
 ```bash
-ast-helper query src/components/ --type "FunctionDeclaration,ArrowFunctionExpression" --format json
+ast-copilot-helper query src/components/ --type "FunctionDeclaration,ArrowFunctionExpression" --format json
 ```
 
 ### Step 5: Test Coverage Analysis
@@ -136,7 +136,7 @@ ast-helper query src/components/ --type "FunctionDeclaration,ArrowFunctionExpres
 Find test files and their targets:
 
 ```bash
-ast-helper analyze tests/ --test-coverage --source src/
+ast-copilot-helper analyze tests/ --test-coverage --source src/
 ```
 
 ---
@@ -146,7 +146,7 @@ ast-helper analyze tests/ --test-coverage --source src/
 ### Step 1: Start MCP Server
 
 ```bash
-ast-helper server --port 3000 --host localhost
+ast-copilot-helper server --port 3000 --host localhost
 ```
 
 ### Step 2: Connect from AI Agent
@@ -208,7 +208,7 @@ Make changes to your code and ask:
 
 ### Step 1: Create Configuration File
 
-Create `.ast-helper.json` in your project root:
+Create `.ast-copilot-helper.json` in your project root:
 
 ```json
 {
@@ -282,19 +282,19 @@ Configure integration with ESLint:
 Run initial performance analysis:
 
 ```bash
-ast-helper analyze src/ --timing --memory-usage
+ast-copilot-helper analyze src/ --timing --memory-usage
 ```
 
 ### Step 2: Enable Caching
 
 ```bash
-ast-helper parse src/ --cache --cache-dir .ast-cache
+ast-copilot-helper parse src/ --cache --cache-dir .ast-cache
 ```
 
 ### Step 3: Parallel Processing
 
 ```bash
-ast-helper analyze src/ --parallel --workers 4
+ast-copilot-helper analyze src/ --parallel --workers 4
 ```
 
 ### Step 4: Incremental Analysis
@@ -302,13 +302,13 @@ ast-helper analyze src/ --parallel --workers 4
 After making changes:
 
 ```bash
-ast-helper analyze src/ --incremental --since HEAD~1
+ast-copilot-helper analyze src/ --incremental --since HEAD~1
 ```
 
 ### Step 5: Monitor Performance
 
 ```bash
-ast-helper analyze src/ --profile --output profile.json
+ast-copilot-helper analyze src/ --profile --output profile.json
 ```
 
 ---
@@ -340,13 +340,13 @@ export class CustomLanguageParser implements ParserPlugin {
 ### Step 2: Register Plugin
 
 ```bash
-ast-helper plugin install ./plugins/custom-parser.ts
+ast-copilot-helper plugin install ./plugins/custom-parser.ts
 ```
 
 ### Step 3: Use Custom Parser
 
 ```bash
-ast-helper parse src/ --parser custom-language
+ast-copilot-helper parse src/ --parser custom-language
 ```
 
 ---

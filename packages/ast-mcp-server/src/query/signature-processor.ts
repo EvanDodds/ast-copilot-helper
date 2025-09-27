@@ -14,6 +14,7 @@ import type {
   AnnotationMatch,
 } from "./types.js";
 import type { ASTNodeMatch } from "../types.js";
+import type { AstCoreEngineApi } from "../../../ast-core-engine/index.js";
 
 /**
  * Signature analysis result
@@ -68,6 +69,7 @@ export class SignatureQueryProcessor {
 
   // Dependencies
   private annotationDatabase: ASTDatabaseReader;
+  private _rustEngine?: AstCoreEngineApi;
 
   // Configuration
   private config: QuerySystemConfig;
@@ -82,9 +84,12 @@ export class SignatureQueryProcessor {
   constructor(
     annotationDatabase: ASTDatabaseReader,
     config: QuerySystemConfig,
+    _rustEngine?: AstCoreEngineApi,
   ) {
     this.annotationDatabase = annotationDatabase;
     this.config = config;
+    this._rustEngine = _rustEngine; // Future use for Rust engine integration
+    void this._rustEngine; // Suppress unused variable warning
 
     // Initialize matching configuration
     this.matchingConfig = {
@@ -522,24 +527,34 @@ export class SignatureQueryProcessor {
       .map(() => Array(a.length + 1).fill(0));
 
     for (let i = 0; i <= a.length; i++) {
-      matrix[0]![i] = i;
+      const row = matrix[0];
+      if (row) {
+        row[i] = i;
+      }
     }
     for (let j = 0; j <= b.length; j++) {
-      matrix[j]![0] = j;
+      const row = matrix[j];
+      if (row) {
+        row[0] = j;
+      }
     }
 
     for (let j = 1; j <= b.length; j++) {
       for (let i = 1; i <= a.length; i++) {
         const substitutionCost = a[i - 1] === b[j - 1] ? 0 : 1;
-        matrix[j]![i] = Math.min(
-          matrix[j]![i - 1]! + 1, // insertion
-          matrix[j - 1]![i]! + 1, // deletion
-          matrix[j - 1]![i - 1]! + substitutionCost, // substitution
-        );
+        const currentRow = matrix[j];
+        const prevRow = matrix[j - 1];
+        if (currentRow && prevRow) {
+          const insertion = (currentRow[i - 1] ?? 0) + 1;
+          const deletion = (prevRow[i] ?? 0) + 1;
+          const substitution = (prevRow[i - 1] ?? 0) + substitutionCost;
+          currentRow[i] = Math.min(insertion, deletion, substitution);
+        }
       }
     }
 
-    return matrix[b.length]![a.length]!;
+    const finalRow = matrix[b.length];
+    return finalRow?.[a.length] ?? Math.max(a.length, b.length);
   }
 
   /**

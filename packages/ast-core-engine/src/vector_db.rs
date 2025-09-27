@@ -12,9 +12,7 @@ use crate::{
 };
 use dashmap::DashMap;
 use napi_derive::napi;
-use std::{
-    sync::{Arc, OnceLock},
-};
+use std::sync::{Arc, OnceLock};
 
 /// Global vector database instance
 static VECTOR_DB: OnceLock<SimpleVectorDb> = OnceLock::new();
@@ -27,10 +25,6 @@ pub struct SimpleVectorDb {
     config: HnswConfig,
 }
 
-
-
-
-
 impl SimpleVectorDb {
     /// Create a new vector database instance
     pub fn new(config: HnswConfig) -> Self {
@@ -42,8 +36,10 @@ impl SimpleVectorDb {
 
     /// Initialize the vector database
     pub fn initialize(&self) -> Result<(), EngineError> {
-        println!("Simple vector database initialized with embedding dimension: {}", 
-                self.config.embedding_dimension);
+        println!(
+            "Simple vector database initialized with embedding dimension: {}",
+            self.config.embedding_dimension
+        );
         Ok(())
     }
 
@@ -65,7 +61,7 @@ impl SimpleVectorDb {
 
         // Store vector and metadata
         self.vectors.insert(node_id.clone(), (embedding, metadata));
-        
+
         println!("Added vector for node: {}", node_id);
         Ok(())
     }
@@ -87,18 +83,18 @@ impl SimpleVectorDb {
         }
 
         let mut similarities = Vec::new();
-        
+
         // Calculate similarity with all stored vectors
         for entry in self.vectors.iter() {
             let (node_id, (embedding, metadata)) = (entry.key().clone(), entry.value());
-            let similarity = cosine_similarity(&query_embedding, &embedding);
-            
+            let similarity = cosine_similarity(&query_embedding, embedding);
+
             similarities.push((node_id, similarity, metadata.clone()));
         }
-        
+
         // Sort by similarity (descending)
         similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         // Take top k results
         let results: Vec<SearchResult> = similarities
             .into_iter()
@@ -121,7 +117,7 @@ impl SimpleVectorDb {
         self.vectors.len() as u32
     }
 
-    /// Clear all vectors 
+    /// Clear all vectors
     pub fn clear(&self) -> Result<(), EngineError> {
         self.vectors.clear();
         println!("Vector database cleared");
@@ -134,7 +130,7 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     let dot_product: f32 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
     let norm_a: f32 = a.iter().map(|x| x * x).sum::<f32>().sqrt();
     let norm_b: f32 = b.iter().map(|x| x * x).sum::<f32>().sqrt();
-    
+
     if norm_a == 0.0 || norm_b == 0.0 {
         0.0
     } else {
@@ -146,12 +142,13 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
 #[napi]
 pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
     let db = SimpleVectorDb::new(config);
-    db.initialize().map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    
-    VECTOR_DB.set(db).map_err(|_| {
-        napi::Error::from_reason("Vector database already initialized".to_string())
-    })?;
-    
+    db.initialize()
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+
+    VECTOR_DB
+        .set(db)
+        .map_err(|_| napi::Error::from_reason("Vector database already initialized".to_string()))?;
+
     Ok("Vector database initialized successfully".to_string())
 }
 
@@ -162,14 +159,14 @@ pub fn add_vector_to_db(
     embedding_json: String, // JSON-encoded Vec<f32>
     metadata: VectorMetadata,
 ) -> napi::Result<String> {
-    let db = VECTOR_DB.get().ok_or_else(|| {
-        napi::Error::from_reason("Vector database not initialized".to_string())
-    })?;
-    
+    let db = VECTOR_DB
+        .get()
+        .ok_or_else(|| napi::Error::from_reason("Vector database not initialized".to_string()))?;
+
     // Parse the embedding from JSON
     let embedding: Vec<f32> = serde_json::from_str(&embedding_json)
         .map_err(|e| napi::Error::from_reason(format!("Invalid embedding JSON: {}", e)))?;
-    
+
     db.add_vector(node_id.clone(), embedding, metadata)
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     Ok(format!("Vector added successfully for node: {}", node_id))
@@ -182,14 +179,14 @@ pub fn search_vectors(
     k: u32,
     ef_search: Option<u32>,
 ) -> napi::Result<Vec<SearchResult>> {
-    let db = VECTOR_DB.get().ok_or_else(|| {
-        napi::Error::from_reason("Vector database not initialized".to_string())
-    })?;
-    
+    let db = VECTOR_DB
+        .get()
+        .ok_or_else(|| napi::Error::from_reason("Vector database not initialized".to_string()))?;
+
     // Parse the query embedding from JSON
     let query_embedding: Vec<f32> = serde_json::from_str(&query_embedding_json)
         .map_err(|e| napi::Error::from_reason(format!("Invalid embedding JSON: {}", e)))?;
-    
+
     db.search_similar(query_embedding, k, ef_search)
         .map_err(|e| napi::Error::from_reason(e.to_string()))
 }
@@ -197,28 +194,29 @@ pub fn search_vectors(
 /// Get vector count from the global database instance
 #[napi]
 pub fn get_vector_count() -> napi::Result<u32> {
-    let db = VECTOR_DB.get().ok_or_else(|| {
-        napi::Error::from_reason("Vector database not initialized".to_string())
-    })?;
-    
+    let db = VECTOR_DB
+        .get()
+        .ok_or_else(|| napi::Error::from_reason("Vector database not initialized".to_string()))?;
+
     Ok(db.get_vector_count())
 }
 
 /// Clear the global vector database
 #[napi]
 pub fn clear_vector_database() -> napi::Result<String> {
-    let db = VECTOR_DB.get().ok_or_else(|| {
-        napi::Error::from_reason("Vector database not initialized".to_string())
-    })?;
-    
-    db.clear().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    let db = VECTOR_DB
+        .get()
+        .ok_or_else(|| napi::Error::from_reason("Vector database not initialized".to_string()))?;
+
+    db.clear()
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     Ok("Vector database cleared successfully".to_string())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_vector_database_operations() {
         let config = HnswConfig {
@@ -228,10 +226,10 @@ mod tests {
             ef_search: 50,
             max_elements: 1000,
         };
-        
+
         let db = SimpleVectorDb::new(config);
         db.initialize().unwrap();
-        
+
         // Test adding vectors
         let embedding = vec![0.1, 0.2, 0.3];
         let metadata = VectorMetadata {
@@ -243,24 +241,25 @@ mod tests {
             embedding_model: "all-MiniLM-L6-v2".to_string(),
             timestamp: 1234567890u32,
         };
-        
-        db.add_vector("test_node".to_string(), embedding.clone(), metadata).unwrap();
-        
+
+        db.add_vector("test_node".to_string(), embedding.clone(), metadata)
+            .unwrap();
+
         // Test searching
         let results = db.search_similar(embedding, 5, None).unwrap();
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].node_id, "test_node");
-        
+
         // Test vector count
         assert_eq!(db.get_vector_count(), 1);
     }
-    
+
     #[test]
     fn test_cosine_similarity() {
         let a = vec![1.0, 2.0, 3.0];
         let b = vec![1.0, 2.0, 3.0];
         assert!((cosine_similarity(&a, &b) - 1.0).abs() < 1e-6);
-        
+
         let c = vec![1.0, 0.0, 0.0];
         let d = vec![0.0, 1.0, 0.0];
         assert!((cosine_similarity(&c, &d) - 0.0).abs() < 1e-6);

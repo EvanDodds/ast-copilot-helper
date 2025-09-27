@@ -5,32 +5,32 @@ interface LogEntry {
   timestamp: string;
   level: "info" | "warn" | "error" | "debug";
   message: string;
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
 }
 
 class Logger {
   private logs: LogEntry[] = [];
 
-  info(message: string, meta?: Record<string, any>): void {
+  info(message: string, meta?: Record<string, unknown>): void {
     this.log("info", message, meta);
   }
 
-  warn(message: string, meta?: Record<string, any>): void {
+  warn(message: string, meta?: Record<string, unknown>): void {
     this.log("warn", message, meta);
   }
 
-  error(message: string, meta?: Record<string, any>): void {
+  error(message: string, meta?: Record<string, unknown>): void {
     this.log("error", message, meta);
   }
 
-  debug(message: string, meta?: Record<string, any>): void {
+  debug(message: string, meta?: Record<string, unknown>): void {
     this.log("debug", message, meta);
   }
 
   private log(
     level: LogEntry["level"],
     message: string,
-    meta?: Record<string, any>,
+    meta?: Record<string, unknown>,
   ): void {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
@@ -44,10 +44,10 @@ class Logger {
     // Output to console for debugging
     const logMethod =
       level === "error"
-        ? console.error
+        ? console.error // eslint-disable-line no-console
         : level === "warn"
-          ? console.warn
-          : console.log;
+          ? console.warn // eslint-disable-line no-console
+          : console.log; // eslint-disable-line no-console
 
     const metaStr = meta ? ` ${JSON.stringify(meta)}` : "";
     logMethod(
