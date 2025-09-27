@@ -9,7 +9,7 @@ This comprehensive troubleshooting guide helps you diagnose and resolve common i
 #### Problem: Node.js version compatibility errors
 
 ```
-Error: ast-copilot-helper requires Node.js version 18.x or higher
+Error: ast-copilot-helper requires Node.js version 20.x or higher
 ```
 
 **Solution:**

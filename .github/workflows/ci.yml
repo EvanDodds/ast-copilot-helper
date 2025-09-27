@@ -26,8 +26,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION_DEFAULT: "20"
-  NODE_VERSION_MATRIX: '["18", "20", "22"]'
+  NODE_VERSION_DEFAULT: "24"
+  NODE_VERSION_MATRIX: '["20", "22", "24"]'
   PLATFORM_MATRIX: '["ubuntu-latest", "windows-latest", "macos-latest"]'
 
 jobs:
@@ -222,7 +222,7 @@ jobs:
         # PR: Single platform/version for speed
         # Main: Multi-platform/version for coverage
         os: ${{ needs.validate.outputs.is-main-push == 'true' && fromJson('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJson('["ubuntu-latest"]') }}
-        node-version: ${{ needs.validate.outputs.is-main-push == 'true' && fromJson('["18", "20", "22"]') || fromJson('["20"]') }}
+        node-version: ${{ needs.validate.outputs.is-main-push == 'true' && fromJson('["20", "22", "24"]') || fromJson('["24"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
@@ -315,7 +315,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ${{ fromJson('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
-        node-version: ${{ fromJson('["18", "20", "22"]') }}
+        node-version: ${{ fromJson('["20", "22", "24"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:

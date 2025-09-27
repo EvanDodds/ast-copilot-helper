@@ -76,7 +76,7 @@ yarn run ci:notify-build-failure # Test notification system
 
 #### CI/CD Features
 
-- **Multi-platform builds**: Windows, macOS, Linux with Node.js 18, 20, 21
+- **Multi-platform builds**: Windows, macOS, Linux with Node.js 20, 22, 24
 - **Quality gates**: 90%+ coverage, security scanning, performance validation
 - **Blue-Green deployment** with automated rollback
 - **Real-time monitoring** with performance tracking and alerting
@@ -276,7 +276,7 @@ tests/
 
 1. **CI Pipeline** (`.github/workflows/ci.yml`)
    - Multi-platform testing (Windows, macOS, Linux)
-   - Node.js version matrix (18, 20, 21)
+   - Node.js version matrix (20, 22, 24)
    - Performance benchmark validation
    - Coverage reporting
 

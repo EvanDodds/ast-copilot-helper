@@ -217,7 +217,7 @@ Our CI pipeline runs comprehensive testing:
 Tests run across:
 
 - **Operating Systems**: Windows, macOS, Linux
-- **Node.js Versions**: 18, 20, 21
+- **Node.js Versions**: 20, 22, 24
 - **Architectures**: x64, ARM64
 
 ### Performance Monitoring

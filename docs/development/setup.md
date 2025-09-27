@@ -10,12 +10,12 @@ Before setting up the development environment, ensure you have the following sof
 
 #### Node.js and npm
 
-- **Node.js**: Version 18.x or higher
+- **Node.js**: Version 20.x or higher (24.x recommended)
 - **npm**: Version 9.x or higher (comes with Node.js)
 
 ```bash
 # Check versions
-node --version  # Should be v18.x.x or higher
+node --version  # Should be v20.x.x or higher (v24.x.x recommended)
 npm --version   # Should be 9.x.x or higher
 ```
 
@@ -67,7 +67,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 # Restart terminal or source your profile
 source ~/.bashrc
 
-# Install and use Node.js 18
+# Install and use Node.js 24
 nvm install 18
 nvm use 18
 ```

@@ -270,7 +270,7 @@ Integration tests generate comprehensive reports:
 
 ### Test Environment Requirements
 
-- Node.js 18+ with TypeScript support
+- Node.js 20+ with TypeScript support (24+ recommended)
 - Vitest testing framework
 - Mock VS Code API dependencies
 - Test database instances

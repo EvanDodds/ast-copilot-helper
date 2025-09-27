@@ -18,7 +18,7 @@ Thank you for your interest in contributing to ast-copilot-helper! This document
 
 ### Prerequisites
 
-- Node.js 18.0.0 or higher
+- Node.js 20.0.0 or higher (24.0.0+ recommended)
 - Yarn 4.9.4 or higher (modern Yarn v4)
 - Git 2.40.0 or higher
 - VS Code (recommended for the best development experience)
@@ -539,7 +539,7 @@ Releases are handled by maintainers following these principles:
 yarn run clean && yarn run build
 
 # Check Node.js version
-node --version  # Should be 18.0.0+
+node --version  # Should be 20.0.0+ (24.0.0+ recommended)
 
 # Clear npm cache
 npm cache clean --force

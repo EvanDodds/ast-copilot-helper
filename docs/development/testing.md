@@ -1304,7 +1304,7 @@ describe("New Project Setup E2E Workflow", () => {
           },
           devDependencies: {
             typescript: "^5.0.0",
-            "@types/node": "^18.0.0",
+            "@types/node": "^24.0.0",
           },
         },
         null,
@@ -1902,7 +1902,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22, 24]
 
     steps:
       - uses: actions/checkout@v4

@@ -45,7 +45,7 @@ CI/CD Pipeline Architecture
 Features:
 
 - **Multi-platform builds**: Windows, macOS, Linux (Ubuntu)
-- **Node.js matrix testing**: Versions 18, 20, 21
+- **Node.js matrix testing**: Versions 20, 22, 24
 - **TypeScript compilation** with strict mode validation
 - **Artifact creation** and binary packaging
 - **Cross-platform compatibility** validation
@@ -58,7 +58,7 @@ build-and-test:
   strategy:
     matrix:
       os: [ubuntu-latest, windows-latest, macos-latest]
-      node: [18, 20, 21]
+      node: [20, 22, 24]
 ```
 
 ### 2. Testing Automation (Criteria 7-12)

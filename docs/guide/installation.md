@@ -678,7 +678,7 @@ For contributing to ast-copilot-helper:
 
 ### Prerequisites
 
-- **Node.js 18+**
+- **Node.js 20+** (24+ recommended)
 - **Git**
 - **Python 3.8+** (for Python language support)
 
