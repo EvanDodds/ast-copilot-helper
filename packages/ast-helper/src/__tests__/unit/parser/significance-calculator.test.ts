@@ -12,7 +12,6 @@ import {
   defaultSignificanceCalculator,
   SignificanceConfig,
   SignificanceContext,
-  SignificanceFactors,
 } from "../../../parser/significance-calculator";
 import {
   ASTNode,
