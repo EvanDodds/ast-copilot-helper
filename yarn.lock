@@ -268,7 +268,7 @@ __metadata:
     commander: "npm:^14.0.1"
     hnswlib-node: "npm:^3.0.0"
     minimatch: "npm:^10.0.3"
-    onnxruntime-node: "npm:1.22.0-rev"
+    onnxruntime-node: "npm:1.23.0"
     tree-sitter: "npm:^0.21.1"
     tree-sitter-javascript: "npm:^0.21.4"
     tree-sitter-python: "npm:^0.21.0"
@@ -1341,9 +1341,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@modelcontextprotocol/sdk@npm:^1.18.1":
-  version: 1.18.1
-  resolution: "@modelcontextprotocol/sdk@npm:1.18.1"
+"@modelcontextprotocol/sdk@npm:^1.18.2":
+  version: 1.18.2
+  resolution: "@modelcontextprotocol/sdk@npm:1.18.2"
   dependencies:
     ajv: "npm:^6.12.6"
     content-type: "npm:^1.0.5"
@@ -1357,7 +1357,7 @@ __metadata:
     raw-body: "npm:^3.0.0"
     zod: "npm:^3.23.8"
     zod-to-json-schema: "npm:^3.24.1"
-  checksum: 10c9/f8907faacb6272a6b88d616c35bce76b126d5e554d592a249dfc897e105a1bdaef2084ec7472661803d4439e99eaa95e5fba74ef238f0246e70984b051ba23bc
+  checksum: 10c9/9923fd66af1e352fcbebc0b5cff158152accdaaca04690cab2d41c0859201318ccd62a6ce6b6160a6d1cdbe3c587e80a7d0e3912247f7a8f577475ef237d8cf0
   languageName: node
   linkType: hard
 
@@ -3425,9 +3425,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vscode/vsce@npm:^3.6.1":
-  version: 3.6.1
-  resolution: "@vscode/vsce@npm:3.6.1"
+"@vscode/vsce@npm:^3.6.2":
+  version: 3.6.2
+  resolution: "@vscode/vsce@npm:3.6.2"
   dependencies:
     "@azure/identity": "npm:^4.1.0"
     "@secretlint/node": "npm:^10.1.2"
@@ -3464,7 +3464,7 @@ __metadata:
       optional: true
   bin:
     vsce: vsce
-  checksum: 10c9/34d6957b2d5fb4f43f369e2fd0a5c410182984222e576592501101efb8762ef7e80b0290f9dd108ad36cd10a1c0958a87c47cd2fd675f1b4829cafbd9802afcf
+  checksum: 10c9/28412a34da35eebf8dba7c6437b39433e9a489461dcd3354b996f1a116b512e96cd7f94b23e9a70b23f4348ea804e5d324b13da6e058fe74b8c572e06889394f
   languageName: node
   linkType: hard
 
@@ -4040,12 +4040,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "ast-copilot-helper-extension@workspace:packages/vscode-extension"
   dependencies:
-    "@modelcontextprotocol/sdk": "npm:^1.18.1"
+    "@modelcontextprotocol/sdk": "npm:^1.18.2"
     "@types/node": "npm:^24.5.2"
     "@types/vscode": "npm:^1.104.0"
     "@vscode/test-cli": "npm:^0.0.11"
     "@vscode/test-electron": "npm:^2.5.2"
-    "@vscode/vsce": "npm:^3.6.1"
+    "@vscode/vsce": "npm:^3.6.2"
     ts-node: "npm:^10.9.2"
     typescript: "npm:^5.9.2"
     vitest: "npm:^3.2.4"
@@ -4069,11 +4069,11 @@ __metadata:
     globals: "npm:^16.4.0"
     husky: "npm:^9.1.7"
     js-yaml: "npm:^4.1.0"
-    lint-staged: "npm:^16.2.0"
+    lint-staged: "npm:^16.2.1"
     pkg: "npm:^5.8.1"
     tmp: "npm:^0.2.5"
     ts-node: "npm:^10.9.2"
-    tsx: "npm:^4.20.5"
+    tsx: "npm:^4.20.6"
     typescript: "npm:^5.9.2"
     typescript-eslint: "npm:^8.44.1"
     vitest: "npm:^3.2.4"
@@ -4750,17 +4750,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:14.0.1, commander@npm:^14.0.1":
-  version: 14.0.1
-  resolution: "commander@npm:14.0.1"
-  checksum: 10c9/783115e9403caeca29c0fcbd4e0358f70c67760e4e4933f3453fcdd5ddba2ec44173c8da5213d7ce5e404f51c7e71203a42c548164dbe27b668b32a8981577f1
-  languageName: node
-  linkType: hard
-
 "commander@npm:^12.1.0":
   version: 12.1.0
   resolution: "commander@npm:12.1.0"
   checksum: 10c9/cdaeb672d979816853a4eed7f1310a9319e8b976172485c2a6b437ed0db0a389a44cfb222bfbde772781efa9f215bdd1b936f80d6b249485b465c6cb906e1f93
+  languageName: node
+  linkType: hard
+
+"commander@npm:^14.0.1":
+  version: 14.0.1
+  resolution: "commander@npm:14.0.1"
+  checksum: 10c9/783115e9403caeca29c0fcbd4e0358f70c67760e4e4933f3453fcdd5ddba2ec44173c8da5213d7ce5e404f51c7e71203a42c548164dbe27b668b32a8981577f1
   languageName: node
   linkType: hard
 
@@ -6964,24 +6964,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lint-staged@npm:^16.2.0":
-  version: 16.2.0
-  resolution: "lint-staged@npm:16.2.0"
+"lint-staged@npm:^16.2.1":
+  version: 16.2.1
+  resolution: "lint-staged@npm:16.2.1"
   dependencies:
-    commander: "npm:14.0.1"
-    listr2: "npm:9.0.4"
-    micromatch: "npm:4.0.8"
-    nano-spawn: "npm:1.0.3"
-    pidtree: "npm:0.6.0"
-    string-argv: "npm:0.3.2"
-    yaml: "npm:2.8.1"
+    commander: "npm:^14.0.1"
+    listr2: "npm:^9.0.4"
+    micromatch: "npm:^4.0.8"
+    nano-spawn: "npm:^1.0.3"
+    pidtree: "npm:^0.6.0"
+    string-argv: "npm:^0.3.2"
+    yaml: "npm:^2.8.1"
   bin:
     lint-staged: bin/lint-staged.js
-  checksum: 10c9/809a42e21f2634c1a3e718dfb25786275a13b51c0cfaef6bb4bed509c656d31ee9b3e6231df55223b4b60cb37e4b5e3ebd958b239cabb529d2d07253cf7e1726
+  checksum: 10c9/b604de3ca27a067e45c5f0e0780ca46f5617e9f6ac3895297dee087d62742bbcd9f9e910300c15c599e1f06900666469b73e036e3fe3153ccedef314ce791dd5
   languageName: node
   linkType: hard
 
-"listr2@npm:9.0.4":
+"listr2@npm:^9.0.4":
   version: 9.0.4
   resolution: "listr2@npm:9.0.4"
   dependencies:
@@ -7334,7 +7334,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"micromatch@npm:4.0.8, micromatch@npm:^4.0.8":
+"micromatch@npm:^4.0.8":
   version: 4.0.8
   resolution: "micromatch@npm:4.0.8"
   dependencies:
@@ -7599,7 +7599,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nano-spawn@npm:1.0.3":
+"nano-spawn@npm:^1.0.3":
   version: 1.0.3
   resolution: "nano-spawn@npm:1.0.3"
   checksum: 10c9/72c56e68ae733c81c459a338fd51e2aa3be06b1cca746c2abe83df7acfac7eee008b01833f5a8781f4ac9fc1eafd23036a44755257a669dfcc2ff2453850822a
@@ -7856,10 +7856,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"onnxruntime-common@npm:1.22.0":
-  version: 1.22.0
-  resolution: "onnxruntime-common@npm:1.22.0"
-  checksum: 10c9/b8c8c5cae90314370f3d28df03054aa6703bf1321a5de8b426c72dd99dc988eb3a18c8863906f8f89fae06d67b874f368a251e6463a5d0fa6f1818b0b344a4fc
+"onnxruntime-common@npm:1.23.0":
+  version: 1.23.0
+  resolution: "onnxruntime-common@npm:1.23.0"
+  checksum: 10c9/57635d9fd86f4b668019585ec9d15f4f7ed1a3e469a9c787cbff87f6439159e159f0cf0f87136ee06484b29fee99644268e0799fe0ccd657d2b30060c56fcf0e
   languageName: node
   linkType: hard
 
@@ -7879,13 +7879,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"onnxruntime-node@npm:1.22.0-rev":
-  version: 1.22.0-rev
-  resolution: "onnxruntime-node@npm:1.22.0-rev"
+"onnxruntime-node@npm:1.23.0":
+  version: 1.23.0
+  resolution: "onnxruntime-node@npm:1.23.0"
   dependencies:
     adm-zip: "npm:^0.5.16"
     global-agent: "npm:^3.0.0"
-    onnxruntime-common: "npm:1.22.0"
+    onnxruntime-common: "npm:1.23.0"
   conditions: (os=win32 | os=darwin | os=linux)
   languageName: node
   linkType: hard
@@ -8200,7 +8200,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pidtree@npm:0.6.0":
+"pidtree@npm:^0.6.0":
   version: 0.6.0
   resolution: "pidtree@npm:0.6.0"
   bin:
@@ -9379,7 +9379,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"string-argv@npm:0.3.2":
+"string-argv@npm:^0.3.2":
   version: 0.3.2
   resolution: "string-argv@npm:0.3.2"
   checksum: 10c9/bb7f84f968fda71f63ace6f33d1b2604c0825f356b164226ad5975732eb2531b3c91b72872386176a63fd6269837104dca677c2f7cf57c9c9ed84e192f0bb1aa
@@ -9943,9 +9943,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:^4.20.5":
-  version: 4.20.5
-  resolution: "tsx@npm:4.20.5"
+"tsx@npm:^4.20.6":
+  version: 4.20.6
+  resolution: "tsx@npm:4.20.6"
   dependencies:
     esbuild: "npm:~0.25.0"
     fsevents: "npm:~2.3.3"
@@ -9955,7 +9955,7 @@ __metadata:
       optional: true
   bin:
     tsx: dist/cli.mjs
-  checksum: 10c9/d64c50d9fe71c5f6d0a6ca03af1a9f63b2dfdcbaa5222c19efbc2e46e3474804c90ecec49c8d2da40cf80a860ff20e8fed6f98081ce3faba8265677d69ebd2ce
+  checksum: 10c9/360e7b7fb6b0681f5bc8cbc07b7a5b2af73d787ba8a601ff5de05310ffa66bfa80ff9ce1a3e3acc2e6875f0d8affe1c55cb21b941971309d0f084651e0e84487
   languageName: node
   linkType: hard
 
@@ -10728,7 +10728,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:2.8.1":
+"yaml@npm:^2.8.1":
   version: 2.8.1
   resolution: "yaml@npm:2.8.1"
   bin:
