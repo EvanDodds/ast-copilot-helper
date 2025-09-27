@@ -596,7 +596,7 @@ mod tests {
         // Cancel after a short delay
         tokio::spawn(async move {
             sleep(Duration::from_millis(10)).await;
-            cancellation_token.cancel().await;
+            cancellation_token.cancel();
         });
 
         let results = process_task.await.unwrap().unwrap();

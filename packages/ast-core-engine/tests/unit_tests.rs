@@ -162,7 +162,7 @@ async fn test_batch_processor() {
     println!("Batch processor created successfully");
 
     // Test cancellation token functionality
-    let is_cancelled = processor.cancellation_token.is_cancelled().await;
+    let is_cancelled = processor.cancellation_token.is_cancelled();
     assert!(!is_cancelled, "Should not be cancelled initially");
 
     println!("✅ Batch processor test passed");
