@@ -315,7 +315,7 @@ NODE_ENV=production ast-mcp-server \
 ### Docker Deployment
 
 ```dockerfile
-FROM node:18-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 COPY package*.json ./

@@ -750,19 +750,19 @@ graph TB
 
 ```dockerfile
 # Multi-stage Docker build
-FROM node:18-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 
-FROM node:18-alpine AS runtime
+FROM node:24-alpine AS runtime
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
 # Production image
-FROM node:18-alpine
+FROM node:24-alpine
 WORKDIR /app
 COPY --from=runtime /app/dist ./dist
 COPY --from=runtime /app/node_modules ./node_modules

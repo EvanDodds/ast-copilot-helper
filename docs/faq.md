@@ -38,7 +38,7 @@ Get quick answers to common questions about ast-copilot-helper. This FAQ covers 
 
 **A**:
 
-- **Node.js**: 18.x or higher
+- **Node.js**: 20.x or higher (24.x recommended)
 - **Operating System**: Windows 10+, macOS 10.15+, Linux (Ubuntu 18+)
 - **Memory**: 4GB RAM minimum, 8GB recommended
 - **Storage**: 100MB for tool, additional space for project databases

@@ -10,12 +10,12 @@ import {
   type LeakDetectorConfig,
 } from "../../../memory/leak-detector.js";
 import type {
-  LeakDetectionResult,
+  LeakDetectionResult as _LeakDetectionResult,
   DetectedLeak,
-  HeapSnapshotAnalysis,
-  AllocationTracker,
+  HeapSnapshotAnalysis as _HeapSnapshotAnalysis,
+  AllocationTracker as _AllocationTracker,
   LeakRecommendation,
-  LeakSeverity,
+  LeakSeverity as _LeakSeverity,
 } from "../../../memory/types.js";
 
 // Mock v8 module

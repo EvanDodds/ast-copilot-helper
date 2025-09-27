@@ -233,7 +233,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "24"
 
       - name: Install dependencies
         run: npm ci
@@ -299,7 +299,7 @@ stages:
 
 ast-analysis:
   stage: analysis
-  image: node:18
+  image: node:24
   script:
     - npm install -g ast-copilot-helper
     - ast-copilot-helper analyze src/ --format json --output analysis.json
@@ -312,7 +312,7 @@ ast-analysis:
 
 quality-report:
   stage: report
-  image: node:18
+  image: node:24
   dependencies:
     - ast-analysis
   script:

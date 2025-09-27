@@ -25,8 +25,8 @@ export class MockDatabaseReader implements DatabaseReader {
     try {
       const { access } = await import("fs/promises");
       await access(this.databasePath);
-    } catch (error) {
-      // Database path doesn't exist - that's ok for now
+    } catch (_error) {
+      // Expected - malformed query
     }
   }
 

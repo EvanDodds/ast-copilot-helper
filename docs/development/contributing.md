@@ -47,7 +47,7 @@ Project maintainers will remove, edit, or reject contributions that violate this
 
 Before contributing, ensure you have:
 
-- **Node.js 18+** (20+ recommended)
+- **Node.js 20+** (24+ recommended)
 - **npm 9+**
 - **Git** with proper SSH/HTTPS setup
 - **Python 3.8+** (for Python language support)

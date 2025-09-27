@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as vscode from "vscode";
-import {
-  ConfigurationManager,
-  ASTConfiguration,
-} from "../managers/ConfigurationManager";
+import { ConfigurationManager } from "../managers/ConfigurationManager";
 
 // Mock filesystem
 vi.mock("fs", () => ({

@@ -384,7 +384,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "24"
       - name: Install ast-copilot-helper
         run: npm install -g ast-copilot-helper
       - name: Run analysis

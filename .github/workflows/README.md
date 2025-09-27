@@ -15,7 +15,7 @@ This directory contains comprehensive GitHub Actions workflows implementing 36 a
 #### 1. **Code Validation & Build Pipeline (Jobs 1-3)**
 
 - **validate-code**: TypeScript compilation, linting, basic validation
-- **build-and-test**: Multi-platform matrix build (Windows/macOS/Linux, Node 18/20/21)
+- **build-and-test**: Multi-platform matrix build (Windows/macOS/Linux, Node 20/22/24)
 - **performance-benchmarks**: Validates acceptance criteria (15k+ nodes <10min, MCP <200ms)
 
 #### 2. **Quality Gates & Security (Jobs 4-6)**

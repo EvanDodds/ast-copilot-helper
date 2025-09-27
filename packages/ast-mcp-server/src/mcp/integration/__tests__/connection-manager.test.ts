@@ -1,10 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { EventEmitter } from "events";
-import {
-  MCPConnectionManager,
-  type ClientConnection,
-} from "../connection-manager.js";
-import { ASTMCPServer } from "../../server-core.js";
+import { MCPConnectionManager } from "../connection-manager.js";
 import { Transport, type ConnectionInfo } from "../../transport/base.js";
 import {
   MCPRequest,
@@ -61,7 +57,7 @@ class MockASTMCPServer extends EventEmitter {
     };
   }
 
-  async handleNotification(notification: MCPNotification): Promise<void> {
+  async handleNotification(_notification: MCPNotification): Promise<void> {
     // Mock implementation
   }
 }

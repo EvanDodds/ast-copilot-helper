@@ -127,7 +127,7 @@ This project implements a comprehensive CI/CD pipeline with 36 acceptance criter
 
 ### 🚀 Pipeline Features
 
-- **Multi-platform builds**: Windows, macOS, Linux with Node.js 18, 20, 21
+- **Multi-platform builds**: Windows, macOS, Linux with Node.js 20, 22, 24
 - **Comprehensive testing**: Unit, integration, and performance tests
 - **Quality gates**: 90%+ coverage, security scanning, performance validation
 - **Blue-Green deployment**: Zero-downtime staging and production deployments

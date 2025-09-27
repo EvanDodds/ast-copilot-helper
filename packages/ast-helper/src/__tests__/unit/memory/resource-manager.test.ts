@@ -17,8 +17,8 @@ describe("AdvancedResourceManager", () => {
     if (resourceManager) {
       try {
         await resourceManager.cleanup();
-      } catch (error) {
-        // Ignore cleanup errors in tests
+      } catch (_error) {
+        // Expected behavior - should handle cleanup gracefully
       }
     }
   });

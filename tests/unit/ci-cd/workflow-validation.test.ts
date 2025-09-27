@@ -58,9 +58,9 @@ describe("CI/CD Pipeline Configuration", () => {
     expect(osMatrix).toContain("macos-latest");
 
     expect(typeof nodeMatrix).toBe("string");
-    expect(nodeMatrix).toContain("18");
     expect(nodeMatrix).toContain("20");
     expect(nodeMatrix).toContain("22");
+    expect(nodeMatrix).toContain("24");
   });
 
   it("should have proper job dependencies", () => {

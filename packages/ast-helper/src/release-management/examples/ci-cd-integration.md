@@ -43,7 +43,7 @@ on:
         type: boolean
 
 env:
-  NODE_VERSION: "18"
+  NODE_VERSION: "24"
   REGISTRY_URL: "https://registry.npmjs.org/"
 
 jobs:
@@ -318,7 +318,7 @@ stages:
   - notify
 
 variables:
-  NODE_VERSION: "18"
+  NODE_VERSION: "24"
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
 
@@ -478,7 +478,7 @@ pr:
 variables:
   - group: release-secrets
   - name: nodeVersion
-    value: "18.x"
+    value: "24.x"
   - name: npmRegistry
     value: "https://registry.npmjs.org/"
 
@@ -615,7 +615,7 @@ pipeline {
     agent any
 
     environment {
-        NODE_VERSION = '18'
+        NODE_VERSION = '24'
         NPM_REGISTRY = 'https://registry.npmjs.org/'
         DOCKER_REGISTRY = 'docker.io'
     }

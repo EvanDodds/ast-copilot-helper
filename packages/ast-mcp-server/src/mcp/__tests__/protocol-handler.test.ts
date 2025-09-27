@@ -1,11 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { MCPProtocolHandler } from "../protocol/handler";
-import {
-  MCPRequest,
-  MCPResponse,
-  MCPErrorCode,
-  MCPError,
-} from "../protocol/types";
+import { MCPRequest, MCPErrorCode, MCPError } from "../protocol/types";
 
 describe("MCPProtocolHandler", () => {
   describe("parseRequest", () => {
