@@ -79,5 +79,4 @@ All security vulnerabilities have been resolved. The new approach uses:
 - Modern, actively maintained packages
 - No known security issues
 - Better dependency management
-</(antml:parameter>
 </invoke>
