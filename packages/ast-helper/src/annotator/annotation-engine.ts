@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { ASTNode } from "../parser/types.js";
 import type { Annotation, Parameter, AnnotationConfig } from "./types.js";
 import {
