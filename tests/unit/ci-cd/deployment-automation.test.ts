@@ -16,10 +16,7 @@ const mockWriteFileSync = vi.mocked(writeFileSync);
 const mockPathJoin = vi.mocked(path.join);
 
 // Import the modules after mocking
-import {
-  StagingDeployment,
-  DeploymentResult,
-} from "../../../scripts/ci-cd/deploy-staging";
+import { StagingDeployment } from "../../../scripts/ci-cd/deploy-staging";
 import { ProductionDeployment } from "../../../scripts/ci-cd/deploy-production";
 import { RollbackAutomation } from "../../../scripts/ci-cd/rollback-automation";
 
@@ -427,7 +424,7 @@ describe("Deployment Automation Tests", () => {
         mockExecSync.mockImplementation((command: string) => {
           if (command.includes("yarn run build")) {
             attemptCount++;
-            if (attemptCount === 1) {
+            if (attemptCount <= 2) {
               throw new Error("Build failed");
             }
           }
@@ -441,7 +438,7 @@ describe("Deployment Automation Tests", () => {
 
         // Assert
         expect(result.success).toBe(true);
-        expect(attemptCount).toBe(2); // Should have retried once
+        expect(attemptCount).toBe(3); // Should have retried twice
       });
 
       it("should fail after max attempts", async () => {

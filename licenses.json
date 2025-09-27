@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2025-09-26T03:17:21.921Z",
+  "generatedAt": "2025-09-27T15:55:25.127Z",
   "generator": "ast-copilot-helper-legal-compliance",
-  "totalDependencies": 55,
+  "totalDependencies": 57,
   "dependencies": [
     {
       "name": "vue",
@@ -157,6 +157,18 @@
       "licenseFile": "node_modules/@typescript-eslint/parser/LICENSE"
     },
     {
+      "name": "@vercel/ncc",
+      "version": "^0.38.1",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["ZEIT, Inc."],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/@vercel/ncc/LICENSE"
+    },
+    {
       "name": "@vitest/coverage-v8",
       "version": "^3.2.4",
       "license": {
@@ -181,6 +193,19 @@
       "sourceUrl": "git+https://github.com/vitest-dev/vitest.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@vitest/ui/LICENSE"
+    },
+    {
+      "name": "esbuild",
+      "version": "^0.25.10",
+      "license": {
+        "spdxId": "MIT",
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "copyrightHolders": ["Evan Wallace"],
+      "sourceUrl": "git+https://github.com/evanw/esbuild.git",
+      "attributionRequired": true,
+      "licenseFile": "node_modules/esbuild/LICENSE.md"
     },
     {
       "name": "eslint",
@@ -240,7 +265,7 @@
     },
     {
       "name": "lint-staged",
-      "version": "^16.2.0",
+      "version": "^16.2.1",
       "license": {
         "spdxId": "MIT",
         "name": "MIT License",
@@ -289,7 +314,7 @@
     },
     {
       "name": "tsx",
-      "version": "^4.20.5",
+      "version": "^4.20.6",
       "license": {
         "spdxId": "MIT",
         "name": "MIT License",
@@ -668,7 +693,7 @@
     },
     {
       "name": "@modelcontextprotocol/sdk",
-      "version": "^1.18.1",
+      "version": "^1.18.2",
       "license": {
         "spdxId": "MIT",
         "name": "MIT License",
@@ -761,7 +786,7 @@
     },
     {
       "name": "@vscode/vsce",
-      "version": "^3.6.1",
+      "version": "^3.6.2",
       "license": {
         "spdxId": "MIT",
         "name": "MIT License",
@@ -919,13 +944,13 @@
     }
   ],
   "licenseSummary": {
-    "MIT": 43,
+    "MIT": 45,
     "Apache-2.0": 6,
     "ISC": 1,
     "UNKNOWN": 5
   },
   "complianceInfo": {
-    "attributionRequiredCount": 55,
+    "attributionRequiredCount": 57,
     "uniqueLicenses": ["MIT", "Apache-2.0", "ISC", "UNKNOWN"],
     "copyleftDependencies": 0
   }

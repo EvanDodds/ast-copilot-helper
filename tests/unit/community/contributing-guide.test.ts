@@ -35,7 +35,7 @@ describe("CONTRIBUTING.md", () => {
 
   it("should include prerequisites and setup instructions", () => {
     expect(content).toContain("### Prerequisites");
-    expect(content).toContain("Node.js 18.0.0 or higher");
+    expect(content).toContain("Node.js 20.0.0 or higher");
     expect(content).toContain("yarn install");
     expect(content).toContain("yarn run build");
     expect(content).toContain("yarn test");

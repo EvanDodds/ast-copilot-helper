@@ -48,6 +48,10 @@ Copyright: typescript-eslint and other contributors
 Source: https://github.com/typescript-eslint/typescript-eslint.git
 License: MIT License
 
+### @vercel/ncc v^0.38.1
+Copyright: ZEIT, Inc.
+License: MIT License
+
 ### @vitest/coverage-v8 v^3.2.4
 Copyright: Anthony Fu <anthonyfu117@hotmail.com>
 Source: git+https://github.com/vitest-dev/vitest.git
@@ -55,6 +59,11 @@ License: MIT License
 
 ### @vitest/ui v^3.2.4
 Source: git+https://github.com/vitest-dev/vitest.git
+License: MIT License
+
+### esbuild v^0.25.10
+Copyright: Evan Wallace
+Source: git+https://github.com/evanw/esbuild.git
 License: MIT License
 
 ### eslint v^9.36.0
@@ -74,7 +83,7 @@ License: MIT License
 Copyright: Vladimir Zapparov <dervus.grim@gmail.com>, Aleksey V Zapparov <ixti@member.fsf.org> (http://www.ixti.net/), Vitaly Puzrin <vitaly@rcdesign.ru> (https://github.com/puzrin), Martin Grenfell <martin.grenfell@gmail.com> (http://got-ravings.blogspot.com), by Vitaly Puzrin
 License: MIT License
 
-### lint-staged v^16.2.0
+### lint-staged v^16.2.1
 Copyright: Andrey Okonetchnikov <andrey@okonet.ru>, Andrey Okonetchnikov
 Source: git+https://github.com/lint-staged/lint-staged.git
 License: MIT License
@@ -88,7 +97,7 @@ Copyright: Blake Embrey, Andrew Bradley, Blake Embrey (hello@blakeembrey.com)
 Source: git://github.com/TypeStrong/ts-node.git
 License: MIT License
 
-### tsx v^4.20.5
+### tsx v^4.20.6
 Copyright: Hiroki Osame
 License: MIT License
 
@@ -160,7 +169,7 @@ Copyright: Anthony Fu <anthonyfu117@hotmail.com>, Anthony Fu <https://github.com
 Source: git+https://github.com/vitest-dev/vitest.git
 License: MIT License
 
-### @modelcontextprotocol/sdk v^1.18.1
+### @modelcontextprotocol/sdk v^1.18.2
 Copyright: Anthropic, PBC (https://anthropic.com), Anthropic, PBC
 Source: git+https://github.com/modelcontextprotocol/typescript-sdk.git
 License: MIT License
@@ -185,7 +194,7 @@ Copyright: Visual Studio Code Team
 Source: https://github.com/Microsoft/vscode-test.git
 License: MIT License
 
-### @vscode/vsce v^3.6.1
+### @vscode/vsce v^3.6.2
 Copyright: Microsoft Corporation
 Source: https://github.com/Microsoft/vsce
 License: MIT License
@@ -300,5 +309,5 @@ License text not available
 ---
 
 
-Generated on: 2025-09-26T03:17:21.921Z
+Generated on: 2025-09-27T15:55:25.126Z
 By: ast-copilot-helper legal compliance system
