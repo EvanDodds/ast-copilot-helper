@@ -206,11 +206,13 @@ export class ConfigManager extends EventEmitter {
     } catch (error) {
       // Provide more specific error messages
       if (error instanceof Error) {
-        if (
+        // Check for file not found errors
+        const isEnoent = 
+          (error as any).code === "ENOENT" ||
           error.message.includes("ENOENT") ||
-          error.message.includes("no such file or directory") ||
-          (error as any).code === "ENOENT"
-        ) {
+          error.message.includes("no such file or directory");
+          
+        if (isEnoent) {
           throw new Error("Configuration file not found");
         } else if (
           error instanceof SyntaxError ||

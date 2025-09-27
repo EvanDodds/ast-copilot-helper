@@ -144,14 +144,17 @@ describe("MetadataManager", () => {
     });
 
     it("should handle storage errors gracefully", async () => {
-      const invalidManager = new MetadataManager(
-        "/invalid/path/that/cannot/be/created",
-      );
+      // Mock fs.writeFile to throw an error
+      const writeFileSpy = vi.spyOn(fs, "writeFile").mockRejectedValueOnce(new Error("Disk full"));
+
       const metadata = createMockMetadata(mockModel);
 
       await expect(
-        invalidManager.storeMetadata(mockModel, metadata),
-      ).rejects.toThrow();
+        metadataManager.storeMetadata(mockModel, metadata),
+      ).rejects.toThrow("Disk full");
+
+      // Restore original function
+      writeFileSpy.mockRestore();
     });
   });
 
@@ -589,12 +592,17 @@ describe("MetadataManager", () => {
     });
 
     it("should handle file system permission errors", async () => {
-      const readonlyManager = new MetadataManager("/dev/null/readonly");
+      // Mock fs.mkdir to throw a permission error
+      const mkdirSpy = vi.spyOn(fs, "mkdir").mockRejectedValueOnce(new Error("EACCES: permission denied"));
+
       const metadata = createMockMetadata(mockModel);
 
       await expect(
-        readonlyManager.storeMetadata(mockModel, metadata),
-      ).rejects.toThrow();
+        metadataManager.storeMetadata(mockModel, metadata),
+      ).rejects.toThrow("EACCES: permission denied");
+
+      // Restore original function
+      mkdirSpy.mockRestore();
     });
   });
 

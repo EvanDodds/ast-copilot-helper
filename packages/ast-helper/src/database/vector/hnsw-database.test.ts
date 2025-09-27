@@ -8,7 +8,22 @@ import {
 import { existsSync, unlinkSync } from "fs";
 import path from "path";
 
-describe("HNSWVectorDatabase", () => {
+// Check if hnswlib-node native bindings are available
+const checkHNSWBinding = () => {
+  try {
+    const hnswPath = path.join(process.cwd(), "node_modules", "hnswlib-node", "lib", "binding");
+    return existsSync(hnswPath) || process.env.FORCE_HNSW_TESTS === "true";
+  } catch {
+    return false;
+  }
+};
+
+const hasHNSWBindings = checkHNSWBinding();
+if (!hasHNSWBindings) {
+  console.warn("HNSW native bindings not available, skipping HNSW tests");
+}
+
+describe.skipIf(!hasHNSWBindings)("HNSWVectorDatabase", () => {
   let db: HNSWVectorDatabase;
   let testDbPath: string;
   let testIndexPath: string;

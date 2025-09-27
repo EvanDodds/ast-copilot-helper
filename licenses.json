@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-27T15:55:25.127Z",
+  "generatedAt": "2025-09-27T19:28:26.571Z",
   "generator": "ast-copilot-helper-legal-compliance",
   "totalDependencies": 57,
   "dependencies": [
@@ -11,7 +11,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Evan You"],
+      "copyrightHolders": [
+        "Evan You"
+      ],
       "sourceUrl": "git+https://github.com/vuejs/core.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/vue/LICENSE"
@@ -24,7 +26,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Evan You"],
+      "copyrightHolders": [
+        "Evan You"
+      ],
       "sourceUrl": "git+https://github.com/vuejs/theme.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@vue/theme/LICENSE"
@@ -37,7 +41,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Evan You"],
+      "copyrightHolders": [
+        "Evan You"
+      ],
       "attributionRequired": true,
       "licenseFile": "node_modules/vitepress/LICENSE"
     },
@@ -138,7 +144,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["typescript-eslint and other contributors"],
+      "copyrightHolders": [
+        "typescript-eslint and other contributors"
+      ],
       "sourceUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@typescript-eslint/eslint-plugin/LICENSE"
@@ -151,7 +159,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["typescript-eslint and other contributors"],
+      "copyrightHolders": [
+        "typescript-eslint and other contributors"
+      ],
       "sourceUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@typescript-eslint/parser/LICENSE"
@@ -164,7 +174,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["ZEIT, Inc."],
+      "copyrightHolders": [
+        "ZEIT, Inc."
+      ],
       "attributionRequired": true,
       "licenseFile": "node_modules/@vercel/ncc/LICENSE"
     },
@@ -176,7 +188,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Anthony Fu <anthonyfu117@hotmail.com>"],
+      "copyrightHolders": [
+        "Anthony Fu <anthonyfu117@hotmail.com>"
+      ],
       "sourceUrl": "git+https://github.com/vitest-dev/vitest.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@vitest/coverage-v8/LICENSE"
@@ -202,7 +216,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Evan Wallace"],
+      "copyrightHolders": [
+        "Evan Wallace"
+      ],
       "sourceUrl": "git+https://github.com/evanw/esbuild.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/esbuild/LICENSE.md"
@@ -229,8 +245,11 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Sindre Sorhus"],
-      "attributionRequired": true
+      "copyrightHolders": [
+        "Sindre Sorhus"
+      ],
+      "attributionRequired": true,
+      "licenseFile": "node_modules/globals/LICENSE"
     },
     {
       "name": "husky",
@@ -240,7 +259,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["typicode"],
+      "copyrightHolders": [
+        "typicode"
+      ],
       "sourceUrl": "git+https://github.com/typicode/husky.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/husky/LICENSE"
@@ -320,7 +341,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Hiroki Osame"],
+      "copyrightHolders": [
+        "Hiroki Osame"
+      ],
       "attributionRequired": true,
       "licenseFile": "node_modules/tsx/LICENSE"
     },
@@ -332,7 +355,9 @@
         "name": "Apache License 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0"
       },
-      "copyrightHolders": ["Microsoft Corp."],
+      "copyrightHolders": [
+        "Microsoft Corp."
+      ],
       "sourceUrl": "https://github.com/microsoft/TypeScript.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/typescript/LICENSE.txt"
@@ -345,7 +370,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["typescript-eslint and other contributors"],
+      "copyrightHolders": [
+        "typescript-eslint and other contributors"
+      ],
       "sourceUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/typescript-eslint/LICENSE"
@@ -382,7 +409,10 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["LongYinan <lynweklm@gmail.com>", "LongYinan"],
+      "copyrightHolders": [
+        "LongYinan <lynweklm@gmail.com>",
+        "LongYinan"
+      ],
       "sourceUrl": "git+https://github.com/napi-rs/napi-rs.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@napi-rs/cli/LICENSE"
@@ -433,7 +463,9 @@
         "name": "Apache License 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0"
       },
-      "copyrightHolders": ["Xenova"],
+      "copyrightHolders": [
+        "Xenova"
+      ],
       "sourceUrl": "git+https://github.com/xenova/transformers.js.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@xenova/transformers/LICENSE"
@@ -478,7 +510,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["TJ Holowaychuk <tj@vision-media.ca>"],
+      "copyrightHolders": [
+        "TJ Holowaychuk <tj@vision-media.ca>"
+      ],
       "sourceUrl": "git+https://github.com/tj/commander.js.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/commander/LICENSE"
@@ -491,7 +525,9 @@
         "name": "Apache License 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0"
       },
-      "copyrightHolders": ["Atsushi Tatsuma"],
+      "copyrightHolders": [
+        "Atsushi Tatsuma"
+      ],
       "attributionRequired": true,
       "licenseFile": "node_modules/hnswlib-node/LICENSE.txt"
     },
@@ -570,7 +606,9 @@
         "name": "Apache License 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0"
       },
-      "copyrightHolders": ["Microsoft Corp."],
+      "copyrightHolders": [
+        "Microsoft Corp."
+      ],
       "sourceUrl": "https://github.com/microsoft/TypeScript.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/typescript/LICENSE.txt"
@@ -662,7 +700,9 @@
         "name": "Apache License 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0"
       },
-      "copyrightHolders": ["Microsoft Corp."],
+      "copyrightHolders": [
+        "Microsoft Corp."
+      ],
       "sourceUrl": "https://github.com/microsoft/TypeScript.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/typescript/LICENSE.txt"
@@ -753,7 +793,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Visual Studio Code Team, Microsoft"],
+      "copyrightHolders": [
+        "Visual Studio Code Team, Microsoft"
+      ],
       "sourceUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@types/vscode/LICENSE"
@@ -766,7 +808,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Connor Peet <connor@peet.io>"],
+      "copyrightHolders": [
+        "Connor Peet <connor@peet.io>"
+      ],
       "sourceUrl": "git+https://github.com/Microsoft/vscode-test-cli.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@vscode/test-cli/LICENSE"
@@ -779,7 +823,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Visual Studio Code Team"],
+      "copyrightHolders": [
+        "Visual Studio Code Team"
+      ],
       "sourceUrl": "https://github.com/Microsoft/vscode-test.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/@vscode/test-electron/LICENSE"
@@ -792,7 +838,9 @@
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT"
       },
-      "copyrightHolders": ["Microsoft Corporation"],
+      "copyrightHolders": [
+        "Microsoft Corporation"
+      ],
       "sourceUrl": "https://github.com/Microsoft/vsce",
       "attributionRequired": true,
       "licenseFile": "node_modules/@vscode/vsce/LICENSE"
@@ -822,7 +870,9 @@
         "name": "Apache License 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0"
       },
-      "copyrightHolders": ["Microsoft Corp."],
+      "copyrightHolders": [
+        "Microsoft Corp."
+      ],
       "sourceUrl": "https://github.com/microsoft/TypeScript.git",
       "attributionRequired": true,
       "licenseFile": "node_modules/typescript/LICENSE.txt"
@@ -951,7 +1001,12 @@
   },
   "complianceInfo": {
     "attributionRequiredCount": 57,
-    "uniqueLicenses": ["MIT", "Apache-2.0", "ISC", "UNKNOWN"],
+    "uniqueLicenses": [
+      "MIT",
+      "Apache-2.0",
+      "ISC",
+      "UNKNOWN"
+    ],
     "copyleftDependencies": 0
   }
 }
