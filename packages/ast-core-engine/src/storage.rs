@@ -393,8 +393,7 @@ impl StorageLayer {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs() as i64;
-        let vector_json =
-            serde_json::to_string(vector_data).map_err(|e| EngineError::Serialization(e))?;
+        let vector_json = serde_json::to_string(vector_data).map_err(EngineError::Serialization)?;
 
         let result = sqlx::query(
             r#"
@@ -633,7 +632,7 @@ impl StorageLayer {
             node_count: node_count as u64,
             vector_count: vector_count as u64,
             cache_stats,
-            connection_pool_size: self.pool.size() as u32,
+            connection_pool_size: self.pool.size(),
             max_connections: self.config.max_connections,
         })
     }

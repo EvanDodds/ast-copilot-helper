@@ -2,12 +2,33 @@ use crate::{
     ast_processor::AstProcessor,
     error::{EngineError, StorageError},
     storage::StorageLayer,
-    types::NodeMetadata,
+    NodeMetadata,
 };
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
-use tokio::sync::{mpsc, Mutex, RwLock};
+use tokio::sync::{mpsc, Mutex};
+
+#[derive(Clone, Default)]
+pub struct CancellationToken {
+    cancelled: Arc<RwLock<bool>>,
+}
+
+impl CancellationToken {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn cancel(&self) {
+        let mut cancelled = self.cancelled.write().unwrap();
+        *cancelled = true;
+    }
+
+    pub fn is_cancelled(&self) -> bool {
+        let cancelled = self.cancelled.read().unwrap();
+        *cancelled
+    }
+}
 
 /// Progress information for batch processing operations
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -108,30 +129,6 @@ pub struct FileProcessingResult {
     pub vectors_count: usize,
 }
 
-/// Cancellation token for batch operations
-#[derive(Debug, Clone)]
-pub struct CancellationToken {
-    cancelled: Arc<RwLock<bool>>,
-}
-
-impl CancellationToken {
-    pub fn new() -> Self {
-        Self {
-            cancelled: Arc::new(RwLock::new(false)),
-        }
-    }
-
-    pub async fn cancel(&self) {
-        let mut cancelled = self.cancelled.write().await;
-        *cancelled = true;
-    }
-
-    pub async fn is_cancelled(&self) -> bool {
-        let cancelled = self.cancelled.read().await;
-        *cancelled
-    }
-}
-
 /// High-performance batch processor for large codebases
 pub struct BatchProcessor {
     ast_processor: Arc<AstProcessor>,
@@ -207,7 +204,7 @@ impl BatchProcessor {
                         }
                     }
                     _ = async {
-                        cancellation_clone.is_cancelled().await
+                        cancellation_clone.is_cancelled()
                     } => {
                         break;
                     }
@@ -229,7 +226,7 @@ impl BatchProcessor {
             let task = tokio::spawn(async move {
                 let _permit = semaphore_permit.acquire().await.unwrap();
 
-                if cancellation_token.is_cancelled().await {
+                if cancellation_token.is_cancelled() {
                     return;
                 }
 
@@ -323,7 +320,7 @@ impl BatchProcessor {
             }
 
             // Check for cancellation
-            if self.cancellation_token.is_cancelled().await {
+            if self.cancellation_token.is_cancelled() {
                 break;
             }
         }
@@ -446,12 +443,12 @@ impl BatchProcessor {
 
     /// Cancel the current batch operation
     pub async fn cancel(&self) {
-        self.cancellation_token.cancel().await;
+        self.cancellation_token.cancel();
     }
 
     /// Check if the operation is cancelled
     pub async fn is_cancelled(&self) -> bool {
-        self.cancellation_token.is_cancelled().await
+        self.cancellation_token.is_cancelled()
     }
 
     /// Get memory usage estimate

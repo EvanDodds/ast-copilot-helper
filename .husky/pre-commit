@@ -20,10 +20,11 @@ if git diff --cached --name-only | grep -E '\.(rs|toml)$' > /dev/null 2>&1; then
     cd packages/ast-core-engine
     echo "  → Checking Rust code compilation..."
     cargo check --quiet || exit 1
-    echo "  → Running Rust tests..."
-    cargo test --quiet || exit 1
+    echo "  → Running Rust linting..."
+    cargo clippy --quiet -- --deny warnings || exit 1
     echo "  → Checking Rust formatting..."
     cargo fmt -- --check || exit 1
+    echo "  💡 Note: NAPI tests require Node.js runtime, use 'yarn test:rust:all' for full validation"
     cd ../..
   else
     echo "  ⚠️  Cargo not found, skipping Rust validation"

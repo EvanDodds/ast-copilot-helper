@@ -149,7 +149,7 @@ impl BenchmarkResults {
 
         // Median
         let mid = durations.len() / 2;
-        self.median_duration_ms = if durations.len() % 2 == 0 {
+        self.median_duration_ms = if durations.len().is_multiple_of(2) {
             (durations[mid - 1] + durations[mid]) / 2
         } else {
             durations[mid]

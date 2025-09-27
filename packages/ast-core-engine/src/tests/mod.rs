@@ -32,7 +32,7 @@ mod tests {
     async fn test_health_check() {
         let health = health_check().await.unwrap();
         assert_eq!(health.status, "healthy");
-        assert!(health.memory_usage_mb >= 0);
+        // memory_usage_mb is u32, so it's always non-negative by type
         assert!(health.version.contains("ast-core-engine"));
     }
 

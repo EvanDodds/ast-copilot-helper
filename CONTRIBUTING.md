@@ -69,7 +69,7 @@ yarn run lint
 ```
 ast-copilot-helper/
 ├── packages/
-│   ├── ast-copilot-helper/          # CLI tool and core library
+│   ├── ast-helper/                  # CLI tool and core library
 │   │   ├── src/            # Source code
 │   │   ├── bin/            # CLI executables
 │   │   └── test/           # Package-specific tests

@@ -48,6 +48,10 @@ impl AstCoreEngineApi {
     }
 
     /// Initialize the engine components
+    ///
+    /// # Safety
+    /// This function is marked unsafe due to NAPI requirements for async functions
+    /// that modify shared state. It must be called only once during engine setup.
     #[napi]
     pub async unsafe fn initialize(&mut self) -> Result<()> {
         // Initialize AST processor
@@ -158,10 +162,7 @@ impl AstCoreEngineApi {
         let start_time = std::time::Instant::now();
         let results = processor
             .process_files(
-                file_paths
-                    .iter()
-                    .map(|p| std::path::PathBuf::from(p))
-                    .collect(),
+                file_paths.iter().map(std::path::PathBuf::from).collect(),
                 None, // No progress callback for now
             )
             .await
@@ -332,7 +333,6 @@ impl AstCoreEngineApi {
 }
 
 /// Helper functions for configuration
-
 /// Create HNSW config helper
 #[napi]
 pub fn create_hnsw_config(

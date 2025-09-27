@@ -87,7 +87,7 @@ impl SimpleVectorDb {
         // Calculate similarity with all stored vectors
         for entry in self.vectors.iter() {
             let (node_id, (embedding, metadata)) = (entry.key().clone(), entry.value());
-            let similarity = cosine_similarity(&query_embedding, &embedding);
+            let similarity = cosine_similarity(&query_embedding, embedding);
 
             similarities.push((node_id, similarity, metadata.clone()));
         }

@@ -59,10 +59,7 @@ impl ParserPool {
 
     /// Get a parser for the specified language, creating if necessary
     pub fn get_parser(&self, language: SupportedLanguage) -> Result<Parser, EngineError> {
-        let mut parser_entry = self
-            .parsers
-            .entry(language.clone())
-            .or_insert_with(Vec::new);
+        let mut parser_entry = self.parsers.entry(language.clone()).or_default();
 
         if let Some(parser) = parser_entry.pop() {
             return Ok(parser);
@@ -80,7 +77,7 @@ impl ParserPool {
 
     /// Return parser to pool for reuse
     pub fn return_parser(&self, language: SupportedLanguage, parser: Parser) {
-        let mut parser_entry = self.parsers.entry(language).or_insert_with(Vec::new);
+        let mut parser_entry = self.parsers.entry(language).or_default();
         if parser_entry.len() < self.max_pool_size {
             parser_entry.push(parser);
         }
