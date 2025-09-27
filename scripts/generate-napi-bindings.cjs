@@ -92,6 +92,7 @@ if (!nativeBinding) {
       constructor() { throw new Error('Native binding not available - run cargo build --release') }
       initialize() { throw new Error('Native binding not available - run cargo build --release') }
       processBatch() { throw new Error('Native binding not available - run cargo build --release') }
+      searchSimilar() { throw new Error('Native binding not available - run cargo build --release') }
     },
     createDefaultEngine: () => { throw new Error('Native binding not available - run cargo build --release') }
   }
@@ -155,6 +156,13 @@ export interface NodeMetadata {
   docstring?: string;
   annotations: string[];
   languageSpecific?: Record<string, any>;
+  // Additional properties used by semantic processor
+  nodeId: string;
+  filePath: string;
+  signature?: string;
+  summary?: string;
+  sourceSnippet?: string;
+  complexity?: number;
 }
 
 /** Batch processing result */
@@ -162,6 +170,7 @@ export interface BatchResult {
   processedFiles: number;
   totalNodes: number;
   processingTimeMs: number;
+  memoryPeakMb: number;
   errors: ProcessingError[];
 }
 
@@ -175,6 +184,9 @@ export declare class AstCoreEngineApi {
   
   /** Process a batch of files */
   processBatch(filePaths: string[], config: EngineConfig): Promise<BatchResult>;
+  
+  /** Search for similar nodes using semantic search */
+  searchSimilar(queryText: string, maxResults?: number): Promise<NodeMetadata[]>;
 }
 
 /** Create a default engine instance */
