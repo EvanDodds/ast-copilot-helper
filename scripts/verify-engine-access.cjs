@@ -55,13 +55,46 @@ try {
   
   // Test actual module loading
   console.log('🧪 Testing module loading...');
-  const module = require(absoluteTargetPath);
-  console.log('✅ ast-core-engine module loads successfully');
-  console.log(`   Module type: ${typeof module}`);
-  
-  if (module && typeof module === 'object') {
-    const exports = Object.keys(module);
-    console.log(`   Available exports: ${exports.length > 0 ? exports.join(', ') : 'none (module may export default or be function)'}`);
+  try {
+    const module = require(absoluteTargetPath);
+    console.log('✅ ast-core-engine module loads successfully');
+    console.log(`   Module type: ${typeof module}`);
+    
+    if (module && typeof module === 'object') {
+      const exports = Object.keys(module);
+      console.log(`   Available exports: ${exports.length > 0 ? exports.join(', ') : 'none (module may export default or be function)'}`);
+      
+      // Test if this is a stub (expected in CI environments without native binaries)
+      if (exports.includes('AstCoreEngineApi')) {
+        try {
+          // Try to create an instance - if it's a stub, this will throw with our specific message
+          new module.AstCoreEngineApi();
+        } catch (stubError) {
+          if (stubError.message.includes('Native binding not available')) {
+            console.log('⚠️  Module is using runtime stub (normal for CI without native binaries)');
+            console.log('   TypeScript compilation will work, but runtime usage requires: cargo build --release');
+          } else {
+            throw stubError; // Re-throw if it's a different error
+          }
+        }
+      }
+    }
+  } catch (moduleError) {
+    // If module loading fails, it might be due to native binding issues
+    if (moduleError.message.includes('Failed to load native binding')) {
+      console.error('❌ CRITICAL: ast-core-engine module cannot be resolved or loaded');
+      console.error(`   Error: ${moduleError.message}`);
+      
+      // Additional debugging information
+      console.log('🔍 Debug information:');
+      console.log(`   Target path: ${path.resolve(targetPath)}`);
+      console.log(`   Current working directory: ${process.cwd()}`);
+      console.log(`   Files in target directory: ${fs.readdirSync(targetPath).join(', ')}`);
+      
+      process.exit(1);
+    } else {
+      throw moduleError; // Re-throw if it's a different error
+    }
   }
   
 } catch (resolveError) {

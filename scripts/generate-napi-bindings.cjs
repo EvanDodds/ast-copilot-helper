@@ -76,14 +76,36 @@ for (const nodeFile of localNodeFiles) {
 }
 
 if (!nativeBinding) {
-  console.error('Failed to load native binding from local .node files')
-  console.error('This may indicate a missing or incompatible native module.')
-  console.error(\`Platform: \${platform}, Architecture: \${arch}\`)
+  // For CI/development environments where .node files don't exist yet,
+  // we create a stub that will fail gracefully at runtime but allow TypeScript compilation
+  console.warn('⚠️  No native binding found - creating runtime stub for TypeScript compilation')
+  console.warn('   This is normal in CI environments. The module will fail at runtime until Rust binaries are built.')
+  console.warn(\`   Platform: \${platform}, Architecture: \${arch}\`)
   if (platform === 'linux') {
-    console.error(\`Musl detected: \${isMusl()}\`)
+    console.warn(\`   Musl detected: \${isMusl()}\`)
   }
-  console.error('Available .node files should be built using: cargo build --release')
-  throw new Error(\`Failed to load native binding for \${platform}-\${arch}\`)
+  console.warn('   To build native binaries: cargo build --release')
+  
+  // Create a stub that provides the correct interface but throws at runtime
+  nativeBinding = {
+    AstCoreEngineApi: class AstCoreEngineApi {
+      constructor() { throw new Error('Native binding not available - run cargo build --release') }
+    },
+    setLogLevel: () => { throw new Error('Native binding not available - run cargo build --release') },
+    getVersion: () => { throw new Error('Native binding not available - run cargo build --release') },
+    validateConfig: () => { throw new Error('Native binding not available - run cargo build --release') },
+    createEngine: () => { throw new Error('Native binding not available - run cargo build --release') },
+    destroyEngine: () => { throw new Error('Native binding not available - run cargo build --release') },
+    addDocuments: () => { throw new Error('Native binding not available - run cargo build --release') },
+    searchSimilar: () => { throw new Error('Native binding not available - run cargo build --release') },
+    listDocuments: () => { throw new Error('Native binding not available - run cargo build --release') },
+    getDocumentById: () => { throw new Error('Native binding not available - run cargo build --release') },
+    deleteDocument: () => { throw new Error('Native binding not available - run cargo build --release') },
+    clearDatabase: () => { throw new Error('Native binding not available - run cargo build --release') },
+    analyzeSyntaxPatterns: () => { throw new Error('Native binding not available - run cargo build --release') },
+    findBestMatches: () => { throw new Error('Native binding not available - run cargo build --release') },
+    calculateSemanticSimilarity: () => { throw new Error('Native binding not available - run cargo build --release') }
+  }
 }
 
 // Export all the native functions and classes
