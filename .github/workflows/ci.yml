@@ -254,6 +254,29 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Setup Rust for native module
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            packages/ast-core-engine/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build project dependencies
+        run: yarn run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
       - name: Run unit tests
         run: yarn run test:unit
         env:
@@ -324,6 +347,29 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Setup Rust for native module
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            packages/ast-core-engine/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build project dependencies
+        run: yarn run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
       - name: Run integration tests
         run: yarn run test:integration
         env:
@@ -365,6 +411,29 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
+
+      - name: Setup Rust for native module
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            packages/ast-core-engine/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build project dependencies
+        run: yarn run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Run performance validation
         run: yarn run test:performance
