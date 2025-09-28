@@ -45,11 +45,13 @@ export default defineConfig({
       vmThreads: {
         maxThreads: 1,
         minThreads: 1,
-        memoryLimit: "1GB", // Increased from 512MB to prevent out of memory
+        memoryLimit: "4GB", // Further increased to handle large test suites
+        useAtomics: false, // Reduce memory overhead
       },
     },
     // Memory management configuration
     maxWorkers: 1, // Single worker for memory-constrained environment
+    maxConcurrency: 1, // Ensure sequential test execution
     sequence: {
       shuffle: false, // Deterministic test order for memory consistency
     },

@@ -8,16 +8,16 @@
 const fs = require('fs');
 const path = require('path');
 
-const targetPath = 'ast-core-engine';
+const targetPath = 'packages/ast-core-engine';
 const indexJsPath = path.join(targetPath, 'index.js');
 const indexDtsPath = path.join(targetPath, 'index.d.ts');
 const packageJsonPath = path.join(targetPath, 'package.json');
 
 console.log('🔍 Post-build verification of ast-core-engine accessibility...');
 
-// Check if the target path exists
+// Check if the target path exists (using packages path instead of symlink)
 if (!fs.existsSync(targetPath)) {
-  console.error('❌ CRITICAL: ast-core-engine path does not exist');
+  console.error('❌ CRITICAL: packages/ast-core-engine path does not exist');
   process.exit(1);
 }
 

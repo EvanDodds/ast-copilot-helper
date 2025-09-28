@@ -41,8 +41,8 @@ describe("GitHub Issue Templates", () => {
         "utf-8",
       );
 
-      // Extract YAML front matter
-      const yamlMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      // Extract YAML front matter (handle both Unix \n and Windows \r\n line endings)
+      const yamlMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
       expect(
         yamlMatch,
         `Template ${template} should have YAML front matter`,

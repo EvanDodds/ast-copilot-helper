@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import * as fs from "fs/promises";
+import * as path from "path";
 import { BatchProcessor, BatchProcessingOptions } from "../batch-processor.js";
 import { BaseParser } from "../parsers/base-parser.js";
 import { ParseResult, ASTNode, ParserRuntime } from "../types.js";
@@ -222,7 +223,9 @@ describe("Batch Processing System", () => {
         expect(result.summary.skipped).toBe(2); // Two unsupported files
 
         // Check that unsupported files have appropriate error messages
-        const unsupportedResult = result.results.get("/test/unsupported.xyz");
+        const unsupportedResult = result.results.get(
+          path.resolve("/test/unsupported.xyz"),
+        );
         expect(unsupportedResult?.errors[0]?.message).toContain(
           "Unsupported file type",
         );
@@ -245,7 +248,9 @@ describe("Batch Processing System", () => {
         expect(result.summary.successful).toBe(1); // Only small file
         expect(result.summary.skipped).toBe(1); // Large file skipped
 
-        const largeFileResult = result.results.get("/test/large.ts");
+        const largeFileResult = result.results.get(
+          path.resolve("/test/large.ts"),
+        );
         expect(largeFileResult?.errors[0]?.message).toContain("File too large");
       });
 
@@ -278,7 +283,7 @@ describe("Batch Processing System", () => {
         });
 
         expect(result.summary.failed).toBe(1);
-        const timeoutResult = result.results.get("/test/slow.ts");
+        const timeoutResult = result.results.get(path.resolve("/test/slow.ts"));
         expect(timeoutResult?.errors[0]?.message).toContain("Parse timeout");
       });
     });
@@ -389,9 +394,10 @@ describe("Batch Processing System", () => {
 
         (fs.stat as any).mockResolvedValue({ size: 1024 });
 
-        // Set up results with similar errors
+        // Set up results with similar errors using resolved paths
         files.forEach((file) => {
-          mockParser.setMockResult(file, {
+          const resolvedPath = path.resolve(file);
+          mockParser.setMockResult(resolvedPath, {
             nodes: [],
             errors: [
               {
@@ -444,7 +450,7 @@ describe("Batch Processing System", () => {
         (fs.stat as any).mockResolvedValue({ size: 1024 });
 
         // Set up different results for different languages
-        mockParser.setMockResult("/test/file.ts", {
+        mockParser.setMockResult(path.resolve("/test/file.ts"), {
           nodes: [
             {
               id: "1",
@@ -461,7 +467,7 @@ describe("Batch Processing System", () => {
           parseTime: 10,
         });
 
-        mockParser.setMockResult("/test/file.js", {
+        mockParser.setMockResult(path.resolve("/test/file.js"), {
           nodes: [
             {
               id: "1",

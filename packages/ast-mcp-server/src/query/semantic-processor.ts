@@ -7,7 +7,7 @@
 
 import { createLogger } from "../../../ast-helper/src/logging/index.js";
 import type { XenovaEmbeddingGenerator } from "../../../ast-helper/src/embedder/index.js";
-import type { HNSWVectorDatabase } from "../../../ast-helper/src/database/vector/index.js";
+import type { VectorDatabase } from "../../../ast-helper/src/database/vector/index.js";
 import type { ASTDatabaseReader } from "../database/reader.js";
 import type {
   AstCoreEngineApi,
@@ -89,7 +89,7 @@ export class SemanticQueryProcessor {
 
   constructor(
     embeddingGenerator: XenovaEmbeddingGenerator,
-    _vectorDatabase: HNSWVectorDatabase, // Unused but kept for API compatibility
+    _vectorDatabase: VectorDatabase, // Unused but kept for API compatibility
     annotationDatabase: ASTDatabaseReader,
     config: QuerySystemConfig,
     performanceMonitor?: any, // Using any to avoid circular import for now

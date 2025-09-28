@@ -119,14 +119,19 @@ describe("ServerProcessManager", () => {
 
     it("should detect default server path in workspace", () => {
       (fs.existsSync as Mock).mockImplementation((path) => {
-        return path.includes("packages/ast-mcp-server/bin/ast-mcp-server");
+        const normalizedPath = path.replace(/\\/g, "/");
+        return normalizedPath.includes(
+          "packages/ast-mcp-server/bin/ast-mcp-server",
+        );
       });
 
       const manager = new ServerProcessManager({}, mockOutputChannel);
       manager.dispose();
 
       expect(fs.existsSync).toHaveBeenCalledWith(
-        expect.stringContaining("packages/ast-mcp-server/bin/ast-mcp-server"),
+        expect.stringMatching(
+          /packages[\\/]ast-mcp-server[\\/]bin[\\/]ast-mcp-server/,
+        ),
       );
     });
   });

@@ -28,6 +28,9 @@ lib/
 *.tsbuildinfo
 
 # ESLint cache
+
+# Symlinks (should not be tracked)
+ast-core-engine
 .eslintcache
 
 # Optional npm cache directory
@@ -124,15 +127,26 @@ package-lock.json
 npm-shrinkwrap.json
 # yarn.lock
 
-# Test output files (temporary test artifacts)
-*_*.json
-batch-test-*.json
-test-*.json
-component_*.json
-valid_*.json
-invalid_*.json
-output-test_*.json
-file[0-9]*_*.json
+# Test output files (temporary test artifacts) - only ignore in root
+/*_*.json
+/batch-test-*.json
+/test-*.json
+/component_*.json
+/valid_*.json
+/invalid_*.json
+/output-test_*.json
+/file[0-9]*_*.json
+
+# Log files in root only
+/*.log
+
+# Database files in root only  
+/*.sqlite*
+/*.db
+
+# Reports in root only
+/*-report.json
+/*-report.html
 
 # Rust build artifacts
 target/
@@ -144,5 +158,3 @@ Cargo.lock
 
 # NAPI-RS build artifacts
 *.node
-index.js
-index.d.ts

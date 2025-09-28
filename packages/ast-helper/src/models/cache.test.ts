@@ -476,13 +476,20 @@ describe("ModelCache", () => {
 
   describe("Error Handling", () => {
     it("should handle file system errors during storage", async () => {
-      const invalidCache = new ModelCache({ cacheDir: "/root/invalid/path" });
+      // Mock fs.mkdir to throw an error
+      const mkdirSpy = vi
+        .spyOn(fs, "mkdir")
+        .mockRejectedValueOnce(new Error("Permission denied"));
+
       const testFilePath = join(TEST_CACHE_DIR, "error-test.onnx");
       await fs.writeFile(testFilePath, "test content");
 
-      await expect(
-        invalidCache.storeModel(mockModel, testFilePath),
-      ).rejects.toThrow();
+      await expect(cache.storeModel(mockModel, testFilePath)).rejects.toThrow(
+        "Permission denied",
+      );
+
+      // Restore original function
+      mkdirSpy.mockRestore();
     });
 
     it("should handle missing source file", async () => {

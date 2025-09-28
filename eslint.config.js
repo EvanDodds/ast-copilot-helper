@@ -148,7 +148,7 @@ export default tseslint.config(
   },
 
   // Configuration for JavaScript files
-  // Root and general JavaScript files (including .mjs/.cjs in scripts)
+  // Root and general JavaScript files (including .mjs/.cjs in scripts and examples)
   {
     files: [
       "*.js",
@@ -156,6 +156,7 @@ export default tseslint.config(
       "*.cjs",
       "scripts/**/*.{js,mjs,cjs}",
       "packages/**/*.{js,mjs,cjs}",
+      "examples/**/*.{js,mjs,cjs}",
     ],
     languageOptions: {
       ecmaVersion: 2024,

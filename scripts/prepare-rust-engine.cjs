@@ -90,67 +90,62 @@ function needsRebuild() {
 }
 
 function updateEngineAccessAfterBuild() {
-  // Check if we have a directory copy (not symlink) at root level
-  const rootEngineDir = path.resolve(__dirname, '..', 'ast-core-engine');
+  // TypeScript path mapping eliminates the need for root-level engine directory
+  console.log('✅ Using TypeScript path mapping - no root engine directory update needed');
+}
+
+function ensureBindingFilesExist() {
+  const jsFile = path.join(engineDir, 'index.js');
+  const dtsFile = path.join(engineDir, 'index.d.ts');
   
-  if (!fs.existsSync(rootEngineDir)) {
-    console.log('No root engine directory found, skipping update');
-    return;
-  }
-  
-  const stats = fs.lstatSync(rootEngineDir);
-  if (stats.isSymbolicLink()) {
-    console.log('Root engine directory is a symlink, no update needed');
-    return;
-  }
-  
-  // This is a directory copy, we need to update it with the new files
-  console.log('🔄 Updating root engine directory copy with new build artifacts...');
-  
-  const filesToUpdate = ['index.js', 'index.d.ts', 'package.json'];
-  
-  // Also copy all .node files (binary files)
-  const sourceFiles = fs.readdirSync(engineDir);
-  const nodeFiles = sourceFiles.filter(f => f.endsWith('.node'));
-  filesToUpdate.push(...nodeFiles);
-  
-  let updatedCount = 0;
-  for (const file of filesToUpdate) {
-    const sourcePath = path.join(engineDir, file);
-    const targetPath = path.join(rootEngineDir, file);
-    
-    if (fs.existsSync(sourcePath)) {
-      try {
-        fs.copyFileSync(sourcePath, targetPath);
-        updatedCount++;
-        console.log(`  ✅ Updated ${file}`);
-      } catch (error) {
-        console.log(`  ⚠️  Failed to update ${file}: ${error.message}`);
-      }
-    } else {
-      console.log(`  ⚠️  Source file ${file} not found, skipping`);
+  if (!fs.existsSync(jsFile) || !fs.existsSync(dtsFile)) {
+    console.log('⚠️  JavaScript wrapper files missing after build, generating fallback bindings...');
+    try {
+      const generateScript = path.resolve(__dirname, 'generate-napi-bindings.cjs');
+      execSync(`node "${generateScript}"`, { stdio: 'inherit' });
+      console.log('✅ Fallback bindings generated successfully');
+    } catch (fallbackError) {
+      console.error('❌ Fallback binding generation failed:', fallbackError.message);
+      process.exit(1);
     }
   }
-  
-  console.log(`🎉 Updated ${updatedCount} files in root engine directory`);
 }
 
 try {
   if (needsRebuild()) {
-    console.log('🔧 Generating NAPI binding files for development/CI...');
+    console.log('🔧 Building Rust NAPI bindings...');
     
-    // Instead of building with NAPI (which doesn't work in our setup),
-    // generate the binding files using our custom generator
-    const generateScript = path.resolve(__dirname, 'generate-napi-bindings.cjs');
-    execSync(`node "${generateScript}"`, { stdio: 'inherit' });
+    // Change to the engine directory and build
+    process.chdir(engineDir);
     
-    console.log('✅ NAPI binding files generated');
+    // Build the Rust bindings using yarn (which runs the NAPI build)
+    console.log('Building native bindings with yarn build...');
+    execSync('yarn build', { stdio: 'inherit' });
+    
+    console.log('✅ Rust NAPI bindings built successfully');
+    
+    // Ensure JavaScript wrapper files exist after build
+    ensureBindingFilesExist();
     
     // Update the root directory copy if it exists
     updateEngineAccessAfterBuild();
+  } else {
+    // Even if we don't rebuild, ensure binding files exist
+    ensureBindingFilesExist();
   }
 } catch (error) {
-  console.error('❌ Binding generation failed:', error.message);
-  console.error('This may be expected in environments without Node.js properly configured');
-  process.exit(0); // Don't fail the entire install process
+  console.error('❌ Rust binding build failed:', error.message);
+  console.error('This likely means Rust toolchain is not available');
+  console.error('Please install Rust: https://rustup.rs/');
+  
+  // For CI environments where Rust isn't installed, fall back to stub generation
+  console.log('🔄 Falling back to stub generation for CI compatibility...');
+  try {
+    const generateScript = path.resolve(__dirname, 'generate-napi-bindings.cjs');
+    execSync(`node "${generateScript}"`, { stdio: 'inherit' });
+    console.log('✅ Stub bindings generated');
+  } catch (stubError) {
+    console.error('❌ Even stub generation failed:', stubError.message);
+    process.exit(1); // This is a hard failure
+  }
 }

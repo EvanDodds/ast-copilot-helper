@@ -30,3 +30,13 @@ export {
 // Storage and database implementations
 export { SQLiteVectorStorage } from "./sqlite-storage.js";
 export { HNSWVectorDatabase } from "./hnsw-database.js";
+export { RustVectorDatabase } from "./rust-vector-database.js";
+
+// Factory for creating vector databases with Rust-first strategy
+export {
+  VectorDatabaseFactory,
+  createVectorDatabase,
+  createRustVectorDatabase,
+  createHNSWVectorDatabase,
+} from "./factory.js";
+export type { VectorDatabaseFactoryOptions } from "./factory.js";

@@ -15,6 +15,8 @@ import {
   loadVectorConfig,
 } from "../vector/index.js";
 
+// Vector types tests - these don't directly depend on native bindings
+
 describe("Vector Database Types", () => {
   describe("validateVectorDBConfig", () => {
     it("should pass validation for valid config", () => {

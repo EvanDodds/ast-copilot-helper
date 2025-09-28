@@ -2,6 +2,7 @@
   "name": "@ast-helper/core-engine",
   "version": "0.1.0",
   "description": "High-performance Rust core engine for AST processing",
+  "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
   "napi": {
@@ -28,9 +29,9 @@
   "scripts": {
     "artifacts": "napi artifacts",
     "bench": "node -r @swc-node/register benchmark/bench.ts",
-    "build": "echo 'Rust build skipped for development - use build:release for production builds'",
-    "build:release": "napi build --platform --release --strip --js index.js --dts index.d.ts",
-    "build:debug": "napi build --platform --js index.js --dts index.d.ts",
+    "build": "napi build --platform",
+    "build:release": "napi build --platform --release --strip",
+    "build:debug": "napi build --platform",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "cargo test",
     "clean": "cargo clean && rm -f *.node index.js index.d.ts",

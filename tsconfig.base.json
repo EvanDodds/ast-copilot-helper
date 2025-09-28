@@ -31,6 +31,7 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
+      "ast-core-engine": ["./packages/ast-core-engine"],
       "@ast-helper/*": ["packages/ast-helper/src/*"],
       "@ast-mcp-server/*": ["packages/ast-mcp-server/src/*"],
       "@vscode-extension/*": ["packages/vscode-extension/src/*"]

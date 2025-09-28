@@ -81,7 +81,11 @@ class PerformanceMonitor {
   private historyPath: string;
 
   constructor() {
-    this.logPath = path.join(process.cwd(), "performance-monitor.log");
+    this.logPath = path.join(
+      process.cwd(),
+      "monitoring",
+      "performance-monitor.log",
+    );
     this.historyPath = path.join(process.cwd(), "performance-history.json");
 
     this.thresholds = {

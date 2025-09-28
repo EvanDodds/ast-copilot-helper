@@ -11,13 +11,13 @@ Model Context Protocol (MCP) is an open standard that enables AI applications to
 ### 1. Install AST Copilot Helper
 
 ```bash
-npm install -g ast-copilot-helper
+npm install -g ast-helper
 ```
 
 ### 2. Start the MCP Server
 
 ```bash
-ast-copilot-helper mcp-server --port 3000
+ast-helper mcp-server --port 3000
 ```
 
 ### 3. Configure Your AI Agent
@@ -27,9 +27,9 @@ Add the MCP server configuration to your AI agent (e.g., Claude Desktop):
 ```json
 {
   "mcpServers": {
-    "ast-copilot-helper": {
+    "ast-helper": {
       "command": "npx",
-      "args": ["ast-copilot-helper", "mcp-server"],
+      "args": ["ast-helper", "mcp-server"],
       "env": {
         "WORKSPACE_PATH": "/path/to/your/project"
       }
@@ -81,7 +81,7 @@ Analyze project dependencies and relationships
 ### Server Options
 
 ```bash
-ast-copilot-helper mcp-server \
+ast-helper mcp-server \
   --port 3000 \
   --workspace /path/to/project \
   --cache-dir /path/to/cache \
@@ -101,8 +101,8 @@ Add to your Claude Desktop configuration file (`~/.claude/claude_desktop_config.
 ```json
 {
   "mcpServers": {
-    "ast-copilot-helper": {
-      "command": "ast-copilot-helper",
+    "ast-helper": {
+      "command": "ast-helper",
       "args": ["mcp-server", "--workspace", "/path/to/your/project"]
     }
   }

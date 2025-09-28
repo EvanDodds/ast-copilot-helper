@@ -69,7 +69,7 @@ class BuildFailureNotifier {
   private logPath: string;
 
   constructor() {
-    this.logPath = path.join(process.cwd(), "notification.log");
+    this.logPath = path.join(process.cwd(), "monitoring", "notification.log");
     this.config = this.loadConfiguration();
   }
 

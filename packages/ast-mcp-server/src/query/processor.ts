@@ -7,7 +7,7 @@
 
 import { createLogger } from "../../../ast-helper/src/logging/index.js";
 import type { XenovaEmbeddingGenerator } from "../../../ast-helper/src/embedder/index.js";
-import type { HNSWVectorDatabase } from "../../../ast-helper/src/database/vector/index.js";
+import type { VectorDatabase } from "../../../ast-helper/src/database/vector/index.js";
 import path from "path";
 import type { ASTDatabaseReader } from "../database/reader.js";
 import { SemanticQueryProcessor } from "./semantic-processor.js";
@@ -176,7 +176,7 @@ export class MainQueryProcessor implements QueryProcessor {
   // Core dependencies
   private annotationDatabase: ASTDatabaseReader;
   private embeddingGenerator?: XenovaEmbeddingGenerator;
-  private vectorDatabase?: HNSWVectorDatabase;
+  private vectorDatabase?: VectorDatabase;
   private rustEngine?: AstCoreEngineApi;
 
   // Specialized processors
@@ -218,7 +218,7 @@ export class MainQueryProcessor implements QueryProcessor {
     annotationDatabase: ASTDatabaseReader,
     config: QuerySystemConfig,
     embeddingGenerator?: XenovaEmbeddingGenerator,
-    vectorDatabase?: HNSWVectorDatabase,
+    vectorDatabase?: VectorDatabase,
   ) {
     this.annotationDatabase = annotationDatabase;
     this.config = config;

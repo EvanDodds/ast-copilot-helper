@@ -236,7 +236,7 @@ Now that you're up and running, explore these guides:
 📖 **[Installation Guide](installation)** - Detailed setup for all platforms  
 🚀 **[CLI Usage Guide](cli-usage)** - Master the command-line interface  
 ⚙️ **[Configuration Guide](configuration)** - Customize parsing and behavior  
-🤖 **[MCP Integration](./mcp-integration)** - Connect with AI agents via Model Context Protocol  
+🤖 **[MCP Integration](./mcp-integration.md)** - Connect with AI agents via Model Context Protocol  
 🔍 **[API Reference](../api/)** - Programmatic usage and API documentation
 
 ## Troubleshooting
@@ -305,7 +305,7 @@ Start with the [CLI Usage Guide](cli-usage) to learn all available commands and 
 :::
 
 ::: tip For AI Enthusiasts
-Jump to the [MCP Integration Guide](./mcp-integration) to connect with Claude Desktop and other AI agents.
+Jump to the [MCP Integration Guide](./mcp-integration.md) to connect with Claude Desktop and other AI agents.
 :::
 
 ::: tip For Developers
@@ -313,5 +313,5 @@ Check out the [Configuration Guide](configuration) to fine-tune AST Copilot Help
 :::
 
 ::: tip For Contributors
-Visit the [Contributing Guide](../CONTRIBUTING) to help improve the project.
+Visit the [Contributing Guide](../CONTRIBUTING.md) to help improve the project.
 :::
