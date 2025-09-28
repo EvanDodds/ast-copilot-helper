@@ -13,6 +13,7 @@ import type {
   VectorDBStats,
   VectorInsert,
 } from "./types.js";
+import { validateVectorDBConfig } from "./types.js";
 import { SQLiteVectorStorage } from "./sqlite-storage.js";
 
 // WASM configuration interface
@@ -77,9 +78,22 @@ export class WasmVectorDatabase implements VectorDatabase {
     this.storage = new SQLiteVectorStorage(config);
   }
 
-  async initialize(_config?: VectorDBConfig): Promise<void> {
+  async initialize(config?: VectorDBConfig): Promise<void> {
     if (this.isInitialized) {
       return;
+    }
+
+    // Update config if provided
+    if (config) {
+      Object.assign(this.config, config);
+    }
+
+    // Validate configuration
+    const configErrors = validateVectorDBConfig(this.config);
+    if (configErrors.length > 0) {
+      throw new Error(
+        `Invalid vector database configuration: ${configErrors.join(", ")}`,
+      );
     }
 
     try {
@@ -125,7 +139,7 @@ export class WasmVectorDatabase implements VectorDatabase {
       // const wasmModule = await import("@ast-helper/core-engine/pkg/ast_core_engine.js");
 
       // Temporary: throw error until WASM module is available
-      throw new Error("WASM module not yet built");
+      throw new Error("WASM module not yet built - build in progress");
 
       const wasmModule = null as unknown as WasmVectorDatabaseModule;
 
@@ -134,10 +148,17 @@ export class WasmVectorDatabase implements VectorDatabase {
 
       this.wasmModule = wasmModule as WasmVectorDatabaseModule;
       // Debug: WASM module loaded successfully
-    } catch (_error) {
-      // Fallback error until WASM module is built
+    } catch (error) {
+      // Provide specific error information based on the type of error
+      if (error instanceof Error && error.message.includes("not yet built")) {
+        throw new Error(
+          "WASM vector database module not yet available. The WASM build is currently being implemented.",
+        );
+      }
+
+      // For other errors (import failures, initialization errors, etc.)
       throw new Error(
-        "WASM module not available. Please run 'wasm-pack build --target web --features wasm' in packages/ast-core-engine",
+        `Failed to initialize WASM module: ${(error as Error).message}. Please ensure WASM module is built with 'wasm-pack build --target web --features wasm' in packages/ast-core-engine`,
       );
     }
   }
@@ -196,10 +217,22 @@ export class WasmVectorDatabase implements VectorDatabase {
   ): Promise<void> {
     this.ensureInitialized();
 
+    if (!nodeId || nodeId.trim().length === 0) {
+      throw new Error("nodeId is required and cannot be empty");
+    }
+
+    if (!vector || vector.length === 0) {
+      throw new Error("vector is required and cannot be empty");
+    }
+
     if (vector.length !== this.config.dimensions) {
       throw new Error(
         `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`,
       );
+    }
+
+    if (!metadata) {
+      throw new Error("metadata is required");
     }
 
     try {
@@ -233,12 +266,33 @@ export class WasmVectorDatabase implements VectorDatabase {
   async insertVectors(vectors: VectorInsert[]): Promise<void> {
     this.ensureInitialized();
 
+    if (!vectors || vectors.length === 0) {
+      throw new Error("vectors array is required and cannot be empty");
+    }
+
     // Batch insert - process each vector
+    const errors: Array<{ nodeId: string; error: string }> = [];
+    let successCount = 0;
+
     for (const vectorInsert of vectors) {
-      await this.insertVector(
-        vectorInsert.nodeId,
-        vectorInsert.vector,
-        vectorInsert.metadata,
+      try {
+        await this.insertVector(
+          vectorInsert.nodeId,
+          vectorInsert.vector,
+          vectorInsert.metadata,
+        );
+        successCount++;
+      } catch (error) {
+        errors.push({
+          nodeId: vectorInsert.nodeId,
+          error: (error as Error).message,
+        });
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new Error(
+        `Batch insert completed with errors. Successful: ${successCount}, Failed: ${errors.length}. Errors: ${errors.map((e) => `${e.nodeId}: ${e.error}`).join("; ")}`,
       );
     }
   }
@@ -254,6 +308,14 @@ export class WasmVectorDatabase implements VectorDatabase {
       throw new Error(
         `Query vector dimensions mismatch: expected ${this.config.dimensions}, got ${queryVector.length}`,
       );
+    }
+
+    if (k <= 0) {
+      throw new Error("Parameter k must be greater than 0");
+    }
+
+    if (ef !== undefined && ef <= 0) {
+      throw new Error("Parameter ef must be greater than 0");
     }
 
     const startTime = performance.now();
@@ -302,6 +364,14 @@ export class WasmVectorDatabase implements VectorDatabase {
   async updateVector(nodeId: string, vector: number[]): Promise<void> {
     this.ensureInitialized();
 
+    if (!nodeId || nodeId.trim().length === 0) {
+      throw new Error("nodeId is required and cannot be empty");
+    }
+
+    if (!vector || vector.length === 0) {
+      throw new Error("vector is required and cannot be empty");
+    }
+
     if (vector.length !== this.config.dimensions) {
       throw new Error(
         `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`,
@@ -332,6 +402,10 @@ export class WasmVectorDatabase implements VectorDatabase {
 
   async deleteVector(nodeId: string): Promise<void> {
     this.ensureInitialized();
+
+    if (!nodeId || nodeId.trim().length === 0) {
+      throw new Error("nodeId is required and cannot be empty");
+    }
 
     try {
       // Delete from storage
