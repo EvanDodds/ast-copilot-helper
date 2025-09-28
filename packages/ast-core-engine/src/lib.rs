@@ -11,35 +11,55 @@
 // Conditional compilation imports are handled per-module
 
 // WASM imports for WebAssembly bindings
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
+// WASM bindings are imported in the wasm_bindings module
 
-pub mod api;
-pub mod ast_processor;
-pub mod batch_processor;
 pub mod config;
-pub mod core;
 pub mod error;
-pub mod performance_monitor;
-pub mod storage;
 pub mod types;
-pub mod utils;
 pub mod vector_db;
+
+// Include other modules only when not compiling for WASM
+#[cfg(not(feature = "wasm"))]
+pub mod api;
+#[cfg(not(feature = "wasm"))]
+pub mod ast_processor;
+#[cfg(not(feature = "wasm"))]
+pub mod batch_processor;
+#[cfg(not(feature = "wasm"))]
+pub mod core;
+#[cfg(not(feature = "wasm"))]
+pub mod performance_monitor;
+#[cfg(not(feature = "wasm"))]
+pub mod storage;
+#[cfg(not(feature = "wasm"))]
+pub mod utils;
+
+// WASM-specific module
+#[cfg(feature = "wasm")]
+pub mod wasm_bindings;
+#[cfg(feature = "wasm")]
+pub mod wasm_serialization;
 
 #[cfg(test)]
 mod tests;
 
 // Re-export main types and functions
+pub use config::*;
+pub use error::*;
+pub use types::*;
+pub use vector_db::SimpleVectorDb;
+
+// Re-export additional modules only when not compiling for WASM
+#[cfg(not(feature = "wasm"))]
 pub use ast_processor::{
     AstNode, AstProcessingResult, AstProcessor, EngineStats, SupportedLanguage,
 };
-pub use config::*;
+#[cfg(not(feature = "wasm"))]
 pub use core::*;
-pub use error::*;
+#[cfg(not(feature = "wasm"))]
 pub use storage::*;
-pub use types::*;
+#[cfg(not(feature = "wasm"))]
 pub use utils::*;
-pub use vector_db::SimpleVectorDb;
 
 // Re-export NAPI vector database functions
 #[cfg(not(feature = "wasm"))]
@@ -98,49 +118,17 @@ mod napi_bindings {
 #[cfg(not(feature = "wasm"))]
 pub use napi_bindings::*;
 
-// WASM bindings for WebAssembly
-#[cfg(feature = "wasm")]
-mod wasm_bindings {
-    use serde_wasm_bindgen::to_value;
-    use wasm_bindgen::prelude::*;
-
-    /// Initialize the Rust core engine (WASM version)
-    #[wasm_bindgen]
-    pub fn init_engine() -> Result<(), JsValue> {
-        // Simple WASM initialization - no complex logging for Phase 1
-        Ok(())
-    }
-
-    /// Get engine version information (WASM version)
-    #[wasm_bindgen]
-    pub fn get_engine_version() -> String {
-        format!("ast-core-engine v{} (WASM)", env!("CARGO_PKG_VERSION"))
-    }
-
-    /// Perform basic engine health check (WASM version)
-    #[wasm_bindgen]
-    pub fn health_check() -> Result<JsValue, JsValue> {
-        use js_sys::Date;
-
-        // Create a simple health object without complex dependencies
-        let health = serde_json::json!({
-            "status": "healthy",
-            "memory_usage_mb": 0,  // Placeholder for Phase 1
-            "version": get_engine_version(),
-            "timestamp": Date::now() as u32
-        });
-
-        to_value(&health).map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
-    }
-
-    /// Simple test function for WASM compilation verification
-    #[wasm_bindgen]
-    pub fn add(a: i32, b: i32) -> i32 {
-        a + b
-    }
-}
+// WASM bindings are now in separate wasm_bindings.rs module
 
 // Re-export WASM functions at crate root
 #[cfg(feature = "wasm")]
 pub use wasm_bindings::*;
+
+// Re-export WASM vector database functions
+#[cfg(feature = "wasm")]
+pub use wasm_bindings::{
+    add_vector_to_db_wasm, clear_vector_database_wasm, create_hnsw_config_wasm,
+    create_vector_metadata_wasm, get_vector_count_wasm, init_vector_database_wasm,
+    search_vectors_wasm,
+};
 // Testing Rust validation
