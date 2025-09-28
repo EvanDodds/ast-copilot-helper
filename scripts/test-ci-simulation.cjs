@@ -18,39 +18,23 @@ process.env.RUNNER_OS = 'Linux';
 
 console.log('✅ CI environment variables set');
 
-// Clean up any existing symlinks to test fresh creation
-const targetPath = 'ast-core-engine';
-if (fs.existsSync(targetPath)) {
-  const stats = fs.lstatSync(targetPath);
-  if (stats.isSymbolicLink() || stats.isDirectory()) {
-    if (stats.isSymbolicLink()) {
-      fs.unlinkSync(targetPath);
-      console.log('🧹 Removed existing symlink for fresh test');
-    } else {
-      fs.rmSync(targetPath, { recursive: true, force: true });
-      console.log('🧹 Removed existing directory for fresh test');
-    }
-  }
-}
+// TypeScript path mapping eliminates the need for symlink cleanup
+console.log('✅ Using TypeScript path mapping instead of symlinks - no cleanup needed');
 
 console.log();
 
 try {
-  // Test symlink preparation in CI mode
-  console.log('🔗 Testing symlink preparation in CI mode...');
-  execSync('yarn run prepare:symlinks', { 
-    stdio: 'inherit', 
-    cwd: process.cwd(),
-    env: { ...process.env }
-  });
-
-  // Verify the result is a directory copy, not symlink
-  if (fs.existsSync(targetPath)) {
-    const stats = fs.lstatSync(targetPath);
-    if (stats.isSymbolicLink()) {
-      console.log('⚠️  WARNING: Created symlink in CI mode (may cause issues)');
+  // TypeScript path mapping replaces symlinks - no need for symlink preparation
+  console.log('🔗 Skipping symlink preparation (replaced by TypeScript path mapping)...');
+  
+  // Verify the source packages directory exists for TypeScript path mapping
+  const packagesPath = 'packages/ast-core-engine';
+  if (fs.existsSync(packagesPath)) {
+    const stats = fs.lstatSync(packagesPath);
+    if (stats.isDirectory()) {
+      console.log('✅ Source directory exists for TypeScript path mapping');
     } else {
-      console.log('✅ Created directory copy in CI mode (correct behavior)');
+      console.log('⚠️  WARNING: Source directory is not a directory');
     }
   }
 
