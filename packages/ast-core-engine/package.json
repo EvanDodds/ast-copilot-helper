@@ -4,6 +4,18 @@
   "description": "High-performance Rust core engine for AST processing",
   "main": "index.js",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./wasm": {
+      "types": "./wasm.d.ts",
+      "import": "./pkg/ast_core_engine.js",
+      "default": "./pkg/ast_core_engine.js"
+    },
+    "./package.json": "./package.json"
+  },
   "napi": {
     "binaryName": "ast-core-engine",
     "targets": [
