@@ -359,15 +359,37 @@ jobs:
       - name: Verify Rust bindings are functional
         run: |
           echo "🔍 Verifying Rust NAPI bindings..."
+          
+          # First check if the files exist
+          if [ ! -f "./packages/ast-core-engine/index.js" ]; then
+            echo "❌ ERROR: index.js not found!"
+            exit 1
+          fi
+          
+          # Check for .node file
+          if ! ls ./packages/ast-core-engine/*.node 1> /dev/null 2>&1; then
+            echo "❌ ERROR: No .node files found in ast-core-engine directory!"
+            echo "Available files:"
+            ls -la ./packages/ast-core-engine/
+            exit 1
+          fi
+          
+          # Test the bindings
           node -e "
             try {
               const engine = require('./packages/ast-core-engine/index.js');
               console.log('✅ Rust engine loaded successfully');
+              
+              if (typeof engine.AstCoreEngineApi !== 'function') {
+                throw new Error('AstCoreEngineApi is not a constructor function');
+              }
+              
               const api = new engine.AstCoreEngineApi();
               console.log('✅ Rust engine instantiated successfully'); 
               console.log('🎉 All Rust bindings are functional');
             } catch (error) {
               console.error('❌ Rust bindings verification failed:', error.message);
+              console.error('Stack trace:', error.stack);
               process.exit(1);
             }
           "
