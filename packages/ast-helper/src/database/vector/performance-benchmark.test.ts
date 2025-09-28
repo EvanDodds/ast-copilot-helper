@@ -144,10 +144,92 @@ class PerformanceBenchmark {
    */
   private getMemoryUsage(): number {
     const memUsage = process.memoryUsage();
-    return memUsage.heapUsed + memUsage.external;
+    return memUsage.heapUsed;
   }
 
   /**
+   * Get detailed memory usage statistics
+   */
+  private getDetailedMemoryUsage(): {
+    heapUsed: number;
+    heapTotal: number;
+    external: number;
+    arrayBuffers: number;
+    rss: number;
+  } {
+    const memUsage = process.memoryUsage();
+    return {
+      heapUsed: memUsage.heapUsed,
+      heapTotal: memUsage.heapTotal,
+      external: memUsage.external,
+      arrayBuffers: memUsage.arrayBuffers,
+      rss: memUsage.rss,
+    };
+  }
+
+  /**
+   * Force garbage collection if possible
+   */
+  private forceGarbageCollection(): void {
+    if (global.gc) {
+      global.gc();
+    }
+  }
+
+  /**
+   * Monitor memory growth over time to detect leaks
+   */
+  private async monitorMemoryGrowth(
+    operations: () => Promise<void>,
+    samples: number = 10,
+    intervalMs: number = 100,
+  ): Promise<{
+    memoryGrowth: number[];
+    averageGrowth: number;
+    maxGrowth: number;
+    hasMemoryLeak: boolean;
+  }> {
+    const memoryReadings: number[] = [];
+
+    // Initial reading
+    this.forceGarbageCollection();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    memoryReadings.push(this.getMemoryUsage());
+
+    // Perform operations and monitor memory
+    for (let i = 0; i < samples; i++) {
+      await operations();
+
+      // Wait for potential async cleanup
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+
+      // Force GC and measure
+      this.forceGarbageCollection();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      memoryReadings.push(this.getMemoryUsage());
+    }
+
+    // Calculate growth between consecutive readings
+    const memoryGrowth = memoryReadings
+      .slice(1)
+      .map((current, index) => current - memoryReadings[index]);
+
+    const averageGrowth =
+      memoryGrowth.reduce((sum, growth) => sum + growth, 0) /
+      memoryGrowth.length;
+    const maxGrowth = Math.max(...memoryGrowth);
+
+    // Consider it a leak if average growth is consistently positive and above threshold
+    const consistentGrowthThreshold = 1024 * 1024; // 1MB threshold
+    const hasMemoryLeak = averageGrowth > consistentGrowthThreshold;
+
+    return {
+      memoryGrowth,
+      averageGrowth,
+      maxGrowth,
+      hasMemoryLeak,
+    };
+  } /**
    * Run multiple measurements and calculate statistics
    */
   private async runMultipleMeasurements<T>(
@@ -387,6 +469,137 @@ class PerformanceBenchmark {
       samples: memoryReadings.length,
       memoryUsage: avgMemory,
     };
+  }
+
+  /**
+   * Detect memory leaks during repeated operations
+   */
+  async detectMemoryLeaks(
+    database: VectorDatabase,
+    implementation: "NAPI" | "WASM",
+  ): Promise<{
+    implementation: string;
+    operation: string;
+    hasMemoryLeak: boolean;
+    averageGrowthPerOperation: number;
+    maxGrowthPerOperation: number;
+    totalMemoryGrowth: number;
+    samples: number;
+  }> {
+    await database.initialize(this.vectorDbConfig);
+
+    const testVector = Array.from(
+      { length: this.config.vectorDimensions },
+      () => Math.random(),
+    );
+
+    // Monitor memory during repeated insertions and searches
+    const leakTest = await this.monitorMemoryGrowth(
+      async () => {
+        // Insert a vector
+        await database.insertVectors([
+          {
+            nodeId: `leak-test-${Date.now()}-${Math.random()}`,
+            vector: testVector,
+            metadata: {
+              signature: "leak-detection-test",
+              summary: "Memory leak detection test vector",
+              fileId: "test-file",
+              filePath: "/test/path",
+              lineNumber: 1,
+              confidence: 0.9,
+              lastUpdated: new Date(),
+            },
+          },
+        ]);
+
+        // Perform a search
+        await database.searchSimilar(testVector, 5);
+      },
+      50,
+      200,
+    ); // 50 operations with 200ms intervals
+
+    return {
+      implementation,
+      operation: "memory_leak_detection",
+      hasMemoryLeak: leakTest.hasMemoryLeak,
+      averageGrowthPerOperation: leakTest.averageGrowth,
+      maxGrowthPerOperation: leakTest.maxGrowth,
+      totalMemoryGrowth: leakTest.memoryGrowth.reduce(
+        (sum, growth) => sum + growth,
+        0,
+      ),
+      samples: leakTest.memoryGrowth.length,
+    };
+  }
+
+  /**
+   * Monitor resource consumption during high-load operations
+   */
+  async monitorResourceConsumption(
+    database: VectorDatabase,
+    implementation: "NAPI" | "WASM",
+    operationCount: number = 1000,
+  ): Promise<{
+    implementation: string;
+    operation: string;
+    peakMemoryUsage: number;
+    averageMemoryUsage: number;
+    memoryEfficiency: number;
+    resourceStability: boolean;
+  }> {
+    await database.initialize(this.vectorDbConfig);
+
+    const memoryReadings: number[] = [];
+    const testVectors = this.generateTestVectors(operationCount);
+
+    // Monitor detailed memory usage during high-load operations
+    let peakMemory = 0;
+    let memorySum = 0;
+    const measurementInterval = Math.max(1, Math.floor(operationCount / 100)); // Sample every 1% of operations
+
+    for (let i = 0; i < testVectors.length; i++) {
+      await database.insertVectors([testVectors[i]]);
+
+      if (i % measurementInterval === 0) {
+        const detailedMemory = this.getDetailedMemoryUsage();
+        const totalMemory = detailedMemory.heapUsed + detailedMemory.external;
+
+        memoryReadings.push(totalMemory);
+        peakMemory = Math.max(peakMemory, totalMemory);
+        memorySum += totalMemory;
+      }
+    }
+
+    const averageMemory = memorySum / memoryReadings.length;
+
+    // Calculate memory efficiency (lower is better)
+    const theoreticalMinMemory =
+      operationCount * this.config.vectorDimensions * 4; // 4 bytes per float
+    const memoryEfficiency = averageMemory / theoreticalMinMemory;
+
+    // Check resource stability (memory should not grow excessively)
+    const memoryGrowthVariance = this.calculateVariance(memoryReadings);
+    const resourceStability = memoryGrowthVariance < averageMemory * 0.5; // Variance should be less than 50% of average
+
+    return {
+      implementation,
+      operation: "resource_consumption_monitoring",
+      peakMemoryUsage: peakMemory,
+      averageMemoryUsage: averageMemory,
+      memoryEfficiency,
+      resourceStability,
+    };
+  }
+
+  /**
+   * Calculate variance of an array of numbers
+   */
+  private calculateVariance(numbers: number[]): number {
+    const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
+    const squaredDiffs = numbers.map((num) => Math.pow(num - mean, 2));
+    return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / numbers.length;
   }
 
   /**
@@ -669,6 +882,136 @@ describe("Performance Benchmark Suite", () => {
         await wasmDb.shutdown();
       }
     }, 30000);
+
+    it("should detect memory leaks in NAPI implementation", async () => {
+      const napiDb = new RustVectorDatabase(createTestConfig());
+
+      try {
+        const leakResults = await benchmark.detectMemoryLeaks(napiDb, "NAPI");
+
+        expect(leakResults.implementation).toBe("NAPI");
+        expect(leakResults.operation).toBe("memory_leak_detection");
+        expect(leakResults.samples).toBeGreaterThan(0);
+        expect(typeof leakResults.hasMemoryLeak).toBe("boolean");
+        expect(typeof leakResults.averageGrowthPerOperation).toBe("number");
+        expect(typeof leakResults.maxGrowthPerOperation).toBe("number");
+
+        // Log results for manual inspection
+        console.log("NAPI Memory Leak Detection:", {
+          hasLeak: leakResults.hasMemoryLeak,
+          avgGrowth:
+            Math.round(leakResults.averageGrowthPerOperation / 1024) + "KB",
+          maxGrowth:
+            Math.round(leakResults.maxGrowthPerOperation / 1024) + "KB",
+          totalGrowth: Math.round(leakResults.totalMemoryGrowth / 1024) + "KB",
+        });
+      } finally {
+        await napiDb.shutdown();
+      }
+    }, 60000); // Longer timeout for leak detection
+
+    it("should detect memory leaks in WASM implementation", async () => {
+      const wasmDb = new WasmVectorDatabase(createTestConfig());
+
+      try {
+        const leakResults = await benchmark.detectMemoryLeaks(wasmDb, "WASM");
+
+        expect(leakResults.implementation).toBe("WASM");
+        expect(leakResults.operation).toBe("memory_leak_detection");
+        expect(leakResults.samples).toBeGreaterThan(0);
+        expect(typeof leakResults.hasMemoryLeak).toBe("boolean");
+        expect(typeof leakResults.averageGrowthPerOperation).toBe("number");
+        expect(typeof leakResults.maxGrowthPerOperation).toBe("number");
+
+        // Log results for manual inspection
+        console.log("WASM Memory Leak Detection:", {
+          hasLeak: leakResults.hasMemoryLeak,
+          avgGrowth:
+            Math.round(leakResults.averageGrowthPerOperation / 1024) + "KB",
+          maxGrowth:
+            Math.round(leakResults.maxGrowthPerOperation / 1024) + "KB",
+          totalGrowth: Math.round(leakResults.totalMemoryGrowth / 1024) + "KB",
+        });
+      } finally {
+        await wasmDb.shutdown();
+      }
+    }, 60000); // Longer timeout for leak detection
+
+    it("should monitor resource consumption under high load for NAPI", async () => {
+      const napiDb = new RustVectorDatabase(createTestConfig());
+
+      try {
+        const resourceResults = await benchmark.monitorResourceConsumption(
+          napiDb,
+          "NAPI",
+          500, // 500 operations for faster testing
+        );
+
+        expect(resourceResults.implementation).toBe("NAPI");
+        expect(resourceResults.operation).toBe(
+          "resource_consumption_monitoring",
+        );
+        expect(resourceResults.peakMemoryUsage).toBeGreaterThan(0);
+        expect(resourceResults.averageMemoryUsage).toBeGreaterThan(0);
+        expect(resourceResults.memoryEfficiency).toBeGreaterThan(0);
+        expect(typeof resourceResults.resourceStability).toBe("boolean");
+
+        // Peak memory should be >= average memory
+        expect(resourceResults.peakMemoryUsage).toBeGreaterThanOrEqual(
+          resourceResults.averageMemoryUsage,
+        );
+
+        // Log results for analysis
+        console.log("NAPI Resource Consumption:", {
+          peakMemory:
+            Math.round(resourceResults.peakMemoryUsage / 1024 / 1024) + "MB",
+          avgMemory:
+            Math.round(resourceResults.averageMemoryUsage / 1024 / 1024) + "MB",
+          efficiency: resourceResults.memoryEfficiency.toFixed(2) + "x",
+          stable: resourceResults.resourceStability,
+        });
+      } finally {
+        await napiDb.shutdown();
+      }
+    }, 45000);
+
+    it("should monitor resource consumption under high load for WASM", async () => {
+      const wasmDb = new WasmVectorDatabase(createTestConfig());
+
+      try {
+        const resourceResults = await benchmark.monitorResourceConsumption(
+          wasmDb,
+          "WASM",
+          500, // 500 operations for faster testing
+        );
+
+        expect(resourceResults.implementation).toBe("WASM");
+        expect(resourceResults.operation).toBe(
+          "resource_consumption_monitoring",
+        );
+        expect(resourceResults.peakMemoryUsage).toBeGreaterThan(0);
+        expect(resourceResults.averageMemoryUsage).toBeGreaterThan(0);
+        expect(resourceResults.memoryEfficiency).toBeGreaterThan(0);
+        expect(typeof resourceResults.resourceStability).toBe("boolean");
+
+        // Peak memory should be >= average memory
+        expect(resourceResults.peakMemoryUsage).toBeGreaterThanOrEqual(
+          resourceResults.averageMemoryUsage,
+        );
+
+        // Log results for analysis
+        console.log("WASM Resource Consumption:", {
+          peakMemory:
+            Math.round(resourceResults.peakMemoryUsage / 1024 / 1024) + "MB",
+          avgMemory:
+            Math.round(resourceResults.averageMemoryUsage / 1024 / 1024) + "MB",
+          efficiency: resourceResults.memoryEfficiency.toFixed(2) + "x",
+          stable: resourceResults.resourceStability,
+        });
+      } finally {
+        await wasmDb.shutdown();
+      }
+    }, 45000);
   });
 
   describe("Comprehensive Implementation Comparison", () => {
