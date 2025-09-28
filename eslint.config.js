@@ -301,6 +301,17 @@ export default tseslint.config(
     },
   },
 
+  // Examples files - allow console statements for demonstration purposes
+  {
+    files: ["examples/**/*.{js,mjs,cjs,ts}"],
+    rules: {
+      "no-console": "off", // Examples need console output for demonstration
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-unused-vars": "warn", // Relaxed for example code
+      "@typescript-eslint/no-unused-vars": "warn",
+    },
+  },
+
   // Node.js script files - relaxed rules for utility scripts
   {
     files: ["scripts/**/*.{js,mjs,ts}"],
