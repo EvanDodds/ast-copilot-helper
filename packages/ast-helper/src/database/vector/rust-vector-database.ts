@@ -108,6 +108,7 @@ export class RustVectorDatabase implements VectorDatabase {
         maxElements: this.config.maxElements || 100000,
       };
 
+      // Call the Rust initialization function
       const result = rustEngine.initVectorDatabase(rustConfig);
       console.log("Rust vector database initialized:", result);
 
