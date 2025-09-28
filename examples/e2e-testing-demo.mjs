@@ -85,7 +85,7 @@ async function runE2ETestingDemo() {
     reporting: {
       enabled: true,
       format: "detailed",
-      output: "./e2e-test-report.json",
+      output: "./test-output/e2e-test-report.json",
     },
     simulation: {
       enabled: true,

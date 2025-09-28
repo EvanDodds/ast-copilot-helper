@@ -20,8 +20,8 @@ const testConfig = createVectorDBConfig({
   maxElements: 1000,
   efConstruction: 200,
   M: 16,
-  storageFile: "test-factory.sqlite",
-  indexFile: "test-factory.hnsw",
+  storageFile: "test-output/test-factory.sqlite",
+  indexFile: "test-output/test-factory.hnsw",
 });
 
 describe("Vector Database Factory", () => {

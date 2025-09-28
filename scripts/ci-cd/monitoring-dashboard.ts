@@ -63,7 +63,7 @@ class MonitoringDashboard {
     this.dashboardPath = path.join(process.cwd(), "monitoring-dashboard.html");
     this.metricsPath = path.join(process.cwd(), "metrics-history.json");
     this.configPath = path.join(process.cwd(), "dashboard-config.json");
-    this.logPath = path.join(process.cwd(), "dashboard.log");
+    this.logPath = path.join(process.cwd(), "monitoring", "dashboard.log");
 
     // Ensure monitoring directory exists
     const monitoringDir = path.join(process.cwd(), "monitoring");

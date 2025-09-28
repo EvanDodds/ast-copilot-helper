@@ -22,7 +22,11 @@ class SecurityScanner {
   private outputFile: string;
 
   constructor() {
-    this.outputFile = join(process.cwd(), "security-audit-report.json");
+    this.outputFile = join(
+      process.cwd(),
+      "ci-artifacts",
+      "security-audit-report.json",
+    );
   }
 
   async performSecurityScan(): Promise<SecurityResult> {
