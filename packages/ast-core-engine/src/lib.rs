@@ -37,6 +37,8 @@ pub mod utils;
 // WASM-specific module
 #[cfg(feature = "wasm")]
 pub mod wasm_bindings;
+#[cfg(feature = "wasm")]
+pub mod wasm_serialization;
 
 #[cfg(test)]
 mod tests;

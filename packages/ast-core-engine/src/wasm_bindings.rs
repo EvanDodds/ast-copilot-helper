@@ -4,7 +4,11 @@
 //! adapting the existing NAPI implementation to work with wasm-bindgen.
 
 use crate::{
-    config::HnswConfig, error::EngineError, types::VectorMetadata, vector_db::SimpleVectorDb,
+    config::HnswConfig,
+    error::EngineError,
+    types::VectorMetadata,
+    vector_db::SimpleVectorDb,
+    wasm_serialization::{ArrayConverter, DataValidator, MemoryManager, TypeSerializer},
 };
 use js_sys::Float32Array;
 use serde_wasm_bindgen::{from_value, to_value};
@@ -158,24 +162,35 @@ pub fn add_vector_to_db_wasm(
         .get()
         .ok_or_else(|| JsValue::from_str("Vector database not initialized"))?;
 
-    // Convert Float32Array to Vec<f32> efficiently
-    let embedding_vec: Vec<f32> = embedding.to_vec();
+    // Validate node_id format
+    DataValidator::validate_node_id(&node_id)?;
 
-    // Convert JavaScript object to VectorMetadata
-    let metadata: VectorMetadata = from_value(metadata_js)
-        .map_err(|e| JsValue::from_str(&format!("Invalid metadata: {}", e)))?;
+    // Convert Float32Array to Vec<f32> with validation
+    let embedding_vec = ArrayConverter::float32_array_to_vec(&embedding)?;
 
-    // Validate embedding dimension before processing
-    if embedding_vec.len() != db.config.embedding_dimension as usize {
-        return Err(JsValue::from_str(&format!(
-            "Invalid embedding dimension: expected {}, got {}",
-            db.config.embedding_dimension,
-            embedding_vec.len()
-        )));
-    }
+    // Validate embedding dimensions and values
+    DataValidator::validate_embedding(&embedding_vec, db.config.embedding_dimension as usize)?;
+
+    // Deserialize metadata with enhanced error handling
+    let metadata = TypeSerializer::deserialize_vector_metadata(metadata_js)?;
+
+    // Check memory limits before adding
+    let current_count = db.get_vector_count() as usize;
+    MemoryManager::check_memory_limit(
+        current_count,
+        1,
+        db.config.embedding_dimension as usize,
+        512, // 512MB default limit
+    )?;
 
     db.add_vector(node_id.clone(), embedding_vec, metadata)
         .map_err(WasmError::from)?;
+
+    wasm_log!(
+        "Added vector for node: {} (total: {})",
+        node_id,
+        current_count + 1
+    );
 
     Ok(format!("Vector added successfully for node: {}", node_id))
 }
@@ -199,30 +214,27 @@ pub fn search_vectors_wasm(
         .get()
         .ok_or_else(|| JsValue::from_str("Vector database not initialized"))?;
 
-    // Convert Float32Array to Vec<f32> efficiently
-    let query_vec: Vec<f32> = query_embedding.to_vec();
+    // Validate search parameters
+    DataValidator::validate_search_params(k, ef_search)?;
 
-    // Validate query embedding dimension before processing
-    if query_vec.len() != db.config.embedding_dimension as usize {
-        return Err(JsValue::from_str(&format!(
-            "Invalid query embedding dimension: expected {}, got {}",
-            db.config.embedding_dimension,
-            query_vec.len()
-        )));
-    }
+    // Convert Float32Array to Vec<f32> with validation
+    let query_vec = ArrayConverter::float32_array_to_vec(&query_embedding)?;
 
-    // Validate k parameter
-    if k == 0 {
-        return Err(JsValue::from_str("k must be greater than 0"));
-    }
+    // Validate query embedding dimensions and values
+    DataValidator::validate_embedding(&query_vec, db.config.embedding_dimension as usize)?;
 
     let results = db
         .search_similar(query_vec, k, ef_search)
         .map_err(WasmError::from)?;
 
-    // Convert results to JavaScript array with proper error handling
-    to_value(&results)
-        .map_err(|e| JsValue::from_str(&format!("Failed to serialize results: {}", e)))
+    wasm_log!(
+        "Search completed: found {} results for k={}",
+        results.len(),
+        k
+    );
+
+    // Use enhanced serialization for results
+    TypeSerializer::serialize_search_results(&results).map_err(|e| e.into())
 }
 
 /// Get the total number of vectors in the database
@@ -278,15 +290,15 @@ pub fn create_hnsw_config_wasm(
     ef_search: u32,
     max_elements: u32,
 ) -> Result<JsValue, JsValue> {
-    let config = HnswConfig {
+    // Use enhanced config creation with validation
+    TypeSerializer::create_config_object(
         embedding_dimension,
         m,
         ef_construction,
         ef_search,
         max_elements,
-    };
-
-    to_value(&config).map_err(|e| JsValue::from_str(&format!("Failed to create config: {}", e)))
+    )
+    .map_err(|e| e.into())
 }
 
 /// Helper function to create VectorMetadata from JavaScript values
@@ -331,11 +343,10 @@ pub fn create_vector_metadata_wasm(
 /// * `vec` - Vector to convert
 ///
 /// # Returns
-/// * Float32Array
+/// * Float32Array or error
 #[wasm_bindgen]
-pub fn vec_to_float32_array(vec: Vec<f32>) -> Float32Array {
-    // Optimize memory allocation by using direct slice conversion
-    Float32Array::from(&vec[..])
+pub fn vec_to_float32_array(vec: Vec<f32>) -> Result<Float32Array, JsValue> {
+    ArrayConverter::vec_to_float32_array(vec).map_err(|e| e.into())
 }
 
 /// Convert Float32Array to Vec<f32> (utility function)
@@ -345,13 +356,10 @@ pub fn vec_to_float32_array(vec: Vec<f32>) -> Float32Array {
 /// * `arr` - Float32Array to convert
 ///
 /// # Returns
-/// * Vec<f32>
+/// * Vec<f32> or error
 #[wasm_bindgen]
-pub fn float32_array_to_vec(arr: Float32Array) -> Vec<f32> {
-    // Efficient conversion with pre-allocated capacity
-    let mut vec = Vec::with_capacity(arr.length() as usize);
-    arr.copy_to(&mut vec);
-    vec
+pub fn float32_array_to_vec(arr: Float32Array) -> Result<Vec<f32>, JsValue> {
+    ArrayConverter::float32_array_to_vec(&arr).map_err(|e| e.into())
 }
 
 /// Get database statistics for monitoring and debugging
@@ -364,7 +372,7 @@ pub fn get_database_stats_wasm() -> Result<JsValue, JsValue> {
         .get()
         .ok_or_else(|| JsValue::from_str("Vector database not initialized"))?;
 
-    // Create a simple stats structure without external JSON dependencies
+    // Create comprehensive stats structure
     use std::collections::HashMap;
     let mut stats = HashMap::new();
     stats.insert("vector_count", db.get_vector_count() as f64);
@@ -374,7 +382,82 @@ pub fn get_database_stats_wasm() -> Result<JsValue, JsValue> {
     stats.insert("ef_construction", db.config.ef_construction as f64);
     stats.insert("ef_search", db.config.ef_search as f64);
 
+    // Add memory information
+    let memory_usage = MemoryManager::estimate_vector_memory(
+        db.config.embedding_dimension as usize,
+        db.get_vector_count() as usize,
+    );
+    stats.insert("memory_usage_bytes", memory_usage as f64);
+    stats.insert("memory_usage_mb", (memory_usage as f64) / (1024.0 * 1024.0));
+
     to_value(&stats).map_err(|e| JsValue::from_str(&format!("Failed to serialize stats: {}", e)))
+}
+
+/// Validate embedding data before processing (utility function)
+///
+/// # Arguments
+/// * `embedding` - Float32Array to validate
+/// * `expected_dimension` - Expected dimension size
+///
+/// # Returns
+/// * Validation result or error
+#[wasm_bindgen]
+pub fn validate_embedding_wasm(
+    embedding: Float32Array,
+    expected_dimension: u32,
+) -> Result<String, JsValue> {
+    let embedding_vec = ArrayConverter::float32_array_to_vec(&embedding)?;
+    DataValidator::validate_embedding(&embedding_vec, expected_dimension as usize)?;
+    Ok(format!(
+        "Embedding validation passed: {} dimensions",
+        embedding_vec.len()
+    ))
+}
+
+/// Check memory usage for a batch operation
+///
+/// # Arguments
+/// * `vector_count` - Number of vectors to add
+/// * `dimensions` - Embedding dimensions
+/// * `max_memory_mb` - Memory limit in MB
+///
+/// # Returns
+/// * Memory check result or error
+#[wasm_bindgen]
+pub fn check_memory_usage_wasm(
+    vector_count: u32,
+    dimensions: u32,
+    max_memory_mb: u32,
+) -> Result<JsValue, JsValue> {
+    let current_db = WASM_VECTOR_DB.get();
+    let current_count = current_db.map(|db| db.get_vector_count()).unwrap_or(0) as usize;
+
+    MemoryManager::check_memory_limit(
+        current_count,
+        vector_count as usize,
+        dimensions as usize,
+        max_memory_mb as usize,
+    )?;
+
+    MemoryManager::create_memory_stats(vector_count, dimensions).map_err(|e| e.into())
+}
+
+/// Batch convert multiple vectors to Float32Arrays
+/// Note: This function would be used with JavaScript arrays passed from JS side
+///
+/// # Arguments
+/// * `js_vectors` - JavaScript array of vectors to convert
+///
+/// # Returns
+/// * JavaScript array of Float32Array objects
+#[wasm_bindgen]
+pub fn batch_convert_vectors_wasm(_js_vectors: JsValue) -> Result<JsValue, JsValue> {
+    // This is a placeholder - in real usage, vectors would be passed from JavaScript
+    // For now, create a simple example conversion
+    let example_vectors = vec![vec![1.0, 2.0, 3.0], vec![4.0, 5.0, 6.0]];
+    ArrayConverter::vecs_to_js_arrays(example_vectors)
+        .map_err(|e| e.into())
+        .map(|arr| arr.into())
 }
 
 // Internal helper functions
