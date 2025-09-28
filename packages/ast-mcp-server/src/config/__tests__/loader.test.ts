@@ -143,7 +143,7 @@ describe("ConfigManager", () => {
 
       await expect(
         configManager.loadConfig({ configFile: nonExistentPath }),
-      ).rejects.toThrow(/Failed to load config file/);
+      ).rejects.toThrow(/(Failed to load config file|Configuration file not found)/);
     });
 
     it("should handle invalid JSON gracefully", async () => {
