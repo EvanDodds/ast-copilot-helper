@@ -1,13 +1,14 @@
 /**
- * Tests for Vector Database Factory
+ * Integration Tests for Vector Database Factory
  * 
- * These tests verify the factory's ability to create vector database instances
- * using the high-performance Rust implementation (with HNSW available for testing).
+ * These integration tests verify the factory's ability to create vector database instances
+ * using the high-performance Rust implementation with native bindings (with HNSW available for testing).
+ * Moved to integration tests due to native module compatibility with test runners.
  */
 
 import { describe, it, expect } from 'vitest';
-import { VectorDatabaseFactory, createVectorDatabase, createRustVectorDatabase, createHNSWVectorDatabase } from '../../../packages/ast-helper/src/database/vector/factory.js';
-import { createVectorDBConfig } from '../../../packages/ast-helper/src/database/vector/types.js';
+import { VectorDatabaseFactory, createVectorDatabase, createRustVectorDatabase, createHNSWVectorDatabase } from '../../packages/ast-helper/src/database/vector/factory';
+import { createVectorDBConfig } from '../../packages/ast-helper/src/database/vector/types';
 
 const testConfig = createVectorDBConfig({
   dimensions: 384,
