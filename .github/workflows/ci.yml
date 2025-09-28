@@ -210,6 +210,64 @@ jobs:
             packages/ast-core-engine/Cargo.lock
           retention-days: 7
 
+  build-wasm:
+    name: Build WASM Bindings
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: |
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            packages/ast-core-engine/target/
+          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-wasm-
+
+      - name: Build WASM package
+        working-directory: packages/ast-core-engine
+        run: |
+          echo "🚀 Building WASM package with wasm-pack..."
+          wasm-pack build --target nodejs --features wasm --scope ast-helper
+          echo "✅ WASM build completed"
+
+      - name: Test WASM package structure
+        working-directory: packages/ast-core-engine
+        run: |
+          echo "🧪 Verifying WASM package structure..."
+          ls -la pkg/
+          echo "📦 Package contents:"
+          cat pkg/package.json
+          echo "🔍 Generated TypeScript definitions:"
+          head -20 pkg/*.d.ts || echo "No .d.ts files found"
+
+      - name: Upload WASM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-package
+          path: packages/ast-core-engine/pkg/
+          retention-days: 7
+
   build-rust-bindings:
     name: Build Rust NAPI Bindings
     runs-on: ubuntu-latest

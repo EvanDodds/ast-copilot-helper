@@ -2,9 +2,20 @@
   "name": "@ast-helper/core-engine",
   "version": "0.1.0",
   "description": "High-performance Rust core engine for AST processing",
-  "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./wasm": {
+      "types": "./wasm.d.ts",
+      "import": "./pkg/ast_core_engine.js",
+      "default": "./pkg/ast_core_engine.js"
+    },
+    "./package.json": "./package.json"
+  },
   "napi": {
     "binaryName": "ast-core-engine",
     "targets": [
@@ -30,11 +41,14 @@
     "artifacts": "napi artifacts",
     "bench": "node -r @swc-node/register benchmark/bench.ts",
     "build": "napi build --platform",
+    "build:all": "npm run build && npm run build:wasm",
     "build:release": "napi build --platform --release --strip",
     "build:debug": "napi build --platform",
     "build:wasm": "wasm-pack build --target nodejs --out-dir pkg --features wasm",
     "build:wasm:release": "wasm-pack build --target nodejs --out-dir pkg --features wasm --release",
+    "test:wasm": "npm run build:wasm && cargo test --features wasm",
     "clean:wasm": "rm -rf pkg/",
+    "clean:all": "npm run clean && npm run clean:wasm",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "cargo test",
     "clean": "cargo clean && rm -f *.node index.js index.d.ts",
