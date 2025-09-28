@@ -32,6 +32,9 @@
     "build": "napi build --platform",
     "build:release": "napi build --platform --release --strip",
     "build:debug": "napi build --platform",
+    "build:wasm": "wasm-pack build --target nodejs --out-dir pkg --features wasm",
+    "build:wasm:release": "wasm-pack build --target nodejs --out-dir pkg --features wasm --release",
+    "clean:wasm": "rm -rf pkg/",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "cargo test",
     "clean": "cargo clean && rm -f *.node index.js index.d.ts",
@@ -53,6 +56,7 @@
   "files": [
     "index.d.ts",
     "index.js",
-    "*.node"
+    "*.node",
+    "pkg/"
   ]
 }

@@ -1,4 +1,4 @@
-//! High-Performance Vector Database with HNSW Indexing
+//! High-performance Vector Database with HNSW Indexing
 //!
 //! This module provides:
 //! - Vector similarity search for AST nodes
@@ -11,6 +11,7 @@ use crate::{
     types::{SearchResult, VectorMetadata},
 };
 use dashmap::DashMap;
+#[cfg(not(feature = "wasm"))]
 use napi_derive::napi;
 use std::sync::{Arc, OnceLock};
 
@@ -139,6 +140,7 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
 }
 
 /// Initialize the global vector database instance
+#[cfg(not(feature = "wasm"))]
 #[napi]
 pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
     // Validate configuration to prevent excessive memory allocation
@@ -183,6 +185,7 @@ pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
 }
 
 /// Add a vector to the global database instance
+#[cfg(not(feature = "wasm"))]
 #[napi]
 pub fn add_vector_to_db(
     node_id: String,
@@ -203,6 +206,7 @@ pub fn add_vector_to_db(
 }
 
 /// Search for similar vectors in the global database instance  
+#[cfg(not(feature = "wasm"))]
 #[napi]
 pub fn search_vectors(
     query_embedding_json: String, // JSON-encoded Vec<f32>
@@ -222,6 +226,7 @@ pub fn search_vectors(
 }
 
 /// Get vector count from the global database instance
+#[cfg(not(feature = "wasm"))]
 #[napi]
 pub fn get_vector_count() -> napi::Result<u32> {
     let db = VECTOR_DB
@@ -232,6 +237,7 @@ pub fn get_vector_count() -> napi::Result<u32> {
 }
 
 /// Clear the global vector database
+#[cfg(not(feature = "wasm"))]
 #[napi]
 pub fn clear_vector_database() -> napi::Result<String> {
     let db = VECTOR_DB

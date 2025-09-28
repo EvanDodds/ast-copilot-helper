@@ -161,6 +161,71 @@ The Rust core engine is optimized for development speed:
 - Production builds use full optimization for maximum performance
 - Testing validates both compilation correctness and runtime behavior
 
+### WASM Build Infrastructure (Phase 1)
+
+The core engine supports dual compilation targets: NAPI-RS for Node.js bindings and WebAssembly (WASM) for browser/universal deployment.
+
+#### WASM Build Setup
+
+**Prerequisites:**
+
+```bash
+# Install WASM target (already configured in project)
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack
+```
+
+**Build Commands:**
+
+```bash
+# WASM build for Node.js target
+cd packages/ast-core-engine
+npm run build:wasm         # Development build
+npm run build:wasm:release # Optimized production build
+
+# Clean WASM build outputs
+npm run clean:wasm         # Remove pkg/ directory
+```
+
+#### Conditional Compilation
+
+The codebase uses feature flags for dual compilation:
+
+```rust
+// NAPI-specific code (Node.js bindings)
+#[cfg(not(feature = "wasm"))]
+use napi_derive::napi;
+
+// WASM-specific code (WebAssembly bindings)
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+```
+
+**Features:**
+
+- `default`: NAPI backend with full dependencies
+- `wasm`: WebAssembly backend with minimal dependencies
+- `full-deps`: Heavy dependencies (database, networking, etc.)
+
+#### Phase 1 Limitations
+
+The initial WASM infrastructure has architectural constraints:
+
+1. **Heavy Dependencies**: Complex dependencies (sqlx, ring cryptography, tokio networking) are incompatible with WASM target
+2. **Feature Subset**: WASM build includes only core AST processing functionality
+3. **Architecture Changes**: Full WASM support requires Phase 2 refactoring to separate core logic from platform-specific features
+
+#### Next Steps (Phase 2+)
+
+To achieve full WASM compatibility:
+
+1. **Dependency Isolation**: Move heavy dependencies to platform-specific modules
+2. **Core Abstraction**: Extract pure Rust core engine without platform dependencies
+3. **Interface Standardization**: Unified API for both NAPI and WASM targets
+4. **Testing Strategy**: Cross-platform validation suite
+
+The Phase 1 infrastructure provides the foundation for these improvements.
+
 ### Performance Requirements
 
 Our codebase must meet strict performance criteria:
