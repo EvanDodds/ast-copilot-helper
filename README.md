@@ -51,7 +51,8 @@ This automatically:
 
 AST Copilot Helper bridges the gap between your codebase and AI agents by providing semantic understanding through Abstract Syntax Tree analysis. The toolkit consists of three integrated components:
 
-- **`@ast-copilot-helper/ast-copilot-helper`** - Core CLI tool that parses source code and builds semantic databases
+- **`@ast-copilot-helper/ast-helper`** - Core CLI tool that parses source code and builds semantic databases
+- **`@ast-helper/core-engine`** - High-performance Rust engine for AST processing (NAPI + WASM)
 - **`@ast-copilot-helper/ast-mcp-server`** - Model Context Protocol server enabling AI agents to query code semantically
 - **`@ast-copilot-helper/vscode-extension`** - VS Code extension for seamless integration (optional)
 
@@ -60,10 +61,15 @@ AST Copilot Helper bridges the gap between your codebase and AI agents by provid
 ```
 ast-copilot-helper/                 # Monorepo root
 ├─ packages/
-│  ├─ ast-copilot-helper/                   # 🔧 Core parsing engine
-│  │  ├─ src/                       # TypeScript source
-│  │  ├─ bin/ast-copilot-helper             # CLI executable
+│  ├─ ast-helper/                   # 🔧 Core TypeScript library
+│  │  ├─ src/                       # TypeScript parsing & analysis
 │  │  └─ dist/                      # Compiled output
+│  ├─ ast-core-engine/              # ⚡ High-performance Rust engine
+│  │  ├─ src/                       # Rust source (NAPI + WASM)
+│  │  ├─ pkg/                       # WASM package output
+│  │  ├─ target/                    # Rust build artifacts
+│  │  ├─ index.js                   # NAPI bindings
+│  │  └─ *.node                     # Native binaries
 │  ├─ ast-mcp-server/               # 🤖 MCP protocol server
 │  │  ├─ src/                       # TypeScript source
 │  │  ├─ bin/ast-mcp-server         # Server executable
@@ -120,6 +126,32 @@ const goResult = await parser.parseCode(
 ```
 
 **[📖 Complete Language Guide](docs/guide/multi-language-support.md)** • **[⚡ Performance Benchmarks](docs/guide/performance.md)** • **[🔧 API Reference](docs/api/interfaces.md)**
+
+## ⚡ Performance & Deployment
+
+AST Copilot Helper uses a **hybrid architecture** combining TypeScript flexibility with Rust performance:
+
+### Dual Engine Architecture
+
+| Target               | Use Case                   | Performance          | Compatibility              |
+| -------------------- | -------------------------- | -------------------- | -------------------------- |
+| **NAPI (Native)**    | Node.js servers, CLI tools | 🔥 100% native speed | Platform-specific binaries |
+| **WASM (Universal)** | Browsers, edge computing   | ⚡ ~80% native speed | Universal compatibility    |
+
+### Key Performance Features
+
+- **🚀 High-Performance Core**: Rust engine for compute-intensive operations
+- **⚖️ Smart Load Balancing**: Automatic selection between NAPI/WASM based on environment
+- **📦 Optimized Bundles**: WASM builds optimized for size, NAPI for speed
+- **🔄 Zero-Copy Operations**: Direct memory access where possible
+- **💾 Intelligent Caching**: Incremental parsing with smart cache invalidation
+
+**Performance Targets:**
+
+- Vector search: <50ms for 100k+ vectors
+- Batch processing: 5000+ files without memory throttling
+- Memory usage: 50-70% reduction vs pure TypeScript
+- WASM overhead: ~20% vs native, with universal compatibility
 
 ## CI/CD Pipeline
 

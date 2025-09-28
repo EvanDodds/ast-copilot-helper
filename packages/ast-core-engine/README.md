@@ -18,25 +18,67 @@ npm install @ast-copilot-helper/core-engine
 
 ## Usage
 
+### NAPI (Native) Usage - Full Features
+
 ```typescript
-import { initEngine, ASTCoreEngine } from "@ast-copilot-helper/core-engine";
+import { AstCoreEngineApi, createDefaultEngine } from "@ast-helper/core-engine";
 
-// Initialize the engine
-await initEngine();
+// Create engine instance (full functionality)
+const engine = await createDefaultEngine();
 
-// Create engine instance
-const engine = new ASTCoreEngine({
+// Process files with complete AST processing
+const result = await engine.processBatch(files, {
   maxMemoryMb: 1024,
   parallelWorkers: 4,
   batchSize: 100,
   vectorDimensions: 768,
+  maxDepth: 10,
+  includeUnnamedNodes: true,
+  enableCaching: true,
 });
 
-// Process files
-const result = await engine.processBatch(files);
-console.log(
-  `Processed ${result.processedFiles} files in ${result.processingTimeMs}ms`,
-);
+console.log(`Processed ${result.processedFiles} files`);
+```
+
+### WASM (WebAssembly) Usage - Universal Compatibility
+
+```typescript
+import {
+  init as initWasm,
+  WasmAstCoreEngineApi,
+  getWasmFeatures,
+} from "@ast-helper/core-engine/wasm";
+
+// Initialize WASM engine (limited functionality)
+await initWasm();
+
+// Check available features
+const features = getWasmFeatures();
+console.log("WASM features:", features); // { hasTreeSitter: false, hasVectorOps: true, hasFileSystem: false }
+
+// Use WASM API (reduced functionality)
+const wasmEngine = new WasmAstCoreEngineApi();
+const result = await wasmEngine.analyzeStructure(code, "typescript");
+```
+
+### Dual Environment Support
+
+```typescript
+// Automatic selection based on environment
+async function createEngine(preferWasm = false) {
+  if (preferWasm || typeof window !== "undefined") {
+    // Browser environment - use WASM
+    const { init, WasmAstCoreEngineApi } = await import(
+      "@ast-helper/core-engine/wasm"
+    );
+    await init();
+    return new WasmAstCoreEngineApi();
+  } else {
+    // Node.js environment - use NAPI
+    const { createDefaultEngine } = await import("@ast-helper/core-engine");
+    return await createDefaultEngine();
+  }
+}
 ```
 
 ## Building
@@ -47,22 +89,52 @@ console.log(
 - Node.js >= 16
 - Platform-specific build tools
 
-### Development Build
+### NAPI Build (Native, Full Features)
 
 ```bash
+# Development build
 npm run build:debug
+
+# Release build
+npm run build
 ```
 
-### Release Build
+### WASM Build (Universal Compatibility)
+
+Requires `wasm-pack`:
 
 ```bash
-npm run build
+# Install wasm-pack (if not already installed)
+curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+# Build WASM package
+npm run build:wasm
+
+# Test WASM build
+npm run test:wasm
+```
+
+### Dual Build (Both NAPI and WASM)
+
+```bash
+# Build both NAPI and WASM versions
+npm run build:all
+
+# Clean all build artifacts
+npm run clean:all
 ```
 
 ### Testing
 
 ```bash
+# Test NAPI build (requires Node.js runtime)
 cargo test
+
+# Test WASM build
+npm run test:wasm
+
+# Note: NAPI tests require Node.js runtime context
+# Use yarn test:rust:all for comprehensive validation
 ```
 
 ## Performance Targets
@@ -74,11 +146,34 @@ cargo test
 
 ## Architecture
 
-The engine uses a hybrid architecture:
+The engine supports dual compilation targets:
 
-- **Rust Core**: Performance-critical computations
-- **TypeScript Interface**: User-facing APIs and orchestration
+### NAPI Target (Default)
+
+- **Rust Core**: Performance-critical computations with full feature access
+- **Tree-sitter Integration**: Complete AST parsing for all supported languages
+- **Vector Operations**: Full HNSW-based vector database functionality
 - **NAPI-RS Bindings**: Zero-overhead Node.js integration
+- **File System Access**: Direct file I/O operations
+
+### WASM Target (Universal)
+
+- **Rust Core**: Limited but universal WebAssembly compilation
+- **Basic Analysis**: Syntax validation and basic structure analysis
+- **Reduced Dependencies**: No tree-sitter (C library incompatible with WASM)
+- **Browser Compatible**: Runs in web browsers and WASM-supporting environments
+- **Sandboxed**: No file system access, pure computation
+
+### Feature Comparison
+
+| Feature           | NAPI                 | WASM         | Notes                          |
+| ----------------- | -------------------- | ------------ | ------------------------------ |
+| AST Parsing       | ✅ Full              | ❌ Limited   | WASM lacks tree-sitter support |
+| Vector Operations | ✅ Full              | ⚠️ Reduced   | Basic vector math only         |
+| File System       | ✅ Direct            | ❌ None      | WASM runs in sandbox           |
+| Performance       | ✅ Native            | ⚠️ Good      | WASM ~80% of native speed      |
+| Portability       | ❌ Platform-specific | ✅ Universal | WASM runs everywhere           |
+| Bundle Size       | ❌ Large             | ✅ Small     | WASM optimized for size        |
 
 ## License
 
