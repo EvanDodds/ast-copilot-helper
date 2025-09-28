@@ -8,7 +8,7 @@
 
 import type { VectorDatabase, VectorDBConfig } from "./types.js";
 import { RustVectorDatabase } from "./rust-vector-database.js";
-import { HNSWVectorDatabase } from "./hnsw-database.js";
+// Dynamic import for HNSW to avoid loading native dependencies at startup
 
 export interface VectorDatabaseFactoryOptions {
   /** Prefer Rust implementation (default: true) */
@@ -153,12 +153,14 @@ export class VectorDatabaseFactory {
   private static async tryCreateHNSW(
     config: VectorDBConfig,
     verbose: boolean
-  ): Promise<HNSWVectorDatabase> {
+  ): Promise<VectorDatabase> {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log("📊 Creating HNSW vector database...");
     }
 
+    // Dynamic import to avoid loading native dependencies at startup
+    const { HNSWVectorDatabase } = await import("./hnsw-database.js");
     const hnswDB = new HNSWVectorDatabase(config);
     await hnswDB.initialize();
     
