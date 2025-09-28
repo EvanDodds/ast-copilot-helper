@@ -64,7 +64,7 @@ log = { version = "0.4", optional = true }
 env_logger = { version = "0.10", optional = true }
 
 # UUID (always available)
-uuid = { version = "1.10", features = ["v4", "serde"] }
+uuid = { version = "1.10", features = ["v4", "serde", "js"] }
 
 # System information (NAPI only)
 sysinfo = { version = "0.32", optional = true }
