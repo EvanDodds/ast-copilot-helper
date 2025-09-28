@@ -12,19 +12,26 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # NAPI-RS for Node.js bindings
-napi = { version = "2.16", default-features = false, features = ["napi9", "serde-json", "tokio_rt"] }
-napi-derive = { version = "2.16", features = ["type-def"] }
+napi = { version = "2.16", default-features = false, features = ["napi9", "serde-json", "tokio_rt"], optional = true }
+napi-derive = { version = "2.16", features = ["type-def"], optional = true }
 
-# Async runtime
-tokio = { version = "1.35", features = ["full"] }
+# WASM-specific dependencies (optional)
+wasm-bindgen = { version = "0.2", optional = true }
+wasm-bindgen-futures = { version = "0.4", optional = true }
+js-sys = { version = "0.3", optional = true }
+serde-wasm-bindgen = { version = "0.6", optional = true }
+getrandom = { version = "0.2", features = ["js"], optional = true }
+
+# Async runtime (conditional features for WASM compatibility)
+tokio = { version = "1.35", features = ["rt", "rt-multi-thread", "macros"], optional = true }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # High-performance data structures
-dashmap = "6.1"
-rayon = "1.8"
+dashmap = { version = "6.1", optional = true }
+rayon = { version = "1.8", optional = true }
 
 # Vector database and ML
 candle-core = { version = "0.8", optional = true }
@@ -40,13 +47,13 @@ tree-sitter-rust = "0.23"
 tree-sitter-java = "0.23"
 tree-sitter-cpp = "0.23"
 
-# Database and storage
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"] }
-memmap2 = "0.9"
+# Database and storage (NAPI only)
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"], optional = true }
+memmap2 = { version = "0.9", optional = true }
 
-# Logging and tracing
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Logging and tracing (NAPI only)
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
 
 # Error handling
 anyhow = "1.0"
@@ -77,8 +84,13 @@ libc = "0.2"
 napi-build = "2.1"
 
 [features]
-default = ["embedding-models"]
-embedding-models = ["candle-core", "candle-nn"]
+default = ["napi-backend", "full-deps"]
+napi-backend = ["napi", "napi-derive"]
+full-deps = ["tokio", "sqlx", "memmap2", "tracing", "tracing-subscriber", "dashmap", "rayon"]
+wasm-full = ["tokio", "dashmap", "rayon"]
+ml = ["candle-core", "candle-nn"] 
+# WASM feature excludes heavy dependencies for Phase 1 infrastructure setup
+wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "serde-wasm-bindgen", "getrandom"]
 
 [profile.release]
 lto = true

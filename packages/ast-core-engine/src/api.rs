@@ -3,6 +3,7 @@
 //! This module provides NAPI-RS bindings to expose the Rust engine functionality
 //! to TypeScript applications.
 
+#[cfg(not(feature = "wasm"))]
 use crate::{
     ast_processor::AstProcessor,
     batch_processor::BatchProcessor,
@@ -12,13 +13,18 @@ use crate::{
     types::{BatchResult, EngineHealth, NodeMetadata, ProcessingOptions},
     vector_db::SimpleVectorDb,
 };
+#[cfg(not(feature = "wasm"))]
 use napi_derive::napi;
+#[cfg(not(feature = "wasm"))]
 use std::sync::Arc;
+#[cfg(not(feature = "wasm"))]
 use tokio::sync::Mutex;
 
+#[cfg(not(feature = "wasm"))]
 type Result<T> = std::result::Result<T, napi::Error>;
 
 /// Main AST Core Engine - NAPI bindings for TypeScript
+#[cfg(not(feature = "wasm"))]
 #[napi]
 pub struct AstCoreEngineApi {
     config: EngineConfig,
@@ -29,6 +35,7 @@ pub struct AstCoreEngineApi {
     batch_processor: Option<Arc<Mutex<BatchProcessor>>>,
 }
 
+#[cfg(not(feature = "wasm"))]
 #[napi]
 impl AstCoreEngineApi {
     /// Create new engine instance
@@ -334,6 +341,7 @@ impl AstCoreEngineApi {
 
 /// Helper functions for configuration
 /// Create HNSW config helper
+#[cfg(not(feature = "wasm"))]
 #[napi]
 pub fn create_hnsw_config(
     embedding_dimension: u32,
@@ -350,6 +358,7 @@ pub fn create_hnsw_config(
 }
 
 /// Initialize engine with custom configuration
+#[cfg(not(feature = "wasm"))]
 #[napi]
 pub async fn create_engine_with_config(config: EngineConfig) -> Result<AstCoreEngineApi> {
     let mut engine = AstCoreEngineApi::new(Some(config))?;
@@ -360,6 +369,7 @@ pub async fn create_engine_with_config(config: EngineConfig) -> Result<AstCoreEn
 }
 
 /// Quick initialization with defaults
+#[cfg(not(feature = "wasm"))]
 #[napi]
 pub async fn create_default_engine() -> Result<AstCoreEngineApi> {
     let mut engine = AstCoreEngineApi::new(None)?;

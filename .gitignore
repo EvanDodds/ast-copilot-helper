@@ -30,7 +30,6 @@ lib/
 # ESLint cache
 
 # Symlinks (should not be tracked)
-ast-core-engine
 .eslintcache
 
 # Optional npm cache directory
