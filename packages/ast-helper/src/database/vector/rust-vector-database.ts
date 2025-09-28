@@ -1,7 +1,7 @@
 /**
  * Rust-based Vector Database Implementation
  *
- * Uses the native Rust vector database from ast-core-engine instead of hnswlib-node
+ * Uses the native Rust engine from ast-core-engine instead of hnswlib-node
  * to avoid Node.js native binding compilation issues.
  */
 
@@ -15,57 +15,59 @@ import type {
   VectorDBStats,
   VectorInsert,
 } from "./types.js";
+import type {
+  VectorDbConfig,
+  VectorMetadata as EngineVectorMetadata,
+  VectorSearchResult,
+} from "@ast-helper/core-engine";
 import { SQLiteVectorStorage } from "./sqlite-storage.js";
 
 // Import Rust engine functions
-interface RustConfig {
-  embeddingDimension: number;
-  m: number;
-  efConstruction: number;
-  efSearch: number;
-  maxElements: number;
-}
-
-interface RustMetadata {
-  node_id: string;
-  file_path: string;
-  node_type: string;
-  signature: string;
-  language: string;
-  embedding_model: string;
-  timestamp: number;
-}
-
-interface RustSearchResult {
-  node_id: string;
-  similarity: number;
-  distance: number;
-  file_path: string;
-  node_type: string;
-}
+// Import Rust engine functions
 
 interface RustEngine {
-  initVectorDatabase: (config: RustConfig) => string;
+  initVectorDatabase: (config: VectorDbConfig) => string;
   addVectorToDb: (
     nodeId: string,
     embeddingJson: string,
-    metadata: RustMetadata,
+    metadata: EngineVectorMetadata,
   ) => string;
   searchVectors: (
     embeddingJson: string,
     k: number,
     efSearch?: number,
-  ) => RustSearchResult[];
+  ) => VectorSearchResult[];
   getVectorCount: () => number;
   clearVectorDatabase: () => string;
 }
 
 let rustEngine: RustEngine | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  rustEngine = require("@ast-helper/core-engine") as RustEngine;
-} catch (_error) {
-  // Rust engine not available - will be handled in initialize()
+
+// Initialize the engine on first import
+async function initializeRustEngine(): Promise<void> {
+  if (rustEngine) {
+    return;
+  }
+
+  try {
+    const {
+      initVectorDatabase,
+      addVectorToDb,
+      searchVectors,
+      getVectorCount,
+      clearVectorDatabase,
+    } = await import("@ast-helper/core-engine");
+
+    rustEngine = {
+      initVectorDatabase,
+      addVectorToDb,
+      searchVectors,
+      getVectorCount,
+      clearVectorDatabase,
+    };
+  } catch (error) {
+    console.warn("Rust engine not available:", error);
+  }
 }
 
 /**
@@ -88,6 +90,9 @@ export class RustVectorDatabase implements VectorDatabase {
     if (this.isInitialized) {
       return;
     }
+
+    // Initialize the Rust engine if needed
+    await initializeRustEngine();
 
     if (!rustEngine) {
       throw new Error(
@@ -297,7 +302,7 @@ export class RustVectorDatabase implements VectorDatabase {
           searchResults.push({
             nodeId: rustResult.node_id,
             distance: rustResult.distance,
-            score: rustResult.similarity,
+            score: rustResult.distance,
             metadata: vectorData.metadata,
           });
         }

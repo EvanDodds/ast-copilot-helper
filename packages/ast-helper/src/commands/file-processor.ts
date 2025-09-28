@@ -548,8 +548,8 @@ export class FileProcessor {
         totalNodes: rustResult.totalNodes,
         totalLines: 0, // Not available from Rust result
         memoryStats: {
-          peakUsageMB: rustResult.memoryPeakMb,
-          avgUsageMB: rustResult.memoryPeakMb, // Approximation
+          peakUsageMB: rustResult.memoryPeakMb || 0,
+          avgUsageMB: rustResult.memoryPeakMb || 0, // Approximation
           gcRuns: 0, // Not applicable to Rust
         },
       },
