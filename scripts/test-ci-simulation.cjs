@@ -2,7 +2,7 @@
 
 /**
  * CI Simulation Test
- * Simulates CI environment behavior to verify our symlink/copy solutions work correctly
+ * Simulates CI environment behavior to verify TypeScript path mapping works correctly
  */
 
 const fs = require('fs');

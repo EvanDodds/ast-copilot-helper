@@ -90,49 +90,8 @@ function needsRebuild() {
 }
 
 function updateEngineAccessAfterBuild() {
-  // Check if we have a directory copy (not symlink) at root level
-  const rootEngineDir = path.resolve(__dirname, '..', 'ast-core-engine');
-  
-  if (!fs.existsSync(rootEngineDir)) {
-    console.log('No root engine directory found, skipping update');
-    return;
-  }
-  
-  const stats = fs.lstatSync(rootEngineDir);
-  if (stats.isSymbolicLink()) {
-    console.log('Root engine directory is a symlink, no update needed');
-    return;
-  }
-  
-  // This is a directory copy, we need to update it with the new files
-  console.log('🔄 Updating root engine directory copy with new build artifacts...');
-  
-  const filesToUpdate = ['index.js', 'index.d.ts', 'package.json'];
-  
-  // Also copy all .node files (binary files)
-  const sourceFiles = fs.readdirSync(engineDir);
-  const nodeFiles = sourceFiles.filter(f => f.endsWith('.node'));
-  filesToUpdate.push(...nodeFiles);
-  
-  let updatedCount = 0;
-  for (const file of filesToUpdate) {
-    const sourcePath = path.join(engineDir, file);
-    const targetPath = path.join(rootEngineDir, file);
-    
-    if (fs.existsSync(sourcePath)) {
-      try {
-        fs.copyFileSync(sourcePath, targetPath);
-        updatedCount++;
-        console.log(`  ✅ Updated ${file}`);
-      } catch (error) {
-        console.log(`  ⚠️  Failed to update ${file}: ${error.message}`);
-      }
-    } else {
-      console.log(`  ⚠️  Source file ${file} not found, skipping`);
-    }
-  }
-  
-  console.log(`🎉 Updated ${updatedCount} files in root engine directory`);
+  // TypeScript path mapping eliminates the need for root-level engine directory
+  console.log('✅ Using TypeScript path mapping - no root engine directory update needed');
 }
 
 try {
