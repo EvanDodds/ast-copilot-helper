@@ -94,6 +94,23 @@ function updateEngineAccessAfterBuild() {
   console.log('✅ Using TypeScript path mapping - no root engine directory update needed');
 }
 
+function ensureBindingFilesExist() {
+  const jsFile = path.join(engineDir, 'index.js');
+  const dtsFile = path.join(engineDir, 'index.d.ts');
+  
+  if (!fs.existsSync(jsFile) || !fs.existsSync(dtsFile)) {
+    console.log('⚠️  JavaScript wrapper files missing after build, generating fallback bindings...');
+    try {
+      const generateScript = path.resolve(__dirname, 'generate-napi-bindings.cjs');
+      execSync(`node "${generateScript}"`, { stdio: 'inherit' });
+      console.log('✅ Fallback bindings generated successfully');
+    } catch (fallbackError) {
+      console.error('❌ Fallback binding generation failed:', fallbackError.message);
+      process.exit(1);
+    }
+  }
+}
+
 try {
   if (needsRebuild()) {
     console.log('🔧 Building Rust NAPI bindings...');
@@ -107,8 +124,14 @@ try {
     
     console.log('✅ Rust NAPI bindings built successfully');
     
+    // Ensure JavaScript wrapper files exist after build
+    ensureBindingFilesExist();
+    
     // Update the root directory copy if it exists
     updateEngineAccessAfterBuild();
+  } else {
+    // Even if we don't rebuild, ensure binding files exist
+    ensureBindingFilesExist();
   }
 } catch (error) {
   console.error('❌ Rust binding build failed:', error.message);
