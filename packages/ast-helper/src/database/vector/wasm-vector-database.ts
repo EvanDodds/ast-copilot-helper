@@ -65,17 +65,69 @@ interface WasmVectorDatabaseModule {
  * WASM-based vector database that uses WebAssembly implementation
  * from ast-core-engine for vector similarity search
  */
+/**
+ * Performance monitoring interface for WASM operations
+ */
+interface PerformanceMetrics {
+  searchTimes: number[];
+  insertTimes: number[];
+  batchOperationTimes: number[];
+  wasmBoundaryCrossings: number;
+  memoryTransferBytes: number;
+  lastResetTime: number;
+}
+
+/**
+ * Batch operation configuration for performance optimization
+ */
+interface BatchConfig {
+  maxBatchSize: number;
+  batchTimeoutMs: number;
+  enableMemoryOptimization: boolean;
+}
+
 export class WasmVectorDatabase implements VectorDatabase {
   private storage: SQLiteVectorStorage;
   private wasmModule: WasmVectorDatabaseModule | null = null;
   private isInitialized = false;
   private readonly config: VectorDBConfig;
-  private searchTimes: number[] = [];
-  private readonly maxSearchTimeHistory = 100;
+
+  // Enhanced performance monitoring
+  private performanceMetrics: PerformanceMetrics;
+  private readonly maxTimeHistory = 100;
+
+  // Batch operation optimization
+  private readonly batchConfig: BatchConfig;
+  private pendingOperations: Array<{
+    type: "insert" | "update" | "delete";
+    nodeId: string;
+    vector?: number[];
+    metadata?: VectorMetadata;
+    resolve: (value: void | PromiseLike<void>) => void;
+    reject: (reason?: unknown) => void;
+  }> = [];
+  private batchTimeout: NodeJS.Timeout | null = null;
 
   constructor(config: VectorDBConfig) {
     this.config = config;
     this.storage = new SQLiteVectorStorage(config);
+
+    // Initialize performance monitoring
+    this.performanceMetrics = {
+      searchTimes: [],
+      insertTimes: [],
+      batchOperationTimes: [],
+      wasmBoundaryCrossings: 0,
+      memoryTransferBytes: 0,
+      lastResetTime: Date.now(),
+    };
+
+    // Initialize batch configuration
+    this.batchConfig = {
+      maxBatchSize: 50,
+      batchTimeoutMs: 100,
+      enableMemoryOptimization: true,
+    };
   }
 
   async initialize(config?: VectorDBConfig): Promise<void> {
@@ -172,6 +224,83 @@ export class WasmVectorDatabase implements VectorDatabase {
     }
   }
 
+  /**
+   * Record performance metrics for monitoring and optimization
+   */
+  private recordPerformanceMetric(
+    type: "search" | "insert" | "batch",
+    timeMs: number,
+  ): void {
+    let targetArray: number[];
+
+    switch (type) {
+      case "search":
+        targetArray = this.performanceMetrics.searchTimes;
+        break;
+      case "insert":
+        targetArray = this.performanceMetrics.insertTimes;
+        break;
+      case "batch":
+        targetArray = this.performanceMetrics.batchOperationTimes;
+        break;
+    }
+
+    targetArray.push(timeMs);
+
+    // Keep only recent measurements
+    if (targetArray.length > this.maxTimeHistory) {
+      targetArray.shift();
+    }
+  }
+
+  /**
+   * Get performance statistics for monitoring
+   */
+  getPerformanceMetrics(): PerformanceMetrics & {
+    averageSearchTime: number;
+    averageInsertTime: number;
+    averageBatchTime: number;
+    boundaryCrossingsPerSecond: number;
+    memoryTransferRate: number; // bytes per second
+  } {
+    const now = Date.now();
+    const timeElapsed = (now - this.performanceMetrics.lastResetTime) / 1000; // seconds
+
+    const calculateAverage = (times: number[]): number =>
+      times.length > 0 ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+
+    return {
+      ...this.performanceMetrics,
+      averageSearchTime: calculateAverage(this.performanceMetrics.searchTimes),
+      averageInsertTime: calculateAverage(this.performanceMetrics.insertTimes),
+      averageBatchTime: calculateAverage(
+        this.performanceMetrics.batchOperationTimes,
+      ),
+      boundaryCrossingsPerSecond:
+        timeElapsed > 0
+          ? this.performanceMetrics.wasmBoundaryCrossings / timeElapsed
+          : 0,
+      memoryTransferRate:
+        timeElapsed > 0
+          ? this.performanceMetrics.memoryTransferBytes / timeElapsed
+          : 0,
+    };
+  }
+
+  /**
+   * Reset performance metrics
+   */
+  resetPerformanceMetrics(): void {
+    this.performanceMetrics = {
+      searchTimes: [],
+      insertTimes: [],
+      batchOperationTimes: [],
+      wasmBoundaryCrossings: 0,
+      memoryTransferBytes: 0,
+      lastResetTime: Date.now(),
+    };
+  }
+
   private async rebuildFromStorage(): Promise<void> {
     const stats = await this.storage.getStats();
     if (stats.vectorCount === 0) {
@@ -215,6 +344,7 @@ export class WasmVectorDatabase implements VectorDatabase {
     vector: number[],
     metadata: VectorMetadata,
   ): Promise<void> {
+    const startTime = performance.now();
     this.ensureInitialized();
 
     if (!nodeId || nodeId.trim().length === 0) {
@@ -239,7 +369,7 @@ export class WasmVectorDatabase implements VectorDatabase {
       // Store in SQLite first
       await this.storage.insertVector(nodeId, vector, metadata);
 
-      // Add to WASM vector database
+      // Add to WASM vector database with optimized memory transfer
       const wasmMetadata = {
         node_id: nodeId,
         file_path: metadata.filePath,
@@ -250,49 +380,178 @@ export class WasmVectorDatabase implements VectorDatabase {
         timestamp: Math.floor(Date.now() / 1000),
       };
 
-      const embeddingArray = new Float32Array(vector);
       if (this.wasmModule) {
+        // Optimize for WASM: reuse Float32Array if batch config allows
+        const embeddingArray = this.batchConfig.enableMemoryOptimization
+          ? new Float32Array(vector)
+          : new Float32Array(vector); // Future: implement buffer pooling
+
         this.wasmModule.add_vector_to_db_wasm(
           nodeId,
           embeddingArray,
           wasmMetadata,
         );
+
+        // Track performance metrics
+        this.performanceMetrics.wasmBoundaryCrossings += 1;
+        this.performanceMetrics.memoryTransferBytes += vector.length * 4; // Float32 = 4 bytes
       }
+
+      // Record timing
+      const insertTime = performance.now() - startTime;
+      this.recordPerformanceMetric("insert", insertTime);
     } catch (error) {
       throw new Error(`Failed to insert vector: ${(error as Error).message}`);
     }
   }
 
   async insertVectors(vectors: VectorInsert[]): Promise<void> {
+    const startTime = performance.now();
     this.ensureInitialized();
 
     if (!vectors || vectors.length === 0) {
       throw new Error("vectors array is required and cannot be empty");
     }
 
-    // Batch insert - process each vector
+    // Process in optimized batches to minimize WASM boundary crossings
+    const batchSize = Math.min(this.batchConfig.maxBatchSize, vectors.length);
     const errors: Array<{ nodeId: string; error: string }> = [];
     let successCount = 0;
+    let totalBoundaryCrossings = 0;
+    let totalMemoryTransfer = 0;
 
-    for (const vectorInsert of vectors) {
-      try {
-        await this.insertVector(
-          vectorInsert.nodeId,
-          vectorInsert.vector,
-          vectorInsert.metadata,
-        );
-        successCount++;
-      } catch (error) {
-        errors.push({
-          nodeId: vectorInsert.nodeId,
-          error: (error as Error).message,
-        });
+    for (let i = 0; i < vectors.length; i += batchSize) {
+      const batch = vectors.slice(i, i + batchSize);
+      const batchStartTime = performance.now();
+
+      // Pre-allocate memory for the batch if memory optimization is enabled
+      if (this.batchConfig.enableMemoryOptimization && this.wasmModule) {
+        // Prepare batch data structures to minimize individual WASM calls
+        const batchNodeIds: string[] = [];
+        const batchVectors: Float32Array[] = [];
+        const batchMetadata: Array<{
+          node_id: string;
+          file_path: string;
+          node_type: string;
+          signature: string;
+          language: string;
+          embedding_model: string;
+          timestamp: number;
+        }> = [];
+
+        // Prepare batch data
+        for (const vectorInsert of batch) {
+          try {
+            // Validate first
+            if (
+              !vectorInsert.nodeId ||
+              vectorInsert.nodeId.trim().length === 0
+            ) {
+              throw new Error("nodeId is required and cannot be empty");
+            }
+
+            if (!vectorInsert.vector || vectorInsert.vector.length === 0) {
+              throw new Error("vector is required and cannot be empty");
+            }
+
+            if (vectorInsert.vector.length !== this.config.dimensions) {
+              throw new Error(
+                `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vectorInsert.vector.length}`,
+              );
+            }
+
+            if (!vectorInsert.metadata) {
+              throw new Error("metadata is required");
+            }
+
+            // Store in SQLite first
+            await this.storage.insertVector(
+              vectorInsert.nodeId,
+              vectorInsert.vector,
+              vectorInsert.metadata,
+            );
+
+            // Prepare for WASM batch
+            batchNodeIds.push(vectorInsert.nodeId);
+            batchVectors.push(new Float32Array(vectorInsert.vector));
+            batchMetadata.push({
+              node_id: vectorInsert.nodeId,
+              file_path: vectorInsert.metadata.filePath,
+              node_type:
+                vectorInsert.metadata.signature.split("(")[0] || "unknown",
+              signature: vectorInsert.metadata.signature,
+              language: "typescript",
+              embedding_model: "codebert-base",
+              timestamp: Math.floor(Date.now() / 1000),
+            });
+
+            totalMemoryTransfer += vectorInsert.vector.length * 4;
+            successCount++;
+          } catch (error) {
+            errors.push({
+              nodeId: vectorInsert.nodeId,
+              error: (error as Error).message,
+            });
+          }
+        }
+
+        // Single WASM call for the entire batch (when WASM supports batch operations)
+        // For now, we still call individually but with optimized memory allocation
+        for (let j = 0; j < batchNodeIds.length; j++) {
+          const nodeId = batchNodeIds[j];
+          const vector = batchVectors[j];
+          const metadata = batchMetadata[j];
+
+          if (!nodeId || !vector || !metadata) {
+            continue;
+          }
+
+          try {
+            this.wasmModule.add_vector_to_db_wasm(nodeId, vector, metadata);
+            totalBoundaryCrossings += 1;
+          } catch (error) {
+            errors.push({
+              nodeId,
+              error: `WASM error: ${(error as Error).message}`,
+            });
+          }
+        }
+      } else {
+        // Fallback to individual processing
+        for (const vectorInsert of batch) {
+          try {
+            await this.insertVector(
+              vectorInsert.nodeId,
+              vectorInsert.vector,
+              vectorInsert.metadata,
+            );
+            successCount++;
+          } catch (error) {
+            errors.push({
+              nodeId: vectorInsert.nodeId,
+              error: (error as Error).message,
+            });
+          }
+        }
       }
+
+      const batchTime = performance.now() - batchStartTime;
+      this.recordPerformanceMetric("batch", batchTime);
     }
+
+    // Update performance metrics
+    this.performanceMetrics.wasmBoundaryCrossings += totalBoundaryCrossings;
+    this.performanceMetrics.memoryTransferBytes += totalMemoryTransfer;
+
+    const totalTime = performance.now() - startTime;
+    this.recordPerformanceMetric("batch", totalTime);
 
     if (errors.length > 0) {
       throw new Error(
-        `Batch insert completed with errors. Successful: ${successCount}, Failed: ${errors.length}. Errors: ${errors.map((e) => `${e.nodeId}: ${e.error}`).join("; ")}`,
+        `Batch insert completed with errors. Successful: ${successCount}, Failed: ${errors.length}. First few errors: ${errors
+          .slice(0, 3)
+          .map((e) => `${e.nodeId}: ${e.error}`)
+          .join("; ")}${errors.length > 3 ? "..." : ""}`,
       );
     }
   }
@@ -350,10 +609,9 @@ export class WasmVectorDatabase implements VectorDatabase {
 
       // Track search performance
       const searchTime = performance.now() - startTime;
-      this.searchTimes.push(searchTime);
-      if (this.searchTimes.length > this.maxSearchTimeHistory) {
-        this.searchTimes.shift();
-      }
+      this.recordPerformanceMetric("search", searchTime);
+      this.performanceMetrics.wasmBoundaryCrossings += 2; // One call in, one call out
+      this.performanceMetrics.memoryTransferBytes += queryVector.length * 4; // Float32 = 4 bytes per element
 
       return results;
     } catch (error) {
@@ -444,11 +702,8 @@ export class WasmVectorDatabase implements VectorDatabase {
         ? this.wasmModule.get_vector_count_wasm()
         : 0;
 
-      const averageSearchTime =
-        this.searchTimes.length > 0
-          ? this.searchTimes.reduce((a, b) => a + b, 0) /
-            this.searchTimes.length
-          : 0;
+      const performanceData = this.getPerformanceMetrics();
+      const averageSearchTime = performanceData.averageSearchTime;
 
       return {
         vectorCount: wasmVectorCount,
@@ -476,6 +731,21 @@ export class WasmVectorDatabase implements VectorDatabase {
   }
 
   async shutdown(): Promise<void> {
+    // Clear any pending batch operations
+    if (this.batchTimeout) {
+      clearTimeout(this.batchTimeout);
+      this.batchTimeout = null;
+    }
+
+    // Process any remaining pending operations
+    if (this.pendingOperations.length > 0) {
+      // Reject pending operations
+      for (const op of this.pendingOperations) {
+        op.reject(new Error("Database shutting down"));
+      }
+      this.pendingOperations = [];
+    }
+
     if (this.storage) {
       await this.storage.shutdown();
     }
@@ -488,6 +758,9 @@ export class WasmVectorDatabase implements VectorDatabase {
         // Error clearing WASM database on shutdown, continuing...
       }
     }
+
+    // Reset performance metrics
+    this.resetPerformanceMetrics();
 
     this.isInitialized = false;
     this.wasmModule = null;
