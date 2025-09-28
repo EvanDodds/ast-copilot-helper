@@ -15,6 +15,11 @@ crate-type = ["cdylib", "rlib"]
 napi = { version = "2.16", default-features = false, features = ["napi9", "serde-json", "tokio_rt"] }
 napi-derive = { version = "2.16", features = ["type-def"] }
 
+# WASM dependencies (feature-gated)
+wasm-bindgen = { version = "0.2", optional = true }
+js-sys = { version = "0.3", optional = true }
+serde-wasm-bindgen = { version = "0.4", optional = true }
+
 # Async runtime
 tokio = { version = "1.35", features = ["full"] }
 
@@ -79,6 +84,7 @@ napi-build = "2.1"
 [features]
 default = ["embedding-models"]
 embedding-models = ["candle-core", "candle-nn"]
+wasm = ["wasm-bindgen", "js-sys", "serde-wasm-bindgen"]
 
 [profile.release]
 lto = true
