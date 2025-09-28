@@ -74,6 +74,9 @@ tempfile = "3.12"
 futures = "0.3"
 fastrand = "2.0"
 
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"
 
@@ -87,10 +90,10 @@ napi-build = "2.1"
 default = ["napi-backend", "full-deps"]
 napi-backend = ["napi", "napi-derive"]
 full-deps = ["tokio", "sqlx", "memmap2", "tracing", "tracing-subscriber", "dashmap", "rayon"]
-wasm-full = ["tokio", "dashmap", "rayon"]
+wasm-full = ["wasm", "dashmap", "rayon"]
 ml = ["candle-core", "candle-nn"] 
-# WASM feature excludes heavy dependencies for Phase 1 infrastructure setup
-wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "serde-wasm-bindgen", "getrandom"]
+# WASM feature excludes tokio, sqlx and other heavy dependencies incompatible with WASM
+wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "serde-wasm-bindgen", "getrandom", "dashmap"]
 
 [profile.release]
 lto = true

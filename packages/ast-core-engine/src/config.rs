@@ -1,10 +1,11 @@
 //! Core engine configuration types and loading
 
+#[cfg(not(feature = "wasm"))]
 use napi_derive::napi;
 use serde::{Deserialize, Serialize};
 
 /// Core engine configuration
-#[napi(object)]
+#[cfg_attr(not(feature = "wasm"), napi(object))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EngineConfig {
     /// Maximum memory usage in MB
@@ -23,8 +24,8 @@ pub struct EngineConfig {
     pub debug_mode: bool,
 }
 
-/// HNSW vector index configuration
-#[napi(object)]
+/// HNSW (Hierarchical Navigable Small World) index configuration
+#[cfg_attr(not(feature = "wasm"), napi(object))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct HnswConfig {
     /// Embedding dimension
@@ -40,7 +41,7 @@ pub struct HnswConfig {
 }
 
 /// Storage layer configuration
-#[napi(object)]
+#[cfg_attr(not(feature = "wasm"), napi(object))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StorageConfig {
     /// Database file path
@@ -94,7 +95,7 @@ impl Default for StorageConfig {
 }
 
 /// Load configuration from environment or use defaults
-#[napi]
+#[cfg_attr(not(feature = "wasm"), napi)]
 pub fn load_config() -> EngineConfig {
     EngineConfig {
         max_memory_mb: std::env::var("AST_MAX_MEMORY_MB")

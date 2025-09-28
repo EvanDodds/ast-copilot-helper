@@ -1,5 +1,6 @@
 //! Error handling types
 
+#[cfg(not(feature = "wasm"))]
 use napi::bindgen_prelude::*;
 use thiserror::Error;
 
@@ -85,28 +86,32 @@ pub enum StorageError {
     Migration(String),
 }
 
-/// Convert EngineError to NAPI error
+/// Convert EngineError to NAPI error (only when not using WASM)
+#[cfg(not(feature = "wasm"))]
 impl From<EngineError> for napi::Error {
     fn from(err: EngineError) -> Self {
         napi::Error::new(napi::Status::GenericFailure, err.to_string())
     }
 }
 
-/// Convert VectorDatabaseError to NAPI error
+/// Convert VectorDatabaseError to NAPI error (only when not using WASM)
+#[cfg(not(feature = "wasm"))]
 impl From<VectorDatabaseError> for napi::Error {
     fn from(err: VectorDatabaseError) -> Self {
         napi::Error::new(napi::Status::GenericFailure, err.to_string())
     }
 }
 
-/// Convert ASTProcessingError to NAPI error
+/// Convert ASTProcessingError to NAPI error (only when not using WASM)
+#[cfg(not(feature = "wasm"))]
 impl From<ASTProcessingError> for napi::Error {
     fn from(err: ASTProcessingError) -> Self {
         napi::Error::new(napi::Status::GenericFailure, err.to_string())
     }
 }
 
-/// Convert StorageError to NAPI error
+/// Convert StorageError to NAPI error (only when not using WASM)
+#[cfg(not(feature = "wasm"))]
 impl From<StorageError> for napi::Error {
     fn from(err: StorageError) -> Self {
         napi::Error::new(napi::Status::GenericFailure, err.to_string())

@@ -23,7 +23,7 @@ pub struct SimpleVectorDb {
     /// Storage for vectors and metadata
     vectors: Arc<DashMap<String, (Vec<f32>, VectorMetadata)>>,
     /// Configuration
-    config: HnswConfig,
+    pub config: HnswConfig,
 }
 
 impl SimpleVectorDb {

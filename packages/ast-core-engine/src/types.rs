@@ -3,8 +3,7 @@
 // Conditional imports based on compilation target
 #[cfg(not(feature = "wasm"))]
 use napi_derive::napi;
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
+// WASM types will be handled in wasm_bindings module
 
 use serde::{Deserialize, Serialize};
 
