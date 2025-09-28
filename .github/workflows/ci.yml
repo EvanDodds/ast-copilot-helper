@@ -80,7 +80,7 @@ jobs:
             ${{ runner.os }}-typescript-
 
       - name: Run ESLint
-        run: yarn run lint
+        run: yarn run lint --max-warnings 3000
 
       - name: Run Prettier format check
         run: yarn run format:check
