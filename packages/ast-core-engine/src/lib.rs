@@ -39,8 +39,7 @@ pub use vector_db::SimpleVectorDb;
 
 // Re-export NAPI vector database functions
 pub use vector_db::{
-    init_vector_database, add_vector_to_db, search_vectors, 
-    get_vector_count, clear_vector_database
+    add_vector_to_db, clear_vector_database, get_vector_count, init_vector_database, search_vectors,
 };
 
 /// Initialize the Rust core engine with tracing

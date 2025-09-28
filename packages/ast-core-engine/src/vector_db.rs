@@ -148,7 +148,7 @@ pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
             config.embedding_dimension
         )));
     }
-    
+
     if config.max_elements == 0 || config.max_elements > 10_000_000 {
         return Err(napi::Error::from_reason(format!(
             "Invalid max_elements: {}. Must be between 1 and 10,000,000",
@@ -160,12 +160,13 @@ pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
     if let Some(existing_db) = VECTOR_DB.get() {
         // If already initialized with compatible config, just clear and return success
         if existing_db.config.embedding_dimension == config.embedding_dimension {
-            existing_db.clear()
+            existing_db
+                .clear()
                 .map_err(|e| napi::Error::from_reason(e.to_string()))?;
             return Ok("Vector database reinitialized successfully".to_string());
         } else {
             return Err(napi::Error::from_reason(
-                "Vector database already initialized with different configuration".to_string()
+                "Vector database already initialized with different configuration".to_string(),
             ));
         }
     }
@@ -174,9 +175,9 @@ pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
     db.initialize()
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-    VECTOR_DB
-        .set(db)
-        .map_err(|_| napi::Error::from_reason("Vector database initialization race condition".to_string()))?;
+    VECTOR_DB.set(db).map_err(|_| {
+        napi::Error::from_reason("Vector database initialization race condition".to_string())
+    })?;
 
     Ok("Vector database initialized successfully".to_string())
 }
