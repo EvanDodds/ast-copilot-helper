@@ -28,7 +28,7 @@
   "scripts": {
     "artifacts": "napi artifacts",
     "bench": "node -r @swc-node/register benchmark/bench.ts",
-    "build": "echo 'Rust build skipped for development - use build:release for production builds'",
+    "build": "napi build --platform --js index.js --dts index.d.ts",
     "build:release": "napi build --platform --release --strip --js index.js --dts index.d.ts",
     "build:debug": "napi build --platform --js index.js --dts index.d.ts",
     "prepublishOnly": "napi prepublish -t npm",

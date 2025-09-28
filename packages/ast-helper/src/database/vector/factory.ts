@@ -1,40 +1,33 @@
 /**
  * Vector Database Factory
  * 
- * Creates vector database instances with intelligent fallback:
- * 1. Primary: RustVectorDatabase (high-performance native Rust implementation)
- * 2. Fallback: HNSWVectorDatabase (TypeScript implementation with hnswlib-node)
+ * Creates vector database instances using the high-performance Rust implementation.
+ * With consistent Rust builds, we no longer need complex fallback logic.
  */
 
 import type { VectorDatabase, VectorDBConfig } from "./types.js";
 import { RustVectorDatabase } from "./rust-vector-database.js";
-// Dynamic import for HNSW to avoid loading native dependencies at startup
 
 export interface VectorDatabaseFactoryOptions {
-  /** Prefer Rust implementation (default: true) */
-  preferRust?: boolean;
-  /** Force specific implementation */
-  forceImplementation?: "rust" | "hnsw";
   /** Enable verbose logging for debugging */
   verbose?: boolean;
+  /** For testing: force use of HNSW implementation instead of Rust */
+  forceHNSW?: boolean;
 }
 
-type RequiredFactoryOptions = Required<Omit<VectorDatabaseFactoryOptions, 'forceImplementation'>> & {
-  forceImplementation?: "rust" | "hnsw";
-};
+type RequiredFactoryOptions = Required<VectorDatabaseFactoryOptions>;
 
 /**
- * Factory for creating vector database instances with intelligent selection
+ * Factory for creating vector database instances
  */
 export class VectorDatabaseFactory {
   private static readonly DEFAULT_OPTIONS: RequiredFactoryOptions = {
-    preferRust: true,
-    forceImplementation: undefined,
     verbose: false,
+    forceHNSW: false,
   };
 
   /**
-   * Create a vector database instance with intelligent implementation selection
+   * Create a vector database instance (Rust-first with optional HNSW fallback for testing)
    */
   static async create(
     config: VectorDBConfig,
@@ -47,110 +40,50 @@ export class VectorDatabaseFactory {
       console.log(`🔧 Creating vector database with options:`, opts);
     }
 
-    // Force specific implementation if requested
-    if (opts.forceImplementation) {
-      return this.createSpecific(config, opts.forceImplementation, opts.verbose);
-    }
-
-    // Try Rust implementation first (high-performance primary choice)
-    if (opts.preferRust) {
-      try {
-        const rustDB = await this.tryCreateRust(config, opts.verbose);
-        if (rustDB) {
-          if (opts.verbose) {
-            // eslint-disable-next-line no-console
-            console.log("✅ Using high-performance Rust vector database");
-          }
-          return rustDB;
-        }
-      } catch (error) {
-        if (opts.verbose) {
-          // eslint-disable-next-line no-console
-          console.warn("⚠️ Rust vector database unavailable:", (error as Error).message);
-        }
-      }
-    }
-
-    // Fallback to HNSW TypeScript implementation
-    try {
-      const hnswDB = await this.tryCreateHNSW(config, opts.verbose);
+    // For testing: allow forcing HNSW implementation
+    if (opts.forceHNSW) {
       if (opts.verbose) {
         // eslint-disable-next-line no-console
-        console.log("📦 Using HNSW TypeScript vector database as fallback");
+        console.log("🧪 Using HNSW implementation for testing");
       }
-      return hnswDB;
-    } catch (error) {
-      if (opts.verbose) {
-        // eslint-disable-next-line no-console
-        console.error("❌ HNSW vector database also failed:", (error as Error).message);
-      }
-      throw new Error(
-        `Failed to create vector database. Both Rust and HNSW implementations failed. ` +
-        `Rust error: ${opts.preferRust ? 'attempted first' : 'not attempted'}. ` +
-        `HNSW error: ${(error as Error).message}`
-      );
+      return this.createHNSW(config, opts.verbose);
     }
+
+    // Default: Use high-performance Rust implementation
+    if (opts.verbose) {
+      // eslint-disable-next-line no-console
+      console.log("🦀 Using high-performance Rust vector database");
+    }
+    return this.createRust(config, opts.verbose);
   }
 
   /**
-   * Create specific implementation (for testing or forced selection)
+   * Create Rust vector database instance
    */
-  private static async createSpecific(
+  private static async createRust(
     config: VectorDBConfig,
-    implementation: "rust" | "hnsw",
     verbose: boolean
-  ): Promise<VectorDatabase> {
+  ): Promise<RustVectorDatabase> {
     if (verbose) {
       // eslint-disable-next-line no-console
-      console.log(`🎯 Forcing ${implementation} implementation`);
+      console.log("🦀 Creating Rust vector database...");
     }
 
-    if (implementation === "rust") {
-      const rustDB = await this.tryCreateRust(config, verbose);
-      if (!rustDB) {
-        throw new Error("Rust vector database implementation not available");
-      }
-      return rustDB;
-    } else {
-      return this.tryCreateHNSW(config, verbose);
+    const rustDB = new RustVectorDatabase(config);
+    await rustDB.initialize();
+    
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log("🚀 Rust vector database initialized successfully");
     }
+    
+    return rustDB;
   }
 
   /**
-   * Try creating Rust vector database instance
+   * Create HNSW vector database instance (for testing)
    */
-  private static async tryCreateRust(
-    config: VectorDBConfig,
-    verbose: boolean
-  ): Promise<RustVectorDatabase | null> {
-    try {
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.log("🦀 Attempting to create Rust vector database...");
-      }
-
-      const rustDB = new RustVectorDatabase(config);
-      await rustDB.initialize();
-      
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.log("🚀 Rust vector database initialized successfully");
-      }
-      
-      return rustDB;
-    } catch (error) {
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.warn("🔧 Rust vector database initialization failed:", (error as Error).message);
-      }
-      return null;
-    }
-  }
-
-  /**
-   * Try creating HNSW vector database instance
-   */
-  private static async tryCreateHNSW(
+  private static async createHNSW(
     config: VectorDBConfig,
     verbose: boolean
   ): Promise<VectorDatabase> {
@@ -172,60 +105,10 @@ export class VectorDatabaseFactory {
     return hnswDB;
   }
 
-  /**
-   * Check if Rust implementation is available
-   */
-  static async isRustAvailable(): Promise<boolean> {
-    try {
-      // Try to load the Rust engine
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const engine = require("../../../ast-core-engine/index.js");
-      return !!(engine?.AstCoreEngineApi);
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Check if HNSW implementation is available
-   */
-  static async isHNSWAvailable(): Promise<boolean> {
-    try {
-      // Try to load hnswlib-node
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require("hnswlib-node");
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Get available implementations
-   */
-  static async getAvailableImplementations(): Promise<{
-    rust: boolean;
-    hnsw: boolean;
-    recommended: "rust" | "hnsw" | "none";
-  }> {
-    const rust = await this.isRustAvailable();
-    const hnsw = await this.isHNSWAvailable();
-    
-    let recommended: "rust" | "hnsw" | "none";
-    if (rust) {
-      recommended = "rust"; // Prefer high-performance Rust
-    } else if (hnsw) {
-      recommended = "hnsw"; // Fallback to TypeScript
-    } else {
-      recommended = "none"; // No implementations available
-    }
-
-    return { rust, hnsw, recommended };
-  }
 }
 
 /**
- * Convenience function to create a vector database with Rust-first strategy
+ * Convenience function to create a vector database (uses Rust implementation)
  */
 export async function createVectorDatabase(
   config: VectorDBConfig,
@@ -235,27 +118,24 @@ export async function createVectorDatabase(
 }
 
 /**
- * Create vector database with explicit Rust preference
+ * Create vector database with Rust implementation (default behavior)
  */
 export async function createRustVectorDatabase(
   config: VectorDBConfig,
   verbose = false
 ): Promise<VectorDatabase> {
-  return VectorDatabaseFactory.create(config, {
-    preferRust: true,
-    verbose,
-  });
+  return VectorDatabaseFactory.create(config, { verbose });
 }
 
 /**
- * Create vector database with HNSW fallback only
+ * Create vector database with HNSW implementation (for testing)
  */
 export async function createHNSWVectorDatabase(
   config: VectorDBConfig,
   verbose = false
 ): Promise<VectorDatabase> {
   return VectorDatabaseFactory.create(config, {
-    forceImplementation: "hnsw",
+    forceHNSW: true,
     verbose,
   });
 }

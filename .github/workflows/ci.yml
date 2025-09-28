@@ -210,9 +210,68 @@ jobs:
             packages/ast-core-engine/Cargo.lock
           retention-days: 7
 
+  build-rust-bindings:
+    name: Build Rust NAPI Bindings
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            packages/ast-core-engine/target/
+          key: ${{ runner.os }}-cargo-napi-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-napi-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build Rust NAPI bindings
+        working-directory: packages/ast-core-engine
+        run: |
+          echo "🔧 Building Rust NAPI bindings for testing..."
+          yarn build
+          echo "✅ NAPI bindings built successfully"
+          
+          # Verify the binary was created
+          ls -la *.node || echo "No .node files found"
+          ls -la index.js index.d.ts || echo "JS/TS files missing"
+
+      - name: Upload Rust bindings
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-napi-bindings
+          path: |
+            packages/ast-core-engine/*.node
+            packages/ast-core-engine/index.js
+            packages/ast-core-engine/index.d.ts
+            packages/ast-core-engine/package.json
+          retention-days: 7
+
   unit-tests:
     name: Unit Tests
-    needs: validate
+    needs: [validate, build-rust-bindings]
     if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
     strategy:
       fail-fast: false
@@ -251,6 +310,18 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Download Rust bindings
+        uses: actions/download-artifact@v4
+        with:
+          name: rust-napi-bindings
+          path: packages/ast-core-engine/
+
+      - name: Verify Rust bindings
+        run: |
+          echo "📦 Checking downloaded Rust bindings..."
+          ls -la packages/ast-core-engine/
+          echo "✅ Rust bindings are available for testing"
+
       - name: Setup Rust for native module
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -268,6 +339,22 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
+
+      - name: Verify Rust bindings are functional
+        run: |
+          echo "🔍 Verifying Rust NAPI bindings..."
+          node -e "
+            try {
+              const engine = require('./packages/ast-core-engine/index.js');
+              console.log('✅ Rust engine loaded successfully');
+              const api = new engine.AstCoreEngineApi();
+              console.log('✅ Rust engine instantiated successfully'); 
+              console.log('🎉 All Rust bindings are functional');
+            } catch (error) {
+              console.error('❌ Rust bindings verification failed:', error.message);
+              process.exit(1);
+            }
+          "
 
       - name: Build project dependencies
         run: yarn run build

@@ -137,20 +137,33 @@ function updateEngineAccessAfterBuild() {
 
 try {
   if (needsRebuild()) {
-    console.log('🔧 Generating NAPI binding files for development/CI...');
+    console.log('🔧 Building Rust NAPI bindings...');
     
-    // Instead of building with NAPI (which doesn't work in our setup),
-    // generate the binding files using our custom generator
-    const generateScript = path.resolve(__dirname, 'generate-napi-bindings.cjs');
-    execSync(`node "${generateScript}"`, { stdio: 'inherit' });
+    // Change to the engine directory and build
+    process.chdir(engineDir);
     
-    console.log('✅ NAPI binding files generated');
+    // Build the Rust bindings using yarn (which runs the NAPI build)
+    console.log('Building native bindings with yarn build...');
+    execSync('yarn build', { stdio: 'inherit' });
+    
+    console.log('✅ Rust NAPI bindings built successfully');
     
     // Update the root directory copy if it exists
     updateEngineAccessAfterBuild();
   }
 } catch (error) {
-  console.error('❌ Binding generation failed:', error.message);
-  console.error('This may be expected in environments without Node.js properly configured');
-  process.exit(0); // Don't fail the entire install process
+  console.error('❌ Rust binding build failed:', error.message);
+  console.error('This likely means Rust toolchain is not available');
+  console.error('Please install Rust: https://rustup.rs/');
+  
+  // For CI environments where Rust isn't installed, fall back to stub generation
+  console.log('🔄 Falling back to stub generation for CI compatibility...');
+  try {
+    const generateScript = path.resolve(__dirname, 'generate-napi-bindings.cjs');
+    execSync(`node "${generateScript}"`, { stdio: 'inherit' });
+    console.log('✅ Stub bindings generated');
+  } catch (stubError) {
+    console.error('❌ Even stub generation failed:', stubError.message);
+    process.exit(1); // This is a hard failure
+  }
 }
