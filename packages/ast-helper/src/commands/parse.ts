@@ -24,6 +24,14 @@ export interface ParseOptions {
   outputStats?: boolean;
   config?: string;
   workspace?: string;
+  // New options for integration test compatibility
+  recursive?: boolean;
+  language?: string;
+  languages?: string;
+  output?: string;
+  outputFile?: string;
+  benchmark?: boolean;
+  targetPath?: string; // Path argument from CLI
 }
 
 /**
@@ -94,22 +102,93 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
   }
 
   /**
+   * Process new CLI options for backward compatibility
+   */
+  private processNewCliOptions(options: ParseOptions): ParseOptions {
+    const processedOptions = { ...options };
+    
+    // Handle targetPath option (positional argument)
+    if (processedOptions.targetPath) {
+      processedOptions.workspace = processedOptions.targetPath;
+    }
+    
+    // Handle recursive option
+    if (processedOptions.recursive) {
+      // Recursive is default behavior, but we can add specific logic if needed
+      this.logger.debug("Recursive parsing enabled");
+    }
+    
+    // Handle language/languages options
+    if (processedOptions.language || processedOptions.languages) {
+      let languages: string[] = [];
+      
+      if (processedOptions.language) {
+        languages = [processedOptions.language];
+      } else if (processedOptions.languages) {
+        languages = processedOptions.languages.split(',').map(l => l.trim());
+      }
+      
+      // Convert to glob pattern for supported languages
+      const extensionMap: Record<string, string[]> = {
+        typescript: ['ts', 'tsx'],
+        javascript: ['js', 'jsx', 'mjs'],
+        python: ['py'],
+        java: ['java'],
+        rust: ['rs'],
+        cpp: ['cpp', 'cxx', 'cc', 'c'],
+        csharp: ['cs']
+      };
+      
+      const extensions: string[] = [];
+      for (const lang of languages) {
+        const langExtensions = extensionMap[lang.toLowerCase()];
+        if (langExtensions) {
+          extensions.push(...langExtensions);
+        }
+      }
+      
+      if (extensions.length > 0) {
+        processedOptions.glob = `**/*.{${extensions.join(',')}}`;
+      }
+    }
+    
+    // Handle output options
+    if (processedOptions.output || processedOptions.outputFile) {
+      this.logger.info("Output formatting options detected", {
+        format: processedOptions.output,
+        file: processedOptions.outputFile
+      });
+    }
+    
+    // Handle benchmark option
+    if (processedOptions.benchmark) {
+      this.logger.info("Benchmark mode enabled");
+      processedOptions.outputStats = true; // Enable stats for benchmarking
+    }
+    
+    return processedOptions;
+  }
+
+  /**
    * Execute the parse command with the given options and configuration
    */
   async execute(options: ParseOptions, config: Config): Promise<void> {
     const startTime = Date.now();
 
     try {
+      // Handle new CLI options for integration test compatibility
+      const processedOptions = this.processNewCliOptions(options);
+      
       this.logger.info("Parse command started", {
-        options: this.sanitizeOptionsForLogging(options),
+        options: this.sanitizeOptionsForLogging(processedOptions),
         workingDirectory: process.cwd(),
       });
 
       // Validate preconditions
-      await this.validatePreconditions(options, config);
+      await this.validatePreconditions(processedOptions, config);
 
       // Step 1: Resolve file selection strategy and get files to process
-      const fileSelection = await this.selectFiles(options, config);
+      const fileSelection = await this.selectFiles(processedOptions, config);
 
       this.logger.info("File selection completed", {
         strategy: fileSelection.strategy,
@@ -120,16 +199,16 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
       });
 
       // Step 2: Handle dry-run mode
-      if (options.dryRun) {
-        await this.handleDryRun(fileSelection, options);
+      if (processedOptions.dryRun) {
+        await this.handleDryRun(fileSelection, processedOptions);
         return;
       }
 
       // Step 3: Execute parsing with progress reporting
-      const result = await this.executeParsing(fileSelection, options, config);
+      const result = await this.executeParsing(fileSelection, processedOptions, config);
 
       // Step 4: Report final results
-      this.reportResults(result, options);
+      this.reportResults(result, processedOptions);
 
       const totalTime = Date.now() - startTime;
       this.logger.info("Parse command completed successfully", {

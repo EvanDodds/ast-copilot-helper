@@ -27,12 +27,40 @@ export class VectorDatabaseFactory {
   };
 
   /**
+   * Validate vector database configuration
+   */
+  private static validateConfig(config: VectorDBConfig): void {
+    if (!config) {
+      throw new Error("Configuration is required");
+    }
+
+    if (!Number.isInteger(config.dimensions) || config.dimensions < 1 || config.dimensions > 10000) {
+      throw new Error(`Invalid embedding dimension: ${config.dimensions}. Must be between 1 and 10000`);
+    }
+
+    if (!Number.isInteger(config.maxElements) || config.maxElements < 1) {
+      throw new Error(`Invalid maxElements: ${config.maxElements}. Must be a positive integer`);
+    }
+
+    if (config.M && (!Number.isInteger(config.M) || config.M < 1 || config.M > 100)) {
+      throw new Error(`Invalid M parameter: ${config.M}. Must be between 1 and 100`);
+    }
+
+    if (config.efConstruction && (!Number.isInteger(config.efConstruction) || config.efConstruction < 1)) {
+      throw new Error(`Invalid efConstruction: ${config.efConstruction}. Must be a positive integer`);
+    }
+  }
+
+  /**
    * Create a vector database instance (Rust-first with optional HNSW fallback for testing)
    */
   static async create(
     config: VectorDBConfig,
     options: VectorDatabaseFactoryOptions = {}
   ): Promise<VectorDatabase> {
+    // Validate configuration before creating any database
+    this.validateConfig(config);
+
     const opts = { ...this.DEFAULT_OPTIONS, ...options };
     
     if (opts.verbose) {

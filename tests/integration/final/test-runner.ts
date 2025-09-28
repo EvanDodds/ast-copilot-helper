@@ -201,7 +201,7 @@ export class FinalTestRunner {
       "packages",
       "ast-mcp-server",
       "dist",
-      "index.js",
+      "cli.js",
     );
 
     switch (testName) {
@@ -576,32 +576,45 @@ export class FinalTestRunner {
     let serverProcess: any;
     try {
       // Start MCP server
-      serverProcess = spawn("node", [mcpServerPath], {
+      serverProcess = spawn("node", [mcpServerPath, "run"], {
         stdio: ["pipe", "pipe", "pipe"],
       });
 
       // Wait for server to start
       await new Promise((resolve, reject) => {
         let output = "";
+        let errorOutput = "";
         const timeout = setTimeout(
-          () => reject(new Error("Server startup timeout")),
+          () => reject(new Error(`Server startup timeout. Output: ${output}. Errors: ${errorOutput}`)),
           10000,
         );
 
         serverProcess.stdout.on("data", (data: Buffer) => {
           output += data.toString();
           if (
-            output.includes("Server started") ||
-            output.includes("MCP server listening")
+            output.includes("Server started successfully") ||
+            output.includes("STDIO transport ready") ||
+            output.includes("TCP server listening")
           ) {
             clearTimeout(timeout);
             resolve(undefined);
           }
         });
 
+        serverProcess.stderr.on("data", (data: Buffer) => {
+          errorOutput += data.toString();
+        });
+
         serverProcess.on("error", (error: Error) => {
           clearTimeout(timeout);
           reject(error);
+        });
+
+        serverProcess.on("exit", (code: number) => {
+          if (code !== 0) {
+            clearTimeout(timeout);
+            reject(new Error(`Server exited with code ${code}. Output: ${output}. Errors: ${errorOutput}`));
+          }
         });
       });
     } finally {

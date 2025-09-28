@@ -19,11 +19,11 @@ import { SQLiteVectorStorage } from "./sqlite-storage.js";
 
 // Import Rust engine functions
 interface RustConfig {
-  embedding_dimension: number;
+  embeddingDimension: number;
   m: number;
-  ef_construction: number;
-  ef_search: number;
-  max_elements: number;
+  efConstruction: number;
+  efSearch: number;
+  maxElements: number;
 }
 
 interface RustMetadata {
@@ -55,7 +55,7 @@ interface RustEngine {
 let rustEngine: RustEngine | null = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  rustEngine = require("../../../ast-core-engine/index.js") as RustEngine;
+  rustEngine = require("@ast-helper/core-engine") as RustEngine;
 } catch (_error) {
   // Rust engine not available - will be handled in initialize()
 }
@@ -93,11 +93,11 @@ export class RustVectorDatabase implements VectorDatabase {
 
       // Initialize Rust vector database
       const rustConfig = {
-        embedding_dimension: this.config.dimensions,
+        embeddingDimension: this.config.dimensions,
         m: this.config.M || 16,
-        ef_construction: this.config.efConstruction || 200,
-        ef_search: 50,
-        max_elements: this.config.maxElements || 100000,
+        efConstruction: this.config.efConstruction || 200,
+        efSearch: 50,
+        maxElements: this.config.maxElements || 100000,
       };
 
       const result = rustEngine.initVectorDatabase(rustConfig);

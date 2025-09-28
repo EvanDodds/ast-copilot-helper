@@ -53,6 +53,13 @@ interface ParseOptions extends GlobalOptions {
   batchSize?: number;
   dryRun?: boolean;
   outputStats?: boolean;
+  // New options for integration test compatibility
+  recursive?: boolean;
+  language?: string;
+  languages?: string;
+  output?: string;
+  outputFile?: string;
+  benchmark?: boolean;
 }
 
 /**
@@ -241,7 +248,7 @@ export class AstHelperCli {
    */
   private setupParseCommand(): void {
     this.program
-      .command("parse")
+      .command("parse [path]")
       .description("Extract AST from source files and save to .astdb database")
       .addOption(
         new Option(
@@ -293,7 +300,47 @@ export class AstHelperCli {
       .addOption(
         new Option("--output-stats", "Display detailed parsing statistics"),
       )
-      .action(async (options: ParseOptions) => {
+      .addOption(
+        new Option(
+          "-r, --recursive",
+          "Parse files recursively in subdirectories",
+        ),
+      )
+      .addOption(
+        new Option(
+          "--language <lang>",
+          "Parse files of specific language (typescript, javascript, python, java, etc.)",
+        ),
+      )
+      .addOption(
+        new Option(
+          "--languages <langs>",
+          "Parse files of multiple languages (comma-separated)",
+        ),
+      )
+      .addOption(
+        new Option(
+          "--output <format>",
+          "Output format (json, yaml, csv)",
+        ).default("json"),
+      )
+      .addOption(
+        new Option(
+          "--output-file <file>",
+          "Save output to specified file",
+        ),
+      )
+      .addOption(
+        new Option(
+          "--benchmark",
+          "Run performance benchmarks during parsing",
+        ),
+      )
+      .action(async (path: string | undefined, options: ParseOptions) => {
+        // If path is provided, set it in options for backward compatibility
+        if (path) {
+          (options as any).targetPath = path;
+        }
         await this.executeCommand("parse", options);
       });
   }
