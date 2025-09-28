@@ -10,9 +10,12 @@ use crate::{
     error::EngineError,
     types::{SearchResult, VectorMetadata},
 };
+#[cfg(not(feature = "wasm"))]
 use dashmap::DashMap;
 #[cfg(not(feature = "wasm"))]
 use napi_derive::napi;
+#[cfg(feature = "wasm")]
+use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
 /// Global vector database instance
@@ -20,8 +23,11 @@ static VECTOR_DB: OnceLock<SimpleVectorDb> = OnceLock::new();
 
 /// Simple vector database for demonstration
 pub struct SimpleVectorDb {
-    /// Storage for vectors and metadata
+    /// Storage for vectors and metadata (DashMap for thread safety in NAPI, HashMap for WASM)
+    #[cfg(not(feature = "wasm"))]
     vectors: Arc<DashMap<String, (Vec<f32>, VectorMetadata)>>,
+    #[cfg(feature = "wasm")]
+    vectors: HashMap<String, (Vec<f32>, VectorMetadata)>,
     /// Configuration
     pub config: HnswConfig,
 }
@@ -30,7 +36,10 @@ impl SimpleVectorDb {
     /// Create a new vector database instance
     pub fn new(config: HnswConfig) -> Self {
         Self {
+            #[cfg(not(feature = "wasm"))]
             vectors: Arc::new(DashMap::new()),
+            #[cfg(feature = "wasm")]
+            vectors: HashMap::new(),
             config,
         }
     }
