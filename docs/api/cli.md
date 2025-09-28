@@ -6,13 +6,13 @@ The ast-helper CLI provides powerful commands for parsing source code and queryi
 
 All commands support these global options:
 
-| Option            | Description              | Default                    |
-| ----------------- | ------------------------ | -------------------------- |
+| Option            | Description              | Default            |
+| ----------------- | ------------------------ | ------------------ |
 | `--config <file>` | Configuration file path  | `.ast-helper.json` |
-| `--verbose, -v`   | Enable verbose logging   | `false`                    |
-| `--silent, -s`    | Suppress output messages | `false`                    |
-| `--help, -h`      | Show help information    | -                          |
-| `--version`       | Show version information | -                          |
+| `--verbose, -v`   | Enable verbose logging   | `false`            |
+| `--silent, -s`    | Suppress output messages | `false`            |
+| `--help, -h`      | Show help information    | -                  |
+| `--version`       | Show version information | -                  |
 
 ## Commands
 
@@ -147,15 +147,15 @@ ast-helper query [options] <query>
 
 #### Options
 
-| Option                     | Alias | Description                              | Default                  |
-| -------------------------- | ----- | ---------------------------------------- | ------------------------ |
+| Option                     | Alias | Description                              | Default          |
+| -------------------------- | ----- | ---------------------------------------- | ---------------- |
 | `--database <file>`        | `-d`  | Database file with parsed annotations    | `.ast-helper.db` |
-| `--limit <number>`         | `-l`  | Maximum number of results to return      | `10`                     |
-| `--similarity <threshold>` | `-s`  | Similarity threshold for semantic search | `0.7`                    |
-| `--format <format>`        | `-f`  | Output format for results                | `json`                   |
-| `--explain`                |       | Explain how the query was processed      | `false`                  |
-| `--type <type>`            | `-t`  | Filter by annotation type                | `all`                    |
-| `--file <pattern>`         |       | Filter by file pattern                   | `*`                      |
+| `--limit <number>`         | `-l`  | Maximum number of results to return      | `10`             |
+| `--similarity <threshold>` | `-s`  | Similarity threshold for semantic search | `0.7`            |
+| `--format <format>`        | `-f`  | Output format for results                | `json`           |
+| `--explain`                |       | Explain how the query was processed      | `false`          |
+| `--type <type>`            | `-t`  | Filter by annotation type                | `all`            |
+| `--file <pattern>`         |       | Filter by file pattern                   | `*`              |
 
 #### Examples
 
@@ -294,14 +294,14 @@ ast-helper server [options]
 
 #### Options
 
-| Option               | Description                            | Default                  |
-| -------------------- | -------------------------------------- | ------------------------ |
-| `--port <port>`      | Server port                            | `3001`                   |
-| `--host <host>`      | Server host                            | `localhost`              |
-| `--transport <type>` | Transport type (stdio, sse, websocket) | `stdio`                  |
+| Option               | Description                            | Default          |
+| -------------------- | -------------------------------------- | ---------------- |
+| `--port <port>`      | Server port                            | `3001`           |
+| `--host <host>`      | Server host                            | `localhost`      |
+| `--transport <type>` | Transport type (stdio, sse, websocket) | `stdio`          |
 | `--database <file>`  | Database file path                     | `.ast-helper.db` |
-| `--cors`             | Enable CORS for web clients            | `false`                  |
-| `--auth <token>`     | Authentication token                   | `none`                   |
+| `--cors`             | Enable CORS for web clients            | `false`          |
+| `--auth <token>`     | Authentication token                   | `none`           |
 
 #### Examples
 
@@ -445,9 +445,9 @@ The CLI reads configuration from `.ast-helper.json`:
 
 ## Environment Variables
 
-| Variable               | Description                          | Default                     |
-| ---------------------- | ------------------------------------ | --------------------------- |
+| Variable               | Description                          | Default             |
+| ---------------------- | ------------------------------------ | ------------------- |
 | `AST_HELPER_CONFIG`    | Configuration file path              | `.ast-helper.json`  |
 | `AST_HELPER_DB`        | Database file path                   | `.ast-helper.db`    |
-| `AST_HELPER_LOG_LEVEL` | Log level (debug, info, warn, error) | `info`                      |
+| `AST_HELPER_LOG_LEVEL` | Log level (debug, info, warn, error) | `info`              |
 | `AST_HELPER_CACHE_DIR` | Cache directory                      | `.ast-helper/cache` |

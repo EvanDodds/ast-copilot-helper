@@ -40,7 +40,10 @@ import { PerformanceMonitor } from "../../packages/ast-mcp-server/src/query/perf
 
 // Database and infrastructure imports
 import { ASTDatabaseReader } from "../../packages/ast-mcp-server/src/database/reader.js";
-import { createVectorDatabase, VectorDatabase } from "../../packages/ast-helper/src/database/vector/index.js";
+import {
+  createVectorDatabase,
+  VectorDatabase,
+} from "../../packages/ast-helper/src/database/vector/index.js";
 import { createVectorDBConfig } from "../../packages/ast-helper/src/database/vector/types.js";
 
 // Conditional imports for native dependencies
@@ -149,7 +152,9 @@ class QueryProcessingTestUtils {
       M: 16,
       efConstruction: 200,
     });
-    const vectorDatabase = await createVectorDatabase(vectorDbConfig, { verbose: true });
+    const vectorDatabase = await createVectorDatabase(vectorDbConfig, {
+      verbose: true,
+    });
 
     // Create comprehensive query system configuration
     const config: QuerySystemConfig = {

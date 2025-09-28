@@ -223,7 +223,9 @@ describe("Batch Processing System", () => {
         expect(result.summary.skipped).toBe(2); // Two unsupported files
 
         // Check that unsupported files have appropriate error messages
-        const unsupportedResult = result.results.get(path.resolve("/test/unsupported.xyz"));
+        const unsupportedResult = result.results.get(
+          path.resolve("/test/unsupported.xyz"),
+        );
         expect(unsupportedResult?.errors[0]?.message).toContain(
           "Unsupported file type",
         );
@@ -246,7 +248,9 @@ describe("Batch Processing System", () => {
         expect(result.summary.successful).toBe(1); // Only small file
         expect(result.summary.skipped).toBe(1); // Large file skipped
 
-        const largeFileResult = result.results.get(path.resolve("/test/large.ts"));
+        const largeFileResult = result.results.get(
+          path.resolve("/test/large.ts"),
+        );
         expect(largeFileResult?.errors[0]?.message).toContain("File too large");
       });
 

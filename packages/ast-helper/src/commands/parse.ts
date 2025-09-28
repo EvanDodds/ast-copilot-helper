@@ -106,39 +106,39 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
    */
   private processNewCliOptions(options: ParseOptions): ParseOptions {
     const processedOptions = { ...options };
-    
+
     // Handle targetPath option (positional argument)
     if (processedOptions.targetPath) {
       processedOptions.workspace = processedOptions.targetPath;
     }
-    
+
     // Handle recursive option
     if (processedOptions.recursive) {
       // Recursive is default behavior, but we can add specific logic if needed
       this.logger.debug("Recursive parsing enabled");
     }
-    
+
     // Handle language/languages options
     if (processedOptions.language || processedOptions.languages) {
       let languages: string[] = [];
-      
+
       if (processedOptions.language) {
         languages = [processedOptions.language];
       } else if (processedOptions.languages) {
-        languages = processedOptions.languages.split(',').map(l => l.trim());
+        languages = processedOptions.languages.split(",").map((l) => l.trim());
       }
-      
+
       // Convert to glob pattern for supported languages
       const extensionMap: Record<string, string[]> = {
-        typescript: ['ts', 'tsx'],
-        javascript: ['js', 'jsx', 'mjs'],
-        python: ['py'],
-        java: ['java'],
-        rust: ['rs'],
-        cpp: ['cpp', 'cxx', 'cc', 'c'],
-        csharp: ['cs']
+        typescript: ["ts", "tsx"],
+        javascript: ["js", "jsx", "mjs"],
+        python: ["py"],
+        java: ["java"],
+        rust: ["rs"],
+        cpp: ["cpp", "cxx", "cc", "c"],
+        csharp: ["cs"],
       };
-      
+
       const extensions: string[] = [];
       for (const lang of languages) {
         const langExtensions = extensionMap[lang.toLowerCase()];
@@ -146,26 +146,26 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
           extensions.push(...langExtensions);
         }
       }
-      
+
       if (extensions.length > 0) {
-        processedOptions.glob = `**/*.{${extensions.join(',')}}`;
+        processedOptions.glob = `**/*.{${extensions.join(",")}}`;
       }
     }
-    
+
     // Handle output options
     if (processedOptions.output || processedOptions.outputFile) {
       this.logger.info("Output formatting options detected", {
         format: processedOptions.output,
-        file: processedOptions.outputFile
+        file: processedOptions.outputFile,
       });
     }
-    
+
     // Handle benchmark option
     if (processedOptions.benchmark) {
       this.logger.info("Benchmark mode enabled");
       processedOptions.outputStats = true; // Enable stats for benchmarking
     }
-    
+
     return processedOptions;
   }
 
@@ -178,7 +178,7 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
     try {
       // Handle new CLI options for integration test compatibility
       const processedOptions = this.processNewCliOptions(options);
-      
+
       this.logger.info("Parse command started", {
         options: this.sanitizeOptionsForLogging(processedOptions),
         workingDirectory: process.cwd(),
@@ -205,7 +205,11 @@ export class ParseCommand implements CommandHandler<ParseOptions> {
       }
 
       // Step 3: Execute parsing with progress reporting
-      const result = await this.executeParsing(fileSelection, processedOptions, config);
+      const result = await this.executeParsing(
+        fileSelection,
+        processedOptions,
+        config,
+      );
 
       // Step 4: Report final results
       this.reportResults(result, processedOptions);

@@ -1,6 +1,6 @@
 /**
  * Rust-based Vector Database Implementation
- * 
+ *
  * Uses the native Rust vector database from ast-core-engine instead of hnswlib-node
  * to avoid Node.js native binding compilation issues.
  */
@@ -46,8 +46,16 @@ interface RustSearchResult {
 
 interface RustEngine {
   initVectorDatabase: (config: RustConfig) => string;
-  addVectorToDb: (nodeId: string, embeddingJson: string, metadata: RustMetadata) => string;
-  searchVectors: (embeddingJson: string, k: number, efSearch?: number) => RustSearchResult[];
+  addVectorToDb: (
+    nodeId: string,
+    embeddingJson: string,
+    metadata: RustMetadata,
+  ) => string;
+  searchVectors: (
+    embeddingJson: string,
+    k: number,
+    efSearch?: number,
+  ) => RustSearchResult[];
   getVectorCount: () => number;
   clearVectorDatabase: () => string;
 }
@@ -83,7 +91,7 @@ export class RustVectorDatabase implements VectorDatabase {
 
     if (!rustEngine) {
       throw new Error(
-        "Rust engine not available. Run 'cargo build --release' in packages/ast-core-engine"
+        "Rust engine not available. Run 'cargo build --release' in packages/ast-core-engine",
       );
     }
 
@@ -109,7 +117,7 @@ export class RustVectorDatabase implements VectorDatabase {
       this.isInitialized = true;
     } catch (error) {
       throw new Error(
-        `Failed to initialize Rust vector database: ${(error as Error).message}`
+        `Failed to initialize Rust vector database: ${(error as Error).message}`,
       );
     }
   }
@@ -126,8 +134,10 @@ export class RustVectorDatabase implements VectorDatabase {
       return;
     }
 
-    console.log(`Rebuilding Rust index from ${stats.vectorCount} stored vectors...`);
-    
+    console.log(
+      `Rebuilding Rust index from ${stats.vectorCount} stored vectors...`,
+    );
+
     const allNodeIds = await this.storage.getAllNodeIds();
     for (const nodeId of allNodeIds) {
       const vectorData = await this.storage.getVector(nodeId);
@@ -135,7 +145,7 @@ export class RustVectorDatabase implements VectorDatabase {
         const rustMetadata = {
           node_id: nodeId,
           file_path: vectorData.metadata.filePath,
-          node_type: vectorData.metadata.signature.split('(')[0] || 'unknown',
+          node_type: vectorData.metadata.signature.split("(")[0] || "unknown",
           signature: vectorData.metadata.signature,
           language: "typescript", // Default, could be enhanced
           embedding_model: "codebert-base", // Default model
@@ -159,13 +169,13 @@ export class RustVectorDatabase implements VectorDatabase {
   async insertVector(
     nodeId: string,
     vector: number[],
-    metadata: VectorMetadata
+    metadata: VectorMetadata,
   ): Promise<void> {
     this.ensureInitialized();
 
     if (vector.length !== this.config.dimensions) {
       throw new Error(
-        `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`
+        `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`,
       );
     }
 
@@ -177,7 +187,7 @@ export class RustVectorDatabase implements VectorDatabase {
       const rustMetadata = {
         node_id: nodeId,
         file_path: metadata.filePath,
-        node_type: metadata.signature.split('(')[0] || 'unknown',
+        node_type: metadata.signature.split("(")[0] || "unknown",
         signature: metadata.signature,
         language: "typescript",
         embedding_model: "codebert-base",
@@ -198,7 +208,7 @@ export class RustVectorDatabase implements VectorDatabase {
       await this.insertVector(
         vectorInsert.nodeId,
         vectorInsert.vector,
-        vectorInsert.metadata
+        vectorInsert.metadata,
       );
     }
   }
@@ -208,7 +218,7 @@ export class RustVectorDatabase implements VectorDatabase {
 
     if (vector.length !== this.config.dimensions) {
       throw new Error(
-        `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`
+        `Vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`,
       );
     }
 
@@ -223,7 +233,7 @@ export class RustVectorDatabase implements VectorDatabase {
         const rustMetadata = {
           node_id: nodeId,
           file_path: vectorData.metadata.filePath,
-          node_type: vectorData.metadata.signature.split('(')[0] || 'unknown',
+          node_type: vectorData.metadata.signature.split("(")[0] || "unknown",
           signature: vectorData.metadata.signature,
           language: "typescript",
           embedding_model: "codebert-base",
@@ -256,13 +266,13 @@ export class RustVectorDatabase implements VectorDatabase {
   async searchSimilar(
     vector: number[],
     k = 10,
-    _ef?: number
+    _ef?: number,
   ): Promise<SearchResult[]> {
     this.ensureInitialized();
 
     if (vector.length !== this.config.dimensions) {
       throw new Error(
-        `Query vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`
+        `Query vector dimensions mismatch: expected ${this.config.dimensions}, got ${vector.length}`,
       );
     }
 
@@ -300,7 +310,7 @@ export class RustVectorDatabase implements VectorDatabase {
       const maxQueryTime = 200; // 200ms target
       if (searchTime > maxQueryTime) {
         console.warn(
-          `Slow vector search: ${searchTime.toFixed(2)}ms (target: ${maxQueryTime}ms)`
+          `Slow vector search: ${searchTime.toFixed(2)}ms (target: ${maxQueryTime}ms)`,
         );
       }
 
@@ -349,10 +359,10 @@ export class RustVectorDatabase implements VectorDatabase {
       if (rustEngine) {
         rustEngine.clearVectorDatabase();
       }
-      
+
       // Rebuild from storage
       await this.rebuildFromStorage();
-      
+
       console.log("Rust vector database rebuild completed");
     } catch (error) {
       throw new Error(`Failed to rebuild index: ${(error as Error).message}`);

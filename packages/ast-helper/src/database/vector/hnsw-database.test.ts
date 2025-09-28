@@ -11,7 +11,13 @@ import path from "path";
 // Check if hnswlib-node native bindings are available
 const checkHNSWBinding = () => {
   try {
-    const hnswPath = path.join(process.cwd(), "node_modules", "hnswlib-node", "lib", "binding");
+    const hnswPath = path.join(
+      process.cwd(),
+      "node_modules",
+      "hnswlib-node",
+      "lib",
+      "binding",
+    );
     return existsSync(hnswPath) || process.env.FORCE_HNSW_TESTS === "true";
   } catch {
     return false;

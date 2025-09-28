@@ -22,8 +22,12 @@ describe("CrossPlatformTestRunner Integration", () => {
 
     // Get current platform result
     const currentPlatform = process.platform as "win32" | "darwin" | "linux";
-    const platformResultKey = currentPlatform === "win32" ? "windows" : 
-                               currentPlatform === "darwin" ? "macos" : "linux";
+    const platformResultKey =
+      currentPlatform === "win32"
+        ? "windows"
+        : currentPlatform === "darwin"
+          ? "macos"
+          : "linux";
     const platformResult = results[platformResultKey];
 
     expect(platformResult).toBeDefined();
@@ -53,8 +57,12 @@ describe("CrossPlatformTestRunner Integration", () => {
     const results = await runner.testPlatformCompatibility();
 
     const currentPlatform = process.platform as "win32" | "darwin" | "linux";
-    const platformResultKey = currentPlatform === "win32" ? "windows" : 
-                               currentPlatform === "darwin" ? "macos" : "linux";
+    const platformResultKey =
+      currentPlatform === "win32"
+        ? "windows"
+        : currentPlatform === "darwin"
+          ? "macos"
+          : "linux";
     const platformResult = results[platformResultKey];
 
     expect(platformResult).toBeDefined();
@@ -83,8 +91,12 @@ describe("CrossPlatformTestRunner Integration", () => {
     const results = await runner.testPlatformCompatibility();
 
     const currentPlatform = process.platform as "win32" | "darwin" | "linux";
-    const platformResultKey = currentPlatform === "win32" ? "windows" : 
-                               currentPlatform === "darwin" ? "macos" : "linux";
+    const platformResultKey =
+      currentPlatform === "win32"
+        ? "windows"
+        : currentPlatform === "darwin"
+          ? "macos"
+          : "linux";
     const platformResult = results[platformResultKey];
 
     expect(platformResult).toBeDefined();

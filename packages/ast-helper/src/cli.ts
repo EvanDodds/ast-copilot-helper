@@ -325,16 +325,10 @@ export class AstHelperCli {
         ).default("json"),
       )
       .addOption(
-        new Option(
-          "--output-file <file>",
-          "Save output to specified file",
-        ),
+        new Option("--output-file <file>", "Save output to specified file"),
       )
       .addOption(
-        new Option(
-          "--benchmark",
-          "Run performance benchmarks during parsing",
-        ),
+        new Option("--benchmark", "Run performance benchmarks during parsing"),
       )
       .action(async (path: string | undefined, options: ParseOptions) => {
         // If path is provided, set it in options for backward compatibility

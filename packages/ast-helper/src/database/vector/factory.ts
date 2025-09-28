@@ -1,6 +1,6 @@
 /**
  * Vector Database Factory
- * 
+ *
  * Creates vector database instances using the high-performance Rust implementation.
  * With consistent Rust builds, we no longer need complex fallback logic.
  */
@@ -34,20 +34,38 @@ export class VectorDatabaseFactory {
       throw new Error("Configuration is required");
     }
 
-    if (!Number.isInteger(config.dimensions) || config.dimensions < 1 || config.dimensions > 10000) {
-      throw new Error(`Invalid embedding dimension: ${config.dimensions}. Must be between 1 and 10000`);
+    if (
+      !Number.isInteger(config.dimensions) ||
+      config.dimensions < 1 ||
+      config.dimensions > 10000
+    ) {
+      throw new Error(
+        `Invalid embedding dimension: ${config.dimensions}. Must be between 1 and 10000`,
+      );
     }
 
     if (!Number.isInteger(config.maxElements) || config.maxElements < 1) {
-      throw new Error(`Invalid maxElements: ${config.maxElements}. Must be a positive integer`);
+      throw new Error(
+        `Invalid maxElements: ${config.maxElements}. Must be a positive integer`,
+      );
     }
 
-    if (config.M && (!Number.isInteger(config.M) || config.M < 1 || config.M > 100)) {
-      throw new Error(`Invalid M parameter: ${config.M}. Must be between 1 and 100`);
+    if (
+      config.M &&
+      (!Number.isInteger(config.M) || config.M < 1 || config.M > 100)
+    ) {
+      throw new Error(
+        `Invalid M parameter: ${config.M}. Must be between 1 and 100`,
+      );
     }
 
-    if (config.efConstruction && (!Number.isInteger(config.efConstruction) || config.efConstruction < 1)) {
-      throw new Error(`Invalid efConstruction: ${config.efConstruction}. Must be a positive integer`);
+    if (
+      config.efConstruction &&
+      (!Number.isInteger(config.efConstruction) || config.efConstruction < 1)
+    ) {
+      throw new Error(
+        `Invalid efConstruction: ${config.efConstruction}. Must be a positive integer`,
+      );
     }
   }
 
@@ -56,13 +74,13 @@ export class VectorDatabaseFactory {
    */
   static async create(
     config: VectorDBConfig,
-    options: VectorDatabaseFactoryOptions = {}
+    options: VectorDatabaseFactoryOptions = {},
   ): Promise<VectorDatabase> {
     // Validate configuration before creating any database
     this.validateConfig(config);
 
     const opts = { ...this.DEFAULT_OPTIONS, ...options };
-    
+
     if (opts.verbose) {
       // eslint-disable-next-line no-console
       console.log(`🔧 Creating vector database with options:`, opts);
@@ -90,7 +108,7 @@ export class VectorDatabaseFactory {
    */
   private static async createRust(
     config: VectorDBConfig,
-    verbose: boolean
+    verbose: boolean,
   ): Promise<RustVectorDatabase> {
     if (verbose) {
       // eslint-disable-next-line no-console
@@ -99,12 +117,12 @@ export class VectorDatabaseFactory {
 
     const rustDB = new RustVectorDatabase(config);
     await rustDB.initialize();
-    
+
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log("🚀 Rust vector database initialized successfully");
     }
-    
+
     return rustDB;
   }
 
@@ -113,7 +131,7 @@ export class VectorDatabaseFactory {
    */
   private static async createHNSW(
     config: VectorDBConfig,
-    verbose: boolean
+    verbose: boolean,
   ): Promise<VectorDatabase> {
     if (verbose) {
       // eslint-disable-next-line no-console
@@ -124,15 +142,14 @@ export class VectorDatabaseFactory {
     const { HNSWVectorDatabase } = await import("./hnsw-database.js");
     const hnswDB = new HNSWVectorDatabase(config);
     await hnswDB.initialize();
-    
+
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log("📈 HNSW vector database initialized successfully");
     }
-    
+
     return hnswDB;
   }
-
 }
 
 /**
@@ -140,7 +157,7 @@ export class VectorDatabaseFactory {
  */
 export async function createVectorDatabase(
   config: VectorDBConfig,
-  options?: VectorDatabaseFactoryOptions
+  options?: VectorDatabaseFactoryOptions,
 ): Promise<VectorDatabase> {
   return VectorDatabaseFactory.create(config, options);
 }
@@ -150,7 +167,7 @@ export async function createVectorDatabase(
  */
 export async function createRustVectorDatabase(
   config: VectorDBConfig,
-  verbose = false
+  verbose = false,
 ): Promise<VectorDatabase> {
   return VectorDatabaseFactory.create(config, { verbose });
 }
@@ -160,7 +177,7 @@ export async function createRustVectorDatabase(
  */
 export async function createHNSWVectorDatabase(
   config: VectorDBConfig,
-  verbose = false
+  verbose = false,
 ): Promise<VectorDatabase> {
   return VectorDatabaseFactory.create(config, {
     forceHNSW: true,

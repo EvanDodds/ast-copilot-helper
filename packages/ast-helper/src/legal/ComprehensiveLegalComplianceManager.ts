@@ -43,17 +43,25 @@ export class ComprehensiveLegalComplianceManager
     this.config = config;
 
     // Detect test mode and set appropriate output directory
-    this.isTestMode = process.env.NODE_ENV === 'test' || 
-                      process.env.VITEST === 'true' || 
-                      process.argv.some(arg => arg.includes('vitest') || arg.includes('test'));
-    
+    this.isTestMode =
+      process.env.NODE_ENV === "test" ||
+      process.env.VITEST === "true" ||
+      process.argv.some(
+        (arg) => arg.includes("vitest") || arg.includes("test"),
+      );
+
     if (this.isTestMode) {
       // Use temporary directory for tests to avoid overwriting project files
-      const os = await import('os');
-      const path = await import('path');
-      this.outputDirectory = path.join(os.tmpdir(), 'ast-legal-test-' + Date.now());
+      const os = await import("os");
+      const path = await import("path");
+      this.outputDirectory = path.join(
+        os.tmpdir(),
+        "ast-legal-test-" + Date.now(),
+      );
       await fs.mkdir(this.outputDirectory, { recursive: true });
-      console.log(`🧪 Test mode detected: using temporary directory ${this.outputDirectory}`);
+      console.log(
+        `🧪 Test mode detected: using temporary directory ${this.outputDirectory}`,
+      );
     } else {
       this.outputDirectory = process.cwd();
     }
@@ -502,7 +510,9 @@ export class ComprehensiveLegalComplianceManager
 
       // Skip actual file generation in test mode unless explicitly requested
       if (this.isTestMode && !options.forceGeneration) {
-        console.log("🧪 Test mode: skipping actual file generation (use options.forceGeneration=true to override)");
+        console.log(
+          "🧪 Test mode: skipping actual file generation (use options.forceGeneration=true to override)",
+        );
         return {
           documentsGenerated: [],
           duration: Date.now() - startTime,
@@ -560,7 +570,10 @@ export class ComprehensiveLegalComplianceManager
       const attributionResult = await this.generateAttributions();
       if (attributionResult.success) {
         for (const attribution of attributionResult.attributions) {
-          const attributionPath = join(this.outputDirectory, attribution.filename);
+          const attributionPath = join(
+            this.outputDirectory,
+            attribution.filename,
+          );
           await fs.writeFile(attributionPath, attribution.content);
           documentsGenerated.push({
             filename: attribution.filename,

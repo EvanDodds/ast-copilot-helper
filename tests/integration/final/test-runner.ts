@@ -585,7 +585,12 @@ export class FinalTestRunner {
         let output = "";
         let errorOutput = "";
         const timeout = setTimeout(
-          () => reject(new Error(`Server startup timeout. Output: ${output}. Errors: ${errorOutput}`)),
+          () =>
+            reject(
+              new Error(
+                `Server startup timeout. Output: ${output}. Errors: ${errorOutput}`,
+              ),
+            ),
           10000,
         );
 
@@ -613,7 +618,11 @@ export class FinalTestRunner {
         serverProcess.on("exit", (code: number) => {
           if (code !== 0) {
             clearTimeout(timeout);
-            reject(new Error(`Server exited with code ${code}. Output: ${output}. Errors: ${errorOutput}`));
+            reject(
+              new Error(
+                `Server exited with code ${code}. Output: ${output}. Errors: ${errorOutput}`,
+              ),
+            );
           }
         });
       });

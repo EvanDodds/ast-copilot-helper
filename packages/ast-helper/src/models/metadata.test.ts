@@ -145,7 +145,9 @@ describe("MetadataManager", () => {
 
     it("should handle storage errors gracefully", async () => {
       // Mock fs.writeFile to throw an error
-      const writeFileSpy = vi.spyOn(fs, "writeFile").mockRejectedValueOnce(new Error("Disk full"));
+      const writeFileSpy = vi
+        .spyOn(fs, "writeFile")
+        .mockRejectedValueOnce(new Error("Disk full"));
 
       const metadata = createMockMetadata(mockModel);
 
@@ -593,7 +595,9 @@ describe("MetadataManager", () => {
 
     it("should handle file system permission errors", async () => {
       // Mock fs.mkdir to throw a permission error
-      const mkdirSpy = vi.spyOn(fs, "mkdir").mockRejectedValueOnce(new Error("EACCES: permission denied"));
+      const mkdirSpy = vi
+        .spyOn(fs, "mkdir")
+        .mockRejectedValueOnce(new Error("EACCES: permission denied"));
 
       const metadata = createMockMetadata(mockModel);
 
