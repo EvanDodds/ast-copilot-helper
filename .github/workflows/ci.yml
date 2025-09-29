@@ -42,6 +42,7 @@ jobs:
     if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
     outputs:
       should-run-benchmarks: ${{ steps.check.outputs.should-run-benchmarks }}
+      should-run-vector-tests: ${{ steps.vector-changes.outputs.should-run }}
       is-main-push: ${{ steps.context.outputs.is-main-push }}
       is-release: ${{ steps.context.outputs.is-release }}
       is-pr: ${{ steps.context.outputs.is-pr }}
@@ -123,6 +124,21 @@ jobs:
             echo "should-run-benchmarks=true" >> $GITHUB_OUTPUT
           else
             echo "should-run-benchmarks=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for vector database changes
+        id: vector-changes
+        run: |
+          # Check if vector database files have changed
+          if git diff --name-only HEAD~1 HEAD | grep -E "(packages/ast-helper/src/database/vector/|packages/ast-core-engine/)" > /dev/null; then
+            echo "Vector database files changed, enabling specialized tests"
+            echo "should-run=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ contains(github.event.head_commit.message, '[vector-test]') }}" == "true" ]]; then
+            echo "Explicit vector test request found in commit message"
+            echo "should-run=true" >> $GITHUB_OUTPUT
+          else
+            echo "No vector database changes detected"
+            echo "should-run=false" >> $GITHUB_OUTPUT
           fi
 
   security-audit:
@@ -658,7 +674,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Run comprehensive benchmarks
-        run: yarn run benchmark:all
+        run: yarn run test:benchmarks
         env:
           NODE_OPTIONS: "--max-old-space-size=8192"
 
@@ -687,6 +703,143 @@ jobs:
                 body: body
               });
             }
+
+  # =====================================
+  # VECTOR DATABASE TESTING (Conditional)
+  # =====================================
+
+  vector-wasm-tests:
+    name: Vector Database WASM Tests
+    needs: validate
+    if: needs.validate.outputs.should-run-vector-tests == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run WASM feature parity tests
+        run: yarn test:vector:wasm
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Upload WASM test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vector-wasm-test-results
+          path: test-output/
+          retention-days: 7
+
+  vector-integration-tests:
+    name: Vector Database Integration Tests
+    needs: validate
+    if: needs.validate.outputs.should-run-vector-tests == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run integration tests
+        run: yarn test:vector:integration
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vector-integration-test-results
+          path: test-output/
+          retention-days: 7
+
+  vector-performance-tests:
+    name: Vector Database Performance Tests
+    needs: validate
+    if: needs.validate.outputs.should-run-vector-tests == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run performance benchmarks
+        run: yarn test:vector:performance
+        env:
+          CI: true
+          NODE_ENV: test
+          NODE_OPTIONS: "--max-old-space-size=8192"
+
+      - name: Upload performance test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vector-performance-test-results
+          path: test-output/
+          retention-days: 30
+
+  vector-regression-tests:
+    name: Vector Database Regression Tests
+    needs: validate
+    if: needs.validate.outputs.should-run-vector-tests == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_DEFAULT }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run regression tests
+        run: yarn test:vector:regression
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Upload regression test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vector-regression-test-results
+          path: test-output/
+          retention-days: 30
 
   # ========================
   # BUILD JOBS (Main + Release)

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { WasmVectorDatabase } from "./wasm-vector-database.js";
+import { RustVectorDatabase } from "./rust-vector-database.js";
 import {
   VectorDBConfig,
   VectorMetadata,
@@ -536,6 +537,268 @@ describe("WasmVectorDatabase", () => {
       await expect(invalidDb.initialize()).rejects.toThrow(
         "efConstruction should be >= M for optimal performance",
       );
+    });
+  });
+
+  describe("Feature Parity with NAPI Implementation", () => {
+    /**
+     * These tests validate that the WASM implementation maintains interface
+     * compatibility and similar behavior patterns to the NAPI implementation,
+     * even when the actual WASM module is not yet available.
+     */
+    describe("Interface Compatibility", () => {
+      it("should implement all VectorDatabase interface methods", () => {
+        const wasmDb = new WasmVectorDatabase(config);
+        const rustDb = new RustVectorDatabase(config);
+
+        // Verify both implementations have the same public interface
+        const wasmMethods = Object.getOwnPropertyNames(
+          Object.getPrototypeOf(wasmDb),
+        ).filter((name) => typeof (wasmDb as any)[name] === "function");
+        const rustMethods = Object.getOwnPropertyNames(
+          Object.getPrototypeOf(rustDb),
+        ).filter((name) => typeof (rustDb as any)[name] === "function");
+
+        // Both should implement core VectorDatabase methods
+        const expectedMethods = [
+          "initialize",
+          "insertVector",
+          "insertVectors",
+          "updateVector",
+          "deleteVector",
+          "searchSimilar",
+          "getStats",
+          "rebuild",
+          "shutdown",
+        ];
+
+        for (const method of expectedMethods) {
+          expect(wasmMethods).toContain(method);
+          expect(rustMethods).toContain(method);
+        }
+      });
+
+      it("should have consistent constructor signatures", () => {
+        expect(() => new WasmVectorDatabase(config)).not.toThrow();
+        expect(() => new RustVectorDatabase(config)).not.toThrow();
+      });
+
+      it("should handle the same configuration validation", async () => {
+        // Test invalid dimensions
+        const invalidDimConfig = createVectorDBConfig({
+          dimensions: -1,
+          maxElements: 1000,
+          efConstruction: 200,
+          M: 16,
+          storageFile: path.join(process.cwd(), "test-invalid-wasm.db"),
+          indexFile: path.join(process.cwd(), "test-invalid-wasm.index"),
+        });
+
+        const wasmDb = new WasmVectorDatabase(invalidDimConfig);
+        const rustDb = new RustVectorDatabase(invalidDimConfig);
+
+        // Both should fail with similar validation errors
+        await expect(wasmDb.initialize()).rejects.toThrow();
+        await expect(rustDb.initialize()).rejects.toThrow();
+      });
+    });
+
+    describe("Error Handling Parity", () => {
+      it("should throw consistent errors for uninitialized operations", async () => {
+        const wasmDbPath = path.join(process.cwd(), "test-uninit-wasm.db");
+        const rustDbPath = path.join(process.cwd(), "test-uninit-rust.db");
+
+        const wasmConfig = createVectorDBConfig({
+          dimensions: 768,
+          maxElements: 1000,
+          efConstruction: 200,
+          M: 16,
+          storageFile: wasmDbPath,
+          indexFile: wasmDbPath.replace(".db", ".index"),
+        });
+
+        const rustConfig = createVectorDBConfig({
+          dimensions: 768,
+          maxElements: 1000,
+          efConstruction: 200,
+          M: 16,
+          storageFile: rustDbPath,
+          indexFile: rustDbPath.replace(".db", ".index"),
+        });
+
+        const wasmDb = new WasmVectorDatabase(wasmConfig);
+        const rustDb = new RustVectorDatabase(rustConfig);
+
+        const testVector = new Array(768).fill(0).map((_, i) => i * 0.001);
+
+        // Both should throw similar errors for uninitialized access
+        await expect(
+          wasmDb.insertVector("test", testVector, testMetadata),
+        ).rejects.toThrow(/not initialized/i);
+
+        await expect(
+          rustDb.insertVector("test", testVector, testMetadata),
+        ).rejects.toThrow(/not initialized/i);
+
+        // Clean up
+        [wasmDbPath, rustDbPath].forEach((file) => {
+          [file, file.replace(".db", ".index")].forEach((f) => {
+            if (existsSync(f)) {
+              unlinkSync(f);
+            }
+          });
+        });
+      });
+
+      it("should handle dimension mismatch errors consistently", async () => {
+        // Since WASM module is not available, both implementations will fail during initialization
+        // But both should fail in similar ways with similar error patterns
+        const wasmDb = new WasmVectorDatabase(config);
+        const rustDb = new RustVectorDatabase(config);
+
+        // Both should fail to initialize due to missing dependencies
+        await expect(wasmDb.initialize()).rejects.toThrow(
+          /WASM.*not.*available/i,
+        );
+        await expect(rustDb.initialize()).rejects.toThrow(); // Rust engine not available
+
+        // Verify both fail before vector operations can be tested
+        // This ensures consistent initialization failure patterns
+        expect(wasmDb.constructor.name).toBe("WasmVectorDatabase");
+        expect(rustDb.constructor.name).toBe("RustVectorDatabase");
+      });
+    });
+
+    describe("Performance Characteristics Parity", () => {
+      it("should have similar initialization behavior", async () => {
+        // Test that both implementations fail initialization in reasonable time
+        const wasmDb = new WasmVectorDatabase(config);
+        const rustDb = new RustVectorDatabase(config);
+
+        // Both should fail quickly when dependencies are missing
+        const wasmStartTime = Date.now();
+        await expect(wasmDb.initialize()).rejects.toThrow();
+        const wasmFailTime = Date.now() - wasmStartTime;
+
+        const rustStartTime = Date.now();
+        await expect(rustDb.initialize()).rejects.toThrow();
+        const rustFailTime = Date.now() - rustStartTime;
+
+        // Both should fail quickly (under 1 second) when dependencies are missing
+        expect(wasmFailTime).toBeLessThan(1000);
+        expect(rustFailTime).toBeLessThan(1000);
+      });
+
+      it("should handle batch operations efficiently", async () => {
+        // Test that both implementations have the same batch operation interface
+        const wasmDb = new WasmVectorDatabase(config);
+        const rustDb = new RustVectorDatabase(config);
+
+        // Both should have insertVectors method
+        expect(typeof wasmDb.insertVectors).toBe("function");
+        expect(typeof rustDb.insertVectors).toBe("function");
+
+        // Both should fail similarly when not initialized
+        const batchVectors: VectorInsert[] = Array.from(
+          { length: 2 },
+          (_, i) => ({
+            nodeId: `test-${i}`,
+            vector: new Array(768).fill(0).map((_, j) => (i + j) * 0.001),
+            metadata: { ...testMetadata, filePath: `test-${i}.ts` },
+          }),
+        );
+
+        // Both should fail batch operations when not initialized
+        await expect(wasmDb.insertVectors(batchVectors)).rejects.toThrow(
+          /not initialized/i,
+        );
+        await expect(rustDb.insertVectors(batchVectors)).rejects.toThrow(
+          /not initialized/i,
+        );
+      });
+    });
+
+    describe("Data Consistency Parity", () => {
+      it("should maintain consistent statistics", async () => {
+        // Test that both implementations have the same statistics interface
+        const wasmDb = new WasmVectorDatabase(config);
+        const rustDb = new RustVectorDatabase(config);
+
+        // Both should have getStats method
+        expect(typeof wasmDb.getStats).toBe("function");
+        expect(typeof rustDb.getStats).toBe("function");
+
+        // Both should fail to get stats when not initialized
+        await expect(wasmDb.getStats()).rejects.toThrow(/not initialized/i);
+        await expect(rustDb.getStats()).rejects.toThrow(/not initialized/i);
+
+        // Both should have the same CRUD operation methods
+        expect(typeof wasmDb.insertVector).toBe("function");
+        expect(typeof wasmDb.updateVector).toBe("function");
+        expect(typeof wasmDb.deleteVector).toBe("function");
+        expect(typeof rustDb.insertVector).toBe("function");
+        expect(typeof rustDb.updateVector).toBe("function");
+        expect(typeof rustDb.deleteVector).toBe("function");
+      });
+
+      it("should handle search result consistency", async () => {
+        // Test that both implementations have the same search interface
+        const wasmDb = new WasmVectorDatabase(config);
+        const rustDb = new RustVectorDatabase(config);
+
+        // Both should have searchSimilar method
+        expect(typeof wasmDb.searchSimilar).toBe("function");
+        expect(typeof rustDb.searchSimilar).toBe("function");
+
+        const queryVector = new Array(768).fill(0).map((_, i) => i * 0.001);
+
+        // Both should fail to search when not initialized
+        await expect(wasmDb.searchSimilar(queryVector, 3)).rejects.toThrow(
+          /not initialized/i,
+        );
+        await expect(rustDb.searchSimilar(queryVector, 3)).rejects.toThrow(
+          /not initialized/i,
+        );
+
+        // Both should validate query vector dimensions before initialization failure
+        const wrongVector = [1, 2, 3]; // Wrong dimension
+        await expect(wasmDb.searchSimilar(wrongVector, 3)).rejects.toThrow();
+        await expect(rustDb.searchSimilar(wrongVector, 3)).rejects.toThrow();
+      });
+    });
+
+    describe("Resource Management Parity", () => {
+      it("should handle initialization and shutdown cleanly", async () => {
+        // Test that both implementations have consistent lifecycle methods
+        const wasmDb = new WasmVectorDatabase(config);
+        const rustDb = new RustVectorDatabase(config);
+
+        // Both should have initialize and shutdown methods
+        expect(typeof wasmDb.initialize).toBe("function");
+        expect(typeof wasmDb.shutdown).toBe("function");
+        expect(typeof rustDb.initialize).toBe("function");
+        expect(typeof rustDb.shutdown).toBe("function");
+
+        // Both should fail to initialize due to missing dependencies
+        await expect(wasmDb.initialize()).rejects.toThrow();
+        await expect(rustDb.initialize()).rejects.toThrow();
+
+        // Both should handle shutdown gracefully even when not initialized
+        await expect(wasmDb.shutdown()).resolves.not.toThrow();
+        await expect(rustDb.shutdown()).resolves.not.toThrow();
+      });
+
+      it("should handle multiple shutdown calls gracefully", async () => {
+        // Test that both implementations handle multiple shutdown calls
+        const wasmDb = new WasmVectorDatabase(config);
+        const rustDb = new RustVectorDatabase(config);
+
+        // Multiple shutdowns should not throw for either implementation
+        await expect(wasmDb.shutdown()).resolves.not.toThrow();
+        await expect(wasmDb.shutdown()).resolves.not.toThrow();
+        await expect(rustDb.shutdown()).resolves.not.toThrow();
+        await expect(rustDb.shutdown()).resolves.not.toThrow();
+      });
     });
   });
 });

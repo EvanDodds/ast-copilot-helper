@@ -1,0 +1,22 @@
+{
+  "validationTimestamp": "2025-09-29T00:19:21.449Z",
+  "isValid": false,
+  "errorCount": 2,
+  "warningCount": 0,
+  "errors": [
+    "No current baseline found at: ci-artifacts/baselines/current-baseline.json",
+    "Run \"yarn baseline:update\" to create initial baseline"
+  ],
+  "warnings": [],
+  "summary": {
+    "baselineAge": 0,
+    "benchmarkCount": 0,
+    "nodeVersionMatch": false,
+    "platformMatch": false
+  },
+  "recommendations": [
+    "Create or update baseline data using \"yarn baseline:update\"",
+    "Consider updating baseline with current Node.js version",
+    "Add more benchmark coverage to improve regression detection"
+  ]
+}
