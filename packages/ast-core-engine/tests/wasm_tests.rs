@@ -234,7 +234,7 @@ mod integration_tests {
 }
 
 // Re-export helper functions for use in tests
-use super::*;
+use ast_helper_core_engine::*;
 
 // Mock helper functions (in a real implementation, these would be actual engine functions)
 fn basic_analyze_string(code: &str) -> String {

@@ -14,6 +14,7 @@ use crate::{
     vector_db::SimpleVectorDb,
 };
 #[cfg(not(feature = "wasm"))]
+#[cfg(feature = "napi")]
 use napi_derive::napi;
 #[cfg(not(feature = "wasm"))]
 use std::sync::Arc;

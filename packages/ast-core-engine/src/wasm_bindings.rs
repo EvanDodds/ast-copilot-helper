@@ -516,13 +516,15 @@ mod tests {
     fn test_utility_functions() {
         // Test vector conversion utilities
         let test_vec = vec![1.0, 2.0, 3.0, 4.0];
-        let float_array = vec_to_float32_array(test_vec.clone());
+        let float_array =
+            vec_to_float32_array(test_vec.clone()).expect("Failed to convert to Float32Array");
 
         // Test Float32Array creation
         assert_eq!(float_array.length(), 4);
 
         // Test conversion back to vec (would work in browser environment)
-        let converted_back = float32_array_to_vec(float_array);
+        let converted_back =
+            float32_array_to_vec(float_array).expect("Failed to convert back to Vec");
         assert_eq!(converted_back.len(), 4);
     }
 
@@ -532,4 +534,23 @@ mod tests {
         let js_val: JsValue = error.into();
         assert!(js_val.is_string());
     }
+}
+
+/// Get the engine version string
+#[wasm_bindgen]
+pub fn get_engine_version() -> String {
+    format!("ast-core-engine v{}", env!("CARGO_PKG_VERSION"))
+}
+
+/// Perform a basic health check
+#[wasm_bindgen]
+pub async fn health_check() -> Result<JsValue, JsValue> {
+    let health_info = serde_json::json!({
+        "status": "healthy",
+        "version": env!("CARGO_PKG_VERSION"),
+        "timestamp": chrono::Utc::now().timestamp(),
+        "engine": "ast-helper-core-engine"
+    });
+
+    to_value(&health_info).map_err(|e| JsValue::from_str(&e.to_string()))
 }

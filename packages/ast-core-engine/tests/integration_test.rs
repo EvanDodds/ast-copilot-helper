@@ -6,7 +6,7 @@
 //! - End-to-end workflows
 //! - Error handling and edge cases
 
-use ast_core_engine::*;
+use ast_helper_core_engine::*;
 use std::time::Instant;
 
 /// Test engine initialization and health check

@@ -1,5 +1,6 @@
 //! High-performance async storage layer with SQLite backend
 
+#[cfg(any(feature = "wasm", test))]
 use crate::ast_processor::{AstNode, SupportedLanguage};
 use crate::config::StorageConfig;
 use crate::error::{EngineError, StorageError};
@@ -263,6 +264,7 @@ impl StorageLayer {
     }
 
     /// Store file record and return file ID
+    #[cfg(any(feature = "wasm", test))]
     pub async fn store_file(
         &self,
         file_path: &str,
@@ -331,6 +333,7 @@ impl StorageLayer {
     }
 
     /// Store AST nodes for a file
+    #[cfg(any(feature = "wasm", test))]
     pub async fn store_ast_nodes(
         &self,
         file_id: i64,

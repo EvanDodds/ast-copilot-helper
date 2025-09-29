@@ -209,6 +209,10 @@ export default defineConfig({
     optimizeDeps: {
       exclude: ["vue"],
     },
+    build: {
+      // Increase chunk size warning limit to 1000 kB for documentation builds
+      chunkSizeWarningLimit: 1000,
+    },
   },
 
   // Site map generation

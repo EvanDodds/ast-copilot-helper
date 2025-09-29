@@ -145,7 +145,7 @@ mod tests {
             max_elements: 1000,
         };
 
-        let db = SimpleVectorDb::new(config);
+        let mut db = SimpleVectorDb::new(config);
         db.initialize().unwrap();
 
         // Test adding vectors

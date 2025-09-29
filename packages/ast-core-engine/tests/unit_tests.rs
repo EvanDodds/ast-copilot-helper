@@ -1,8 +1,7 @@
 //! Unit tests for AST Core Engine
 //! These tests validate core functionality without requiring NAPI runtime
 
-use ast_core_engine::{
-    ast_processor::{AstProcessor, SupportedLanguage},
+use ast_helper_core_engine::{
     batch_processor::{BatchConfig, BatchProcessor},
     config::{EngineConfig, HnswConfig, StorageConfig},
     core::ASTCoreEngine,
@@ -12,6 +11,9 @@ use ast_core_engine::{
     types::{NodeMetadata, ProcessingOptions},
     vector_db::SimpleVectorDb,
 };
+
+#[cfg(any(feature = "wasm", test))]
+use ast_helper_core_engine::ast_processor::{AstProcessor, SupportedLanguage};
 use std::sync::Arc;
 
 /// Test engine config creation
