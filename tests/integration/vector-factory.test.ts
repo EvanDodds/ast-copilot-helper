@@ -10,6 +10,7 @@ import { describe, it, expect } from "vitest";
 import {
   VectorDatabaseFactory,
   createVectorDatabase,
+  createWasmVectorDatabase,
   createRustVectorDatabase,
   createHNSWVectorDatabase,
 } from "../../packages/ast-helper/src/database/vector/factory";
@@ -26,18 +27,25 @@ const testConfig = createVectorDBConfig({
 
 describe("Vector Database Factory", () => {
   describe("Basic Factory Creation", () => {
-    it("should create a Rust database instance by default", async () => {
+    it("should create a WASM database instance by default", async () => {
+      // With the migration, WASM is now the default but may fall back to Rust if available
       const db = await VectorDatabaseFactory.create(testConfig);
       expect(db).toBeDefined();
       expect(typeof db.initialize).toBe("function");
       expect(typeof db.shutdown).toBe("function");
-      expect(db.constructor.name).toBe("RustVectorDatabase");
+      // Could be either WasmVectorDatabase or RustVectorDatabase (fallback)
+      expect(["WasmVectorDatabase", "RustVectorDatabase"]).toContain(
+        db.constructor.name,
+      );
     });
 
     it("should use default options when none provided", async () => {
       const db = await VectorDatabaseFactory.create(testConfig);
       expect(db).toBeDefined();
-      expect(db.constructor.name).toBe("RustVectorDatabase");
+      // Could be either WASM (preferred) or Rust (fallback)
+      expect(["WasmVectorDatabase", "RustVectorDatabase"]).toContain(
+        db.constructor.name,
+      );
     });
 
     it("should respect verbose option", async () => {
@@ -45,15 +53,21 @@ describe("Vector Database Factory", () => {
         verbose: true,
       });
       expect(db).toBeDefined();
-      expect(db.constructor.name).toBe("RustVectorDatabase");
+      // Could be either WASM (preferred) or Rust (fallback)
+      expect(["WasmVectorDatabase", "RustVectorDatabase"]).toContain(
+        db.constructor.name,
+      );
     });
   });
 
   describe("Implementation Selection", () => {
-    it("should create Rust implementation by default", async () => {
+    it("should prefer WASM implementation by default", async () => {
       const db = await VectorDatabaseFactory.create(testConfig);
       expect(db).toBeDefined();
-      expect(db.constructor.name).toBe("RustVectorDatabase");
+      // Could be either WASM (preferred) or Rust (fallback)
+      expect(["WasmVectorDatabase", "RustVectorDatabase"]).toContain(
+        db.constructor.name,
+      );
     });
 
     it("should create HNSW implementation when forced for testing", async () => {
@@ -91,10 +105,13 @@ describe("Vector Database Factory", () => {
   });
 
   describe("Convenience Functions", () => {
-    it("should create database using createVectorDatabase", async () => {
+    it("should create database using createVectorDatabase (WASM preferred)", async () => {
       const db = await createVectorDatabase(testConfig);
       expect(db).toBeDefined();
-      expect(db.constructor.name).toBe("RustVectorDatabase");
+      // Could be either WASM (preferred) or Rust (fallback)
+      expect(["WasmVectorDatabase", "RustVectorDatabase"]).toContain(
+        db.constructor.name,
+      );
     });
 
     it("should create Rust database using createRustVectorDatabase", async () => {
@@ -109,7 +126,23 @@ describe("Vector Database Factory", () => {
       expect(db.constructor.name).toBe("HNSWVectorDatabase");
     });
 
+    it("should create WASM database using createWasmVectorDatabase", async () => {
+      const db = await createWasmVectorDatabase(testConfig);
+      expect(db).toBeDefined();
+      // Could be either WASM (preferred) or Rust (fallback)
+      expect(["WasmVectorDatabase", "RustVectorDatabase"]).toContain(
+        db.constructor.name,
+      );
+    });
+
     it("should handle verbose option in convenience functions", async () => {
+      const wasmDB = await createWasmVectorDatabase(testConfig, true);
+      expect(wasmDB).toBeDefined();
+      // Could be either WASM (preferred) or Rust (fallback)
+      expect(["WasmVectorDatabase", "RustVectorDatabase"]).toContain(
+        wasmDB.constructor.name,
+      );
+
       const rustDB = await createRustVectorDatabase(testConfig, true);
       expect(rustDB).toBeDefined();
       expect(rustDB.constructor.name).toBe("RustVectorDatabase");

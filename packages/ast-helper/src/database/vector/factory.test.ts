@@ -145,19 +145,18 @@ describe("VectorDatabaseFactory", () => {
     });
   });
 
-  describe("WASM Implementation", () => {
-    it("should create WASM implementation when requested", async () => {
-      await expect(
-        VectorDatabaseFactory.create(config, { useWasm: true }),
-      ).rejects.toThrow("WASM vector database module not yet available");
+  describe("WASM Implementation (Default)", () => {
+    it("should create WASM implementation by default", async () => {
+      await expect(VectorDatabaseFactory.create(config)).rejects.toThrow(
+        "WASM vector database module not yet available",
+      );
     });
 
-    it("should log WASM creation in verbose mode", async () => {
+    it("should log WASM creation in verbose mode by default", async () => {
       const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
       try {
         await VectorDatabaseFactory.create(config, {
-          useWasm: true,
           verbose: true,
         });
       } catch {
@@ -165,7 +164,36 @@ describe("VectorDatabaseFactory", () => {
       }
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("🕸️ Using WASM vector database"),
+        expect.stringContaining(
+          "🕸️ Attempting high-performance WASM vector database",
+        ),
+      );
+
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe("Rust Implementation (Explicit)", () => {
+    it("should create Rust implementation when explicitly requested", async () => {
+      await expect(
+        VectorDatabaseFactory.create(config, { useRust: true }),
+      ).rejects.toThrow(); // Expected to fail due to Rust module not available in unit tests
+    });
+
+    it("should log Rust creation in verbose mode", async () => {
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+      try {
+        await VectorDatabaseFactory.create(config, {
+          useRust: true,
+          verbose: true,
+        });
+      } catch {
+        // Expected to fail due to Rust not available
+      }
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("🦀 Using native Rust vector database"),
       );
 
       consoleSpy.mockRestore();
@@ -261,9 +289,9 @@ describe("VectorDatabaseFactory", () => {
       });
 
       it("should pass options to factory", async () => {
-        await expect(
-          createVectorDatabase(config, { useWasm: true }),
-        ).rejects.toThrow("WASM vector database module not yet available");
+        await expect(createWasmVectorDatabase(config)).rejects.toThrow(
+          "WASM vector database module not yet available",
+        );
       });
     });
 
@@ -285,7 +313,7 @@ describe("VectorDatabaseFactory", () => {
         }
 
         expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Creating vector database with options"),
+          expect.stringContaining("🦀 Using native Rust vector database"),
         );
 
         consoleSpy.mockRestore();
@@ -311,7 +339,9 @@ describe("VectorDatabaseFactory", () => {
         }
 
         expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining("🕸️ Using WASM vector database"),
+          expect.stringContaining(
+            "🕸️ Attempting high-performance WASM vector database",
+          ),
         );
 
         consoleSpy.mockRestore();
@@ -357,7 +387,7 @@ describe("VectorDatabaseFactory", () => {
     });
 
     it("should merge provided options with defaults", async () => {
-      const options = { verbose: true, useWasm: false };
+      const options = { verbose: true, useRust: false };
 
       try {
         await VectorDatabaseFactory.create(config, options);

@@ -1,8 +1,8 @@
 /**
  * Vector Database Factory
  *
- * Creates vector database instances using the high-performance Rust implementation.
- * With consistent Rust builds, we no longer need complex fallback logic.
+ * Creates vector database instances using the high-performance WASM implementation.
+ * Provides intelligent fallback to native Rust implementation if needed.
  */
 
 import type { VectorDatabase, VectorDBConfig } from "./types.js";
@@ -12,10 +12,10 @@ import { WasmVectorDatabase } from "./wasm-vector-database.js";
 export interface VectorDatabaseFactoryOptions {
   /** Enable verbose logging for debugging */
   verbose?: boolean;
-  /** For testing: force use of HNSW implementation instead of Rust */
+  /** For testing: force use of HNSW implementation instead of WASM */
   forceHNSW?: boolean;
-  /** Use WASM implementation instead of native Rust */
-  useWasm?: boolean;
+  /** Use native Rust implementation instead of WASM */
+  useRust?: boolean;
 }
 
 type RequiredFactoryOptions = Required<VectorDatabaseFactoryOptions>;
@@ -27,7 +27,7 @@ export class VectorDatabaseFactory {
   private static readonly DEFAULT_OPTIONS: RequiredFactoryOptions = {
     verbose: false,
     forceHNSW: false,
-    useWasm: false,
+    useRust: false,
   };
 
   /**
@@ -99,27 +99,27 @@ export class VectorDatabaseFactory {
       return this.createHNSW(config, opts.verbose);
     }
 
-    // Use WASM implementation if explicitly requested
-    if (opts.useWasm) {
+    // Use native Rust implementation if explicitly requested
+    if (opts.useRust) {
       if (opts.verbose) {
         // eslint-disable-next-line no-console
-        console.log("🕸️ Using WASM vector database");
+        console.log("🦀 Using native Rust vector database");
       }
-      return this.createWasm(config, opts.verbose);
+      return this.createRust(config, opts.verbose);
     }
 
-    // Intelligent fallback: Try native Rust first, fallback to WASM if needed
+    // Intelligent fallback: Try WASM first, fallback to native Rust if needed
     try {
       if (opts.verbose) {
         // eslint-disable-next-line no-console
-        console.log("🦀 Attempting high-performance Rust vector database");
+        console.log("🕸️ Attempting high-performance WASM vector database");
       }
-      return await this.createRust(config, opts.verbose);
+      return await this.createWasm(config, opts.verbose);
     } catch (error) {
       if (opts.verbose) {
         // eslint-disable-next-line no-console
         console.warn(
-          "⚠️ Rust implementation failed, trying WASM fallback:",
+          "⚠️ WASM implementation failed, trying native Rust fallback:",
           error,
         );
       }
@@ -127,20 +127,20 @@ export class VectorDatabaseFactory {
       try {
         if (opts.verbose) {
           // eslint-disable-next-line no-console
-          console.log("🕸️ Falling back to WASM vector database");
+          console.log("🦀 Falling back to native Rust vector database");
         }
-        return await this.createWasm(config, opts.verbose);
-      } catch (wasmError) {
+        return await this.createRust(config, opts.verbose);
+      } catch (rustError) {
         if (opts.verbose) {
           // eslint-disable-next-line no-console
-          console.error("❌ Both Rust and WASM implementations failed");
+          console.error("❌ Both WASM and Rust implementations failed");
           // eslint-disable-next-line no-console
-          console.error("Rust error:", error);
+          console.error("WASM error:", error);
           // eslint-disable-next-line no-console
-          console.error("WASM error:", wasmError);
+          console.error("Rust error:", rustError);
         }
 
-        // Throw the original Rust error as it's the preferred implementation
+        // Throw the original WASM error as it's the preferred implementation
         throw error;
       }
     }
@@ -227,7 +227,7 @@ export class VectorDatabaseFactory {
 }
 
 /**
- * Convenience function to create a vector database (uses Rust implementation)
+ * Convenience function to create a vector database (uses WASM implementation)
  */
 export async function createVectorDatabase(
   config: VectorDBConfig,
@@ -237,9 +237,9 @@ export async function createVectorDatabase(
 }
 
 /**
- * Create vector database with Rust implementation (default behavior)
+ * Create vector database with WASM implementation (default behavior)
  */
-export async function createRustVectorDatabase(
+export async function createWasmVectorDatabase(
   config: VectorDBConfig,
   verbose = false,
 ): Promise<VectorDatabase> {
@@ -247,14 +247,14 @@ export async function createRustVectorDatabase(
 }
 
 /**
- * Create vector database with WASM implementation
+ * Create vector database with native Rust implementation
  */
-export async function createWasmVectorDatabase(
+export async function createRustVectorDatabase(
   config: VectorDBConfig,
   verbose = false,
 ): Promise<VectorDatabase> {
   return VectorDatabaseFactory.create(config, {
-    useWasm: true,
+    useRust: true,
     verbose,
   });
 }
