@@ -301,7 +301,9 @@ describe("Documentation Consistency", () => {
         // Basic syntax validation - should have proper imports
         if (block.includes("import")) {
           // Handle both static imports and dynamic imports
-          expect(block).toMatch(/import.*from.*['"]|import\s*\(/);
+          expect(block).toMatch(
+            /import\s+[{]?[\w\s,*]*[}]?\s+from\s+['"].*['"]|import\s*\(|import\s*\{/,
+          );
         }
 
         // Should use proper async/await syntax
