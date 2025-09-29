@@ -235,23 +235,18 @@ export class MainQueryProcessor implements QueryProcessor {
     this.signatureProcessor = new SignatureQueryProcessor(
       this.annotationDatabase,
       this.config,
-      undefined, // No longer using Rust engine in WASM-first approach
     );
 
     // Initialize file processor
-    this.fileProcessor = new FileQueryProcessor(
-      this.annotationDatabase,
-      {
-        maxResults: this.config.search.defaultMaxResults,
-        caseSensitive: false,
-        includeHidden: false,
-        maxDepth: 10,
-        enableGlobPatterns: true,
-        fuzzyMatching: true,
-        fuzzyThreshold: 0.6,
-      },
-      undefined, // No longer using Rust engine in WASM-first approach
-    );
+    this.fileProcessor = new FileQueryProcessor(this.annotationDatabase, {
+      maxResults: this.config.search.defaultMaxResults,
+      caseSensitive: false,
+      includeHidden: false,
+      maxDepth: 10,
+      enableGlobPatterns: true,
+      fuzzyMatching: true,
+      fuzzyThreshold: 0.6,
+    });
   }
 
   /**
@@ -324,7 +319,6 @@ export class MainQueryProcessor implements QueryProcessor {
         this.annotationDatabase,
         this.config,
         this.performanceMonitor,
-        undefined, // No longer using Rust engine in WASM-first approach
       );
     }
 

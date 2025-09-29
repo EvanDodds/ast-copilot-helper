@@ -14,7 +14,7 @@ import type {
   AnnotationMatch,
 } from "./types.js";
 import type { ASTNodeMatch } from "../types.js";
-import type { AstCoreEngineApi } from "../../../ast-core-engine/index.js";
+// import type { AstCoreEngineApi } from "../../../ast-core-engine/index.js"; // Removed as part of NAPI cleanup
 
 /**
  * Signature analysis result
@@ -69,7 +69,7 @@ export class SignatureQueryProcessor {
 
   // Dependencies
   private annotationDatabase: ASTDatabaseReader;
-  private _rustEngine?: AstCoreEngineApi;
+  // private _rustEngine?: AstCoreEngineApi; // Removed as part of NAPI cleanup
 
   // Configuration
   private config: QuerySystemConfig;
@@ -84,12 +84,12 @@ export class SignatureQueryProcessor {
   constructor(
     annotationDatabase: ASTDatabaseReader,
     config: QuerySystemConfig,
-    _rustEngine?: AstCoreEngineApi,
+    // _rustEngine?: AstCoreEngineApi, // Removed as part of NAPI cleanup
   ) {
     this.annotationDatabase = annotationDatabase;
     this.config = config;
-    this._rustEngine = _rustEngine; // Future use for Rust engine integration
-    void this._rustEngine; // Suppress unused variable warning
+    // this._rustEngine = _rustEngine; // Future use for Rust engine integration - Removed as part of NAPI cleanup
+    // void this._rustEngine; // Suppress unused variable warning - Removed as part of NAPI cleanup
 
     // Initialize matching configuration
     this.matchingConfig = {
