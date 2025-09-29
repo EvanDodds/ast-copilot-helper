@@ -6,7 +6,6 @@ This directory contains comprehensive documentation for the Phase 5 Testing & Pe
 
 ### 📚 Core Documentation
 
-- **[Phase 5 Testing Guide](./PHASE5_TESTING_GUIDE.md)** - Comprehensive overview of the testing framework, architecture, and usage
 - **[Performance Baselines](./PERFORMANCE_BASELINES.md)** - Detailed documentation of performance baselines, management, and interpretation
 - **[Test Procedures](./TEST_PROCEDURES.md)** - Step-by-step procedures for running tests and CI/CD integration
 - **[Test Configuration](./TEST_CONFIGURATION.md)** - Detailed configuration options, setup procedures, and environment management
@@ -106,13 +105,13 @@ npm run test:regression
 
 ## Performance Targets
 
-| Operation        | WASM Target   | Rust Fallback | Max Acceptable |
-| ---------------- | ------------- | -------------- | -------------- |
-| Initialization   | 35ms          | 25ms           | 50ms           |
-| Vector Insertion | 1.8ms         | 1.2ms          | 2.4ms          |
-| Batch Insertion  | 65ms          | 45ms           | 90ms           |
-| Vector Search    | 12ms          | 8.3ms          | 16.6ms         |
-| Memory Usage     | 55MB          | 45MB           | 67MB           |
+| Operation        | WASM Target | Rust Fallback | Max Acceptable |
+| ---------------- | ----------- | ------------- | -------------- |
+| Initialization   | 35ms        | 25ms          | 50ms           |
+| Vector Insertion | 1.8ms       | 1.2ms         | 2.4ms          |
+| Batch Insertion  | 65ms        | 45ms          | 90ms           |
+| Vector Search    | 12ms        | 8.3ms         | 16.6ms         |
+| Memory Usage     | 55MB        | 45MB          | 67MB           |
 
 ## Current Status
 
@@ -155,9 +154,9 @@ npm run test:regression
 
 ### Documentation References
 
-1. **[Phase 5 Testing Guide](./PHASE5_TESTING_GUIDE.md)** - Start here for comprehensive overview
-2. **[Performance Baselines](./PERFORMANCE_BASELINES.md)** - Understanding and managing performance targets
-3. **[Test Procedures](./TEST_PROCEDURES.md)** - Step-by-step execution and troubleshooting
+1. **[Performance Baselines](./PERFORMANCE_BASELINES.md)** - Understanding and managing performance targets
+2. **[Test Procedures](./TEST_PROCEDURES.md)** - Step-by-step execution and troubleshooting
+3. **[Test Configuration](./TEST_CONFIGURATION.md)** - Configuration options and environment setup
 
 ### Common Scenarios
 
