@@ -1,14 +1,11 @@
 //! Core types and data structures
 
-// Conditional imports based on compilation target
-#[cfg(not(feature = "wasm"))]
-use napi_derive::napi;
-// WASM types will be handled in wasm_bindings module
+// Core types for WASM compilation
 
 use serde::{Deserialize, Serialize};
 
 /// Engine health status information
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EngineHealth {
     pub status: String,
@@ -18,7 +15,7 @@ pub struct EngineHealth {
 }
 
 /// Processing options for batch operations
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ProcessingOptions {
     pub max_memory_mb: u32,
@@ -34,7 +31,7 @@ pub struct ProcessingOptions {
 }
 
 /// Result of batch processing operation
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BatchResult {
     pub processed_files: u32,
@@ -46,7 +43,7 @@ pub struct BatchResult {
 }
 
 /// Search result from vector database
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SearchResult {
     pub node_id: String,
@@ -57,7 +54,7 @@ pub struct SearchResult {
 }
 
 /// Processing error information
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ProcessingError {
     pub file_path: String,
@@ -66,7 +63,7 @@ pub struct ProcessingError {
 }
 
 /// Performance metrics for operations
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
     pub parse_time_ms: u32,
@@ -78,7 +75,7 @@ pub struct PerformanceMetrics {
 }
 
 /// AST node representation
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ASTNode {
     pub id: String,
@@ -95,7 +92,7 @@ pub struct ASTNode {
 }
 
 /// Source code position
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Point {
     pub row: u32,
@@ -103,7 +100,7 @@ pub struct Point {
 }
 
 /// Node metadata for storage
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NodeMetadata {
     pub node_id: String,
@@ -116,7 +113,7 @@ pub struct NodeMetadata {
 }
 
 /// Annotation for AST nodes
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Annotation {
     pub signature: String,
@@ -127,7 +124,7 @@ pub struct Annotation {
 }
 
 /// Metadata associated with each vector in the database
-#[cfg_attr(not(feature = "wasm"), napi(object))]
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VectorMetadata {
     pub node_id: String,

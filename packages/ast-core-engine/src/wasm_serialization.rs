@@ -88,11 +88,8 @@ impl ArrayConverter {
             ));
         }
 
-        // Pre-allocate vector with exact capacity
-        let mut vec = Vec::with_capacity(length);
-        unsafe {
-            vec.set_len(length);
-        }
+        // Pre-allocate vector with exact capacity and initialize with zeros
+        let mut vec = vec![0.0f32; length];
         array.copy_to(&mut vec);
         Ok(vec)
     }

@@ -22,13 +22,11 @@ on:
           - compare
           - archive
       implementation:
-        description: 'Implementation to process'
+        description: 'Implementation to generate baseline for'
         required: false
-        default: 'both'
+        default: 'wasm'
         type: choice
         options:
-          - both
-          - napi
           - wasm
 
 env:
@@ -83,23 +81,7 @@ jobs:
       - name: Create baseline directory
         run: mkdir -p performance-baselines
 
-      - name: Generate NAPI baseline
-        if: github.event.inputs.implementation != 'wasm'
-        run: |
-          echo "Generating NAPI performance baseline..."
-          npm run test:performance:baseline -- --implementation=NAPI
-        env:
-          BASELINE_MODE: create
-          PERFORMANCE_MODE: baseline
-          MEASUREMENT_RUNS: 20
-          WARMUP_RUNS: 10
-          DATASET_SIZE: full
-          NODE_OPTIONS: '--max-old-space-size=8192'
-        timeout-minutes: 60
-
       - name: Generate WASM baseline
-        if: github.event.inputs.implementation != 'napi'
-        continue-on-error: true  # WASM implementation may not be ready
         run: |
           echo "Generating WASM performance baseline..."
           npm run test:performance:baseline -- --implementation=WASM
@@ -156,15 +138,9 @@ jobs:
             
             let allValid = true;
             
-            // Validate NAPI baseline
-            const napiPath = 'performance-baselines/napi-baseline.json';
-            if (!validateBaseline(napiPath)) {
-              allValid = false;
-            }
-            
-            // Validate WASM baseline (if exists)
+            // Validate WASM baseline
             const wasmPath = 'performance-baselines/wasm-baseline.json';
-            if (fs.existsSync(wasmPath) && !validateBaseline(wasmPath)) {
+            if (!validateBaseline(wasmPath)) {
               allValid = false;
             }
             
@@ -314,19 +290,10 @@ jobs:
             
             let validationPassed = true;
             
-            // Validate NAPI baseline
-            if (!validateBaseline('performance-baselines/napi-baseline.json', 'NAPI')) {
-              validationPassed = false;
-            }
-            
-            // Validate WASM baseline if exists
+            // Validate WASM baseline
             const wasmPath = 'performance-baselines/wasm-baseline.json';
-            if (fs.existsSync(wasmPath)) {
-              if (!validateBaseline(wasmPath, 'WASM')) {
-                validationPassed = false;
-              }
-            } else {
-              console.log('ℹ️ WASM baseline not found (expected during development)');
+            if (!validateBaseline(wasmPath, 'WASM')) {
+              validationPassed = false;
             }
             
             if (!validationPassed) {
@@ -398,8 +365,7 @@ jobs:
               return comparison;
             }
             
-            // Load current and archived baselines
-            const currentNapi = loadBaseline('performance-baselines/napi-baseline.json', 'Current NAPI');
+            // Load current baseline
             const currentWasm = loadBaseline('performance-baselines/wasm-baseline.json', 'Current WASM');
             
             // For comparison, we would load from archive (simplified here)
@@ -407,16 +373,6 @@ jobs:
             console.log('');
             console.log(\`Generated: \${new Date().toISOString()}\`);
             console.log('');
-            
-            if (currentNapi) {
-              console.log('## NAPI Performance Summary');
-              console.log('');
-              const results = currentNapi.results.NAPI;
-              for (const [op, result] of Object.entries(results)) {
-                console.log(\`- \${op}: \${result.avgTime.toFixed(2)}ms (±\${result.standardDeviation?.toFixed(2) || 'N/A'}ms)\`);
-              }
-              console.log('');
-            }
             
             if (currentWasm) {
               console.log('## WASM Performance Summary');
@@ -426,23 +382,6 @@ jobs:
                 console.log(\`- \${op}: \${result.avgTime.toFixed(2)}ms (±\${result.standardDeviation?.toFixed(2) || 'N/A'}ms)\`);
               }
               console.log('');
-            }
-            
-            if (currentNapi && currentWasm) {
-              console.log('## NAPI vs WASM Comparison');
-              console.log('');
-              const napiResults = currentNapi.results.NAPI;
-              const wasmResults = currentWasm.results.WASM;
-              
-              for (const [op, napiResult] of Object.entries(napiResults)) {
-                const wasmResult = wasmResults[op];
-                if (!wasmResult) continue;
-                
-                const ratio = wasmResult.avgTime / napiResult.avgTime;
-                const performance = ratio > 1 ? \`\${ratio.toFixed(2)}x slower\` : \`\${(1/ratio).toFixed(2)}x faster\`;
-                
-                console.log(\`- \${op}: WASM is \${performance} than NAPI\`);
-              }
             }
             
             console.log('');
@@ -542,8 +481,8 @@ jobs:
                   <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                       <tr style="background: #f8f9fa;">
                           <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Operation</th>
-                          <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">NAPI Baseline</th>
-                          <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">WASM Target</th>
+                          <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">WASM Current</th>
+                          <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Target Performance</th>
                           <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Max Acceptable</th>
                       </tr>
                       <tr>

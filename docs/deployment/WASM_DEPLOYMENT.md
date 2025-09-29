@@ -43,10 +43,10 @@ This generates:
 ### Node.js Applications
 
 ```typescript
-// Automatic selection based on environment
-import { createEngine } from "@ast-helper/core-engine/example-usage";
+// WASM-first architecture
+import { VectorDatabaseFactory } from "@ast-helper/core-engine";
 
-const engine = await createEngine(); // Uses NAPI by default
+const vectorDb = await VectorDatabaseFactory.create(); // Uses WASM by default
 ```
 
 ### Browser Applications

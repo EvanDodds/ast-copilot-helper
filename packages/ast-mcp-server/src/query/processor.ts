@@ -7,7 +7,7 @@
 
 import { createLogger } from "../../../ast-helper/src/logging/index.js";
 import type { XenovaEmbeddingGenerator } from "../../../ast-helper/src/embedder/index.js";
-import type { VectorDatabase } from "../../../ast-helper/src/database/vector/index.js";
+
 import path from "path";
 import type { ASTDatabaseReader } from "../database/reader.js";
 import { SemanticQueryProcessor } from "./semantic-processor.js";
@@ -16,9 +16,9 @@ import { FileQueryProcessor } from "./file-processor.js";
 import { ResponseAssembler } from "./response-assembler.js";
 import { PerformanceMonitor } from "./performance-monitor.js";
 import {
-  createDefaultEngine,
-  type AstCoreEngineApi,
-} from "../../../ast-core-engine/index.js";
+  VectorDatabaseFactory,
+  type VectorDatabase,
+} from "../../../ast-helper/src/database/vector/index.js";
 
 import type {
   QueryProcessor,
@@ -32,6 +32,7 @@ import type {
   QuerySystemConfig,
   QueryType,
   QueryContext,
+  QueryOptions,
 } from "./types.js";
 
 /**
@@ -177,7 +178,6 @@ export class MainQueryProcessor implements QueryProcessor {
   private annotationDatabase: ASTDatabaseReader;
   private embeddingGenerator?: XenovaEmbeddingGenerator;
   private vectorDatabase?: VectorDatabase;
-  private rustEngine?: AstCoreEngineApi;
 
   // Specialized processors
   private semanticProcessor?: SemanticQueryProcessor;
@@ -235,23 +235,18 @@ export class MainQueryProcessor implements QueryProcessor {
     this.signatureProcessor = new SignatureQueryProcessor(
       this.annotationDatabase,
       this.config,
-      this.rustEngine,
     );
 
     // Initialize file processor
-    this.fileProcessor = new FileQueryProcessor(
-      this.annotationDatabase,
-      {
-        maxResults: this.config.search.defaultMaxResults,
-        caseSensitive: false,
-        includeHidden: false,
-        maxDepth: 10,
-        enableGlobPatterns: true,
-        fuzzyMatching: true,
-        fuzzyThreshold: 0.6,
-      },
-      this.rustEngine,
-    );
+    this.fileProcessor = new FileQueryProcessor(this.annotationDatabase, {
+      maxResults: this.config.search.defaultMaxResults,
+      caseSensitive: false,
+      includeHidden: false,
+      maxDepth: 10,
+      enableGlobPatterns: true,
+      fuzzyMatching: true,
+      fuzzyThreshold: 0.6,
+    });
   }
 
   /**
@@ -268,17 +263,31 @@ export class MainQueryProcessor implements QueryProcessor {
       config: this.config,
     });
 
-    // Initialize Rust core engine
-    try {
-      this.logger.info("Initializing Rust core engine...");
-      this.rustEngine = await createDefaultEngine();
-      await this.rustEngine.initialize();
-      this.logger.info("Rust core engine initialized successfully");
-    } catch (error) {
-      this.logger.warn(
-        "Failed to initialize Rust core engine, falling back to TypeScript implementations",
-        { error },
-      );
+    // Initialize vector database using factory
+    if (!this.vectorDatabase) {
+      try {
+        this.logger.info("Initializing vector database...");
+        this.vectorDatabase = await VectorDatabaseFactory.create(
+          {
+            dimensions: 768, // CodeBERT dimensions
+            maxElements: 100000,
+            efConstruction: 200,
+            M: 16,
+            space: "cosine" as const,
+            storageFile: ":memory:", // In-memory for MCP server
+            indexFile: ":memory:",
+            autoSave: false,
+            saveInterval: 60,
+          },
+          {
+            useRust: false, // WASM-first approach
+            verbose: true,
+          },
+        );
+        this.logger.info("Vector database initialized successfully");
+      } catch (error) {
+        this.logger.warn("Failed to initialize vector database", { error });
+      }
     }
 
     // Initialize dependencies if available
@@ -310,7 +319,6 @@ export class MainQueryProcessor implements QueryProcessor {
         this.annotationDatabase,
         this.config,
         this.performanceMonitor,
-        this.rustEngine,
       );
     }
 
@@ -668,7 +676,9 @@ export class MainQueryProcessor implements QueryProcessor {
   /**
    * Get list of applied filters for metadata
    */
-  private getAppliedFilters(options: any): string[] {
+  private getAppliedFilters(
+    options: QueryOptions & { minScore?: number },
+  ): string[] {
     const filters: string[] = [];
 
     if (options.fileFilter) {

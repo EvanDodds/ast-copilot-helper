@@ -27,7 +27,6 @@ import type {
   Annotation,
 } from "./types.js";
 import type { ASTDatabaseReader } from "../database/reader.js";
-import type { AstCoreEngineApi } from "../../../ast-core-engine/index.js";
 
 const logger = createLogger({
   level: LogLevel.INFO,
@@ -97,19 +96,14 @@ interface FileSearchResult {
 export class FileQueryProcessor extends EventEmitter {
   private readonly config: Required<FileProcessorConfig>;
   private readonly databaseReader: ASTDatabaseReader;
-  private _rustEngine?: AstCoreEngineApi;
 
   constructor(
     databaseReader: ASTDatabaseReader,
     config: FileProcessorConfig = {},
-    _rustEngine?: AstCoreEngineApi,
   ) {
     super();
     this.databaseReader = databaseReader;
     this.config = { ...DEFAULT_CONFIG, ...config };
-    // Store rust engine for future implementation
-    this._rustEngine = _rustEngine;
-    void this._rustEngine; // Suppress unused variable warning
   }
 
   /**

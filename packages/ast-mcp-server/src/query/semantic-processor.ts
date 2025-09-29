@@ -9,10 +9,7 @@ import { createLogger } from "../../../ast-helper/src/logging/index.js";
 import type { XenovaEmbeddingGenerator } from "../../../ast-helper/src/embedder/index.js";
 import type { VectorDatabase } from "../../../ast-helper/src/database/vector/index.js";
 import type { ASTDatabaseReader } from "../database/reader.js";
-import type {
-  AstCoreEngineApi,
-  NodeMetadata,
-} from "../../../ast-core-engine/index.js";
+// NAPI types removed - using WASM-first approach
 
 import type {
   SemanticQueryOptions,
@@ -73,13 +70,13 @@ export class SemanticQueryProcessor {
   // Dependencies
   private embeddingGenerator: XenovaEmbeddingGenerator;
   private annotationDatabase: ASTDatabaseReader;
-  private rustEngine?: AstCoreEngineApi;
+  // private rustEngine?: AstCoreEngineApi; // Removed in WASM migration
 
   // Configuration
   private config: QuerySystemConfig;
   private rankingConfig: SemanticRankingConfig;
   private contextBoostConfig: ContextBoostConfig;
-  private performanceMonitor?: any;
+  // private performanceMonitor?: unknown; // Temporarily disabled
 
   // Performance tracking
   private processedQueries = 0;
@@ -92,14 +89,14 @@ export class SemanticQueryProcessor {
     _vectorDatabase: VectorDatabase, // Unused but kept for API compatibility
     annotationDatabase: ASTDatabaseReader,
     config: QuerySystemConfig,
-    performanceMonitor?: any, // Using any to avoid circular import for now
-    rustEngine?: AstCoreEngineApi,
+    _performanceMonitor?: unknown, // Using unknown to avoid circular import for now - temporarily disabled
+    // rustEngine parameter removed in WASM migration
   ) {
     this.embeddingGenerator = embeddingGenerator;
     this.annotationDatabase = annotationDatabase;
     this.config = config;
-    this.performanceMonitor = performanceMonitor;
-    this.rustEngine = rustEngine;
+    // this.performanceMonitor = performanceMonitor; // Temporarily disabled
+    // this.rustEngine = rustEngine; // Removed in WASM migration
 
     // Initialize default ranking configuration
     this.rankingConfig = {
@@ -171,87 +168,25 @@ export class SemanticQueryProcessor {
 
     // Check for cached query response first
     // Extract minScore from the query if available
-    const queryMinScore =
-      typeof queryOrText === "object" && "minScore" in queryOrText
-        ? queryOrText.minScore
-        : undefined;
+    // minScore handling removed for simplification
 
-    const query: MCPQuery = {
-      type: "semantic",
-      text: queryText,
-      maxResults: queryMaxResults,
-      minScore: queryMinScore,
-      options: Object.keys(queryOptions).length > 0 ? queryOptions : undefined,
-    };
-
-    if (this.performanceMonitor) {
-      const cachedResponse =
-        this.performanceMonitor.getCachedQueryResponse(query);
-      if (cachedResponse) {
-        // Update the metadata to reflect cache hit
-        const cachedResponseWithMeta = {
-          ...cachedResponse,
-          metadata: {
-            ...cachedResponse.metadata,
-            cacheHit: true,
-            timestamp: new Date(),
-          },
-        };
-
-        this.logger.debug("Returning cached query response", {
-          queryText,
-          cachedResultsCount: cachedResponse.results.length,
-        });
-
-        return cachedResponseWithMeta;
-      }
-    }
+    // Skip caching for now - performance monitor temporarily disabled
 
     try {
-      // Step 1: Generate query embedding (with caching)
+      // Step 1: Generate query embedding (caching disabled)
       const queryEmbeddingStartTime = Date.now();
-      let queryEmbedding: number[];
 
-      // Try to get cached embedding first
-      if (this.performanceMonitor) {
-        const cachedEmbedding =
-          this.performanceMonitor.getCachedEmbedding(queryText);
-        if (cachedEmbedding) {
-          queryEmbedding = cachedEmbedding;
-        } else {
-          // Generate new embedding and cache it
-          const embeddings = await this.embeddingGenerator.generateEmbeddings([
-            queryText,
-          ]);
+      const embeddings = await this.embeddingGenerator.generateEmbeddings([
+        queryText,
+      ]);
 
-          if (embeddings.length === 0) {
-            throw new Error("Failed to generate query embedding");
-          }
+      if (embeddings.length === 0) {
+        throw new Error("Failed to generate query embedding");
+      }
 
-          const embedding = embeddings[0];
-          if (!embedding) {
-            throw new Error("Generated embedding is undefined");
-          }
-          queryEmbedding = embedding;
-
-          // Cache the embedding for future use
-          this.performanceMonitor.cacheEmbedding(queryText, queryEmbedding);
-        }
-      } else {
-        // Fallback without caching
-        const embeddings = await this.embeddingGenerator.generateEmbeddings([
-          queryText,
-        ]);
-
-        if (embeddings.length === 0) {
-          throw new Error("Failed to generate query embedding");
-        }
-
-        const embedding = embeddings[0];
-        if (!embedding) {
-          throw new Error("Generated embedding is undefined");
-        }
-        queryEmbedding = embedding;
+      const embedding = embeddings[0];
+      if (!embedding) {
+        throw new Error("Generated embedding is undefined");
       }
 
       const embeddingTime = Date.now() - queryEmbeddingStartTime;
@@ -260,7 +195,7 @@ export class SemanticQueryProcessor {
       const vectorSearchStartTime = Date.now();
 
       // Build options object based on query type and properties
-      const vectorSearchOptions: any = {
+      const vectorSearchOptions: Record<string, unknown> = {
         maxResults: Math.min(
           queryMaxResults || this.rankingConfig.maxResults,
           1000, // hard-coded candidate limit
@@ -309,54 +244,13 @@ export class SemanticQueryProcessor {
           queryOptions.useContextBoosting;
       }
 
-      let vectorResults: any;
+      // Use JavaScript vector database search
 
-      // Prefer Rust engine if available for faster vector search
-      if (this.rustEngine) {
-        try {
-          this.logger.debug("Using Rust engine for semantic search", {
-            queryText,
-          });
-          const rustResults = await this.rustEngine.searchSimilar(
-            queryText,
-            queryMaxResults || 50,
-          );
-
-          // Convert Rust engine results to expected format
-          vectorResults = rustResults.map((result: NodeMetadata) => ({
-            nodeId: result.nodeId,
-            filePath: result.filePath,
-            signature: result.signature,
-            summary: result.summary,
-            sourceSnippet: result.sourceSnippet,
-            similarity: 1.0, // Rust engine provides normalized results
-            language: result.language,
-            complexity: result.complexity,
-          }));
-
-          this.logger.debug("Rust engine search completed", {
-            resultCount: vectorResults.length,
-          });
-        } catch (error) {
-          this.logger.warn(
-            "Rust engine search failed, falling back to TypeScript",
-            {
-              error: String(error),
-            },
-          );
-          // Fall back to original implementation
-          vectorResults = await this.annotationDatabase.vectorSearch(
-            queryText,
-            vectorSearchOptions,
-          );
-        }
-      } else {
-        // Use original TypeScript implementation
-        vectorResults = await this.annotationDatabase.vectorSearch(
-          queryText,
-          vectorSearchOptions,
-        );
-      }
+      // Rust engine removed - using JavaScript implementation only
+      const vectorResults = await this.annotationDatabase.vectorSearch(
+        queryText,
+        vectorSearchOptions,
+      );
 
       this.vectorSearchTime = Date.now() - vectorSearchStartTime;
 
@@ -481,9 +375,7 @@ export class SemanticQueryProcessor {
       };
 
       // Cache the response for future use
-      if (this.performanceMonitor) {
-        this.performanceMonitor.cacheQueryResponse(query, response);
-      }
+      // Performance monitor disabled - response cache skipped
 
       return response;
     } catch (error) {

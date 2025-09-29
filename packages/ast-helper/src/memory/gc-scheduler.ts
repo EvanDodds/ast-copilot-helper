@@ -336,7 +336,10 @@ export class GCScheduler extends EventEmitter {
 
       // Handle immediate or critical cases
       if (schedule.priority === "critical" || schedule.priority === "high") {
-        await this.executeScheduledGC(schedule);
+        // Use setTimeout even for immediate execution to avoid blocking
+        this.schedulerTimer = setTimeout(async () => {
+          await this.executeScheduledGC(schedule);
+        }, 10); // Minimal delay
       } else {
         // Schedule for later
         const delay = schedule.nextGC.getTime() - Date.now();
@@ -361,8 +364,10 @@ export class GCScheduler extends EventEmitter {
     } catch (error) {
       this.emit("error", error);
     } finally {
-      // Schedule next cycle
-      await this.scheduleNext();
+      // Schedule next cycle only if still running
+      if (this.isRunning) {
+        await this.scheduleNext();
+      }
     }
   }
 
@@ -376,8 +381,12 @@ export class GCScheduler extends EventEmitter {
       return 0;
     }
 
-    const first = recent[0]!;
-    const last = recent[recent.length - 1]!;
+    const first = recent[0];
+    const last = recent[recent.length - 1];
+
+    if (!first || !last) {
+      return 0;
+    }
     const timeDiff = (last.timestamp - first.timestamp) / 1000; // seconds
     const memoryDiff = (last.heapUsed - first.heapUsed) / (1024 * 1024); // MB
 
