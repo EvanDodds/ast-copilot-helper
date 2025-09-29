@@ -16,9 +16,11 @@ use dashmap::DashMap;
 use napi_derive::napi;
 #[cfg(feature = "wasm")]
 use std::collections::HashMap;
+#[cfg(not(feature = "wasm"))]
 use std::sync::{Arc, Mutex, OnceLock};
 
-/// Global vector database instance
+/// Global vector database instance (NAPI only)
+#[cfg(not(feature = "wasm"))]
 static VECTOR_DB: OnceLock<Mutex<SimpleVectorDb>> = OnceLock::new();
 
 /// Simple vector database for demonstration

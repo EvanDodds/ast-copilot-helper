@@ -94,9 +94,8 @@ napi-backend = ["napi", "napi-derive", "tree-sitter-features", "uuid"]
 full-deps = ["tokio", "sqlx", "memmap2", "tracing", "tracing-subscriber", "dashmap", "rayon", "sysinfo", "num_cpus", "chrono", "tempfile", "futures", "fastrand", "log", "env_logger", "hnsw_rs"]
 tree-sitter-features = ["tree-sitter", "tree-sitter-typescript", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-rust", "tree-sitter-java", "tree-sitter-cpp"]
 ml = ["candle-core", "candle-nn"]
-# WASM feature - minimal, WASM-compatible dependencies only (no system-level deps)
+# WASM feature - ONLY WASM-compatible dependencies (excludes all C/system-level deps)
 wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "serde-wasm-bindgen", "getrandom", "uuid"]
-# Removed wasm-full feature to avoid dependency conflicts
 
 [profile.release]
 lto = true

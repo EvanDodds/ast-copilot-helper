@@ -17,12 +17,12 @@
     "node": ">= 10"
   },
   "scripts": {
-    "build": "wasm-pack build --target nodejs --out-dir pkg --features wasm",
+    "build": "wasm-pack build --target nodejs --out-dir pkg --no-default-features --features wasm",
     "build:all": "npm run build",
-    "build:release": "wasm-pack build --target nodejs --out-dir pkg --features wasm --release",
-    "build:debug": "wasm-pack build --target nodejs --out-dir pkg --features wasm --dev",
-    "build:wasm": "wasm-pack build --target nodejs --out-dir pkg --features wasm",
-    "build:wasm:release": "wasm-pack build --target nodejs --out-dir pkg --features wasm --release",
+    "build:release": "wasm-pack build --target nodejs --out-dir pkg --no-default-features --features wasm --release",
+    "build:debug": "wasm-pack build --target nodejs --out-dir pkg --no-default-features --features wasm --dev",
+    "build:wasm": "wasm-pack build --target nodejs --out-dir pkg --no-default-features --features wasm",
+    "build:wasm:release": "wasm-pack build --target nodejs --out-dir pkg --no-default-features --features wasm --release",
     "test:wasm": "npm run build:wasm && cargo test --features wasm",
     "clean:wasm": "rm -rf pkg/",
     "clean:all": "npm run clean && npm run clean:wasm",
