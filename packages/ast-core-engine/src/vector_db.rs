@@ -55,7 +55,7 @@ impl SimpleVectorDb {
 
     /// Add a vector with metadata to the database
     pub fn add_vector(
-        &self,
+        &mut self,
         node_id: String,
         embedding: Vec<f32>,
         metadata: VectorMetadata,
@@ -95,11 +95,20 @@ impl SimpleVectorDb {
         let mut similarities = Vec::new();
 
         // Calculate similarity with all stored vectors
-        for entry in self.vectors.iter() {
-            let (node_id, (embedding, metadata)) = (entry.key().clone(), entry.value());
-            let similarity = cosine_similarity(&query_embedding, embedding);
-
-            similarities.push((node_id, similarity, metadata.clone()));
+        #[cfg(not(feature = "wasm"))]
+        {
+            for entry in self.vectors.iter() {
+                let (node_id, (embedding, metadata)) = (entry.key().clone(), entry.value());
+                let similarity = cosine_similarity(&query_embedding, embedding);
+                similarities.push((node_id, similarity, metadata.clone()));
+            }
+        }
+        #[cfg(feature = "wasm")]
+        {
+            for (node_id, (embedding, metadata)) in self.vectors.iter() {
+                let similarity = cosine_similarity(&query_embedding, embedding);
+                similarities.push((node_id.clone(), similarity, metadata.clone()));
+            }
         }
 
         // Sort by similarity (descending)
@@ -128,7 +137,7 @@ impl SimpleVectorDb {
     }
 
     /// Clear all vectors
-    pub fn clear(&self) -> Result<(), EngineError> {
+    pub fn clear(&mut self) -> Result<(), EngineError> {
         self.vectors.clear();
         println!("Vector database cleared");
         Ok(())

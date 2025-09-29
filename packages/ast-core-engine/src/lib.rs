@@ -1,31 +1,34 @@
 //! AST Core Engine - High-Performance Rust Backend
 //!
 //! This crate provides high-performance implementations for:
-//! - Vector database operations with HNSW indexing
-//! - AST processing with Tree-sitter integration
-//! - Batch file processing with memory optimization
-//! - Async storage layer with SQLite backend
+//! - Vector database operations with HNSW indexing (NAPI + WASM)
+//! - AST processing with Tree-sitter integration (NAPI only)
+//! - Batch file processing with memory optimization (NAPI only)
+//! - Async storage layer with SQLite backend (NAPI only)
 //!
-//! Supports both NAPI-RS (Node.js) and WASM compilation targets.
+//! Supports both NAPI-RS (Node.js) and WASM compilation targets with
+//! conditional feature compilation for maximum compatibility.
 
-// Conditional compilation imports are handled per-module
-
-// WASM imports for WebAssembly bindings
-// WASM bindings are imported in the wasm_bindings module
-
+// Core modules available in both NAPI and WASM builds
 pub mod config;
 pub mod error;
 pub mod types;
 pub mod vector_db;
 
-// Include other modules only when not compiling for WASM
-#[cfg(not(feature = "wasm"))]
+// WASM-specific modules (only when compiling for WASM)
+#[cfg(feature = "wasm")]
+pub mod wasm_bindings;
+#[cfg(feature = "wasm")]
+pub mod wasm_serialization;
+
+// NAPI-specific modules (only when not compiling for WASM)
+#[cfg(feature = "napi-backend")]
 pub mod api;
-#[cfg(not(feature = "wasm"))]
+#[cfg(feature = "napi-backend")]
 pub mod ast_processor;
-#[cfg(not(feature = "wasm"))]
+#[cfg(feature = "napi-backend")]
 pub mod batch_processor;
-#[cfg(not(feature = "wasm"))]
+#[cfg(feature = "napi-backend")]
 pub mod core;
 #[cfg(not(feature = "wasm"))]
 pub mod performance_monitor;
@@ -33,12 +36,6 @@ pub mod performance_monitor;
 pub mod storage;
 #[cfg(not(feature = "wasm"))]
 pub mod utils;
-
-// WASM-specific module
-#[cfg(feature = "wasm")]
-pub mod wasm_bindings;
-#[cfg(feature = "wasm")]
-pub mod wasm_serialization;
 
 #[cfg(test)]
 mod tests;
