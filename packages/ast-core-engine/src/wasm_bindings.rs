@@ -114,7 +114,11 @@ pub fn init_vector_database_wasm(config_js: JsValue) -> Result<String, JsValue> 
             && existing_db.config.max_elements >= config.max_elements
         {
             drop(existing_db); // Release the lock before mutable lock
-            existing_db_mutex.lock().unwrap().clear().map_err(WasmError::from)?;
+            existing_db_mutex
+                .lock()
+                .unwrap()
+                .clear()
+                .map_err(WasmError::from)?;
             wasm_log!("Vector database reinitialized with compatible config");
             return Ok("Vector database reinitialized successfully".to_string());
         } else {
@@ -177,7 +181,7 @@ pub fn add_vector_to_db_wasm(
     let new_count = {
         let mut db = db_mutex.lock().unwrap();
         DataValidator::validate_embedding(&embedding_vec, db.config.embedding_dimension as usize)?;
-        
+
         // Check memory limits before adding
         let current_count = db.get_vector_count() as usize;
         MemoryManager::check_memory_limit(
@@ -189,15 +193,11 @@ pub fn add_vector_to_db_wasm(
 
         db.add_vector(node_id.clone(), embedding_vec, metadata)
             .map_err(WasmError::from)?;
-        
+
         current_count + 1
     };
 
-    wasm_log!(
-        "Added vector for node: {} (total: {})",
-        node_id,
-        new_count
-    );
+    wasm_log!("Added vector for node: {} (total: {})", node_id, new_count);
 
     Ok(format!("Vector added successfully for node: {}", node_id))
 }
