@@ -401,36 +401,50 @@ describe("GCScheduler", () => {
 
   describe("event emission", () => {
     it("should emit pressure-analysis event", async () => {
-      const pressureAnalysisSpy = vi.fn();
-      scheduler.on("pressure-analysis", pressureAnalysisSpy);
+      // Use fake timers for this test
+      vi.useFakeTimers();
 
-      await scheduler.start();
+      try {
+        const pressureAnalysisSpy = vi.fn();
+        scheduler.on("pressure-analysis", pressureAnalysisSpy);
 
-      // Allow time for analysis
-      await new Promise((resolve) => setTimeout(resolve, 150));
+        await scheduler.start();
 
-      expect(pressureAnalysisSpy).toHaveBeenCalled();
+        // Fast-forward time to trigger the analysis
+        await vi.advanceTimersByTimeAsync(150);
+
+        expect(pressureAnalysisSpy).toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("should emit scheduled-gc event", async () => {
-      const scheduledGcSpy = vi.fn();
-      scheduler.on("scheduled-gc", scheduledGcSpy);
+      // Use fake timers for this test
+      vi.useFakeTimers();
 
-      // Create high pressure scenario
-      vi.spyOn(process, "memoryUsage").mockReturnValue({
-        rss: 3.8 * 1024 * 1024 * 1024, // 3.8GB - high usage
-        heapTotal: 1.5 * 1024 * 1024 * 1024, // 1.5GB
-        heapUsed: 1.4 * 1024 * 1024 * 1024, // 1.4GB - high usage
-        external: 100 * 1024 * 1024,
-        arrayBuffers: 50 * 1024 * 1024,
-      });
+      try {
+        const scheduledGcSpy = vi.fn();
+        scheduler.on("scheduled-gc", scheduledGcSpy);
 
-      await scheduler.start();
+        // Create high pressure scenario
+        vi.spyOn(process, "memoryUsage").mockReturnValue({
+          rss: 3.8 * 1024 * 1024 * 1024, // 3.8GB - high usage
+          heapTotal: 1.5 * 1024 * 1024 * 1024, // 1.5GB
+          heapUsed: 1.4 * 1024 * 1024 * 1024, // 1.4GB - high usage
+          external: 100 * 1024 * 1024,
+          arrayBuffers: 50 * 1024 * 1024,
+        });
 
-      // Allow time for high-priority GC to trigger
-      await new Promise((resolve) => setTimeout(resolve, 200));
+        await scheduler.start();
 
-      expect(scheduledGcSpy).toHaveBeenCalled();
+        // Fast-forward time to trigger high-priority GC
+        await vi.advanceTimersByTimeAsync(50);
+
+        expect(scheduledGcSpy).toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });

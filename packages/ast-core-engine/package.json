@@ -3,9 +3,15 @@
   "version": "0.1.0",
   "description": "High-performance Rust core engine for AST processing",
   "main": "./pkg/ast_core_engine.js",
+  "module": "./pkg/ast_core_engine.js",
   "types": "./pkg/ast_core_engine.d.ts",
   "exports": {
     ".": {
+      "types": "./pkg/ast_core_engine.d.ts",
+      "import": "./pkg/ast_core_engine.js",
+      "default": "./pkg/ast_core_engine.js"
+    },
+    "./wasm": {
       "types": "./pkg/ast_core_engine.d.ts",
       "import": "./pkg/ast_core_engine.js",
       "default": "./pkg/ast_core_engine.js"
@@ -25,7 +31,7 @@
     "build:wasm:release": "wasm-pack build --target nodejs --out-dir pkg --release",
     "test:wasm": "npm run build:wasm && cargo test --features wasm",
     "clean:wasm": "rm -rf pkg/",
-    "clean:all": "npm run clean && npm run clean:wasm",
+    "clean:all": "rimraf pkg/ target/",
     "test": "cargo test",
     "clean": "cargo clean && rm -rf pkg/"
   },
@@ -44,5 +50,8 @@
   ],
   "files": [
     "pkg/"
-  ]
+  ],
+  "devDependencies": {
+    "rimraf": "^6.0.1"
+  }
 }

@@ -23,21 +23,23 @@ npm install @ast-copilot-helper/core-engine
 ```typescript
 import { AstCoreEngineApi, createDefaultEngine } from "@ast-helper/core-engine";
 
-// Create engine instance (full functionality)
-const engine = await createDefaultEngine();
+async function processFiles() {
+  // Create engine instance (full functionality)
+  const engine = await createDefaultEngine();
 
-// Process files with complete AST processing
-const result = await engine.processBatch(files, {
-  maxMemoryMb: 1024,
-  parallelWorkers: 4,
-  batchSize: 100,
-  vectorDimensions: 768,
-  maxDepth: 10,
-  includeUnnamedNodes: true,
-  enableCaching: true,
-});
+  // Process files with complete AST processing
+  const result = await engine.processBatch(files, {
+    maxMemoryMb: 1024,
+    parallelWorkers: 4,
+    batchSize: 100,
+    vectorDimensions: 768,
+    maxDepth: 10,
+    includeUnnamedNodes: true,
+    enableCaching: true,
+  });
 
-console.log(`Processed ${result.processedFiles} files`);
+  console.log(`Processed ${result.processedFiles} files`);
+}
 ```
 
 ### WASM (WebAssembly) Usage - Universal Compatibility
@@ -49,16 +51,18 @@ import {
   getWasmFeatures,
 } from "@ast-helper/core-engine/wasm";
 
-// Initialize WASM engine (limited functionality)
-await initWasm();
+async function useWasmEngine() {
+  // Initialize WASM engine (limited functionality)
+  await initWasm();
 
-// Check available features
-const features = getWasmFeatures();
-console.log("WASM features:", features); // { hasTreeSitter: false, hasVectorOps: true, hasFileSystem: false }
+  // Check available features
+  const features = getWasmFeatures();
+  console.log("WASM features:", features); // { hasTreeSitter: false, hasVectorOps: true, hasFileSystem: false }
 
-// Use WASM API (reduced functionality)
-const wasmEngine = new WasmAstCoreEngineApi();
-const result = await wasmEngine.analyzeStructure(code, "typescript");
+  // Use WASM API (reduced functionality)
+  const wasmEngine = new WasmAstCoreEngineApi();
+  const result = await wasmEngine.analyzeStructure(code, "typescript");
+}
 ```
 
 ### Dual Environment Support
