@@ -3,99 +3,35 @@ name = "ast-core-engine"
 version = "0.1.0"
 edition = "2021"
 authors = ["AST Copilot Helper Team"]
-description = "High-performance Rust core engine for AST processing, vector operations, and batch file handling"
+description = "High-performance WASM core engine for vector operations and AST processing"
 license = "MIT"
 repository = "https://github.com/EvanDodds/ast-copilot-helper"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [dependencies]
-# NAPI-RS for Node.js bindings (NAPI only)
-napi = { version = "2.16", default-features = false, features = ["napi9", "serde-json", "tokio_rt"], optional = true }
-napi-derive = { version = "2.16", features = ["type-def"], optional = true }
-
-# WASM-specific dependencies (WASM only)
-wasm-bindgen = { version = "0.2", optional = true }
-wasm-bindgen-futures = { version = "0.4", optional = true }
-js-sys = { version = "0.3", optional = true }
-serde-wasm-bindgen = { version = "0.6", optional = true }
-getrandom = { version = "0.2", features = ["js"], optional = true }
-uuid = { version = "1.10", features = ["v4", "serde", "js"], default-features = false, optional = true }
-
-# Async runtime (NAPI only - incompatible with WASM)
-tokio = { version = "1.35", features = ["rt", "rt-multi-thread", "macros"], optional = true }
+# WASM-specific dependencies
+wasm-bindgen = { version = "0.2" }
+wasm-bindgen-futures = { version = "0.4" }
+js-sys = { version = "0.3" }
+serde-wasm-bindgen = { version = "0.6" }
+getrandom = { version = "0.2", features = ["js"] }
+uuid = { version = "1.10", features = ["v4", "serde", "js"], default-features = false }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# High-performance data structures (NAPI only for WASM compatibility)
-dashmap = { version = "6.1", optional = true }
-rayon = { version = "1.8", optional = true }
-
-# Vector database and ML (NAPI only - candle requires system libraries)
-candle-core = { version = "0.8", optional = true }
-candle-nn = { version = "0.8", optional = true }
-hnsw_rs = { version = "0.3", optional = true }
-
-# Tree-sitter for AST parsing (NAPI only - not compatible with WASM)
-tree-sitter = { version = "0.24", optional = true }
-tree-sitter-typescript = { version = "0.23", optional = true }
-tree-sitter-javascript = { version = "0.23", optional = true }
-tree-sitter-python = { version = "0.23", optional = true }
-tree-sitter-rust = { version = "0.23", optional = true }
-tree-sitter-java = { version = "0.23", optional = true }
-tree-sitter-cpp = { version = "0.23", optional = true }
-
-# Database and storage (NAPI only - SQLite not compatible with WASM)
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"], optional = true }
-memmap2 = { version = "0.9", optional = true }
-
-# Logging and tracing (NAPI only)
-tracing = { version = "0.1", optional = true }
-tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
-
-# Error handling (always available)
+# Error handling
 anyhow = "1.0"
 thiserror = "1.0"
-
-# Logging (NAPI only due to env interactions)
-log = { version = "0.4", optional = true }
-env_logger = { version = "0.10", optional = true }
-
-# UUID is defined in WASM-specific section above
-
-# System information (NAPI only)
-sysinfo = { version = "0.32", optional = true }
-num_cpus = { version = "1.16", optional = true }
-chrono = { version = "0.4", features = ["serde"], optional = true }
-
-# Test dependencies (NAPI only)
-tempfile = { version = "3.12", optional = true }
-futures = { version = "0.3", optional = true }
-fastrand = { version = "2.0", optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 
-[target.'cfg(target_os = "linux")'.dependencies]
-libc = "0.2"
-
-[target.'cfg(target_os = "macos")'.dependencies]
-libc = "0.2"
-
-[build-dependencies]
-napi-build = "2.1"
-
 [features]
-default = ["napi-backend", "full-deps"]
-napi-backend = ["napi", "napi-derive", "tree-sitter-features", "uuid"]
-full-deps = ["tokio", "sqlx", "memmap2", "tracing", "tracing-subscriber", "dashmap", "rayon", "sysinfo", "num_cpus", "chrono", "tempfile", "futures", "fastrand", "log", "env_logger", "hnsw_rs"]
-tree-sitter-features = ["tree-sitter", "tree-sitter-typescript", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-rust", "tree-sitter-java", "tree-sitter-cpp"]
-ml = ["candle-core", "candle-nn"]
-# WASM feature - ONLY WASM-compatible dependencies (excludes all C/system-level deps)
-wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "serde-wasm-bindgen", "getrandom", "uuid"]
+default = []
 
 [profile.release]
 lto = true
