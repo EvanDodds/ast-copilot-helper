@@ -82,4 +82,7 @@ pub enum StorageError {
 
     #[error("Migration failed: {0}")]
     Migration(String),
+
+    #[error("Feature not supported: {0}")]
+    NotSupported(String),
 }

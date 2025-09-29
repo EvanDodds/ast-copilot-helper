@@ -522,11 +522,20 @@ export class PerformanceOptimizer {
    */
   private updateMetrics(): void {
     try {
-      const memUsage = process.memoryUsage();
+      let memoryUsage = this.metrics.memoryUsage; // Keep previous value as fallback
+
+      try {
+        const memUsage = process.memoryUsage();
+        memoryUsage = memUsage.heapUsed;
+      } catch (error) {
+        // Handle mocked process.memoryUsage() errors during testing
+        logger.debug("Error accessing memory usage, using fallback", { error });
+        // Keep previous value
+      }
 
       this.metrics = {
         ...this.metrics,
-        memoryUsage: memUsage.heapUsed,
+        memoryUsage,
         activeDownloads: this.activeDownloads.size,
         cpuUsage: this.getCpuUsage(),
         responseTime: Date.now(),
@@ -709,7 +718,15 @@ export class PerformanceOptimizer {
   private createInitialMetrics(): PerformanceMetrics {
     let memoryUsage = 0;
     try {
-      memoryUsage = process.memoryUsage().heapUsed;
+      try {
+        memoryUsage = process.memoryUsage().heapUsed;
+      } catch (error) {
+        // Handle mocked process.memoryUsage() errors during testing
+        logger.debug("Error accessing memory usage in createInitialMetrics", {
+          error,
+        });
+        memoryUsage = 0; // Use fallback value
+      }
     } catch (_error) {
       // Default to 0 during testing when memoryUsage is mocked to throw
     }

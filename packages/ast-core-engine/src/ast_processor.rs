@@ -3,8 +3,19 @@ use crate::types::ProcessingOptions;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-#[cfg(feature = "wasm")]
+#[cfg(feature = "full-system")]
 use tree_sitter::Parser;
+
+// WASM-compatible parser stub
+#[cfg(not(feature = "full-system"))]
+pub struct Parser;
+
+#[cfg(not(feature = "full-system"))]
+impl Parser {
+    pub fn new() -> Self {
+        Parser
+    }
+}
 
 // Language support - simplified for testing without external language parsers
 /// Supported programming languages for AST processing

@@ -1,20 +1,28 @@
 //! High-performance async storage layer with SQLite backend
 
+#[cfg(feature = "full-system")]
+use {
+    crate::config::StorageConfig,
+    crate::error::{EngineError, StorageError},
+    crate::types::NodeMetadata,
+    dashmap::DashMap,
+    serde::{Deserialize, Serialize},
+    sqlx::{
+        sqlite::{SqliteConnectOptions, SqlitePoolOptions},
+        Pool, Row, Sqlite,
+    },
+    std::path::Path,
+    std::sync::Arc,
+    std::time::{SystemTime, UNIX_EPOCH},
+    tokio::sync::RwLock,
+};
+
 #[cfg(any(feature = "wasm", test))]
 use crate::ast_processor::{AstNode, SupportedLanguage};
-use crate::config::StorageConfig;
-use crate::error::{EngineError, StorageError};
-use crate::types::NodeMetadata;
-use dashmap::DashMap;
-use serde::{Deserialize, Serialize};
-use sqlx::{
-    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
-    Pool, Row, Sqlite,
-};
-use std::path::Path;
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::sync::RwLock;
+
+#[cfg(feature = "full-system")]
+pub mod storage_impl {
+    use super::*;
 
 /// File metadata stored in database
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -976,3 +984,45 @@ mod tests {
         storage.close().await;
     }
 }
+
+} // end storage_impl module
+
+#[cfg(feature = "full-system")]
+pub use storage_impl::*;
+
+// WASM stub implementation
+#[cfg(not(feature = "full-system"))]
+pub mod wasm_storage_stub {
+    use crate::error::{EngineError, StorageError};
+    use serde::{Deserialize, Serialize};
+    
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct FileRecord {
+        pub id: i64,
+        pub file_path: String,
+        pub language: String,
+        pub content_hash: String,
+        pub ast_node_count: i64,
+        pub processing_time_ms: i64,
+        pub created_at: i64,
+        pub updated_at: i64,
+    }
+    
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct StorageStats {
+        pub file_count: i64,
+        pub node_count: i64,
+        pub vector_count: i64,
+    }
+    
+    pub struct StorageLayer;
+    
+    impl StorageLayer {
+        pub async fn new(_config: crate::config::StorageConfig) -> Result<Self, StorageError> {
+            Err(StorageError::NotSupported("Storage not available in WASM".to_string()))
+        }
+    }
+}
+
+#[cfg(not(feature = "full-system"))]
+pub use wasm_storage_stub::*;

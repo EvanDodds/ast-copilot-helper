@@ -23,17 +23,18 @@
     "node": ">= 10"
   },
   "scripts": {
-    "build": "wasm-pack build --target nodejs --out-dir pkg",
-    "build:all": "npm run build",
-    "build:release": "wasm-pack build --target nodejs --out-dir pkg --release",
-    "build:debug": "wasm-pack build --target nodejs --out-dir pkg --dev",
-    "build:wasm": "wasm-pack build --target nodejs --out-dir pkg",
-    "build:wasm:release": "wasm-pack build --target nodejs --out-dir pkg --release",
-    "test:wasm": "npm run build:wasm && cargo test --features wasm",
-    "clean:wasm": "rm -rf pkg/",
-    "clean:all": "rimraf pkg/ target/",
+    "build": "npm run build:native",
+    "build:native": "cargo build --release",
+    "build:native:debug": "cargo build",
+    "build:wasm": "wasm-pack build --target nodejs --out-dir pkg --no-default-features --features wasm",
+    "build:wasm:release": "wasm-pack build --target nodejs --out-dir pkg --release --no-default-features --features wasm",
+    "build:wasm:debug": "wasm-pack build --target nodejs --out-dir pkg --dev --no-default-features --features wasm",
+    "build:all": "npm run build:native && npm run build:wasm",
     "test": "cargo test",
-    "clean": "cargo clean && rm -rf pkg/"
+    "test:wasm": "cargo test --no-default-features --features wasm",
+    "clean": "cargo clean && rm -rf pkg/",
+    "clean:wasm": "rm -rf pkg/",
+    "clean:all": "cargo clean && rm -rf pkg/"
   },
   "repository": {
     "type": "git",

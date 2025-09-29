@@ -4,6 +4,8 @@ use crate::{
     error::{EngineError, StorageError},
     storage::StorageLayer,
 };
+#[cfg(any(feature = "wasm", test))]
+use crate::types::NodeMetadata;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
@@ -96,7 +98,16 @@ pub struct BatchConfig {
 impl Default for BatchConfig {
     fn default() -> Self {
         Self {
-            max_concurrent_files: num_cpus::get(),
+            max_concurrent_files: {
+                #[cfg(feature = "full-system")]
+                {
+                    num_cpus::get()
+                }
+                #[cfg(not(feature = "full-system"))]
+                {
+                    4 // Default to 4 threads for WASM
+                }
+            },
             db_batch_size: 100,
             max_memory_usage: 1024 * 1024 * 1024, // 1GB
             progress_interval: Duration::from_secs(1),

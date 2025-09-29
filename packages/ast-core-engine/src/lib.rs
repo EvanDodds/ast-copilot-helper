@@ -9,8 +9,6 @@
 //! and minimal binary size.
 
 // Core modules
-#[cfg(feature = "napi")]
-pub mod api;
 #[cfg(any(feature = "wasm", test))]
 pub mod ast_processor;
 pub mod batch_processor;
