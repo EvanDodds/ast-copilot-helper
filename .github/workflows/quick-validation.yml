@@ -75,7 +75,6 @@ jobs:
           
           DOC_FILES=(
             "docs/testing/PERFORMANCE_BASELINES.md"
-            "docs/testing/VECTOR_DATABASE_TESTING_GUIDE.md"
             "docs/testing/README.md"
             "docs/testing/TEST_CONFIGURATION.md"
             "docs/testing/TEST_PROCEDURES.md"
