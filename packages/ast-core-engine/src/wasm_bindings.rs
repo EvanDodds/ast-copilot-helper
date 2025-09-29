@@ -12,7 +12,7 @@ use crate::{
 };
 use js_sys::Float32Array;
 use serde_wasm_bindgen::{from_value, to_value};
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 use wasm_bindgen::prelude::*;
 
 // Log function for WASM debugging (conditionally compiled for wasm target)
@@ -36,7 +36,7 @@ macro_rules! wasm_log {
 }
 
 /// Global vector database instance for WASM
-static WASM_VECTOR_DB: OnceLock<SimpleVectorDb> = OnceLock::new();
+static WASM_VECTOR_DB: OnceLock<Mutex<SimpleVectorDb>> = OnceLock::new();
 
 /// WASM-compatible error type
 #[derive(Debug)]
@@ -107,12 +107,18 @@ pub fn init_vector_database_wasm(config_js: JsValue) -> Result<String, JsValue> 
     }
 
     // Check if database is already initialized
-    if let Some(existing_db) = WASM_VECTOR_DB.get() {
+    if let Some(existing_db_mutex) = WASM_VECTOR_DB.get() {
+        let existing_db = existing_db_mutex.lock().unwrap();
         // If already initialized with compatible config, just clear and return success
         if existing_db.config.embedding_dimension == config.embedding_dimension
             && existing_db.config.max_elements >= config.max_elements
         {
-            existing_db.clear().map_err(WasmError::from)?;
+            drop(existing_db); // Release the lock before mutable lock
+            existing_db_mutex
+                .lock()
+                .unwrap()
+                .clear()
+                .map_err(WasmError::from)?;
             wasm_log!("Vector database reinitialized with compatible config");
             return Ok("Vector database reinitialized successfully".to_string());
         } else {
@@ -128,7 +134,7 @@ pub fn init_vector_database_wasm(config_js: JsValue) -> Result<String, JsValue> 
     db.initialize().map_err(WasmError::from)?;
 
     WASM_VECTOR_DB
-        .set(db)
+        .set(Mutex::new(db))
         .map_err(|_| JsValue::from_str("Vector database initialization race condition"))?;
 
     wasm_log!(
@@ -158,7 +164,7 @@ pub fn add_vector_to_db_wasm(
     embedding: Float32Array,
     metadata_js: JsValue,
 ) -> Result<String, JsValue> {
-    let db = WASM_VECTOR_DB
+    let db_mutex = WASM_VECTOR_DB
         .get()
         .ok_or_else(|| JsValue::from_str("Vector database not initialized"))?;
 
@@ -168,29 +174,30 @@ pub fn add_vector_to_db_wasm(
     // Convert Float32Array to Vec<f32> with validation
     let embedding_vec = ArrayConverter::float32_array_to_vec(&embedding)?;
 
-    // Validate embedding dimensions and values
-    DataValidator::validate_embedding(&embedding_vec, db.config.embedding_dimension as usize)?;
-
     // Deserialize metadata with enhanced error handling
     let metadata = TypeSerializer::deserialize_vector_metadata(metadata_js)?;
 
-    // Check memory limits before adding
-    let current_count = db.get_vector_count() as usize;
-    MemoryManager::check_memory_limit(
-        current_count,
-        1,
-        db.config.embedding_dimension as usize,
-        512, // 512MB default limit
-    )?;
+    // Validate embedding dimensions and values and add vector
+    let new_count = {
+        let mut db = db_mutex.lock().unwrap();
+        DataValidator::validate_embedding(&embedding_vec, db.config.embedding_dimension as usize)?;
 
-    db.add_vector(node_id.clone(), embedding_vec, metadata)
-        .map_err(WasmError::from)?;
+        // Check memory limits before adding
+        let current_count = db.get_vector_count() as usize;
+        MemoryManager::check_memory_limit(
+            current_count,
+            1,
+            db.config.embedding_dimension as usize,
+            512, // 512MB default limit
+        )?;
 
-    wasm_log!(
-        "Added vector for node: {} (total: {})",
-        node_id,
+        db.add_vector(node_id.clone(), embedding_vec, metadata)
+            .map_err(WasmError::from)?;
+
         current_count + 1
-    );
+    };
+
+    wasm_log!("Added vector for node: {} (total: {})", node_id, new_count);
 
     Ok(format!("Vector added successfully for node: {}", node_id))
 }
@@ -210,7 +217,7 @@ pub fn search_vectors_wasm(
     k: u32,
     ef_search: Option<u32>,
 ) -> Result<JsValue, JsValue> {
-    let db = WASM_VECTOR_DB
+    let db_mutex = WASM_VECTOR_DB
         .get()
         .ok_or_else(|| JsValue::from_str("Vector database not initialized"))?;
 
@@ -220,12 +227,14 @@ pub fn search_vectors_wasm(
     // Convert Float32Array to Vec<f32> with validation
     let query_vec = ArrayConverter::float32_array_to_vec(&query_embedding)?;
 
-    // Validate query embedding dimensions and values
-    DataValidator::validate_embedding(&query_vec, db.config.embedding_dimension as usize)?;
+    let results = {
+        let db = db_mutex.lock().unwrap();
+        // Validate query embedding dimensions and values
+        DataValidator::validate_embedding(&query_vec, db.config.embedding_dimension as usize)?;
 
-    let results = db
-        .search_similar(query_vec, k, ef_search)
-        .map_err(WasmError::from)?;
+        db.search_similar(query_vec, k, ef_search)
+            .map_err(WasmError::from)?
+    };
 
     wasm_log!(
         "Search completed: found {} results for k={}",
@@ -243,11 +252,11 @@ pub fn search_vectors_wasm(
 /// * Number of vectors as u32 or throws JsValue error
 #[wasm_bindgen]
 pub fn get_vector_count_wasm() -> Result<u32, JsValue> {
-    let db = WASM_VECTOR_DB
+    let db_mutex = WASM_VECTOR_DB
         .get()
         .ok_or_else(|| JsValue::from_str("Vector database not initialized"))?;
 
-    Ok(db.get_vector_count())
+    Ok(db_mutex.lock().unwrap().get_vector_count())
 }
 
 /// Clear all vectors from the database
@@ -256,10 +265,11 @@ pub fn get_vector_count_wasm() -> Result<u32, JsValue> {
 /// * Success message as string or throws JsValue error
 #[wasm_bindgen]
 pub fn clear_vector_database_wasm() -> Result<String, JsValue> {
-    let db = WASM_VECTOR_DB
+    let db_mutex = WASM_VECTOR_DB
         .get()
         .ok_or_else(|| JsValue::from_str("Vector database not initialized"))?;
 
+    let mut db = db_mutex.lock().unwrap();
     let count_before = db.get_vector_count();
     db.clear().map_err(WasmError::from)?;
 
@@ -368,13 +378,14 @@ pub fn float32_array_to_vec(arr: Float32Array) -> Result<Vec<f32>, JsValue> {
 /// * JavaScript object with database statistics
 #[wasm_bindgen]
 pub fn get_database_stats_wasm() -> Result<JsValue, JsValue> {
-    let db = WASM_VECTOR_DB
+    let db_mutex = WASM_VECTOR_DB
         .get()
         .ok_or_else(|| JsValue::from_str("Vector database not initialized"))?;
 
     // Create comprehensive stats structure
     use std::collections::HashMap;
     let mut stats = HashMap::new();
+    let db = db_mutex.lock().unwrap();
     stats.insert("vector_count", db.get_vector_count() as f64);
     stats.insert("embedding_dimension", db.config.embedding_dimension as f64);
     stats.insert("max_elements", db.config.max_elements as f64);
@@ -430,7 +441,9 @@ pub fn check_memory_usage_wasm(
     max_memory_mb: u32,
 ) -> Result<JsValue, JsValue> {
     let current_db = WASM_VECTOR_DB.get();
-    let current_count = current_db.map(|db| db.get_vector_count()).unwrap_or(0) as usize;
+    let current_count = current_db
+        .map(|db_mutex| db_mutex.lock().unwrap().get_vector_count())
+        .unwrap_or(0) as usize;
 
     MemoryManager::check_memory_limit(
         current_count,

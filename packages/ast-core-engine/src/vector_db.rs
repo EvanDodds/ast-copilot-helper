@@ -16,10 +16,10 @@ use dashmap::DashMap;
 use napi_derive::napi;
 #[cfg(feature = "wasm")]
 use std::collections::HashMap;
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 
 /// Global vector database instance
-static VECTOR_DB: OnceLock<SimpleVectorDb> = OnceLock::new();
+static VECTOR_DB: OnceLock<Mutex<SimpleVectorDb>> = OnceLock::new();
 
 /// Simple vector database for demonstration
 pub struct SimpleVectorDb {
@@ -55,7 +55,7 @@ impl SimpleVectorDb {
 
     /// Add a vector with metadata to the database
     pub fn add_vector(
-        &self,
+        &mut self,
         node_id: String,
         embedding: Vec<f32>,
         metadata: VectorMetadata,
@@ -95,11 +95,20 @@ impl SimpleVectorDb {
         let mut similarities = Vec::new();
 
         // Calculate similarity with all stored vectors
-        for entry in self.vectors.iter() {
-            let (node_id, (embedding, metadata)) = (entry.key().clone(), entry.value());
-            let similarity = cosine_similarity(&query_embedding, embedding);
-
-            similarities.push((node_id, similarity, metadata.clone()));
+        #[cfg(not(feature = "wasm"))]
+        {
+            for entry in self.vectors.iter() {
+                let (node_id, (embedding, metadata)) = (entry.key().clone(), entry.value());
+                let similarity = cosine_similarity(&query_embedding, embedding);
+                similarities.push((node_id, similarity, metadata.clone()));
+            }
+        }
+        #[cfg(feature = "wasm")]
+        {
+            for (node_id, (embedding, metadata)) in self.vectors.iter() {
+                let similarity = cosine_similarity(&query_embedding, embedding);
+                similarities.push((node_id.clone(), similarity, metadata.clone()));
+            }
         }
 
         // Sort by similarity (descending)
@@ -128,7 +137,7 @@ impl SimpleVectorDb {
     }
 
     /// Clear all vectors
-    pub fn clear(&self) -> Result<(), EngineError> {
+    pub fn clear(&mut self) -> Result<(), EngineError> {
         self.vectors.clear();
         println!("Vector database cleared");
         Ok(())
@@ -150,7 +159,7 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
 
 /// Initialize the global vector database instance
 #[cfg(not(feature = "wasm"))]
-#[napi]
+#[napi(js_name = "initVectorDatabase")]
 pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
     // Validate configuration to prevent excessive memory allocation
     if config.embedding_dimension == 0 || config.embedding_dimension > 10000 {
@@ -168,10 +177,14 @@ pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
     }
 
     // Check if database is already initialized
-    if let Some(existing_db) = VECTOR_DB.get() {
+    if let Some(existing_db_mutex) = VECTOR_DB.get() {
         // If already initialized with compatible config, just clear and return success
+        let existing_db = existing_db_mutex.lock().unwrap();
         if existing_db.config.embedding_dimension == config.embedding_dimension {
-            existing_db
+            drop(existing_db); // Release the lock before calling clear
+            existing_db_mutex
+                .lock()
+                .unwrap()
                 .clear()
                 .map_err(|e| napi::Error::from_reason(e.to_string()))?;
             return Ok("Vector database reinitialized successfully".to_string());
@@ -186,7 +199,7 @@ pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
     db.initialize()
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-    VECTOR_DB.set(db).map_err(|_| {
+    VECTOR_DB.set(Mutex::new(db)).map_err(|_| {
         napi::Error::from_reason("Vector database initialization race condition".to_string())
     })?;
 
@@ -195,13 +208,13 @@ pub fn init_vector_database(config: HnswConfig) -> napi::Result<String> {
 
 /// Add a vector to the global database instance
 #[cfg(not(feature = "wasm"))]
-#[napi]
+#[napi(js_name = "addVectorToDb")]
 pub fn add_vector_to_db(
     node_id: String,
     embedding_json: String, // JSON-encoded Vec<f32>
     metadata: VectorMetadata,
 ) -> napi::Result<String> {
-    let db = VECTOR_DB
+    let db_mutex = VECTOR_DB
         .get()
         .ok_or_else(|| napi::Error::from_reason("Vector database not initialized".to_string()))?;
 
@@ -209,20 +222,21 @@ pub fn add_vector_to_db(
     let embedding: Vec<f32> = serde_json::from_str(&embedding_json)
         .map_err(|e| napi::Error::from_reason(format!("Invalid embedding JSON: {}", e)))?;
 
+    let mut db = db_mutex.lock().unwrap();
     db.add_vector(node_id.clone(), embedding, metadata)
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     Ok(format!("Vector added successfully for node: {}", node_id))
 }
 
-/// Search for similar vectors in the global database instance  
+/// Search for similar vectors in the global database instance
 #[cfg(not(feature = "wasm"))]
-#[napi]
+#[napi(js_name = "searchVectors")]
 pub fn search_vectors(
     query_embedding_json: String, // JSON-encoded Vec<f32>
     k: u32,
     ef_search: Option<u32>,
 ) -> napi::Result<Vec<SearchResult>> {
-    let db = VECTOR_DB
+    let db_mutex = VECTOR_DB
         .get()
         .ok_or_else(|| napi::Error::from_reason("Vector database not initialized".to_string()))?;
 
@@ -230,29 +244,31 @@ pub fn search_vectors(
     let query_embedding: Vec<f32> = serde_json::from_str(&query_embedding_json)
         .map_err(|e| napi::Error::from_reason(format!("Invalid embedding JSON: {}", e)))?;
 
+    let db = db_mutex.lock().unwrap();
     db.search_similar(query_embedding, k, ef_search)
         .map_err(|e| napi::Error::from_reason(e.to_string()))
 }
 
 /// Get vector count from the global database instance
 #[cfg(not(feature = "wasm"))]
-#[napi]
+#[napi(js_name = "getVectorCount")]
 pub fn get_vector_count() -> napi::Result<u32> {
-    let db = VECTOR_DB
+    let db_mutex = VECTOR_DB
         .get()
         .ok_or_else(|| napi::Error::from_reason("Vector database not initialized".to_string()))?;
 
-    Ok(db.get_vector_count())
+    Ok(db_mutex.lock().unwrap().get_vector_count())
 }
 
 /// Clear the global vector database
 #[cfg(not(feature = "wasm"))]
-#[napi]
+#[napi(js_name = "clearVectorDatabase")]
 pub fn clear_vector_database() -> napi::Result<String> {
-    let db = VECTOR_DB
+    let db_mutex = VECTOR_DB
         .get()
         .ok_or_else(|| napi::Error::from_reason("Vector database not initialized".to_string()))?;
 
+    let mut db = db_mutex.lock().unwrap();
     db.clear()
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     Ok("Vector database cleared successfully".to_string())

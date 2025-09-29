@@ -11,29 +11,30 @@ repository = "https://github.com/EvanDodds/ast-copilot-helper"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# NAPI-RS for Node.js bindings
+# NAPI-RS for Node.js bindings (NAPI only)
 napi = { version = "2.16", default-features = false, features = ["napi9", "serde-json", "tokio_rt"], optional = true }
 napi-derive = { version = "2.16", features = ["type-def"], optional = true }
 
-# WASM-specific dependencies (optional)
+# WASM-specific dependencies (WASM only)
 wasm-bindgen = { version = "0.2", optional = true }
 wasm-bindgen-futures = { version = "0.4", optional = true }
 js-sys = { version = "0.3", optional = true }
 serde-wasm-bindgen = { version = "0.6", optional = true }
 getrandom = { version = "0.2", features = ["js"], optional = true }
+uuid = { version = "1.10", features = ["v4", "serde", "js"], default-features = false, optional = true }
 
-# Async runtime (conditional features for WASM compatibility)
+# Async runtime (NAPI only - incompatible with WASM)
 tokio = { version = "1.35", features = ["rt", "rt-multi-thread", "macros"], optional = true }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# High-performance data structures
+# High-performance data structures (NAPI only for WASM compatibility)
 dashmap = { version = "6.1", optional = true }
 rayon = { version = "1.8", optional = true }
 
-# Vector database and ML
+# Vector database and ML (NAPI only - candle requires system libraries)
 candle-core = { version = "0.8", optional = true }
 candle-nn = { version = "0.8", optional = true }
 hnsw_rs = { version = "0.3", optional = true }
@@ -47,7 +48,7 @@ tree-sitter-rust = { version = "0.23", optional = true }
 tree-sitter-java = { version = "0.23", optional = true }
 tree-sitter-cpp = { version = "0.23", optional = true }
 
-# Database and storage (NAPI only)
+# Database and storage (NAPI only - SQLite not compatible with WASM)
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"], optional = true }
 memmap2 = { version = "0.9", optional = true }
 
@@ -55,7 +56,7 @@ memmap2 = { version = "0.9", optional = true }
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
 
-# Error handling
+# Error handling (always available)
 anyhow = "1.0"
 thiserror = "1.0"
 
@@ -63,8 +64,7 @@ thiserror = "1.0"
 log = { version = "0.4", optional = true }
 env_logger = { version = "0.10", optional = true }
 
-# UUID (always available)
-uuid = { version = "1.10", features = ["v4", "serde", "js"] }
+# UUID is defined in WASM-specific section above
 
 # System information (NAPI only)
 sysinfo = { version = "0.32", optional = true }
@@ -90,14 +90,13 @@ napi-build = "2.1"
 
 [features]
 default = ["napi-backend", "full-deps"]
-napi-backend = ["napi", "napi-derive", "tree-sitter-features"]
+napi-backend = ["napi", "napi-derive", "tree-sitter-features", "uuid"]
 full-deps = ["tokio", "sqlx", "memmap2", "tracing", "tracing-subscriber", "dashmap", "rayon", "sysinfo", "num_cpus", "chrono", "tempfile", "futures", "fastrand", "log", "env_logger", "hnsw_rs"]
 tree-sitter-features = ["tree-sitter", "tree-sitter-typescript", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-rust", "tree-sitter-java", "tree-sitter-cpp"]
-wasm-full = ["wasm", "dashmap", "rayon"]
-ml = ["candle-core", "candle-nn"] 
-# WASM feature excludes tokio, sqlx, tree-sitter and other heavy dependencies incompatible with WASM
-# Only include basic WASM bindings and core functionality - no AST processing
-wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "serde-wasm-bindgen", "getrandom/js"]
+ml = ["candle-core", "candle-nn"]
+# WASM feature - minimal, WASM-compatible dependencies only (no system-level deps)
+wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "serde-wasm-bindgen", "getrandom", "uuid"]
+# Removed wasm-full feature to avoid dependency conflicts
 
 [profile.release]
 lto = true
@@ -109,3 +108,6 @@ strip = true
 inherits = "release"
 debug = true
 strip = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
