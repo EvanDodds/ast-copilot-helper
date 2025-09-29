@@ -149,7 +149,7 @@ yarn run test:rust:fmt        # Code formatting check (cargo fmt --check)
 
 - **Compilation**: Ensures all Rust code compiles without errors
 - **Unit Tests**: Validates core engine functionality and edge cases
-- **Integration Tests**: Tests NAPI bindings and Node.js integration
+- **Integration Tests**: Tests WASM bindings and Node.js integration
 - **Code Quality**: Clippy linting catches common issues and suggests improvements
 - **Formatting**: Consistent code style with `rustfmt`
 
@@ -163,7 +163,7 @@ The Rust core engine is optimized for development speed:
 
 ### WASM Build Infrastructure (Phase 1)
 
-The core engine supports dual compilation targets: NAPI-RS for Node.js bindings and WebAssembly (WASM) for browser/universal deployment.
+The core engine uses WebAssembly (WASM) as the primary compilation target for universal deployment across Node.js, browsers, and edge environments.
 
 #### WASM Build Setup
 
@@ -187,25 +187,24 @@ npm run build:wasm:release # Optimized production build
 npm run clean:wasm         # Remove pkg/ directory
 ```
 
-#### Conditional Compilation
+#### WASM-First Architecture
 
-The codebase uses feature flags for dual compilation:
+The codebase is built with WASM as the primary target:
 
 ```rust
-// NAPI-specific code (Node.js bindings)
-#[cfg(not(feature = "wasm"))]
-use napi_derive::napi;
-
-// WASM-specific code (WebAssembly bindings)
-#[cfg(feature = "wasm")]
+// WASM-optimized code (universal deployment)
 use wasm_bindgen::prelude::*;
+
+// Feature-gated native fallback for performance-critical operations
+#[cfg(feature = "native-fallback")]
+use crate::native_impl::*;
 ```
 
 **Features:**
 
-- `default`: NAPI backend with full dependencies
-- `wasm`: WebAssembly backend with minimal dependencies
-- `full-deps`: Heavy dependencies (database, networking, etc.)
+- `default`: WASM backend with optimized dependencies
+- `wasm`: WebAssembly backend (primary target)
+- `native-fallback`: Rust native fallback for specific environments
 
 #### Phase 1 Limitations
 
@@ -221,7 +220,7 @@ To achieve full WASM compatibility:
 
 1. **Dependency Isolation**: Move heavy dependencies to platform-specific modules
 2. **Core Abstraction**: Extract pure Rust core engine without platform dependencies
-3. **Interface Standardization**: Unified API for both NAPI and WASM targets
+3. **Interface Standardization**: Unified API for WASM with native fallback support
 4. **Testing Strategy**: Cross-platform validation suite
 
 The Phase 1 infrastructure provides the foundation for these improvements.

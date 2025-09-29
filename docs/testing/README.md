@@ -42,7 +42,7 @@ npm run test:regression
 
 **File**: `performance-benchmark.test.ts`
 
-- Comprehensive NAPI vs WASM performance comparison
+- Comprehensive WASM performance benchmarking
 - Memory usage monitoring and leak detection
 - Resource consumption tracking under high load
 - Statistical analysis and reporting
@@ -51,7 +51,7 @@ npm run test:regression
 
 **File**: `wasm-vector-database.test.ts`
 
-- Feature parity validation between NAPI and WASM
+- Feature validation for WASM implementation
 - Interface compatibility verification
 - Error handling consistency testing
 - Configuration and initialization validation
@@ -106,13 +106,13 @@ npm run test:regression
 
 ## Performance Targets
 
-| Operation        | NAPI Baseline | WASM Target | Max Acceptable |
-| ---------------- | ------------- | ----------- | -------------- |
-| Initialization   | 25ms          | 35ms        | 50ms (2x)      |
-| Vector Insertion | 1.2ms         | 1.8ms       | 2.4ms (2x)     |
-| Batch Insertion  | 45ms          | 65ms        | 90ms (2x)      |
-| Vector Search    | 8.3ms         | 12ms        | 16.6ms (2x)    |
-| Memory Usage     | 45MB          | 55MB        | 67MB (1.5x)    |
+| Operation        | WASM Target   | Rust Fallback | Max Acceptable |
+| ---------------- | ------------- | -------------- | -------------- |
+| Initialization   | 35ms          | 25ms           | 50ms           |
+| Vector Insertion | 1.8ms         | 1.2ms          | 2.4ms          |
+| Batch Insertion  | 65ms          | 45ms           | 90ms           |
+| Vector Search    | 12ms          | 8.3ms          | 16.6ms         |
+| Memory Usage     | 55MB          | 45MB           | 67MB           |
 
 ## Current Status
 
