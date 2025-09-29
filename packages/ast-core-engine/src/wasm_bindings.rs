@@ -178,7 +178,8 @@ pub fn add_vector_to_db_wasm(
     let metadata = TypeSerializer::deserialize_vector_metadata(metadata_js)?;
 
     // Validate embedding dimensions and values and add vector
-    let _new_count = {
+    #[allow(unused_variables)] // Used in wasm_log! which is conditionally compiled
+    let new_count = {
         let mut db = db_mutex.lock().unwrap();
         DataValidator::validate_embedding(&embedding_vec, db.config.embedding_dimension as usize)?;
 
