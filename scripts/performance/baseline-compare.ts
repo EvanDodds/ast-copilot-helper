@@ -1,14 +1,14 @@
 #!/usr/bin/env tsx
 /**
- * Phase 5 Performance Baseline Comparison Script
+ * Performance Baseline Comparison Script
  *
  * This script compares current performance test results against established baselines
  * to detect performance regressions and generate detailed comparison reports.
  *
  * Usage:
  *   yarn baseline:compare
- *   tsx scripts/phase5/compare-baselines.ts
- *   tsx scripts/phase5/compare-baselines.ts --threshold 0.1  # Custom regression threshold
+ *   tsx scripts/performance/baseline-compare.ts
+ *   tsx scripts/performance/baseline-compare.ts --threshold 0.1  # Custom regression threshold
  */
 
 import { readFileSync, writeFileSync, existsSync } from "fs";
@@ -339,7 +339,7 @@ async function generateComparisonReport(
 function generateMarkdownSummary(report: ComparisonReport): string {
   const { summary, results, recommendations } = report;
 
-  let md = `# Phase 5 Performance Comparison Report\n\n`;
+  let md = `# Performance Comparison Report\n\n`;
   md += `**Generated:** ${new Date(report.comparisonTimestamp).toLocaleString()}\n`;
   md += `**Baseline:** ${report.baselineInfo.commitHash.substring(0, 8)} (${Math.round(report.baselineInfo.age)}h old)\n`;
   md += `**Current:** ${report.currentInfo.commitHash.substring(0, 8)}\n\n`;

@@ -1,14 +1,14 @@
 #!/usr/bin/env tsx
 /**
- * Phase 5 Performance Baseline Update Script
+ * Performance Baseline Update Script
  *
  * This script runs performance tests and updates the baseline performance data
  * used for regression detection in CI/CD pipelines.
  *
  * Usage:
  *   yarn baseline:update
- *   tsx scripts/phase5/update-baselines.ts
- *   tsx scripts/phase5/update-baselines.ts --force  # Force update even if tests fail
+ *   tsx scripts/performance/baseline-update.ts
+ *   tsx scripts/performance/baseline-update.ts --force  # Force update even if tests fail
  */
 
 import { execSync } from "child_process";
@@ -55,9 +55,7 @@ async function getCommitHash(): Promise<string> {
 }
 
 async function runPerformanceTests(): Promise<any> {
-  console.log(
-    "🧪 Running Phase 5 performance tests to generate baseline data...",
-  );
+  console.log("🧪 Running performance tests to generate baseline data...");
 
   try {
     // Run performance benchmark tests and capture output
@@ -185,7 +183,7 @@ async function generateBaselineReport(
 
 async function main(): Promise<void> {
   try {
-    console.log("🚀 Starting Phase 5 baseline update process...");
+    console.log("🚀 Starting baseline update process...");
 
     // Get system information
     const systemInfo = await getSystemInfo();
@@ -213,7 +211,7 @@ async function main(): Promise<void> {
     // Generate report
     await generateBaselineReport(baselineData);
 
-    console.log("✅ Phase 5 baseline update completed successfully!");
+    console.log("✅ Baseline update completed successfully!");
     console.log(
       `📈 Updated ${Object.keys(benchmarks).length} benchmark baselines`,
     );

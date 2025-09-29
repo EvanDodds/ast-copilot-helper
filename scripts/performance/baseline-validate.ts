@@ -1,17 +1,17 @@
 #!/usr/bin/env tsx
 /**
- * Phase 5 Performance Baseline Validation Script
+ * Performance Baseline Validation Script
  *
  * This script validates that current performance baselines exist and are valid,
  * ensuring the regression testing system has proper reference data.
  *
  * Usage:
  *   yarn baseline:validate
- *   tsx scripts/phase5/validate-baselines.ts
- *   tsx scripts/phase5/validate-baselines.ts --strict  # Fail on any warnings
+ *   tsx scripts/performance/baseline-validate.ts
+ *   tsx scripts/performance/baseline-validate.ts --strict  # Fail on any warnings
  */
 
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 
 interface BaselineData {
@@ -101,7 +101,7 @@ function validateBaselineStructure(baseline: any): string[] {
   return errors;
 }
 
-function generateWarnings(baseline: BaselineData): string[] {
+async function generateWarnings(baseline: BaselineData): Promise<string[]> {
   const warnings: string[] = [];
   const now = new Date();
   const baselineDate = new Date(baseline.timestamp);
@@ -126,7 +126,7 @@ function generateWarnings(baseline: BaselineData): string[] {
   }
 
   // Platform warnings
-  const os = require("os");
+  const os = await import("os");
   if (baseline.systemInfo.platform !== os.platform()) {
     warnings.push(
       `Baseline platform (${baseline.systemInfo.platform}) differs from current (${os.platform()})`,
@@ -192,7 +192,7 @@ async function validateBaseline(): Promise<ValidationResult> {
 
     if (structureErrors.length === 0) {
       // Generate warnings
-      result.warnings = generateWarnings(baseline);
+      result.warnings = await generateWarnings(baseline);
 
       // Calculate summary
       const baselineDate = new Date(baseline.timestamp);
@@ -203,9 +203,9 @@ async function validateBaseline(): Promise<ValidationResult> {
       result.summary.nodeVersionMatch =
         baseline.nodeVersion === process.version;
 
-      const os = require("os");
+      const osModule = await import("os");
       result.summary.platformMatch =
-        baseline.systemInfo.platform === os.platform();
+        baseline.systemInfo.platform === osModule.platform();
 
       result.isValid = true;
     }
@@ -262,11 +262,11 @@ async function generateValidationReport(
   }
 
   // Write report
-  require("fs").writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  writeFileSync(reportPath, JSON.stringify(report, null, 2));
 }
 
 async function main(): Promise<void> {
-  console.log("🔍 Validating Phase 5 performance baselines...");
+  console.log("🔍 Validating performance baselines...");
 
   try {
     const validation = await validateBaseline();
