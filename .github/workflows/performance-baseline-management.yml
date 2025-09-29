@@ -481,8 +481,8 @@ jobs:
                   <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                       <tr style="background: #f8f9fa;">
                           <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Operation</th>
-                          <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">NAPI Baseline</th>
-                          <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">WASM Target</th>
+                          <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">WASM Current</th>
+                          <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Target Performance</th>
                           <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Max Acceptable</th>
                       </tr>
                       <tr>

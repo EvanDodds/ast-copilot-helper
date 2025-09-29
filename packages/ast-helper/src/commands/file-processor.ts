@@ -20,12 +20,7 @@ import type {
   ProgressDisplayOptions,
 } from "./progress-reporter.js";
 import { ProgressReporter } from "./progress-reporter.js";
-import {
-  createDefaultEngine,
-  type AstCoreEngineApi,
-  type BatchResult,
-  type ProcessingError,
-} from "../../../ast-core-engine/index.js";
+// Note: All Rust engine dependencies removed as part of WASM-first migration
 
 /**
  * File metadata with processing information
@@ -94,7 +89,6 @@ export class FileProcessor {
   private logger = createLogger();
   private batchOrchestrator: ParseBatchOrchestrator;
   private outputManager: ASTOutputManager;
-  private rustEngine?: AstCoreEngineApi;
 
   private constructor(
     batchOrchestrator: ParseBatchOrchestrator,
@@ -114,19 +108,9 @@ export class FileProcessor {
 
     const processor = new FileProcessor(batchOrchestrator, outputManager);
 
-    // Initialize Rust engine if available
-    try {
-      processor.rustEngine = await createDefaultEngine();
-      await processor.rustEngine.initialize();
-      processor.logger.info("Rust core engine initialized for file processing");
-    } catch (error) {
-      processor.logger.warn(
-        "Failed to initialize Rust engine, using TypeScript fallback",
-        {
-          error: String(error),
-        },
-      );
-    }
+    processor.logger.info(
+      "File processor initialized with WASM-first architecture",
+    );
 
     return processor;
   }
@@ -184,7 +168,9 @@ export class FileProcessor {
             phase: "parsing", // Default phase for basic progress
             errorCount: 0, // Will be updated by detailed progress
           };
-          progressReporter!.update(progressUpdate);
+          if (progressReporter) {
+            progressReporter.update(progressUpdate);
+          }
 
           // Also call the original callback if provided
           if (onProgress) {
@@ -332,7 +318,7 @@ export class FileProcessor {
    */
   private async processBatches(
     fileMetadata: ProcessingFileMetadata[],
-    _batchOptions: any, // Removed since orchestrator creates its own options
+    _batchOptions: null, // Removed since orchestrator creates its own options
     onProgress?: ProcessingProgressCallback,
     options?: ParseOptions,
     config?: Config,
@@ -355,63 +341,18 @@ export class FileProcessor {
       : undefined;
 
     try {
-      let batchResult: BatchProcessingResult;
+      // Use the ParseBatchOrchestrator for WASM-first processing
+      this.logger.info("Processing files with WASM-first architecture", {
+        fileCount: filePaths.length,
+      });
 
-      // Prefer Rust engine if available for better performance
-      if (this.rustEngine) {
-        try {
-          this.logger.info("Using Rust engine for batch processing", {
-            fileCount: filePaths.length,
-          });
-
-          const rustBatchResult: BatchResult =
-            await this.rustEngine.processBatch(filePaths, {
-              maxMemoryMb: 1024,
-              batchSize: options?.batchSize || 50,
-              parallelWorkers: 4,
-              vectorDimensions: 768,
-              indexEfConstruction: 200,
-              indexM: 16,
-              maxDepth: 100,
-              includeUnnamedNodes: false,
-              maxNodeLength: 1000,
-              enableCaching: true,
-            });
-
-          // Convert Rust results to TypeScript format
-          batchResult = this.convertRustBatchResult(rustBatchResult, filePaths);
-
-          this.logger.info("Rust batch processing completed", {
-            processedFiles: rustBatchResult.processedFiles,
-            totalNodes: rustBatchResult.totalNodes,
-            processingTimeMs: rustBatchResult.processingTimeMs,
-            errors: rustBatchResult.errors.length,
-          });
-        } catch (rustError) {
-          this.logger.warn(
-            "Rust batch processing failed, falling back to TypeScript",
-            {
-              error: String(rustError),
-            },
-          );
-
-          // Fallback to TypeScript implementation
-          batchResult = await this.batchOrchestrator.processFiles(
-            filePaths,
-            options || ({} as ParseOptions),
-            config || ({} as Config),
-            orchestratorCallback,
-          );
-        }
-      } else {
-        // Use the ParseBatchOrchestrator for enhanced processing
-        batchResult = await this.batchOrchestrator.processFiles(
+      const batchResult: BatchProcessingResult =
+        await this.batchOrchestrator.processFiles(
           filePaths,
           options || ({} as ParseOptions),
           config || ({} as Config),
           orchestratorCallback,
         );
-      }
 
       // Transform batch results to our format
       for (const [filePath, parseResult] of Array.from(
@@ -501,72 +442,6 @@ export class FileProcessor {
       results: resultsArray,
       errors,
       memoryStats,
-    };
-  }
-
-  /**
-   * Convert Rust batch result to TypeScript format
-   */
-  private convertRustBatchResult(
-    rustResult: BatchResult,
-    filePaths: string[],
-  ): BatchProcessingResult {
-    const results = new Map();
-
-    // Create mock parse results for each file
-    // In a real implementation, we'd need the Rust engine to provide more detailed results
-    for (const filePath of filePaths) {
-      const parseResult = {
-        nodes: [], // Rust engine should provide these
-        sourceCode: "",
-        filePath,
-        parseTime: rustResult.processingTimeMs / rustResult.processedFiles,
-        errors: rustResult.errors
-          .filter((error: ProcessingError) => error.filePath === filePath)
-          .map((error: ProcessingError) => ({
-            message: error.message,
-            type: error.errorType,
-            line: 0,
-            column: 0,
-          })),
-        language: "unknown", // Should be detected by Rust engine
-        fileSize: 0,
-        complexity: 0,
-      };
-
-      results.set(filePath, parseResult);
-    }
-
-    return {
-      results,
-      summary: {
-        totalFiles: rustResult.processedFiles,
-        successful: rustResult.processedFiles - rustResult.errors.length,
-        failed: rustResult.errors.length,
-        skipped: 0,
-        totalTimeMs: rustResult.processingTimeMs,
-        totalNodes: rustResult.totalNodes,
-        totalLines: 0, // Not available from Rust result
-        memoryStats: {
-          peakUsageMB: rustResult.memoryPeakMb || 0,
-          avgUsageMB: rustResult.memoryPeakMb || 0, // Approximation
-          gcRuns: 0, // Not applicable to Rust
-        },
-      },
-      errorSummary: new Map(),
-      metrics: {
-        rateHistory: [],
-        memoryHistory: [],
-        parseTimeDistribution: {
-          min: 0,
-          max: rustResult.processingTimeMs,
-          avg: rustResult.processingTimeMs / rustResult.processedFiles,
-          p50: rustResult.processingTimeMs / rustResult.processedFiles,
-          p95: rustResult.processingTimeMs / rustResult.processedFiles,
-          p99: rustResult.processingTimeMs / rustResult.processedFiles,
-        },
-        languageStats: new Map(),
-      },
     };
   }
 
@@ -701,7 +576,7 @@ export class ASTOutputManager {
   /**
    * Perform atomic write of JSON data
    */
-  private async atomicWriteJSON(filePath: string, data: any): Promise<void> {
+  private async atomicWriteJSON(filePath: string, data: object): Promise<void> {
     const { writeFile } = await import("node:fs/promises");
     const tempPath = `${filePath}.tmp`;
 

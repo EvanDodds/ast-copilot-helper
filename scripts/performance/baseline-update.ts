@@ -98,7 +98,6 @@ async function extractBenchmarkData(
 
   // Mock benchmark data structure (would be replaced with actual parsing)
   const mockBenchmarks = [
-    "NAPI Vector Operations",
     "WASM Vector Operations",
     "HNSW Index Performance",
     "Memory Usage Comparison",
