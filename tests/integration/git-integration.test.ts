@@ -14,6 +14,7 @@ import {
 import { join, resolve } from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { realpath } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { writeFile, mkdir } from "node:fs/promises";
 import { GitManager } from "../../packages/ast-helper/src/git/manager.js";
@@ -22,6 +23,18 @@ import type {
   ChangedFilesOptions,
 } from "../../packages/ast-helper/src/git/types.js";
 import { GitError } from "../../packages/ast-helper/src/errors/types.js";
+
+/**
+ * Normalize paths consistently across platforms, especially handling macOS symlinks
+ * On macOS, /var/folders/... is a symlink to /private/var/folders/...
+ */
+async function normalizePath(path: string): Promise<string> {
+  try {
+    return await realpath(resolve(path));
+  } catch {
+    return resolve(path);
+  }
+}
 
 /**
  * Git test utilities for managing test repositories
@@ -88,7 +101,7 @@ class GitTestUtils {
       await this.execGit(["config", "init.defaultBranch", "main"], dir);
       // If already initialized, rename the default branch to main
       await this.execGit(["branch", "-M", "main"], dir);
-    } catch (error) {
+    } catch (_error) {
       // If config fails, just proceed - older git versions may not support it
     }
   }
@@ -253,12 +266,16 @@ class ComprehensiveGitIntegrationTestSuite {
 
     // Test repository root finding
     const repoRoot = await this.gitManager.getRepositoryRoot(this.testRepoDir);
-    expect(resolve(repoRoot)).toBe(resolve(this.testRepoDir));
+    expect(await normalizePath(repoRoot)).toBe(
+      await normalizePath(this.testRepoDir),
+    );
 
     // Test with subdirectory
     const srcDir = join(this.testRepoDir, "src");
     const rootFromSrc = await this.gitManager.getRepositoryRoot(srcDir);
-    expect(resolve(rootFromSrc)).toBe(resolve(this.testRepoDir));
+    expect(await normalizePath(rootFromSrc)).toBe(
+      await normalizePath(this.testRepoDir),
+    );
 
     console.log("✓ Basic repository operations tests passed");
   }
@@ -273,7 +290,9 @@ class ComprehensiveGitIntegrationTestSuite {
 
     // Get initial status
     const initialStatus = await this.gitManager.getStatus(this.testRepoDir);
-    expect(initialStatus.repositoryRoot).toBe(resolve(this.testRepoDir));
+    expect(await normalizePath(initialStatus.repositoryRoot)).toBe(
+      await normalizePath(this.testRepoDir),
+    );
     // Accept either 'main' or 'master' as valid default branch names
     expect(["main", "master"]).toContain(initialStatus.branch);
     expect(initialStatus.isDirty).toBe(false);
@@ -470,7 +489,7 @@ class ComprehensiveGitIntegrationTestSuite {
     expect(defaultStatus.branch).toBe(defaultBranch);
 
     // Verify feature file doesn't exist on main
-    const changedFromFeature = await this.gitManager.getChangedFiles({
+    const _changedFromFeature = await this.gitManager.getChangedFiles({
       base: "feature-branch",
     });
     // Should show difference when comparing main to feature-branch
@@ -536,12 +555,16 @@ class ComprehensiveGitIntegrationTestSuite {
 
     // Test path resolution across platforms
     const repoRoot = await this.gitManager.getRepositoryRoot(this.testRepoDir);
-    expect(repoRoot).toBe(resolve(this.testRepoDir));
+    expect(await normalizePath(repoRoot)).toBe(
+      await normalizePath(this.testRepoDir),
+    );
 
     // Test with different path separators (should be normalized)
     const srcPath = join(this.testRepoDir, "src");
     const rootFromSrc = await this.gitManager.getRepositoryRoot(srcPath);
-    expect(rootFromSrc).toBe(resolve(this.testRepoDir));
+    expect(await normalizePath(rootFromSrc)).toBe(
+      await normalizePath(this.testRepoDir),
+    );
 
     // Test file paths in changed files (should use platform-appropriate separators)
     await this.gitTestUtils.createDirectory(

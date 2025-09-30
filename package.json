@@ -45,6 +45,8 @@
     "test:vector:regression": "echo '📈 Running vector database regression tests...' && vitest run packages/ast-helper/src/database/vector/regression.test.ts --reporter=verbose",
     "test:vector:quick": "echo '⚡ Running vector database quick validation...' && vitest run packages/ast-helper/src/database/vector --reporter=basic --run --exclude='**/performance-benchmark.test.ts'",
     "test:vector:ci": "echo '🤖 Running vector database CI tests...' && vitest run packages/ast-helper/src/database/vector --reporter=json --outputFile=test-output/vector-results.json",
+    "test:performance": "echo '⚡ Running performance tests...' && yarn run test:benchmarks && yarn run test:vector:performance",
+    "test:performance:baseline": "echo '📊 Running performance baseline tests...' && yarn run baseline:compare",
     "baseline:update": "echo '📊 Updating performance baselines...' && tsx scripts/performance/baseline-update.ts",
     "baseline:validate": "echo '✅ Validating performance baselines...' && tsx scripts/performance/baseline-validate.ts",
     "baseline:compare": "echo '🔍 Comparing performance against baselines...' && tsx scripts/performance/baseline-compare.ts",
