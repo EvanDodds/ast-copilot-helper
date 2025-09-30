@@ -520,13 +520,27 @@ git config --global diff.tool vscode
 
 ## Release Process
 
+> **For Maintainers**: See the complete [Release Process Guide](docs/development/release-process.md)
+
+**Quick Release Steps**:
+
+1. Ensure all changes are merged to `main` and CI is passing
+2. Create and push a version tag: `git tag v1.2.3 && git push origin v1.2.3`
+3. GitHub Actions automatically handles the rest (build, test, publish, release)
+
+**Release Triggers**:
+
+- ✅ **Git tags**: `v*.*.*` format (recommended)
+- ✅ **GitHub Releases**: Publishing a release in GitHub UI
+- ✅ **Manual dispatch**: "Run workflow" button in Actions tab
+
 Releases are handled by maintainers following these principles:
 
 - **Semantic Versioning** - Following semver strictly
-- **Automated Changelog** - Generated from commit messages
+- **Automated Publishing** - Fully automated via GitHub Actions
 - **Multi-package Coordination** - All packages released together
-- **Backward Compatibility** - Maintain compatibility when possible
-- **Migration Guides** - For breaking changes
+- **Quality Gates** - Comprehensive testing before release
+- **Cross-platform Binaries** - Windows, macOS, Linux distributions
 
 ## Troubleshooting
 

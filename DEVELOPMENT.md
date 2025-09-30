@@ -161,42 +161,68 @@ The Rust core engine is optimized for development speed:
 - Production builds use full optimization for maximum performance
 - Testing validates both compilation correctness and runtime behavior
 
-### WASM Build Infrastructure (Phase 1)
+### Native-First Architecture with WASM Development
 
-The core engine uses WebAssembly (WASM) as the primary compilation target for universal deployment across Node.js, browsers, and edge environments.
+The core engine uses a native-first approach with NAPI bindings for production deployments, with WASM builds planned for future universal deployment.
 
-#### WASM Build Setup
+#### Current Architecture: Native NAPI
+
+**Production Target:**
+
+```bash
+# Native builds (currently used in production)
+cd packages/ast-core-engine
+cargo build --release     # Native compilation for current platform
+```
+
+**Native Performance Benefits:**
+
+- 100% native performance for compute-intensive operations
+- Direct system integration and I/O capabilities
+- Full access to Rust ecosystem including networking and file system
+
+#### WASM Build Infrastructure (In Development)
+
+WASM build infrastructure is implemented but currently limited by dependency compatibility.
 
 **Prerequisites:**
 
 ```bash
-# Install WASM target (already configured in project)
+# Install WASM target (configured but not production-ready)
 rustup target add wasm32-unknown-unknown
 cargo install wasm-pack
 ```
 
-**Build Commands:**
+**Build Commands (Development Only):**
 
 ```bash
-# WASM build for Node.js target
+# WASM build attempts (currently blocked by dependency issues)
 cd packages/ast-core-engine
-npm run build:wasm         # Development build
-npm run build:wasm:release # Optimized production build
-
-# Clean WASM build outputs
-npm run clean:wasm         # Remove pkg/ directory
+npm run build:wasm         # Will fail due to tokio/mio incompatibility
+npm run build:wasm:release # Not currently functional
 ```
 
-#### WASM-First Architecture
+**Current WASM Limitations:**
 
-The codebase is built with WASM as the primary target:
+- `tokio` with networking features requires `mio` which doesn't support WASM
+- Vector database dependencies may have similar compatibility issues
+- See `packages/ast-core-engine/WASM_BUILD_NOTES.md` for full technical analysis
+
+#### Native-First Code Structure
+
+The codebase is structured for native performance with WASM compatibility planned:
 
 ```rust
-// WASM-optimized code (universal deployment)
+// Native-optimized code (current production target)
+use napi::bindgen_prelude::*;
+use tokio::runtime::Runtime;
+
+// WASM-compatible subset (future target)
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-// Feature-gated native fallback for performance-critical operations
-#[cfg(feature = "native-fallback")]
+// Conditional compilation for different targets
+#[cfg(not(target_arch = "wasm32"))]
 use crate::native_impl::*;
 ```
 
