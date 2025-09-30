@@ -370,7 +370,7 @@ tests/
    - Performance benchmark validation
    - Coverage reporting
 
-2. **Release Pipeline** (`.github/workflows/release.yml`)
+2. **Release Pipeline** (`.github/workflows/release-pipeline.yml`)
    - Automated semantic versioning
    - Cross-platform builds
    - NPM package publishing

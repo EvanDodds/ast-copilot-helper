@@ -40,7 +40,7 @@ CI/CD Pipeline Architecture
 
 ### 1. Build Pipeline (Criteria 1-6)
 
-**GitHub Actions Workflow**: `.github/workflows/ci-cd.yml`
+**GitHub Actions Workflow**: `.github/workflows/ci.yml`
 
 Features:
 

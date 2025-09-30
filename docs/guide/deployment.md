@@ -29,9 +29,8 @@ Our automated CI/CD pipeline handles everything once secrets are configured:
 
 **Workflows**:
 
-- `ci-cd.yml` - Main deployment pipeline
-- `release.yml` - Release management
-- `distribution.yml` - Package distribution
+- `ci.yml` - Main CI/CD pipeline (testing, validation, quality gates)
+- `release-pipeline.yml` - Unified release management (npm, binaries, GitHub releases, Docker)
 
 ### 2. Manual Deployment
 

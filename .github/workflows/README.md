@@ -4,7 +4,7 @@ This directory contains comprehensive GitHub Actions workflows implementing 36 a
 
 ## 🏗️ Comprehensive CI/CD Pipeline
 
-### Main Workflow: `ci-cd.yml`
+### Main Workflow: `ci.yml`
 
 **A comprehensive 15-job pipeline addressing all acceptance criteria**
 
@@ -217,13 +217,13 @@ git commit -m "feat: optimize query processing [benchmark]"
 git push
 
 # Manual deployment
-gh workflow run ci-cd.yml -f environment=production -f deploy=true
+gh workflow run ci.yml -f environment=production -f deploy=true
 
 # Security audit
-gh workflow run ci-cd.yml -f security-audit=true
+gh workflow run ci.yml -f security-audit=true
 
 # Performance monitoring
-gh workflow run ci-cd.yml -f monitoring=true
+gh workflow run ci.yml -f monitoring=true
 ```
 
 ## ⚙️ Configuration
@@ -358,11 +358,11 @@ yarn run ci:diagnostic-report
 Add these to your README.md:
 
 ```markdown
-[![CI/CD Pipeline](../../workflows/CI/CD%20Pipeline/badge.svg)](../../actions/workflows/ci-cd.yml)
-[![Build Status](../../workflows/Build%20and%20Test/badge.svg)](../../actions/workflows/ci-cd.yml)
-[![Security Scan](../../workflows/Security%20Audit/badge.svg)](../../actions/workflows/ci-cd.yml)
-[![Performance](../../workflows/Performance%20Benchmarks/badge.svg)](../../actions/workflows/ci-cd.yml)
-[![Quality Gate](../../workflows/Quality%20Gate/badge.svg)](../../actions/workflows/ci-cd.yml)
+[![CI/CD Pipeline](../../workflows/CI/CD%20Pipeline/badge.svg)](../../actions/workflows/ci.yml)
+[![Build Status](../../workflows/Build%20and%20Test/badge.svg)](../../actions/workflows/ci.yml)
+[![Security Scan](../../workflows/Security%20Audit/badge.svg)](../../actions/workflows/ci.yml)
+[![Performance](../../workflows/Performance%20Benchmarks/badge.svg)](../../actions/workflows/ci.yml)
+[![Quality Gate](../../workflows/Quality%20Gate/badge.svg)](../../actions/workflows/ci.yml)
 ```
 
 ### Monitoring Status
@@ -421,13 +421,13 @@ git commit -m "feat: optimize query processing [benchmark]"
 git push
 
 # Manual deployment
-gh workflow run ci-cd.yml -f environment=production -f deploy=true
+gh workflow run ci.yml -f environment=production -f deploy=true
 
 # Security audit
-gh workflow run ci-cd.yml -f security-audit=true
+gh workflow run ci.yml -f security-audit=true
 
 # Performance monitoring
-gh workflow run ci-cd.yml -f monitoring=true
+gh workflow run ci.yml -f monitoring=true
 ```
 
 ## ⚙️ Configuration

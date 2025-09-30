@@ -532,15 +532,25 @@ git config --global diff.tool vscode
 
 - ✅ **Git tags**: `v*.*.*` format (recommended)
 - ✅ **GitHub Releases**: Publishing a release in GitHub UI
-- ✅ **Manual dispatch**: "Run workflow" button in Actions tab
+- ✅ **Manual dispatch**: "Run workflow" button in Actions tab with channel selection
+
+**New: Channel-Specific Releases** (Manual dispatch only):
+
+- `all` - Complete release (npm + binaries + GitHub + Docker)
+- `npm-only` - Only publish to npm registry
+- `binaries-only` - Only build cross-platform executables
+- `github-only` - Only create GitHub release
+- `docker-only` - Only build and push Docker images
+- `dry-run` - Validation only, no publishing
 
 Releases are handled by maintainers following these principles:
 
 - **Semantic Versioning** - Following semver strictly
-- **Automated Publishing** - Fully automated via GitHub Actions
+- **Unified Pipeline** - Single workflow eliminates redundancy
+- **Smart Dependencies** - Reuses CI validation, no duplicate testing
 - **Multi-package Coordination** - All packages released together
 - **Quality Gates** - Comprehensive testing before release
-- **Cross-platform Binaries** - Windows, macOS, Linux distributions
+- **Cross-platform Binaries** - Real native executables (Windows, macOS, Linux)
 
 ## Troubleshooting
 
