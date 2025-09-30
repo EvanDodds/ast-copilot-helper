@@ -132,10 +132,10 @@ AST Copilot Helper uses a **hybrid architecture** combining TypeScript flexibili
 
 ### Dual Engine Architecture
 
-| Target               | Use Case                     | Performance          | Compatibility              |
-| -------------------- | ---------------------------- | -------------------- | -------------------------- |
+| Target               | Use Case                    | Performance          | Compatibility              |
+| -------------------- | --------------------------- | -------------------- | -------------------------- |
 | **WASM (Universal)** | Browsers, Node.js, edge     | ⚡ ~85% native speed | Universal compatibility    |
-| **Rust Fallback**   | Legacy Node.js environments | 🔥 100% native speed | Local compilation required |
+| **Rust Fallback**    | Legacy Node.js environments | 🔥 100% native speed | Local compilation required |
 
 ### Key Performance Features
 
