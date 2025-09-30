@@ -75,6 +75,20 @@ jobs:
           echo "📂 Directory contents before build:"
           node -e "console.log(require('fs').readdirSync('.').join('\n'))"
           
+          # Verify prerequisite files exist
+          echo "🔍 Checking for CLI module at packages/ast-helper/dist/cli.js:"
+          if [ -f "packages/ast-helper/dist/cli.js" ]; then
+            echo "✅ CLI module found"
+            head -5 packages/ast-helper/dist/cli.js
+          else
+            echo "❌ CLI module missing - trying to list dist contents:"
+            if [ -d "packages/ast-helper/dist" ]; then
+              node -e "console.log(require('fs').readdirSync('packages/ast-helper/dist').join('\n'))"
+            else
+              echo "❌ packages/ast-helper/dist directory does not exist"
+            fi
+          fi
+          
           # Ensure output directory exists
           node -e "const fs = require('fs'); fs.mkdirSync('dist/binaries', { recursive: true }); console.log('Created dist/binaries directory');"
           

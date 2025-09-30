@@ -117,7 +117,7 @@ class BinaryBuilder {
     const binaryPath = join(this.options.outputDir, binaryName);
 
     // First, create a bundled entry point using esbuild
-    const bundlePath = join(this.options.outputDir, `bundle-${platform}.js`);
+    const bundlePath = join(this.options.outputDir, `bundle-${platform}.mjs`);
 
     try {
       // Step 1: Bundle with esbuild
@@ -165,10 +165,12 @@ class BinaryBuilder {
 
     console.log(`✅ CLI module found at: ${cliModulePath}`);
 
-    const cjsWrapperContent = `#!/usr/bin/env node
+    // Create an ES module wrapper that imports the CLI and runs it
+    // This wrapper will be converted to CommonJS by ncc
+    const esmWrapperContent = `#!/usr/bin/env node
 
-// CommonJS wrapper for the CLI
-const { AstHelperCli } = require('${cliModulePath.replace(/\\/g, "/")}');
+// ES module wrapper for the CLI that ncc can convert to CommonJS
+import { AstHelperCli } from '${cliModulePath.replace(/\\/g, "/")}';
 
 // Create and run the CLI
 const cli = new AstHelperCli();
@@ -178,10 +180,10 @@ cli.run().catch((error) => {
 });
 `;
 
-    await writeFile(bundlePath, cjsWrapperContent, "utf-8");
+    await writeFile(bundlePath, esmWrapperContent, "utf-8");
 
     console.log(
-      `✅ CommonJS wrapper created for ncc processing: ${bundlePath}`,
+      `✅ ES module wrapper created for ncc processing: ${bundlePath}`,
     );
     console.log(`   CLI module path: ${cliModulePath}`);
   }
@@ -209,7 +211,7 @@ cli.run().catch((error) => {
       .map((mod) => `--external ${mod}`)
       .join(" ");
 
-    const nccCommand = `npx @vercel/ncc build "${bundlePath}" --out "${nccOutputDir}" ${this.options.compress ? "--minify" : ""} --no-source-map-register ${externalModules} --quiet`;
+    const nccCommand = `npx @vercel/ncc build "${bundlePath}" --out "${nccOutputDir}" ${this.options.compress ? "--minify" : ""} --no-source-map-register ${externalModules} --target es2022 --quiet`;
 
     console.log(`📦 Creating single-file bundle with @vercel/ncc...`);
     console.log(`Running: ${nccCommand}`);
@@ -220,28 +222,35 @@ cli.run().catch((error) => {
         cwd: projectRoot,
       });
 
-      // Verify ncc output was created
-      if (!existsSync(nccBundlePath)) {
-        throw new Error(`NCC failed to create bundle at ${nccBundlePath}`);
+      // Verify ncc output was created (could be .js or .mjs)
+      const nccBundlePathMjs = nccBundlePath.replace(/\.js$/, ".mjs");
+      const actualBundlePath = existsSync(nccBundlePathMjs)
+        ? nccBundlePathMjs
+        : nccBundlePath;
+
+      if (!existsSync(actualBundlePath)) {
+        throw new Error(
+          `NCC failed to create bundle at ${nccBundlePath} or ${nccBundlePathMjs}`,
+        );
       }
 
-      console.log(`✅ NCC bundle created successfully at ${nccBundlePath}`);
+      console.log(`✅ NCC bundle created successfully at ${actualBundlePath}`);
+
+      // Post-process the ncc output to fix ES module issues
+      await this.fixNccOutput(actualBundlePath, nccOutputDir);
+
+      // Create a platform-specific executable wrapper
+      if (platform === "win32") {
+        await this.createWindowsExecutable(actualBundlePath, binaryPath);
+      } else {
+        await this.createUnixExecutable(actualBundlePath, binaryPath);
+      }
     } catch (error) {
       console.error(`❌ NCC bundling failed for ${platform}`);
       console.error(`Command: ${nccCommand}`);
       console.error(`Working directory: ${projectRoot}`);
       console.error(`Error: ${error instanceof Error ? error.message : error}`);
       throw error;
-    }
-
-    // Post-process the ncc output to fix ES module issues
-    await this.fixNccOutput(nccBundlePath, nccOutputDir);
-
-    // Create a platform-specific executable wrapper
-    if (platform === "win32") {
-      await this.createWindowsExecutable(nccBundlePath, binaryPath);
-    } else {
-      await this.createUnixExecutable(nccBundlePath, binaryPath);
     }
 
     console.log(`✅ Executable created: ${binaryPath}`);
