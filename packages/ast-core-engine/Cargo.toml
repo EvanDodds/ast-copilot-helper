@@ -61,7 +61,6 @@ tempfile = "3.0"
 default = ["full-system"]
 wasm = [] # WASM build without system dependencies
 full-system = ["sqlx", "sysinfo", "num_cpus", "tree-sitter", "tokio/fs", "sqlx/runtime-tokio"] # Include system dependencies for native builds
-napi = [] # NAPI bindings for Node.js integration (requires additional dependencies)
 
 [profile.release]
 lto = true

@@ -1,4 +1,7 @@
-//! WASM Bindings for Vector Database Operations
+//! WASM bindings for AST processing functionality
+//!
+//! This module provides WebAssembly bindings for the AST core engine,
+//! optimized for browser environments using wasm-bindgen.WASM Bindings for Vector Database Operations
 //!
 //! This module provides WebAssembly bindings for the vector database functionality,
 //! adapting the existing NAPI implementation to work with wasm-bindgen.

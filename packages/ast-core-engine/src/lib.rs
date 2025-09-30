@@ -9,8 +9,6 @@
 //! and minimal binary size.
 
 // Core modules
-#[cfg(all(not(feature = "wasm"), feature = "napi"))] // API layer only for NAPI builds
-pub mod api;
 #[cfg(any(feature = "wasm", feature = "full-system", test))] // AST processor needs tree-sitter
 pub mod ast_processor;
 pub mod batch_processor;
@@ -36,7 +34,3 @@ pub use vector_db::SimpleVectorDb;
 
 // Re-export WASM bindings
 pub use wasm_bindings::*;
-
-// Re-export API for NAPI builds
-#[cfg(all(not(feature = "wasm"), feature = "napi"))]
-pub use api::*;

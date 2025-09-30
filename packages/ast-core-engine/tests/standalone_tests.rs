@@ -1,7 +1,6 @@
-//! Standalone unit tests for the AST Core Engine
+//! Standalone tests for AST Core Engine components
 //!
-//! These tests validate the core Rust functionality without requiring
-//! NAPI bindings or Node.js runtime environment.
+//! These tests focus on individual components using the native full-system feature.
 
 use std::sync::Arc;
 

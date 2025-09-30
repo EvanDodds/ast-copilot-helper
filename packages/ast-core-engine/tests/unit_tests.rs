@@ -1,5 +1,5 @@
-//! Unit tests for AST Core Engine
-//! These tests validate core functionality without requiring NAPI runtime
+//! Unit tests for AST Core Engine core functionality
+//! These tests validate core functionality using the native full-system feature
 
 use ast_helper_core_engine::{
     batch_processor::{BatchConfig, BatchProcessor},
