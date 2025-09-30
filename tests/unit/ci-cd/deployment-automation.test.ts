@@ -420,6 +420,11 @@ describe("Deployment Automation Tests", () => {
         ];
         mockExistsSync.mockReturnValue(true);
         mockReadFileSync.mockReturnValue(JSON.stringify(mockDeploymentHistory));
+
+        // Mock Math.random to ensure health check passes
+        const originalMathRandom = Math.random;
+        Math.random = vi.fn(() => 0.1); // > 0.05, so health check passes
+
         let attemptCount = 0;
         mockExecSync.mockImplementation((command: string) => {
           if (command.includes("yarn run build")) {
@@ -433,12 +438,17 @@ describe("Deployment Automation Tests", () => {
 
         const rollback = new RollbackAutomation("staging", "Test retry");
 
-        // Act
-        const result = await rollback.execute();
+        try {
+          // Act
+          const result = await rollback.execute();
 
-        // Assert
-        expect(result.success).toBe(true);
-        expect(attemptCount).toBe(3); // Should have retried twice
+          // Assert
+          expect(result.success).toBe(true);
+          expect(attemptCount).toBe(3); // Should have retried twice
+        } finally {
+          // Restore Math.random
+          Math.random = originalMathRandom;
+        }
       });
 
       it("should fail after max attempts", async () => {

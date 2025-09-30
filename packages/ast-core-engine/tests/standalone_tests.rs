@@ -1,7 +1,6 @@
-//! Standalone unit tests for the AST Core Engine
+//! Standalone tests for AST Core Engine components
 //!
-//! These tests validate the core Rust functionality without requiring
-//! NAPI bindings or Node.js runtime environment.
+//! These tests focus on individual components using the native full-system feature.
 
 use std::sync::Arc;
 
@@ -10,7 +9,7 @@ use std::sync::Arc;
 async fn test_engine_config_creation() {
     println!("🧪 Testing engine config creation...");
 
-    let config = ast_core_engine::config::EngineConfig::default();
+    let config = ast_helper_core_engine::config::EngineConfig::default();
 
     assert_eq!(config.hnsw_config.embedding_dimension, 384);
     assert_eq!(config.storage_config.db_path, ".astdb/index.db");
@@ -25,7 +24,7 @@ async fn test_engine_config_creation() {
 async fn test_ast_processor_creation() {
     println!("🧪 Testing AST processor creation...");
 
-    let _processor = ast_core_engine::ast_processor::AstProcessor::new(4); // max depth 4
+    let _processor = ast_helper_core_engine::ast_processor::AstProcessor::new(4); // max depth 4
 
     // Test processor creation succeeds
     println!("AST processor created successfully");
@@ -38,10 +37,10 @@ async fn test_ast_processor_creation() {
 async fn test_storage_layer_creation() {
     println!("🧪 Testing storage layer creation...");
 
-    let config = ast_core_engine::config::StorageConfig::default();
+    let config = ast_helper_core_engine::config::StorageConfig::default();
 
     // Test that we can create storage layer async
-    let storage_result = ast_core_engine::storage::StorageLayer::new(config).await;
+    let storage_result = ast_helper_core_engine::storage::StorageLayer::new(config).await;
     assert!(
         storage_result.is_ok(),
         "Should create storage layer successfully"
@@ -55,7 +54,7 @@ async fn test_storage_layer_creation() {
 async fn test_vector_database_creation() {
     println!("🧪 Testing vector database...");
 
-    let config = ast_core_engine::config::HnswConfig {
+    let config = ast_helper_core_engine::config::HnswConfig {
         embedding_dimension: 3, // Use small dimension for testing
         m: 16,
         ef_construction: 200,
@@ -63,7 +62,7 @@ async fn test_vector_database_creation() {
         max_elements: 10000,
     };
 
-    let vector_db = ast_core_engine::vector_db::SimpleVectorDb::new(config);
+    let mut vector_db = ast_helper_core_engine::vector_db::SimpleVectorDb::new(config);
 
     // Test initialization
     let result = vector_db.initialize();
@@ -74,7 +73,7 @@ async fn test_vector_database_creation() {
 
     // Test vector operations with matching dimension
     let embedding = vec![0.1, 0.2, 0.3]; // Match the embedding dimension
-    let metadata = ast_core_engine::types::VectorMetadata {
+    let metadata = ast_helper_core_engine::types::VectorMetadata {
         node_id: "test_node".to_string(),
         file_path: "test.ts".to_string(),
         node_type: "function".to_string(),
@@ -107,7 +106,7 @@ async fn test_vector_database_creation() {
 async fn test_performance_monitor() {
     println!("🧪 Testing performance monitor...");
 
-    let monitor = ast_core_engine::performance_monitor::PerformanceMonitor::new();
+    let monitor = ast_helper_core_engine::performance_monitor::PerformanceMonitor::new();
 
     // Test timer operations
     monitor.start_timer("test_operation".to_string()).await;
@@ -137,19 +136,19 @@ async fn test_performance_monitor() {
 async fn test_batch_processor() {
     println!("🧪 Testing batch processor...");
 
-    let storage_config = ast_core_engine::config::StorageConfig::default();
-    let batch_config = ast_core_engine::batch_processor::BatchConfig::default();
+    let storage_config = ast_helper_core_engine::config::StorageConfig::default();
+    let batch_config = ast_helper_core_engine::batch_processor::BatchConfig::default();
 
     // Create necessary components
-    let ast_processor = Arc::new(ast_core_engine::ast_processor::AstProcessor::new(4));
+    let ast_processor = Arc::new(ast_helper_core_engine::ast_processor::AstProcessor::new(4));
     let storage_layer = Arc::new(
-        ast_core_engine::storage::StorageLayer::new(storage_config)
+        ast_helper_core_engine::storage::StorageLayer::new(storage_config)
             .await
             .unwrap(),
     );
 
     // Create batch processor with required arguments
-    let processor = ast_core_engine::batch_processor::BatchProcessor::new(
+    let processor = ast_helper_core_engine::batch_processor::BatchProcessor::new(
         ast_processor,
         storage_layer,
         batch_config,
@@ -170,8 +169,8 @@ async fn test_batch_processor() {
 async fn test_core_engine_creation() {
     println!("🧪 Testing core engine creation...");
 
-    let config = ast_core_engine::config::EngineConfig::default();
-    let engine = ast_core_engine::core::ASTCoreEngine::new(config);
+    let config = ast_helper_core_engine::config::EngineConfig::default();
+    let engine = ast_helper_core_engine::core::ASTCoreEngine::new(config);
     assert!(engine.is_ok(), "Should create core engine successfully");
 
     let engine = engine.unwrap();
@@ -197,17 +196,17 @@ async fn test_error_handling() {
 
     // Test different error types
     let vector_error =
-        ast_core_engine::error::EngineError::VectorDbError("Test vector error".to_string());
+        ast_helper_core_engine::error::EngineError::VectorDbError("Test vector error".to_string());
     assert!(matches!(
         vector_error,
-        ast_core_engine::error::EngineError::VectorDbError(_)
+        ast_helper_core_engine::error::EngineError::VectorDbError(_)
     ));
 
     let config_error =
-        ast_core_engine::error::EngineError::Configuration("Test config error".to_string());
+        ast_helper_core_engine::error::EngineError::Configuration("Test config error".to_string());
     assert!(matches!(
         config_error,
-        ast_core_engine::error::EngineError::Configuration(_)
+        ast_helper_core_engine::error::EngineError::Configuration(_)
     ));
 
     // Test error display
@@ -222,7 +221,7 @@ async fn test_error_handling() {
 async fn test_processing_options() {
     println!("🧪 Testing processing options...");
 
-    let options = ast_core_engine::types::ProcessingOptions {
+    let options = ast_helper_core_engine::types::ProcessingOptions {
         max_memory_mb: 512,
         batch_size: 50,
         parallel_workers: 2,
@@ -242,7 +241,7 @@ async fn test_processing_options() {
     assert!(options.enable_caching);
 
     // Test default options
-    let default_options = ast_core_engine::types::ProcessingOptions::default();
+    let default_options = ast_helper_core_engine::types::ProcessingOptions::default();
     assert_eq!(default_options.max_memory_mb, 1024);
     assert_eq!(default_options.batch_size, 100);
     assert_eq!(default_options.max_depth, 10);
@@ -257,7 +256,7 @@ async fn test_processing_options() {
 async fn test_benchmark_configuration() {
     println!("🧪 Testing benchmark configuration...");
 
-    let benchmark_config = ast_core_engine::performance_monitor::BenchmarkConfig {
+    let benchmark_config = ast_helper_core_engine::performance_monitor::BenchmarkConfig {
         iterations: 100,
         warmup_iterations: 10,
         iteration_timeout: std::time::Duration::from_secs(30),
@@ -272,9 +271,9 @@ async fn test_benchmark_configuration() {
     assert!(benchmark_config.collect_system_stats);
 
     // Test default benchmark config
-    let default_config = ast_core_engine::performance_monitor::BenchmarkConfig::default();
-    assert_eq!(default_config.iterations, 1000);
-    assert_eq!(default_config.warmup_iterations, 100);
+    let default_config = ast_helper_core_engine::performance_monitor::BenchmarkConfig::default();
+    assert_eq!(default_config.iterations, 10);
+    assert_eq!(default_config.warmup_iterations, 3);
     assert!(default_config.collect_memory_stats);
     assert!(default_config.collect_system_stats);
 

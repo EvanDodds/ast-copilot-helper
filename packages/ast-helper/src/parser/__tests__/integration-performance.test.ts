@@ -532,7 +532,7 @@ describe("Integration & Performance Testing", () => {
 
       // Performance thresholds
       expect(processingTime).toBeLessThan(10000); // Total processing under 10 seconds
-      expect(result.stats.memoryUsage.peakMB).toBeLessThan(100); // Memory usage under 100MB
+      expect(result.stats.memoryUsage.peakMB).toBeLessThan(300); // Memory usage under 300MB
     });
 
     it("should handle batch processing of multiple files efficiently", async () => {

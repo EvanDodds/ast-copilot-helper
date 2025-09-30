@@ -9,9 +9,17 @@
 //! and minimal binary size.
 
 // Core modules
+#[cfg(any(feature = "wasm", feature = "full-system", test))] // AST processor needs tree-sitter
+pub mod ast_processor;
+#[cfg(feature = "full-system")] // Batch processor needs file system access
+pub mod batch_processor;
 pub mod config;
+pub mod core;
 pub mod error;
+pub mod performance_monitor;
+pub mod storage;
 pub mod types;
+pub mod utils;
 pub mod vector_db;
 pub mod wasm_bindings;
 pub mod wasm_serialization;
@@ -27,10 +35,3 @@ pub use vector_db::SimpleVectorDb;
 
 // Re-export WASM bindings
 pub use wasm_bindings::*;
-
-// Re-export WASM vector database functions
-pub use wasm_bindings::{
-    add_vector_to_db_wasm, clear_vector_database_wasm, create_hnsw_config_wasm,
-    create_vector_metadata_wasm, get_vector_count_wasm, init_vector_database_wasm,
-    search_vectors_wasm,
-};

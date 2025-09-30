@@ -1,5 +1,6 @@
 //! Utility functions
 
+#[cfg(feature = "full-system")]
 use sysinfo::System;
 
 /// Get current memory usage in bytes
@@ -65,15 +66,23 @@ pub fn get_memory_usage() -> u64 {
         }
     }
 
-    // Fallback: use sysinfo crate
-    let mut sys = System::new();
-    sys.refresh_all();
-
-    let pid = sysinfo::get_current_pid().unwrap();
-    if let Some(process) = sys.process(pid) {
-        process.memory() * 1024 // sysinfo returns KB, convert to bytes
-    } else {
-        0
+    #[cfg(feature = "full-system")]
+    {
+        // Fallback: use sysinfo crate
+        let mut system = System::new_all();
+        system.refresh_memory();
+        let pid = sysinfo::get_current_pid().unwrap();
+        system
+            .process(pid)
+            .map(|process| {
+                process.memory() * 1024 // sysinfo returns KB, convert to bytes
+            })
+            .unwrap_or(0)
+    }
+    #[cfg(not(feature = "full-system"))]
+    {
+        // WASM fallback - return 0 as memory info isn't available
+        0u64
     }
 }
 

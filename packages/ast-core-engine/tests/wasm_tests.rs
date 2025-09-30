@@ -104,27 +104,6 @@ mod wasm_tests {
         }
     }
 
-    #[cfg(not(feature = "wasm"))]
-    mod napi_feature_tests {
-        /// Test that NAPI features are available when WASM is not enabled
-        #[test]
-        fn test_napi_features_available() {
-            assert!(true, "NAPI feature is enabled");
-
-            // These features should only be available in NAPI builds
-            #[cfg(feature = "tree-sitter")]
-            {
-                test_tree_sitter_availability();
-            }
-        }
-
-        #[cfg(feature = "tree-sitter")]
-        fn test_tree_sitter_availability() {
-            // Test that tree-sitter is available in NAPI builds
-            assert!(true, "Tree-sitter is available in NAPI builds");
-        }
-    }
-
     // Helper functions for testing
 
     fn clean_code_string(code: &str) -> String {
@@ -172,20 +151,20 @@ mod integration_tests {
     /// Test the overall build configuration
     #[test]
     fn test_build_configuration() {
-        // Test that exactly one of NAPI or WASM features is enabled
-        let napi_enabled = cfg!(feature = "napi");
+        // Test that at least one primary feature is enabled
         let wasm_enabled = cfg!(feature = "wasm");
+        let full_system_enabled = cfg!(feature = "full-system");
 
-        // Should have exactly one primary feature enabled
+        // Should have at least one primary feature enabled
         assert!(
-            napi_enabled || wasm_enabled,
-            "Either NAPI or WASM should be enabled"
+            wasm_enabled || full_system_enabled,
+            "Either WASM or full-system should be enabled"
         );
 
         // Document which features are active
         println!("Build configuration:");
-        println!("  NAPI enabled: {}", napi_enabled);
         println!("  WASM enabled: {}", wasm_enabled);
+        println!("  Full-system enabled: {}", full_system_enabled);
         println!("  Tree-sitter: {}", cfg!(feature = "tree-sitter"));
         println!("  Target arch: {}", std::env::consts::ARCH);
     }
@@ -204,21 +183,12 @@ mod integration_tests {
                 "Tree-sitter should not be available in WASM builds"
             );
         }
-
-        #[cfg(feature = "napi")]
-        {
-            // NAPI-specific code paths
-            assert!(cfg!(feature = "napi"));
-
-            // Tree-sitter may be available in NAPI
-            // (depending on the specific build configuration)
-        }
     }
 
     /// Test that the API surface is consistent between builds
     #[test]
     fn test_api_consistency() {
-        // Both WASM and NAPI builds should provide basic functionality
+        // Both WASM and full-system builds should provide basic functionality
         // This test ensures that switching between them doesn't break the API
 
         let test_code = "const x = 1;";
@@ -234,7 +204,7 @@ mod integration_tests {
 }
 
 // Re-export helper functions for use in tests
-use super::*;
+use ast_helper_core_engine::*;
 
 // Mock helper functions (in a real implementation, these would be actual engine functions)
 fn basic_analyze_string(code: &str) -> String {

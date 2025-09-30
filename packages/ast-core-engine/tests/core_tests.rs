@@ -1,4 +1,4 @@
-// Pure Rust unit tests for core functionality without NAPI dependencies
+// Pure Rust unit tests for core functionality
 // These tests validate the core Rust modules independently
 
 use std::collections::HashMap;

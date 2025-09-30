@@ -48,6 +48,9 @@ export class HNSWVectorDatabase implements VectorDatabase {
     }
 
     try {
+      // Always create a new storage instance to handle reinitialization after shutdown
+      this.storage = new SQLiteVectorStorage(this.config);
+
       // Initialize SQLite storage
       await this.storage.initialize();
 

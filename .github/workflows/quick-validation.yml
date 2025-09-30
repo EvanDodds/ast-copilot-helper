@@ -75,7 +75,6 @@ jobs:
           
           DOC_FILES=(
             "docs/testing/PERFORMANCE_BASELINES.md"
-            "docs/testing/VECTOR_DATABASE_TESTING_GUIDE.md"
             "docs/testing/README.md"
             "docs/testing/TEST_CONFIGURATION.md"
             "docs/testing/TEST_PROCEDURES.md"
@@ -97,33 +96,3 @@ jobs:
           fi
           
           echo "✅ All vector database documentation files are present"
-
-      - name: Comment PR with validation results
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const comment = `## 🚀 Quick Validation Results
-            
-            ✅ **TypeScript compilation**: Passed
-            ✅ **Linting**: Passed
-            ✅ **Quick tests**: Passed  
-            ✅ **Phase 5 test files**: All present
-            ✅ **Phase 5 documentation**: All present
-            
-            **Phase 5 Testing Framework Status:**
-            - Performance Benchmark Infrastructure: ✅ Ready (740+ lines)
-            - WASM Feature Parity Tests: ✅ Ready (11 scenarios)
-            - Integration Testing Framework: ✅ Ready (565 lines)
-            - Performance Regression Testing: ✅ Ready (automated baseline management)
-            - Comprehensive Documentation: ✅ Ready (5 detailed guides)
-            
-            🎯 Ready for comprehensive testing in Phase 5 workflow.
-            `;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
