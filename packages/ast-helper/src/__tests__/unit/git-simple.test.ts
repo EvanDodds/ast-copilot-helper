@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 // Import from the compiled dist directory
-import { GitManager } from "../../../dist/git/manager.js";
+import { GitManager } from "../../git/manager.js";
 
 // Mock child_process
 vi.mock("child_process", () => ({

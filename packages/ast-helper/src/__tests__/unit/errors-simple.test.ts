@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 
-// Import from compiled JS files in dist
-import { ConfigurationError, GitError } from "../../../dist/errors/types.js";
-import { GitErrors } from "../../../dist/errors/factories.js";
+// Import from source TypeScript files
+import { ConfigurationError, GitError } from "../../errors/types.js";
+import { GitErrors } from "../../errors/factories.js";
 import { withRetry } from "../../../dist/errors/utils.js";
 
 describe("Error Handling Framework - Simple Tests", () => {

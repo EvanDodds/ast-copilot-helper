@@ -3,12 +3,12 @@ import { rmSync, mkdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 
-// Import compiled modules
-import { GitManager } from "../../../dist/git/manager.js";
-import { FileSystemManager } from "../../../dist/filesystem/manager.js";
-import { GlobManager } from "../../../dist/glob/manager.js";
-import { ConfigurationError } from "../../../dist/errors/types.js";
-import { withRetry } from "../../../dist/errors/utils.js";
+// Import source modules
+import { GitManager } from "../../git/manager.js";
+import { FileSystemManager } from "../../filesystem/manager.js";
+import { GlobManager } from "../../glob/manager.js";
+import { ConfigurationError } from "../../errors/types.js";
+import { withRetry } from "../../errors/utils.js";
 
 // Mock process.cwd for tests
 vi.stubGlobal("process", {

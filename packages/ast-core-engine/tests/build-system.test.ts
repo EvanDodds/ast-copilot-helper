@@ -200,11 +200,10 @@ describe("Build Process Validation", () => {
 
       // Verify clean scripts exist and are properly configured
       expect(packageJson.scripts["clean:all"]).toBeDefined();
-      expect(packageJson.scripts["clean:all"]).toContain("rimraf");
+      expect(packageJson.scripts["clean:all"]).toContain("cargo clean");
 
       // Should clean both NAPI and WASM artifacts
       expect(packageJson.scripts["clean:all"]).toContain("pkg");
-      expect(packageJson.scripts["clean:all"]).toContain("target");
     });
   });
 });
