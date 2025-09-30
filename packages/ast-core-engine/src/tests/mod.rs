@@ -3,7 +3,7 @@
 use crate::{core::ASTCoreEngine, storage::StorageLayer, *};
 
 #[cfg(test)]
-mod tests {
+mod test_cases {
     use super::*;
 
     #[test]
@@ -64,8 +64,10 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let db_path = temp_dir.path().join("test.db");
 
-        let mut storage_config = StorageConfig::default();
-        storage_config.db_path = db_path.to_string_lossy().to_string();
+        let storage_config = StorageConfig {
+            db_path: db_path.to_string_lossy().to_string(),
+            ..Default::default()
+        };
 
         let storage = StorageLayer::new(storage_config).await;
         assert!(storage.is_ok());

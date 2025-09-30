@@ -36,6 +36,7 @@ mod tests {
     fn test_basic_error_types() {
         // Test custom error types without NAPI dependencies
         #[derive(Debug, PartialEq)]
+        #[allow(clippy::enum_variant_names, dead_code)]
         enum TestEngineError {
             ConfigurationError(String),
             ProcessingError(String),
@@ -154,6 +155,7 @@ mod tests {
     fn test_basic_batch_processing_state() {
         // Test batch processing state management
         #[derive(Debug, PartialEq)]
+        #[allow(dead_code)]
         enum BatchState {
             Idle,
             Processing,
@@ -163,6 +165,7 @@ mod tests {
         }
 
         #[derive(Debug)]
+        #[allow(dead_code)]
         struct BatchInfo {
             pub batch_id: String,
             pub state: BatchState,
@@ -305,6 +308,7 @@ mod tests {
     fn test_basic_ast_node_structure() {
         // Test basic AST node structure without tree-sitter
         #[derive(Debug, PartialEq)]
+        #[allow(dead_code)]
         enum NodeType {
             Function,
             Variable,
@@ -314,6 +318,7 @@ mod tests {
         }
 
         #[derive(Debug)]
+        #[allow(dead_code)]
         struct AstNode {
             pub node_type: NodeType,
             pub name: String,
@@ -374,9 +379,9 @@ mod tests {
     #[test]
     fn test_performance_benchmark_simulation() {
         // Test performance improvement validation
-        use std::time::{Duration, Instant};
 
         #[derive(Debug)]
+        #[allow(dead_code)]
         struct BenchmarkResult {
             pub operation: String,
             pub baseline_time_ms: u64,
