@@ -259,7 +259,7 @@ mod tests {
         let ast_result = result.unwrap();
         assert_eq!(ast_result.language, "JavaScript");
         assert_eq!(ast_result.file_path, "test.js");
-        assert!(ast_result.nodes.len() > 0);
+        assert!(!ast_result.nodes.is_empty());
         assert_eq!(ast_result.error_count, 0);
     }
 

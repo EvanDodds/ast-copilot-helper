@@ -8,12 +8,12 @@ use ast_helper_core_engine::{
     error::EngineError,
     performance_monitor::{BenchmarkConfig, PerformanceMonitor},
     storage::StorageLayer,
-    types::{NodeMetadata, ProcessingOptions},
+    types::ProcessingOptions,
     vector_db::SimpleVectorDb,
 };
 
 #[cfg(any(feature = "wasm", test))]
-use ast_helper_core_engine::ast_processor::{AstProcessor, SupportedLanguage};
+use ast_helper_core_engine::ast_processor::AstProcessor;
 use std::sync::Arc;
 
 /// Test engine config creation
@@ -36,7 +36,7 @@ async fn test_engine_config_creation() {
 async fn test_ast_processor_creation() {
     println!("🧪 Testing AST processor creation...");
 
-    let processor = AstProcessor::new(4); // max_parsers_per_language
+    let _processor = AstProcessor::new(4); // max_parsers_per_language
 
     // Test that the processor was created successfully
     // In a real implementation we would test specific functionality

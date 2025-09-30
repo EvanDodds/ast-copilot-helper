@@ -4,8 +4,7 @@
 //! ensuring that the limited feature set works correctly.
 
 #[cfg(test)]
-mod wasm_tests {
-    use super::*;
+mod tests {
 
     #[cfg(feature = "wasm")]
     mod wasm_feature_tests {
@@ -106,6 +105,7 @@ mod wasm_tests {
 
     // Helper functions for testing
 
+    #[allow(dead_code)]
     fn clean_code_string(code: &str) -> String {
         code.trim()
             .lines()
@@ -115,14 +115,17 @@ mod wasm_tests {
             .join(" ")
     }
 
+    #[allow(dead_code)]
     fn calculate_dot_product(vec1: &[f64], vec2: &[f64]) -> f64 {
         vec1.iter().zip(vec2.iter()).map(|(a, b)| a * b).sum()
     }
 
+    #[allow(dead_code)]
     fn calculate_magnitude(vec: &[f64]) -> f64 {
         vec.iter().map(|x| x * x).sum::<f64>().sqrt()
     }
 
+    #[allow(dead_code)]
     fn safe_parse_code(code: &str) -> Result<String, &'static str> {
         if code.is_empty() {
             return Err("Empty code");
@@ -135,6 +138,7 @@ mod wasm_tests {
         Ok(format!("Parsed: {}", code.len()))
     }
 
+    #[allow(dead_code)]
     fn basic_analyze_string(code: &str) -> String {
         format!(
             "Analysis: {} chars, {} lines",
@@ -199,12 +203,11 @@ mod integration_tests {
         assert!(analysis.contains("Analysis:"));
 
         let cleaned = clean_code_string(test_code);
-        assert!(cleaned.len() > 0);
+        assert!(!cleaned.is_empty());
     }
 }
 
 // Re-export helper functions for use in tests
-use ast_helper_core_engine::*;
 
 // Mock helper functions (in a real implementation, these would be actual engine functions)
 fn basic_analyze_string(code: &str) -> String {
