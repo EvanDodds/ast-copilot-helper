@@ -134,10 +134,14 @@ describe("Telemetry Configuration", () => {
   });
 
   it("should check if telemetry is enabled correctly", () => {
-    // Mock NODE_ENV to avoid test environment interference
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("CI", "");
-    vi.stubEnv("GITHUB_ACTIONS", "");
+    // Save original environment and manually mock NODE_ENV to avoid test environment interference
+    const originalEnv = process.env;
+    process.env = {
+      ...originalEnv,
+      NODE_ENV: "production",
+      CI: "",
+      GITHUB_ACTIONS: "",
+    };
 
     const enabledConfig: TelemetryConfig = {
       ...DEFAULT_TELEMETRY_CONFIG,
@@ -159,8 +163,8 @@ describe("Telemetry Configuration", () => {
     // Missing API key
     expect(isTelemetryEnabled({ ...enabledConfig, apiKey: "" })).toBe(false);
 
-    // Restore environment
-    vi.unstubAllEnvs();
+    // Restore original environment
+    process.env = originalEnv;
   });
 
   it("should get telemetry features based on privacy level", () => {
