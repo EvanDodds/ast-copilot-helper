@@ -183,6 +183,9 @@ describe("DatabaseConfigurationManager", () => {
       originalConfig.topK = 99; // Test with valid value within range (1-100)
       await manager.saveConfig(tempDir, originalConfig);
 
+      // Add a small delay to ensure timestamp difference
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // Create again with force (should merge)
       const options: InitOptions = { force: true };
       await manager.createConfigurationFile(tempDir, options);

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 // Import from source TypeScript files
 import { ConfigurationError, GitError } from "../../errors/types.js";
 import { GitErrors } from "../../errors/factories.js";
-import { withRetry } from "../../../dist/errors/utils.js";
+import { withRetry } from "../../errors/utils.js";
 
 describe("Error Handling Framework - Simple Tests", () => {
   describe("Basic Error Creation", () => {

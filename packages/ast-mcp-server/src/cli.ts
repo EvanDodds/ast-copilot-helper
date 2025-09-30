@@ -78,13 +78,10 @@ class ProcessManager {
       const pidStr = await fs.readFile(this.config.pidFile, "utf8");
       const pid = parseInt(pidStr.trim(), 10);
       return isNaN(pid) ? null : pid;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        return null;
-      }
-      throw new Error(
-        `Failed to read PID file: ${error instanceof Error ? error.message : String(error)}`,
-      );
+    } catch (_error) {
+      // Return null for any filesystem error (file not found, invalid path, etc.)
+      // This allows the status command to gracefully report "not running"
+      return null;
     }
   }
 
