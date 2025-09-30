@@ -52,7 +52,7 @@ This automatically:
 AST Copilot Helper bridges the gap between your codebase and AI agents by providing semantic understanding through Abstract Syntax Tree analysis. The toolkit consists of three integrated components:
 
 - **`@ast-copilot-helper/ast-helper`** - Core CLI tool that parses source code and builds semantic databases
-- **`@ast-helper/core-engine`** - High-performance Rust engine for AST processing (WASM)
+- **`@ast-helper/core-engine`** - High-performance Rust engine for AST processing (native NAPI)
 - **`@ast-copilot-helper/ast-mcp-server`** - Model Context Protocol server enabling AI agents to query code semantically
 - **`@ast-copilot-helper/vscode-extension`** - VS Code extension for seamless integration (optional)
 
@@ -65,8 +65,8 @@ ast-copilot-helper/                 # Monorepo root
 │  │  ├─ src/                       # TypeScript parsing & analysis
 │  │  └─ dist/                      # Compiled output
 │  ├─ ast-core-engine/              # ⚡ High-performance Rust engine
-│  │  ├─ src/                       # Rust source (WASM)
-│  │  ├─ pkg/                       # WASM package output
+│  │  ├─ src/                       # Rust source (NAPI)
+│  │  ├─ pkg/                       # Build output (WASM planned)
 │  │  ├─ target/                    # Rust build artifacts
 │  │  └─ Cargo.toml                 # Rust configuration
 │  ├─ ast-mcp-server/               # 🤖 MCP protocol server
@@ -100,7 +100,7 @@ AST Copilot Helper supports **15 programming languages** organized into 3 tiers:
 ### Quick Example
 
 ```typescript
-import { ParserFactory } from "@ast-copilot-helper/ast-copilot-helper";
+import { ParserFactory } from "@ast-copilot-helper/ast-helper";
 
 // Create parser for any supported language
 const parser = await ParserFactory.createParser();
@@ -126,31 +126,34 @@ const goResult = await parser.parseCode(
 
 **[📖 Complete Language Guide](docs/guide/multi-language-support.md)** • **[⚡ Performance Benchmarks](docs/guide/performance.md)** • **[🔧 API Reference](docs/api/interfaces.md)**
 
-## ⚡ Performance & Deployment
+## ⚡ Performance & Architecture
 
-AST Copilot Helper uses a **hybrid architecture** combining TypeScript flexibility with Rust performance:
+AST Copilot Helper uses a **native-first architecture** combining TypeScript flexibility with Rust performance:
 
-### Dual Engine Architecture
+### Native-First Engine Architecture
 
-| Target               | Use Case                    | Performance          | Compatibility              |
-| -------------------- | --------------------------- | -------------------- | -------------------------- |
-| **WASM (Universal)** | Browsers, Node.js, edge     | ⚡ ~85% native speed | Universal compatibility    |
-| **Rust Fallback**    | Legacy Node.js environments | 🔥 100% native speed | Local compilation required |
+| Target              | Use Case                        | Performance          | Compatibility              |
+| ------------------- | ------------------------------- | -------------------- | -------------------------- |
+| **Native (NAPI)**   | Node.js environments            | 🔥 100% native speed | Node.js with native builds |
+| **TypeScript Core** | Cross-platform fallback         | ⚡ Good performance  | Universal compatibility    |
+| **WASM (Future)**   | Browsers, edge (in development) | � Under development  | Universal (when ready)     |
 
 ### Key Performance Features
 
-- **🚀 High-Performance Core**: Rust engine for compute-intensive operations
-- **🌐 Universal Deployment**: WASM-first with intelligent Rust fallback
-- **📦 Optimized Bundles**: WASM builds optimized for both size and performance
-- **🔄 Zero-Copy Operations**: Direct memory access where possible
-- **💾 Intelligent Caching**: Incremental parsing with smart cache invalidation
+- **🚀 High-Performance Core**: Rust engine for compute-intensive operations via NAPI
+- **�️ Native-First Deployment**: Optimized native binaries with TypeScript fallback
+- **📦 Efficient Binary Distribution**: Platform-specific builds for optimal performance
+- **🔄 Smart Language Detection**: Intelligent grammar loading and caching
+- **💾 Incremental Processing**: Smart cache invalidation and differential updates
 
-**Performance Targets:**
+**Current Performance Characteristics:**
 
-- Vector search: <50ms for 100k+ vectors
-- Batch processing: 5000+ files without memory throttling
-- Memory usage: 50-70% reduction vs pure TypeScript
-- WASM overhead: ~20% vs native, with universal compatibility
+- AST parsing: 1-50ms depending on language tier and file size
+- Vector search: High-performance native vector operations
+- Batch processing: 5000+ files with intelligent memory management
+- Language support: 15 languages across 3 performance tiers
+
+**Note**: WASM builds are in development but currently limited by dependency compatibility issues. Production deployments use native NAPI builds for optimal performance.
 
 ## CI/CD Pipeline
 
@@ -420,8 +423,9 @@ code --install-extension ast-copilot-helper
 
 - **🏗️ Monorepo**: Yarn v4 workspaces with TypeScript project references
 - **⚡ TypeScript**: Strict configuration targeting ES2022 with full type safety
-- **🧪 Testing**: Comprehensive test suite with Vitest (unit, integration, benchmarks)
-- **🔄 CI/CD**: Automated testing, quality gates, and deployment pipeline
+- **� Rust Core**: High-performance native engine via NAPI bindings
+- **�🧪 Testing**: Comprehensive test suite with Vitest (unit, integration, benchmarks)
+- **🔄 CI/CD**: Automated testing, quality gates, and deployment pipeline with binary releases
 - **🌐 Cross-Platform**: Full Windows, macOS, and Linux support (x64, arm64)
 
 ## Current Status
@@ -478,7 +482,8 @@ git push origin feature/your-feature
 
 📋 **Use our templates**: [Issues](.github/ISSUE_TEMPLATE/) • [Pull Requests](.github/pull_request_template.md)  
 💬 **Join discussions**: [GitHub Discussions](https://github.com/EvanDodds/ast-copilot-helper/discussions)  
-❓ **Get help**: [Support Guide](.github/SUPPORT.md)
+❓ **Get help**: [Support Guide](.github/SUPPORT.md)  
+🚀 **For maintainers**: [Release Process Guide](docs/development/release-process.md)
 
 ## License & Security
 

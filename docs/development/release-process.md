@@ -2,6 +2,111 @@
 
 This comprehensive guide covers the complete end-to-end release process for AST Copilot Helper maintainers and core contributors.
 
+## Quick Start for Maintainers
+
+> **TL;DR: Human Steps to Create a Release**
+>
+> 1. **Push a version tag**: `git tag v1.2.3 && git push origin v1.2.3`
+> 2. **GitHub Actions does the rest automatically** (builds, publishes, creates GitHub release)
+> 3. **Optional**: Use `workflow_dispatch` in GitHub Actions tab for manual control
+>
+> **What triggers the release workflow?**
+>
+> - ✅ **Git tags**: `v*.*.*` format (recommended for production releases)
+> - ✅ **GitHub Releases**: When you publish a release in the GitHub UI
+> - ✅ **Manual dispatch**: "Run workflow" button in GitHub Actions tab
+>
+> **What happens automatically?**
+>
+> - 🏗️ Builds all packages and binaries for Windows, macOS, Linux
+> - 🧪 Runs comprehensive test suite and quality gates
+> - 📦 Publishes to npm registry (`@ast-copilot-helper/*` packages)
+> - 🚀 Creates GitHub Release with binary attachments
+> - 📝 Generates changelog and release notes
+> - 📧 Sends notifications to configured channels
+
+### Three Ways to Release
+
+| Method                     | When to Use                              | Human Steps                    | Automation Level |
+| -------------------------- | ---------------------------------------- | ------------------------------ | ---------------- |
+| **Tag Push** (Recommended) | Standard releases                        | 1. Create/push git tag         | Full automation  |
+| **GitHub Release**         | When you want custom release notes first | 1. Create release in GitHub UI | Full automation  |
+| **Manual Dispatch**        | Emergency releases, testing              | 1. Run workflow in Actions tab | Full automation  |
+
+### Step-by-Step: Tag Push Method (Recommended)
+
+**Prerequisites:**
+
+- All changes merged to `main` branch
+- CI checks passing
+- You have push access to the repository
+
+**Steps:**
+
+1. **Ensure you're on latest main**
+
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+2. **Create and push version tag**
+
+   ```bash
+   # For production release
+   git tag v1.2.3
+   git push origin v1.2.3
+
+   # For pre-release (alpha/beta)
+   git tag v1.2.3-alpha.1
+   git push origin v1.2.3-alpha.1
+   ```
+
+3. **Monitor the automated process**
+   - Go to [GitHub Actions](https://github.com/EvanDodds/ast-copilot-helper/actions)
+   - Watch the "Release and Deployment" workflow
+   - Typical completion time: 10-15 minutes
+
+4. **Verify release completion**
+   - Check [GitHub Releases](https://github.com/EvanDodds/ast-copilot-helper/releases)
+   - Verify npm packages: `npm view ast-copilot-helper@latest`
+   - Test binary downloads from release assets
+
+**That's it!** The automation handles building, testing, publishing, and notifications.
+
+### Step-by-Step: GitHub Release Method
+
+1. **Go to GitHub Releases page**
+   - Navigate to https://github.com/EvanDodds/ast-copilot-helper/releases
+
+2. **Click "Create a new release"**
+
+3. **Fill in release details**
+   - **Tag**: Enter new version like `v1.2.3` (creates tag automatically)
+   - **Title**: "AST Copilot Helper v1.2.3"
+   - **Description**: Add custom release notes or leave empty for auto-generation
+
+4. **Publish the release**
+   - Click "Publish release"
+   - This triggers the same automation as tag push
+
+### Step-by-Step: Manual Workflow Dispatch
+
+1. **Go to GitHub Actions**
+   - Navigate to https://github.com/EvanDodds/ast-copilot-helper/actions
+
+2. **Select "Release and Deployment" workflow**
+
+3. **Click "Run workflow"**
+   - **Version**: Enter version like `v1.2.3`
+   - **Environment**: Choose `staging` or `production`
+
+4. **Click "Run workflow" button**
+
+---
+
+> 📋 **Quick Reference**: Use the [Release Checklist](../RELEASE_CHECKLIST.md) for a simplified step-by-step process
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -399,6 +504,94 @@ gh pr create --title "Hotfix v1.1.1" --base main
 git checkout develop
 git merge main
 git push origin develop
+```
+
+## Common Release Issues & Quick Fixes
+
+### ❌ Release Workflow Failed
+
+**Problem**: GitHub Actions workflow failed during release
+
+**Quick Fix**:
+
+1. Check [workflow logs](https://github.com/EvanDodds/ast-copilot-helper/actions) for specific error
+2. Common causes:
+
+   ```bash
+   # Build failure - dependency issues
+   yarn install --frozen-lockfile && yarn run build
+
+   # Test failure - run locally first
+   yarn run test:all
+
+   # Publishing failure - check authentication
+   npm whoami  # Should show your username
+   ```
+
+3. Re-run the workflow: `gh workflow run release.yml --ref main`
+
+### ❌ Tag Already Exists
+
+**Problem**: "Tag already exists" error when trying to release
+
+**Quick Fix**:
+
+```bash
+# If release failed, delete and recreate tag
+git tag -d v1.2.3
+git push --delete origin v1.2.3
+
+# Create new tag (increment patch version)
+git tag v1.2.4
+git push origin v1.2.4
+```
+
+### ❌ NPM Publish Failed
+
+**Problem**: Package already published or permission denied
+
+**Quick Fix**:
+
+```bash
+# Check what's already published
+npm view ast-copilot-helper version
+
+# Increment version if needed
+npm version patch
+
+# Verify authentication
+npm whoami
+```
+
+### ❌ Binary Build Failed
+
+**Problem**: Cross-platform binary compilation failed
+
+**Quick Fix**: Check the GitHub Actions logs for platform-specific errors, then:
+
+```bash
+# Update Rust toolchain
+rustup update stable
+
+# Clear build cache
+cargo clean
+
+# Test local build
+yarn run build:binary:linux
+```
+
+### ❌ Release Created but Assets Missing
+
+**Problem**: GitHub release exists but binary downloads missing
+
+**Quick Fix**:
+
+```bash
+# Upload missing assets manually
+gh release upload v1.2.3 dist/binaries/*
+
+# Or re-run workflow with specific version
+gh workflow run release.yml --field version=v1.2.3
 ```
 
 ## Troubleshooting
