@@ -55,7 +55,7 @@ export class VectorDatabaseFactory {
     }
 
     if (
-      config.M &&
+      config.M !== undefined &&
       (!Number.isInteger(config.M) || config.M < 1 || config.M > 100)
     ) {
       throw new Error(
@@ -64,7 +64,7 @@ export class VectorDatabaseFactory {
     }
 
     if (
-      config.efConstruction &&
+      config.efConstruction !== undefined &&
       (!Number.isInteger(config.efConstruction) || config.efConstruction < 1)
     ) {
       throw new Error(
