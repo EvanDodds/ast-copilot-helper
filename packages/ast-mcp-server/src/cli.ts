@@ -500,15 +500,18 @@ Examples:
         case "start":
           if (this.config.transport === "tcp") {
             await this.serverManager.startDaemon();
+            process.exit(0);
           } else {
             // For STDIO, we need to run in foreground
             console.log("Starting STDIO server in foreground...");
             await this.serverManager.startServer();
+            // STDIO server runs indefinitely, so no exit here
           }
           break;
 
         case "stop":
           await this.serverManager.stopServer();
+          process.exit(0);
           break;
 
         case "restart":
@@ -520,8 +523,10 @@ Examples:
 
           if (this.config.transport === "tcp") {
             await this.serverManager.startDaemon();
+            process.exit(0);
           } else {
             await this.serverManager.startServer();
+            // STDIO server runs indefinitely, so no exit here
           }
           break;
 
@@ -542,6 +547,7 @@ Examples:
           } else {
             console.log("Server is not running");
           }
+          process.exit(0);
           break;
         }
 
@@ -564,6 +570,7 @@ Examples:
         case "--help":
         case "-h":
           this.showUsage();
+          process.exit(0);
           break;
 
         default:

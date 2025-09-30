@@ -21,6 +21,12 @@ on:
           - staging
           - production
 
+permissions:
+  contents: write    # Required for creating releases and pushing tags
+  packages: write    # Required for publishing packages
+  actions: read      # Standard permission for accessing workflow information
+  id-token: write    # Required for OIDC token generation (if needed for auth)
+
 env:
   NODE_VERSION: "24"
   REGISTRY_URL: "https://registry.npmjs.org"
