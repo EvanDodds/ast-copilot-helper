@@ -11,6 +11,7 @@
 // Core modules
 #[cfg(any(feature = "wasm", feature = "full-system", test))] // AST processor needs tree-sitter
 pub mod ast_processor;
+#[cfg(feature = "full-system")] // Batch processor needs file system access
 pub mod batch_processor;
 pub mod config;
 pub mod core;

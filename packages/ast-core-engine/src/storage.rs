@@ -17,9 +17,6 @@ use {
     tokio::sync::RwLock,
 };
 
-#[cfg(any(feature = "wasm", test))]
-use crate::ast_processor::{AstNode, SupportedLanguage};
-
 #[cfg(feature = "full-system")]
 pub mod storage_impl {
     use super::*;
@@ -997,7 +994,7 @@ pub use storage_impl::*;
 // WASM stub implementation
 #[cfg(not(feature = "full-system"))]
 pub mod wasm_storage_stub {
-    use crate::error::{EngineError, StorageError};
+    use crate::error::StorageError;
     use serde::{Deserialize, Serialize};
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1019,13 +1016,35 @@ pub mod wasm_storage_stub {
         pub vector_count: i64,
     }
 
-    pub struct StorageLayer;
+    pub struct StorageLayer {
+        config: crate::config::StorageConfig,
+    }
 
     impl StorageLayer {
-        pub async fn new(_config: crate::config::StorageConfig) -> Result<Self, StorageError> {
+        pub async fn new(config: crate::config::StorageConfig) -> Result<Self, StorageError> {
+            Ok(Self { config })
+        }
+
+        pub async fn store_metadata(
+            &self,
+            _metadata: &crate::types::NodeMetadata,
+        ) -> Result<(), StorageError> {
             Err(StorageError::NotSupported(
-                "Storage not available in WASM".to_string(),
+                "Storage operations not available in WASM".to_string(),
             ))
+        }
+
+        pub async fn get_metadata(
+            &self,
+            _node_id: &str,
+        ) -> Result<Option<crate::types::NodeMetadata>, StorageError> {
+            Err(StorageError::NotSupported(
+                "Storage operations not available in WASM".to_string(),
+            ))
+        }
+
+        pub fn config(&self) -> &crate::config::StorageConfig {
+            &self.config
         }
     }
 }
