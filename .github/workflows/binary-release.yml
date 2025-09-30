@@ -47,16 +47,35 @@ jobs:
 
       - name: Install dependencies
         run: |
+          echo "📦 Installing dependencies..."
           yarn install --immutable
           npm install -g tsx
+          echo "✅ Dependencies installed"
 
       - name: Build project
-        run: yarn build:all || yarn build
+        run: |
+          echo "🏗️ Building project..."
+          yarn build:all || yarn build
+          echo "✅ Project build completed"
+          
+          # Verify packages were built
+          echo "📂 Checking packages directory:"
+          ls -la packages/*/dist/ || echo "⚠️ Some package dist directories missing"
 
       - name: Build binary for ${{ matrix.platform }}
         run: |
           echo "🔨 Building binary for ${{ matrix.platform }}"
+          echo "🔍 Current working directory: $(pwd)"
+          echo "📂 Directory contents before build:"
+          ls -la
+          
+          # Ensure output directory exists
+          mkdir -p dist/binaries
+          
           yarn build:binary:${{ matrix.platform }}
+          
+          echo "📂 Directory contents after build:"
+          ls -la dist/binaries/ || echo "❌ dist/binaries directory not created"
 
       - name: Verify binary
         shell: bash
@@ -67,13 +86,32 @@ jobs:
             BINARY_PATH="dist/binaries/ast-copilot-helper-${{ matrix.target }}"
           fi
           
+          echo "🔍 Looking for binary at: $BINARY_PATH"
+          echo "📂 Contents of dist directory:"
+          ls -la dist/ || echo "dist directory does not exist"
+          
+          if [ -d "dist/binaries" ]; then
+            echo "📂 Contents of dist/binaries:"
+            ls -la dist/binaries/
+          else
+            echo "❌ dist/binaries directory does not exist"
+          fi
+          
           if [ -f "$BINARY_PATH" ]; then
             echo "✅ Binary created: $BINARY_PATH"
             ls -lh "$BINARY_PATH"
+            
+            # Test binary can be executed (basic smoke test)
+            if [ "${{ matrix.platform }}" = "win32" ]; then
+              echo "🧪 Testing Windows binary execution:"
+              "$BINARY_PATH" --version || echo "⚠️ Binary execution test failed"
+            else
+              echo "🧪 Testing Unix binary execution:"
+              chmod +x "$BINARY_PATH"
+              "$BINARY_PATH" --version || echo "⚠️ Binary execution test failed"
+            fi
           else
             echo "❌ Binary not found at: $BINARY_PATH"
-            echo "Contents of dist/binaries:"
-            ls -la dist/binaries/ || echo "Directory does not exist"
             exit 1
           fi
 

@@ -156,6 +156,15 @@ class BinaryBuilder {
     // Use absolute path to ensure ncc can resolve the module
     const cliModulePath = join(projectRoot, "packages/ast-helper/dist/cli.js");
 
+    // Validate that the CLI module exists
+    if (!existsSync(cliModulePath)) {
+      throw new Error(
+        `CLI module not found at ${cliModulePath}. Make sure to run 'yarn build' first.`,
+      );
+    }
+
+    console.log(`✅ CLI module found at: ${cliModulePath}`);
+
     const cjsWrapperContent = `#!/usr/bin/env node
 
 // CommonJS wrapper for the CLI
@@ -204,10 +213,26 @@ cli.run().catch((error) => {
 
     console.log(`📦 Creating single-file bundle with @vercel/ncc...`);
     console.log(`Running: ${nccCommand}`);
-    execSync(nccCommand, {
-      stdio: "inherit",
-      cwd: projectRoot,
-    });
+
+    try {
+      execSync(nccCommand, {
+        stdio: "inherit",
+        cwd: projectRoot,
+      });
+
+      // Verify ncc output was created
+      if (!existsSync(nccBundlePath)) {
+        throw new Error(`NCC failed to create bundle at ${nccBundlePath}`);
+      }
+
+      console.log(`✅ NCC bundle created successfully at ${nccBundlePath}`);
+    } catch (error) {
+      console.error(`❌ NCC bundling failed for ${platform}`);
+      console.error(`Command: ${nccCommand}`);
+      console.error(`Working directory: ${projectRoot}`);
+      console.error(`Error: ${error instanceof Error ? error.message : error}`);
+      throw error;
+    }
 
     // Post-process the ncc output to fix ES module issues
     await this.fixNccOutput(nccBundlePath, nccOutputDir);
