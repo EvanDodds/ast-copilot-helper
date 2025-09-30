@@ -319,7 +319,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.2",
-    "@types/node": "^24.5.2"
+    "@types/node": "^24.6.0"
   },
   "devDependencies": {
     "@types/vscode": "^1.104.0",
@@ -327,7 +327,7 @@
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.6.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
   "repository": {
