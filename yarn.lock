@@ -3032,6 +3032,7 @@ __metadata:
     husky: "npm:^9.1.7"
     js-yaml: "npm:^4.1.0"
     lint-staged: "npm:^16.2.1"
+    postject: "npm:^1.0.0-alpha.6"
     tmp: "npm:^0.2.5"
     ts-node: "npm:^10.9.2"
     tsx: "npm:^4.20.6"
@@ -3672,6 +3673,13 @@ __metadata:
   version: 14.0.1
   resolution: "commander@npm:14.0.1"
   checksum: 10c9/783115e9403caeca29c0fcbd4e0358f70c67760e4e4933f3453fcdd5ddba2ec44173c8da5213d7ce5e404f51c7e71203a42c548164dbe27b668b32a8981577f1
+  languageName: node
+  linkType: hard
+
+"commander@npm:^9.4.0":
+  version: 9.5.0
+  resolution: "commander@npm:9.5.0"
+  checksum: 10c9/41c49b3d0f94a1fbeb0463c85b13f15aa15a9e0b4d5e10a49c0a1d58d4489b549d62262b052ae0aa6cfda53299bee487bfe337825df15e342114dde543f82906
   languageName: node
   linkType: hard
 
@@ -6922,6 +6930,17 @@ __metadata:
     picocolors: "npm:^1.1.1"
     source-map-js: "npm:^1.2.1"
   checksum: 10c9/9e4fbe97574091e9736d0e82a591e29aa100a0bf60276a926308f8c57249698935f35c5d2f4e80de778d0cbb8dcffab4f383d85fd50c5649aca421c3df729b86
+  languageName: node
+  linkType: hard
+
+"postject@npm:^1.0.0-alpha.6":
+  version: 1.0.0-alpha.6
+  resolution: "postject@npm:1.0.0-alpha.6"
+  dependencies:
+    commander: "npm:^9.4.0"
+  bin:
+    postject: dist/cli.js
+  checksum: 10c9/deda89e3cb623332f477a7d9ab75c5aebf3338cb305adb9420f37fc50930f3eb46782fe3b2ab2dc22a59da91ea1a011c7edfe2b3d2e225a9cd6b0e745c51061d
   languageName: node
   linkType: hard
 
