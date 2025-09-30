@@ -83,7 +83,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: "yarn"
 
       - name: Install dependencies
         run: |
@@ -94,16 +94,16 @@ jobs:
 
       - name: Build packages
         run: |
-          npm run build
+          yarn build
 
       - name: Run tests
         run: |
-          npm test
+          yarn test
 
       - name: Validate distribution configuration
         run: |
           cd packages/ast-helper
-          npm run dist:validate
+          yarn dist:validate
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
@@ -111,10 +111,10 @@ jobs:
 
       - name: Security audit
         run: |
-          npm audit --audit-level moderate
-          cd packages/ast-helper && npm audit --audit-level moderate
-          cd ../ast-mcp-server && npm audit --audit-level moderate  
-          cd ../vscode-extension && npm audit --audit-level moderate
+          yarn npm audit
+          cd packages/ast-helper && yarn npm audit
+          cd ../ast-mcp-server && yarn npm audit  
+          cd ../vscode-extension && yarn npm audit
 
   distribute:
     runs-on: ${{ matrix.os }}
@@ -174,7 +174,7 @@ jobs:
 
       - name: Build packages
         run: |
-          npm run build
+          yarn build
 
       - name: Set up distribution environment
         run: |
@@ -185,7 +185,7 @@ jobs:
         if: matrix.channel == 'npm'
         run: |
           cd packages/ast-helper
-          npm run dist:npm
+          yarn dist:npm
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_REGISTRY: ${{ vars.NPM_REGISTRY || 'https://registry.npmjs.org' }}
@@ -194,31 +194,20 @@ jobs:
         if: matrix.channel == 'marketplace'
         run: |
           cd packages/vscode-extension
-          npm run dist:marketplace
+          yarn dist:marketplace
         env:
           VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
           VSCE_PUBLISHER: ${{ vars.VSCE_PUBLISHER }}
 
-      - name: GitHub Release Distribution
+      - name: GitHub Releases Distribution
         if: matrix.channel == 'github'
         run: |
-          cd packages/ast-helper
-          npm run dist:github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_OWNER: ${{ github.repository_owner }}
-          GITHUB_REPO: ${{ github.event.repository.name }}
+          yarn dist:github
 
       - name: Binary Distribution
         if: matrix.channel == 'binary'
         run: |
-          cd packages/ast-helper
-          npm run dist:binary
-        env:
-          BINARY_SIGNING_ENABLED: ${{ vars.BINARY_SIGNING_ENABLED || 'false' }}
-          WIN_CERT_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
-          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
-          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+          yarn dist:binary
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v4
@@ -235,7 +224,7 @@ jobs:
         if: always()
         run: |
           cd packages/ast-helper
-          npm run dist:report -- --channel ${{ matrix.channel }} --version ${{ needs.prepare.outputs.version }}
+          yarn dist:report --channel ${{ matrix.channel }} --version ${{ needs.prepare.outputs.version }}
 
       - name: Upload distribution report
         if: always()
@@ -274,7 +263,7 @@ jobs:
       - name: Verify distributions
         run: |
           cd packages/ast-helper
-          npm run dist:verify -- --version ${{ needs.prepare.outputs.version }} --reports ./reports
+          yarn dist:verify --version ${{ needs.prepare.outputs.version }} --reports ./reports
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
@@ -284,7 +273,7 @@ jobs:
         if: always()
         run: |
           cd packages/ast-helper
-          npm run dist:verify-report
+          yarn dist:verify-report
 
       - name: Upload verification report
         if: always()
