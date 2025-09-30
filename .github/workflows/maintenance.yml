@@ -72,7 +72,9 @@ jobs:
           echo "🧪 Running tests with updated dependencies..."
           # Install and test
           yarn install --immutable
-          yarn test      - name: Create Pull Request
+          yarn test
+
+      - name: Create Pull Request
         if: steps.update.outputs.has-updates == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
