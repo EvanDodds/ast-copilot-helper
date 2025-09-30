@@ -1060,7 +1060,7 @@ const ErrorHelp: Partial<Record<ErrorCodes, string>> = {
 
 ### 12.1 CI/CD Pipeline Specification
 
-**GitHub Actions Workflow** (`.github/workflows/release.yml`)
+**GitHub Actions Workflow** (`.github/workflows/release-pipeline.yml`)
 
 ```yaml
 name: Build and Release

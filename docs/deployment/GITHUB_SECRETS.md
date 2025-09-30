@@ -19,7 +19,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
   - `write:packages` (upload packages to GitHub Package Registry)
   - `read:org` (read organization membership)
 - **Setup**: Automatically provided by GitHub Actions (usually no manual setup needed)
-- **Workflows**: `ci-cd.yml`, `release.yml`, `distribution.yml`, `community-analytics.yml`, `maintenance.yml`
+- **Workflows**: `ci.yml`, `release-pipeline.yml`, `community-analytics.yml`, `maintenance.yml`
 
 ### 📦 Package Distribution Secrets
 
@@ -32,7 +32,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
   2. Go to Profile → Access Tokens → Generate New Token
   3. Select "Automation" type for CI/CD usage
   4. Copy the token (format: `npm_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`)
-- **Workflows**: `ci-cd.yml`, `release.yml`, `distribution.yml`
+- **Workflows**: `ci.yml`, `release.yml`, `distribution.yml`
 
 #### `VSCE_PAT` / `VSCE_TOKEN`
 
@@ -44,7 +44,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
   3. Set Organization to "All accessible organizations"
   4. Set Scopes to "Marketplace (manage)"
   5. Copy the token
-- **Workflows**: `ci-cd.yml`, `distribution.yml`
+- **Workflows**: `ci.yml`, `release-pipeline.yml`
 
 ### 🔒 Code Signing Secrets
 
@@ -66,7 +66,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
   1. Obtain a macOS Developer ID certificate from Apple
   2. Export the certificate from Keychain Access
   3. Set this secret to the export password
-- **Workflows**: `distribution.yml`
+- **Workflows**: `release-pipeline.yml`
 
 #### `LINUX_GPG_PASSPHRASE`
 
@@ -76,7 +76,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
   1. Generate a GPG key: `gpg --gen-key`
   2. Export the key: `gpg --export-secret-keys YOUR_KEY_ID > private.key`
   3. Set this secret to the passphrase you used when creating the key
-- **Workflows**: `distribution.yml`
+- **Workflows**: `release-pipeline.yml`
 
 ### 🚀 Deployment Secrets
 
@@ -88,7 +88,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
   1. Deploy your staging environment
   2. Create a health check endpoint (e.g., `/health` or `/api/health`)
   3. Set this secret to the full URL (e.g., `https://staging.example.com/health`)
-- **Workflows**: `ci-cd.yml`
+- **Workflows**: `ci.yml`
 
 #### `PRODUCTION_HEALTH_CHECK_URLS`
 
@@ -98,7 +98,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
   1. Deploy your production environment(s)
   2. Create health check endpoints for each instance
   3. Set this secret to comma-separated URLs (e.g., `https://api1.example.com/health,https://api2.example.com/health`)
-- **Workflows**: `ci-cd.yml`
+- **Workflows**: `ci.yml`
 
 #### `DEPLOYMENT_APPROVAL_TOKEN`
 
@@ -108,7 +108,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
   1. Create a service account or bot token with deployment permissions
   2. Generate a secure token for this account
   3. Set this secret to the token value
-- **Workflows**: `ci-cd.yml`
+- **Workflows**: `ci.yml`
 
 #### `BLUE_GREEN_DEPLOYMENT`
 
@@ -118,7 +118,7 @@ The AST Copilot Helper project uses GitHub Actions for continuous integration, d
   1. Set up blue-green deployment infrastructure
   2. Create a JSON configuration with environment endpoints
   3. Example value: `{"blue": "https://blue.example.com", "green": "https://green.example.com"}`
-- **Workflows**: `ci-cd.yml`
+- **Workflows**: `ci.yml`
 
 ### 📢 Notification Secrets
 

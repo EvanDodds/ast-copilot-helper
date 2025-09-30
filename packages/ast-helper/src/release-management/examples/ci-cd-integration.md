@@ -7,7 +7,7 @@ This document provides detailed examples for integrating the release management 
 ### Complete Release Workflow
 
 ```yaml
-# .github/workflows/release.yml
+# .github/workflows/release-pipeline.yml
 name: Automated Release Management
 
 on:
