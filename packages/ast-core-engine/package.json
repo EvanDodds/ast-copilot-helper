@@ -32,9 +32,9 @@
     "build:all": "npm run build:native && npm run build:wasm",
     "test": "cargo test",
     "test:wasm": "cargo test --no-default-features --features wasm",
-    "clean": "cargo clean && rm -rf pkg/",
-    "clean:wasm": "rm -rf pkg/",
-    "clean:all": "cargo clean && rm -rf pkg/"
+    "clean": "cargo clean && rimraf pkg/",
+    "clean:wasm": "rimraf pkg/",
+    "clean:all": "cargo clean && rimraf pkg/"
   },
   "repository": {
     "type": "git",

@@ -69,8 +69,35 @@ jobs:
         id: matrix
         run: |
           CHANNELS="${{ steps.channels.outputs.channels }}"
-          MATRIX_JSON=$(echo "$CHANNELS" | jq -R 'split(",") | map({"channel": .})')
-          echo "matrix={\"include\":$MATRIX_JSON}" >> $GITHUB_OUTPUT
+          echo "Input channels: $CHANNELS"
+          
+          # Build matrix JSON more safely
+          if [[ "$CHANNELS" == *"npm"* ]]; then
+            MATRIX_ITEMS+=('{"channel":"npm"}')
+          fi
+          if [[ "$CHANNELS" == *"marketplace"* ]]; then
+            MATRIX_ITEMS+=('{"channel":"marketplace"}')
+          fi
+          if [[ "$CHANNELS" == *"github"* ]]; then
+            MATRIX_ITEMS+=('{"channel":"github"}')
+          fi
+          if [[ "$CHANNELS" == *"binary"* ]]; then
+            MATRIX_ITEMS+=('{"channel":"binary"}')
+          fi
+          
+          # Join array elements with commas
+          IFS=','
+          MATRIX_JSON="[${MATRIX_ITEMS[*]}]"
+          unset IFS
+          
+          # Output using heredoc to avoid escaping issues
+          {
+            echo "matrix<<EOF"
+            echo "{\"include\":$MATRIX_JSON}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+          
+          echo "Generated matrix: {\"include\":$MATRIX_JSON}"
 
   validate:
     runs-on: ubuntu-latest

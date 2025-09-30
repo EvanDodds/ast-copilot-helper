@@ -183,6 +183,9 @@ describe("DatabaseConfigurationManager", () => {
       originalConfig.topK = 99; // Test with valid value within range (1-100)
       await manager.saveConfig(tempDir, originalConfig);
 
+      // Add a small delay to ensure timestamp difference
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // Create again with force (should merge)
       const options: InitOptions = { force: true };
       await manager.createConfigurationFile(tempDir, options);
@@ -284,14 +287,17 @@ describe("DatabaseConfigurationManager", () => {
     it("should update lastUpdated timestamp on save", async () => {
       const config = manager.createDefaultConfig();
       const originalTimestamp = config.lastUpdated;
+      const originalTime = new Date(originalTimestamp).getTime();
 
       // Wait a bit to ensure timestamp difference
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       await manager.saveConfig(tempDir, config);
       const loadedConfig = await manager.loadConfig(tempDir);
+      const newTime = new Date(loadedConfig.lastUpdated).getTime();
 
-      expect(loadedConfig.lastUpdated).not.toBe(originalTimestamp);
+      // Ensure the new timestamp is later than the original
+      expect(newTime).toBeGreaterThan(originalTime);
     });
 
     it("should handle missing configuration file", async () => {
