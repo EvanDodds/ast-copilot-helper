@@ -25,19 +25,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: "npm"
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --immutable
 
       - name: Type check
-        run: npm run type-check
+        run: yarn type-check
 
       - name: Lint
-        run: npm run lint
+        run: yarn lint
 
       - name: Quick tests
-        run: npm run test:quick
+        run: yarn test:quick
         timeout-minutes: 5
 
       - name: Validate vector database test files

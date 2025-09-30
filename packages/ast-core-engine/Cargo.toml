@@ -32,6 +32,9 @@ dashmap = "6.1"
 sysinfo = { version = "0.32", optional = true }
 num_cpus = { version = "1.16", optional = true }
 
+# Platform-specific dependencies
+libc = { version = "0.2", optional = true }
+
 # AST parsing
 tree-sitter = { version = "0.20", optional = true }
 
@@ -60,7 +63,7 @@ tempfile = "3.0"
 [features]
 default = ["full-system"]
 wasm = [] # WASM build without system dependencies
-full-system = ["sqlx", "sysinfo", "num_cpus", "tree-sitter", "tokio/fs", "sqlx/runtime-tokio"] # Include system dependencies for native builds
+full-system = ["sqlx", "sysinfo", "num_cpus", "tree-sitter", "libc", "tokio/fs", "sqlx/runtime-tokio"] # Include system dependencies for native builds
 
 [profile.release]
 lto = true

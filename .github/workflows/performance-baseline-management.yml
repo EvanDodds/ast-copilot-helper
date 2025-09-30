@@ -51,7 +51,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -61,7 +61,7 @@ jobs:
           override: true
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Build Rust engine
         run: |
@@ -84,7 +84,7 @@ jobs:
       - name: Generate WASM baseline
         run: |
           echo "Generating WASM performance baseline..."
-          npm run test:performance:baseline -- --implementation=WASM
+          yarn test:performance:baseline --implementation=WASM
         env:
           BASELINE_MODE: create
           PERFORMANCE_MODE: baseline  
@@ -216,10 +216,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Validate baseline integrity
         run: |
@@ -317,10 +317,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Generate baseline comparison report
         run: |
@@ -409,10 +409,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Generate performance dashboard
         run: |

@@ -20,7 +20,7 @@ pub fn get_memory_usage() -> u64 {
         }
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(all(target_os = "macos", feature = "libc"))]
     {
         use libc::{c_void, getpid, proc_pidinfo, PROC_PIDTASKINFO};
         use std::mem;
