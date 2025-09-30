@@ -896,7 +896,7 @@ export class FileSystemTester {
         duration: Date.now() - startTime,
         error: allSuccessful
           ? undefined
-          : "Concurrent file operations did not all complete successfully",
+          : `Concurrent file operations failed. Expected content mismatch. Results: ${JSON.stringify(results_data.map((content, i) => ({ expected: `Content from operation ${i}`, actual: content, match: content === `Content from operation ${i}` })))}`,
         details: {
           operationCount: operations.length,
           allSuccessful,
