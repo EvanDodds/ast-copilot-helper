@@ -17,6 +17,9 @@ use {
     tokio::sync::RwLock,
 };
 
+#[cfg(test)]
+use crate::ast_processor::{AstNode, SupportedLanguage};
+
 #[cfg(feature = "full-system")]
 pub mod storage_impl {
     use super::*;
