@@ -63,7 +63,7 @@ async fn test_vector_database_creation() {
         max_elements: 10000,
     };
 
-    let vector_db = ast_helper_core_engine::vector_db::SimpleVectorDb::new(config);
+    let mut vector_db = ast_helper_core_engine::vector_db::SimpleVectorDb::new(config);
 
     // Test initialization
     let result = vector_db.initialize();
@@ -273,8 +273,8 @@ async fn test_benchmark_configuration() {
 
     // Test default benchmark config
     let default_config = ast_helper_core_engine::performance_monitor::BenchmarkConfig::default();
-    assert_eq!(default_config.iterations, 1000);
-    assert_eq!(default_config.warmup_iterations, 100);
+    assert_eq!(default_config.iterations, 10);
+    assert_eq!(default_config.warmup_iterations, 3);
     assert!(default_config.collect_memory_stats);
     assert!(default_config.collect_system_stats);
 

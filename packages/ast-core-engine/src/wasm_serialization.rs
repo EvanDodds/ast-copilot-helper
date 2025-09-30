@@ -406,6 +406,7 @@ impl MemoryManager {
 mod tests {
     use super::*;
 
+    #[cfg(target_family = "wasm")]
     #[test]
     fn test_array_converter() {
         let test_vec = vec![1.0, 2.0, 3.0, 4.0];

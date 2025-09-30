@@ -1,6 +1,6 @@
-#[cfg(any(feature = "wasm", test))]
+#[cfg(any(feature = "wasm", feature = "full-system", test))]
 use crate::ast_processor::AstProcessor;
-#[cfg(any(feature = "wasm", test))]
+#[cfg(any(feature = "wasm", feature = "full-system", test))]
 use crate::types::NodeMetadata;
 use crate::{
     error::{EngineError, StorageError},
@@ -9,9 +9,9 @@ use crate::{
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
-#[cfg(not(any(feature = "wasm", test)))]
+#[cfg(not(any(feature = "wasm", feature = "full-system", test)))]
 use tokio::sync::Mutex;
-#[cfg(any(feature = "wasm", test))]
+#[cfg(any(feature = "wasm", feature = "full-system", test))]
 use tokio::sync::{mpsc, Mutex};
 
 #[derive(Clone, Default)]
@@ -146,18 +146,18 @@ pub struct FileProcessingResult {
 /// High-performance batch processor for large codebases
 #[allow(dead_code)]
 pub struct BatchProcessor {
-    #[cfg(any(feature = "wasm", test))]
+    #[cfg(any(feature = "wasm", feature = "full-system", test))]
     ast_processor: Arc<AstProcessor>,
     storage: Arc<StorageLayer>,
     config: BatchConfig,
-    #[cfg(any(feature = "wasm", test))]
+    #[cfg(any(feature = "wasm", feature = "full-system", test))]
     progress: Arc<Mutex<BatchProgress>>,
     pub cancellation_token: CancellationToken,
     start_time: Arc<Mutex<Option<Instant>>>,
 }
 
 impl BatchProcessor {
-    #[cfg(any(feature = "wasm", test))]
+    #[cfg(any(feature = "wasm", feature = "full-system", test))]
     pub fn new(
         ast_processor: Arc<AstProcessor>,
         storage: Arc<StorageLayer>,
@@ -175,7 +175,7 @@ impl BatchProcessor {
     }
 
     /// Process multiple files in batch with progress tracking
-    #[cfg(any(feature = "wasm", test))]
+    #[cfg(any(feature = "wasm", feature = "full-system", test))]
     pub async fn process_files(
         &mut self,
         file_paths: Vec<PathBuf>,
@@ -361,7 +361,7 @@ impl BatchProcessor {
     }
 
     /// Process a single file and return (nodes_count, vectors_count)
-    #[cfg(any(feature = "wasm", test))]
+    #[cfg(any(feature = "wasm", feature = "full-system", test))]
     async fn process_single_file(
         _ast_processor: &AstProcessor,
         storage: &StorageLayer,
@@ -457,7 +457,7 @@ impl BatchProcessor {
     }
 
     /// Get current progress
-    #[cfg(any(feature = "wasm", test))]
+    #[cfg(any(feature = "wasm", feature = "full-system", test))]
     pub async fn get_progress(&self) -> BatchProgress {
         let progress = self.progress.lock().await;
         progress.clone()
@@ -474,7 +474,7 @@ impl BatchProcessor {
     }
 
     /// Get memory usage estimate
-    #[cfg(any(feature = "wasm", test))]
+    #[cfg(any(feature = "wasm", feature = "full-system", test))]
     pub async fn get_memory_usage(&self) -> u64 {
         // Simple estimate based on processed data
         let progress = self.progress.lock().await;

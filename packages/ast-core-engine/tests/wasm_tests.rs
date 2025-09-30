@@ -172,20 +172,22 @@ mod integration_tests {
     /// Test the overall build configuration
     #[test]
     fn test_build_configuration() {
-        // Test that exactly one of NAPI or WASM features is enabled
+        // Test that at least one primary feature is enabled
         let napi_enabled = cfg!(feature = "napi");
         let wasm_enabled = cfg!(feature = "wasm");
+        let full_system_enabled = cfg!(feature = "full-system");
 
-        // Should have exactly one primary feature enabled
+        // Should have at least one primary feature enabled
         assert!(
-            napi_enabled || wasm_enabled,
-            "Either NAPI or WASM should be enabled"
+            napi_enabled || wasm_enabled || full_system_enabled,
+            "Either NAPI, WASM, or full-system should be enabled"
         );
 
         // Document which features are active
         println!("Build configuration:");
         println!("  NAPI enabled: {}", napi_enabled);
         println!("  WASM enabled: {}", wasm_enabled);
+        println!("  Full-system enabled: {}", full_system_enabled);
         println!("  Tree-sitter: {}", cfg!(feature = "tree-sitter"));
         println!("  Target arch: {}", std::env::consts::ARCH);
     }

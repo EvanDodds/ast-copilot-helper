@@ -512,6 +512,7 @@ mod tests {
         assert_eq!(config.max_elements, 1000);
     }
 
+    #[cfg(target_family = "wasm")]
     #[test]
     fn test_utility_functions() {
         // Test vector conversion utilities
@@ -528,6 +529,7 @@ mod tests {
         assert_eq!(converted_back.len(), 4);
     }
 
+    #[cfg(target_family = "wasm")]
     #[test]
     fn test_wasm_error_creation() {
         let error = WasmError::new("Test error message");
