@@ -1,6 +1,6 @@
 //! Basic tests for workspace setup
 
-use crate::{*, core::ASTCoreEngine, storage::StorageLayer};
+use crate::{core::ASTCoreEngine, storage::StorageLayer, *};
 
 #[cfg(test)]
 mod tests {

@@ -1,11 +1,11 @@
 #[cfg(any(feature = "wasm", test))]
 use crate::ast_processor::AstProcessor;
+#[cfg(any(feature = "wasm", test))]
+use crate::types::NodeMetadata;
 use crate::{
     error::{EngineError, StorageError},
     storage::StorageLayer,
 };
-#[cfg(any(feature = "wasm", test))]
-use crate::types::NodeMetadata;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};

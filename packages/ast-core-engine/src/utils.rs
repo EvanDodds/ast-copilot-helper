@@ -66,15 +66,18 @@ pub fn get_memory_usage() -> u64 {
         }
     }
 
-        #[cfg(feature = "full-system")]
+    #[cfg(feature = "full-system")]
     {
         // Fallback: use sysinfo crate
         let mut system = System::new_all();
         system.refresh_memory();
         let pid = sysinfo::get_current_pid().unwrap();
-        system.process(pid).map(|process| {
-            process.memory() * 1024 // sysinfo returns KB, convert to bytes
-        }).unwrap_or(0)
+        system
+            .process(pid)
+            .map(|process| {
+                process.memory() * 1024 // sysinfo returns KB, convert to bytes
+            })
+            .unwrap_or(0)
     }
     #[cfg(not(feature = "full-system"))]
     {
