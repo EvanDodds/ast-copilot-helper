@@ -27,6 +27,9 @@ build/
 lib/
 *.tsbuildinfo
 
+# Exception: Track build scripts
+!scripts/build/
+
 # ESLint cache
 
 # Symlinks (should not be tracked)
