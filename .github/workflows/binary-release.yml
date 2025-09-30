@@ -13,6 +13,12 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write    # Required for creating releases and pushing tags
+  packages: write    # Required for publishing packages
+  actions: read      # Standard permission for accessing workflow information
+  id-token: write    # Required for OIDC token generation (if needed for auth)
+
 env:
   NODE_VERSION: "24"
 
@@ -60,22 +66,22 @@ jobs:
           
           # Verify packages were built
           echo "📂 Checking packages directory:"
-          ls -la packages/*/dist/ || echo "⚠️ Some package dist directories missing"
+          node -e "const fs = require('fs'); const path = require('path'); try { const packages = fs.readdirSync('packages'); packages.forEach(pkg => { const distPath = path.join('packages', pkg, 'dist'); if (fs.existsSync(distPath)) { console.log('✅ Found dist for:', pkg); } else { console.log('⚠️ Missing dist for:', pkg); } }); } catch(e) { console.log('⚠️ Some package dist directories missing'); }"
 
       - name: Build binary for ${{ matrix.platform }}
         run: |
           echo "🔨 Building binary for ${{ matrix.platform }}"
-          echo "🔍 Current working directory: $(pwd)"
+          echo "🔍 Current working directory: $(node -e 'console.log(process.cwd())')"
           echo "📂 Directory contents before build:"
-          ls -la
+          node -e "console.log(require('fs').readdirSync('.').join('\n'))"
           
           # Ensure output directory exists
-          mkdir -p dist/binaries
+          node -e "const fs = require('fs'); fs.mkdirSync('dist/binaries', { recursive: true }); console.log('Created dist/binaries directory');"
           
           yarn build:binary:${{ matrix.platform }}
           
           echo "📂 Directory contents after build:"
-          ls -la dist/binaries/ || echo "❌ dist/binaries directory not created"
+          node -e "const fs = require('fs'); try { console.log(fs.readdirSync('dist/binaries').join('\n')); } catch(e) { console.log('❌ dist/binaries directory not created'); }"
 
       - name: Verify binary
         shell: bash
@@ -88,11 +94,11 @@ jobs:
           
           echo "🔍 Looking for binary at: $BINARY_PATH"
           echo "📂 Contents of dist directory:"
-          ls -la dist/ || echo "dist directory does not exist"
+          node -e "const fs = require('fs'); try { console.log(fs.readdirSync('dist').join('\n')); } catch(e) { console.log('dist directory does not exist'); }"
           
           if [ -d "dist/binaries" ]; then
             echo "📂 Contents of dist/binaries:"
-            ls -la dist/binaries/
+            node -e "console.log(require('fs').readdirSync('dist/binaries').join('\n'));"
           else
             echo "❌ dist/binaries directory does not exist"
           fi
@@ -179,15 +185,42 @@ jobs:
 
       - name: Prepare release assets
         run: |
-          mkdir -p ./release-assets
+          node -e "require('fs').mkdirSync('./release-assets', { recursive: true }); console.log('Created release-assets directory');"
           
           # Copy all binary archives and checksums
-          find ./artifacts -name "*.zip" -o -name "*.tar.gz" -o -name "*.sha256" | while read file; do
-            cp "$file" ./release-assets/
-          done
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            
+            function findFiles(dir, extensions) {
+              const files = [];
+              const entries = fs.readdirSync(dir, { withFileTypes: true });
+              
+              for (const entry of entries) {
+                const fullPath = path.join(dir, entry.name);
+                if (entry.isDirectory()) {
+                  files.push(...findFiles(fullPath, extensions));
+                } else if (extensions.some(ext => entry.name.endsWith(ext))) {
+                  files.push(fullPath);
+                }
+              }
+              return files;
+            }
+            
+            try {
+              const files = findFiles('./artifacts', ['.zip', '.tar.gz', '.sha256']);
+              files.forEach(file => {
+                const dest = path.join('./release-assets', path.basename(file));
+                fs.copyFileSync(file, dest);
+                console.log('Copied:', file, '->', dest);
+              });
+            } catch(e) {
+              console.log('Error copying files:', e.message);
+            }
+          "
           
           echo "Release assets:"
-          ls -la ./release-assets/
+          node -e "console.log(require('fs').readdirSync('./release-assets').join('\n'));"
 
       - name: Generate release notes
         id: release-notes
@@ -290,7 +323,7 @@ jobs:
           echo "Updating package manager configs for version: $VERSION"
           
           # Download checksums from the release
-          mkdir -p /tmp/checksums
+          node -e "const path = require('path'); const fs = require('fs'); const tmpDir = path.join(require('os').tmpdir(), 'checksums'); fs.mkdirSync(tmpDir, { recursive: true }); console.log('Created checksums directory at:', tmpDir);"
           
           # Note: In a real implementation, you would:
           # 1. Download the actual checksum files from the release
