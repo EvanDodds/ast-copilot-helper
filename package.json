@@ -50,6 +50,7 @@
     "baseline:update": "echo '📊 Updating performance baselines...' && tsx scripts/performance/baseline-update.ts",
     "baseline:validate": "echo '✅ Validating performance baselines...' && tsx scripts/performance/baseline-validate.ts",
     "baseline:compare": "echo '🔍 Comparing performance against baselines...' && tsx scripts/performance/baseline-compare.ts",
+    "baseline:wasm:generate": "echo '🔧 Generating WASM performance baseline...' && tsx scripts/performance/baseline-wasm-generate.ts",
     "performance:dashboard": "echo '📈 Generating performance dashboard...' && tsx scripts/performance/dashboard-generate.ts",
     "dev": "yarn workspaces foreach --all --parallel --verbose run dev",
     "start:mcp": "yarn workspace ast-mcp-server run start",

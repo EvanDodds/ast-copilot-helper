@@ -84,7 +84,7 @@ jobs:
       - name: Generate WASM baseline
         run: |
           echo "Generating WASM performance baseline..."
-          yarn test:performance:baseline --implementation=WASM
+          yarn baseline:wasm:generate
         env:
           BASELINE_MODE: create
           PERFORMANCE_MODE: baseline  

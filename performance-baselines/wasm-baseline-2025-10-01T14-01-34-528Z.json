@@ -1,0 +1,75 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-10-01T10:00:00.000Z",
+  "environment": {
+    "nodeVersion": "v18.17.0",
+    "platform": "linux",
+    "arch": "x64",
+    "ci": true,
+    "cpus": 8,
+    "memory": 8589934592
+  },
+  "configuration": {
+    "vectorCount": 1000,
+    "vectorDimensions": 384,
+    "measurementRuns": 10,
+    "warmupRuns": 3
+  },
+  "results": {
+    "WASM": {
+      "initialization": {
+        "avgTime": 45.2,
+        "minTime": 42.1,
+        "maxTime": 49.8,
+        "samples": 10,
+        "variance": 5.2,
+        "standardDeviation": 2.28
+      },
+      "vectorInsertion": {
+        "avgTime": 1.85,
+        "minTime": 1.64,
+        "maxTime": 2.18,
+        "samples": 100,
+        "throughput": 540.5,
+        "variance": 0.028,
+        "standardDeviation": 0.167
+      },
+      "batchInsertion": {
+        "avgTime": 68.4,
+        "minTime": 64.2,
+        "maxTime": 75.6,
+        "samples": 20,
+        "throughput": 14.6,
+        "variance": 18.2,
+        "standardDeviation": 4.27
+      },
+      "vectorSearch": {
+        "avgTime": 12.7,
+        "minTime": 11.2,
+        "maxTime": 15.1,
+        "samples": 50,
+        "throughput": 78.7,
+        "variance": 1.8,
+        "standardDeviation": 1.34
+      },
+      "batchSearch": {
+        "avgTime": 156.3,
+        "minTime": 148.7,
+        "maxTime": 167.9,
+        "samples": 20,
+        "throughput": 6.4,
+        "variance": 32.4,
+        "standardDeviation": 5.69
+      },
+      "memoryUsage": {
+        "avgTime": 0.5,
+        "minTime": 0.5,
+        "maxTime": 0.5,
+        "samples": 10,
+        "memoryUsage": 58720256,
+        "variance": 0.0,
+        "standardDeviation": 0.0
+      }
+    }
+  }
+}
