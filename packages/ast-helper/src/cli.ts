@@ -9,6 +9,7 @@ import { Command, Option } from "commander";
 import * as fs from "fs/promises";
 import { readFileSync, existsSync } from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { ConfigManager } from "./config/index.js";
 import {
   ConfigurationErrors,
@@ -785,9 +786,33 @@ export class AstHelperCli {
    */
   private getVersion(): string {
     try {
-      const packagePath = path.join(__dirname, "..", "package.json");
-      const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
-      return packageJson.version || "0.1.0";
+      // In ES modules, we need to use import.meta.url to get the current file's directory
+      const currentFileUrl = import.meta.url;
+      const currentDir = path.dirname(fileURLToPath(currentFileUrl));
+
+      // For compiled code, currentDir will be in dist/, so we need to go up one level
+      const packagePath = path.join(currentDir, "..", "package.json");
+
+      if (existsSync(packagePath)) {
+        const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
+        return packageJson.version || "0.1.0";
+      }
+
+      // Fallback: try to find package.json in workspace
+      const workspacePackagePath = path.join(
+        process.cwd(),
+        "packages",
+        "ast-helper",
+        "package.json",
+      );
+      if (existsSync(workspacePackagePath)) {
+        const packageJson = JSON.parse(
+          readFileSync(workspacePackagePath, "utf8"),
+        );
+        return packageJson.version || "0.1.0";
+      }
+
+      return "0.1.0";
     } catch {
       return "0.1.0";
     }
