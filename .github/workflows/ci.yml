@@ -6,8 +6,6 @@ on:
   pull_request:
     branches: [main]
     types: [ready_for_review, synchronize]
-  release:
-    types: [published]
   schedule:
     # Run nightly performance benchmarks and security scans
     - cron: "0 2 * * *"
@@ -862,7 +860,7 @@ jobs:
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
       - name: Generate changelog
-        run: yarn run release:changelog
+        run: yarn run changelog:generate
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
