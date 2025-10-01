@@ -1,5 +1,5 @@
 {
-  "score": 9.4,
+  "score": 8.6,
   "vulnerabilities": 0,
   "moderate": 0,
   "high": 0,
@@ -18,12 +18,12 @@
           "total": 0
         },
         "dependencies": {
-          "prod": 109,
-          "dev": 522,
-          "optional": 83,
-          "peer": 43,
+          "prod": 208,
+          "dev": 673,
+          "optional": 79,
+          "peer": 40,
           "peerOptional": 0,
-          "total": 664
+          "total": 912
         }
       }
     },
@@ -36,12 +36,13 @@
         ]
       },
       "dependencyDepth": {
-        "score": 8,
-        "dependencyCount": 58
+        "score": 5,
+        "dependencyCount": -1,
+        "error": "Could not analyze dependencies"
       },
       "licenseSecurity": {
-        "score": 10,
-        "issues": []
+        "score": 5,
+        "issues": ["Could not check licenses"]
       }
     }
   }

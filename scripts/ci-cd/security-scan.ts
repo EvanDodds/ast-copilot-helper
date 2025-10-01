@@ -6,7 +6,7 @@
  */
 
 import { execSync } from "child_process";
-import { writeFileSync, readFileSync, existsSync } from "fs";
+import { writeFileSync, readFileSync, existsSync, appendFileSync } from "fs";
 import { join } from "path";
 
 interface SecurityResult {
@@ -275,8 +275,7 @@ async function main() {
   // Use GitHub Actions environment file instead of deprecated set-output
   const outputFile = process.env.GITHUB_OUTPUT;
   if (outputFile) {
-    const fs = require("fs");
-    fs.appendFileSync(outputFile, `security-score=${result.score}\n`);
+    appendFileSync(outputFile, `security-score=${result.score}\n`);
   } else {
     console.log(`security-score=${result.score}`);
   }
