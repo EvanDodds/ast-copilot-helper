@@ -139,8 +139,8 @@ jobs:
         run: |
           echo "🔍 Checking publish readiness..."
           
-          # Check if this is a dry run
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+          # Check if this is a dry run (only for workflow_dispatch events)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             echo "should-publish=false" >> $GITHUB_OUTPUT
             echo "🔍 Dry run mode - no actual publishing"
             exit 0
@@ -244,11 +244,9 @@ jobs:
           cache: 'yarn'
 
       - name: Setup Rust (for WASM)
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
           toolchain: stable
-          override: true
 
       - name: Install dependencies
         run: |
