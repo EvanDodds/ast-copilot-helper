@@ -94,7 +94,7 @@ class QualityReporter {
         functions: total.functions.pct,
         branches: total.branches.pct,
       };
-    } catch (error) {
+    } catch (_error) {
       console.warn("⚠️  Could not parse coverage data");
       return { score: 0, lines: 0, statements: 0, functions: 0, branches: 0 };
     }
@@ -117,7 +117,7 @@ class QualityReporter {
         critical: security.critical,
         high: security.high,
       };
-    } catch (error) {
+    } catch (_error) {
       console.warn("⚠️  Could not parse security data");
       return { score: 0, vulnerabilities: 0, critical: 0, high: 0 };
     }
@@ -150,7 +150,7 @@ class QualityReporter {
         querying: Math.round(queryingScore),
         memory: Math.round(memoryScore),
       };
-    } catch (error) {
+    } catch (_error) {
       console.warn("⚠️  Could not parse performance data");
       return { score: 0, parsing: 0, querying: 0, memory: 0 };
     }
@@ -350,7 +350,15 @@ const reporter = new QualityReporter();
 const report = reporter.generateReport();
 
 // Output for GitHub Actions
-console.log(`::set-output name=quality-score::${report.overall.score}`);
-console.log(`::set-output name=quality-grade::${report.overall.grade}`);
+// Use GitHub Actions environment file instead of deprecated set-output
+const outputFile = process.env.GITHUB_OUTPUT;
+if (outputFile) {
+  const fs = require("fs");
+  fs.appendFileSync(outputFile, `quality-score=${report.overall.score}\n`);
+  fs.appendFileSync(outputFile, `quality-grade=${report.overall.grade}\n`);
+} else {
+  console.log(`quality-score=${report.overall.score}`);
+  console.log(`quality-grade=${report.overall.grade}`);
+}
 
 process.exit(report.overall.passed ? 0 : 1);

@@ -334,6 +334,13 @@ const scorer = new PerformanceScorer();
 const score = scorer.analyzePerformance();
 
 // Output score for GitHub Actions
-console.log(`::set-output name=performance-score::${score}`);
+// Use GitHub Actions environment file instead of deprecated set-output
+const outputFile = process.env.GITHUB_OUTPUT;
+if (outputFile) {
+  const fs = require("fs");
+  fs.appendFileSync(outputFile, `performance-score=${score}\n`);
+} else {
+  console.log(`performance-score=${score}`);
+}
 
 process.exit(score >= 80 ? 0 : 1);

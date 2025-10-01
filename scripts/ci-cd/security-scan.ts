@@ -272,7 +272,14 @@ async function main() {
   scanner.reportResults(result);
 
   // Output score for GitHub Actions
-  console.log(`::set-output name=security-score::${result.score}`);
+  // Use GitHub Actions environment file instead of deprecated set-output
+  const outputFile = process.env.GITHUB_OUTPUT;
+  if (outputFile) {
+    const fs = require("fs");
+    fs.appendFileSync(outputFile, `security-score=${result.score}\n`);
+  } else {
+    console.log(`security-score=${result.score}`);
+  }
 
   // Exit with appropriate code
   const threshold = 8.0;
