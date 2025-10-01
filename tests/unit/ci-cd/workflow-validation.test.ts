@@ -79,7 +79,8 @@ describe("CI/CD Pipeline Configuration", () => {
 
     expect(workflow.on.push.branches).toContain("main");
     expect(workflow.on.pull_request.branches).toContain("main");
-    expect(workflow.on.release.types).toContain("published");
+    expect(workflow.on.schedule).toBeDefined();
+    expect(workflow.on.workflow_call).toBeDefined();
   });
 
   it("should have quick validation workflow", () => {
