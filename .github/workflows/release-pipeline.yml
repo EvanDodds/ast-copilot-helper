@@ -39,6 +39,9 @@ permissions:
   packages: write    # Required for publishing packages
   actions: read      # Standard permission for accessing workflow information
   id-token: write    # Required for OIDC token generation
+  issues: write      # Required for CI workflow checks
+  pull-requests: write  # Required for CI workflow checks
+  checks: write      # Required for CI workflow status checks
 
 # Cancel previous runs when new commits are pushed
 concurrency:
@@ -58,6 +61,12 @@ jobs:
   validate:
     name: Pre-Release Validation
     uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      checks: write
+      actions: read
     secrets: inherit
     with:
       skip-nightly: true  # Skip nightly-only jobs for releases
