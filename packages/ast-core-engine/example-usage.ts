@@ -23,27 +23,23 @@ export async function createEngine(
 ): Promise<AstCoreEngineApi | WasmAstCoreEngineApi> {
   if (preferWasm || typeof window !== "undefined") {
     // Browser environment or WASM explicitly requested
-    console.log("Initializing WASM engine...");
     await initWasm();
 
-    const features = getWasmFeatures();
-    console.log("WASM features:", features);
+    const _features = getWasmFeatures();
 
     // Return WASM API (limited functionality)
     return {
-      analyzeStructure: async (code: string, language: string) => {
+      analyzeStructure: async (code: string, _language: string) => {
         // WASM implementation - no tree-sitter
-        console.warn("WASM build: Limited AST analysis without tree-sitter");
-        return { type: "basic", language, hasTreeSitter: false };
+        return { type: "basic", language: _language, hasTreeSitter: false };
       },
-      validateSyntax: async (code: string, language: string) => {
+      validateSyntax: async (code: string, _language: string) => {
         // Basic syntax validation without tree-sitter
         return code.length > 0;
       },
     };
   } else {
     // Node.js environment - use full NAPI functionality
-    console.log("Using NAPI engine...");
     return createDefaultEngine();
   }
 }
@@ -64,25 +60,20 @@ export async function exampleUsage() {
 
     if ("hasVectorOps" in engine) {
       // This is the WASM API
-      console.log("Using WASM engine (limited features)");
       const result = await engine.analyzeStructure(code, "typescript");
-      console.log("WASM analysis:", result);
+      return result;
     } else {
       // This is the NAPI API
-      console.log("Using NAPI engine (full features)");
       const result = await (engine as AstCoreEngineApi).analyzeStructure(
         code,
         "typescript",
       );
-      console.log("NAPI analysis:", result);
+      return result;
     }
   } catch (error) {
-    console.error("Engine initialization failed:", error);
-
     // Fallback to WASM
-    console.log("Falling back to WASM...");
     const wasmEngine = await createEngine(true);
     const result = await wasmEngine.analyzeStructure(code, "typescript");
-    console.log("WASM fallback result:", result);
+    return result;
   }
 }
