@@ -11,6 +11,13 @@ on:
   schedule:
     # Run nightly performance benchmarks and security scans
     - cron: "0 2 * * *"
+  workflow_call:
+    inputs:
+      skip-nightly:
+        description: "Skip nightly-only jobs (performance benchmarks, etc.)"
+        required: false
+        default: false
+        type: boolean
 
 # Permissions needed for GitHub Actions
 permissions:
@@ -104,8 +111,12 @@ jobs:
       - name: Check benchmark conditions
         id: check
         run: |
+          # Skip benchmarks if explicitly requested via workflow_call input
+          if [[ "${{ inputs.skip-nightly }}" == "true" ]]; then
+            echo "Skipping benchmarks due to skip-nightly input"
+            echo "should-run-benchmarks=false" >> $GITHUB_OUTPUT
           # For scheduled runs, check if there are new commits since last nightly run
-          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
             # Get the timestamp of the last successful nightly run (24 hours ago)
             LAST_RUN_TIME=$(date -d '24 hours ago' --iso-8601=seconds)
             
@@ -145,7 +156,9 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     needs: validate
-    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    if: |
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request') &&
+      (inputs.skip-nightly != true || github.event_name != 'schedule')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
