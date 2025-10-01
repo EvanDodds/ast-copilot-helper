@@ -139,9 +139,10 @@ describe("Telemetry Configuration", () => {
     process.env = {
       ...originalEnv,
       NODE_ENV: "production",
-      CI: "",
-      GITHUB_ACTIONS: "",
     };
+    // Remove CI environment variables to simulate non-CI environment
+    delete process.env.CI;
+    delete process.env.GITHUB_ACTIONS;
 
     const enabledConfig: TelemetryConfig = {
       ...DEFAULT_TELEMETRY_CONFIG,
