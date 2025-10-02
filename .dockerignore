@@ -1,0 +1,129 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output
+
+# Test output
+test-output/
+test-tmp/
+*.test.db*
+
+# Build outputs (keep only specific built files we need)
+dist/
+build/
+lib/
+*.tsbuildinfo
+
+# Dependencies that will be installed in container
+node_modules/
+
+# Package manager files (keep yarn.lock and package.json)
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+
+# Development and testing files
+tests/
+**/*.test.ts
+**/*.spec.ts
+**/*.test.js
+**/*.spec.js
+vitest*.config.ts
+jest.config.*
+
+# Documentation (not needed in production image)
+docs/
+*.md
+!README.md
+
+# CI/CD files
+.github/
+.circleci/
+.travis.yml
+.codecov.yml
+
+# Monitoring and analytics
+monitoring/
+ci-artifacts/
+
+# Performance baselines and test data
+performance-baselines/
+data/vectors/
+examples/
+
+# Distribution files
+distribution/
+
+# Scripts (development only)
+scripts/
+
+# Temporary files
+tmp/
+temp/
+.tmp
+
+# Large test files and batch files
+batch-test-*.json
+test-*.json
+*_*.json
+large-file*.json
+
+# Database files (these should be mounted as volumes)
+*.db
+*.db-shm
+*.db-wal
+.astdb/
+
+# Local development
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Rust build artifacts (if any)
+target/
+Cargo.lock
+
+# Backup files
+*.bak
+*.backup
+
+# Archive files
+*.tar.gz
+*.zip
+*.rar
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride

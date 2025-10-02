@@ -214,6 +214,44 @@ jobs:
         run: |
           echo "📦 Installing dependencies..."
           yarn install --frozen-lockfile
+          
+      - name: Install Windows-specific build tools (Windows only)
+        if: matrix.platform == 'win32'
+        run: |
+          echo "🔧 Installing Windows-specific build tools..."
+          # Ensure postject is available
+          npm install -g postject@latest
+          echo "✅ Postject version: $(npx postject --version)"
+          
+      - name: Test Node.js SEA functionality (Windows only)
+        if: matrix.platform == 'win32'
+        shell: bash
+        run: |
+          echo "🧪 Testing Node.js SEA functionality..."
+          echo "Node.js version: $(node --version)"
+          echo "Testing SEA config parsing..."
+          
+          # Create a simple test
+          mkdir -p test-sea
+          echo 'console.log("Hello SEA");' > test-sea/test.js
+          echo '{"main":"test.js","output":"test.blob","disableExperimentalSEAWarning":true}' > test-sea/sea-config.json
+          
+          cd test-sea
+          echo "Running: node --experimental-sea-config sea-config.json"
+          node --experimental-sea-config sea-config.json || {
+            echo "❌ SEA functionality test failed"
+            echo "This might indicate an issue with Node.js SEA support in this environment"
+          }
+          
+          if [ -f "test.blob" ]; then
+            echo "✅ SEA blob creation works"
+            ls -la test.blob
+          else
+            echo "❌ SEA blob was not created"
+          fi
+          
+          cd ..
+          rm -rf test-sea
 
       - name: Build project
         run: |
@@ -223,7 +261,54 @@ jobs:
       - name: Build binary for ${{ matrix.platform }}
         run: |
           echo "🔨 Building binary for ${{ matrix.platform }}"
-          yarn build:binary:${{ matrix.platform }}
+          echo "Platform: ${{ matrix.platform }}"
+          echo "Target: ${{ matrix.target }}"
+          echo "OS: ${{ runner.os }}"
+          echo "Node.js executable: $(which node)"
+          echo "Working directory: $(pwd)"
+          
+          # Ensure the CLI module is built
+          if [ ! -f "packages/ast-helper/dist/cli.js" ]; then
+            echo "❌ CLI module not found, rebuilding..."
+            yarn build
+          fi
+          
+          # Build the binary with verbose output
+          set -e  # Exit on any error
+          yarn build:binary:${{ matrix.platform }} || {
+            echo "❌ Binary build failed with exit code $?"
+            echo "📋 Current directory contents:"
+            ls -la
+            echo "📋 Dist directory contents (if exists):"
+            [ -d "dist" ] && find dist -type f || echo "dist directory not found"
+            exit 1
+          }
+
+      - name: Debug binary build results
+        shell: bash
+        run: |
+          echo "🔍 Debugging binary build results for ${{ matrix.platform }}"
+          echo "Working directory: $(pwd)"
+          echo "Node.js version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Yarn version: $(yarn --version)"
+          echo ""
+          echo "📂 Contents of dist directory:"
+          if [ -d "dist" ]; then
+            find dist -type f -name "*" | head -20
+          else
+            echo "dist directory does not exist"
+          fi
+          echo ""
+          echo "📂 Contents of dist/binaries directory:"
+          if [ -d "dist/binaries" ]; then
+            ls -la dist/binaries/
+          else
+            echo "dist/binaries directory does not exist"
+          fi
+          echo ""
+          echo "🔍 Searching for any files containing 'ast-copilot-helper':"
+          find . -name "*ast-copilot-helper*" -type f 2>/dev/null | head -10 || echo "No files found"
 
       - name: Verify and prepare binary
         shell: bash
