@@ -89,14 +89,34 @@ async function main() {
   console.log("\n📋 Test 5: Simple SEA Test");
   const testDir = "test-sea-simple";
   runCommand(`mkdir -p ${testDir}`, "Create test directory");
-  runCommand(
-    `echo 'console.log("Hello SEA");' > ${testDir}/test.js`,
-    "Create test script",
-  );
-  runCommand(
-    `echo '{"main":"test.js","output":"test.blob","disableExperimentalSEAWarning":true}' > ${testDir}/sea-config.json`,
-    "Create SEA config",
-  );
+
+  // Create test files using proper cross-platform approach
+  const testScript = 'console.log("Hello SEA");';
+  const seaConfig = {
+    main: "test.js",
+    output: "test.blob",
+    disableExperimentalSEAWarning: true,
+  };
+
+  try {
+    const { writeFileSync } = await import("fs");
+    const { join } = await import("path");
+
+    const testScriptPath = join(testDir, "test.js");
+    const seaConfigPath = join(testDir, "sea-config.json");
+
+    writeFileSync(testScriptPath, testScript, "utf8");
+    writeFileSync(seaConfigPath, JSON.stringify(seaConfig, null, 2), "utf8");
+
+    console.log("✅ Success: Create test script");
+    console.log("✅ Success: Create SEA config");
+  } catch (error) {
+    console.error("❌ Failed: Create test files");
+    console.error(
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    failures++;
+  }
 
   if (
     runCommand(
