@@ -204,6 +204,23 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
+          
+      - name: Verify Node.js SEA support
+        shell: bash
+        run: |
+          echo "🔍 Verifying Node.js SEA support..."
+          echo "Node.js version: $(node --version)"
+          echo "Platform: ${{ runner.os }}"
+          
+          # Check if SEA is supported
+          if node --help | grep -q "experimental-sea-config"; then
+            echo "✅ Node.js supports Single Executable Applications (SEA)"
+          else
+            echo "❌ Node.js does not support SEA in this version"
+            echo "SEA support requires Node.js 20.12.0 or later"
+            echo "Current version: $(node --version)"
+            exit 1
+          fi
 
       - name: Setup Rust (for WASM)
         uses: dtolnay/rust-toolchain@stable
@@ -220,53 +237,161 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "🔧 Installing Windows-specific build tools..."
-          # Ensure postject is available
-          npm install -g postject@latest
-          Write-Host "✅ Postject installed successfully"
-          # Verify postject is available (it doesn't have --version flag)
+          Write-Host "Node.js version: $(node --version)"
+          Write-Host "NPM version: $(npm --version)"
+          Write-Host "Platform: ${{ runner.os }}"
+          
+          # Check if Node.js supports SEA
+          Write-Host "🔍 Checking Node.js SEA support..."
           try {
-            npx postject --help *> $null
+            node --help | Select-String "experimental-sea" -ErrorAction Stop
+            Write-Host "✅ Node.js supports SEA"
+          } catch {
+            Write-Host "❌ Node.js does not appear to support SEA"
+            Write-Host "Available experimental features:"
+            node --help | Select-String "experimental"
+          }
+          
+          # Ensure postject is available
+          Write-Host "Installing postject globally..."
+          npm install -g postject@latest
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "❌ Failed to install postject"
+            exit 1
+          }
+          Write-Host "✅ Postject installed successfully"
+          
+          # Verify postject is available
+          Write-Host "Verifying postject installation..."
+          try {
+            $postjectPath = Get-Command postject -ErrorAction Stop
+            Write-Host "✅ Postject found at: $($postjectPath.Source)"
+          } catch {
+            Write-Host "❌ Postject not found in PATH"
+            Write-Host "PATH: $env:PATH"
+            try {
+              Get-Command npm -ErrorAction Stop | Select-Object Source
+              $npmGlobalPath = npm root -g
+              Write-Host "NPM global path: $npmGlobalPath"
+              Get-ChildItem "$npmGlobalPath\.bin" -ErrorAction SilentlyContinue | Where-Object Name -like "*postject*"
+            } catch {
+              Write-Host "Could not check npm global path"
+            }
+            exit 1
+          }
+          
+          # Test postject functionality
+          try {
+            $null = npx postject --help 2>$null
             Write-Host "✅ Postject is working"
           } catch {
-            Write-Host "⚠️ Postject help not available"
+            Write-Host "⚠️ Postject help command failed, but binary exists"
           }
           
-      - name: Test Node.js SEA functionality (Windows only)
+      - name: Test binary build environment (Windows only)
         if: matrix.platform == 'win32'
-        shell: bash
+        shell: pwsh
         run: |
-          echo "🧪 Testing Node.js SEA functionality..."
-          echo "Node.js version: $(node --version)"
-          echo "Testing SEA config parsing..."
+          Write-Host "🧪 Testing binary build environment..."
+          Write-Host "Running comprehensive build environment test..."
           
-          # Create a simple test
-          mkdir -p test-sea
-          echo 'console.log("Hello SEA");' > test-sea/test.js
-          echo '{"main":"test.js","output":"test.blob","disableExperimentalSEAWarning":true}' > test-sea/sea-config.json
-          
-          cd test-sea
-          echo "Running: node --experimental-sea-config sea-config.json"
-          node --experimental-sea-config sea-config.json || {
-            echo "❌ SEA functionality test failed"
-            echo "This might indicate an issue with Node.js SEA support in this environment"
+          try {
+            npx tsx "scripts/build/test-binary-build.ts"
+            Write-Host "✅ Build environment test passed"
+          } catch {
+            Write-Host "❌ Build environment test failed: $_"
+            Write-Host "This indicates an issue with the binary build environment"
+            
+            # Run individual tests for more detailed diagnosis
+            Write-Host "🔍 Running individual diagnostics..."
+            
+            Write-Host "Node.js SEA support:"
+            try {
+              node --help | Select-String "experimental-sea"
+              Write-Host "✅ SEA support found"
+            } catch {
+              Write-Host "❌ SEA support not found"
+            }
+            
+            Write-Host "Postject availability:"
+            try {
+              npx postject --help | Out-Null
+              Write-Host "✅ Postject is available"
+            } catch {
+              Write-Host "❌ Postject not available"
+            }
+            
+            throw "Build environment test failed"
           }
-          
-          if [ -f "test.blob" ]; then
-            echo "✅ SEA blob creation works"
-            ls -la test.blob
-          else
-            echo "❌ SEA blob was not created"
-          fi
-          
-          cd ..
-          rm -rf test-sea
 
       - name: Build project
         run: |
           echo "🏗️ Building project..."
           yarn build
 
-      - name: Build binary for ${{ matrix.platform }}
+      - name: Build binary for Windows
+        if: matrix.platform == 'win32'
+        shell: pwsh
+        run: |
+          Write-Host "🔨 Building binary for ${{ matrix.platform }}"
+          Write-Host "Platform: ${{ matrix.platform }}"
+          Write-Host "Target: ${{ matrix.target }}"
+          Write-Host "OS: ${{ runner.os }}"
+          Write-Host "Node.js executable: $(Get-Command node | Select-Object -ExpandProperty Source)"
+          Write-Host "Working directory: $(Get-Location)"
+          Write-Host "Environment PATH: $env:PATH"
+          
+          # Ensure the CLI module is built
+          if (-not (Test-Path "packages/ast-helper/dist/cli.js")) {
+            Write-Host "❌ CLI module not found, rebuilding..."
+            yarn build
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "❌ Project build failed"
+              exit 1
+            }
+          }
+          
+          Write-Host "✅ CLI module exists: packages/ast-helper/dist/cli.js"
+          Write-Host "✅ CLI module size: $((Get-Item 'packages/ast-helper/dist/cli.js').Length) bytes"
+          
+          # Verify required build tools are available
+          Write-Host "🔍 Verifying build environment..."
+          Write-Host "NCC available: $(if (Get-Command npx -ErrorAction SilentlyContinue) { 'Yes' } else { 'No' })"
+          Write-Host "Postject available: $(if (Get-Command postject -ErrorAction SilentlyContinue) { 'Yes' } else { 'No' })"
+          
+          # Build the binary with verbose output
+          Write-Host "🔨 Starting binary build process..."
+          $env:DEBUG = "1"
+          yarn build:binary:${{ matrix.platform }}
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "❌ Primary binary build failed with exit code $LASTEXITCODE"
+            Write-Host "📋 Current directory contents:"
+            Get-ChildItem | Format-Table
+            Write-Host "📋 Dist directory contents (if exists):"
+            if (Test-Path "dist") {
+              Get-ChildItem -Recurse "dist" | Select-Object FullName, Length | Format-Table
+            } else {
+              Write-Host "dist directory not found"
+            }
+            
+            Write-Host "🔄 Attempting fallback build with direct npx call..."
+            try {
+              npx tsx "./scripts/build/build-binaries.ts" --platform win32
+              if ($LASTEXITCODE -eq 0) {
+                Write-Host "✅ Fallback build succeeded"
+              } else {
+                Write-Host "❌ Fallback build also failed"
+                exit 1
+              }
+            } catch {
+              Write-Host "❌ Fallback build threw exception: $_"
+              exit 1
+            }
+          }
+
+      - name: Build binary for Unix
+        if: matrix.platform != 'win32'
         shell: bash
         run: |
           echo "🔨 Building binary for ${{ matrix.platform }}"
@@ -293,7 +418,39 @@ jobs:
             exit 1
           }
 
-      - name: Debug binary build results
+      - name: Debug Windows binary build results
+        if: matrix.platform == 'win32'
+        shell: pwsh
+        run: |
+          Write-Host "🔍 Debugging binary build results for ${{ matrix.platform }}"
+          Write-Host "Working directory: $(Get-Location)"
+          Write-Host "Node.js version: $(node --version)"
+          Write-Host "NPM version: $(npm --version)"
+          Write-Host "Yarn version: $(yarn --version)"
+          Write-Host ""
+          Write-Host "📂 Contents of dist directory:"
+          if (Test-Path "dist") {
+            Get-ChildItem -Recurse "dist" -File | Select-Object -First 20 | Select-Object FullName, Length | Format-Table
+          } else {
+            Write-Host "dist directory does not exist"
+          }
+          Write-Host ""
+          Write-Host "📂 Contents of dist/binaries directory:"
+          if (Test-Path "dist/binaries") {
+            Get-ChildItem "dist/binaries" | Format-Table Name, Length, LastWriteTime
+          } else {
+            Write-Host "dist/binaries directory does not exist"
+          }
+          Write-Host ""
+          Write-Host "🔍 Searching for any files containing 'ast-copilot-helper':"
+          try {
+            Get-ChildItem -Recurse -File -Name "*ast-copilot-helper*" | Select-Object -First 10
+          } catch {
+            Write-Host "No files found or search failed"
+          }
+
+      - name: Debug Unix binary build results
+        if: matrix.platform != 'win32'
         shell: bash
         run: |
           echo "🔍 Debugging binary build results for ${{ matrix.platform }}"
@@ -319,7 +476,59 @@ jobs:
           echo "🔍 Searching for any files containing 'ast-copilot-helper':"
           find . -name "*ast-copilot-helper*" -type f 2>/dev/null | head -10 || echo "No files found"
 
-      - name: Verify and prepare binary
+      - name: Verify and prepare Windows binary
+        if: matrix.platform == 'win32'
+        shell: pwsh
+        run: |
+          Write-Host "🔍 Verifying binary for ${{ matrix.platform }}"
+          
+          # Create binaries directory if it doesn't exist
+          if (-not (Test-Path "dist/binaries")) {
+            New-Item -ItemType Directory -Force -Path "dist/binaries"
+          }
+          
+          # Expected binary paths based on platform
+          $EXPECTED_BINARY = "dist/binaries/ast-copilot-helper-${{ matrix.target }}.exe"
+          
+          # Check if binary exists
+          if (Test-Path $EXPECTED_BINARY) {
+            Write-Host "✅ Binary found at: $EXPECTED_BINARY"
+            Get-ChildItem $EXPECTED_BINARY | Format-List
+            
+            # Get file size
+            $SIZE = (Get-Item $EXPECTED_BINARY).Length
+            Write-Host "📊 Binary size: $SIZE bytes ($([math]::Round($SIZE/1MB, 2)) MB)"
+            
+            # Test if the binary is executable
+            Write-Host "🧪 Testing binary execution..."
+            try {
+              & $EXPECTED_BINARY --version
+              Write-Host "✅ Binary is executable"
+            } catch {
+              Write-Host "⚠️ Binary test failed: $_"
+            }
+          } else {
+            Write-Host "❌ Binary not found at expected location: $EXPECTED_BINARY"
+            Write-Host "📋 Directory contents:"
+            if (Test-Path "dist") {
+              Get-ChildItem -Recurse "dist" -File -Name "*ast-copilot-helper*" -ErrorAction SilentlyContinue
+            }
+            
+            Write-Host "📋 All files in dist/binaries (if exists):"
+            if (Test-Path "dist/binaries") {
+              Get-ChildItem "dist/binaries" | Format-Table
+            } else {
+              Write-Host "dist/binaries directory does not exist"
+            }
+            
+            Write-Host "📋 Searching entire workspace for binaries:"
+            Get-ChildItem -Recurse -File -Name "*.exe" -ErrorAction SilentlyContinue | Select-Object -First 10
+            
+            exit 1
+          }
+
+      - name: Verify and prepare Unix binary
+        if: matrix.platform != 'win32'
         shell: bash
         run: |
           echo "🔍 Verifying binary for ${{ matrix.platform }}"
@@ -328,11 +537,7 @@ jobs:
           mkdir -p dist/binaries
           
           # Expected binary paths based on platform
-          if [ "${{ matrix.platform }}" = "win32" ]; then
-            EXPECTED_BINARY="dist/binaries/ast-copilot-helper-${{ matrix.target }}.exe"
-          else
-            EXPECTED_BINARY="dist/binaries/ast-copilot-helper-${{ matrix.target }}"
-          fi
+          EXPECTED_BINARY="dist/binaries/ast-copilot-helper-${{ matrix.target }}"
           
           # Check if binary exists
           if [ -f "$EXPECTED_BINARY" ]; then
@@ -340,17 +545,21 @@ jobs:
             ls -la "$EXPECTED_BINARY"
             
             # Make executable on non-Windows
-            if [ "${{ runner.os }}" != "Windows" ]; then
-              chmod +x "$EXPECTED_BINARY"
-            fi
+            chmod +x "$EXPECTED_BINARY"
             
             # Get file size
             SIZE=$(stat -c%s "$EXPECTED_BINARY" 2>/dev/null || stat -f%z "$EXPECTED_BINARY" 2>/dev/null || echo "unknown")
             echo "📊 Binary size: $SIZE bytes"
+            
+            # Test if the binary is executable
+            echo "🧪 Testing binary execution..."
+            "$EXPECTED_BINARY" --version || echo "⚠️ Binary test failed"
           else
             echo "❌ Binary not found at expected location: $EXPECTED_BINARY"
             echo "📋 Directory contents:"
-            find dist -name "*ast-copilot-helper*" -type f 2>/dev/null || echo "No binaries found"
+            find dist -name "*ast-copilot-helper*" -type f 2>/dev/null || echo "No binaries found in dist"
+            echo "📋 Searching workspace for binaries:"
+            find . -name "ast-copilot-helper*" -type f 2>/dev/null | head -10 || echo "No binaries found in workspace"
             exit 1
           fi
 
