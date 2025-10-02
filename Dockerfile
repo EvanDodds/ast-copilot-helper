@@ -16,7 +16,7 @@ COPY packages/ast-helper/package.json ./packages/ast-helper/
 COPY packages/ast-mcp-server/package.json ./packages/ast-mcp-server/
 COPY packages/vscode-extension/package.json ./packages/vscode-extension/
 
-# Install dependencies
+# Install dependencies (--immutable ensures lockfile consistency)
 RUN yarn install --immutable
 
 # Copy source code

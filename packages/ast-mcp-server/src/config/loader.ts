@@ -56,12 +56,19 @@ export class ConfigManager extends EventEmitter {
       }
 
       // Load from configuration file (higher priority - overrides environment)
-      if (options.configFile || this.findConfigFile()) {
-        const configFile = options.configFile || this.findConfigFile();
-        if (configFile) {
+      const configFile = options.configFile || this.findConfigFile();
+      if (configFile) {
+        try {
           const fileConfig = await this.loadConfigFile(configFile);
           config = this.mergeConfigs(config, fileConfig);
           this.addSource({ type: "file", path: configFile, priority: 3 });
+        } catch (error) {
+          // If the file was auto-detected but doesn't exist, continue without it
+          // If the file was explicitly specified, re-throw the error
+          if (options.configFile) {
+            throw error;
+          }
+          // Auto-detected file doesn't exist, continue with current config
         }
       }
 

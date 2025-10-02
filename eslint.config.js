@@ -40,6 +40,8 @@ export default tseslint.config(
       "**/tsconfig*.json",
       // Exclude compiled JavaScript files from TypeScript source
       "packages/**/src/**/*.js",
+      // Exclude WASM-generated files
+      "**/pkg/**",
     ],
   },
 
