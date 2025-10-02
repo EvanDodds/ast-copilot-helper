@@ -81,7 +81,7 @@
     "test:quick": "vitest run tests/unit/ci-cd",
     "package:cli": "cd packages/ast-helper && yarn build && yarn pack",
     "package:vscode": "cd packages/vscode-extension && yarn build && yarn package",
-    "build:binaries": "npx tsx \"$(pwd)/scripts/build/build-binaries.ts\"",
+    "build:binaries": "npx tsx \"scripts/build/build-binaries.ts\"",
     "build:binaries:all": "yarn run build:binaries --platforms win32,darwin,linux",
     "build:binary:win32": "yarn run build:binaries --platform win32",
     "build:binary:darwin": "yarn run build:binaries --platform darwin",
