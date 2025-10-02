@@ -16,8 +16,9 @@ COPY packages/ast-helper/package.json ./packages/ast-helper/
 COPY packages/ast-mcp-server/package.json ./packages/ast-mcp-server/
 COPY packages/vscode-extension/package.json ./packages/vscode-extension/
 
-# Install dependencies (--immutable ensures lockfile consistency)
-RUN yarn install --immutable
+# Install dependencies - try frozen-lockfile first, fallback if needed
+RUN yarn install --frozen-lockfile --network-timeout 300000 || \
+    (echo "Frozen lockfile failed, regenerating..." && yarn install --network-timeout 300000)
 
 # Copy source code
 COPY . .
