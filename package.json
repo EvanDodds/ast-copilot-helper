@@ -86,6 +86,7 @@
     "build:binary:win32": "yarn run build:binaries --platform win32",
     "build:binary:darwin": "yarn run build:binaries --platform darwin",
     "build:binary:linux": "yarn run build:binaries --platform linux",
+    "test:binary:build": "npx tsx scripts/build/test-binary-build.ts",
     "validate:build": "yarn build && yarn typecheck && yarn test:unit",
     "changelog:generate": "tsx scripts/release/generate-changelog.ts",
     "version:update": "tsx scripts/release/update-version.ts",
