@@ -404,6 +404,17 @@ console.log('For full features, install: npm install -g ast-copilot-helper');
     const blobPath = join(dirname(bundlePath), "sea-blob.blob");
 
     try {
+      console.log(`🔧 Creating SEA executable for ${platform}`);
+      console.log(`   Bundle path: ${bundlePath}`);
+      console.log(`   Binary path: ${binaryPath}`);
+      console.log(`   SEA config path: ${seaConfigPath}`);
+      console.log(`   Blob path: ${blobPath}`);
+
+      // Ensure the bundle file exists
+      if (!existsSync(bundlePath)) {
+        throw new Error(`Bundle file does not exist at ${bundlePath}`);
+      }
+
       // Step 1: Create SEA configuration
       const seaConfig = {
         main: bundlePath,
@@ -416,23 +427,71 @@ console.log('For full features, install: npm install -g ast-copilot-helper');
       console.log(`📝 Creating SEA config: ${seaConfigPath}`);
       await fs.writeFile(seaConfigPath, JSON.stringify(seaConfig, null, 2));
 
+      // Verify config was created
+      if (!existsSync(seaConfigPath)) {
+        throw new Error(`SEA config file was not created at ${seaConfigPath}`);
+      }
+
       // Step 2: Generate SEA blob
       console.log(`🗜️  Generating SEA blob...`);
+      console.log(`Node.js version: ${process.version}`);
+      console.log(`Platform: ${process.platform}`);
+      console.log(`Architecture: ${process.arch}`);
+
       const generateBlobCommand = `node --experimental-sea-config "${seaConfigPath}"`;
-      execSync(generateBlobCommand, {
-        stdio: "inherit",
-        cwd: dirname(bundlePath),
-      });
+      console.log(`Running command: ${generateBlobCommand}`);
+
+      try {
+        execSync(generateBlobCommand, {
+          stdio: "inherit",
+          cwd: dirname(bundlePath),
+        });
+      } catch (blobError) {
+        console.error(`❌ SEA blob generation failed:`, blobError);
+        console.log(`Working directory: ${dirname(bundlePath)}`);
+        console.log(`Bundle file exists: ${existsSync(bundlePath)}`);
+        console.log(`Config file exists: ${existsSync(seaConfigPath)}`);
+        throw new Error(
+          `SEA blob generation failed: ${blobError instanceof Error ? blobError.message : String(blobError)}`,
+        );
+      }
 
       // Verify blob was created
       if (!existsSync(blobPath)) {
+        console.error(`❌ SEA blob was not created at ${blobPath}`);
+        console.log(`Files in directory:`);
+        try {
+          const files = await fs.readdir(dirname(bundlePath));
+          console.log(files.join(", "));
+        } catch (dirError) {
+          console.error(`Could not list directory: ${dirError}`);
+        }
         throw new Error(`SEA blob not created at ${blobPath}`);
       }
+
+      console.log(`✅ SEA blob created successfully: ${blobPath}`);
 
       // Step 3: Copy Node.js executable and inject SEA blob
       const nodeExe = process.execPath;
       console.log(`📋 Copying Node.js executable: ${nodeExe} -> ${binaryPath}`);
-      copyFileSync(nodeExe, binaryPath);
+
+      try {
+        copyFileSync(nodeExe, binaryPath);
+      } catch (copyError) {
+        console.error(`❌ Failed to copy Node.js executable:`, copyError);
+        throw new Error(
+          `Failed to copy Node.js executable: ${copyError instanceof Error ? copyError.message : String(copyError)}`,
+        );
+      }
+
+      // Verify copy was successful
+      if (!existsSync(binaryPath)) {
+        throw new Error(
+          `Binary was not created at ${binaryPath} after copying Node.js executable`,
+        );
+      }
+
+      console.log(`✅ Node.js executable copied successfully`);
 
       // Step 4: Inject the SEA blob using postject
       console.log(`💉 Injecting SEA blob into executable...`);
@@ -441,10 +500,32 @@ console.log('For full features, install: npm install -g ast-copilot-helper');
           ? `npx postject "${binaryPath}" NODE_SEA_BLOB "${blobPath}" --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2`
           : `npx postject "${binaryPath}" NODE_SEA_BLOB "${blobPath}" --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 --macho-segment-name NODE_SEA`;
 
-      execSync(postjectCommand, {
-        stdio: "inherit",
-        cwd: dirname(bundlePath),
-      });
+      console.log(`Running postject command: ${postjectCommand}`);
+
+      try {
+        execSync(postjectCommand, {
+          stdio: "inherit",
+          cwd: dirname(bundlePath),
+        });
+      } catch (postjectError) {
+        console.error(`❌ Postject injection failed:`, postjectError);
+        console.log(`Binary file exists: ${existsSync(binaryPath)}`);
+        console.log(`Blob file exists: ${existsSync(blobPath)}`);
+
+        // Try to get more information about the files
+        try {
+          const binaryStats = await fs.stat(binaryPath);
+          const blobStats = await fs.stat(blobPath);
+          console.log(`Binary size: ${binaryStats.size} bytes`);
+          console.log(`Blob size: ${blobStats.size} bytes`);
+        } catch (statError) {
+          console.error(`Could not get file stats: ${statError}`);
+        }
+
+        throw new Error(
+          `Postject injection failed: ${postjectError instanceof Error ? postjectError.message : String(postjectError)}`,
+        );
+      }
 
       // Step 5: Make executable on Unix systems
       if (platform === "unix") {
@@ -452,6 +533,20 @@ console.log('For full features, install: npm install -g ast-copilot-helper');
       }
 
       console.log(`✅ SEA executable created: ${binaryPath}`);
+
+      // Verify final binary exists and get its size
+      if (existsSync(binaryPath)) {
+        try {
+          const finalStats = await fs.stat(binaryPath);
+          console.log(
+            `✅ Final binary size: ${(finalStats.size / 1024 / 1024).toFixed(2)} MB`,
+          );
+        } catch (statError) {
+          console.warn(`Could not get final binary stats: ${statError}`);
+        }
+      } else {
+        throw new Error(`Final binary does not exist at ${binaryPath}`);
+      }
 
       // Clean up temporary files
       try {
@@ -465,6 +560,11 @@ console.log('For full features, install: npm install -g ast-copilot-helper');
       }
     } catch (error) {
       console.error(`❌ SEA executable creation failed: ${error}`);
+      console.log(`Environment info:`);
+      console.log(`  Node.js version: ${process.version}`);
+      console.log(`  Platform: ${process.platform}`);
+      console.log(`  Architecture: ${process.arch}`);
+      console.log(`  Working directory: ${process.cwd()}`);
       throw error;
     }
   }
