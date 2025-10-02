@@ -67,7 +67,7 @@ async function main() {
       return false;
     }
   };
-  
+
   if (checkSEASupport()) {
     console.log("✅ Success: Check SEA support");
     console.log("Node.js supports Single Executable Applications");
@@ -109,7 +109,9 @@ async function main() {
     console.log("✅ Success: Create test directory");
   } catch (error) {
     console.log("❌ Failed: Create test directory");
-    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     failures++;
   }
 
@@ -162,7 +164,9 @@ async function main() {
     console.log("✅ Success: Cleanup test directory");
   } catch (error) {
     console.log("❌ Failed: Cleanup test directory");
-    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     // Don't increment failures for cleanup issues
   }
 

@@ -933,11 +933,11 @@ Environment Variables:
 
 // Run if called directly
 // More robust check that works on both Windows and Unix
-const isMainModule = process.argv[1] && (
-  import.meta.url === `file://${process.argv[1]}` ||
-  import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}` ||
-  import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'))
-);
+const isMainModule =
+  process.argv[1] &&
+  (import.meta.url === `file://${process.argv[1]}` ||
+    import.meta.url === `file://${process.argv[1].replace(/\\/g, "/")}` ||
+    import.meta.url.endsWith(process.argv[1].replace(/\\/g, "/")));
 
 if (isMainModule) {
   main().catch((error) => {
