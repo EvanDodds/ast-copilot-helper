@@ -49,7 +49,7 @@ node_modules/
 .npm
 .yarn/cache
 .yarn/unplugged
-# Note: .yarn/install-state.gz is needed for --immutable installs
+# Note: .yarn/install-state.gz can be safely excluded in Docker builds
 
 # Development and testing files
 tests/

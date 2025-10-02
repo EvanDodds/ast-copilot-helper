@@ -217,13 +217,19 @@ jobs:
           
       - name: Install Windows-specific build tools (Windows only)
         if: matrix.platform == 'win32'
+        shell: pwsh
         run: |
-          echo "🔧 Installing Windows-specific build tools..."
+          Write-Host "🔧 Installing Windows-specific build tools..."
           # Ensure postject is available
           npm install -g postject@latest
-          echo "✅ Postject installed successfully"
+          Write-Host "✅ Postject installed successfully"
           # Verify postject is available (it doesn't have --version flag)
-          npx postject --help > /dev/null 2>&1 && echo "✅ Postject is working" || echo "⚠️ Postject help not available"
+          try {
+            npx postject --help *> $null
+            Write-Host "✅ Postject is working"
+          } catch {
+            Write-Host "⚠️ Postject help not available"
+          }
           
       - name: Test Node.js SEA functionality (Windows only)
         if: matrix.platform == 'win32'
