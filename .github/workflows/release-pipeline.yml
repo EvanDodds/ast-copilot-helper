@@ -221,7 +221,9 @@ jobs:
           echo "🔧 Installing Windows-specific build tools..."
           # Ensure postject is available
           npm install -g postject@latest
-          echo "✅ Postject version: $(npx postject --version)"
+          echo "✅ Postject installed successfully"
+          # Verify postject is available (it doesn't have --version flag)
+          npx postject --help > /dev/null 2>&1 && echo "✅ Postject is working" || echo "⚠️ Postject help not available"
           
       - name: Test Node.js SEA functionality (Windows only)
         if: matrix.platform == 'win32'
