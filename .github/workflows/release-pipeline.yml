@@ -267,6 +267,7 @@ jobs:
           yarn build
 
       - name: Build binary for ${{ matrix.platform }}
+        shell: bash
         run: |
           echo "🔨 Building binary for ${{ matrix.platform }}"
           echo "Platform: ${{ matrix.platform }}"
