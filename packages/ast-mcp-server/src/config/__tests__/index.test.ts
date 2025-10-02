@@ -63,9 +63,9 @@ describe("Configuration Index", () => {
 
   describe("Module Exports", () => {
     it("should export all required components", () => {
-      // Re-import to check exports
+      // Re-import to check exports from compiled output
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const configIndex = require("../index.js");
+      const configIndex = require("../../../dist/config/index.js");
 
       // Types
       expect(configIndex.MCPServerConfig).toBeUndefined(); // Types don't exist at runtime
@@ -81,7 +81,7 @@ describe("Configuration Index", () => {
 
     it("should export environment configurations", () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const configIndex = require("../index.js");
+      const configIndex = require("../../../dist/config/index.js");
 
       expect(configIndex.DEVELOPMENT_CONFIG).toBeDefined();
       expect(configIndex.PRODUCTION_CONFIG).toBeDefined();

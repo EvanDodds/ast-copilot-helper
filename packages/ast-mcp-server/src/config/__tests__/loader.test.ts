@@ -13,7 +13,17 @@ vi.mock("fs", async () => {
   return {
     ...actual,
     watch: vi.fn(() => ({ close: vi.fn() })),
-    existsSync: vi.fn(() => true),
+    existsSync: vi.fn((filePath: string) => {
+      // For default configuration tests, pretend no config files exist
+      // unless they're in our test directory
+      if (typeof filePath === "string") {
+        return (
+          filePath.includes("config-test-") ||
+          (actual as any).existsSync(filePath)
+        );
+      }
+      return false;
+    }),
   };
 });
 
