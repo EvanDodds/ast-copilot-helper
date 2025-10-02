@@ -4,8 +4,18 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Install dependencies for building native modules
-RUN apk add --no-cache python3 make g++
+# Install dependencies for building native modules and Rust
+RUN apk add --no-cache python3 make g++ curl
+
+# Install Rust and Cargo
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install wasm-pack for WebAssembly builds
+RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+# Verify Rust installation
+RUN rustc --version && cargo --version
 
 # Copy package files for dependency installation
 COPY package.json yarn.lock .yarnrc.yml ./
