@@ -5,7 +5,7 @@
  */
 
 import { execSync } from "child_process";
-import { existsSync } from "fs";
+import { existsSync, mkdirSync, rmSync } from "fs";
 import { join } from "path";
 
 const projectRoot = process.cwd();
@@ -58,7 +58,22 @@ async function main() {
 
   // Test 1: Check Node.js SEA support
   console.log("\n📋 Test 1: Node.js SEA Support");
-  if (!runCommand("node --help | grep experimental-sea", "Check SEA support")) {
+  // Use cross-platform approach to check SEA support
+  const checkSEASupport = () => {
+    try {
+      const output = execSync("node --help", { encoding: "utf8" });
+      return output.includes("experimental-sea");
+    } catch {
+      return false;
+    }
+  };
+  
+  if (checkSEASupport()) {
+    console.log("✅ Success: Check SEA support");
+    console.log("Node.js supports Single Executable Applications");
+  } else {
+    console.log("❌ Failed: Check SEA support");
+    console.log("Node.js does not support Single Executable Applications");
     failures++;
   }
 
@@ -88,7 +103,15 @@ async function main() {
   // Test 5: Test simple SEA creation
   console.log("\n📋 Test 5: Simple SEA Test");
   const testDir = "test-sea-simple";
-  runCommand(`mkdir -p ${testDir}`, "Create test directory");
+  // Use cross-platform directory creation
+  try {
+    mkdirSync(testDir, { recursive: true });
+    console.log("✅ Success: Create test directory");
+  } catch (error) {
+    console.log("❌ Failed: Create test directory");
+    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    failures++;
+  }
 
   // Create test files using proper cross-platform approach
   const testScript = 'console.log("Hello SEA");';
@@ -133,7 +156,15 @@ async function main() {
     failures++;
   }
 
-  runCommand(`rm -rf ${testDir}`, "Cleanup test directory");
+  // Use cross-platform directory cleanup
+  try {
+    rmSync(testDir, { recursive: true, force: true });
+    console.log("✅ Success: Cleanup test directory");
+  } catch (error) {
+    console.log("❌ Failed: Cleanup test directory");
+    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    // Don't increment failures for cleanup issues
+  }
 
   // Test 6: Binary build (for current platform)
   console.log(`\n📋 Test 6: Binary Build (${process.platform})`);
