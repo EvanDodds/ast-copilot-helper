@@ -416,9 +416,13 @@ console.log('For full features, install: npm install -g ast-copilot-helper');
       }
 
       // Step 1: Create SEA configuration
+      // Use relative paths from the config file location
+      const bundleRelativePath = basename(bundlePath);
+      const blobRelativePath = basename(blobPath);
+
       const seaConfig = {
-        main: bundlePath,
-        output: blobPath,
+        main: bundleRelativePath,
+        output: blobRelativePath,
         disableExperimentalSEAWarning: true,
         useSnapshot: false,
         useCodeCache: true,
@@ -474,11 +478,21 @@ console.log('For full features, install: npm install -g ast-copilot-helper');
       // Step 3: Copy Node.js executable and inject SEA blob
       const nodeExe = process.execPath;
       console.log(`📋 Copying Node.js executable: ${nodeExe} -> ${binaryPath}`);
+      console.log(
+        `   Node.js executable size: ${(await fs.stat(nodeExe)).size} bytes`,
+      );
+
+      // Ensure the target directory exists
+      await fs.mkdir(dirname(binaryPath), { recursive: true });
 
       try {
         copyFileSync(nodeExe, binaryPath);
       } catch (copyError) {
         console.error(`❌ Failed to copy Node.js executable:`, copyError);
+        console.log(`   Source exists: ${existsSync(nodeExe)}`);
+        console.log(
+          `   Target directory exists: ${existsSync(dirname(binaryPath))}`,
+        );
         throw new Error(
           `Failed to copy Node.js executable: ${copyError instanceof Error ? copyError.message : String(copyError)}`,
         );
@@ -486,12 +500,25 @@ console.log('For full features, install: npm install -g ast-copilot-helper');
 
       // Verify copy was successful
       if (!existsSync(binaryPath)) {
+        console.error(
+          `❌ Binary was not created at ${binaryPath} after copying`,
+        );
+        console.log(`   Target directory contents:`);
+        try {
+          const dirContents = await fs.readdir(dirname(binaryPath));
+          console.log(`     ${dirContents.join(", ")}`);
+        } catch (dirError) {
+          console.error(`     Could not list directory: ${dirError}`);
+        }
         throw new Error(
           `Binary was not created at ${binaryPath} after copying Node.js executable`,
         );
       }
 
-      console.log(`✅ Node.js executable copied successfully`);
+      const copiedStats = await fs.stat(binaryPath);
+      console.log(
+        `✅ Node.js executable copied successfully (${copiedStats.size} bytes)`,
+      );
 
       // Step 4: Inject the SEA blob using postject
       console.log(`💉 Injecting SEA blob into executable...`);
@@ -545,6 +572,38 @@ console.log('For full features, install: npm install -g ast-copilot-helper');
           console.warn(`Could not get final binary stats: ${statError}`);
         }
       } else {
+        // Enhanced debugging for missing binary
+        console.error(`❌ Final binary does not exist at ${binaryPath}`);
+        console.log(`🔍 Debug information:`);
+        console.log(`   Binary path: ${binaryPath}`);
+        console.log(`   Directory: ${dirname(binaryPath)}`);
+        console.log(`   Expected filename: ${basename(binaryPath)}`);
+
+        try {
+          const dirContents = await fs.readdir(dirname(binaryPath));
+          console.log(`   Directory contents: ${dirContents.join(", ")}`);
+        } catch (dirError) {
+          console.error(`   Could not list directory: ${dirError}`);
+        }
+
+        // Check if there are any binary files in the directory
+        try {
+          const dirContents = await fs.readdir(dirname(binaryPath));
+          const binaryFiles = dirContents.filter(
+            (f) =>
+              f.includes("ast-copilot-helper") ||
+              f.endsWith(".exe") ||
+              (!f.includes(".") && f !== "package.json"),
+          );
+          if (binaryFiles.length > 0) {
+            console.log(
+              `   Potential binary files found: ${binaryFiles.join(", ")}`,
+            );
+          }
+        } catch (searchError) {
+          console.error(`   Could not search for binary files: ${searchError}`);
+        }
+
         throw new Error(`Final binary does not exist at ${binaryPath}`);
       }
 
