@@ -151,8 +151,10 @@ export class AnnotateCommandHandler {
     config: Config,
     options: AnnotateCommandOptions,
   ): Promise<void> {
-    // Initialize database manager
-    this.dbManager = new ASTDatabaseManager(config.outputDir);
+    // Initialize database manager with workspace path, not outputDir
+    // ASTDatabaseManager will create .astdb inside the workspace
+    const workspacePath = options.workspace || process.cwd();
+    this.dbManager = new ASTDatabaseManager(workspacePath);
 
     // Ensure database structure exists
     await this.dbManager.createDirectoryStructure({ force: false });
@@ -225,10 +227,13 @@ export class AnnotateCommandHandler {
         const astContent = await readFile(astPath, "utf8");
         const astData = JSON.parse(astContent);
 
-        if (astData.nodes && Array.isArray(astData.nodes)) {
+        if (
+          astData.parseResult?.nodes &&
+          Array.isArray(astData.parseResult.nodes)
+        ) {
           // Check if any nodes need re-annotation
           const needsUpdate = await this.checkNodesNeedUpdate(
-            astData.nodes,
+            astData.parseResult.nodes,
             structure,
           );
           if (needsUpdate) {
@@ -264,10 +269,13 @@ export class AnnotateCommandHandler {
         const astContent = await readFile(astPath, "utf8");
         const astData = JSON.parse(astContent);
 
-        if (astData.nodes && Array.isArray(astData.nodes)) {
+        if (
+          astData.parseResult?.nodes &&
+          Array.isArray(astData.parseResult.nodes)
+        ) {
           // Check if any nodes lack annotations
           const hasUnannotatedNodes = await this.hasUnannotatedNodes(
-            astData.nodes,
+            astData.parseResult.nodes,
             structure,
           );
           if (hasUnannotatedNodes) {
@@ -455,12 +463,15 @@ export class AnnotateCommandHandler {
     const astContent = await readFile(astFilePath, "utf8");
     const astData = JSON.parse(astContent);
 
-    if (!astData.nodes || !Array.isArray(astData.nodes)) {
+    if (
+      !astData.parseResult?.nodes ||
+      !Array.isArray(astData.parseResult.nodes)
+    ) {
       this.logger.warn("AST file has no nodes array", { file: astFilePath });
       return fileStats;
     }
 
-    const nodes: ASTNode[] = astData.nodes;
+    const nodes: ASTNode[] = astData.parseResult.nodes;
     fileStats.totalNodes = nodes.length;
 
     // Create annotation context
