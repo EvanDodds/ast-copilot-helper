@@ -56,7 +56,9 @@ export class TreeSitterGrammarManager implements GrammarManager {
       config.grammarHash,
     );
     if (!isValid) {
-      await fs.unlink(grammarPath).catch(() => {}); // Clean up invalid file
+      await fs.unlink(grammarPath).catch(() => {
+        /* ignore cleanup errors */
+      }); // Clean up invalid file
       throw new Error(
         `Downloaded grammar for ${language} failed integrity check`,
       );
@@ -125,7 +127,7 @@ export class TreeSitterGrammarManager implements GrammarManager {
         const metadataContent = await fs.readFile(metadataPath, "utf-8");
         const metadata: GrammarMetadata = JSON.parse(metadataContent);
         expectedHash = metadata.hash;
-      } catch (error) {
+      } catch (_error) {
         // If no metadata file, fall back to language config hash
         const config = this.getLanguageConfig(language);
         expectedHash = config.grammarHash;
@@ -141,7 +143,7 @@ export class TreeSitterGrammarManager implements GrammarManager {
    * Load a parser for the specified language
    * For now, this is a placeholder that will be implemented with runtime integration
    */
-  async loadParser(language: string): Promise<any> {
+  async loadParser(language: string): Promise<unknown> {
     // This will be implemented when we integrate with the actual parsers
     // For now, ensure grammar is available
     await this.getCachedGrammarPath(language);
@@ -201,31 +203,28 @@ export class TreeSitterGrammarManager implements GrammarManager {
   }
 
   /**
-   * Download a single file (mock implementation for now)
-   * In a real implementation, this would use fetch() or similar
+   * Download a single file using built-in fetch with proper error handling
    */
   private async downloadFile(url: string, filePath: string): Promise<void> {
-    // Mock implementation - in reality this would use fetch() or a similar HTTP client
-    // For testing, we'll create a dummy file
-
+    // For testing, create a dummy file
     if (process.env.NODE_ENV === "test") {
-      // Create a dummy WASM file for testing
       const dummyContent = Buffer.from(`WASM_DUMMY_CONTENT_FOR_TESTING_${url}`);
       await fs.writeFile(filePath, dummyContent);
       return;
     }
 
-    // In production, implement actual download:
-    // const response = await fetch(url);
-    // if (!response.ok) {
-    //   throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    // }
-    // const buffer = await response.arrayBuffer();
-    // await fs.writeFile(filePath, Buffer.from(buffer));
+    try {
+      const response = await fetch(url);
 
-    throw new Error(
-      "Grammar download not implemented - install tree-sitter grammars manually or set NODE_ENV=test",
-    );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const buffer = await response.arrayBuffer();
+      await fs.writeFile(filePath, Buffer.from(buffer));
+    } catch (error) {
+      throw new Error(`Failed to download ${url}: ${(error as Error).message}`);
+    }
   }
 
   /**
@@ -246,15 +245,14 @@ export class TreeSitterGrammarManager implements GrammarManager {
 
       // If no expected hash provided (empty string), compute and store it for future use
       if (!expectedHash || expectedHash.trim() === "") {
-        console.log(
-          `📊 Computing hash for grammar at ${filePath}: ${actualHash}`,
-        );
+        // Log computed hash for debugging
+        // console.log(`📊 Computing hash for grammar at ${filePath}: ${actualHash}`);
         // In production, you might want to store this hash for future verification
         return true; // Accept the file and use computed hash
       }
 
       return actualHash === expectedHash;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -307,8 +305,8 @@ export class TreeSitterGrammarManager implements GrammarManager {
   private async ensureDirectory(dirPath: string): Promise<void> {
     try {
       await fs.mkdir(dirPath, { recursive: true });
-    } catch (error: any) {
-      if (error.code !== "EEXIST") {
+    } catch (error: unknown) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
         throw error;
       }
     }
@@ -332,7 +330,7 @@ export class TreeSitterGrammarManager implements GrammarManager {
   async cleanCache(): Promise<void> {
     try {
       await fs.rm(this.grammarDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore errors - directory might not exist
     }
   }
@@ -355,7 +353,7 @@ export class TreeSitterGrammarManager implements GrammarManager {
         try {
           const metadataContent = await fs.readFile(metadataPath, "utf-8");
           info[language] = JSON.parse(metadataContent);
-        } catch {
+        } catch (_error) {
           info[language] = null; // Invalid or missing metadata
         }
       }

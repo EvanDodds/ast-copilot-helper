@@ -17,10 +17,7 @@ vi.mock("fs", async () => {
       // For default configuration tests, pretend no config files exist
       // unless they're in our test directory
       if (typeof filePath === "string") {
-        return (
-          filePath.includes("config-test-") ||
-          (actual as any).existsSync(filePath)
-        );
+        return filePath.includes("config-test-");
       }
       return false;
     }),
@@ -275,6 +272,7 @@ describe("ConfigManager", () => {
 
   describe("Environment Variable Mapping", () => {
     it("should map standard environment variables", async () => {
+      // Set environment variables for this test
       process.env.MCP_SERVER_NAME = "Env Server";
       process.env.MCP_SERVER_VERSION = "3.0.0";
       process.env.MCP_SERVER_DATABASE_PATH = "./env.db";
@@ -284,6 +282,7 @@ describe("ConfigManager", () => {
       process.env.MCP_SERVER_CACHE_SIZE = "500";
       process.env.MCP_SERVER_ENABLE_CORS = "false";
 
+      // Use existing configManager to pick up the new environment variables
       const config = await configManager.loadConfig();
 
       expect(config.name).toBe("Env Server");

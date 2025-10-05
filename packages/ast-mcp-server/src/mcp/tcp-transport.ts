@@ -6,7 +6,7 @@
 import type { Server, Socket } from "net";
 import { createServer } from "net";
 import type { JSONRPCResponse, JSONRPCNotification } from "./protocol";
-import { MCPTransport, BaseTransportStats } from "./transport";
+import { MCPTransport, BaseTransportStats } from "./transport.js";
 
 /**
  * Statistics for TCP transport
