@@ -13,15 +13,56 @@ import type {
 } from "../types.js";
 import { generateNodeId } from "../types.js";
 import type { TreeSitterGrammarManager } from "../grammar-manager.js";
+import { getLanguageConfig } from "../languages.js";
+
+// Tree-sitter type definitions
+interface TreeSitterNode {
+  type: string;
+  text: string;
+  startPosition: { row: number; column: number };
+  endPosition: { row: number; column: number };
+  startIndex: number;
+  endIndex: number;
+  childCount: number;
+  child(index: number): TreeSitterNode | null;
+  hasError: boolean;
+  isMissing: boolean;
+  isNamed: boolean;
+  parent: TreeSitterNode | null;
+  walk(): TreeSitterCursor;
+}
+
+interface TreeSitterTree {
+  rootNode: TreeSitterNode;
+  walk(): TreeSitterCursor;
+}
+
+interface TreeSitterCursor {
+  currentNode: TreeSitterNode;
+  gotoFirstChild(): boolean;
+  gotoNextSibling(): boolean;
+  gotoParent(): boolean;
+}
+
+interface TreeSitterParser {
+  parse(code: string): TreeSitterTree;
+  setLanguage(language: TreeSitterLanguage): void;
+}
+
+type TreeSitterLanguage = object;
+
+interface _TreeSitterConstructor {
+  new (): TreeSitterParser;
+}
 
 /**
  * Native Tree-sitter parser implementation
  */
 export class NativeTreeSitterParser extends BaseParser {
   private grammarManager: TreeSitterGrammarManager;
-  private TreeSitter: any;
-  private parsers: Map<string, any> = new Map();
-  private initializedLanguages: Map<string, any> = new Map();
+  private TreeSitter: _TreeSitterConstructor | null = null;
+  private parsers: Map<string, TreeSitterParser> = new Map();
+  private initializedLanguages: Map<string, TreeSitterLanguage> = new Map();
 
   constructor(
     runtime: ParserRuntime,
@@ -71,19 +112,43 @@ export class NativeTreeSitterParser extends BaseParser {
       // Initialize Tree-sitter
       await this.initializeTreeSitter();
 
-      // Parse the code into multiple AST nodes to satisfy test expectations
-      const mockNodes = this.createDetailedMockNodes(
+      // Get language configuration
+      const config = getLanguageConfig(language);
+      if (!config) {
+        return {
+          language,
+          nodes: [],
+          errors: [
+            {
+              type: "configuration" as const,
+              message: `No configuration found for language: ${language}`,
+              context: undefined,
+            },
+          ],
+          parseTime: performance.now() - startTime,
+        };
+      }
+
+      // Get parser for this language
+      const parser = await this.getParserForLanguage(config);
+
+      // Parse the code
+      const tree = parser.parse(code);
+
+      // Convert Tree-sitter tree to AST nodes
+      const nodes = this.treeToASTNodes(
+        tree,
         code,
-        language,
         filePath || "<anonymous>",
+        language,
       );
 
-      // Detect syntax errors in the code
-      const errors = this.detectSyntaxErrors(code, language);
+      // Detect syntax errors from Tree-sitter
+      const errors = this.extractSyntaxErrorsFromTree(tree, code);
 
       return {
         language,
-        nodes: mockNodes,
+        nodes,
         errors,
         parseTime: performance.now() - startTime,
       };
@@ -200,7 +265,9 @@ export class NativeTreeSitterParser extends BaseParser {
 
   /**
    * Create detailed mock nodes from code content for testing compatibility
+   * @deprecated - replaced by real Tree-sitter parsing
    */
+  // @ts-expect-error - kept for compatibility, will be removed
   private createDetailedMockNodes(
     code: string,
     language: string,
@@ -856,7 +923,9 @@ export class NativeTreeSitterParser extends BaseParser {
 
   /**
    * Detect syntax errors in the code
+   * @deprecated - replaced by extractSyntaxErrorsFromTree
    */
+  // @ts-expect-error - kept for compatibility, will be removed
   private detectSyntaxErrors(code: string, language: string): ParseError[] {
     const errors: ParseError[] = [];
 
@@ -982,18 +1051,96 @@ export class NativeTreeSitterParser extends BaseParser {
   }
 
   /**
+   * Extract syntax errors from Tree-sitter tree
+   */
+  private extractSyntaxErrorsFromTree(
+    tree: TreeSitterTree,
+    code: string,
+  ): ParseError[] {
+    const errors: ParseError[] = [];
+
+    // Check if the tree has error nodes
+    if (tree.rootNode.hasError) {
+      // Walk through the tree to find error nodes
+      const walkNodes = (node: TreeSitterNode) => {
+        if (node.type === "ERROR") {
+          const startPos = node.startPosition;
+          const endPos = node.endPosition;
+
+          // Extract the problematic text
+          const lines = code.split("\n");
+          const errorText = lines
+            .slice(startPos.row, endPos.row + 1)
+            .map((line, i) => {
+              if (i === 0 && startPos.row === endPos.row) {
+                return line.slice(startPos.column, endPos.column);
+              } else if (i === 0) {
+                return line.slice(startPos.column);
+              } else if (i === endPos.row - startPos.row) {
+                return line.slice(0, endPos.column);
+              }
+              return line;
+            })
+            .join("\n");
+
+          errors.push({
+            type: "syntax" as const,
+            message: `Syntax error: unexpected token`,
+            position: {
+              line: startPos.row + 1,
+              column: startPos.column + 1,
+            },
+            context: errorText.trim() || undefined,
+          });
+        }
+
+        // Check missing nodes (these appear when Tree-sitter expects something but it's not there)
+        if (node.isMissing) {
+          const startPos = node.startPosition;
+          errors.push({
+            type: "syntax" as const,
+            message: `Missing expected token: ${node.type}`,
+            position: {
+              line: startPos.row + 1,
+              column: startPos.column + 1,
+            },
+          });
+        }
+
+        // Recursively check children
+        for (let i = 0; i < node.childCount; i++) {
+          const child = node.child(i);
+          if (child) {
+            walkNodes(child);
+          }
+        }
+      };
+
+      walkNodes(tree.rootNode);
+    }
+
+    return errors;
+  }
+
+  /**
    * Get or create a parser instance for the specified language
    */
-  protected async getParserForLanguage(config: LanguageConfig): Promise<any> {
+  protected async getParserForLanguage(
+    config: LanguageConfig,
+  ): Promise<TreeSitterParser> {
     // Check if we already have a parser for this language
-    if (this.parsers.has(config.name)) {
-      return this.parsers.get(config.name);
+    const existingParser = this.parsers.get(config.name);
+    if (existingParser) {
+      return existingParser;
     }
 
     // Initialize Tree-sitter if needed
     await this.initializeTreeSitter();
 
     // Create new parser
+    if (!this.TreeSitter) {
+      throw new Error("TreeSitter not initialized");
+    }
     const parser = new this.TreeSitter();
 
     // Load the language grammar
@@ -1004,12 +1151,8 @@ export class NativeTreeSitterParser extends BaseParser {
         try {
           const languageModule = await import(config.parserModule);
           language = languageModule.default || languageModule;
-        } catch (error) {
+        } catch (_error) {
           // If native module fails, fall back to grammar manager
-          console.warn(
-            `Native module ${config.parserModule} failed to load, falling back to grammar manager:`,
-            error,
-          );
           language = await this.loadLanguageFromGrammar(config);
         }
       } else {
@@ -1041,7 +1184,9 @@ export class NativeTreeSitterParser extends BaseParser {
   /**
    * Load language from grammar file using grammar manager
    */
-  private async loadLanguageFromGrammar(config: LanguageConfig): Promise<any> {
+  private async loadLanguageFromGrammar(
+    config: LanguageConfig,
+  ): Promise<TreeSitterLanguage> {
     try {
       // Ensure grammar is downloaded and cached
       await this.grammarManager.downloadGrammar(config.name);
@@ -1063,7 +1208,7 @@ export class NativeTreeSitterParser extends BaseParser {
    * Convert Tree-sitter tree to AST nodes array
    */
   protected treeToASTNodes(
-    tree: any,
+    tree: TreeSitterTree,
     sourceCode: string,
     filePath: string,
     language: string,
@@ -1241,7 +1386,10 @@ export class NativeTreeSitterParser extends BaseParser {
   /**
    * Extract node name (identifier) from the node
    */
-  private extractNodeName(node: any, sourceCode: string): string | undefined {
+  private extractNodeName(
+    node: TreeSitterNode,
+    sourceCode: string,
+  ): string | undefined {
     // Look for identifier child nodes
     const cursor = node.walk();
     if (cursor.gotoFirstChild()) {
@@ -1268,7 +1416,7 @@ export class NativeTreeSitterParser extends BaseParser {
   /**
    * Extract modifiers from node (async, static, public, etc.)
    */
-  private extractModifiers(node: any): string[] {
+  private extractModifiers(node: TreeSitterNode): string[] {
     const modifiers: string[] = [];
 
     // Look for modifier nodes
@@ -1333,7 +1481,7 @@ export class NativeTreeSitterParser extends BaseParser {
   /**
    * Calculate cyclomatic complexity for a node
    */
-  private calculateComplexity(node: any): number {
+  private calculateComplexity(node: TreeSitterNode): number {
     let complexity = 0;
     const complexityNodes = new Set([
       "if_statement",
@@ -1369,7 +1517,7 @@ export class NativeTreeSitterParser extends BaseParser {
   /**
    * Establish parent-child relationships between nodes
    */
-  private establishRelationships(nodes: ASTNode[], tree: any): void {
+  private establishRelationships(nodes: ASTNode[], tree: TreeSitterTree): void {
     const nodeMap = new Map<string, ASTNode>();
 
     // Build node lookup map
