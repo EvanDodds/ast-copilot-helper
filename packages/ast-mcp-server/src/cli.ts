@@ -604,8 +604,12 @@ export async function main(): Promise<void> {
 }
 
 // Only execute if this file is run directly
+import { fileURLToPath } from "url";
+import { resolve } from "path";
 
-const isMainModule = require.main === module;
+const isMainModule =
+  process.argv[1] === fileURLToPath(import.meta.url) ||
+  process.argv[1] === resolve(fileURLToPath(import.meta.url));
 if (isMainModule) {
   main().catch((error) => {
     console.error(

@@ -15,7 +15,7 @@
 
 import { createHash } from "crypto";
 import type { ASTDatabaseManager } from "./manager";
-import { AstLogger, LogLevel } from "../logging";
+import { AstLogger, LogLevel } from "../logging/index.js";
 import { performance } from "perf_hooks";
 import { readFile, readdir, writeFile, access } from "fs/promises";
 import { join } from "path";

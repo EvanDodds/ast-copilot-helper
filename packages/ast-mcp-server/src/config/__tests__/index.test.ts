@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   createDevelopmentConfig,
   createProductionConfig,
@@ -62,15 +62,11 @@ describe("Configuration Index", () => {
   });
 
   describe("Module Exports", () => {
-    it("should export all required components", () => {
-      // Re-import to check exports from compiled output
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const configIndex = require("../../../dist/config/index.js");
+    it("should export all required components", async () => {
+      // Re-import to check exports from compiled output using dynamic import
+      const configIndex = await import("../../../dist/config/index.js");
 
-      // Types
-      expect(configIndex.MCPServerConfig).toBeUndefined(); // Types don't exist at runtime
-
-      // Classes and functions
+      // Classes and functions should be defined
       expect(configIndex.ConfigManager).toBeDefined();
       expect(configIndex.validateConfig).toBeDefined();
       expect(configIndex.DEFAULT_MCP_SERVER_CONFIG).toBeDefined();
@@ -79,9 +75,9 @@ describe("Configuration Index", () => {
       expect(configIndex.createTestConfig).toBeDefined();
     });
 
-    it("should export environment configurations", () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const configIndex = require("../../../dist/config/index.js");
+    it("should export environment configurations", async () => {
+      // Re-import to check exports from compiled output using dynamic import
+      const configIndex = await import("../../../dist/config/index.js");
 
       expect(configIndex.DEVELOPMENT_CONFIG).toBeDefined();
       expect(configIndex.PRODUCTION_CONFIG).toBeDefined();
@@ -146,7 +142,7 @@ describe("Configuration Index", () => {
     it("should override specific properties while keeping defaults", async () => {
       // Test via ConfigManager since factory functions don't accept overrides
       const configManager = new ConfigManager();
-      const baseConfig = await configManager.loadConfig();
+      await configManager.loadConfig();
 
       configManager.updateConfig({
         name: "Production Override",

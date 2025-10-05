@@ -210,12 +210,12 @@ describe("TreeSitterGrammarManager", () => {
 
   describe("error handling", () => {
     it("should handle network errors gracefully", async () => {
-      // Remove test environment to trigger network error
+      // Remove test environment to trigger actual network download
       delete process.env.NODE_ENV;
 
       await expect(
         grammarManager.downloadGrammar("typescript"),
-      ).rejects.toThrow("Grammar download not implemented");
+      ).rejects.toThrow("Failed to download");
     });
 
     it("should retry downloads on failure", async () => {

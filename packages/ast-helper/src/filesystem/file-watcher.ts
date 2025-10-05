@@ -12,7 +12,7 @@ import type { Stats } from "node:fs";
 import { resolve, relative } from "node:path";
 import * as chokidar from "chokidar";
 import { minimatch } from "minimatch";
-import { createModuleLogger } from "../logging";
+import { createModuleLogger } from "../logging/index.js";
 import type {
   FileWatcher,
   FileWatchConfig,

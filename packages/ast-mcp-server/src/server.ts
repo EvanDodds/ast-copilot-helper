@@ -11,12 +11,12 @@ import type {
   JSONRPCResponse,
   MCPHandler,
   MCPServerCapabilities,
-} from "./mcp/protocol";
+} from "./mcp/protocol.js";
 import {
   MCPErrorCode,
   createErrorResponse,
   isValidMCPRequest,
-} from "./mcp/protocol";
+} from "./mcp/protocol.js";
 import type { MCPTransport } from "./mcp/transport";
 import type { DatabaseReader, ServerStats } from "./types";
 import { StandardHandlerFactory } from "./mcp/standard-handlers.js";

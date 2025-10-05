@@ -3,8 +3,8 @@
  * Handles MCP communication via standard input/output streams
  */
 
-import type { JSONRPCResponse, JSONRPCNotification } from "./protocol";
-import { MCPTransport, BaseTransportStats } from "./transport";
+import type { JSONRPCResponse, JSONRPCNotification } from "./protocol.js";
+import { MCPTransport, BaseTransportStats } from "./transport.js";
 
 /**
  * Statistics for stdio transport
