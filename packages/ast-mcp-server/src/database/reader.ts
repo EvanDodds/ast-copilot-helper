@@ -20,6 +20,7 @@ import type {
   ASTNodeMatch,
   QueryOptions,
 } from "../types.js";
+import type { SearchResult } from "../../../ast-helper/src/database/vector/types.js";
 
 /**
  * Hot reload detection configuration
@@ -171,7 +172,7 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
   }
 
   /**
-   * Query AST nodes by natural language intent using text search
+   * Query AST nodes by natural language intent using semantic vector search
    */
   async queryByIntent(
     intent: string,
@@ -188,11 +189,35 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
     const startTime = performance.now();
 
     try {
-      // Use text-based search for intent queries
+      // Try vector search first if available
+      const vectorSearchResults = await this.vectorSearch(intent, {
+        maxResults: options.maxResults,
+        ef: 50, // Good balance of speed vs accuracy
+      });
+
+      // If vector search returns good results, use them
+      if (vectorSearchResults.length > 0) {
+        const duration = performance.now() - startTime;
+        this.logger.debug("Intent query completed (vector search)", {
+          intent: intent.substring(0, 100),
+          results: vectorSearchResults.length,
+          duration: `${duration.toFixed(1)}ms`,
+        });
+
+        // Cache results
+        this.setCachedResult(cacheKey, vectorSearchResults);
+        return vectorSearchResults;
+      }
+
+      // Fallback to text search if vector search fails or returns empty
+      this.logger.debug("Falling back to text search for intent query", {
+        intent: intent.substring(0, 100),
+      });
+
       const results = await this.textSearch(intent, options);
 
       const duration = performance.now() - startTime;
-      this.logger.debug("Intent query completed", {
+      this.logger.debug("Intent query completed (text search fallback)", {
         intent: intent.substring(0, 100),
         results: results.length,
         duration: `${duration.toFixed(1)}ms`,
@@ -343,16 +368,106 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
     }
 
     try {
-      // For now, delegate to text search - this would be replaced with actual vector search
-      const queryOptions: QueryOptions = {
-        maxResults: options.maxResults,
-        minScore: 0.3, // Default min score for vector search
-      };
+      // Try to use the actual vector database infrastructure
+      const structure = this.dbManager.getDatabaseStructure();
+      const vectorDBPath = structure.models; // Use models directory from database structure
 
-      const results = await this.textSearch(query, queryOptions);
+      // Dynamic import to avoid loading heavy dependencies at startup
+      const { VectorDatabaseFactory } = await import(
+        "../../../ast-helper/src/database/vector/factory.js"
+      );
+      const { XenovaEmbeddingGenerator } = await import(
+        "../../../ast-helper/src/embedder/XenovaEmbeddingGenerator.js"
+      );
 
-      this.setCachedResult(cacheKey, results);
-      return results;
+      try {
+        // Initialize vector database
+        const vectorConfig = {
+          dimensions: 768, // CodeBERT dimensions
+          maxElements: 100000,
+          M: 16,
+          efConstruction: 200,
+          space: "cosine" as const,
+          storageFile: `${vectorDBPath}/vectors.db`,
+          indexFile: `${vectorDBPath}/index.bin`,
+          autoSave: false, // Read-only for queries
+          saveInterval: 0,
+        };
+
+        const vectorDB = await VectorDatabaseFactory.create(vectorConfig, {
+          verbose: false,
+        });
+        await vectorDB.initialize(vectorConfig);
+
+        // Initialize embedding generator
+        const embeddingGenerator = new XenovaEmbeddingGenerator();
+        const modelPath = `${vectorDBPath}/codebert`;
+        await embeddingGenerator.initialize(modelPath);
+
+        // Generate query embedding
+        const queryEmbeddings = await embeddingGenerator.generateEmbeddings([
+          query,
+        ]);
+        if (queryEmbeddings.length === 0) {
+          throw new Error("Failed to generate query embedding");
+        }
+
+        const queryVector = queryEmbeddings[0];
+        if (!queryVector) {
+          throw new Error("Query vector is undefined");
+        }
+
+        // Search for similar vectors
+        const searchResults = await vectorDB.searchSimilar(
+          queryVector,
+          options.maxResults || 10,
+          options.ef || 50,
+        );
+
+        // Convert to ASTNodeMatch format
+        const matches: ASTNodeMatch[] = searchResults.map(
+          (result: SearchResult) => ({
+            nodeId: result.nodeId,
+            nodeType: "function", // Default type since VectorMetadata doesn't have nodeType
+            signature: result.metadata?.signature || "",
+            summary: result.metadata?.summary || "",
+            filePath: result.metadata?.filePath || "",
+            startLine: result.metadata?.lineNumber || 0,
+            endLine: result.metadata?.lineNumber
+              ? result.metadata.lineNumber + 10
+              : 10, // Approximate end line
+            parentId: undefined, // VectorMetadata doesn't have parentId
+            sourceSnippet: result.metadata?.signature || "", // Use signature as source
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            score: result.score, // Use the normalized score directly
+            matchReason: `semantic similarity (${result.score.toFixed(3)})`,
+          }),
+        );
+
+        // Cleanup
+        await embeddingGenerator.shutdown();
+        await vectorDB.shutdown();
+
+        this.setCachedResult(cacheKey, matches);
+        return matches;
+      } catch (vectorError) {
+        this.logger.warn("Vector search failed, falling back to text search", {
+          error:
+            vectorError instanceof Error
+              ? vectorError.message
+              : String(vectorError),
+        });
+
+        // Fallback to text search
+        const fallbackResults = await this.textSearch(query, {
+          maxResults: options.maxResults,
+          minScore: 0.3,
+        });
+
+        this.setCachedResult(cacheKey, fallbackResults);
+        return fallbackResults;
+      }
     } catch (error) {
       this.logger.error("Vector search failed", { query, error });
       return [];

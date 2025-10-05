@@ -184,6 +184,125 @@ export class WatchCommand extends EventEmitter {
   }
 
   /**
+   * Clean up database entries for deleted files
+   */
+  private async cleanupDeletedFiles(deletedFiles: string[]): Promise<void> {
+    const { ASTDatabaseManager } = await import("../database/manager.js");
+    const { join, resolve } = await import("node:path");
+    const { readdir, unlink, access } = await import("node:fs/promises");
+    const { constants } = await import("node:fs");
+
+    try {
+      // Initialize database managers
+      const workspacePath = this.config.outputDir || process.cwd();
+      const dbManager = new ASTDatabaseManager(workspacePath);
+
+      const structure = dbManager.getDatabaseStructure();
+
+      for (const deletedFile of deletedFiles) {
+        const relativePath = resolve(deletedFile).replace(
+          resolve(workspacePath) + "/",
+          "",
+        );
+
+        this.logger.debug("Cleaning up database entries for deleted file", {
+          file: deletedFile,
+          relativePath,
+        });
+
+        // Clean up AST files
+        const astDir = structure.asts;
+        const astFileName = relativePath.replace(/[/\\]/g, "_") + ".json";
+        const astFilePath = join(astDir, astFileName);
+
+        try {
+          await access(astFilePath, constants.F_OK);
+          await unlink(astFilePath);
+          this.logger.debug("Removed AST file", { path: astFilePath });
+        } catch {
+          // File doesn't exist, that's ok
+        }
+
+        // Clean up annotation files
+        const annotDir = structure.annots;
+        const annotFileName = relativePath.replace(/[/\\]/g, "_") + ".json";
+        const annotFilePath = join(annotDir, annotFileName);
+
+        try {
+          await access(annotFilePath, constants.F_OK);
+          await unlink(annotFilePath);
+          this.logger.debug("Removed annotation file", { path: annotFilePath });
+        } catch {
+          // File doesn't exist, that's ok
+        }
+
+        // Clean up embedding files (this is more complex as embeddings are stored by timestamp)
+        try {
+          const embeddingsPath = join(dbManager.astdbPath, "embeddings");
+          const files = await readdir(embeddingsPath).catch(() => []);
+
+          // Look for embedding files that reference this file path
+          const embeddingFiles = files.filter(
+            (f) => f.startsWith("embeddings-") && f.endsWith(".json"),
+          );
+
+          for (const embeddingFile of embeddingFiles) {
+            const { readFile } = await import("node:fs/promises");
+            try {
+              const embeddingData = JSON.parse(
+                await readFile(join(embeddingsPath, embeddingFile), "utf-8"),
+              );
+
+              // Filter out embeddings for the deleted file
+              const filteredEmbeddings = embeddingData.filter(
+                (embedding: { inputText?: string; nodeId?: string }) => {
+                  return (
+                    !embedding.inputText?.includes(relativePath) &&
+                    !embedding.nodeId?.includes(relativePath)
+                  );
+                },
+              );
+
+              // If embeddings were removed, update the file
+              if (filteredEmbeddings.length !== embeddingData.length) {
+                const { writeFile } = await import("node:fs/promises");
+                await writeFile(
+                  join(embeddingsPath, embeddingFile),
+                  JSON.stringify(filteredEmbeddings, null, 2),
+                );
+                this.logger.debug(
+                  "Updated embedding file, removed entries for deleted file",
+                  {
+                    embeddingFile,
+                    removedCount:
+                      embeddingData.length - filteredEmbeddings.length,
+                  },
+                );
+              }
+            } catch (error) {
+              this.logger.warn("Failed to clean embedding file", {
+                file: embeddingFile,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            }
+          }
+        } catch (error) {
+          this.logger.warn("Failed to clean embeddings for deleted file", {
+            file: deletedFile,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    } catch (error) {
+      this.logger.error("Failed to cleanup deleted files from database", {
+        error: error instanceof Error ? error.message : String(error),
+        files: deletedFiles,
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Set up file watcher event handlers
    */
   private setupFileWatcherEvents(): void {
@@ -306,11 +425,20 @@ export class WatchCommand extends EventEmitter {
         this.logger.info("Handling deleted files", {
           fileCount: deletedFiles.length,
         });
-        // TODO: Implement database cleanup for deleted files
-        // For now, just log the deletions
-        deletedFiles.forEach((file) => {
-          this.logger.info("File deleted (cleanup needed)", { file });
-        });
+
+        try {
+          await this.cleanupDeletedFiles(deletedFiles);
+          this.logger.info(
+            "Successfully cleaned up database entries for deleted files",
+            {
+              cleanedFiles: deletedFiles.length,
+            },
+          );
+        } catch (error) {
+          const errorMsg = `Failed to cleanup deleted files from database: ${error instanceof Error ? error.message : String(error)}`;
+          processingErrors.push(errorMsg);
+          this.logger.error(errorMsg, { error, files: deletedFiles });
+        }
       }
 
       const processingTime = Date.now() - startTime;
