@@ -83,7 +83,7 @@ describe("Issue #17 Resources Implementation", () => {
       expect(response.result).toBeDefined();
 
       const resources = (response.result as any).resources;
-      expect(resources).toHaveLength(5);
+      expect(resources).toHaveLength(6);
 
       // Check that all Issue #17 required resources are present
       const resourceUris = resources.map((r: any) => r.uri);
@@ -94,7 +94,7 @@ describe("Issue #17 Resources Implementation", () => {
     });
 
     it("should include proper resource definitions", () => {
-      expect(MCP_RESOURCES).toHaveLength(5);
+      expect(MCP_RESOURCES).toHaveLength(6);
 
       MCP_RESOURCES.forEach((resource) => {
         expect(resource.uri).toBeDefined();
@@ -172,8 +172,9 @@ describe("Issue #17 Resources Implementation", () => {
 
       const content = JSON.parse(result.contents[0].text);
       expect(content.filePath).toBe("test.ts");
-      expect(content.nodes).toHaveLength(1);
-      expect(content.totalCount).toBe(1);
+      expect(content.structure).toBeDefined();
+      expect(content.structure.totalNodes).toBe(1);
+      expect(content.statistics.totalNodes).toBe(1);
     });
   });
 
