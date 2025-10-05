@@ -42,6 +42,10 @@
     "./embedder": {
       "types": "./dist/embedder/index.d.ts",
       "import": "./dist/embedder/index.js"
+    },
+    "./database": {
+      "types": "./dist/database/index.d.ts",
+      "import": "./dist/database/index.js"
     }
   },
   "scripts": {

@@ -10,9 +10,9 @@ import { readdir, stat, readFile } from "node:fs/promises";
 import { watch } from "node:fs";
 import { EventEmitter } from "node:events";
 
-import { ASTDatabaseManager } from "../../../ast-helper/src/database/manager.js";
-import { FileSystemManager } from "../../../ast-helper/src/filesystem/manager.js";
-import { createLogger } from "../../../ast-helper/src/logging/index.js";
+import { ASTDatabaseManager } from "@ast-copilot-helper/ast-helper/database";
+import { FileSystemManager } from "@ast-copilot-helper/ast-helper/filesystem";
+import { createLogger } from "@ast-copilot-helper/ast-helper/logging";
 
 import type {
   DatabaseReader,

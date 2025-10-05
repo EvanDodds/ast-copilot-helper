@@ -9,12 +9,12 @@ import { promises as fs } from "fs";
 import path from "path";
 import type { ChildProcess } from "child_process";
 import { spawn } from "child_process";
-import type { ServerConfig } from "./server";
-import { ASTMCPServer } from "./server";
-import { StdioTransport } from "./mcp/stdio-transport";
-import { TCPTransport } from "./mcp/tcp-transport";
-import type { MCPTransport } from "./mcp/transport";
-import { MockDatabaseReader } from "./database/mock-reader";
+import type { ServerConfig } from "./server.js";
+import { ASTMCPServer } from "./server.js";
+import { StdioTransport } from "./mcp/stdio-transport.js";
+import { TCPTransport } from "./mcp/tcp-transport.js";
+import type { MCPTransport } from "./mcp/transport.js";
+import { ASTDatabaseReader } from "./database/reader.js";
 
 /**
  * CLI Configuration interface
@@ -189,7 +189,7 @@ class ServerManager {
   async startServer(): Promise<void> {
     try {
       // Create database reader
-      const database = new MockDatabaseReader(this.config.databasePath);
+      const database = new ASTDatabaseReader(this.config.databasePath);
       await database.initialize();
 
       // Create transport and server
@@ -371,7 +371,7 @@ class ServerManager {
 
       // Check database accessibility
       try {
-        const database = new MockDatabaseReader(this.config.databasePath);
+        const database = new ASTDatabaseReader(this.config.databasePath);
         await database.initialize();
         await database.close();
       } catch (error) {
