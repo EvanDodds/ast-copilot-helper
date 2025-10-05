@@ -87,7 +87,7 @@ interface QueryOptions extends GlobalOptions {
   top?: number;
   minScore?: number;
   format?: "plain" | "json" | "markdown";
-  intent?: string;
+  intent: string;
 }
 
 /**
@@ -1351,12 +1351,11 @@ class EmbedCommandHandler implements CommandHandler<EmbedOptions> {
 
 class QueryCommandHandler implements CommandHandler<QueryOptions> {
   async execute(options: QueryOptions, config: Config): Promise<void> {
-    console.log("Query command executed with options:", options);
-    console.log("Using config:", {
-      outputDir: config.outputDir,
-      topK: config.topK,
-    });
-    // TODO: Implement actual query logic
+    const { QueryCommandHandler: RealQueryHandler } = await import(
+      "./commands/query.js"
+    );
+    const handler = new RealQueryHandler();
+    await handler.execute(options, config);
   }
 }
 
