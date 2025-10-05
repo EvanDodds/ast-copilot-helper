@@ -470,7 +470,23 @@ export class ResourcesReadHandler extends BaseHandler {
     const nodes = await this.db.getFileNodes(filePath);
 
     if (nodes.length === 0) {
-      throw new Error(`No AST nodes found for file: ${filePath}`);
+      // Return empty results for files with no nodes instead of throwing
+      return {
+        filePath,
+        language: this.inferLanguageFromPath(filePath),
+        structure: {
+          rootNodes: [],
+          totalNodes: 0,
+          nodeTypes: [],
+          lastModified: new Date().toISOString(),
+        },
+        statistics: {
+          totalNodes: 0,
+          nodeTypeDistribution: {},
+          linesOfCode: 0,
+        },
+        timestamp: new Date().toISOString(),
+      };
     }
 
     // Build hierarchical tree structure
