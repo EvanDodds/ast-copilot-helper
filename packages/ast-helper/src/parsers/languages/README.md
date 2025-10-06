@@ -469,11 +469,11 @@ manager.on("debug", (info) => {
 
 ## API Reference
 
-For complete API documentation, see the [API Reference](../../docs/api/issue-150.md#extended-language-support).
+For complete API documentation, see the [API Reference](../../docs/api/advanced-features.md#extended-language-support).
 
 ## Examples
 
-For practical examples and integration patterns, see the [Examples Guide](../../docs/examples/issue-150-examples.md#extended-language-support).
+For practical examples and integration patterns, see the [Examples Guide](../../docs/examples/advanced-features.md#extended-language-support).
 
 ## Contributing
 

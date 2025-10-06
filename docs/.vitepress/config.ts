@@ -69,7 +69,7 @@ export default defineConfig({
           text: "Issue #150 Features",
           collapsed: false,
           items: [
-            { text: "Complete Overview", link: "/guides/issue-150" },
+            { text: "Advanced Features", link: "/guide/advanced-features" },
             {
               text: "Tree-sitter Integration",
               link: "/guides/tree-sitter-integration",
@@ -103,7 +103,7 @@ export default defineConfig({
             { text: "MCP Server", link: "/api/mcp-server" },
             { text: "TypeScript Interfaces", link: "/api/interfaces" },
             { text: "VS Code Extension", link: "/api/vscode-extension" },
-            { text: "Issue #150 API", link: "/api/issue-150" },
+            { text: "Advanced Features API", link: "/api/advanced-features" },
           ],
         },
       ],
@@ -118,7 +118,7 @@ export default defineConfig({
             { text: "Integration Examples", link: "/examples/integrations" },
             {
               text: "Issue #150 Examples",
-              link: "/examples/issue-150-examples",
+              link: "/examples/advanced-features",
             },
           ],
         },

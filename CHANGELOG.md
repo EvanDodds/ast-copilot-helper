@@ -104,9 +104,9 @@ This major release implements the final 25% of core functionality, bringing AST 
 - `packages/ast-helper/src/commands/watch/` - Enhanced watch command system
 - `packages/ast-helper/src/annotations/` - Advanced annotation features
 - `packages/ast-helper/src/performance/optimization/` - Performance optimization system
-- `docs/guides/issue-150.md` - Comprehensive Issue #150 guide
-- `docs/api/issue-150.md` - Complete API reference
-- `docs/examples/issue-150-examples.md` - Practical examples and tutorials
+- `docs/guide/advanced-features.md` - Comprehensive advanced features guide
+- `docs/api/advanced-features.md` - Complete API reference
+- `docs/examples/advanced-features.md` - Practical examples and tutorials
 
 ### Compatibility
 

@@ -1,6 +1,6 @@
-# Issue #150 API Reference
+# Advanced Features API Reference
 
-Complete API documentation for all Issue #150 components.
+Complete API documentation for all advanced features components.
 
 ## Table of Contents
 

@@ -1,6 +1,6 @@
-# Issue #150 Examples
+# Advanced Features Examples
 
-Practical examples demonstrating the powerful features of Issue #150 components.
+Practical examples demonstrating the powerful capabilities of the advanced features components.
 
 ## Table of Contents
 
