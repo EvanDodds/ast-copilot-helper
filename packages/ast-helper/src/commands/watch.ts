@@ -14,6 +14,7 @@ import type {
 import type { Config } from "../types.js";
 import { ParseCommand } from "./parse.js";
 import { AnnotateCommandHandler } from "./annotate.js";
+import { EmbedCommand } from "./embed.js";
 
 /**
  * Watch command options interface
@@ -23,6 +24,8 @@ export interface WatchCommandOptions {
   debounce?: number;
   includeAnnotation?: boolean;
   batchSize?: number;
+  maxBatchSize?: number;
+  batch?: boolean;
   recursive?: boolean;
   followSymlinks?: boolean;
 }
@@ -46,6 +49,7 @@ export class WatchCommand extends EventEmitter {
   private fileWatcher: FileWatcher | null = null;
   private parseCommand: ParseCommand;
   private annotateHandler?: AnnotateCommandHandler;
+  private embedCommand?: EmbedCommand;
   private config: Config;
   private options: WatchCommandOptions;
   private isRunning = false;
@@ -53,6 +57,16 @@ export class WatchCommand extends EventEmitter {
   private errors: string[] = [];
   private pendingChanges = new Map<string, FileChangeEvent>();
   private processingTimer: NodeJS.Timeout | null = null;
+  private memoryCheckInterval: NodeJS.Timeout | null = null;
+  private startTime = Date.now();
+  private stats = {
+    peakMemoryMB: 0,
+    totalProcessingTime: 0,
+    sessionStartTime: Date.now(),
+  };
+  private fileModificationTimes = new Map<string, number>();
+  private restartAttempts = 0;
+  private readonly maxRestartAttempts = 5;
 
   constructor(config: Config, options: WatchCommandOptions) {
     super();
@@ -62,6 +76,8 @@ export class WatchCommand extends EventEmitter {
 
     if (options.includeAnnotation) {
       this.annotateHandler = new AnnotateCommandHandler();
+      // Always enable embedding when annotation is enabled for complete pipeline
+      this.embedCommand = new EmbedCommand(config, this.logger);
     }
   }
 
@@ -98,7 +114,10 @@ export class WatchCommand extends EventEmitter {
         ],
         enableRecursive: this.options.recursive !== false,
         debounceMs: this.options.debounce || 200,
-        batchSize: this.options.batchSize || 50,
+        batchSize: Math.min(
+          this.options.batchSize || 50,
+          this.options.maxBatchSize || 200,
+        ),
         followSymlinks: this.options.followSymlinks || false,
       };
 
@@ -112,6 +131,12 @@ export class WatchCommand extends EventEmitter {
       // Start watching
       await this.fileWatcher.start();
       this.isRunning = true;
+
+      // Start memory monitoring for long-running sessions
+      this.startMemoryMonitoring();
+
+      // Reset restart attempts on successful start
+      this.restartAttempts = 0;
 
       this.logger.info("File watcher started successfully", {
         watchPaths,
@@ -144,6 +169,12 @@ export class WatchCommand extends EventEmitter {
       if (this.processingTimer) {
         clearTimeout(this.processingTimer);
         this.processingTimer = null;
+      }
+
+      // Stop memory monitoring
+      if (this.memoryCheckInterval) {
+        clearInterval(this.memoryCheckInterval);
+        this.memoryCheckInterval = null;
       }
 
       // Process any remaining changes
@@ -332,6 +363,24 @@ export class WatchCommand extends EventEmitter {
         : null,
     });
 
+    // Track modification times for delta updates
+    if (event.stats?.mtime) {
+      const currentModTime = this.fileModificationTimes.get(event.filePath);
+      const newModTime = event.stats.mtime.getTime();
+
+      // Only process if file has actually changed (avoid duplicate processing)
+      if (currentModTime && currentModTime >= newModTime) {
+        this.logger.debug("Skipping file - not actually modified", {
+          path: event.filePath,
+          currentModTime: new Date(currentModTime),
+          newModTime: event.stats.mtime,
+        });
+        return;
+      }
+
+      this.fileModificationTimes.set(event.filePath, newModTime);
+    }
+
     // Add to pending changes (debouncing)
     this.pendingChanges.set(event.filePath, event);
 
@@ -352,6 +401,33 @@ export class WatchCommand extends EventEmitter {
     this.logger.error("File watcher error", { error });
     this.errors.push(error.message);
     this.emit("error", error);
+
+    // Consider restarting the watcher for certain types of errors
+    if (error.message.includes("ENOSPC") || error.message.includes("EMFILE")) {
+      this.logger.warn("Resource limit error detected", {
+        error: error.message,
+        restartAttempts: this.restartAttempts,
+        maxRestartAttempts: this.maxRestartAttempts,
+      });
+
+      if (this.restartAttempts < this.maxRestartAttempts) {
+        this.restartAttempts++;
+        this.logger.info("Attempting to restart watcher", {
+          attempt: this.restartAttempts,
+        });
+
+        // Stop current watcher and restart after delay
+        this.stop();
+        setTimeout(() => {
+          this.start().catch((restartError) => {
+            this.logger.error("Failed to restart watcher", restartError);
+          });
+        }, 2000 * this.restartAttempts); // Exponential backoff
+      } else {
+        this.logger.warn("Maximum restart attempts reached, stopping watcher");
+        this.stop();
+      }
+    }
   }
 
   /**
@@ -390,12 +466,17 @@ export class WatchCommand extends EventEmitter {
             fileCount: changedFiles.length,
           });
 
+          const effectiveBatchSize = Math.min(
+            this.options.batchSize || 50,
+            this.options.maxBatchSize || 200,
+          );
+
           // Use parse command to process files
           await this.parseCommand.execute(
             {
               glob: changedFiles.join(","),
               force: true,
-              batchSize: this.options.batchSize || 50,
+              batchSize: effectiveBatchSize,
             },
             this.config,
           );
@@ -408,10 +489,20 @@ export class WatchCommand extends EventEmitter {
             await this.annotateHandler.execute(
               {
                 force: true,
-                batchSize: this.options.batchSize || 50,
+                batchSize: effectiveBatchSize,
               },
               this.config,
             );
+
+            // Run embedding after successful annotation for complete pipeline
+            if (this.embedCommand) {
+              this.logger.info("Generating embeddings for annotated files");
+              await this.embedCommand.execute({
+                force: true,
+                batchSize: effectiveBatchSize,
+                verbose: false, // Keep quiet for watch mode
+              });
+            }
           }
         } catch (error) {
           const errorMsg = `Failed to process changed files: ${error instanceof Error ? error.message : String(error)}`;
@@ -428,6 +519,12 @@ export class WatchCommand extends EventEmitter {
 
         try {
           await this.cleanupDeletedFiles(deletedFiles);
+
+          // Clean up modification time tracking for deleted files
+          deletedFiles.forEach((filePath) => {
+            this.fileModificationTimes.delete(filePath);
+          });
+
           this.logger.info(
             "Successfully cleaned up database entries for deleted files",
             {
@@ -444,6 +541,7 @@ export class WatchCommand extends EventEmitter {
       const processingTime = Date.now() - startTime;
       this.processedFiles += processedCount;
       this.errors.push(...processingErrors);
+      this.stats.totalProcessingTime += processingTime;
 
       const result: WatchProcessingResult = {
         processedFiles: processedCount,
@@ -466,6 +564,54 @@ export class WatchCommand extends EventEmitter {
       this.errors.push(errorMsg);
       this.emit("error", error);
     }
+  }
+
+  /**
+   * Start memory monitoring for long-running watch sessions
+   */
+  private startMemoryMonitoring(): void {
+    // Check memory usage every 30 seconds
+    this.memoryCheckInterval = setInterval(() => {
+      const memoryUsage = process.memoryUsage();
+      const memoryMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
+
+      if (memoryMB > this.stats.peakMemoryMB) {
+        this.stats.peakMemoryMB = memoryMB;
+      }
+
+      // Log memory warnings if usage is high
+      if (memoryMB > 512) {
+        this.logger.warn("High memory usage detected", {
+          currentMemoryMB: memoryMB,
+          peakMemoryMB: this.stats.peakMemoryMB,
+          sessionDurationMin: Math.round((Date.now() - this.startTime) / 60000),
+        });
+
+        // Suggest garbage collection if memory is very high
+        if (memoryMB > 1024 && global.gc) {
+          this.logger.info("Running garbage collection to free memory");
+          global.gc();
+        }
+      }
+    }, 30000); // Check every 30 seconds
+  }
+
+  /**
+   * Get enhanced statistics including memory and session info
+   */
+  getEnhancedStats() {
+    const sessionDurationMs = Date.now() - this.startTime;
+    return {
+      ...this.getStats(),
+      sessionDurationMs,
+      sessionDurationMin: Math.round(sessionDurationMs / 60000),
+      peakMemoryMB: this.stats.peakMemoryMB,
+      totalProcessingTime: this.stats.totalProcessingTime,
+      averageProcessingTimePerFile:
+        this.processedFiles > 0
+          ? Math.round(this.stats.totalProcessingTime / this.processedFiles)
+          : 0,
+    };
   }
 }
 
@@ -509,9 +655,19 @@ export class WatchCommandHandler {
       });
 
       this.watchCommand.on("stopped", () => {
-        const stats = this.watchCommand?.getStats();
+        const stats = this.watchCommand?.getEnhancedStats();
         logger.info("\n📊 Watch session summary:");
         logger.info(`   Files processed: ${stats?.processedFiles || 0}`);
+        logger.info(
+          `   Session duration: ${stats?.sessionDurationMin || 0} minutes`,
+        );
+        logger.info(`   Peak memory usage: ${stats?.peakMemoryMB || 0} MB`);
+        logger.info(
+          `   Total processing time: ${Math.round((stats?.totalProcessingTime || 0) / 1000)}s`,
+        );
+        logger.info(
+          `   Average time per file: ${stats?.averageProcessingTimePerFile || 0}ms`,
+        );
         logger.info(`   Errors: ${stats?.errors || 0}`);
         logger.info("👋 Watch stopped");
         process.exit(0);
