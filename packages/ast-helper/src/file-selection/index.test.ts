@@ -47,6 +47,13 @@ describe("FileSelectionEngine", () => {
         M: 16,
       },
       modelHost: "https://models.example.com",
+      model: {
+        defaultModel: "test-model",
+        modelsDir: "./models",
+        downloadTimeout: 30000,
+        maxConcurrentDownloads: 2,
+        showProgress: false,
+      },
       enableTelemetry: false,
       concurrency: 4,
       batchSize: 10,
@@ -62,7 +69,7 @@ describe("FileSelectionEngine", () => {
     // Clean up test workspace
     try {
       await rm(TEST_WORKSPACE, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
   });
@@ -142,7 +149,7 @@ describe("GlobFileSelector", () => {
   afterEach(async () => {
     try {
       await rm(TEST_WORKSPACE, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
   });
@@ -227,17 +234,21 @@ describe("GlobFileSelector", () => {
         join(TEST_WORKSPACE, "code.ts"),
         "export const test = 1;",
       );
+      await writeFile(join(TEST_WORKSPACE, "script.js"), "const x = 1;");
       await writeFile(join(TEST_WORKSPACE, "image.png"), "binary data");
-      await writeFile(join(TEST_WORKSPACE, "readme.md"), "# Test");
+      await writeFile(join(TEST_WORKSPACE, "data.txt"), "plain text");
 
       // Wait a bit for file system to sync
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const result = await globFileSelector.selectFiles(options, {} as Config);
 
-      // Only TypeScript file should be included (or markdown might be included too depending on config)
+      // Only supported file types should be included (.ts and .js)
       expect(result.files.length).toBeGreaterThan(0);
       expect(result.files.some((f) => f.endsWith("code.ts"))).toBe(true);
+      expect(result.files.some((f) => f.endsWith("script.js"))).toBe(true);
+      // Unsupported files should be in skipped array
+      expect(result.skipped.length).toBeGreaterThan(0);
     });
 
     it("should handle file size limits", async () => {
@@ -305,6 +316,13 @@ describe("ConfigFileSelector", () => {
         M: 16,
       },
       modelHost: "https://models.example.com",
+      model: {
+        defaultModel: "test-model",
+        modelsDir: "./models",
+        downloadTimeout: 30000,
+        maxConcurrentDownloads: 2,
+        showProgress: false,
+      },
       enableTelemetry: false,
       concurrency: 4,
       batchSize: 10,
@@ -316,7 +334,7 @@ describe("ConfigFileSelector", () => {
   afterEach(async () => {
     try {
       await rm(TEST_WORKSPACE, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
   });
@@ -337,7 +355,7 @@ describe("ConfigFileSelector", () => {
         "export const utils = 1;",
       );
       await writeFile(
-        join(TEST_WORKSPACE, "styles.css"),
+        join(TEST_WORKSPACE, "unsupported.css"),
         ".class { color: red; }",
       );
 
@@ -348,6 +366,9 @@ describe("ConfigFileSelector", () => {
 
       expect(result.files.length).toBeGreaterThan(0);
       expect(result.strategy).toBe("config");
+      // Should include supported files
+      expect(result.files.some((f) => f.includes("component.tsx"))).toBe(true);
+      expect(result.files.some((f) => f.includes("utils.ts"))).toBe(true);
     });
 
     it("should handle empty parseGlob configuration", async () => {
@@ -435,7 +456,7 @@ describe("File Metadata and Filtering", () => {
   afterEach(async () => {
     try {
       await rm(TEST_WORKSPACE, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
   });
@@ -457,12 +478,11 @@ describe("File Metadata and Filtering", () => {
 
     expect(result.files).toHaveLength(1);
     expect(result.totalSize).toBeGreaterThan(0);
+    // Size should match content length
     expect(result.totalSize).toBe(testContent.length);
   });
 
   it("should handle symbolic links appropriately", async () => {
-    // This test would require platform-specific symlink creation
-    // For now, we'll just verify the structure handles it
     const globSelector = new GlobFileSelector();
     const options: ParseOptions = {
       glob: "**/*.ts",
@@ -478,5 +498,6 @@ describe("File Metadata and Filtering", () => {
 
     expect(result).toHaveProperty("files");
     expect(result.files).toHaveLength(1);
+    expect(result.files[0]).toMatch(/real\.ts$/);
   });
 });
