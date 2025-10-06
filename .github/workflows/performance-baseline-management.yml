@@ -29,8 +29,14 @@ on:
         options:
           - wasm
 
+# Grant write permissions to allow the workflow to push commits
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '24'
   RUST_VERSION: 'stable'
 
 jobs:
