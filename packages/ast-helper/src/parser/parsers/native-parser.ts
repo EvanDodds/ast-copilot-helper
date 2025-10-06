@@ -14,6 +14,7 @@ import type {
 import { generateNodeId } from "../types.js";
 import type { TreeSitterGrammarManager } from "../grammar-manager.js";
 import { getLanguageConfig } from "../languages.js";
+import { createHash } from "crypto";
 
 // Tree-sitter type definitions
 interface TreeSitterNode {
@@ -57,6 +58,10 @@ type TreeSitterLanguage = object;
 export class NativeTreeSitterParser extends BaseParser {
   private grammarManager: TreeSitterGrammarManager;
   private parsers: Map<string, TreeSitterParser> = new Map();
+  private parseCache: Map<string, { result: ParseResult; timestamp: number }> =
+    new Map();
+  private readonly cacheTimeout = 300000; // 5 minutes
+  private readonly maxCacheSize = 100;
 
   constructor(
     runtime: ParserRuntime,
@@ -75,6 +80,15 @@ export class NativeTreeSitterParser extends BaseParser {
     filePath?: string,
   ): Promise<ParseResult> {
     const startTime = performance.now();
+
+    // Generate cache key
+    const cacheKey = this.generateCacheKey(code, language, filePath);
+
+    // Check cache first
+    const cached = this.parseCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+      return cached.result;
+    }
 
     try {
       // Check if language is supported
@@ -137,12 +151,17 @@ export class NativeTreeSitterParser extends BaseParser {
       // Detect syntax errors from Tree-sitter
       const errors = this.extractSyntaxErrorsFromTree(tree, code);
 
-      return {
+      const result: ParseResult = {
         language,
         nodes,
         errors,
         parseTime: performance.now() - startTime,
       };
+
+      // Cache the result for future use
+      this.cacheResult(cacheKey, result);
+
+      return result;
     } catch (error) {
       return {
         language,
@@ -974,10 +993,69 @@ export class NativeTreeSitterParser extends BaseParser {
   }
 
   /**
+   * Generate cache key for parse results
+   */
+  private generateCacheKey(
+    code: string,
+    language: string,
+    filePath?: string,
+  ): string {
+    const hash = createHash("sha256");
+    hash.update(code);
+    hash.update(language);
+    if (filePath) {
+      hash.update(filePath);
+    }
+    return hash.digest("hex").substring(0, 16); // Use first 16 chars for performance
+  }
+
+  /**
+   * Cache a parse result
+   */
+  private cacheResult(key: string, result: ParseResult): void {
+    // Clean up old entries if cache is full
+    if (this.parseCache.size >= this.maxCacheSize) {
+      this.cleanupCache();
+    }
+
+    this.parseCache.set(key, {
+      result,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Clean up expired cache entries
+   */
+  private cleanupCache(): void {
+    const now = Date.now();
+    const entries = Array.from(this.parseCache.entries());
+
+    // Remove expired entries first
+    for (const [key, cached] of entries) {
+      if (now - cached.timestamp > this.cacheTimeout) {
+        this.parseCache.delete(key);
+      }
+    }
+
+    // If still full, remove oldest entries
+    if (this.parseCache.size >= this.maxCacheSize) {
+      const sortedEntries = entries
+        .sort(([, a], [, b]) => a.timestamp - b.timestamp)
+        .slice(0, Math.floor(this.maxCacheSize * 0.3)); // Remove oldest 30%
+
+      for (const [key] of sortedEntries) {
+        this.parseCache.delete(key);
+      }
+    }
+  }
+
+  /**
    * Clean up resources
    */
   override async dispose(): Promise<void> {
     await super.dispose();
     this.parsers.clear();
+    this.parseCache.clear();
   }
 }

@@ -251,6 +251,102 @@ To achieve full WASM compatibility:
 
 The Phase 1 infrastructure provides the foundation for these improvements.
 
+## Tree-sitter Integration
+
+### Overview
+
+The ast-copilot-helper leverages Tree-sitter for high-performance, incremental parsing across multiple programming languages. Tree-sitter provides robust syntax analysis with excellent error recovery and incremental parsing capabilities.
+
+### Supported Languages
+
+Our Tree-sitter integration currently supports the following languages:
+
+| Language   | Grammar Status | Features Supported             |
+| ---------- | -------------- | ------------------------------ |
+| JavaScript | ✅ Full        | Syntax, imports, exports, JSX  |
+| TypeScript | ✅ Full        | Types, interfaces, generics    |
+| Python     | ✅ Full        | Classes, functions, decorators |
+| Rust       | ✅ Full        | Modules, traits, macros        |
+| Go         | ✅ Full        | Packages, interfaces, structs  |
+| Java       | ✅ Full        | Classes, annotations, generics |
+| C++        | ✅ Full        | Classes, templates, namespaces |
+| C#         | ✅ Full        | Classes, interfaces, LINQ      |
+
+### Architecture
+
+#### Native Parser Implementation
+
+The core parsing functionality is implemented in `packages/ast-helper/src/parser/parsers/native-parser.ts`:
+
+- **Tree-sitter Integration**: Direct bindings to Tree-sitter WASM parsers
+- **Language Detection**: Automatic language detection based on file extensions
+- **Error Handling**: Robust error recovery and reporting
+- **Performance Optimization**: Caching and memory management
+
+#### Performance Features
+
+- **Parse Caching**: SHA256-based cache keys with 5-minute TTL
+- **Memory Management**: Automatic cleanup and garbage collection
+- **Parser Pooling**: Reusable parser instances for better performance
+- **Incremental Parsing**: Only re-parse modified sections when possible
+
+### Usage Examples
+
+#### Basic Parsing
+
+```typescript
+import { NativeTreeSitterParser } from "@ast-copilot-helper/ast-helper";
+
+const parser = new NativeTreeSitterParser();
+const result = await parser.parseFile("/path/to/file.ts");
+console.log(result.nodes.length); // AST node count
+```
+
+#### Batch Processing
+
+```typescript
+const files = ["file1.js", "file2.ts", "file3.py"];
+const results = await Promise.all(files.map((file) => parser.parseFile(file)));
+```
+
+### WASM Limitations
+
+While Tree-sitter has excellent WASM support, some limitations exist:
+
+1. **Binary Size**: Each language grammar adds ~200KB to bundle size
+2. **Initialization**: WASM parsers require async initialization
+3. **Memory**: WASM memory model limits very large file processing
+4. **Threading**: Single-threaded execution in browser environments
+
+### Development Guidelines
+
+#### Adding New Languages
+
+1. Install the Tree-sitter grammar: `yarn add tree-sitter-<language>`
+2. Add language detection logic in `native-parser.ts`
+3. Update the supported languages table above
+4. Add test cases in `tests/parser/` directory
+
+#### Performance Considerations
+
+- Use caching for repeated parsing operations
+- Implement memory limits for large files (>10MB)
+- Consider lazy loading for rarely used language grammars
+- Monitor parse times and optimize bottlenecks
+
+#### Testing Tree-sitter Integration
+
+```bash
+# Run parser-specific tests
+yarn test tests/parser/
+
+# Run performance benchmarks
+yarn run test:benchmarks
+
+# Validate all supported languages
+yarn test tests/languages/
+```
+
 ### Performance Requirements
 
 Our codebase must meet strict performance criteria:
