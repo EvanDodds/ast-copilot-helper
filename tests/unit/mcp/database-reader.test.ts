@@ -131,7 +131,10 @@ describe("ASTDatabaseReader", () => {
           continue;
         }
         // If it's not a busy error or we've exhausted retries, log and continue
-        console.warn(`Failed to cleanup temp directory after ${attempts + 1} attempts:`, error.message);
+        console.warn(
+          `Failed to cleanup temp directory after ${attempts + 1} attempts:`,
+          error.message,
+        );
         break;
       }
     }
