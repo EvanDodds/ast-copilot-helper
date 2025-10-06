@@ -794,9 +794,7 @@ export class ExtendedLanguageManager extends EventEmitter {
     return null;
   }
 
-  private async detectLanguageFromContent(
-    code: string,
-  ): Promise<{
+  private async detectLanguageFromContent(code: string): Promise<{
     language: ExtendedLanguage;
     confidence: number;
     alternatives?: Array<{ language: ExtendedLanguage; confidence: number }>;
