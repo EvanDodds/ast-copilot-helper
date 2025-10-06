@@ -113,10 +113,28 @@ describe("ASTDatabaseReader", () => {
     // On Windows, SQLite file handles might not be immediately released
     // Add a small delay to ensure all database connections are fully closed
     if (process.platform === "win32") {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
-    await rm(tempDir, { recursive: true, force: true });
+    // Retry cleanup with exponential backoff for Windows file locking issues
+    let attempts = 0;
+    const maxAttempts = 5;
+    while (attempts < maxAttempts) {
+      try {
+        await rm(tempDir, { recursive: true, force: true });
+        break;
+      } catch (error: any) {
+        if (error.code === "EBUSY" && attempts < maxAttempts - 1) {
+          attempts++;
+          const delay = Math.pow(2, attempts) * 50; // 100ms, 200ms, 400ms, 800ms
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        // If it's not a busy error or we've exhausted retries, log and continue
+        console.warn(`Failed to cleanup temp directory after ${attempts + 1} attempts:`, error.message);
+        break;
+      }
+    }
     vi.restoreAllMocks();
   });
 
