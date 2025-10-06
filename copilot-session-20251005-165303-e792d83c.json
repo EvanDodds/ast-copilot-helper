@@ -1,0 +1,208 @@
+{
+  "sessionId": "session-20251005-165303-e792d83c",
+  "timestamp": "2025-10-05T16:53:03Z",
+  "issues": {
+    "primary": [140, 141, 143],
+    "discovered": [],
+    "relationships": {
+      "143": { "dependsOn": [140], "type": "dependency" }
+    }
+  },
+  "parentIssues": [],
+  "repoOwner": "EvanDodds",
+  "repoName": "ast-copilot-helper",
+  "currentStep": "0.4",
+  "status": "analysis-complete",
+  "issueDetails": {
+    "140": {
+      "title": "Implement Complete Annotation Command - Metadata Extraction System",
+      "priority": "HIGH",
+      "state": "open",
+      "labels": [
+        "priority: high",
+        "type: feature",
+        "component: annotation",
+        "effort: large"
+      ]
+    },
+    "141": {
+      "title": "Implement MCP Server Tools - Core AST Query Functionality",
+      "priority": "HIGH",
+      "state": "open",
+      "labels": [
+        "priority: high",
+        "type: feature",
+        "component: mcp-server",
+        "effort: medium"
+      ]
+    },
+    "143": {
+      "title": "Implement Watch Command - Incremental Processing Pipeline",
+      "priority": "MEDIUM-HIGH",
+      "state": "open",
+      "labels": [
+        "type: feature",
+        "effort: medium",
+        "priority: medium-high",
+        "component: watch"
+      ]
+    }
+  },
+  "acceptanceCriteria": [
+    {
+      "id": 1,
+      "text": "All AST nodes receive meaningful metadata beyond basic fields",
+      "source": "#140",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 2,
+      "text": "Language-specific extraction works for TS/JS/Python",
+      "source": "#140",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 3,
+      "text": "Generic fallback handles other languages gracefully",
+      "source": "#140",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 4,
+      "text": "Metadata enables effective semantic search",
+      "source": "#140",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 5,
+      "text": "Performance: <500ms for typical file annotation",
+      "source": "#140",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 6,
+      "text": "Comprehensive test coverage for all metadata types",
+      "source": "#140",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 7,
+      "text": "All three tools (query_ast_context, get_node_details, list_recent_changes) are fully functional",
+      "source": "#141",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 8,
+      "text": "Tools integrate properly with existing vector database and AST storage",
+      "source": "#141",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 9,
+      "text": "MCP protocol compliance verified through integration tests",
+      "source": "#141",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 10,
+      "text": "Performance targets met (<200ms typical response)",
+      "source": "#141",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 11,
+      "text": "Comprehensive error handling and validation",
+      "source": "#141",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 12,
+      "text": "Tools work with VS Code extension and external MCP clients",
+      "source": "#141",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 13,
+      "text": "Watch mode provides responsive live updates during development",
+      "source": "#143",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 14,
+      "text": "Performance impact is minimal during active editing",
+      "source": "#143",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 15,
+      "text": "Debouncing prevents excessive processing during rapid edits",
+      "source": "#143",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 16,
+      "text": "Incremental updates maintain data consistency",
+      "source": "#143",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 17,
+      "text": "Error handling doesn't break watch mode operation",
+      "source": "#143",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 18,
+      "text": "Configuration options support different development workflows",
+      "source": "#143",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 19,
+      "text": "Integration with VS Code extension works seamlessly",
+      "source": "#143",
+      "priority": "required",
+      "existingStatus": "not-started"
+    }
+  ],
+  "existingWork": {
+    "summary": "Significant infrastructure exists but core implementations are incomplete",
+    "partialImplementations": [
+      "AnnotationEngine class with signature extraction framework",
+      "Language-specific extractors (TypeScript, JavaScript, Python, etc.)",
+      "Complexity analyzer infrastructure",
+      "MCP server protocol framework and tool registry",
+      "Tool handler classes with placeholder implementations",
+      "Watch command with chokidar integration and basic file monitoring",
+      "File watcher with debouncing and change detection"
+    ],
+    "affectedFiles": [
+      "packages/ast-helper/src/commands/annotate.ts",
+      "packages/ast-helper/src/annotator/",
+      "packages/ast-mcp-server/src/mcp/issue17-tools.ts",
+      "packages/ast-mcp-server/src/mcp/tools.ts",
+      "packages/ast-helper/src/commands/watch.ts",
+      "packages/ast-helper/src/filesystem/file-watcher.ts"
+    ]
+  },
+  "implementationStrategy": "Complex Network - Multiple interrelated issues requiring careful sequencing (143 depends on 140)",
+  "estimatedComplexity": "high"
+}

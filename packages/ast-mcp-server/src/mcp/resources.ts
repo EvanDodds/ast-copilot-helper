@@ -56,6 +56,9 @@ interface FileResourceContent {
     nodeTypeDistribution: Record<string, number>;
     linesOfCode: number;
   };
+  // Backward compatibility properties
+  nodes: TreeNode[];
+  totalCount: number;
   timestamp: string;
 }
 
@@ -105,6 +108,26 @@ interface SearchResourceContent {
       resultsPerSecond: number;
     };
   };
+  // Backward compatibility properties
+  matches: Array<{
+    nodeId: string;
+    score: number;
+    matchReason?: string;
+    node: {
+      filePath: string;
+      nodeType: string;
+      signature: string;
+      summary: string;
+      sourceCode: {
+        snippet: string;
+        startLine: number;
+        endLine: number;
+        language: string;
+      };
+    };
+    metadata: Record<string, unknown>;
+  }>;
+  totalCount: number;
   timestamp: string;
 }
 
@@ -470,7 +493,27 @@ export class ResourcesReadHandler extends BaseHandler {
     const nodes = await this.db.getFileNodes(filePath);
 
     if (nodes.length === 0) {
-      throw new Error(`No AST nodes found for file: ${filePath}`);
+      // Return empty results for files with no nodes instead of throwing
+      return {
+        filePath,
+        language: this.inferLanguageFromPath(filePath),
+        // New structured format
+        structure: {
+          rootNodes: [],
+          totalNodes: 0,
+          nodeTypes: [],
+          lastModified: new Date().toISOString(),
+        },
+        statistics: {
+          totalNodes: 0,
+          nodeTypeDistribution: {},
+          linesOfCode: 0,
+        },
+        // Backward compatibility properties
+        nodes: [],
+        totalCount: 0,
+        timestamp: new Date().toISOString(),
+      };
     }
 
     // Build hierarchical tree structure
@@ -515,6 +558,7 @@ export class ResourcesReadHandler extends BaseHandler {
     return {
       filePath,
       language: this.inferLanguageFromPath(filePath),
+      // New structured format
       structure: {
         rootNodes,
         totalNodes: nodes.length,
@@ -532,6 +576,9 @@ export class ResourcesReadHandler extends BaseHandler {
         nodeTypeDistribution: this.calculateNodeTypeDistribution(nodes),
         linesOfCode: this.calculateLinesOfCode(nodes),
       },
+      // Backward compatibility properties
+      nodes: rootNodes,
+      totalCount: nodes.length,
       timestamp: new Date().toISOString(),
     };
   }
@@ -552,37 +599,43 @@ export class ResourcesReadHandler extends BaseHandler {
     const results = await this.db.searchNodes(query, options);
     const queryTime = Date.now() - startTime;
 
+    const formattedResults = results.map((match) => ({
+      nodeId: match.nodeId,
+      score: match.score,
+      matchReason: match.matchReason,
+      node: {
+        filePath: match.filePath,
+        nodeType: match.nodeType,
+        signature: match.signature,
+        summary: match.summary,
+        sourceCode: {
+          snippet: match.sourceSnippet,
+          startLine: match.startLine,
+          endLine: match.endLine,
+          language: this.inferLanguageFromPath(match.filePath),
+        },
+      },
+      metadata: {
+        ...match.metadata,
+        updatedAt: match.updatedAt.toISOString(),
+      },
+    }));
+
     return {
       query,
       searchOptions: options,
+      // New structured format
       results: {
-        matches: results.map((match) => ({
-          nodeId: match.nodeId,
-          score: match.score,
-          matchReason: match.matchReason,
-          node: {
-            filePath: match.filePath,
-            nodeType: match.nodeType,
-            signature: match.signature,
-            summary: match.summary,
-            sourceCode: {
-              snippet: match.sourceSnippet,
-              startLine: match.startLine,
-              endLine: match.endLine,
-              language: this.inferLanguageFromPath(match.filePath),
-            },
-          },
-          metadata: {
-            ...match.metadata,
-            updatedAt: match.updatedAt.toISOString(),
-          },
-        })),
+        matches: formattedResults,
         totalCount: results.length,
         performance: {
           queryTimeMs: queryTime,
           resultsPerSecond: results.length / (queryTime / 1000),
         },
       },
+      // Backward compatibility properties
+      matches: formattedResults,
+      totalCount: results.length,
       timestamp: new Date().toISOString(),
     };
   }

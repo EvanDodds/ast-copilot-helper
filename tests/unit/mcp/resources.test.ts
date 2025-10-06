@@ -243,8 +243,8 @@ describe("Resource Handlers", () => {
 
         const content = JSON.parse(response.result.contents[0].text);
         expect(content.filePath).toBe("/test/file.ts");
-        expect(content.nodes).toHaveLength(1);
-        expect(content.totalCount).toBe(1);
+        expect(content.structure.rootNodes).toHaveLength(1);
+        expect(content.structure.totalNodes).toBe(1);
       });
 
       it("should handle non-existent file", async () => {
@@ -261,8 +261,8 @@ describe("Resource Handlers", () => {
 
         expect(response.result).toBeDefined();
         const content = JSON.parse(response.result.contents[0].text);
-        expect(content.nodes).toHaveLength(0);
-        expect(content.totalCount).toBe(0);
+        expect(content.structure.rootNodes).toHaveLength(0);
+        expect(content.structure.totalNodes).toBe(0);
       });
     });
 
@@ -284,8 +284,8 @@ describe("Resource Handlers", () => {
 
         const content = JSON.parse(response.result.contents[0].text);
         expect(content.query).toBe("test function");
-        expect(content.matches).toHaveLength(1);
-        expect(content.totalCount).toBe(1);
+        expect(content.results.matches).toHaveLength(1);
+        expect(content.results.totalCount).toBe(1);
       });
 
       it("should return empty results for no matches", async () => {
@@ -302,8 +302,8 @@ describe("Resource Handlers", () => {
 
         expect(response.result).toBeDefined();
         const content = JSON.parse(response.result.contents[0].text);
-        expect(content.matches).toHaveLength(0);
-        expect(content.totalCount).toBe(0);
+        expect(content.results.matches).toHaveLength(0);
+        expect(content.results.totalCount).toBe(0);
       });
     });
 
