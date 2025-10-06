@@ -53,9 +53,11 @@ class PatternMatcher {
 
     // Handle glob patterns
     regexPattern = regexPattern
+      .replace(/\*\*\/\*/g, "<<<GLOBSTAR_SLASH_STAR>>>") // Special case for **/*
       .replace(/\*\*/g, "<<<GLOBSTAR>>>") // Placeholder for **
       .replace(/\*/g, "[^/]*") // * matches anything except directory separator
       .replace(/\?/g, "[^/]") // ? matches single character except directory separator
+      .replace(/<<<GLOBSTAR_SLASH_STAR>>>/g, "(?:.*\\/)?[^/]*") // **/* matches optional path + filename
       .replace(/<<<GLOBSTAR>>>/g, ".*"); // ** matches any number of directories
 
     const flags = this.caseSensitive ? "" : "i";

@@ -80,7 +80,6 @@ export default defineConfig({
       "**/resource-usage*.{test,spec}.{js,ts}", // Resource usage tests
       "**/milestone-week-*.{test,spec}.{js,ts}", // Milestone performance tests
       "**/performance-validation.test.ts", // Slow performance validation tests (37+ seconds)
-      "**/database/workspace.test.ts", // Temporarily excluded due to memory issues
       "**/binary/BinaryCompatibilityTester.test.ts", // Binary compatibility tests causing native crashes
       "**/comprehensive-integration.test.ts", // Cross-platform integration timeouts
       "tests/integration/database-integration.test.ts", // Large database integration test causing memory leaks (~1300 lines)

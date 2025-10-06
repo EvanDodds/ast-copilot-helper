@@ -15,7 +15,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "typescript",
     extensions: [".ts", ".tsx"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-typescript@0.20.4/tree-sitter-typescript.wasm",
+      "https://github.com/tree-sitter/tree-sitter-typescript/releases/download/v0.21.2/tree-sitter-typescript.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-typescript",
     wasmPath: "tree-sitter-typescript.wasm",
@@ -24,7 +24,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "javascript",
     extensions: [".js", ".jsx", ".mjs", ".cjs"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-javascript@0.21.4/tree-sitter-javascript.wasm",
+      "https://github.com/tree-sitter/tree-sitter-javascript/releases/download/v0.21.4/tree-sitter-javascript.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-javascript",
     wasmPath: "tree-sitter-javascript.wasm",
@@ -33,7 +33,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "python",
     extensions: [".py", ".pyi", ".pyw"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-python@0.20.4/tree-sitter-python.wasm",
+      "https://github.com/tree-sitter/tree-sitter-python/releases/download/v0.21.0/tree-sitter-python.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-python",
     wasmPath: "tree-sitter-python.wasm",

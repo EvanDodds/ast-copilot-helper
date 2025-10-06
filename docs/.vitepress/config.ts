@@ -66,6 +66,26 @@ export default defineConfig({
           ],
         },
         {
+          text: "Issue #150 Features",
+          collapsed: false,
+          items: [
+            { text: "Advanced Features", link: "/guide/advanced-features" },
+            {
+              text: "Tree-sitter Integration",
+              link: "/guides/tree-sitter-integration",
+            },
+            { text: "Watch Enhancement", link: "/guides/watch-enhancement" },
+            {
+              text: "Advanced Annotations",
+              link: "/guides/annotations-advanced",
+            },
+            {
+              text: "Performance Optimization",
+              link: "/guides/performance-optimization",
+            },
+          ],
+        },
+        {
           text: "Help & Support",
           collapsed: false,
           items: [
@@ -83,6 +103,7 @@ export default defineConfig({
             { text: "MCP Server", link: "/api/mcp-server" },
             { text: "TypeScript Interfaces", link: "/api/interfaces" },
             { text: "VS Code Extension", link: "/api/vscode-extension" },
+            { text: "Advanced Features API", link: "/api/advanced-features" },
           ],
         },
       ],
@@ -95,6 +116,10 @@ export default defineConfig({
             { text: "CLI Examples", link: "/examples/cli" },
             { text: "Interactive Tutorials", link: "/examples/tutorials" },
             { text: "Integration Examples", link: "/examples/integrations" },
+            {
+              text: "Issue #150 Examples",
+              link: "/examples/advanced-features",
+            },
           ],
         },
       ],

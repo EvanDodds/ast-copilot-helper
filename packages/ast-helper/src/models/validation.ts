@@ -7,7 +7,6 @@ import type {
   ValidationResult,
   ModelRequirements,
 } from "./types.js";
-import { parse as parseUrl } from "url";
 import * as os from "os";
 
 /**
@@ -112,7 +111,7 @@ export function validateUrl(url: string): ValidationResult {
   }
 
   try {
-    const parsed = parseUrl(url);
+    const parsed = new URL(url);
 
     // Must be HTTPS
     if (parsed.protocol !== "https:") {
@@ -130,7 +129,7 @@ export function validateUrl(url: string): ValidationResult {
         "raw.githubusercontent.com",
       ];
 
-      if (!allowedHosts.some((host) => parsed.hostname!.endsWith(host))) {
+      if (!allowedHosts.some((host) => parsed.hostname.endsWith(host))) {
         warnings.push(
           `URL host '${parsed.hostname}' is not in the list of known safe sources`,
         );

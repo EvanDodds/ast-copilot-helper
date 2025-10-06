@@ -141,15 +141,77 @@ export class TreeSitterGrammarManager implements GrammarManager {
 
   /**
    * Load a parser for the specified language
-   * For now, this is a placeholder that will be implemented with runtime integration
+   * Supports both native tree-sitter and WASM fallback
    */
   async loadParser(language: string): Promise<unknown> {
-    // This will be implemented when we integrate with the actual parsers
-    // For now, ensure grammar is available
-    await this.getCachedGrammarPath(language);
+    // Try native parser first (doesn't need cached grammar)
+    try {
+      return await this.loadNativeParser(language, "");
+    } catch (_nativeError) {
+      // Native parser failed, try WASM fallback
+      // Only download grammar if native parsing failed and we need WASM
+      const grammarPath = await this.getCachedGrammarPath(language);
+      return await this.loadWASMParser(language, grammarPath);
+    }
+  } /**
+   * Load native Tree-sitter parser
+   */
+  private async loadNativeParser(
+    language: string,
+    _grammarPath: string,
+  ): Promise<unknown> {
+    try {
+      // Dynamic import of native tree-sitter
+      const TreeSitter = (await import("tree-sitter")).default;
+      const parser = new TreeSitter();
 
+      let languageModule: unknown;
+
+      // Load the appropriate language module (only for installed packages)
+      switch (language) {
+        case "typescript": {
+          // TODO: Fix TypeScript language module compatibility issue
+          // tree-sitter-typescript 0.23.2 has compatibility issues with tree-sitter 0.21.1
+          throw new Error(
+            `TypeScript parsing temporarily disabled due to version compatibility issues`,
+          );
+        }
+        case "javascript": {
+          const jsModule = await import("tree-sitter-javascript");
+          languageModule = jsModule.default;
+          break;
+        }
+        case "python": {
+          const pyModule = await import("tree-sitter-python");
+          languageModule = pyModule.default;
+          break;
+        }
+        default:
+          throw new Error(
+            `Native parser not available for language: ${language} (package not installed)`,
+          );
+      }
+
+      parser.setLanguage(languageModule);
+      return parser;
+    } catch (error) {
+      throw new Error(`Failed to load native parser for ${language}: ${error}`);
+    }
+  }
+
+  /**
+   * Load WASM Tree-sitter parser
+   * TODO: Implement proper WASM grammar distribution
+   */
+  private async loadWASMParser(
+    language: string,
+    grammarPath: string,
+  ): Promise<unknown> {
+    // For now, throw an error indicating WASM loading needs proper WASM files
     throw new Error(
-      `Parser loading not yet implemented - grammar available for ${language}`,
+      `WASM parser loading not yet implemented for ${language}. ` +
+        `WASM grammar files need to be properly distributed. ` +
+        `Grammar path: ${grammarPath}`,
     );
   }
 

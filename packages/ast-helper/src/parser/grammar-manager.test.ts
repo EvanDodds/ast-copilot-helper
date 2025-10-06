@@ -153,7 +153,7 @@ describe("TreeSitterGrammarManager", () => {
   describe("loadParser", () => {
     it("should ensure grammar is available but not yet implement parser loading", async () => {
       await expect(grammarManager.loadParser("typescript")).rejects.toThrow(
-        "Parser loading not yet implemented",
+        "WASM parser loading not yet implemented",
       );
 
       // But should have downloaded the grammar

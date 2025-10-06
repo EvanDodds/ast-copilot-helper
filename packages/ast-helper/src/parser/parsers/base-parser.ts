@@ -24,19 +24,12 @@ export abstract class BaseParser implements ASTParser {
     language: string,
     filePath?: string,
   ): Promise<ParseResult> {
-    // Default stub implementation
-    return {
-      nodes: [],
-      errors: [
-        {
-          type: "runtime",
-          message: `parseCode not implemented for ${language}`,
-          context: filePath,
-        },
-      ],
-      language: language,
-      parseTime: 0,
-    };
+    // This should never be reached in production - all concrete parsers must override this method
+    throw new Error(
+      `CRITICAL: parseCode not implemented for ${language} in ${this.constructor.name}. ` +
+        `This indicates a programming error - all parser implementations must override parseCode. ` +
+        `File: ${filePath || "unknown"}`,
+    );
   }
 
   // Default implementation of batch parsing

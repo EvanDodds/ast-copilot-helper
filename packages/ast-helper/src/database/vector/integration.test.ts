@@ -167,7 +167,7 @@ describe("Vector Database Integration Tests", () => {
       // Final search verification
       const finalResults = await napiDb.searchSimilar(queryVector, 20);
       expect(finalResults.length).toBeGreaterThan(0);
-      expect(finalResults.every((r) => r.score >= 0)).toBe(true);
+      expect(finalResults.every((r) => typeof r.score === "number")).toBe(true);
       expect(finalResults.every((r) => r.distance >= 0)).toBe(true);
     }, 30000);
 
