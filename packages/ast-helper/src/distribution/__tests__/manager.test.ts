@@ -240,13 +240,15 @@ describe("DistributionManager", () => {
       await manager.initialize(testConfig);
     });
 
-    it("should throw appropriate errors for unimplemented methods", async () => {
-      await expect(manager.publishToNPM()).rejects.toThrow(
-        "NPM publishing not yet implemented",
-      );
+    it("should handle validation failures for unimplemented methods", async () => {
+      const result = await manager.publishToNPM();
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Validation failed");
 
-      await expect(manager.publishToVSCodeMarketplace()).rejects.toThrow(
-        "Marketplace publishing not yet implemented",
+      const vsCodeResult = await manager.publishToVSCodeMarketplace();
+      expect(vsCodeResult.success).toBe(false);
+      expect(vsCodeResult.error).toContain(
+        "VS Code Marketplace publishing failed",
       );
 
       await expect(manager.createGitHubRelease()).rejects.toThrow(

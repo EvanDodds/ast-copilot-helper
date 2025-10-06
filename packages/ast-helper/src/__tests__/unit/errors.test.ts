@@ -2,7 +2,7 @@
  * Unit tests for error handling system
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   ConfigurationError,
   GitError,

@@ -3,7 +3,7 @@
  * Basic functionality without complex mocking
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 
 // Mock the entire workspace module with simple behavior
 vi.mock("./workspace.js", () => ({
