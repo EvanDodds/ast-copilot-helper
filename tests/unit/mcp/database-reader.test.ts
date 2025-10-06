@@ -12,7 +12,6 @@ import { tmpdir } from "node:os";
 import { ASTDatabaseReader } from "../../../packages/ast-mcp-server/src/database/reader.js";
 import type {
   ASTNode,
-  ASTNodeMatch,
   QueryOptions,
 } from "../../../packages/ast-mcp-server/src/types.js";
 
@@ -110,6 +109,13 @@ describe("ASTDatabaseReader", () => {
 
   afterEach(async () => {
     await reader.close();
+
+    // On Windows, SQLite file handles might not be immediately released
+    // Add a small delay to ensure all database connections are fully closed
+    if (process.platform === "win32") {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
     await rm(tempDir, { recursive: true, force: true });
     vi.restoreAllMocks();
   });

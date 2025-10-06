@@ -380,6 +380,14 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
         "../../../ast-helper/src/embedder/XenovaEmbeddingGenerator.js"
       );
 
+      // Initialize resources
+      let vectorDB: Awaited<
+        ReturnType<typeof VectorDatabaseFactory.create>
+      > | null = null;
+      let embeddingGenerator: InstanceType<
+        typeof XenovaEmbeddingGenerator
+      > | null = null;
+
       try {
         // Initialize vector database
         const vectorConfig = {
@@ -394,13 +402,13 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
           saveInterval: 0,
         };
 
-        const vectorDB = await VectorDatabaseFactory.create(vectorConfig, {
+        vectorDB = await VectorDatabaseFactory.create(vectorConfig, {
           verbose: false,
         });
         await vectorDB.initialize(vectorConfig);
 
         // Initialize embedding generator
-        const embeddingGenerator = new XenovaEmbeddingGenerator();
+        embeddingGenerator = new XenovaEmbeddingGenerator();
         const modelPath = `${vectorDBPath}/codebert`;
         await embeddingGenerator.initialize(modelPath);
 
@@ -445,10 +453,6 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
           }),
         );
 
-        // Cleanup
-        await embeddingGenerator.shutdown();
-        await vectorDB.shutdown();
-
         this.setCachedResult(cacheKey, matches);
         return matches;
       } catch (vectorError) {
@@ -467,6 +471,27 @@ export class ASTDatabaseReader extends EventEmitter implements DatabaseReader {
 
         this.setCachedResult(cacheKey, fallbackResults);
         return fallbackResults;
+      } finally {
+        // Ensure cleanup always happens, even if errors occur
+        try {
+          if (embeddingGenerator) {
+            await embeddingGenerator.shutdown();
+          }
+        } catch (cleanupError) {
+          this.logger.warn("Error during embedding generator cleanup", {
+            cleanupError,
+          });
+        }
+
+        try {
+          if (vectorDB) {
+            await vectorDB.shutdown();
+          }
+        } catch (cleanupError) {
+          this.logger.warn("Error during vector database cleanup", {
+            cleanupError,
+          });
+        }
       }
     } catch (error) {
       this.logger.error("Vector search failed", { query, error });
