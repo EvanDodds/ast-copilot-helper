@@ -91,33 +91,7 @@ export class NativeTreeSitterParser extends BaseParser {
     }
 
     try {
-      // Check if language is supported
-      const supportedLanguages = [
-        "typescript",
-        "javascript",
-        "python",
-        "java",
-        "cpp",
-        "c",
-        "rust",
-        "go",
-      ];
-      if (!supportedLanguages.includes(language)) {
-        return {
-          language,
-          nodes: [],
-          errors: [
-            {
-              type: "runtime" as const,
-              message: `Unsupported language: ${language}`,
-              context: undefined,
-            },
-          ],
-          parseTime: performance.now() - startTime,
-        };
-      }
-
-      // Get language configuration
+      // Get language configuration to check if supported
       const config = getLanguageConfig(language);
       if (!config) {
         return {

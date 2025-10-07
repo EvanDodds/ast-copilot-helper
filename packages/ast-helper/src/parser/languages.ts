@@ -13,12 +13,21 @@ import type { LanguageConfig } from "./types.js";
 export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   {
     name: "typescript",
-    extensions: [".ts", ".tsx"],
+    extensions: [".ts"],
     grammarUrl:
-      "https://github.com/tree-sitter/tree-sitter-typescript/releases/download/v0.21.2/tree-sitter-typescript.wasm",
+      "https://github.com/tree-sitter/tree-sitter-typescript/releases/download/v0.23.2/tree-sitter-typescript.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
-    parserModule: "tree-sitter-typescript",
+    parserModule: "tree-sitter-typescript/typescript",
     wasmPath: "tree-sitter-typescript.wasm",
+  },
+  {
+    name: "tsx",
+    extensions: [".tsx"],
+    grammarUrl:
+      "https://github.com/tree-sitter/tree-sitter-typescript/releases/download/v0.23.2/tree-sitter-tsx.wasm",
+    grammarHash: "", // Will be computed at runtime for production safety
+    parserModule: "tree-sitter-typescript/tsx",
+    wasmPath: "tree-sitter-tsx.wasm",
   },
   {
     name: "javascript",
@@ -44,7 +53,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "java",
     extensions: [".java"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-java@0.20.2/tree-sitter-java.wasm",
+      "https://github.com/tree-sitter/tree-sitter-java/releases/download/v0.23.2/tree-sitter-java.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-java",
     wasmPath: "tree-sitter-java.wasm",
@@ -53,7 +62,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "csharp",
     extensions: [".cs", ".csx"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-c-sharp@0.20.0/tree-sitter-c-sharp.wasm",
+      "https://github.com/tree-sitter/tree-sitter-c-sharp/releases/download/v0.21.4/tree-sitter-c-sharp.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-c-sharp",
     wasmPath: "tree-sitter-c-sharp.wasm",
@@ -61,7 +70,8 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   {
     name: "go",
     extensions: [".go"],
-    grammarUrl: "https://unpkg.com/tree-sitter-go@0.20.0/tree-sitter-go.wasm",
+    grammarUrl:
+      "https://github.com/tree-sitter/tree-sitter-go/releases/download/v0.23.1/tree-sitter-go.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-go",
     wasmPath: "tree-sitter-go.wasm",
@@ -72,7 +82,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "rust",
     extensions: [".rs"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-rust@0.20.4/tree-sitter-rust.wasm",
+      "https://github.com/tree-sitter/tree-sitter-rust/releases/download/v0.23.0/tree-sitter-rust.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-rust",
     wasmPath: "tree-sitter-rust.wasm",
@@ -80,7 +90,8 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   {
     name: "c",
     extensions: [".c", ".h"],
-    grammarUrl: "https://unpkg.com/tree-sitter-c@0.20.6/tree-sitter-c.wasm",
+    grammarUrl:
+      "https://github.com/tree-sitter/tree-sitter-c/releases/download/v0.23.1/tree-sitter-c.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-c",
     wasmPath: "tree-sitter-c.wasm",
@@ -88,7 +99,8 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   {
     name: "cpp",
     extensions: [".cpp", ".cxx", ".cc", ".c++", ".hpp", ".hxx", ".hh", ".h++"],
-    grammarUrl: "https://unpkg.com/tree-sitter-cpp@0.20.0/tree-sitter-cpp.wasm",
+    grammarUrl:
+      "https://github.com/tree-sitter/tree-sitter-cpp/releases/download/v0.23.1/tree-sitter-cpp.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-cpp",
     wasmPath: "tree-sitter-cpp.wasm",
@@ -96,7 +108,8 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   {
     name: "php",
     extensions: [".php", ".phtml", ".php3", ".php4", ".php5", ".phps"],
-    grammarUrl: "https://unpkg.com/tree-sitter-php@0.22.5/tree-sitter-php.wasm",
+    grammarUrl:
+      "https://github.com/tree-sitter/tree-sitter-php/releases/download/v0.23.4/tree-sitter-php.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-php",
     wasmPath: "tree-sitter-php.wasm",
@@ -105,7 +118,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "ruby",
     extensions: [".rb", ".rbw", ".rake", ".gemspec"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-ruby@0.20.1/tree-sitter-ruby.wasm",
+      "https://github.com/tree-sitter/tree-sitter-ruby/releases/download/v0.22.0/tree-sitter-ruby.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-ruby",
     wasmPath: "tree-sitter-ruby.wasm",
@@ -114,7 +127,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "kotlin",
     extensions: [".kt", ".kts"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-kotlin@0.3.1/tree-sitter-kotlin.wasm",
+      "https://github.com/fwcd/tree-sitter-kotlin/releases/download/0.3.8/tree-sitter-kotlin.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-kotlin",
     wasmPath: "tree-sitter-kotlin.wasm",
@@ -125,7 +138,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "swift",
     extensions: [".swift"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-swift@0.4.0/tree-sitter-swift.wasm",
+      "https://github.com/alex-pinkus/tree-sitter-swift/releases/download/v0.7.1/tree-sitter-swift.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-swift",
     wasmPath: "tree-sitter-swift.wasm",
@@ -134,7 +147,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "dart",
     extensions: [".dart"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-dart@0.0.1/tree-sitter-dart.wasm",
+      "https://github.com/UserNobody14/tree-sitter-dart/releases/download/v1.0.0/tree-sitter-dart.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-dart",
     wasmPath: "tree-sitter-dart.wasm",
@@ -143,7 +156,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "scala",
     extensions: [".scala", ".sc"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-scala@0.20.2/tree-sitter-scala.wasm",
+      "https://github.com/tree-sitter/tree-sitter-scala/releases/download/v0.24.0/tree-sitter-scala.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-scala",
     wasmPath: "tree-sitter-scala.wasm",
@@ -151,7 +164,8 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   {
     name: "lua",
     extensions: [".lua"],
-    grammarUrl: "https://unpkg.com/tree-sitter-lua@0.0.19/tree-sitter-lua.wasm",
+    grammarUrl:
+      "https://github.com/tree-sitter-grammars/tree-sitter-lua/releases/download/v2.1.3/tree-sitter-lua.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-lua",
     wasmPath: "tree-sitter-lua.wasm",
@@ -160,7 +174,7 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
     name: "bash",
     extensions: [".sh", ".bash", ".zsh", ".fish"],
     grammarUrl:
-      "https://unpkg.com/tree-sitter-bash@0.20.4/tree-sitter-bash.wasm",
+      "https://github.com/tree-sitter/tree-sitter-bash/releases/download/v0.25.0/tree-sitter-bash.wasm",
     grammarHash: "", // Will be computed at runtime for production safety
     parserModule: "tree-sitter-bash",
     wasmPath: "tree-sitter-bash.wasm",

@@ -250,57 +250,81 @@ export class TreeSitterGrammarManager implements GrammarManager {
 
       let languageModule: unknown;
 
-      // Load the appropriate language module (only for installed packages)
-      switch (language) {
-        case "typescript": {
-          // Fixed: TypeScript language module compatibility resolved
-          // Updated tree-sitter-typescript to 0.21.2 for compatibility with tree-sitter 0.21.1
-          try {
-            const tsModule = await import("tree-sitter-typescript");
-            // tree-sitter-typescript exports both typescript and tsx parsers via default export
-            languageModule = tsModule.default.typescript;
-          } catch (_error) {
-            // If module import fails, try a fresh import without cache
-            if (typeof require !== "undefined" && require.cache) {
-              delete require.cache[require.resolve("tree-sitter-typescript")];
-            }
-            const tsModule = await import("tree-sitter-typescript");
-            languageModule = tsModule.default.typescript;
-          }
-          break;
+      // Load the appropriate language module dynamically
+      const config = this.getLanguageConfig(language);
+      const moduleName = config.parserModule;
+
+      if (!moduleName) {
+        throw new Error(
+          `No parser module configured for language: ${language}`,
+        );
+      }
+
+      try {
+        // Special handling for TypeScript/TSX
+        if (language === "typescript") {
+          const tsModule = await import("tree-sitter-typescript");
+          languageModule =
+            tsModule.default?.typescript ||
+            tsModule.typescript ||
+            tsModule.default;
+        } else if (language === "tsx") {
+          const tsModule = await import("tree-sitter-typescript");
+          languageModule =
+            tsModule.default?.tsx || tsModule.tsx || tsModule.default;
+        } else {
+          // Generic module loading for all other languages
+          const module = await import(moduleName);
+          // Try different export patterns: default export, named export, or module.exports
+          languageModule =
+            module.default ||
+            module[language] ||
+            module["module.exports"] ||
+            module;
         }
-        case "javascript": {
-          try {
-            const jsModule = await import("tree-sitter-javascript");
-            languageModule = jsModule.default;
-          } catch (_error) {
-            // If module import fails, try a fresh import without cache
-            if (typeof require !== "undefined" && require.cache) {
-              delete require.cache[require.resolve("tree-sitter-javascript")];
-            }
-            const jsModule = await import("tree-sitter-javascript");
-            languageModule = jsModule.default;
-          }
-          break;
-        }
-        case "python": {
-          try {
-            const pyModule = await import("tree-sitter-python");
-            languageModule = pyModule.default;
-          } catch (_error) {
-            // If module import fails, try a fresh import without cache
-            if (typeof require !== "undefined" && require.cache) {
-              delete require.cache[require.resolve("tree-sitter-python")];
-            }
-            const pyModule = await import("tree-sitter-python");
-            languageModule = pyModule.default;
-          }
-          break;
-        }
-        default:
+
+        if (!languageModule) {
           throw new Error(
-            `Native parser not available for language: ${language} (package not installed)`,
+            `Language module not found or has no default export: ${moduleName}`,
           );
+        }
+      } catch (_importError) {
+        // Try cache clearing and retry once
+        if (typeof require !== "undefined" && require.cache) {
+          try {
+            delete require.cache[require.resolve(moduleName)];
+          } catch {
+            // Ignore cache clearing errors
+          }
+        }
+
+        try {
+          // Retry import after cache clear
+          if (language === "typescript") {
+            const tsModule = await import("tree-sitter-typescript");
+            languageModule =
+              tsModule.default?.typescript ||
+              tsModule.typescript ||
+              tsModule.default;
+          } else if (language === "tsx") {
+            const tsModule = await import("tree-sitter-typescript");
+            languageModule =
+              tsModule.default?.tsx || tsModule.tsx || tsModule.default;
+          } else {
+            const module = await import(moduleName);
+            // Try different export patterns: default export, named export, or module.exports
+            languageModule =
+              module.default ||
+              module[language] ||
+              module["module.exports"] ||
+              module;
+          }
+        } catch (retryError) {
+          throw new Error(
+            `Failed to load native parser module '${moduleName}' for language '${language}': ${(retryError as Error).message}. ` +
+              `Make sure the package is installed: yarn add ${moduleName}`,
+          );
+        }
       }
 
       parser.setLanguage(languageModule);

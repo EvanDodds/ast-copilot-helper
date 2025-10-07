@@ -270,14 +270,22 @@ __metadata:
     minimatch: "npm:^10.0.3"
     onnxruntime-node: "npm:1.23.0"
     tree-sitter: "npm:^0.21.1"
-    tree-sitter-c: "npm:^0.20.6"
+    tree-sitter-bash: "npm:^0.25.0"
+    tree-sitter-c: "npm:^0.24.1"
     tree-sitter-c-sharp: "npm:^0.20.0"
-    tree-sitter-cpp: "npm:^0.20.0"
-    tree-sitter-go: "npm:^0.20.0"
-    tree-sitter-java: "npm:^0.20.2"
+    tree-sitter-cpp: "npm:^0.23.4"
+    tree-sitter-dart: "npm:^1.0.0"
+    tree-sitter-go: "npm:^0.25.0"
+    tree-sitter-java: "npm:^0.23.5"
     tree-sitter-javascript: "npm:^0.21.4"
+    tree-sitter-kotlin: "npm:^0.3.8"
+    tree-sitter-lua: "npm:^2.1.3"
+    tree-sitter-php: "npm:^0.24.2"
     tree-sitter-python: "npm:^0.21.0"
-    tree-sitter-rust: "npm:^0.20.4"
+    tree-sitter-ruby: "npm:^0.23.1"
+    tree-sitter-rust: "npm:^0.24.0"
+    tree-sitter-scala: "npm:^0.24.0"
+    tree-sitter-swift: "npm:^0.7.1"
     tree-sitter-typescript: "npm:^0.21.2"
     ts-node: "npm:^10.9.2"
     typescript: "npm:^5.9.3"
@@ -288,11 +296,15 @@ __metadata:
       optional: true
     tree-sitter:
       optional: true
+    tree-sitter-bash:
+      optional: true
     tree-sitter-c:
       optional: true
     tree-sitter-c-sharp:
       optional: true
     tree-sitter-cpp:
+      optional: true
+    tree-sitter-dart:
       optional: true
     tree-sitter-go:
       optional: true
@@ -300,9 +312,21 @@ __metadata:
       optional: true
     tree-sitter-javascript:
       optional: true
+    tree-sitter-kotlin:
+      optional: true
+    tree-sitter-lua:
+      optional: true
+    tree-sitter-php:
+      optional: true
     tree-sitter-python:
       optional: true
+    tree-sitter-ruby:
+      optional: true
     tree-sitter-rust:
+      optional: true
+    tree-sitter-scala:
+      optional: true
+    tree-sitter-swift:
       optional: true
     tree-sitter-typescript:
       optional: true
@@ -3064,11 +3088,39 @@ __metadata:
     lint-staged: "npm:^16.2.3"
     postject: "npm:^1.0.0-alpha.6"
     tmp: "npm:^0.2.5"
+    tree-sitter-bash: "npm:^0.25.0"
+    tree-sitter-c: "npm:^0.24.1"
+    tree-sitter-cpp: "npm:^0.23.4"
+    tree-sitter-dart: "npm:^1.0.0"
+    tree-sitter-go: "npm:^0.25.0"
+    tree-sitter-java: "npm:^0.23.5"
+    tree-sitter-lua: "npm:^2.1.3"
+    tree-sitter-php: "npm:^0.24.2"
+    tree-sitter-rust: "npm:^0.24.0"
     ts-node: "npm:^10.9.2"
     tsx: "npm:^4.20.6"
     typescript: "npm:^5.9.3"
     typescript-eslint: "npm:^8.45.0"
     vitest: "npm:^3.2.4"
+  dependenciesMeta:
+    tree-sitter-bash:
+      optional: true
+    tree-sitter-c:
+      optional: true
+    tree-sitter-cpp:
+      optional: true
+    tree-sitter-dart:
+      optional: true
+    tree-sitter-go:
+      optional: true
+    tree-sitter-java:
+      optional: true
+    tree-sitter-lua:
+      optional: true
+    tree-sitter-php:
+      optional: true
+    tree-sitter-rust:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -6381,7 +6433,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.14.0, nan@npm:^2.14.1, nan@npm:^2.17.0, nan@npm:^2.18.0":
+"nan@npm:^2.14.0, nan@npm:^2.15.0":
   version: 2.23.0
   resolution: "nan@npm:2.23.0"
   dependencies:
@@ -6463,7 +6515,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-addon-api@npm:^8.0.0":
+"node-addon-api@npm:^8.0.0, node-addon-api@npm:^8.2.1, node-addon-api@npm:^8.2.2, node-addon-api@npm:^8.3.0, node-addon-api@npm:^8.3.1":
   version: 8.5.0
   resolution: "node-addon-api@npm:8.5.0"
   dependencies:
@@ -6472,7 +6524,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp-build@npm:^4.8.0, node-gyp-build@npm:^4.8.1":
+"node-gyp-build@npm:^4.8.0, node-gyp-build@npm:^4.8.1, node-gyp-build@npm:^4.8.2, node-gyp-build@npm:^4.8.4":
   version: 4.8.4
   resolution: "node-gyp-build@npm:4.8.4"
   bin:
@@ -8414,6 +8466,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tree-sitter-bash@npm:^0.25.0":
+  version: 0.25.0
+  resolution: "tree-sitter-bash@npm:0.25.0"
+  dependencies:
+    node-addon-api: "npm:^8.2.1"
+    node-gyp: "npm:latest"
+    node-gyp-build: "npm:^4.8.2"
+  peerDependencies:
+    tree-sitter: ^0.25.0
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/fd96bad49b58a6f20cc4954be7b2105c7b92624831df9f8e9360631cded75ca08ac08944f55adc37bbe7d4021f89dd2a9d9e945f37f0ee066b2d982d19217dc3
+  languageName: node
+  linkType: hard
+
 "tree-sitter-c-sharp@npm:^0.20.0":
   version: 0.20.0
   resolution: "tree-sitter-c-sharp@npm:0.20.0"
@@ -8424,43 +8492,103 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tree-sitter-c@npm:^0.20.6":
-  version: 0.20.8
-  resolution: "tree-sitter-c@npm:0.20.8"
+"tree-sitter-c@npm:^0.23.1":
+  version: 0.23.6
+  resolution: "tree-sitter-c@npm:0.23.6"
   dependencies:
-    nan: "npm:^2.18.0"
+    node-addon-api: "npm:^8.3.0"
     node-gyp: "npm:latest"
-  checksum: 10c9/5526f88bb6eaa4cccade1a02944e80878573586d8ba8f81c7f5de90072e6849a1264d0bf779ae1f240d5573ba8288bfd65ae75148d3f3008c07c485a9fbc0a3d
+    node-gyp-build: "npm:^4.8.4"
+  peerDependencies:
+    tree-sitter: ^0.22.1
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/904e0d0a09c81a40d954198e329690699793eccef5f85446de27115abc071a7b1378d8ac041879e71c0ee77e382370e01f67e3becfad6da1a83911702d240d58
   languageName: node
   linkType: hard
 
-"tree-sitter-cpp@npm:^0.20.0":
-  version: 0.20.5
-  resolution: "tree-sitter-cpp@npm:0.20.5"
+"tree-sitter-c@npm:^0.24.1":
+  version: 0.24.1
+  resolution: "tree-sitter-c@npm:0.24.1"
   dependencies:
-    nan: "npm:^2.18.0"
+    node-addon-api: "npm:^8.3.1"
     node-gyp: "npm:latest"
-  checksum: 10c9/185703c27519e90bf485867f62b8663c38cc411a43053b99f697abe5d6ba7b1a77ce93b65f9773af3a2ba30355c101ebb78cef47f309c37fcfd3b3943ff5a6a0
+    node-gyp-build: "npm:^4.8.4"
+  peerDependencies:
+    tree-sitter: ^0.22.4
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/da4321a05a2873fc6720cc9b2c75002b9073b632fd05f432bf4b4da3161f2d63002bc67cc2f43cf803ebcb87bb98bc2c84251b00b5bfcf2e245dc60ff6157a42
   languageName: node
   linkType: hard
 
-"tree-sitter-go@npm:^0.20.0":
-  version: 0.20.0
-  resolution: "tree-sitter-go@npm:0.20.0"
-  dependencies:
-    nan: "npm:^2.14.0"
-    node-gyp: "npm:latest"
-  checksum: 10c9/5fd4aead12124c6e49af8f01d934bc9e7091cb28a08976a2cb9e6961959908eae33c542ac28bbdf5cb2d614dae9fb4390fd2fdd192574dcd1b0d02703b400231
+"tree-sitter-cli@npm:^0.23":
+  version: 0.23.2
+  resolution: "tree-sitter-cli@npm:0.23.2"
+  bin:
+    tree-sitter: cli.js
+  checksum: 10c9/6f31c0d33ca749592cd2723e575d514988ecc5e4e363fe7db5309e15a280ce7687178d0412b8b80d3acde5eb229a555a25f7c51e220a34596d518b6fc1f39c32
   languageName: node
   linkType: hard
 
-"tree-sitter-java@npm:^0.20.2":
-  version: 0.20.2
-  resolution: "tree-sitter-java@npm:0.20.2"
+"tree-sitter-cpp@npm:^0.23.4":
+  version: 0.23.4
+  resolution: "tree-sitter-cpp@npm:0.23.4"
   dependencies:
-    nan: "npm:^2.14.1"
+    node-addon-api: "npm:^8.2.1"
     node-gyp: "npm:latest"
-  checksum: 10c9/5482fbe768df234db4a7c0d463d6370d0bdb7f0cbd87e407db3490b9b9f5d352910dcc8caf3ee67204535ea4cecc77174c4eb38acfb8303904aebec842c5360e
+    node-gyp-build: "npm:^4.8.2"
+    tree-sitter-c: "npm:^0.23.1"
+  peerDependencies:
+    tree-sitter: ^0.21.1
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/33e9ff11970899667b6687a42ae8861c3ca3a7693a175c02c3d49f9d69b30c7c1923d67c05383cf93830809ea31dbf6d6dec0c6c070ec4955e6216b9b7b4d5b1
+  languageName: node
+  linkType: hard
+
+"tree-sitter-dart@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "tree-sitter-dart@npm:1.0.0"
+  dependencies:
+    nan: "npm:^2.15.0"
+    node-gyp: "npm:latest"
+  checksum: 10c9/bcf4ebccb5e4170f8367f4dc1f2092511cb20705d23a51086bbc7de338149d6c0c99e42c865b2800599bbb07fb7d617e139d6fb54307094ff52d1d3a1233c8f1
+  languageName: node
+  linkType: hard
+
+"tree-sitter-go@npm:^0.25.0":
+  version: 0.25.0
+  resolution: "tree-sitter-go@npm:0.25.0"
+  dependencies:
+    node-addon-api: "npm:^8.3.1"
+    node-gyp: "npm:latest"
+    node-gyp-build: "npm:^4.8.4"
+  peerDependencies:
+    tree-sitter: ^0.25.0
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/983d7e077615de6fdd40c110d1f5e5775d39f3405213078e26cbb5b0e462108acba335661b41155a58205fefef57a3ddb817aba3cad20e4113603d2f138cf863
+  languageName: node
+  linkType: hard
+
+"tree-sitter-java@npm:^0.23.5":
+  version: 0.23.5
+  resolution: "tree-sitter-java@npm:0.23.5"
+  dependencies:
+    node-addon-api: "npm:^8.2.2"
+    node-gyp: "npm:latest"
+    node-gyp-build: "npm:^4.8.2"
+  peerDependencies:
+    tree-sitter: ^0.21.1
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/d32015afdd73de789b141c260894844d91b637399cf40ac08a20a1237809561ae8e6090a542b3936dcde6af457f95521b5f806195bc6a06ccfdba0a62e18bf32
   languageName: node
   linkType: hard
 
@@ -8480,6 +8608,48 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tree-sitter-kotlin@npm:^0.3.8":
+  version: 0.3.8
+  resolution: "tree-sitter-kotlin@npm:0.3.8"
+  dependencies:
+    node-addon-api: "npm:^7.1.0"
+    node-gyp: "npm:latest"
+    node-gyp-build: "npm:^4.8.0"
+  peerDependencies:
+    tree-sitter: ^0.21.0
+  peerDependenciesMeta:
+    tree_sitter:
+      optional: true
+  checksum: 10c9/2e37e89d597e4f8a048abe927c6f11a49f0d66b7b6fcbc0d141d86d32002eb5d01cdc0eac41f1c488aa850d6f94bfe91ed1c9377d0008b27efb6c225ca64ffe7
+  languageName: node
+  linkType: hard
+
+"tree-sitter-lua@npm:^2.1.3":
+  version: 2.1.3
+  resolution: "tree-sitter-lua@npm:2.1.3"
+  dependencies:
+    nan: "npm:^2.15.0"
+    node-gyp: "npm:latest"
+  checksum: 10c9/2b649a9fea0ca29763ece6926429eab8958a4a1d62479b804c0a00506fed444245d224a286bdd5b03fe0898b3533d0b339ac89ecbed8cb6a543113d0d48fe3a6
+  languageName: node
+  linkType: hard
+
+"tree-sitter-php@npm:^0.24.2":
+  version: 0.24.2
+  resolution: "tree-sitter-php@npm:0.24.2"
+  dependencies:
+    node-addon-api: "npm:^8.2.2"
+    node-gyp: "npm:latest"
+    node-gyp-build: "npm:^4.8.2"
+  peerDependencies:
+    tree-sitter: ^0.22.4
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/ef04c802d6feaa01ed47368400b332c83c4eb9abcaf2fc631c957d818866293ad3c25bf23f1582b732d6d4f2700185da4abb376a8cf995aef98f5bd7c22002bf
+  languageName: node
+  linkType: hard
+
 "tree-sitter-python@npm:^0.21.0":
   version: 0.21.0
   resolution: "tree-sitter-python@npm:0.21.0"
@@ -8496,13 +8666,69 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tree-sitter-rust@npm:^0.20.4":
-  version: 0.20.4
-  resolution: "tree-sitter-rust@npm:0.20.4"
+"tree-sitter-ruby@npm:^0.23.1":
+  version: 0.23.1
+  resolution: "tree-sitter-ruby@npm:0.23.1"
   dependencies:
-    nan: "npm:^2.17.0"
+    node-addon-api: "npm:^8.2.2"
     node-gyp: "npm:latest"
-  checksum: 10c9/ab1ee04a3a3744b39d261975f841699a6a41ea9984c8db14d262c2223adda2d6e95916d828d8ba71f341aeccae6360b264d3aea18309546318b1c56c8bd7e923
+    node-gyp-build: "npm:^4.8.2"
+  peerDependencies:
+    tree-sitter: ^0.21.1
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/e368c82755ae9af5bb8744349df2e98cd6559567e6a14ad6e9f553480d9c4ee089fb8b40ea56bfa099afa90182685beb810f9aed72c0cdd73d08b59bc253c9e0
+  languageName: node
+  linkType: hard
+
+"tree-sitter-rust@npm:^0.24.0":
+  version: 0.24.0
+  resolution: "tree-sitter-rust@npm:0.24.0"
+  dependencies:
+    node-addon-api: "npm:^8.2.2"
+    node-gyp: "npm:latest"
+    node-gyp-build: "npm:^4.8.4"
+  peerDependencies:
+    tree-sitter: ^0.22.1
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/54dab2f961380384b9814957714caa1dc78f80ead0857b5adf3a15d4479944bb4e5dee9bb633a69ddad6ff5e9861db3099234265fe1203e69ef2f78ebfd2f5f4
+  languageName: node
+  linkType: hard
+
+"tree-sitter-scala@npm:^0.24.0":
+  version: 0.24.0
+  resolution: "tree-sitter-scala@npm:0.24.0"
+  dependencies:
+    node-addon-api: "npm:^8.2.2"
+    node-gyp: "npm:latest"
+    node-gyp-build: "npm:^4.8.2"
+  peerDependencies:
+    tree-sitter: ^0.21.1
+  peerDependenciesMeta:
+    tree-sitter:
+      optional: true
+  checksum: 10c9/72d3499e6ee12f92b9ebb206ba18cff7acf15e68f0361bef5d9a144259da42f207c119b732996e3cdea2ed5282ee983fdd77809a013d27087fd1938bda370890
+  languageName: node
+  linkType: hard
+
+"tree-sitter-swift@npm:^0.7.1":
+  version: 0.7.1
+  resolution: "tree-sitter-swift@npm:0.7.1"
+  dependencies:
+    node-addon-api: "npm:^8.0.0"
+    node-gyp: "npm:latest"
+    node-gyp-build: "npm:^4.8.0"
+    tree-sitter-cli: "npm:^0.23"
+    which: "npm:2.0.2"
+  peerDependencies:
+    tree-sitter: ^0.22.1
+  peerDependenciesMeta:
+    tree_sitter:
+      optional: true
+  checksum: 10c9/e1e4484f33f034ea148528124b7774dae7d6c3afcb68a80aaba8f014eef47c73d79583c3cb5889466ba0615e6687170ec8d3aafe1af6bd389b7e108fa76ef4ce
   languageName: node
   linkType: hard
 
@@ -9209,7 +9435,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"which@npm:^2.0.1":
+"which@npm:2.0.2, which@npm:^2.0.1":
   version: 2.0.2
   resolution: "which@npm:2.0.2"
   dependencies:
