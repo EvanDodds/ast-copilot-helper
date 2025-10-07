@@ -173,8 +173,8 @@ export class TreeSitterGrammarManager implements GrammarManager {
           // Fixed: TypeScript language module compatibility resolved
           // Updated tree-sitter-typescript to 0.21.2 for compatibility with tree-sitter 0.21.1
           const tsModule = await import("tree-sitter-typescript");
-          // tree-sitter-typescript exports both typescript and tsx parsers
-          languageModule = tsModule.typescript;
+          // tree-sitter-typescript exports both typescript and tsx parsers via default export
+          languageModule = tsModule.default.typescript;
           break;
         }
         case "javascript": {
