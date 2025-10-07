@@ -255,10 +255,29 @@ ast-copilot-helper parse [options]
   --force, -f            Force reparse even if files unchanged
   --help, -h             Show command help
 
-# Annotate command - Generate metadata for parsed AST nodes
-ast-copilot-helper annotate [options]
-  --changed, -c          Process only nodes from changed files
-  --force, -f            Force re-annotation of existing nodes
+# Annotation (via Rust CLI) - Generate metadata and analysis for parsed AST nodes
+# NOTE: Annotation is now handled by the high-performance Rust CLI
+ast-parser annotate [options]
+  --file, -f <FILE>      File path to annotate
+  --language, -l <LANG>  Language override (auto-detected if not specified)
+  --stdin                Read source from stdin instead of file
+  --format <FORMAT>      Output format: json, yaml, or summary (default: json)
+  --help, -h             Show command help
+
+# Complexity Analysis (via Rust CLI)
+ast-parser analyze-complexity [options]
+  --file, -f <FILE>      File path to analyze
+  --language, -l <LANG>  Language override (auto-detected if not specified)
+  --stdin                Read source from stdin instead of file
+  --format <FORMAT>      Output format: json, yaml, or summary (default: summary)
+  --help, -h             Show command help
+
+# Dependency Analysis (via Rust CLI)
+ast-parser analyze-dependencies [options]
+  --file, -f <FILE>      File path to analyze
+  --language, -l <LANG>  Language override (auto-detected if not specified)
+  --stdin                Read source from stdin instead of file
+  --format <FORMAT>      Output format: json, yaml, or summary (default: summary)
   --help, -h             Show command help
 
 # Embed command - Generate vector embeddings for annotations

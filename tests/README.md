@@ -8,10 +8,10 @@ This directory contains the comprehensive testing infrastructure for the AST Cop
 tests/
 ├─ unit/                    # Unit tests for individual modules
 │  ├─ parser/              # AST parsing tests
-│  ├─ annotator/           # Annotation generation tests
 │  ├─ embedder/            # Embedding generation tests
 │  ├─ cli/                 # CLI command tests
 │  └─ utils/               # Utility function tests
+│  Note: Annotation tests removed - now handled by Rust CLI
 ├─ integration/            # Integration tests
 │  ├─ workflow/            # End-to-end workflow tests
 │  ├─ mcp/                 # MCP protocol tests

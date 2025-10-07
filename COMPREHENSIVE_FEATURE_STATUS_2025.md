@@ -299,15 +299,16 @@ case "typescript": {
 
 **Implementation:**
 
-```typescript
-// packages/ast-helper/src/commands/annotate.ts
-export class AnnotateCommandHandler {
-  async processFile(filePath: string): Promise<AnnotationResult> {
-    // Complete annotation processing with metadata extraction
-    return {
-      signature: this.extractSignature(node),
-      summary: this.generateSummary(node),
-      complexity: this.calculateComplexity(node),
+```bash
+# High-performance Rust CLI implementation
+# Annotation generation
+ast-parser annotate --file src/example.ts --format json
+
+# Complexity analysis
+ast-parser analyze-complexity --file src/example.ts --format summary
+
+# Dependency analysis
+ast-parser analyze-dependencies --file src/example.ts --format json
       dependencies: this.analyzeDependencies(node),
     };
   }
