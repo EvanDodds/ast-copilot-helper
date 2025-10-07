@@ -11,7 +11,6 @@ export * from "./parser/index.js";
 
 // Types and interfaces
 export * from "./parser/types.js";
-export * from "./parser/languages.js";
 
 // Import classes for internal use
 import {

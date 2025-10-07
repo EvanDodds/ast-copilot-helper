@@ -3,7 +3,6 @@
  */
 
 export * from "./types.js";
-export * from "./languages.js";
 export * from "./parsers/index.js";
 export {
   RustParserAdapter,
