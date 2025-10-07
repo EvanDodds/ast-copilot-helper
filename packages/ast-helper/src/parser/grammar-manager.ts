@@ -273,14 +273,25 @@ export class TreeSitterGrammarManager implements GrammarManager {
           languageModule =
             tsModule.default?.tsx || tsModule.tsx || tsModule.default;
         } else {
-          // Generic module loading for all other languages
-          const module = await import(moduleName);
-          // Try different export patterns: default export, named export, or module.exports
-          languageModule =
-            module.default ||
-            module[language] ||
-            module["module.exports"] ||
-            module;
+          // Generic module loading for all other languages using CommonJS
+          // Tree-sitter language packages use native bindings that work better with CommonJS
+          const { createRequire } = await import("module");
+          const require = createRequire(import.meta.url);
+
+          try {
+            // Use CommonJS require for better native module compatibility
+            const nativeModule = require(moduleName);
+            languageModule = nativeModule;
+          } catch (_requireError) {
+            // Fallback to ES modules import if CommonJS fails
+            const module = await import(moduleName);
+            // Try different export patterns: default export, named export, or module.exports
+            languageModule =
+              module.default ||
+              module[language] ||
+              module["module.exports"] ||
+              module;
+          }
         }
 
         if (!languageModule) {
@@ -311,13 +322,28 @@ export class TreeSitterGrammarManager implements GrammarManager {
             languageModule =
               tsModule.default?.tsx || tsModule.tsx || tsModule.default;
           } else {
-            const module = await import(moduleName);
-            // Try different export patterns: default export, named export, or module.exports
-            languageModule =
-              module.default ||
-              module[language] ||
-              module["module.exports"] ||
-              module;
+            // Retry with CommonJS approach
+            const { createRequire } = await import("module");
+            const require = createRequire(import.meta.url);
+
+            try {
+              // Use CommonJS require for better native module compatibility
+              const nativeModule = require(moduleName);
+              languageModule = this.extractLanguageObject(
+                nativeModule,
+                language,
+              );
+            } catch (_retryRequireError) {
+              // Final fallback to ES modules import
+              const module = await import(moduleName);
+              languageModule = this.extractLanguageObject(
+                module.default ||
+                  module[language] ||
+                  module["module.exports"] ||
+                  module,
+                language,
+              );
+            }
           }
         } catch (retryError) {
           throw new Error(
@@ -327,7 +353,7 @@ export class TreeSitterGrammarManager implements GrammarManager {
         }
       }
 
-      parser.setLanguage(languageModule);
+      parser.setLanguage(languageModule as any);
       return parser;
     } catch (error) {
       const nativeError = new NativeModuleError(
@@ -343,6 +369,60 @@ export class TreeSitterGrammarManager implements GrammarManager {
       );
       throw nativeError;
     }
+  }
+
+  /**
+   * Extract language object from potentially nested module structure
+   * Handles cases where language is exported as {languageName: <actual-language-object>}
+   */
+  private extractLanguageObject(
+    moduleExport: unknown,
+    language: string,
+  ): unknown {
+    if (!moduleExport || typeof moduleExport !== "object") {
+      return moduleExport;
+    }
+
+    const exportObj = moduleExport as Record<string, unknown>;
+
+    // Direct language object (most common case)
+    if ("type" in exportObj && "version" in exportObj) {
+      return moduleExport;
+    }
+
+    // Handle nested language objects for specific languages
+    // These packages export {php: {language}, php_only: {language}} etc.
+    const normalizedLang = language.toLowerCase().replace("-", "_");
+
+    // PHP has dual exports: php.language and php_only.language (use php_only for pure PHP without HTML)
+    if (normalizedLang === "php") {
+      const php_only = exportObj["php_only"] as
+        | Record<string, unknown>
+        | undefined;
+      if (php_only && "language" in php_only) {
+        return php_only["language"];
+      }
+      const php = exportObj["php"] as Record<string, unknown> | undefined;
+      if (php && "language" in php) {
+        return php["language"];
+      }
+    }
+
+    // Dart uses 'dart.language' property
+    if (normalizedLang === "dart") {
+      const dart = exportObj["dart"] as Record<string, unknown> | undefined;
+      if (dart && "language" in dart) {
+        return dart["language"];
+      }
+    }
+
+    // Check for direct language property export (most common pattern)
+    if ("language" in exportObj) {
+      return exportObj["language"];
+    }
+
+    // Return original export for all other cases (including broken packages like lua)
+    return moduleExport;
   }
 
   /**
