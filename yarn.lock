@@ -270,8 +270,14 @@ __metadata:
     minimatch: "npm:^10.0.3"
     onnxruntime-node: "npm:1.23.0"
     tree-sitter: "npm:^0.21.1"
+    tree-sitter-c: "npm:^0.20.6"
+    tree-sitter-c-sharp: "npm:^0.20.0"
+    tree-sitter-cpp: "npm:^0.20.0"
+    tree-sitter-go: "npm:^0.20.0"
+    tree-sitter-java: "npm:^0.20.2"
     tree-sitter-javascript: "npm:^0.21.4"
     tree-sitter-python: "npm:^0.21.0"
+    tree-sitter-rust: "npm:^0.20.4"
     tree-sitter-typescript: "npm:^0.21.2"
     ts-node: "npm:^10.9.2"
     typescript: "npm:^5.9.3"
@@ -282,9 +288,21 @@ __metadata:
       optional: true
     tree-sitter:
       optional: true
+    tree-sitter-c:
+      optional: true
+    tree-sitter-c-sharp:
+      optional: true
+    tree-sitter-cpp:
+      optional: true
+    tree-sitter-go:
+      optional: true
+    tree-sitter-java:
+      optional: true
     tree-sitter-javascript:
       optional: true
     tree-sitter-python:
+      optional: true
+    tree-sitter-rust:
       optional: true
     tree-sitter-typescript:
       optional: true
@@ -6363,6 +6381,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nan@npm:^2.14.0, nan@npm:^2.14.1, nan@npm:^2.17.0, nan@npm:^2.18.0":
+  version: 2.23.0
+  resolution: "nan@npm:2.23.0"
+  dependencies:
+    node-gyp: "npm:latest"
+  checksum: 10c9/f7c8e9f95b0974ed77c0f414dda7ca10b98bccdda2f8c5e301eff2ee4ff4f8dd297c72cba729b2570f150909d0473bd48e879f707fa7c9f0797a04634786e635
+  languageName: node
+  linkType: hard
+
 "nano-spawn@npm:^1.0.3":
   version: 1.0.3
   resolution: "nano-spawn@npm:1.0.3"
@@ -8387,6 +8414,56 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tree-sitter-c-sharp@npm:^0.20.0":
+  version: 0.20.0
+  resolution: "tree-sitter-c-sharp@npm:0.20.0"
+  dependencies:
+    nan: "npm:^2.14.0"
+    node-gyp: "npm:latest"
+  checksum: 10c9/cfc9cf63d2f596b097fdfac6734324b103669695e10d80a36ec3b49c179f804cbb6c30ef3393fe4df790aede5f111b007dd295d41601d086daf52e1d91e0a10b
+  languageName: node
+  linkType: hard
+
+"tree-sitter-c@npm:^0.20.6":
+  version: 0.20.8
+  resolution: "tree-sitter-c@npm:0.20.8"
+  dependencies:
+    nan: "npm:^2.18.0"
+    node-gyp: "npm:latest"
+  checksum: 10c9/5526f88bb6eaa4cccade1a02944e80878573586d8ba8f81c7f5de90072e6849a1264d0bf779ae1f240d5573ba8288bfd65ae75148d3f3008c07c485a9fbc0a3d
+  languageName: node
+  linkType: hard
+
+"tree-sitter-cpp@npm:^0.20.0":
+  version: 0.20.5
+  resolution: "tree-sitter-cpp@npm:0.20.5"
+  dependencies:
+    nan: "npm:^2.18.0"
+    node-gyp: "npm:latest"
+  checksum: 10c9/185703c27519e90bf485867f62b8663c38cc411a43053b99f697abe5d6ba7b1a77ce93b65f9773af3a2ba30355c101ebb78cef47f309c37fcfd3b3943ff5a6a0
+  languageName: node
+  linkType: hard
+
+"tree-sitter-go@npm:^0.20.0":
+  version: 0.20.0
+  resolution: "tree-sitter-go@npm:0.20.0"
+  dependencies:
+    nan: "npm:^2.14.0"
+    node-gyp: "npm:latest"
+  checksum: 10c9/5fd4aead12124c6e49af8f01d934bc9e7091cb28a08976a2cb9e6961959908eae33c542ac28bbdf5cb2d614dae9fb4390fd2fdd192574dcd1b0d02703b400231
+  languageName: node
+  linkType: hard
+
+"tree-sitter-java@npm:^0.20.2":
+  version: 0.20.2
+  resolution: "tree-sitter-java@npm:0.20.2"
+  dependencies:
+    nan: "npm:^2.14.1"
+    node-gyp: "npm:latest"
+  checksum: 10c9/5482fbe768df234db4a7c0d463d6370d0bdb7f0cbd87e407db3490b9b9f5d352910dcc8caf3ee67204535ea4cecc77174c4eb38acfb8303904aebec842c5360e
+  languageName: node
+  linkType: hard
+
 "tree-sitter-javascript@npm:^0.21.4":
   version: 0.21.4
   resolution: "tree-sitter-javascript@npm:0.21.4"
@@ -8416,6 +8493,16 @@ __metadata:
     tree_sitter:
       optional: true
   checksum: 10c9/9e4b25947ae4cb117ff5784acac29ece5825fdcd45be321253781f9216910b601c2655e60f622c0a6e381bb0384eee0c30ad3f7587cddc6b0a6dd69c0f50e8b1
+  languageName: node
+  linkType: hard
+
+"tree-sitter-rust@npm:^0.20.4":
+  version: 0.20.4
+  resolution: "tree-sitter-rust@npm:0.20.4"
+  dependencies:
+    nan: "npm:^2.17.0"
+    node-gyp: "npm:latest"
+  checksum: 10c9/ab1ee04a3a3744b39d261975f841699a6a41ea9984c8db14d262c2223adda2d6e95916d828d8ba71f341aeccae6360b264d3aea18309546318b1c56c8bd7e923
   languageName: node
   linkType: hard
 

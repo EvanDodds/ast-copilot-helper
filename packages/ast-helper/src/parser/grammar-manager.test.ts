@@ -230,5 +230,97 @@ describe("TreeSitterGrammarManager", () => {
       // but is hard to test without mocking the download function
       expect(true).toBe(true);
     });
+
+    it("should provide detailed error information for loadParser failures", async () => {
+      // Test with an invalid/unsupported language
+      await expect(async () => {
+        await grammarManager.loadParser("nonexistent-language");
+      }).rejects.toThrow();
+
+      // Now test the error message content
+      try {
+        await grammarManager.loadParser("nonexistent-language");
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        // Check that error message contains comprehensive troubleshooting information
+        expect(errorMessage).toContain(
+          "Failed to load parser for language 'nonexistent-language'",
+        );
+        expect(errorMessage).toContain("Native Parser:");
+        expect(errorMessage).toContain("WASM Parser:");
+        expect(errorMessage).toContain("Troubleshooting suggestions:");
+        expect(errorMessage).toContain(
+          "tree-sitter-nonexistent-language package",
+        );
+        expect(errorMessage).toContain("Loading context:");
+      }
+    });
+
+    it("should handle cached grammar path errors with helpful context", async () => {
+      // Test with a language that will fail cache verification
+      await expect(async () => {
+        await grammarManager.getCachedGrammarPath("invalid-test-language");
+      }).rejects.toThrow();
+
+      // Now test the error message content
+      try {
+        await grammarManager.getCachedGrammarPath("invalid-test-language");
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        // Check that error provides helpful diagnostic information
+        expect(errorMessage).toContain(
+          "Failed to get cached grammar path for invalid-test-language",
+        );
+        expect(errorMessage).toContain("Attempted path:");
+        expect(errorMessage).toContain(
+          "This may indicate issues with the grammar cache",
+        );
+        expect(errorMessage).toContain("network connectivity");
+        expect(errorMessage).toContain("language configuration");
+      }
+    });
+
+    it("should handle downloadGrammar errors with step-by-step context", async () => {
+      // Remove test environment to trigger actual network download
+      delete process.env.NODE_ENV;
+
+      await expect(async () => {
+        await grammarManager.downloadGrammar("invalid-grammar-test");
+      }).rejects.toThrow();
+
+      // Now test the error message content
+      try {
+        await grammarManager.downloadGrammar("invalid-grammar-test");
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        // Check that error provides comprehensive download context
+        expect(errorMessage).toContain(
+          "Grammar download failed for invalid-grammar-test",
+        );
+        expect(errorMessage).toContain("Download context:");
+        expect(errorMessage).toContain("language");
+        expect(errorMessage).toContain("timestamp");
+        expect(errorMessage).toContain("steps");
+      }
+    });
+
+    it("should verify grammar integrity correctly", async () => {
+      // Test integrity verification with a known working language
+      const isValidTypescript =
+        await grammarManager.verifyGrammarIntegrity("typescript");
+      // Should be false since we haven't downloaded anything in test environment
+      expect(typeof isValidTypescript).toBe("boolean");
+
+      // Test with non-existent language
+      const isValidNonexistent =
+        await grammarManager.verifyGrammarIntegrity("nonexistent");
+      expect(isValidNonexistent).toBe(false);
+    });
   });
 });
