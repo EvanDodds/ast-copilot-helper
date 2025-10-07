@@ -272,7 +272,7 @@ __metadata:
     tree-sitter: "npm:^0.21.1"
     tree-sitter-javascript: "npm:^0.21.4"
     tree-sitter-python: "npm:^0.21.0"
-    tree-sitter-typescript: "npm:^0.23.2"
+    tree-sitter-typescript: "npm:^0.21.2"
     ts-node: "npm:^10.9.2"
     typescript: "npm:^5.9.3"
     vitest: "npm:^3.2.4"
@@ -6436,7 +6436,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-addon-api@npm:^8.0.0, node-addon-api@npm:^8.2.2":
+"node-addon-api@npm:^8.0.0":
   version: 8.5.0
   resolution: "node-addon-api@npm:8.5.0"
   dependencies:
@@ -6445,7 +6445,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp-build@npm:^4.8.0, node-gyp-build@npm:^4.8.1, node-gyp-build@npm:^4.8.2":
+"node-gyp-build@npm:^4.8.0, node-gyp-build@npm:^4.8.1":
   version: 4.8.4
   resolution: "node-gyp-build@npm:4.8.4"
   bin:
@@ -8403,22 +8403,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tree-sitter-javascript@npm:^0.23.1":
-  version: 0.23.1
-  resolution: "tree-sitter-javascript@npm:0.23.1"
-  dependencies:
-    node-addon-api: "npm:^8.2.2"
-    node-gyp: "npm:latest"
-    node-gyp-build: "npm:^4.8.2"
-  peerDependencies:
-    tree-sitter: ^0.21.1
-  peerDependenciesMeta:
-    tree-sitter:
-      optional: true
-  checksum: 10c9/d0d9e879b47de7c32cfed41815636de99242f69b23eac7069b00b4d25beecd584788a51b5db50ac243042f17ca11347fa5adff266d84ba930130db662c325258
-  languageName: node
-  linkType: hard
-
 "tree-sitter-python@npm:^0.21.0":
   version: 0.21.0
   resolution: "tree-sitter-python@npm:0.21.0"
@@ -8435,20 +8419,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tree-sitter-typescript@npm:^0.23.2":
-  version: 0.23.2
-  resolution: "tree-sitter-typescript@npm:0.23.2"
+"tree-sitter-typescript@npm:^0.21.2":
+  version: 0.21.2
+  resolution: "tree-sitter-typescript@npm:0.21.2"
   dependencies:
-    node-addon-api: "npm:^8.2.2"
+    node-addon-api: "npm:^8.0.0"
     node-gyp: "npm:latest"
-    node-gyp-build: "npm:^4.8.2"
-    tree-sitter-javascript: "npm:^0.23.1"
+    node-gyp-build: "npm:^4.8.1"
   peerDependencies:
     tree-sitter: ^0.21.0
   peerDependenciesMeta:
-    tree-sitter:
+    tree_sitter:
       optional: true
-  checksum: 10c9/cc737c7b21e92d78f5ab8365bbf8c7397422203d48e24f8e832a44a2a5eeab97f87aeaedb9bb0aace1b9dc069952d80bb1329d90f00d7708ae9500cd26736380
+  checksum: 10c9/5ba6236c17851ebf4c7b867148fb6e16e0d756d9df8d65b0a3c5a19b182ed446603e6b683b1343536caac962e265ff0698c768819a08517be90864918b549afb
   languageName: node
   linkType: hard
 

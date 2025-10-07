@@ -151,12 +151,18 @@ describe("TreeSitterGrammarManager", () => {
   });
 
   describe("loadParser", () => {
-    it("should ensure grammar is available but not yet implement parser loading", async () => {
-      await expect(grammarManager.loadParser("typescript")).rejects.toThrow(
-        "WASM parser loading not yet implemented",
-      );
+    it("should successfully load TypeScript parser using native tree-sitter", async () => {
+      // With fixed grammar compatibility, TypeScript parsing should work
+      const parser = await grammarManager.loadParser("typescript");
+      expect(parser).toBeDefined();
 
-      // But should have downloaded the grammar
+      // Parser should be able to parse simple TypeScript code
+      const sampleCode = "const x: number = 42;";
+      const tree = (parser as any).parse(sampleCode);
+      expect(tree).toBeDefined();
+      expect(tree.rootNode).toBeDefined();
+
+      // Should not need to download WASM grammar since native parser works
       const grammarPath = path.join(
         testBaseDir,
         "grammars",
@@ -167,7 +173,8 @@ describe("TreeSitterGrammarManager", () => {
         .access(grammarPath)
         .then(() => true)
         .catch(() => false);
-      expect(fileExists).toBe(true);
+      // Native parser doesn't require WASM grammar download
+      expect(fileExists).toBe(false);
     });
   });
 
