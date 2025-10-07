@@ -1,12 +1,21 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { TreeSitterGrammarManager } from "./grammar-manager.js";
 import * as fs from "fs/promises";
+import * as path from "path";
 
 describe("Tree-sitter Language Support Validation", () => {
   let grammarManager: TreeSitterGrammarManager;
-  const testBaseDir = ".astdb-multilang-test";
+  const testBaseDir = path.join(
+    process.cwd(),
+    "test-tmp",
+    "multilang-validation-test",
+  );
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Clean up any existing test data and create fresh directory
+    await fs.rm(testBaseDir, { recursive: true, force: true });
+    await fs.mkdir(testBaseDir, { recursive: true });
+
     grammarManager = new TreeSitterGrammarManager(testBaseDir);
   });
 
@@ -14,10 +23,21 @@ describe("Tree-sitter Language Support Validation", () => {
     // Clean up test directory to prevent cache interference
     try {
       await grammarManager.cleanCache();
-      await fs.rmdir(testBaseDir).catch(() => {});
+      await fs.rm(testBaseDir, { recursive: true, force: true });
     } catch {
       // Ignore cleanup errors
     }
+
+    // Clear grammarManager reference and force cleanup
+    grammarManager = null as any;
+
+    // Force garbage collection to clean up Tree-sitter state
+    if (global.gc) {
+      global.gc();
+    }
+
+    // Small delay to allow cleanup to complete
+    await new Promise((resolve) => setTimeout(resolve, 5));
   });
 
   describe("Core Working Languages", () => {

@@ -25,7 +25,18 @@ describe("TreeSitterGrammarManager", () => {
     } catch {
       // Ignore cleanup errors
     }
+
+    // Clear grammarManager reference and force cleanup
+    grammarManager = null as any;
     delete process.env.NODE_ENV;
+
+    // Force garbage collection to clean up Tree-sitter state
+    if (global.gc) {
+      global.gc();
+    }
+
+    // Small delay to allow cleanup to complete
+    await new Promise((resolve) => setTimeout(resolve, 5));
   });
 
   describe("downloadGrammar", () => {

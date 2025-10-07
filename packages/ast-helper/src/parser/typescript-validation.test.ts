@@ -15,6 +15,26 @@ describe("TypeScript Parsing Validation", () => {
     grammarManager = new TreeSitterGrammarManager(testBaseDir);
   });
 
+  afterEach(async () => {
+    // Clean up test directory and state
+    try {
+      await fs.rm(testBaseDir, { recursive: true, force: true });
+    } catch {
+      // Ignore cleanup errors
+    }
+
+    // Clear grammarManager reference and force cleanup
+    grammarManager = null as any;
+
+    // Force garbage collection to clean up Tree-sitter state
+    if (global.gc) {
+      global.gc();
+    }
+
+    // Small delay to allow cleanup to complete
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  });
+
   describe("TypeScript Grammar Compatibility", () => {
     it("should successfully parse basic TypeScript syntax", async () => {
       const parser = await grammarManager.loadParser("typescript");

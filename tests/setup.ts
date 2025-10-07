@@ -6,8 +6,22 @@ beforeEach(() => {
   // Setup before each test
 });
 
-afterEach(() => {
+afterEach(async () => {
   // Cleanup after each test
+
+  // Clear any dynamically loaded modules (Tree-sitter parsers)
+  if (typeof require !== "undefined" && require.cache) {
+    // Clear any cached tree-sitter modules
+    Object.keys(require.cache).forEach((key) => {
+      if (key.includes("tree-sitter")) {
+        delete require.cache[key];
+      }
+    });
+  }
+
+  // Add a small delay to allow any pending async operations to complete
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
   // Force garbage collection if available to prevent memory leaks
   if (typeof global !== "undefined" && global.gc) {
     global.gc();

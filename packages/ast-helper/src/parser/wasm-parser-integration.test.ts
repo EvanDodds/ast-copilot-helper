@@ -57,7 +57,12 @@ describe("WASM Parser Integration", () => {
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        expect(errorMessage).toContain("WASM fallback required");
+        // Should show it attempted both native and WASM parsers
+        expect(
+          errorMessage.includes("Failed to load parser for language") &&
+            errorMessage.includes("Native Parser:") &&
+            errorMessage.includes("WASM Parser:"),
+        ).toBe(true);
       }
     });
 
@@ -67,7 +72,12 @@ describe("WASM Parser Integration", () => {
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        expect(errorMessage).toContain("WASM fallback required");
+        // Should show it attempted both native and WASM parsers
+        expect(
+          errorMessage.includes("Failed to load parser for language") &&
+            errorMessage.includes("Native Parser:") &&
+            errorMessage.includes("WASM Parser:"),
+        ).toBe(true);
       }
     });
 
@@ -81,11 +91,13 @@ describe("WASM Parser Integration", () => {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
 
-        // Should contain helpful information about the WASM failure
+        // Should contain helpful information about the parser failure
         expect(
-          errorMessage.includes("WASM fallback required") ||
+          errorMessage.includes("Failed to load parser for language") ||
             errorMessage.includes("Failed to load WASM parser") ||
-            errorMessage.includes("Failed to download grammar"),
+            errorMessage.includes("Failed to download grammar") ||
+            errorMessage.includes("Native Parser:") ||
+            errorMessage.includes("WASM Parser:"),
         ).toBe(true);
       }
     });
@@ -114,11 +126,13 @@ describe("WASM Parser Integration", () => {
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          // WASM-only languages should show fallback attempt
+          // WASM-only languages should show comprehensive error information
           expect(
-            errorMessage.includes("WASM fallback required") ||
+            errorMessage.includes("Failed to load parser for language") ||
               errorMessage.includes("Failed to load WASM parser") ||
-              errorMessage.includes("Failed to download grammar"),
+              errorMessage.includes("Failed to download grammar") ||
+              errorMessage.includes("Native Parser:") ||
+              errorMessage.includes("WASM Parser:"),
           ).toBe(true);
         }
       }
