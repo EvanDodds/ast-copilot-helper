@@ -202,18 +202,51 @@ export class TreeSitterGrammarManager implements GrammarManager {
 
   /**
    * Load WASM Tree-sitter parser
-   * TODO: Implement proper WASM grammar distribution
+   * Implements proper WASM fallback when native parsing fails
    */
   private async loadWASMParser(
     language: string,
     grammarPath: string,
   ): Promise<unknown> {
-    // For now, throw an error indicating WASM loading needs proper WASM files
-    throw new Error(
-      `WASM parser loading not yet implemented for ${language}. ` +
-        `WASM grammar files need to be properly distributed. ` +
-        `Grammar path: ${grammarPath}`,
-    );
+    try {
+      // Dynamic import of web-tree-sitter
+      const Parser = (await import("web-tree-sitter")).default;
+
+      // Initialize web-tree-sitter if needed
+      await Parser.init();
+
+      // Create parser instance
+      const parser = new Parser();
+
+      // Check if we have a real WASM file or just a mock
+      const wasmContent = await this.readFileIfExists(grammarPath);
+      if (
+        !wasmContent ||
+        wasmContent.includes("WASM_DUMMY_CONTENT_FOR_TESTING")
+      ) {
+        // We have a mock/dummy WASM file, which means real WASM grammars aren't available
+        throw new Error(
+          `Real WASM grammar not available for ${language}. ` +
+            `Found mock file at ${grammarPath}. ` +
+            `Pre-built WASM grammar files are not distributed by tree-sitter language repositories.`,
+        );
+      }
+
+      // Load the WASM language grammar
+      const Language = await Parser.Language.load(grammarPath);
+      parser.setLanguage(Language);
+
+      return parser;
+    } catch (error) {
+      // Provide detailed error context for debugging
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to load WASM parser for ${language}: ${errorMessage}. ` +
+          `Grammar path: ${grammarPath}. ` +
+          `Consider using native parsing or building WASM files from source.`,
+      );
+    }
   }
 
   /**
@@ -384,6 +417,18 @@ export class TreeSitterGrammarManager implements GrammarManager {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Read file content if it exists, return null if not
+   */
+  private async readFileIfExists(filePath: string): Promise<string | null> {
+    try {
+      const content = await fs.readFile(filePath, "utf-8");
+      return content;
+    } catch {
+      return null;
     }
   }
 
