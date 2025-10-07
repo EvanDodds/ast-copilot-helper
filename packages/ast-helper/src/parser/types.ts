@@ -55,10 +55,10 @@ export interface LanguageConfig {
 }
 
 export interface ParserRuntime {
-  type: "native" | "wasm";
+  type: "native";
   available: boolean;
   initialize(): Promise<void>;
-  createParser(language: string): Promise<any>;
+  createParser(language: string): Promise<unknown>;
 }
 
 export interface ASTParser {

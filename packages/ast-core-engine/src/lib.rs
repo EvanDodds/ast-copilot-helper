@@ -16,6 +16,10 @@ pub mod batch_processor;
 pub mod config;
 pub mod core;
 pub mod error;
+#[cfg(any(feature = "wasm", feature = "full-system", test))] // Language config for parsing
+pub mod language_config;
+#[cfg(any(feature = "wasm", feature = "full-system", test))] // High-level parse interface
+pub mod parse_interface;
 pub mod performance_monitor;
 pub mod storage;
 pub mod types;

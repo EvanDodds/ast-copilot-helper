@@ -14,7 +14,7 @@
 **Status**: 🟡 SUBSTANTIALLY_COMPLETE  
 **Key Components Discovered**:
 
-- ✅ NativeTreeSitterParser with native-only architecture
+- ✅ RustParserAdapter with high-performance Rust engine
 - ✅ TreeSitterGrammarManager with 15+ language support
 - ✅ RuntimeDetector for native operation
 - ✅ Comprehensive test suite and documentation

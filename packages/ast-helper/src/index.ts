@@ -1,75 +1,76 @@
 /**
  * AST Copilot Helper - Main Entry Point
- * Exports the primary parser classes and interfaces
+ * Exports the Rust-based parser classes and interfaces
  */
 
-// Main parser exports
-export { NativeTreeSitterParser } from "./parser/parsers/native-parser.js";
-export { WASMTreeSitterParser } from "./parser/parsers/wasm-parser.js";
+// Main parser exports (Rust-based architecture)
 export { BaseParser } from "./parser/parsers/base-parser.js";
 
-// Grammar manager and runtime detection
-export { TreeSitterGrammarManager } from "./parser/grammar-manager.js";
-export { RuntimeDetector } from "./parser/runtime-detector.js";
+// Export everything from the parser module
+export * from "./parser/index.js";
 
 // Types and interfaces
 export * from "./parser/types.js";
 export * from "./parser/languages.js";
 
 // Import classes for internal use
-import { NativeTreeSitterParser } from "./parser/parsers/native-parser.js";
-import { TreeSitterGrammarManager } from "./parser/grammar-manager.js";
-import type { ParserRuntime } from "./parser/types.js";
+import {
+  createRustParserAdapter,
+  type RustParserAdapter,
+} from "./parser/rust-parser-adapter.js";
 
-// Main convenience class
+// Main convenience class using Rust parser
 export class ASTHelper {
-  private parser: NativeTreeSitterParser;
-  private grammarManager: TreeSitterGrammarManager;
+  private parser: RustParserAdapter | null = null;
 
   constructor() {
-    // Initialize grammar manager
-    this.grammarManager = new TreeSitterGrammarManager();
+    // Parser will be initialized on first use
+  }
 
-    // Create a simple runtime object
-    const runtime: ParserRuntime = {
-      type: "native",
-      available: true,
-      initialize: async () => {
-        // Runtime initialization placeholder
-      },
-      createParser: async () => ({}),
-    };
-
-    // Use native parser for comprehensive language testing
-    this.parser = new NativeTreeSitterParser(runtime, this.grammarManager);
+  /**
+   * Initialize the Rust parser (lazy initialization)
+   */
+  private async ensureParser(): Promise<RustParserAdapter> {
+    if (!this.parser) {
+      this.parser = await createRustParserAdapter();
+    }
+    return this.parser;
   }
 
   /**
    * Parse code for specified language
    */
   async parseCode(code: string, language: string, filePath?: string) {
-    return await this.parser.parseCode(code, language, filePath);
+    const parser = await this.ensureParser();
+    return await parser.parseCode(code, language, filePath);
   }
 
   /**
    * Parse file from disk
    */
   async parseFile(filePath: string) {
-    return await this.parser.parseFile(filePath);
+    const parser = await this.ensureParser();
+    return await parser.parseFile(filePath);
   }
 
   /**
    * Get runtime information
    */
   getRuntime() {
-    return this.parser.getRuntime();
+    return {
+      type: "rust" as const,
+      available: true,
+    };
   }
 
   /**
    * Dispose resources
    */
   async dispose() {
-    await this.parser.dispose();
+    if (this.parser) {
+      await this.parser.dispose();
+      this.parser = null;
+    }
   }
 }
 

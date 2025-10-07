@@ -1,4 +1,5 @@
 use crate::error::{ASTProcessingError, EngineError};
+use crate::language_config::LanguageConfig;
 use crate::types::ProcessingOptions;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
@@ -27,6 +28,9 @@ pub enum SupportedLanguage {
     Rust,
     Java,
     Cpp,
+    C,
+    CSharp,
+    Go,
 }
 
 /// AST node information for analysis
@@ -70,6 +74,7 @@ impl ParserPool {
     }
 
     /// Get a parser for the specified language, creating if necessary
+    #[cfg(feature = "full-system")]
     pub fn get_parser(&self, language: SupportedLanguage) -> Result<Parser, EngineError> {
         let mut parser_entry = self.parsers.entry(language.clone()).or_default();
 
@@ -77,13 +82,24 @@ impl ParserPool {
             return Ok(parser);
         }
 
-        // Create new parser if pool is empty
+        // Create new parser with proper language configuration
+        let mut parser = Parser::new();
+        LanguageConfig::configure_parser(&mut parser, &language)?;
+
+        Ok(parser)
+    }
+
+    /// Get a parser for WASM builds (fallback implementation)
+    #[cfg(not(feature = "full-system"))]
+    pub fn get_parser(&self, language: SupportedLanguage) -> Result<Parser, EngineError> {
+        let mut parser_entry = self.parsers.entry(language.clone()).or_default();
+
+        if let Some(parser) = parser_entry.pop() {
+            return Ok(parser);
+        }
+
+        // Create new parser (WASM stub)
         let parser = Parser::new();
-
-        // For now, we'll just return the parser without setting language
-        // This allows compilation while we focus on the structure
-        // TODO: Add language setting when Tree-sitter grammars are available
-
         Ok(parser)
     }
 
@@ -475,6 +491,9 @@ mod tests {
             SupportedLanguage::Rust,
             SupportedLanguage::Java,
             SupportedLanguage::Cpp,
+            SupportedLanguage::C,
+            SupportedLanguage::CSharp,
+            SupportedLanguage::Go,
         ];
 
         for lang in languages {

@@ -6,24 +6,20 @@ This document provides comprehensive type definitions for all ast-copilot-helper
 
 ### `ParserFactory`
 
-Factory for creating parser instances with automatic runtime detection.
+Factory for creating Rust-based parser instances.
 
 ```typescript
 class ParserFactory {
-  /** Create parser with automatic runtime detection */
-  static createParser(
-    grammarManager?: TreeSitterGrammarManager,
-  ): Promise<ASTParser>;
+  /** Create parser using Rust engine */
+  static createParser(): Promise<ASTParser>;
 
-  /** Create native parser (requires native Tree-sitter) */
-  static createNativeParser(
-    grammarManager?: TreeSitterGrammarManager,
-  ): Promise<NativeTreeSitterParser>;
+  /** Create Rust parser (alias for createParser) */
+  static createRustParser(): Promise<RustParserAdapter>;
 
   /** Get runtime availability information */
   static getRuntimeInfo(): Promise<{
-    native: { available: boolean; error?: string };
-    recommended: "native";
+    rust: { available: boolean; error?: string };
+    recommended: "rust";
   }>;
 }
 ```
@@ -173,25 +169,31 @@ interface ParseError {
 }
 ```
 
-### `TreeSitterGrammarManager`
+### `RustParserAdapter`
 
-Grammar management for all 15 supported languages.
+**DEPRECATED**: `TreeSitterGrammarManager` has been replaced with the Rust-based parser engine.
+
+High-performance Rust-based parser adapter that handles all language parsing.
 
 ```typescript
-class TreeSitterGrammarManager {
-  /** Install grammar for specific language */
-  installGrammar(language: string): Promise<void>;
+class RustParserAdapter extends BaseParser {
+  /** Parse code with specified language */
+  parseCode(
+    code: string,
+    language: string,
+    filePath?: string,
+  ): Promise<ParseResult>;
 
-  /** Get available grammars */
-  getAvailableGrammars(): Promise<string[]>;
+  /** Parse file from disk */
+  parseFile(filePath: string): Promise<ParseResult>;
 
-  /** Check if grammar is installed */
-  hasGrammar(language: string): Promise<boolean>;
+  /** Batch parse multiple files */
+  batchParseFiles(
+    filePaths: string[],
+    options?: BatchParseOptions,
+  ): Promise<ParseResult[]>;
 
-  /** Get grammar path */
-  getGrammarPath(language: string): Promise<string>;
-
-  /** Clear grammar cache */
+  /** Get supported languages */
   clearCache(): Promise<void>;
 }
 ```

@@ -12,8 +12,6 @@ import type {
   BatchProcessingResult,
 } from "../parser/batch-processor.js";
 import { BatchProcessor } from "../parser/batch-processor.js";
-import { TreeSitterGrammarManager } from "../parser/grammar-manager.js";
-import { createParser } from "../parser/parsers/index.js";
 import type { Config } from "../types.js";
 import type { ParseOptions } from "./parse.js";
 
@@ -124,9 +122,12 @@ export class ParseBatchOrchestrator extends EventEmitter<ParseBatchOrchestratorE
    * Create a new ParseBatchOrchestrator instance
    */
   static async create(): Promise<ParseBatchOrchestrator> {
-    const grammarManager = new TreeSitterGrammarManager();
-    const parser = await createParser(grammarManager);
-    const batchProcessor = new BatchProcessor(parser as any);
+    // Import Rust parser adapter for high-performance parsing
+    const { createRustParserAdapter } = await import(
+      "../parser/rust-parser-adapter.js"
+    );
+    const parser = await createRustParserAdapter();
+    const batchProcessor = new BatchProcessor(parser);
 
     return new ParseBatchOrchestrator(batchProcessor);
   }

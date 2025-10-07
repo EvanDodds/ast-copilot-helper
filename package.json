@@ -174,21 +174,5 @@
   "packageManager": "yarn@4.9.4",
   "resolutions": {
     "esbuild": "^0.25.10"
-  },
-  "optionalDependencies": {
-    "tree-sitter-bash": "^0.21.0",
-    "tree-sitter-c": "^0.21.0",
-    "tree-sitter-cpp": "^0.23.4",
-    "tree-sitter-dart": "^1.0.0",
-    "tree-sitter-go": "^0.21.0",
-    "tree-sitter-java": "^0.23.5",
-    "tree-sitter-lua": "^2.1.3",
-    "tree-sitter-php": "^0.24.2",
-    "tree-sitter-rust": "^0.24.0"
-  },
-  "dependencies": {
-    "tree-sitter": "0.22.4",
-    "tree-sitter-c-sharp": "0.21.3",
-    "tree-sitter-html": "^0.23.2"
   }
 }

@@ -5,7 +5,9 @@
  * including custom grammar support and plugin architecture.
  */
 
-import type Parser from "web-tree-sitter";
+// NOTE: Extended Language Manager system has been deprecated in favor of native-only parsing
+// Placeholder type for backward compatibility
+type Parser = unknown;
 
 /**
  * Extended supported languages beyond the core set

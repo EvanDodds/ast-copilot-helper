@@ -4,7 +4,7 @@
 
 export * from "./types";
 export * from "./benchmark-runner";
-export * from "./parsing-benchmarks";
+// Note: parsing-benchmarks removed during Rust migration
 export * from "./query-benchmarks";
 export * from "./memory-profiler";
 export * from "./concurrency-profiler";

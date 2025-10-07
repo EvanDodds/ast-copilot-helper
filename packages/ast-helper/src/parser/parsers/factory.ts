@@ -1,87 +1,21 @@
 /**
- * Parser Factory - Createsclass SimpleWASMRuntime implements ParserRuntime {
-  type = 'wasm' as const;ppropriate parser instances based on runtime detection
+ * Parser Factory - Creates Rust-based parser instances
  */
 
-import { NativeTreeSitterParser } from "./native-parser.js";
-import { WASMTreeSitterParser } from "./wasm-parser.js";
-import { RuntimeDetector } from "../runtime-detector.js";
-import { TreeSitterGrammarManager } from "../grammar-manager.js";
-import type { ASTParser, ParserRuntime } from "../types.js";
+import { createRustParserAdapter } from "../rust-parser-adapter.js";
+import type { RustParserAdapter } from "../rust-parser-adapter.js";
+import type { ASTParser } from "../types.js";
 
 /**
- * Simple runtime implementations for factory use
- */
-class SimpleNativeRuntime implements ParserRuntime {
-  type = "native" as const;
-  available = false;
-
-  async initialize(): Promise<void> {
-    try {
-      await import("tree-sitter");
-      this.available = true;
-    } catch (_error) {
-      this.available = false;
-    }
-  }
-
-  async createParser(_language: string): Promise<unknown> {
-    const TreeSitter = (await import("tree-sitter")).default;
-    return new TreeSitter();
-  }
-}
-
-class SimpleWasmRuntime implements ParserRuntime {
-  type = "wasm" as const;
-  available = false;
-
-  async initialize(): Promise<void> {
-    try {
-      const Parser = (await import("web-tree-sitter")).default;
-      await Parser.init();
-      this.available = true;
-    } catch (_error) {
-      this.available = false;
-    }
-  }
-
-  async createParser(_language: string): Promise<unknown> {
-    const Parser = (await import("web-tree-sitter")).default;
-    return new Parser();
-  }
-}
-
-/**
- * Factory class for creating appropriate parser instances
+ * Factory class for creating Rust-based parser instances
  */
 export class ParserFactory {
-  private static grammarManager: TreeSitterGrammarManager;
-
   /**
-   * Create a parser instance using automatic runtime detection
+   * Create a parser instance (uses Rust-based parser)
    */
-  static async createParser(
-    grammarManager?: TreeSitterGrammarManager,
-  ): Promise<ASTParser> {
-    // Use provided grammar manager or create a default one
-    this.grammarManager = grammarManager || new TreeSitterGrammarManager();
-
+  static async createParser(): Promise<ASTParser> {
     try {
-      // Detect best available runtime
-      const runtime = await RuntimeDetector.getBestRuntime();
-
-      // Create parser based on runtime type
-      if (runtime.type === "native") {
-        return new NativeTreeSitterParser(
-          runtime,
-          this.grammarManager,
-        ) as unknown as ASTParser;
-      } else {
-        return new WASMTreeSitterParser(
-          runtime,
-          this.grammarManager,
-        ) as unknown as ASTParser;
-      }
+      return await createRustParserAdapter();
     } catch (error) {
       throw new Error(
         `Failed to create parser: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -90,116 +24,44 @@ export class ParserFactory {
   }
 
   /**
-   * Create a native parser (will throw if native runtime is not available)
+   * Create a Rust parser (alias for createParser for compatibility)
    */
-  static async createNativeParser(
-    grammarManager?: TreeSitterGrammarManager,
-  ): Promise<NativeTreeSitterParser> {
-    this.grammarManager = grammarManager || new TreeSitterGrammarManager();
-
-    try {
-      const runtime = new SimpleNativeRuntime();
-      await runtime.initialize();
-
-      if (!runtime.available) {
-        throw new Error("Native Tree-sitter runtime is not available");
-      }
-
-      return new NativeTreeSitterParser(runtime, this.grammarManager);
-    } catch (error) {
-      throw new Error(
-        `Failed to create native parser: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
+  static async createRustParser(): Promise<RustParserAdapter> {
+    return await createRustParserAdapter();
   }
 
   /**
-   * Create a WASM parser (should always work as fallback)
-   */
-  static async createWASMParser(
-    grammarManager?: TreeSitterGrammarManager,
-  ): Promise<WASMTreeSitterParser> {
-    this.grammarManager = grammarManager || new TreeSitterGrammarManager();
-
-    try {
-      const runtime = new SimpleWasmRuntime();
-      await runtime.initialize();
-
-      if (!runtime.available) {
-        throw new Error("WASM Tree-sitter runtime is not available");
-      }
-
-      return new WASMTreeSitterParser(runtime, this.grammarManager);
-    } catch (error) {
-      throw new Error(
-        `Failed to create WASM parser: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
-  }
-
-  /**
-   * Get information about available runtimes
+   * Get information about parser availability
    */
   static async getRuntimeInfo(): Promise<{
-    native: { available: boolean; error?: string };
-    wasm: { available: boolean; error?: string };
-    recommended: "native" | "wasm";
+    rust: { available: boolean; error?: string };
+    recommended: "rust";
   }> {
-    const nativeRuntime = new SimpleNativeRuntime();
-    const wasmRuntime = new SimpleWasmRuntime();
-
-    let nativeError: string | undefined;
-    let wasmError: string | undefined;
-
     try {
-      await nativeRuntime.initialize();
-    } catch (error) {
-      nativeError = error instanceof Error ? error.message : "Unknown error";
-    }
+      // Test if Rust parser can be created
+      await createRustParserAdapter();
 
-    try {
-      await wasmRuntime.initialize();
+      return {
+        rust: {
+          available: true,
+        },
+        recommended: "rust",
+      };
     } catch (error) {
-      wasmError = error instanceof Error ? error.message : "Unknown error";
+      return {
+        rust: {
+          available: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+        recommended: "rust",
+      };
     }
-
-    return {
-      native: {
-        available: nativeRuntime.available,
-        error: nativeError,
-      },
-      wasm: {
-        available: wasmRuntime.available,
-        error: wasmError,
-      },
-      recommended: nativeRuntime.available ? "native" : "wasm",
-    };
   }
 }
 
 /**
- * Convenience function to create a parser with automatic runtime detection
+ * Convenience function to create a parser
  */
-export async function createParser(
-  grammarManager?: TreeSitterGrammarManager,
-): Promise<ASTParser> {
-  return ParserFactory.createParser(grammarManager);
-}
-
-/**
- * Convenience function to create a native parser
- */
-export async function createNativeParser(
-  grammarManager?: TreeSitterGrammarManager,
-): Promise<NativeTreeSitterParser> {
-  return ParserFactory.createNativeParser(grammarManager);
-}
-
-/**
- * Convenience function to create a WASM parser
- */
-export async function createWASMParser(
-  grammarManager?: TreeSitterGrammarManager,
-): Promise<WASMTreeSitterParser> {
-  return ParserFactory.createWASMParser(grammarManager);
+export async function createParser(): Promise<ASTParser> {
+  return ParserFactory.createParser();
 }

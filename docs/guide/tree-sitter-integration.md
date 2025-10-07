@@ -38,14 +38,14 @@ const grammarManager = new TreeSitterGrammarManager();
 await grammarManager.loadParser("typescript");
 ```
 
-#### 3. Native Parser (`packages/ast-helper/src/parser/parsers/native-parser.ts`)
+#### 3. Rust Parser (`packages/ast-helper/src/parser/rust-parser-adapter.ts`)
 
-High-performance native Tree-sitter parser implementation:
+High-performance Rust-based Tree-sitter parser implementation:
 
 ```typescript
-import { NativeTreeSitterParser } from "@ast-copilot-helper/ast-helper";
+import { createRustParserAdapter } from "@ast-copilot-helper/ast-helper";
 
-const parser = new NativeTreeSitterParser(runtime, grammarManager);
+const parser = await createRustParserAdapter();
 const result = await parser.parseCode(sourceCode, "typescript", "file.ts");
 ```
 

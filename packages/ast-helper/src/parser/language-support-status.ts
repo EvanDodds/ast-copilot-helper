@@ -2,11 +2,11 @@
  * Language Support Status Documentation
  *
  * This file documents the current status of Tree-sitter language support
- * based on parser module compatibility testing.
+ * for native-only parsing (WASM support has been removed).
  */
 
 /**
- * Language Support Categories
+ * Language Support Categories (Native-Only Architecture)
  */
 export const LANGUAGE_SUPPORT_STATUS = {
   // Tier 1: Full Native Support (working with native Tree-sitter)
@@ -35,49 +35,49 @@ export const LANGUAGE_SUPPORT_STATUS = {
     },
   ],
 
-  // Tier 3: WASM-Only Support (native modules lack 'language' property)
-  WASM_ONLY: [
+  // Tier 3: Limited Native Support (may require additional work)
+  NATIVE_LIMITED: [
     {
       language: "java",
-      status: "🔄 WASM fallback only",
+      status: "⚠️ Native support needs verification",
       moduleStructure:
-        "default.name and default.nodeTypeInfo (no language property)",
-      notes: "Native module incompatible, requires WASM parsing",
+        "May require grammar module updates for native compatibility",
+      notes: "Previously WASM-only, needs native compatibility testing",
     },
     {
       language: "csharp",
-      status: "🔄 WASM fallback only",
+      status: "⚠️ Native support needs verification",
       moduleStructure:
-        "default.name and default.nodeTypeInfo (no language property)",
-      notes: "Native module incompatible, requires WASM parsing",
+        "May require grammar module updates for native compatibility",
+      notes: "Previously WASM-only, needs native compatibility testing",
     },
     {
       language: "go",
-      status: "🔄 WASM fallback only",
+      status: "⚠️ Native support needs verification",
       moduleStructure:
-        "default.name and default.nodeTypeInfo (no language property)",
-      notes: "Native module incompatible, requires WASM parsing",
+        "May require grammar module updates for native compatibility",
+      notes: "Previously WASM-only, needs native compatibility testing",
     },
     {
       language: "rust",
-      status: "🔄 WASM fallback only",
+      status: "⚠️ Native support needs verification",
       moduleStructure:
-        "default.name and default.nodeTypeInfo (no language property)",
-      notes: "Native module incompatible, requires WASM parsing",
+        "May require grammar module updates for native compatibility",
+      notes: "Previously WASM-only, needs native compatibility testing",
     },
     {
       language: "c",
-      status: "🔄 WASM fallback only",
+      status: "⚠️ Native support needs verification",
       moduleStructure:
-        "default.name and default.nodeTypeInfo (no language property)",
-      notes: "Native module incompatible, requires WASM parsing",
+        "May require grammar module updates for native compatibility",
+      notes: "Previously WASM-only, needs native compatibility testing",
     },
     {
       language: "cpp",
-      status: "🔄 WASM fallback only",
+      status: "⚠️ Native support needs verification",
       moduleStructure:
-        "default.name and default.nodeTypeInfo (no language property)",
-      notes: "Native module incompatible, requires WASM parsing",
+        "May require grammar module updates for native compatibility",
+      notes: "Previously WASM-only, needs native compatibility testing",
     },
   ],
 
@@ -95,28 +95,29 @@ export const LANGUAGE_SUPPORT_STATUS = {
 };
 
 /**
- * Implementation Status Summary
+ * Implementation Status Summary (Native-Only Architecture)
  */
 export const IMPLEMENTATION_STATUS = {
   nativeWorkingCount: 3, // JavaScript, Python, TypeScript (special)
-  wasmOnlyCount: 6, // Java, C#, Go, Rust, C, C++
+  nativeLimitedCount: 6, // Java, C#, Go, Rust, C, C++ (need native verification)
   totalTestedCount: 9,
 
-  // Current capabilities
+  // Current capabilities (native-only)
   capabilities: {
-    nativeParsing: "✅ Implemented with dual-method fallback",
-    wasmFallback: "✅ Implemented with web-tree-sitter",
+    nativeParsing: "✅ Implemented with native Tree-sitter only",
     errorHandling: "✅ Comprehensive error diagnostics implemented",
     cacheManagement: "✅ Grammar caching and integrity verification",
     languageDetection: "✅ File extension based detection",
+    wasmSupport: "❌ Removed - native-only architecture",
   },
 
-  // Next steps for full language support
+  // Next steps for full native language support
   nextSteps: [
+    "Verify native compatibility for previously WASM-only languages",
     "Add remaining language packages (PHP, Ruby, Kotlin, etc.)",
-    "Test WASM parsing with actual grammar files",
-    "Optimize WASM loading performance",
-    "Add language-specific parsing optimizations",
+    "Test native parsing with all grammar modules",
+    "Add language-specific parsing optimizations for native runtime",
+    "Update grammar module dependencies to ensure native compatibility",
   ],
 };
 

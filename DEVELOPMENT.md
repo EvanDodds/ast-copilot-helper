@@ -263,9 +263,9 @@ The core parsing functionality is implemented in `packages/ast-helper/src/parser
 #### Basic Parsing
 
 ```typescript
-import { NativeTreeSitterParser } from "@ast-copilot-helper/ast-helper";
+import { createRustParserAdapter } from "@ast-copilot-helper/ast-helper";
 
-const parser = new NativeTreeSitterParser();
+const parser = await createRustParserAdapter();
 const result = await parser.parseFile("/path/to/file.ts");
 console.log(result.nodes.length); // AST node count
 ```
