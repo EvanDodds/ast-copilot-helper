@@ -242,12 +242,12 @@ Follow these guidelines while making changes:
 
 ```typescript
 /**
- * Parses a TypeScript file and extracts AST annotations
- * @param filePath - Path to the TypeScript file
- * @param options - Parsing options
- * @returns Promise resolving to parsed annotations
+ * Invokes Rust annotation system for file analysis
+ * @param filePath - Path to the source file
+ * @param options - Analysis options
+ * @returns Promise resolving to annotation results from Rust CLI
  */
-export async function parseTypeScriptFile(
+export async function analyzeSourceFile(
   filePath: string,
   options: ParseOptions = {},
 ): Promise<ASTAnnotation[]> {

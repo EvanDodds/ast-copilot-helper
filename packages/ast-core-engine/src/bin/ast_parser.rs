@@ -344,22 +344,78 @@ async fn handle_annotate(
     let ast_result = parse_result.result.ok_or("No parse result")?;
 
     // Create annotation engine and analyze
-    let _engine = AnnotationEngine::new();
-    let _language_str = lang
-        .map(|l| format!("{:?}", l))
-        .unwrap_or_else(|| "unknown".to_string());
+    let engine = AnnotationEngine::new();
+    let language_str = lang
+        .map(|l| format!("{:?}", l).to_lowercase())
+        .unwrap_or_else(|| ast_result.language.to_lowercase());
 
-    // For now, create a simple annotation for the whole file
-    // TODO: Convert AstNode to ASTNode structure or work with existing nodes
+    // Convert the parsed nodes to ASTNode format for annotation
+    let ast_nodes: Vec<ASTNode> = ast_result
+        .nodes
+        .iter()
+        .enumerate()
+        .map(|(index, node)| ASTNode {
+            id: (index as u32).to_string(), // Use index as ID since AstNode doesn't have id
+            node_type: node.node_type.clone(),
+            text: node.text.clone(),
+            start_point: Point {
+                row: node.start_row,
+                column: node.start_column,
+            },
+            end_point: Point {
+                row: node.end_row,
+                column: node.end_column,
+            },
+            start_byte: node.start_byte,
+            end_byte: node.end_byte,
+            children_ids: Vec::new(), // AstNode doesn't track children_ids
+            parent_id: None,          // AstNode doesn't track parent_id
+            language: ast_result.language.clone(),
+            complexity: 0, // Will be calculated by annotation engine
+        })
+        .collect();
+
+    // Generate annotations for significant nodes (functions, classes, etc.)
+    let significant_types = [
+        "function_declaration",
+        "function_expression",
+        "arrow_function",
+        "method_definition",
+        "class_declaration",
+        "interface_declaration",
+        "variable_declaration",
+        "export_statement",
+        "import_statement",
+    ];
+
+    let mut annotations = Vec::new();
+    for node in &ast_nodes {
+        if significant_types.contains(&node.node_type.as_str()) {
+            match engine.annotate_node(node, &language_str, &source_code, &file_path) {
+                Ok(annotation) => annotations.push(annotation),
+                Err(e) => {
+                    if verbose {
+                        eprintln!("Failed to annotate node {}: {}", node.id, e);
+                    }
+                }
+            }
+        }
+    }
+
     let annotation_summary = format!(
-        "File: {}\nLanguage: {}\nTotal nodes: {}\nProcessing time: {}ms",
-        file_path, ast_result.language, ast_result.total_nodes, ast_result.processing_time_ms
+        "File: {}\nLanguage: {}\nTotal nodes: {}\nAnnotations: {}\nProcessing time: {}ms",
+        file_path,
+        ast_result.language,
+        ast_result.total_nodes,
+        annotations.len(),
+        ast_result.processing_time_ms
     );
 
     let result = serde_json::json!({
         "file_path": file_path,
         "language": ast_result.language,
         "total_nodes": ast_result.total_nodes,
+        "annotations": annotations,
         "processing_time_ms": ast_result.processing_time_ms,
         "summary": annotation_summary
     });

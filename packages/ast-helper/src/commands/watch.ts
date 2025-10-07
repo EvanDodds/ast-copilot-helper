@@ -13,7 +13,6 @@ import type {
 } from "../filesystem/types.js";
 import type { Config } from "../types.js";
 import { ParseCommand } from "./parse.js";
-import { AnnotateCommandHandler } from "./annotate.js";
 import { EmbedCommand } from "./embed.js";
 
 /**
@@ -48,7 +47,6 @@ export class WatchCommand extends EventEmitter {
   private logger = createLogger({ operation: "watch-command" });
   private fileWatcher: FileWatcher | null = null;
   private parseCommand: ParseCommand;
-  private annotateHandler?: AnnotateCommandHandler;
   private embedCommand?: EmbedCommand;
   private config: Config;
   private options: WatchCommandOptions;
@@ -75,7 +73,7 @@ export class WatchCommand extends EventEmitter {
     this.parseCommand = new ParseCommand();
 
     if (options.includeAnnotation) {
-      this.annotateHandler = new AnnotateCommandHandler();
+      // Annotation is now handled by Rust CLI (ast-parser annotate)
       // Always enable embedding when annotation is enabled for complete pipeline
       this.embedCommand = new EmbedCommand(config, this.logger);
     }
@@ -483,26 +481,17 @@ export class WatchCommand extends EventEmitter {
 
           processedCount += changedFiles.length;
 
-          // Run annotation if enabled
-          if (this.annotateHandler && processedCount > 0) {
-            this.logger.info("Annotating parsed files");
-            await this.annotateHandler.execute(
-              {
-                force: true,
-                batchSize: effectiveBatchSize,
-              },
-              this.config,
+          // Note: Annotation is now handled by Rust CLI (ast-parser annotate)
+          // Run embedding if enabled for the pipeline
+          if (this.embedCommand && processedCount > 0) {
+            this.logger.info(
+              "Generating embeddings for files (annotation via Rust CLI)",
             );
-
-            // Run embedding after successful annotation for complete pipeline
-            if (this.embedCommand) {
-              this.logger.info("Generating embeddings for annotated files");
-              await this.embedCommand.execute({
-                force: true,
-                batchSize: effectiveBatchSize,
-                verbose: false, // Keep quiet for watch mode
-              });
-            }
+            await this.embedCommand.execute({
+              force: true,
+              batchSize: effectiveBatchSize,
+              verbose: false, // Keep quiet for watch mode
+            });
           }
         } catch (error) {
           const errorMsg = `Failed to process changed files: ${error instanceof Error ? error.message : String(error)}`;

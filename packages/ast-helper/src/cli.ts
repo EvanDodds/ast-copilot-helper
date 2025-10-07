@@ -64,14 +64,6 @@ interface ParseOptions extends GlobalOptions {
 }
 
 /**
- * Options for the annotate command
- */
-interface AnnotateOptions extends GlobalOptions {
-  changed?: boolean;
-  force?: boolean;
-}
-
-/**
  * Options for the embed command
  */
 interface EmbedOptions extends GlobalOptions {
@@ -204,7 +196,6 @@ export class AstHelperCli {
   private setupCommands(): void {
     this.setupInitCommand();
     this.setupParseCommand();
-    this.setupAnnotateCommand();
     this.setupEmbedCommand();
     this.setupQueryCommand();
     this.setupWatchCommand();
@@ -337,24 +328,6 @@ export class AstHelperCli {
           (options as any).targetPath = path;
         }
         await this.executeCommand("parse", options);
-      });
-  }
-
-  /**
-   * Set up the annotate command
-   */
-  private setupAnnotateCommand(): void {
-    this.program
-      .command("annotate")
-      .description("Generate metadata for parsed AST nodes")
-      .addOption(
-        new Option("-c, --changed", "Process only nodes from changed files"),
-      )
-      .addOption(
-        new Option("--force", "Regenerate all annotations even if unchanged"),
-      )
-      .action(async (options: AnnotateOptions) => {
-        await this.executeCommand("annotate", options);
       });
   }
 
@@ -829,12 +802,6 @@ export class AstHelperCli {
         return new InitCommandHandler();
       case "parse":
         return new ParseCommandHandler();
-      case "annotate": {
-        const { AnnotateCommandHandler } = await import(
-          "./commands/annotate.js"
-        );
-        return new AnnotateCommandHandler();
-      }
       case "embed": {
         return new EmbedCommandHandler();
       }

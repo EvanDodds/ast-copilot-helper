@@ -58,7 +58,7 @@ graph TB
 
 | Component                   | Responsibility                               | Technology Stack                     |
 | --------------------------- | -------------------------------------------- | ------------------------------------ |
-| **AST Parser Engine**       | Parse source code into semantic annotations  | TypeScript Compiler API, Tree-sitter |
+| **AST Parser Engine**       | Parse source code into semantic annotations  | Rust with Tree-sitter, WASM bindings |
 | **AI Embeddings Generator** | Create vector embeddings for semantic search | OpenAI API, Sentence Transformers    |
 | **Semantic Query Engine**   | Process natural language queries             | Vector similarity, SQLite FTS        |
 | **MCP Server**              | Provide AI agent integration                 | JSON-RPC, WebSocket, HTTP            |
