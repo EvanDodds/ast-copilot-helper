@@ -30,57 +30,87 @@ export class TreeSitterGrammarManager implements GrammarManager {
    * Download a grammar for the specified language
    */
   async downloadGrammar(language: string): Promise<string> {
-    const config = this.getLanguageConfig(language);
-    const languageDir = path.join(this.grammarDir, language);
-    const grammarPath = path.join(languageDir, `tree-sitter-${language}.wasm`);
-    const metadataPath = path.join(languageDir, "metadata.json");
+    const timestamp = new Date().toISOString();
 
-    // Ensure directory exists
-    await this.ensureDirectory(languageDir);
-
-    // Check if grammar already exists and is valid
-    if (await this.isGrammarCached(language)) {
-      const isValid = await this.verifyGrammarIntegrity(language);
-      if (isValid) {
-        return grammarPath;
-      }
-    }
-
-    // Download with retry logic
-    await this.downloadWithRetry(config.grammarUrl, grammarPath);
-
-    // Verify the downloaded file
-    const actualHash = await this.computeFileHash(grammarPath);
-    const isValid = await this.verifyDownloadedGrammar(
-      grammarPath,
-      config.grammarHash,
-    );
-    if (!isValid) {
-      await fs.unlink(grammarPath).catch(() => {
-        /* ignore cleanup errors */
-      }); // Clean up invalid file
-      throw new Error(
-        `Downloaded grammar for ${language} failed integrity check`,
+    try {
+      const config = this.getLanguageConfig(language);
+      const languageDir = path.join(this.grammarDir, language);
+      const grammarPath = path.join(
+        languageDir,
+        `tree-sitter-${language}.wasm`,
       );
+      const metadataPath = path.join(languageDir, "metadata.json");
+
+      // Ensure directory exists
+      await this.ensureDirectory(languageDir);
+
+      // Check if grammar already exists and is valid
+      if (await this.isGrammarCached(language)) {
+        const isValid = await this.verifyGrammarIntegrity(language);
+        if (isValid) {
+          return grammarPath;
+        }
+      }
+
+      // Download with retry logic
+      await this.downloadWithRetry(config.grammarUrl, grammarPath);
+
+      // Verify the downloaded file
+      const actualHash = await this.computeFileHash(grammarPath);
+      const isValid = await this.verifyDownloadedGrammar(
+        grammarPath,
+        config.grammarHash,
+      );
+      if (!isValid) {
+        await fs.unlink(grammarPath).catch(() => {
+          /* ignore cleanup errors */
+        }); // Clean up invalid file
+        throw new Error(
+          `Downloaded grammar for ${language} failed integrity check`,
+        );
+      }
+
+      // Save metadata with computed hash if none was provided
+      const finalHash = config.grammarHash || actualHash;
+      const metadata: GrammarMetadata = {
+        version: this.extractVersionFromUrl(config.grammarUrl),
+        hash: finalHash,
+        url: config.grammarUrl,
+        downloadedAt: new Date().toISOString(),
+        lastVerified: new Date().toISOString(),
+      };
+
+      await fs.writeFile(
+        metadataPath,
+        JSON.stringify(metadata, null, 2),
+        "utf-8",
+      );
+
+      return grammarPath;
+    } catch (error) {
+      const originalError =
+        error instanceof Error ? error.message : String(error);
+
+      const errorMessage = [
+        `Grammar download failed for ${language}`,
+        ``,
+        `Download context:`,
+        `  - language: ${language}`,
+        `  - timestamp: ${timestamp}`,
+        `  - cache directory: ${this.grammarDir}`,
+        ``,
+        `Error details: ${originalError}`,
+        ``,
+        `Download steps that may have failed:`,
+        `  1. Language configuration lookup`,
+        `  2. Directory creation`,
+        `  3. Network download with retry logic`,
+        `  4. File integrity verification`,
+        `  5. Metadata creation`,
+      ].join("\n");
+
+      throw new Error(errorMessage);
     }
-
-    // Save metadata with computed hash if none was provided
-    const finalHash = config.grammarHash || actualHash;
-    const metadata: GrammarMetadata = {
-      version: this.extractVersionFromUrl(config.grammarUrl),
-      hash: finalHash,
-      url: config.grammarUrl,
-      downloadedAt: new Date().toISOString(),
-      lastVerified: new Date().toISOString(),
-    };
-
-    await fs.writeFile(
-      metadataPath,
-      JSON.stringify(metadata, null, 2),
-      "utf-8",
-    );
-
-    return grammarPath;
   }
 
   /**
@@ -93,12 +123,36 @@ export class TreeSitterGrammarManager implements GrammarManager {
       `tree-sitter-${language}.wasm`,
     );
 
-    if (await this.isGrammarCached(language)) {
-      return grammarPath;
-    }
+    try {
+      if (await this.isGrammarCached(language)) {
+        return grammarPath;
+      }
 
-    // Grammar not cached, download it
-    return await this.downloadGrammar(language);
+      // Grammar not cached, download it
+      return await this.downloadGrammar(language);
+    } catch (error) {
+      const originalError =
+        error instanceof Error ? error.message : String(error);
+      const timestamp = new Date().toISOString();
+
+      const errorMessage = [
+        `Failed to get cached grammar path for ${language}`,
+        ``,
+        `Attempted path:`,
+        `  - Grammar: ${grammarPath}`,
+        `  - Directory: ${this.grammarDir}`,
+        ``,
+        `Original error: ${originalError}`,
+        ``,
+        `This may indicate issues with the grammar cache, network connectivity,`,
+        `or language configuration. Check that ${language} is supported and`,
+        `the cache directory is writable.`,
+        ``,
+        `Timestamp: ${timestamp}`,
+      ].join("\n");
+
+      throw new Error(errorMessage);
+    }
   }
 
   /**
@@ -144,15 +198,50 @@ export class TreeSitterGrammarManager implements GrammarManager {
    * Supports both native tree-sitter and WASM fallback
    */
   async loadParser(language: string): Promise<unknown> {
+    let nativeError: Error | null = null;
+    let wasmError: Error | null = null;
+
     // Try native parser first (doesn't need cached grammar)
     try {
       return await this.loadNativeParser(language, "");
-    } catch (_nativeError) {
-      // Native parser failed, try WASM fallback
-      // Only download grammar if native parsing failed and we need WASM
+    } catch (error) {
+      nativeError = error instanceof Error ? error : new Error(String(error));
+    }
+
+    // Native parser failed, try WASM fallback
+    try {
       const grammarPath = await this.getCachedGrammarPath(language);
       return await this.loadWASMParser(language, grammarPath);
+    } catch (error) {
+      wasmError = error instanceof Error ? error : new Error(String(error));
     }
+
+    // Both parsers failed, provide comprehensive error information
+    const timestamp = new Date().toISOString();
+    const errorMessage = [
+      `Failed to load parser for language '${language}'`,
+      ``,
+      `Native Parser:`,
+      `  - Error: ${nativeError?.message || "Unknown error"}`,
+      `  - Status: ${nativeError?.message.includes("Native parser not available") ? "Not installed" : "Failed"}`,
+      ``,
+      `WASM Parser:`,
+      `  - Error: ${wasmError?.message || "Unknown error"}`,
+      `  - Status: ${wasmError?.message.includes("Real WASM grammar not available") ? "Mock files only" : "Failed"}`,
+      ``,
+      `Troubleshooting suggestions:`,
+      `  1. Install native parser: npm install tree-sitter-${language} package`,
+      `  2. Check language configuration in languages.ts`,
+      `  3. Verify network connectivity for WASM grammar download`,
+      `  4. Build WASM files from source if pre-built unavailable`,
+      ``,
+      `Loading context:`,
+      `  - Language: ${language}`,
+      `  - Timestamp: ${timestamp}`,
+      `  - Grammar cache: ${this.grammarDir}`,
+    ].join("\n");
+
+    throw new Error(errorMessage);
   } /**
    * Load native Tree-sitter parser
    */
