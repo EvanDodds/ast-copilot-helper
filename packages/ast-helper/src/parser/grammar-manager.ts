@@ -8,6 +8,12 @@ import * as path from "path";
 import { createHash } from "crypto";
 import type { LanguageConfig, GrammarManager } from "./types.js";
 import { getLanguageConfig } from "./languages.js";
+import {
+  ParserLoadError,
+  GrammarDownloadError,
+  WASMIntegrationError,
+  NativeModuleError,
+} from "./errors.js";
 
 interface GrammarMetadata {
   version: string;
@@ -188,7 +194,7 @@ export class TreeSitterGrammarManager implements GrammarManager {
       }
 
       return await this.verifyDownloadedGrammar(grammarPath, expectedHash);
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -216,32 +222,20 @@ export class TreeSitterGrammarManager implements GrammarManager {
       wasmError = error instanceof Error ? error : new Error(String(error));
     }
 
-    // Both parsers failed, provide comprehensive error information
-    const timestamp = new Date().toISOString();
-    const errorMessage = [
-      `Failed to load parser for language '${language}'`,
-      ``,
-      `Native Parser:`,
-      `  - Error: ${nativeError?.message || "Unknown error"}`,
-      `  - Status: ${nativeError?.message.includes("Native parser not available") ? "Not installed" : "Failed"}`,
-      ``,
-      `WASM Parser:`,
-      `  - Error: ${wasmError?.message || "Unknown error"}`,
-      `  - Status: ${wasmError?.message.includes("Real WASM grammar not available") ? "Mock files only" : "Failed"}`,
-      ``,
-      `Troubleshooting suggestions:`,
-      `  1. Install native parser: npm install tree-sitter-${language} package`,
-      `  2. Check language configuration in languages.ts`,
-      `  3. Verify network connectivity for WASM grammar download`,
-      `  4. Build WASM files from source if pre-built unavailable`,
-      ``,
-      `Loading context:`,
-      `  - Language: ${language}`,
-      `  - Timestamp: ${timestamp}`,
-      `  - Grammar cache: ${this.grammarDir}`,
-    ].join("\n");
+    // Both parsers failed, use structured error handling
+    const optimizedError = new ParserLoadError(
+      language,
+      nativeError,
+      wasmError,
+      {
+        context: {
+          grammarCache: this.grammarDir,
+          retryAttempts: this.maxRetries,
+        },
+      },
+    );
 
-    throw new Error(errorMessage);
+    throw optimizedError;
   } /**
    * Load native Tree-sitter parser
    */
@@ -261,19 +255,46 @@ export class TreeSitterGrammarManager implements GrammarManager {
         case "typescript": {
           // Fixed: TypeScript language module compatibility resolved
           // Updated tree-sitter-typescript to 0.21.2 for compatibility with tree-sitter 0.21.1
-          const tsModule = await import("tree-sitter-typescript");
-          // tree-sitter-typescript exports both typescript and tsx parsers via default export
-          languageModule = tsModule.default.typescript;
+          try {
+            const tsModule = await import("tree-sitter-typescript");
+            // tree-sitter-typescript exports both typescript and tsx parsers via default export
+            languageModule = tsModule.default.typescript;
+          } catch (_error) {
+            // If module import fails, try a fresh import without cache
+            if (typeof require !== "undefined" && require.cache) {
+              delete require.cache[require.resolve("tree-sitter-typescript")];
+            }
+            const tsModule = await import("tree-sitter-typescript");
+            languageModule = tsModule.default.typescript;
+          }
           break;
         }
         case "javascript": {
-          const jsModule = await import("tree-sitter-javascript");
-          languageModule = jsModule.default;
+          try {
+            const jsModule = await import("tree-sitter-javascript");
+            languageModule = jsModule.default;
+          } catch (_error) {
+            // If module import fails, try a fresh import without cache
+            if (typeof require !== "undefined" && require.cache) {
+              delete require.cache[require.resolve("tree-sitter-javascript")];
+            }
+            const jsModule = await import("tree-sitter-javascript");
+            languageModule = jsModule.default;
+          }
           break;
         }
         case "python": {
-          const pyModule = await import("tree-sitter-python");
-          languageModule = pyModule.default;
+          try {
+            const pyModule = await import("tree-sitter-python");
+            languageModule = pyModule.default;
+          } catch (_error) {
+            // If module import fails, try a fresh import without cache
+            if (typeof require !== "undefined" && require.cache) {
+              delete require.cache[require.resolve("tree-sitter-python")];
+            }
+            const pyModule = await import("tree-sitter-python");
+            languageModule = pyModule.default;
+          }
           break;
         }
         default:
@@ -285,7 +306,18 @@ export class TreeSitterGrammarManager implements GrammarManager {
       parser.setLanguage(languageModule);
       return parser;
     } catch (error) {
-      throw new Error(`Failed to load native parser for ${language}: ${error}`);
+      const nativeError = new NativeModuleError(
+        language,
+        `tree-sitter-${language}`,
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          context: {
+            attemptedImport: true,
+            moduleLoadingStrategy: "dynamic import with cache clearing",
+          },
+        },
+      );
+      throw nativeError;
     }
   }
 
@@ -327,14 +359,19 @@ export class TreeSitterGrammarManager implements GrammarManager {
 
       return parser;
     } catch (error) {
-      // Provide detailed error context for debugging
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `Failed to load WASM parser for ${language}: ${errorMessage}. ` +
-          `Grammar path: ${grammarPath}. ` +
-          `Consider using native parsing or building WASM files from source.`,
+      const wasmError = new WASMIntegrationError(
+        language,
+        grammarPath,
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          context: {
+            webTreeSitterInit: true,
+            grammarFileExists: await this.fileExists(grammarPath),
+            parserInitialized: false,
+          },
+        },
       );
+      throw wasmError;
     }
   }
 
@@ -398,8 +435,9 @@ export class TreeSitterGrammarManager implements GrammarManager {
       return;
     }
 
+    let response: Response | undefined;
     try {
-      const response = await fetch(url);
+      response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -408,7 +446,19 @@ export class TreeSitterGrammarManager implements GrammarManager {
       const buffer = await response.arrayBuffer();
       await fs.writeFile(filePath, Buffer.from(buffer));
     } catch (error) {
-      throw new Error(`Failed to download ${url}: ${(error as Error).message}`);
+      const downloadError = new GrammarDownloadError(
+        "unknown", // Language will be set by caller
+        url,
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          context: {
+            httpStatus: response?.status || "N/A",
+            httpStatusText: response?.statusText || "N/A",
+            networkError: !response,
+          },
+        },
+      );
+      throw downloadError;
     }
   }
 

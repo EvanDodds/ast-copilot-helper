@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { TreeSitterGrammarManager } from "./grammar-manager.js";
+import { cleanupTestEnvironment } from "./test-utils.js";
 import * as path from "path";
 import * as fs from "fs/promises";
 
@@ -26,13 +27,8 @@ describe("TypeScript Parsing Validation", () => {
     // Clear grammarManager reference and force cleanup
     grammarManager = null as any;
 
-    // Force garbage collection to clean up Tree-sitter state
-    if (global.gc) {
-      global.gc();
-    }
-
-    // Small delay to allow cleanup to complete
-    await new Promise((resolve) => setTimeout(resolve, 5));
+    // Use comprehensive Tree-sitter state cleanup
+    await cleanupTestEnvironment();
   });
 
   describe("TypeScript Grammar Compatibility", () => {
