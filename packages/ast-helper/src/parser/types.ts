@@ -84,11 +84,6 @@ export interface ASTParser {
   dispose(): Promise<void>;
 }
 
-export interface GrammarManager {
-  loadParser(language: string): Promise<unknown>;
-  cleanCache(): Promise<void>;
-}
-
 /**
  * Normalized AST node with consistent structure across languages
  */
