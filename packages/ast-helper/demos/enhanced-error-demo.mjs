@@ -30,7 +30,7 @@ async function demonstrateEnhancedErrors() {
   // Test 2: Native module error (for installed languages that might fail)
   console.log("2. Testing native module loading (TypeScript should work):");
   try {
-    const parser = await grammarManager.loadParser("typescript");
+    await grammarManager.loadParser("typescript");
     console.log("✓ TypeScript parser loaded successfully");
     console.log("✓ Enhanced error handling works - no errors for working parsers");
   } catch (error) {

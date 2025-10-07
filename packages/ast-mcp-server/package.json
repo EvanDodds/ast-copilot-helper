@@ -31,7 +31,7 @@
   ],
   "dependencies": {
     "@ast-copilot-helper/ast-helper": "workspace:*",
-    "@types/node": "^24.6.2"
+    "@types/node": "^24.7.0"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",

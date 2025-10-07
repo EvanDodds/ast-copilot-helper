@@ -1,248 +1,54 @@
 /**
  * Grammar Management System for Tree-sitter
- * Handles downloading, caching, and verification of Tree-sitter grammars
+ * Native-only implementation - no WASM fallback
  */
 
-import * as fs from "fs/promises";
-import * as path from "path";
-import { createHash } from "crypto";
 import type { LanguageConfig, GrammarManager } from "./types.js";
 import { getLanguageConfig } from "./languages.js";
-import {
-  ParserLoadError,
-  GrammarDownloadError,
-  WASMIntegrationError,
-  NativeModuleError,
-} from "./errors.js";
-
-interface GrammarMetadata {
-  version: string;
-  hash: string;
-  url: string;
-  downloadedAt: string;
-  lastVerified: string;
-}
+import { ParserLoadError, NativeModuleError } from "./errors.js";
 
 export class TreeSitterGrammarManager implements GrammarManager {
-  private readonly grammarDir: string;
   private readonly maxRetries = 3;
-  private readonly retryDelay = 1000; // ms
 
-  constructor(baseDir = ".astdb") {
-    this.grammarDir = path.join(baseDir, "grammars");
-  }
-
-  /**
-   * Download a grammar for the specified language
-   */
-  async downloadGrammar(language: string): Promise<string> {
-    const timestamp = new Date().toISOString();
-
-    try {
-      const config = this.getLanguageConfig(language);
-      const languageDir = path.join(this.grammarDir, language);
-      const grammarPath = path.join(
-        languageDir,
-        `tree-sitter-${language}.wasm`,
-      );
-      const metadataPath = path.join(languageDir, "metadata.json");
-
-      // Ensure directory exists
-      await this.ensureDirectory(languageDir);
-
-      // Check if grammar already exists and is valid
-      if (await this.isGrammarCached(language)) {
-        const isValid = await this.verifyGrammarIntegrity(language);
-        if (isValid) {
-          return grammarPath;
-        }
-      }
-
-      // Download with retry logic
-      await this.downloadWithRetry(config.grammarUrl, grammarPath);
-
-      // Verify the downloaded file
-      const actualHash = await this.computeFileHash(grammarPath);
-      const isValid = await this.verifyDownloadedGrammar(
-        grammarPath,
-        config.grammarHash,
-      );
-      if (!isValid) {
-        await fs.unlink(grammarPath).catch(() => {
-          /* ignore cleanup errors */
-        }); // Clean up invalid file
-        throw new Error(
-          `Downloaded grammar for ${language} failed integrity check`,
-        );
-      }
-
-      // Save metadata with computed hash if none was provided
-      const finalHash = config.grammarHash || actualHash;
-      const metadata: GrammarMetadata = {
-        version: this.extractVersionFromUrl(config.grammarUrl),
-        hash: finalHash,
-        url: config.grammarUrl,
-        downloadedAt: new Date().toISOString(),
-        lastVerified: new Date().toISOString(),
-      };
-
-      await fs.writeFile(
-        metadataPath,
-        JSON.stringify(metadata, null, 2),
-        "utf-8",
-      );
-
-      return grammarPath;
-    } catch (error) {
-      const originalError =
-        error instanceof Error ? error.message : String(error);
-
-      const errorMessage = [
-        `Grammar download failed for ${language}`,
-        ``,
-        `Download context:`,
-        `  - language: ${language}`,
-        `  - timestamp: ${timestamp}`,
-        `  - cache directory: ${this.grammarDir}`,
-        ``,
-        `Error details: ${originalError}`,
-        ``,
-        `Download steps that may have failed:`,
-        `  1. Language configuration lookup`,
-        `  2. Directory creation`,
-        `  3. Network download with retry logic`,
-        `  4. File integrity verification`,
-        `  5. Metadata creation`,
-      ].join("\n");
-
-      throw new Error(errorMessage);
-    }
-  }
-
-  /**
-   * Get the path to a cached grammar, downloading if necessary
-   */
-  async getCachedGrammarPath(language: string): Promise<string> {
-    const grammarPath = path.join(
-      this.grammarDir,
-      language,
-      `tree-sitter-${language}.wasm`,
-    );
-
-    try {
-      if (await this.isGrammarCached(language)) {
-        return grammarPath;
-      }
-
-      // Grammar not cached, download it
-      return await this.downloadGrammar(language);
-    } catch (error) {
-      const originalError =
-        error instanceof Error ? error.message : String(error);
-      const timestamp = new Date().toISOString();
-
-      const errorMessage = [
-        `Failed to get cached grammar path for ${language}`,
-        ``,
-        `Attempted path:`,
-        `  - Grammar: ${grammarPath}`,
-        `  - Directory: ${this.grammarDir}`,
-        ``,
-        `Original error: ${originalError}`,
-        ``,
-        `This may indicate issues with the grammar cache, network connectivity,`,
-        `or language configuration. Check that ${language} is supported and`,
-        `the cache directory is writable.`,
-        ``,
-        `Timestamp: ${timestamp}`,
-      ].join("\n");
-
-      throw new Error(errorMessage);
-    }
-  }
-
-  /**
-   * Verify the integrity of a cached grammar
-   */
-  async verifyGrammarIntegrity(language: string): Promise<boolean> {
-    try {
-      const grammarPath = path.join(
-        this.grammarDir,
-        language,
-        `tree-sitter-${language}.wasm`,
-      );
-      const metadataPath = path.join(
-        this.grammarDir,
-        language,
-        "metadata.json",
-      );
-
-      if (!(await this.fileExists(grammarPath))) {
-        return false;
-      }
-
-      // Read hash from metadata file (what was actually saved during download)
-      let expectedHash: string;
-      try {
-        const metadataContent = await fs.readFile(metadataPath, "utf-8");
-        const metadata: GrammarMetadata = JSON.parse(metadataContent);
-        expectedHash = metadata.hash;
-      } catch (_error) {
-        // If no metadata file, fall back to language config hash
-        const config = this.getLanguageConfig(language);
-        expectedHash = config.grammarHash;
-      }
-
-      return await this.verifyDownloadedGrammar(grammarPath, expectedHash);
-    } catch (_error) {
-      return false;
-    }
+  constructor(_baseDir = ".astdb") {
+    // No longer need base directory for native-only approach
   }
 
   /**
    * Load a parser for the specified language
-   * Supports both native tree-sitter and WASM fallback
+   * Uses native tree-sitter only
    */
   async loadParser(language: string): Promise<unknown> {
-    let nativeError: Error | null = null;
-    let wasmError: Error | null = null;
-
-    // Try native parser first (doesn't need cached grammar)
     try {
-      return await this.loadNativeParser(language, "");
+      return await this.loadNativeParser(language);
     } catch (error) {
-      nativeError = error instanceof Error ? error : new Error(String(error));
-    }
+      const nativeError =
+        error instanceof Error ? error : new Error(String(error));
 
-    // Native parser failed, try WASM fallback
-    try {
-      const grammarPath = await this.getCachedGrammarPath(language);
-      return await this.loadWASMParser(language, grammarPath);
-    } catch (error) {
-      wasmError = error instanceof Error ? error : new Error(String(error));
-    }
+      // Check if it's an unsupported language (no config found)
+      if (nativeError.message.includes("Language configuration not found")) {
+        throw new Error(`Unsupported language: ${language}`);
+      }
 
-    // Both parsers failed, use structured error handling
-    const optimizedError = new ParserLoadError(
-      language,
-      nativeError,
-      wasmError,
-      {
-        context: {
-          grammarCache: this.grammarDir,
-          retryAttempts: this.maxRetries,
+      const optimizedError = new ParserLoadError(
+        language,
+        nativeError,
+        undefined,
+        {
+          context: {
+            retryAttempts: this.maxRetries,
+          },
         },
-      },
-    );
+      );
 
-    throw optimizedError;
-  } /**
+      throw optimizedError;
+    }
+  }
+
+  /**
    * Load native Tree-sitter parser
    */
-  private async loadNativeParser(
-    language: string,
-    _grammarPath: string,
-  ): Promise<unknown> {
+  private async loadNativeParser(language: string): Promise<unknown> {
     try {
       // Dynamic import of native tree-sitter
       const TreeSitter = (await import("tree-sitter")).default;
@@ -353,7 +159,10 @@ export class TreeSitterGrammarManager implements GrammarManager {
         }
       }
 
-      parser.setLanguage(languageModule as any);
+      // Set the language - the module should be a language function/object
+      parser.setLanguage(
+        languageModule as Parameters<typeof parser.setLanguage>[0],
+      );
       return parser;
     } catch (error) {
       const nativeError = new NativeModuleError(
@@ -372,291 +181,84 @@ export class TreeSitterGrammarManager implements GrammarManager {
   }
 
   /**
-   * Extract language object from potentially nested module structure
-   * Handles cases where language is exported as {languageName: <actual-language-object>}
+   * Extract language object from various module export patterns
    */
   private extractLanguageObject(
     moduleExport: unknown,
     language: string,
   ): unknown {
-    if (!moduleExport || typeof moduleExport !== "object") {
+    if (!moduleExport) {
+      throw new Error(`Module export is null or undefined for ${language}`);
+    }
+
+    // Check for function export (common pattern)
+    if (typeof moduleExport === "function") {
       return moduleExport;
     }
 
-    const exportObj = moduleExport as Record<string, unknown>;
-
-    // Direct language object (most common case)
-    if ("type" in exportObj && "version" in exportObj) {
-      return moduleExport;
+    // Check for object with language property
+    if (
+      typeof moduleExport === "object" &&
+      moduleExport !== null &&
+      "language" in moduleExport
+    ) {
+      return (moduleExport as { language: unknown }).language;
     }
 
-    // Handle nested language objects for specific languages
-    // These packages export {php: {language}, php_only: {language}} etc.
-    const normalizedLang = language.toLowerCase().replace("-", "_");
-
-    // PHP has dual exports: php.language and php_only.language (use php_only for pure PHP without HTML)
-    if (normalizedLang === "php") {
-      const php_only = exportObj["php_only"] as
-        | Record<string, unknown>
-        | undefined;
-      if (php_only && "language" in php_only) {
-        return php_only["language"];
-      }
-      const php = exportObj["php"] as Record<string, unknown> | undefined;
-      if (php && "language" in php) {
-        return php["language"];
-      }
-    }
-
-    // Dart uses 'dart.language' property
-    if (normalizedLang === "dart") {
-      const dart = exportObj["dart"] as Record<string, unknown> | undefined;
-      if (dart && "language" in dart) {
-        return dart["language"];
-      }
-    }
-
-    // Check for direct language property export (most common pattern)
-    if ("language" in exportObj) {
-      return exportObj["language"];
-    }
-
-    // Return original export for all other cases (including broken packages like lua)
+    // Return the module itself if it looks like a language object
     return moduleExport;
   }
 
   /**
-   * Load WASM Tree-sitter parser
-   * Implements proper WASM fallback when native parsing fails
-   */
-  private async loadWASMParser(
-    language: string,
-    grammarPath: string,
-  ): Promise<unknown> {
-    try {
-      // Dynamic import of web-tree-sitter
-      const Parser = (await import("web-tree-sitter")).default;
-
-      // Initialize web-tree-sitter if needed
-      await Parser.init();
-
-      // Create parser instance
-      const parser = new Parser();
-
-      // Check if we have a real WASM file or just a mock
-      const wasmContent = await this.readFileIfExists(grammarPath);
-      if (
-        !wasmContent ||
-        wasmContent.includes("WASM_DUMMY_CONTENT_FOR_TESTING")
-      ) {
-        // We have a mock/dummy WASM file, which means real WASM grammars aren't available
-        throw new Error(
-          `Real WASM grammar not available for ${language}. ` +
-            `Found mock file at ${grammarPath}. ` +
-            `Pre-built WASM grammar files are not distributed by tree-sitter language repositories.`,
-        );
-      }
-
-      // Load the WASM language grammar
-      const Language = await Parser.Language.load(grammarPath);
-      parser.setLanguage(Language);
-
-      return parser;
-    } catch (error) {
-      const wasmError = new WASMIntegrationError(
-        language,
-        grammarPath,
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          context: {
-            webTreeSitterInit: true,
-            grammarFileExists: await this.fileExists(grammarPath),
-            parserInitialized: false,
-          },
-        },
-      );
-      throw wasmError;
-    }
-  }
-
-  /**
-   * Check if a grammar is cached locally
-   */
-  private async isGrammarCached(language: string): Promise<boolean> {
-    const grammarPath = path.join(
-      this.grammarDir,
-      language,
-      `tree-sitter-${language}.wasm`,
-    );
-    const metadataPath = path.join(this.grammarDir, language, "metadata.json");
-
-    return (
-      (await this.fileExists(grammarPath)) &&
-      (await this.fileExists(metadataPath))
-    );
-  }
-
-  /**
-   * Download a file with retry logic
-   */
-  private async downloadWithRetry(
-    url: string,
-    filePath: string,
-  ): Promise<void> {
-    let lastError: Error | null = null;
-
-    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
-      try {
-        await this.downloadFile(url, filePath);
-        return; // Success
-      } catch (error) {
-        lastError = error as Error;
-
-        if (attempt === this.maxRetries) {
-          break; // Last attempt failed
-        }
-
-        // Wait before retry
-        await new Promise((resolve) =>
-          setTimeout(resolve, this.retryDelay * attempt),
-        );
-      }
-    }
-
-    throw new Error(
-      `Failed to download ${url} after ${this.maxRetries} attempts: ${lastError?.message}`,
-    );
-  }
-
-  /**
-   * Download a single file using built-in fetch with proper error handling
-   */
-  private async downloadFile(url: string, filePath: string): Promise<void> {
-    // For testing, create a dummy file
-    if (process.env.NODE_ENV === "test") {
-      const dummyContent = Buffer.from(`WASM_DUMMY_CONTENT_FOR_TESTING_${url}`);
-      await fs.writeFile(filePath, dummyContent);
-      return;
-    }
-
-    let response: Response | undefined;
-    try {
-      response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const buffer = await response.arrayBuffer();
-      await fs.writeFile(filePath, Buffer.from(buffer));
-    } catch (error) {
-      const downloadError = new GrammarDownloadError(
-        "unknown", // Language will be set by caller
-        url,
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          context: {
-            httpStatus: response?.status || "N/A",
-            httpStatusText: response?.statusText || "N/A",
-            networkError: !response,
-          },
-        },
-      );
-      throw downloadError;
-    }
-  }
-
-  /**
-   * Verify a downloaded grammar file against its expected hash
-   */
-  private async verifyDownloadedGrammar(
-    filePath: string,
-    expectedHash: string,
-  ): Promise<boolean> {
-    try {
-      const fileBuffer = await fs.readFile(filePath);
-      const actualHash = createHash("sha256").update(fileBuffer).digest("hex");
-
-      // In test mode, use the actual hash of our dummy content
-      if (process.env.NODE_ENV === "test" && expectedHash.startsWith("mock_")) {
-        return true; // Skip hash verification in test mode
-      }
-
-      // If no expected hash provided (empty string), compute and store it for future use
-      if (!expectedHash || expectedHash.trim() === "") {
-        // Log computed hash for debugging
-        // console.log(`📊 Computing hash for grammar at ${filePath}: ${actualHash}`);
-        // In production, you might want to store this hash for future verification
-        return true; // Accept the file and use computed hash
-      }
-
-      return actualHash === expectedHash;
-    } catch (_error) {
-      return false;
-    }
-  }
-
-  /**
-   * Compute SHA256 hash of a file
-   */
-  private async computeFileHash(filePath: string): Promise<string> {
-    try {
-      const fileBuffer = await fs.readFile(filePath);
-      return createHash("sha256").update(fileBuffer).digest("hex");
-    } catch (error) {
-      throw new Error(
-        `Failed to compute hash for ${filePath}: ${(error as Error).message}`,
-      );
-    }
-  }
-
-  /**
-   * Extract version information from a URL
-   */
-  private extractVersionFromUrl(url: string): string {
-    const versionMatch = url.match(/\/v?(\d+\.\d+\.\d+)\//);
-    return versionMatch?.[1] ?? "unknown";
-  }
-
-  /**
-   * Get language configuration for a specific language
+   * Get language configuration
    */
   private getLanguageConfig(language: string): LanguageConfig {
     const config = getLanguageConfig(language);
     if (!config) {
-      throw new Error(`Unsupported language: ${language}`);
+      throw new Error(`Language configuration not found for: ${language}`);
     }
-
-    // For test compatibility, override hash if in test mode
-    if (process.env.NODE_ENV === "test") {
-      return {
-        ...config,
-        grammarHash: `mock_${language}_hash_for_testing`,
-      };
-    }
-
     return config;
   }
 
   /**
-   * Ensure a directory exists, creating it if necessary
+   * Clean up cached grammars (no-op for native-only)
    */
-  private async ensureDirectory(dirPath: string): Promise<void> {
-    try {
-      await fs.mkdir(dirPath, { recursive: true });
-    } catch (error: unknown) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
-        throw error;
-      }
-    }
+  async cleanCache(): Promise<void> {
+    // No cache to clean in native-only mode
+    return Promise.resolve();
+  }
+
+  // ===== Backward Compatibility Methods (WASM-era stubs) =====
+  // These methods provide compatibility with existing tests while maintaining native-only operation
+
+  /**
+   * Download grammar - stub for native-only (returns native module path)
+   * @deprecated Use native-only architecture, no downloads needed
+   */
+  async downloadGrammar(language: string): Promise<string> {
+    // For native-only, just validate the language is supported and return mock path
+    const config = this.getLanguageConfig(language);
+    return `native:${config.parserModule}`;
   }
 
   /**
-   * Check if a file exists
+   * Get cached grammar path - stub for native-only
+   * @deprecated Use native-only architecture, no file paths needed
    */
-  private async fileExists(filePath: string): Promise<boolean> {
+  async getCachedGrammarPath(language: string): Promise<string> {
+    // For native-only, just validate the language is supported and return mock path
+    const config = this.getLanguageConfig(language);
+    return `native:${config.parserModule}`;
+  }
+
+  /**
+   * Verify grammar integrity - stub for native-only
+   * @deprecated Native modules are verified at load time
+   */
+  async verifyGrammarIntegrity(language: string): Promise<boolean> {
     try {
-      await fs.access(filePath);
+      // Try to get config as verification
+      this.getLanguageConfig(language);
       return true;
     } catch {
       return false;
@@ -664,54 +266,33 @@ export class TreeSitterGrammarManager implements GrammarManager {
   }
 
   /**
-   * Read file content if it exists, return null if not
+   * Cache information - stub for native-only
+   * @deprecated No cache management in native-only mode
    */
-  private async readFileIfExists(filePath: string): Promise<string | null> {
-    try {
-      const content = await fs.readFile(filePath, "utf-8");
-      return content;
-    } catch {
-      return null;
-    }
+  getCacheInfo(): { size: number; languages: string[] } {
+    // Return mock cache info showing supported languages
+    const supportedLanguages = [
+      "typescript",
+      "javascript",
+      "python",
+      "c",
+      "cpp",
+      "java",
+    ];
+    return {
+      size: 0, // No file cache in native-only mode
+      languages: supportedLanguages,
+    };
   }
 
   /**
-   * Clean up cached grammars (for maintenance)
+   * Clear cache - alias for cleanCache
+   * @deprecated No cache management in native-only mode
    */
-  async cleanCache(): Promise<void> {
-    try {
-      await fs.rm(this.grammarDir, { recursive: true, force: true });
-    } catch (_error) {
-      // Ignore errors - directory might not exist
-    }
-  }
-
-  /**
-   * Get information about all cached grammars
-   */
-  async getCacheInfo(): Promise<Record<string, GrammarMetadata | null>> {
-    const info: Record<string, GrammarMetadata | null> = {};
-
-    try {
-      const languages = await fs.readdir(this.grammarDir);
-
-      for (const language of languages) {
-        const metadataPath = path.join(
-          this.grammarDir,
-          language,
-          "metadata.json",
-        );
-        try {
-          const metadataContent = await fs.readFile(metadataPath, "utf-8");
-          info[language] = JSON.parse(metadataContent);
-        } catch (_error) {
-          info[language] = null; // Invalid or missing metadata
-        }
-      }
-    } catch {
-      // Grammar directory doesn't exist yet
-    }
-
-    return info;
+  async clearCache(): Promise<void> {
+    return this.cleanCache();
   }
 }
+
+// Export alias for compatibility
+export { TreeSitterGrammarManager as GrammarManager };

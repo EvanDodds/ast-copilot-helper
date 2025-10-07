@@ -51,10 +51,7 @@ export interface ParseError {
 export interface LanguageConfig {
   name: string;
   extensions: string[];
-  grammarUrl: string;
-  grammarHash: string; // SHA256 for integrity verification
-  parserModule?: string; // Node module name for native parser
-  wasmPath?: string; // WASM grammar path for fallback
+  parserModule: string; // Node module name for native parser
 }
 
 export interface ParserRuntime {
@@ -88,10 +85,8 @@ export interface ASTParser {
 }
 
 export interface GrammarManager {
-  downloadGrammar(language: string): Promise<string>;
-  getCachedGrammarPath(language: string): Promise<string>;
-  verifyGrammarIntegrity(language: string): Promise<boolean>;
-  loadParser(language: string): Promise<any>;
+  loadParser(language: string): Promise<unknown>;
+  cleanCache(): Promise<void>;
 }
 
 /**

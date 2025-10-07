@@ -319,7 +319,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.19.1",
-    "@types/node": "^24.6.2"
+    "@types/node": "^24.7.0"
   },
   "devDependencies": {
     "@types/vscode": "^1.104.0",

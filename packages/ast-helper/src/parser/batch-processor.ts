@@ -9,7 +9,7 @@ import * as fs from "fs/promises";
 import type { BaseParser } from "./parsers/base-parser.js";
 import { parseErrorHandler } from "./parse-errors.js";
 import type { ParseResult, ASTNode } from "./types.js";
-import { isFileSupported, detectLanguage } from "./languages.js";
+import { isExtensionSupported, getLanguageFromExtension } from "./languages.js";
 import crypto from "crypto";
 import os from "os";
 
@@ -442,7 +442,8 @@ export class BatchProcessor extends EventEmitter {
     for (const file of files) {
       try {
         // Check if file type is supported
-        if (!isFileSupported(file)) {
+        const extension = path.extname(file);
+        if (!isExtensionSupported(extension)) {
           unsupportedFiles.push(file);
           continue;
         }
@@ -493,7 +494,7 @@ export class BatchProcessor extends EventEmitter {
             context: `filePath: ${file}`,
           },
         ],
-        language: detectLanguage(file) || "",
+        language: getLanguageFromExtension(path.extname(file)) || "",
         parseTime: 0,
       });
 
@@ -708,7 +709,7 @@ export class BatchProcessor extends EventEmitter {
     return {
       nodes: [],
       errors: [parsedError],
-      language: detectLanguage(file) || "",
+      language: getLanguageFromExtension(path.extname(file)) || "",
       parseTime: 0,
     };
   }

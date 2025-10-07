@@ -5,8 +5,6 @@
 
 export enum ErrorCategory {
   PARSER_LOAD = "PARSER_LOAD",
-  GRAMMAR_DOWNLOAD = "GRAMMAR_DOWNLOAD",
-  WASM_INTEGRATION = "WASM_INTEGRATION",
   NATIVE_MODULE = "NATIVE_MODULE",
   CONFIGURATION = "CONFIGURATION",
   RUNTIME = "RUNTIME",
@@ -102,97 +100,29 @@ export class ParserLoadError extends TreeSitterError {
   constructor(
     language: string,
     nativeError?: Error,
-    wasmError?: Error,
+    _wasmError?: Error, // Unused in native-only mode
     options: { context?: Record<string, unknown> } = {},
   ) {
     const troubleshooting = [
       `Install native parser: npm install tree-sitter-${language}`,
       "Check language configuration in languages.ts",
-      "Verify network connectivity for WASM grammar download",
-      "Build WASM files from source if pre-built unavailable",
+      "Verify native module compatibility with your Node.js version",
+      "Rebuild native modules: npm rebuild",
     ];
 
     const context = {
       nativeError: nativeError?.message || "N/A",
-      wasmError: wasmError?.message || "N/A",
       nativeStatus: nativeError?.message.includes("Native parser not available")
         ? "Not installed"
         : "Failed",
-      wasmStatus: wasmError?.message.includes("Real WASM grammar not available")
-        ? "Mock files only"
-        : "Failed",
       ...options.context,
     };
 
     super(
-      `Failed to load parser for language '${language}'. Both native and WASM parsers failed.`,
+      `Failed to load parser for language '${language}'. Native parser failed.`,
       ErrorCategory.PARSER_LOAD,
       ErrorSeverity.HIGH,
-      { language, troubleshooting, context, cause: nativeError || wasmError },
-    );
-  }
-}
-
-/**
- * Error for grammar download failures
- */
-export class GrammarDownloadError extends TreeSitterError {
-  constructor(
-    language: string,
-    url: string,
-    cause?: Error,
-    options: { retryCount?: number; context?: Record<string, unknown> } = {},
-  ) {
-    const troubleshooting = [
-      "Check internet connectivity and firewall settings",
-      "Verify the grammar URL is accessible and correct",
-      "Try downloading manually and placing in grammar cache directory",
-      "Check if the language repository provides pre-built WASM files",
-    ];
-
-    const context = {
-      grammarUrl: url,
-      retryCount: options.retryCount || 0,
-      ...options.context,
-    };
-
-    super(
-      `Failed to download grammar for language '${language}' from ${url}`,
-      ErrorCategory.GRAMMAR_DOWNLOAD,
-      ErrorSeverity.MEDIUM,
-      { language, troubleshooting, context, cause },
-    );
-  }
-}
-
-/**
- * Error for WASM integration issues
- */
-export class WASMIntegrationError extends TreeSitterError {
-  constructor(
-    language: string,
-    grammarPath: string,
-    cause?: Error,
-    options: { context?: Record<string, unknown> } = {},
-  ) {
-    const troubleshooting = [
-      "Ensure web-tree-sitter is properly installed and initialized",
-      "Check if the WASM file is valid and not corrupted",
-      "Verify the grammar file matches the expected format",
-      "Consider using native parsing as an alternative",
-    ];
-
-    const context = {
-      grammarPath,
-      wasmFileExists: true, // Will be updated by caller if needed
-      ...options.context,
-    };
-
-    super(
-      `WASM parser integration failed for language '${language}'`,
-      ErrorCategory.WASM_INTEGRATION,
-      ErrorSeverity.MEDIUM,
-      { language, troubleshooting, context, cause },
+      { language, troubleshooting, context, cause: nativeError },
     );
   }
 }
@@ -235,7 +165,7 @@ export class NativeModuleError extends TreeSitterError {
  * Utility function to create appropriate error based on context
  */
 export function createOptimizedError(
-  type: "parser" | "grammar" | "wasm" | "native",
+  type: "parser" | "native",
   language: string,
   details: Record<string, unknown>,
   cause?: Error,
@@ -245,18 +175,7 @@ export function createOptimizedError(
       return new ParserLoadError(
         language,
         details.nativeError as Error | undefined,
-        details.wasmError as Error | undefined,
-        { context: details },
-      );
-    case "grammar":
-      return new GrammarDownloadError(language, details.url as string, cause, {
-        context: details,
-      });
-    case "wasm":
-      return new WASMIntegrationError(
-        language,
-        details.grammarPath as string,
-        cause,
+        undefined,
         { context: details },
       );
     case "native":
