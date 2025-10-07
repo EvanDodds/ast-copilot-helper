@@ -1,5 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import * as path from "path";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   SUPPORTED_LANGUAGES,
   LanguageDetector,
@@ -25,12 +24,8 @@ describe("Language Support Configuration", () => {
         expect(config.name).toBeTruthy();
         expect(config.extensions).toBeInstanceOf(Array);
         expect(config.extensions.length).toBeGreaterThan(0);
-        expect(config.grammarUrl || config.parserModule).toBeTruthy();
-        if (config.grammarUrl) {
-          // Grammar hash can be empty for runtime generation
-          expect(typeof config.grammarHash).toBe("string");
-          expect(config.wasmPath).toBeTruthy();
-        }
+        expect(config.parserModule).toBeTruthy();
+        expect(typeof config.parserModule).toBe("string");
       }
     });
 
@@ -225,9 +220,7 @@ describe("Language Support Configuration", () => {
         const rustConfig: LanguageConfig = {
           name: "rust",
           extensions: [".rs"],
-          grammarUrl: "https://example.com/rust.wasm",
-          grammarHash: "mock-hash",
-          wasmPath: "rust.wasm",
+          parserModule: "tree-sitter-rust",
         };
 
         LanguageDetector.addLanguage(rustConfig);
@@ -244,17 +237,13 @@ describe("Language Support Configuration", () => {
         const newTsConfig: LanguageConfig = {
           name: "typescript",
           extensions: [".ts", ".tsx", ".d.ts"], // Added .d.ts
-          grammarUrl: "https://example.com/typescript-new.wasm",
-          grammarHash: "new-hash",
-          wasmPath: "typescript-new.wasm",
-          parserModule: "tree-sitter-typescript-new", // Keep parserModule
+          parserModule: "tree-sitter-typescript-new",
         };
 
         LanguageDetector.addLanguage(newTsConfig);
 
         const updatedConfig = LanguageDetector.getLanguageConfig("typescript");
         expect(updatedConfig?.extensions).toContain(".d.ts");
-        expect(updatedConfig?.grammarHash).toBe("new-hash");
         expect(updatedConfig?.parserModule).toBe("tree-sitter-typescript-new");
       });
 
@@ -267,10 +256,8 @@ describe("Language Support Configuration", () => {
           LanguageDetector.addLanguage({
             name: "test",
             extensions: [],
-            grammarUrl: "",
-            grammarHash: "",
-            wasmPath: "",
-          } as LanguageConfig);
+            parserModule: "",
+          });
         }).toThrow("Invalid language configuration");
       });
     });
@@ -346,9 +333,8 @@ describe("Language Support Configuration", () => {
         const stats = LanguageDetector.getLanguageStats();
 
         expect(stats.typescript).toBeDefined();
-        expect(stats.typescript.extensions).toBeGreaterThan(0);
-        expect(stats.typescript.hasNative).toBe(true);
-        expect(stats.typescript.hasWasm).toBe(true);
+        expect(stats.typescript.extensions.length).toBeGreaterThan(0);
+        expect(stats.typescript.supported).toBe(true);
 
         expect(stats.python).toBeDefined();
         expect(stats.javascript).toBeDefined();
@@ -378,9 +364,7 @@ describe("Language Support Configuration", () => {
         const testConfig: LanguageConfig = {
           name: "test-lang",
           extensions: [".test"],
-          grammarUrl: "https://example.com/test.wasm",
-          grammarHash: "test-hash",
-          wasmPath: "test.wasm",
+          parserModule: "tree-sitter-test",
         };
 
         LanguageDetector.addLanguage(testConfig);

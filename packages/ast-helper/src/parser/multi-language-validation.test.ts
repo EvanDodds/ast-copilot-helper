@@ -141,8 +141,23 @@ class Repository(Generic[T]):
       await expect(grammarManager.loadParser("rust")).rejects.toThrow();
     });
 
-    it("should detect incompatible C parser modules", async () => {
-      await expect(grammarManager.loadParser("c")).rejects.toThrow();
+    it("should successfully parse C code (native parser now works)", async () => {
+      // C parser now works after version conflict fix
+      const parser = await grammarManager.loadParser("c");
+      expect(parser).toBeDefined();
+
+      const code = `
+int main() {
+    int x = 5;
+    printf("Hello, world!");
+    return 0;
+}`;
+
+      const tree = (parser as any).parse(code);
+      expect(tree).toBeDefined();
+      expect(tree.rootNode).toBeDefined();
+      expect(tree.rootNode.type).toBe("translation_unit");
+      expect(tree.rootNode.hasError).toBe(false);
     });
 
     it("should detect incompatible C++ parser modules", async () => {
@@ -165,7 +180,7 @@ class Repository(Generic[T]):
 
     it("should throw for completely unsupported languages", async () => {
       await expect(grammarManager.loadParser("nonexistent")).rejects.toThrow(
-        "Unsupported language: nonexistent",
+        "Failed to load parser for language 'nonexistent'. Native parser failed.",
       );
     });
   });

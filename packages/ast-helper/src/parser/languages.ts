@@ -13,22 +13,17 @@ import type { LanguageConfig } from "./types.js";
 export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   {
     name: "typescript",
-    extensions: [".ts"],
+    extensions: [".ts", ".tsx"],
     parserModule: "tree-sitter-typescript/typescript",
   },
   {
-    name: "tsx",
-    extensions: [".tsx"],
-    parserModule: "tree-sitter-typescript/tsx",
-  },
-  {
     name: "javascript",
-    extensions: [".js", ".mjs", ".cjs"],
+    extensions: [".js", ".jsx", ".mjs", ".cjs"],
     parserModule: "tree-sitter-javascript",
   },
   {
     name: "python",
-    extensions: [".py"],
+    extensions: [".py", ".pyi", ".pyw"],
     parserModule: "tree-sitter-python",
   },
   {
@@ -142,11 +137,15 @@ export function getLanguageConfig(language: string): LanguageConfig | null {
  * Returns null if extension is not supported
  */
 export function getLanguageFromExtension(extension: string): string | null {
-  // Normalize extension (ensure it starts with .)
-  const normalizedExt = extension.startsWith(".") ? extension : `.${extension}`;
+  // Normalize extension (ensure it starts with .) and make case-insensitive
+  const normalizedExt = (
+    extension.startsWith(".") ? extension : `.${extension}`
+  ).toLowerCase();
 
   for (const config of SUPPORTED_LANGUAGES) {
-    if (config.extensions.includes(normalizedExt)) {
+    if (
+      config.extensions.map((ext) => ext.toLowerCase()).includes(normalizedExt)
+    ) {
       return config.name;
     }
   }
@@ -165,7 +164,9 @@ export function getSupportedLanguages(): string[] {
  * Check if a language is supported
  */
 export function isLanguageSupported(language: string): boolean {
-  return SUPPORTED_LANGUAGES.some((config) => config.name === language);
+  return SUPPORTED_LANGUAGES.some(
+    (config) => config.name.toLowerCase() === language.toLowerCase(),
+  );
 }
 
 /**

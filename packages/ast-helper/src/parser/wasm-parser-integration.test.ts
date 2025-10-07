@@ -31,110 +31,62 @@ describe("WASM Parser Integration", () => {
     }
   });
 
-  describe("WASM Fallback for Incompatible Native Parsers", () => {
-    it("should fall back to WASM for Java parser", async () => {
-      // Java parser doesn't have native language property, so should attempt WASM fallback
-      try {
-        await grammarManager.loadParser("java");
-        // If it succeeds, the WASM fallback worked
-        // If it fails, we expect a specific WASM-related error
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-
-        // Should show it attempted WASM fallback - the error message contains both native and WASM attempts
-        expect(
-          errorMessage.includes("WASM fallback required") ||
-            errorMessage.includes("Failed to load WASM parser") ||
-            errorMessage.includes("Both methods failed"),
-        ).toBe(true);
-      }
+  describe("Native-Only Language Support", () => {
+    it("should fail cleanly for Java (native parser unavailable)", async () => {
+      // Java should fail in native-only architecture since no compatible native parser exists
+      await expect(grammarManager.loadParser("java")).rejects.toThrow(
+        "Failed to load parser for language 'java'. Native parser failed.",
+      );
     });
 
-    it("should fall back to WASM for C# parser", async () => {
-      try {
-        await grammarManager.loadParser("csharp");
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        // Should show it attempted both native and WASM parsers
-        expect(
-          errorMessage.includes("Failed to load parser for language") &&
-            errorMessage.includes("Native Parser:") &&
-            errorMessage.includes("WASM Parser:"),
-        ).toBe(true);
-      }
+    it("should fail cleanly for C# parser (native parser unavailable)", async () => {
+      // C# should fail in native-only architecture since no compatible native parser exists
+      await expect(grammarManager.loadParser("csharp")).rejects.toThrow(
+        "Failed to load parser for language 'csharp'. Native parser failed.",
+      );
     });
 
-    it("should fall back to WASM for Go parser", async () => {
-      try {
-        await grammarManager.loadParser("go");
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        // Should show it attempted both native and WASM parsers
-        expect(
-          errorMessage.includes("Failed to load parser for language") &&
-            errorMessage.includes("Native Parser:") &&
-            errorMessage.includes("WASM Parser:"),
-        ).toBe(true);
-      }
+    it("should fail cleanly for Go parser (native parser unavailable)", async () => {
+      // Go should fail in native-only architecture since no compatible native parser exists
+      await expect(grammarManager.loadParser("go")).rejects.toThrow(
+        "Failed to load parser for language 'go'. Native parser failed.",
+      );
     });
 
-    it("should provide clear error messages for WASM failures", async () => {
-      // Remove test environment to trigger actual WASM download attempts
-      delete process.env.NODE_ENV;
-
-      try {
-        await grammarManager.loadParser("rust");
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-
-        // Should contain helpful information about the parser failure
-        expect(
-          errorMessage.includes("Failed to load parser for language") ||
-            errorMessage.includes("Failed to load WASM parser") ||
-            errorMessage.includes("Failed to download grammar") ||
-            errorMessage.includes("Native Parser:") ||
-            errorMessage.includes("WASM Parser:"),
-        ).toBe(true);
-      }
+    it("should provide clear error messages for native parser failures", async () => {
+      // Test that unsupported languages provide clear error messages
+      await expect(grammarManager.loadParser("rust")).rejects.toThrow(
+        "Failed to load parser for language 'rust'. Native parser failed.",
+      );
     });
   });
 
-  describe("Native vs WASM Loading Strategy", () => {
-    it("should clearly distinguish between native and WASM loading errors", async () => {
-      const workingLanguages = ["typescript", "javascript", "python"];
-      const wasmOnlyLanguages = ["java", "csharp", "go", "rust", "c", "cpp"];
+  describe("Native-Only Loading Strategy Validation", () => {
+    it("should correctly handle supported and unsupported languages in native-only mode", async () => {
+      const supportedLanguages = ["typescript", "javascript", "python", "c"];
+      const unsupportedLanguages = ["java", "csharp", "go", "rust", "cpp"];
 
-      for (const language of workingLanguages) {
+      // Test supported languages - should work
+      for (const language of supportedLanguages) {
         try {
           const parser = await grammarManager.loadParser(language);
           expect(parser).toBeDefined();
+          expect(typeof (parser as any).parse).toBe("function");
         } catch (error) {
-          // Working languages should either succeed or fail for different reasons
+          // If supported languages fail, it should not be due to WASM fallback
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          expect(errorMessage).not.toContain("WASM fallback required");
+          expect(errorMessage).not.toContain("WASM");
+          // Re-throw to fail the test since these should work
+          throw error;
         }
       }
 
-      for (const language of wasmOnlyLanguages) {
-        try {
-          await grammarManager.loadParser(language);
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          // WASM-only languages should show comprehensive error information
-          expect(
-            errorMessage.includes("Failed to load parser for language") ||
-              errorMessage.includes("Failed to load WASM parser") ||
-              errorMessage.includes("Failed to download grammar") ||
-              errorMessage.includes("Native Parser:") ||
-              errorMessage.includes("WASM Parser:"),
-          ).toBe(true);
-        }
+      // Test unsupported languages - should fail with native error
+      for (const language of unsupportedLanguages) {
+        await expect(grammarManager.loadParser(language)).rejects.toThrow(
+          `Failed to load parser for language '${language}'. Native parser failed.`,
+        );
       }
     });
   });
