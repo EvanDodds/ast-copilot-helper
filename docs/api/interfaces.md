@@ -20,16 +20,10 @@ class ParserFactory {
     grammarManager?: TreeSitterGrammarManager,
   ): Promise<NativeTreeSitterParser>;
 
-  /** Create WASM parser (fallback runtime) */
-  static createWASMParser(
-    grammarManager?: TreeSitterGrammarManager,
-  ): Promise<WASMTreeSitterParser>;
-
   /** Get runtime availability information */
   static getRuntimeInfo(): Promise<{
     native: { available: boolean; error?: string };
-    wasm: { available: boolean; error?: string };
-    recommended: "native" | "wasm";
+    recommended: "native";
   }>;
 }
 ```

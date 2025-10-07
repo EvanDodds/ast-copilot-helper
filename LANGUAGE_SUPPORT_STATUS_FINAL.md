@@ -65,7 +65,7 @@ The fact that C, Go, and Bash work in direct tests but fail in the comprehensive
 1. Different module resolution paths
 2. Different error handling in framework vs direct test
 3. Possible race conditions or async loading issues
-4. Framework might be using WASM fallback instead of native parsers
+4. Framework uses native-only parsers for optimal performance
 
 ## Recommendations for 100% Specification Compliance:
 

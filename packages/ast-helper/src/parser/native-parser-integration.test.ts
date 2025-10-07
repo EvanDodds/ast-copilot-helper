@@ -1,6 +1,6 @@
 /**
- * Test WASM parser functionality
- * This test validates that WASM fallback works for languages that don't support native parsing
+ * Test native parser integration
+ * This test validates native-only architecture behavior for unsupported languages
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
@@ -8,7 +8,7 @@ import { TreeSitterGrammarManager } from "./grammar-manager.js";
 import * as path from "path";
 import * as fs from "fs/promises";
 
-describe("WASM Parser Integration", () => {
+describe("Native Parser Integration", () => {
   let grammarManager: TreeSitterGrammarManager;
   const testCacheDir = path.join(process.cwd(), "test-tmp", "wasm-parser-test");
 

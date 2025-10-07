@@ -295,7 +295,7 @@ npm install tree-sitter-python
 ast-copilot-helper doctor --parsers
 
 # Manual parser rebuild
-npx tree-sitter build --wasm
+npx tree-sitter build
 ```
 
 #### Problem: Large files cause memory issues

@@ -149,7 +149,7 @@ yarn run test:rust:fmt        # Code formatting check (cargo fmt --check)
 
 - **Compilation**: Ensures all Rust code compiles without errors
 - **Unit Tests**: Validates core engine functionality and edge cases
-- **Integration Tests**: Tests WASM bindings and Node.js integration
+- **Integration Tests**: Tests native bindings and Node.js integration
 - **Code Quality**: Clippy linting catches common issues and suggests improvements
 - **Formatting**: Consistent code style with `rustfmt`
 
@@ -161,9 +161,9 @@ The Rust core engine is optimized for development speed:
 - Production builds use full optimization for maximum performance
 - Testing validates both compilation correctness and runtime behavior
 
-### Native-First Architecture with WASM Development
+### Native-Only Architecture
 
-The core engine uses a native-first approach with NAPI bindings for production deployments, with WASM builds planned for future universal deployment.
+The core engine uses a native-only approach with NAPI bindings for optimal performance and reliability.
 
 #### Current Architecture: Native NAPI
 
@@ -181,48 +181,16 @@ cargo build --release     # Native compilation for current platform
 - Direct system integration and I/O capabilities
 - Full access to Rust ecosystem including networking and file system
 
-#### WASM Build Infrastructure (In Development)
+#### Native Architecture
 
-WASM build infrastructure is implemented but currently limited by dependency compatibility.
-
-**Prerequisites:**
-
-```bash
-# Install WASM target (configured but not production-ready)
-rustup target add wasm32-unknown-unknown
-cargo install wasm-pack
-```
-
-**Build Commands (Development Only):**
-
-```bash
-# WASM build attempts (currently blocked by dependency issues)
-cd packages/ast-core-engine
-npm run build:wasm         # Will fail due to tokio/mio incompatibility
-npm run build:wasm:release # Not currently functional
-```
-
-**Current WASM Limitations:**
-
-- `tokio` with networking features requires `mio` which doesn't support WASM
-- Vector database dependencies may have similar compatibility issues
-- See `packages/ast-core-engine/WASM_BUILD_NOTES.md` for full technical analysis
-
-#### Native-First Code Structure
-
-The codebase is structured for native performance with WASM compatibility planned:
+The codebase uses native-only architecture for optimal performance:
 
 ```rust
-// Native-optimized code (current production target)
+// Native-optimized code (production target)
 use napi::bindgen_prelude::*;
 use tokio::runtime::Runtime;
 
-// WASM-compatible subset (future target)
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-
-// Conditional compilation for different targets
-#[cfg(not(target_arch = "wasm32"))]
+// Native implementation
 use crate::native_impl::*;
 ```
 

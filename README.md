@@ -66,7 +66,7 @@ ast-copilot-helper/                 # Monorepo root
 │  │  └─ dist/                      # Compiled output
 │  ├─ ast-core-engine/              # ⚡ High-performance Rust engine
 │  │  ├─ src/                       # Rust source (NAPI)
-│  │  ├─ pkg/                       # Build output (WASM planned)
+│  │  ├─ pkg/                       # Build output (native)
 │  │  ├─ target/                    # Rust build artifacts
 │  │  └─ Cargo.toml                 # Rust configuration
 │  ├─ ast-mcp-server/               # 🤖 MCP protocol server
@@ -132,11 +132,11 @@ AST Copilot Helper uses a **native-first architecture** combining TypeScript fle
 
 ### Native-First Engine Architecture
 
-| Target              | Use Case                        | Performance          | Compatibility              |
-| ------------------- | ------------------------------- | -------------------- | -------------------------- |
-| **Native (NAPI)**   | Node.js environments            | 🔥 100% native speed | Node.js with native builds |
-| **TypeScript Core** | Cross-platform fallback         | ⚡ Good performance  | Universal compatibility    |
-| **WASM (Future)**   | Browsers, edge (in development) | � Under development  | Universal (when ready)     |
+| Target               | Use Case                | Performance          | Compatibility              |
+| -------------------- | ----------------------- | -------------------- | -------------------------- |
+| **Native (NAPI)**    | Node.js environments    | 🔥 100% native speed | Node.js with native builds |
+| **TypeScript Core**  | Cross-platform fallback | ⚡ Good performance  | Universal compatibility    |
+| **Native (Current)** | Production environments | 🚀 Production ready  | Node.js with native builds |
 
 ### Key Performance Features
 
@@ -153,7 +153,7 @@ AST Copilot Helper uses a **native-first architecture** combining TypeScript fle
 - Batch processing: 5000+ files with intelligent memory management
 - Language support: 15 languages across 3 performance tiers
 
-**Note**: WASM builds are in development but currently limited by dependency compatibility issues. Production deployments use native NAPI builds for optimal performance.
+**Note**: The system uses native-only architecture for optimal performance and reliability.
 
 ## CI/CD Pipeline
 
