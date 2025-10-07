@@ -6,7 +6,7 @@
  */
 
 import { spawn } from "child_process";
-import { promises as fs } from "fs";
+import { promises as fs, existsSync } from "fs";
 import { join } from "path";
 import { performance } from "perf_hooks";
 import { fileURLToPath } from "url";
@@ -80,6 +80,84 @@ export interface RustParserStats {
   average_parse_time_ms: number;
 }
 
+// Annotation interfaces
+export interface RustAnnotateRequest {
+  file_path: string;
+  language?: string;
+}
+
+export interface RustAnnotationParameter {
+  name: string;
+  param_type: string;
+  optional: boolean;
+  default_value: string | null;
+}
+
+export interface RustComplexityMetrics {
+  cyclomatic: number;
+  cognitive: number;
+  max_nesting: number;
+  decision_points: number;
+  category: string;
+  breakdown: {
+    branches: number;
+    loops: number;
+    returns: number;
+  };
+}
+
+export interface RustDependencies {
+  imports: string[];
+  exports: string[];
+  calls: string[];
+  internal_dependencies: string[];
+  external_dependencies: string[];
+}
+
+export interface RustAnnotation {
+  node_type: string;
+  signature: string;
+  summary: string;
+  language: string;
+  start_line: number;
+  end_line: number;
+  parameters: RustAnnotationParameter[];
+  return_type: string | null;
+  modifiers: string[];
+  semantic_tags: string[];
+  complexity_metrics: RustComplexityMetrics;
+  dependencies: RustDependencies;
+}
+
+export interface RustAnnotateResult {
+  annotations: RustAnnotation[];
+  file_path: string;
+  language: string;
+  total_nodes: number;
+  processing_time_ms: number;
+  summary: string;
+}
+
+export interface RustBatchAnnotateRequest {
+  files: RustAnnotateRequest[];
+  max_concurrency?: number;
+}
+
+export interface RustBatchAnnotateResult {
+  success: boolean;
+  results: Record<
+    string,
+    {
+      success: boolean;
+      result?: RustAnnotateResult;
+      error?: string;
+    }
+  >;
+  total_files: number;
+  successful_files: number;
+  total_processing_time_ms: number;
+}
+
 export class RustCliError extends Error {
   constructor(
     message: string,
@@ -109,18 +187,29 @@ export class RustParserCli {
   }
 
   private getDefaultCliPath(): string {
-    // Look for the compiled binary in the expected location
+    // Look for the compiled binary in the expected location (prefer release over debug)
     const possiblePaths = [
-      join(process.cwd(), "packages/ast-core-engine/target/debug/ast-parser"),
       join(process.cwd(), "packages/ast-core-engine/target/release/ast-parser"),
-      join(__dirname, "../../ast-core-engine/target/debug/ast-parser"),
+      join(process.cwd(), "packages/ast-core-engine/target/debug/ast-parser"),
       join(__dirname, "../../ast-core-engine/target/release/ast-parser"),
-      join(__dirname, "../../../ast-core-engine/target/debug/ast-parser"),
+      join(__dirname, "../../ast-core-engine/target/debug/ast-parser"),
       join(__dirname, "../../../ast-core-engine/target/release/ast-parser"),
+      join(__dirname, "../../../ast-core-engine/target/debug/ast-parser"),
       "ast-parser", // If in PATH
     ];
 
-    return possiblePaths[0] || "ast-parser";
+    // Check which path actually exists
+    for (const path of possiblePaths) {
+      try {
+        if (existsSync(path)) {
+          return path;
+        }
+      } catch {
+        // Continue to next path
+      }
+    }
+
+    return "ast-parser"; // Fallback to PATH
   }
 
   /**
@@ -294,6 +383,127 @@ export class RustParserCli {
   }
 
   /**
+   * Annotate a single file
+   */
+  async annotateFile(
+    filePath: string,
+    language?: string,
+  ): Promise<RustAnnotateResult> {
+    const startTime = performance.now();
+
+    if (this.verbose) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[Rust Annotator] Annotating ${filePath} (${language || "auto-detect"})`,
+      );
+    }
+
+    const args = ["annotate", "--file", filePath, "--format", "json"];
+
+    if (language) {
+      args.push("--language", language);
+    }
+
+    if (this.verbose) {
+      args.push("--verbose");
+    }
+
+    const result = await this.runCliCommand<{
+      success: boolean;
+      data?: RustAnnotateResult;
+      error?: string;
+    }>(args);
+
+    const endTime = performance.now();
+
+    if (this.verbose) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[Rust Annotator] Completed in ${(endTime - startTime).toFixed(2)}ms`,
+      );
+    }
+
+    if (!result.success || !result.data) {
+      throw new RustCliError(
+        `Annotation failed: ${result.error || "Unknown error"}. Full result: ${JSON.stringify(result)}`,
+      );
+    }
+
+    return result.data as unknown as RustAnnotateResult;
+  }
+
+  /**
+   * Annotate multiple files in batch
+   */
+  async annotateFiles(
+    filePaths: string[],
+    options: {
+      language?: string;
+      maxConcurrency?: number;
+    } = {},
+  ): Promise<RustBatchAnnotateResult> {
+    const startTime = performance.now();
+
+    if (this.verbose) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[Rust Annotator] Batch annotating ${filePaths.length} files (concurrency: ${options.maxConcurrency || "default"})`,
+      );
+    }
+
+    // For now, process files individually since Rust CLI doesn't have batch annotate yet
+    // This can be optimized later with a dedicated batch annotate command in Rust
+    const results: Record<
+      string,
+      {
+        success: boolean;
+        result?: RustAnnotateResult;
+        error?: string;
+      }
+    > = {};
+
+    let successCount = 0;
+    const concurrency = options.maxConcurrency || this.maxParsers;
+
+    // Process files in batches
+    for (let i = 0; i < filePaths.length; i += concurrency) {
+      const batch = filePaths.slice(i, i + concurrency);
+
+      await Promise.all(
+        batch.map(async (filePath) => {
+          try {
+            const result = await this.annotateFile(filePath, options.language);
+            results[filePath] = { success: true, result };
+            successCount++;
+          } catch (error) {
+            results[filePath] = {
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+        }),
+      );
+    }
+
+    const endTime = performance.now();
+
+    if (this.verbose) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[Rust Annotator] Batch completed in ${(endTime - startTime).toFixed(2)}ms`,
+      );
+    }
+
+    return {
+      success: true,
+      results,
+      total_files: filePaths.length,
+      successful_files: successCount,
+      total_processing_time_ms: endTime - startTime,
+    };
+  }
+
+  /**
    * Get parser statistics
    */
   async getStats(): Promise<RustParserStats> {
@@ -447,6 +657,12 @@ export const parseFiles = (
   filePaths: string[],
   options?: { language?: string; maxConcurrency?: number },
 ) => rustParser.parseFiles(filePaths, options);
+export const annotateFile = (filePath: string, language?: string) =>
+  rustParser.annotateFile(filePath, language);
+export const annotateFiles = (
+  filePaths: string[],
+  options?: { language?: string; maxConcurrency?: number },
+) => rustParser.annotateFiles(filePaths, options);
 export const getSupportedLanguages = () => rustParser.getSupportedLanguages();
 export const isLanguageSupported = (language: string) =>
   rustParser.isLanguageSupported(language);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports, no-console */
 const C = require('tree-sitter-c');
 console.log('tree-sitter-c module structure:');
 console.log('  typeof C:', typeof C);
