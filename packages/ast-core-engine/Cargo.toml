@@ -73,6 +73,7 @@ fastrand = "2.0"
 
 # CLI dependencies
 clap = { version = "4.0", features = ["derive"], optional = true }
+serde_yaml = { version = "0.9", optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
@@ -82,7 +83,7 @@ tempfile = "3.0"
 [features]
 default = ["full-system"]
 wasm = [] # WASM build without system dependencies
-full-system = ["sqlx", "sysinfo", "num_cpus", "tree-sitter", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript", "tree-sitter-c", "tree-sitter-java", "tree-sitter-cpp", "tree-sitter-c-sharp", "tree-sitter-rust", "tree-sitter-go", "libc", "tokio/fs", "sqlx/runtime-tokio", "clap"] # Include system dependencies for native builds
+full-system = ["sqlx", "sysinfo", "num_cpus", "tree-sitter", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript", "tree-sitter-c", "tree-sitter-java", "tree-sitter-cpp", "tree-sitter-c-sharp", "tree-sitter-rust", "tree-sitter-go", "libc", "tokio/fs", "sqlx/runtime-tokio", "clap", "serde_yaml"] # Include system dependencies for native builds
 
 [profile.release]
 lto = true

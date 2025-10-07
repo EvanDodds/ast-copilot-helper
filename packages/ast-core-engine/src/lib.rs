@@ -9,6 +9,8 @@
 //! and minimal binary size.
 
 // Core modules
+#[cfg(any(feature = "wasm", feature = "full-system", test))] // Annotation engine
+pub mod annotation;
 #[cfg(any(feature = "wasm", feature = "full-system", test))] // AST processor needs tree-sitter
 pub mod ast_processor;
 #[cfg(feature = "full-system")] // Batch processor needs file system access
@@ -36,6 +38,13 @@ pub use config::*;
 pub use error::*;
 pub use types::*;
 pub use vector_db::SimpleVectorDb;
+
+// Re-export annotation functionality (specific items to avoid conflicts)
+#[cfg(any(feature = "wasm", feature = "full-system", test))]
+pub use annotation::{
+    AnnotationConfig, AnnotationEngine, AnnotationError, AnnotationResult, ComplexityAnalyzer,
+    ComplexityMetrics, DependencyAnalyzer, DependencyInfo, LanguageExtractor,
+};
 
 // Re-export WASM bindings
 pub use wasm_bindings::*;

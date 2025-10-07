@@ -6,6 +6,8 @@
 use ast_helper_core_engine::{
     ast_processor::SupportedLanguage,
     parse_interface::{BatchParseRequest, ParseRequest, RustParser},
+    types::{ASTNode, Point},
+    AnnotationEngine, ComplexityAnalyzer, DependencyAnalyzer,
 };
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
@@ -74,6 +76,63 @@ enum Commands {
 
     /// Get parser statistics
     Stats,
+
+    /// Generate comprehensive annotations for a file
+    Annotate {
+        /// File path to annotate
+        #[arg(short, long, required_unless_present = "stdin")]
+        file: Option<PathBuf>,
+
+        /// Language override (auto-detected if not specified)
+        #[arg(short, long)]
+        language: Option<String>,
+
+        /// Read source from stdin instead of file
+        #[arg(long)]
+        stdin: bool,
+
+        /// Output format: json, yaml, or summary
+        #[arg(long, default_value = "json")]
+        format: String,
+    },
+
+    /// Analyze code complexity metrics
+    AnalyzeComplexity {
+        /// File path to analyze
+        #[arg(short, long, required_unless_present = "stdin")]
+        file: Option<PathBuf>,
+
+        /// Language override (auto-detected if not specified)
+        #[arg(short, long)]
+        language: Option<String>,
+
+        /// Read source from stdin instead of file
+        #[arg(long)]
+        stdin: bool,
+
+        /// Output format: json, yaml, or summary
+        #[arg(long, default_value = "summary")]
+        format: String,
+    },
+
+    /// Analyze dependency relationships
+    AnalyzeDependencies {
+        /// File path to analyze
+        #[arg(short, long, required_unless_present = "stdin")]
+        file: Option<PathBuf>,
+
+        /// Language override (auto-detected if not specified)
+        #[arg(short, long)]
+        language: Option<String>,
+
+        /// Read source from stdin instead of file
+        #[arg(long)]
+        stdin: bool,
+
+        /// Output format: json, yaml, or summary
+        #[arg(long, default_value = "summary")]
+        format: String,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -251,6 +310,219 @@ async fn handle_batch(
     Ok(())
 }
 
+async fn handle_annotate(
+    parser: &RustParser,
+    file: Option<PathBuf>,
+    language: Option<String>,
+    stdin: bool,
+    format: &str,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let (source_code, file_path) = get_source_input(file, stdin)?;
+    let lang = language.as_ref().and_then(|l| string_to_language(l));
+
+    if verbose {
+        eprintln!("Generating annotations for: {}", file_path);
+    }
+
+    // Parse the file first
+    let request = ParseRequest {
+        source_code: source_code.clone(),
+        file_path: file_path.clone(),
+        language: lang.clone(),
+    };
+
+    let parse_result = parser.parse(request);
+
+    if !parse_result.success {
+        return Err(parse_result
+            .error
+            .unwrap_or("Parse failed".to_string())
+            .into());
+    }
+
+    let ast_result = parse_result.result.ok_or("No parse result")?;
+
+    // Create annotation engine and analyze
+    let _engine = AnnotationEngine::new();
+    let _language_str = lang
+        .map(|l| format!("{:?}", l))
+        .unwrap_or_else(|| "unknown".to_string());
+
+    // For now, create a simple annotation for the whole file
+    // TODO: Convert AstNode to ASTNode structure or work with existing nodes
+    let annotation_summary = format!(
+        "File: {}\nLanguage: {}\nTotal nodes: {}\nProcessing time: {}ms",
+        file_path, ast_result.language, ast_result.total_nodes, ast_result.processing_time_ms
+    );
+
+    let result = serde_json::json!({
+        "file_path": file_path,
+        "language": ast_result.language,
+        "total_nodes": ast_result.total_nodes,
+        "processing_time_ms": ast_result.processing_time_ms,
+        "summary": annotation_summary
+    });
+
+    match format {
+        "yaml" => {
+            println!("{}", serde_yaml::to_string(&result)?);
+        }
+        "summary" => {
+            println!("{}", annotation_summary);
+        }
+        _ => {
+            output_json(CliResponse::success(result))?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_complexity(
+    _parser: &RustParser,
+    file: Option<PathBuf>,
+    _language: Option<String>,
+    stdin: bool,
+    format: &str,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let (source_code, file_path) = get_source_input(file, stdin)?;
+
+    if verbose {
+        eprintln!("Analyzing complexity for: {}", file_path);
+    }
+
+    // For now, provide a simple text-based complexity analysis
+    let analyzer = ComplexityAnalyzer::new();
+
+    // Create a dummy ASTNode to work with the text-based approach
+    let dummy_node = ASTNode {
+        id: "root".to_string(),
+        node_type: "program".to_string(),
+        start_byte: 0,
+        end_byte: source_code.len() as u32,
+        start_point: Point { row: 0, column: 0 },
+        end_point: Point {
+            row: source_code.lines().count() as u32,
+            column: 0,
+        },
+        text: source_code.clone(),
+        language: "unknown".to_string(),
+        complexity: 1,
+        parent_id: None,
+        children_ids: vec![],
+    };
+
+    let metrics = analyzer.analyze_node(&dummy_node, &source_code);
+
+    match format {
+        "yaml" => {
+            println!("{}", serde_yaml::to_string(&metrics)?);
+        }
+        "json" => {
+            output_json(CliResponse::success(metrics))?;
+        }
+        _ => {
+            println!("Complexity Analysis for: {}", file_path);
+            println!("Cyclomatic complexity: {}", metrics.cyclomatic);
+            println!("Cognitive complexity: {}", metrics.cognitive);
+            println!("Max nesting depth: {}", metrics.max_nesting);
+            println!("Decision points: {}", metrics.decision_points);
+            println!("Category: {:?}", metrics.category);
+            if !metrics.breakdown.is_empty() {
+                println!("\nComplexity breakdown:");
+                for (decision_type, count) in &metrics.breakdown {
+                    println!("  {}: {}", decision_type, count);
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_dependencies(
+    _parser: &RustParser,
+    file: Option<PathBuf>,
+    _language: Option<String>,
+    stdin: bool,
+    format: &str,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let (source_code, file_path) = get_source_input(file, stdin)?;
+
+    if verbose {
+        eprintln!("Analyzing dependencies for: {}", file_path);
+    }
+
+    // Create a dummy ASTNode to work with the text-based approach
+    let dummy_node = ASTNode {
+        id: "root".to_string(),
+        node_type: "program".to_string(),
+        start_byte: 0,
+        end_byte: source_code.len() as u32,
+        start_point: Point { row: 0, column: 0 },
+        end_point: Point {
+            row: source_code.lines().count() as u32,
+            column: 0,
+        },
+        text: source_code.clone(),
+        language: "unknown".to_string(),
+        complexity: 1,
+        parent_id: None,
+        children_ids: vec![],
+    };
+
+    // Analyze dependencies
+    let analyzer = DependencyAnalyzer::new();
+    let deps = analyzer.analyze_node(&dummy_node, &source_code, &file_path);
+
+    match format {
+        "yaml" => {
+            println!("{}", serde_yaml::to_string(&deps)?);
+        }
+        "json" => {
+            output_json(CliResponse::success(deps))?;
+        }
+        _ => {
+            println!("Dependency Analysis for: {}", file_path);
+            println!("Imports: {:?}", deps.imports);
+            println!("Exports: {:?}", deps.exports);
+            if !deps.external_dependencies.is_empty() {
+                println!("External dependencies: {:?}", deps.external_dependencies);
+            }
+            if !deps.calls.is_empty() {
+                println!("Function calls: {:?}", deps.calls);
+            }
+            if !deps.internal_dependencies.is_empty() {
+                println!("Internal dependencies: {:?}", deps.internal_dependencies);
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn get_source_input(
+    file: Option<PathBuf>,
+    stdin: bool,
+) -> Result<(String, String), Box<dyn std::error::Error>> {
+    if stdin {
+        let mut input = String::new();
+        let stdin = io::stdin();
+        for line in stdin.lock().lines() {
+            input.push_str(&line?);
+            input.push('\n');
+        }
+        Ok((input, "<stdin>".to_string()))
+    } else {
+        let file_path = file.ok_or("File path required when not using stdin")?;
+        let source_code = fs::read_to_string(&file_path)?;
+        Ok((source_code, file_path.to_string_lossy().to_string()))
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
@@ -310,6 +582,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Stats => {
             let stats = parser.get_stats();
             output_json(CliResponse::success(stats))?;
+        }
+
+        Commands::Annotate {
+            file,
+            language,
+            stdin,
+            format,
+        } => {
+            handle_annotate(&parser, file, language, stdin, &format, cli.verbose).await?;
+        }
+
+        Commands::AnalyzeComplexity {
+            file,
+            language,
+            stdin,
+            format,
+        } => {
+            handle_complexity(&parser, file, language, stdin, &format, cli.verbose).await?;
+        }
+
+        Commands::AnalyzeDependencies {
+            file,
+            language,
+            stdin,
+            format,
+        } => {
+            handle_dependencies(&parser, file, language, stdin, &format, cli.verbose).await?;
         }
     }
 
