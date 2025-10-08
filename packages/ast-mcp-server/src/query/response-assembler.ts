@@ -55,7 +55,7 @@ interface MCPResource {
 interface MCPTool {
   name: string;
   description: string;
-  inputSchema: any;
+  inputSchema: Record<string, unknown>;
 }
 
 /**
@@ -482,6 +482,54 @@ export class ResponseAssembler {
             recursive: { type: "boolean", description: "Search recursively" },
           },
           required: ["filePath"],
+        },
+      },
+      {
+        name: "cache_stats",
+        description: "Get query cache statistics and performance metrics",
+        inputSchema: {
+          type: "object",
+          properties: {
+            detailed: {
+              type: "boolean",
+              description: "Include detailed per-level cache statistics",
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: "cache_warm",
+        description: "Pre-warm cache with common queries",
+        inputSchema: {
+          type: "object",
+          properties: {
+            queries: {
+              type: "array",
+              description: "List of queries to pre-load into cache",
+              items: { type: "string" },
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: "cache_prune",
+        description: "Prune old or least-used cache entries",
+        inputSchema: {
+          type: "object",
+          properties: {
+            strategy: {
+              type: "string",
+              enum: ["lru", "age", "size"],
+              description: "Pruning strategy to use",
+            },
+            limit: {
+              type: "number",
+              description: "Maximum entries to keep or age in seconds",
+            },
+          },
+          required: [],
         },
       },
     ];

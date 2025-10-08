@@ -359,21 +359,105 @@ export class MCPClientManager extends EventEmitter {
     }
 
     try {
+      const startTime = Date.now();
       this.outputChannel.appendLine(
-        `Calling tool: ${name} with args: ${JSON.stringify(arguments_)}`,
+        `📤 Calling tool: ${name} with args: ${JSON.stringify(arguments_)}`,
       );
+
       const result = await this.client.callTool({
         name,
         arguments: arguments_,
       });
+
+      const duration = Date.now() - startTime;
+
+      // Extract and display cache information if present
+      this.logCacheInfo(result, name, duration);
+
       this.outputChannel.appendLine(
-        `Tool result: ${JSON.stringify(result, null, 2)}`,
+        `✅ Tool ${name} completed in ${duration}ms`,
       );
+
       return result;
     } catch (error) {
-      this.outputChannel.appendLine(`Failed to call tool ${name}: ${error}`);
+      this.outputChannel.appendLine(`❌ Failed to call tool ${name}: ${error}`);
       throw error;
     }
+  }
+
+  /**
+   * Log cache information from tool response
+   */
+  private logCacheInfo(
+    result: unknown,
+    _toolName: string,
+    duration: number,
+  ): void {
+    try {
+      // Check if result contains cache metadata
+      const resultObj = result as Record<string, unknown>;
+      const queryMetadata = resultObj?.queryMetadata as
+        | Record<string, unknown>
+        | undefined;
+
+      if (queryMetadata?.cacheInfo) {
+        const cacheInfo = queryMetadata.cacheInfo as Record<string, unknown>;
+        const { cacheHit, cacheLevel, cacheAge } = cacheInfo;
+
+        if (cacheHit) {
+          this.outputChannel.appendLine(
+            `💾 Cache HIT (${cacheLevel}) - Age: ${cacheAge}ms - Saved ${duration}ms`,
+          );
+        } else {
+          this.outputChannel.appendLine(
+            `🔍 Cache MISS - Result cached for future queries`,
+          );
+        }
+      }
+
+      // Display performance metrics if available
+      if (queryMetadata?.performanceMetrics) {
+        const metrics = queryMetadata.performanceMetrics as Record<
+          string,
+          unknown
+        >;
+        this.outputChannel.appendLine(
+          `⚡ Performance: Total=${metrics.totalTime}ms, ` +
+            `Vector=${metrics.vectorSearchTime}ms, ` +
+            `Ranking=${metrics.rankingTime}ms`,
+        );
+      }
+    } catch (_error) {
+      // Silently ignore if result doesn't have expected structure
+    }
+  }
+
+  /**
+   * Get cache statistics from server
+   */
+  public async getCacheStats(detailed = false): Promise<unknown> {
+    return this.callTool("cache_stats", { detailed });
+  }
+
+  /**
+   * Warm cache with common queries
+   */
+  public async warmCache(queries?: string[]): Promise<unknown> {
+    this.outputChannel.appendLine("🔥 Warming cache...");
+    return this.callTool("cache_warm", { queries });
+  }
+
+  /**
+   * Prune cache entries
+   */
+  public async pruneCache(
+    strategy: "lru" | "age" | "size" = "lru",
+    limit?: number,
+  ): Promise<unknown> {
+    this.outputChannel.appendLine(
+      `🧹 Pruning cache (strategy: ${strategy})...`,
+    );
+    return this.callTool("cache_prune", { strategy, limit });
   }
 
   /**
