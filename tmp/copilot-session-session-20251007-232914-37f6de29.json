@@ -1,0 +1,113 @@
+{
+  "sessionId": "session-20251007-232914-37f6de29",
+  "timestamp": "2025-10-07T23:29:14Z",
+  "issues": [157],
+  "parentIssues": [],
+  "repoOwner": "EvanDodds",
+  "repoName": "ast-copilot-helper",
+  "currentStep": "0.complete",
+  "status": "analysis-complete",
+  "acceptanceCriteria": [
+    {
+      "id": 1,
+      "text": "ast-helper parse --staged processes only staged files",
+      "source": "#157",
+      "priority": "required",
+      "existingStatus": "partial",
+      "requiredWork": "update-existing"
+    },
+    {
+      "id": 2,
+      "text": "ast-helper parse --base main processes files changed since main branch",
+      "source": "#157",
+      "priority": "required",
+      "existingStatus": "partial",
+      "requiredWork": "create-new"
+    },
+    {
+      "id": 3,
+      "text": "--changed mode correctly detects all git status types",
+      "source": "#157",
+      "priority": "required",
+      "existingStatus": "partial",
+      "requiredWork": "update-existing"
+    },
+    {
+      "id": 4,
+      "text": "All modes work in git repositories and fail gracefully outside",
+      "source": "#157",
+      "priority": "required",
+      "existingStatus": "complete",
+      "requiredWork": "verify-only"
+    },
+    {
+      "id": 5,
+      "text": "Git operations handle edge cases (detached HEAD, merge conflicts, etc.)",
+      "source": "#157",
+      "priority": "required",
+      "existingStatus": "partial",
+      "requiredWork": "update-existing"
+    },
+    {
+      "id": 6,
+      "text": "Performance is acceptable for repositories with 10k+ files",
+      "source": "#157",
+      "priority": "required",
+      "existingStatus": "not-started",
+      "requiredWork": "verify-only"
+    },
+    {
+      "id": 7,
+      "text": "Comprehensive test coverage (>90%) for all git integration code",
+      "source": "#157",
+      "priority": "required",
+      "existingStatus": "partial",
+      "requiredWork": "create-new"
+    },
+    {
+      "id": 8,
+      "text": "Documentation updated with all new options and examples",
+      "source": "#157",
+      "priority": "required",
+      "existingStatus": "not-started",
+      "requiredWork": "create-new"
+    }
+  ],
+  "implementationStrategy": "update-existing-with-new-features",
+  "estimatedComplexity": "medium",
+  "existingWork": {
+    "summary": "Significant infrastructure already exists for git integration with CLI options defined but incomplete implementation",
+    "partialImplementations": [
+      {
+        "file": "packages/ast-helper/src/cli.ts",
+        "description": "CLI options --staged, --base, and --changed already defined with defaults",
+        "completeness": "30%",
+        "notes": "Options exist but validation logic needs completion"
+      },
+      {
+        "file": "packages/ast-helper/src/git/manager.ts",
+        "description": "GitManager with getStagedFiles() method already implemented",
+        "completeness": "70%",
+        "notes": "Core git operations exist, need to add getChangedFilesSince() method"
+      },
+      {
+        "file": "packages/ast-helper/src/git-integration/index.ts",
+        "description": "GitFileSelector and GitRepositoryValidator partially implemented",
+        "completeness": "50%",
+        "notes": "Basic structure exists, needs full implementation of --staged and --base modes"
+      }
+    ],
+    "affectedFiles": [
+      "packages/ast-helper/src/cli.ts",
+      "packages/ast-helper/src/git/manager.ts",
+      "packages/ast-helper/src/git-integration/index.ts",
+      "packages/ast-helper/src/commands/parse.ts",
+      "packages/ast-helper/src/git/types.ts"
+    ],
+    "relatedWork": [
+      "Existing test files: git-integration/index.test.ts, git-integration/integration.test.ts",
+      "Error handling already in place via ValidationErrors",
+      "Logger infrastructure already available"
+    ]
+  }
+}

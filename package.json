@@ -174,5 +174,8 @@
   "packageManager": "yarn@4.9.4",
   "resolutions": {
     "esbuild": "^0.25.10"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.0"
   }
 }

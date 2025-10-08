@@ -19,6 +19,8 @@ import type {
  */
 export class GitManager implements GitUtils {
   private defaultCwd: string;
+  private repositoryCheckCache: Map<string, boolean> = new Map();
+  private repositoryRootCache: Map<string, string> = new Map();
 
   constructor(cwd?: string) {
     const workingDir =
@@ -94,15 +96,24 @@ export class GitManager implements GitUtils {
    * Check if the given path is within a git repository
    */
   async isGitRepository(path: string = this.defaultCwd): Promise<boolean> {
+    const resolvedPath = resolve(path);
+
+    // Check cache first to avoid redundant git calls
+    const cached = this.repositoryCheckCache.get(resolvedPath);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     try {
-      const resolvedPath = resolve(path);
       await this.execGitCommand(["rev-parse", "--git-dir"], resolvedPath);
+      this.repositoryCheckCache.set(resolvedPath, true);
       return true;
     } catch (error) {
       // Only return false for repository-specific errors (exit code 128)
       // Re-throw other errors like permission issues
       if (error instanceof GitError) {
         if (error.context?.exitCode === 128) {
+          this.repositoryCheckCache.set(resolvedPath, false);
           return false;
         }
       }
@@ -112,6 +123,7 @@ export class GitManager implements GitUtils {
           error.message.includes("not a git repository") ||
           error.message.includes("fatal: not a git repository")
         ) {
+          this.repositoryCheckCache.set(resolvedPath, false);
           return false;
         }
       }
@@ -197,11 +209,35 @@ export class GitManager implements GitUtils {
    * Get list of staged files
    */
   async getStagedFiles(cwd: string = this.defaultCwd): Promise<string[]> {
+    // Verify this is a git repository
+    if (!(await this.isGitRepository(cwd))) {
+      throw GitErrors.notARepository(cwd);
+    }
+
     try {
+      // Check if this is an initial commit (no HEAD yet)
+      const hasCommits = await this.hasCommits(cwd);
+
+      if (!hasCommits) {
+        // For initial commit, use ls-files to get staged files
+        const result = await this.execGitCommand(["ls-files", "--cached"], cwd);
+
+        if (!result.stdout) {
+          return [];
+        }
+
+        return result.stdout
+          .split("\n")
+          .filter((file) => file.trim())
+          .map((file) => file.trim());
+      }
+
+      // Normal case: compare staged against HEAD
       const result = await this.execGitCommand(
         ["diff", "--name-only", "--cached", "--relative"],
         cwd,
       );
+
       if (!result.stdout) {
         return [];
       }
@@ -211,13 +247,82 @@ export class GitManager implements GitUtils {
         .filter((file) => file.trim())
         .map((file) => file.trim());
     } catch (error) {
-      if (!(await this.isGitRepository(cwd))) {
-        throw GitErrors.notARepository(cwd);
-      }
       throw GitErrors.commandFailed(
         "git diff --cached --name-only",
         1,
         (error as Error).message,
+        cwd,
+      );
+    }
+  }
+
+  /**
+   * Get list of files changed since a git reference
+   * @param ref - Git reference (branch, tag, or commit) to compare against
+   * @param cwd - Working directory (optional)
+   * @returns Array of file paths changed between ref and HEAD
+   */
+  async getChangedFilesSince(
+    ref: string,
+    cwd: string = this.defaultCwd,
+  ): Promise<string[]> {
+    // Verify this is a git repository
+    if (!(await this.isGitRepository(cwd))) {
+      throw GitErrors.notARepository(cwd);
+    }
+
+    // Check for initial commit state
+    const hasCommits = await this.hasCommits(cwd);
+    if (!hasCommits) {
+      throw new Error(
+        "Repository has no commits yet. Commit your changes first or use --staged to process staged files.",
+      );
+    }
+
+    // Validate the reference exists
+    const isValid = await this.validateGitReference(ref, cwd);
+    if (!isValid) {
+      throw new Error(
+        `Invalid git reference: '${ref}'. Please provide a valid branch, tag, or commit.`,
+      );
+    }
+
+    try {
+      // Use three-dot syntax (ref...HEAD) to get files changed on current branch
+      // since it diverged from ref. This is the most common use case for --base.
+      const result = await this.execGitCommand(
+        ["diff", "--name-only", "--relative", `${ref}...HEAD`],
+        cwd,
+      );
+
+      if (!result.stdout) {
+        return [];
+      }
+
+      return result.stdout
+        .split("\n")
+        .filter((file) => file.trim())
+        .map((file) => file.trim());
+    } catch (error) {
+      // Provide helpful error messages for common issues
+      const errorMsg = (error as Error).message;
+      if (
+        errorMsg.includes("bad revision") ||
+        errorMsg.includes("unknown revision")
+      ) {
+        throw new Error(
+          `Git reference '${ref}' could not be resolved. Check that the branch/tag exists and try again.`,
+        );
+      }
+      if (errorMsg.includes("ambiguous argument")) {
+        throw new Error(
+          `Git reference '${ref}' is ambiguous. Use a full reference like 'origin/${ref}' or a commit SHA.`,
+        );
+      }
+      throw GitErrors.commandFailed(
+        `git diff --name-only ${ref}...HEAD`,
+        1,
+        errorMsg,
         cwd,
       );
     }
@@ -229,6 +334,12 @@ export class GitManager implements GitUtils {
   async getRepositoryRoot(path: string = this.defaultCwd): Promise<string> {
     const resolvedPath = resolve(path);
 
+    // Check cache first to avoid redundant git calls
+    const cachedRoot = this.repositoryRootCache.get(resolvedPath);
+    if (cachedRoot !== undefined) {
+      return cachedRoot;
+    }
+
     if (!(await this.isGitRepository(resolvedPath))) {
       throw GitErrors.notARepository(resolvedPath);
     }
@@ -239,8 +350,10 @@ export class GitManager implements GitUtils {
         resolvedPath,
       );
       // Normalize path to match the format used by Node.js on current platform
-      return resolve(result.stdout);
-    } catch (error) {
+      const root = resolve(result.stdout);
+      this.repositoryRootCache.set(resolvedPath, root);
+      return root;
+    } catch (_error) {
       throw GitErrors.repositoryNotFound(resolvedPath);
     }
   }
@@ -264,6 +377,34 @@ export class GitManager implements GitUtils {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Check if repository has any commits (not in initial state)
+   */
+  async hasCommits(cwd: string = this.defaultCwd): Promise<boolean> {
+    try {
+      await this.execGitCommand(["rev-parse", "HEAD"], cwd);
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if repository is in detached HEAD state
+   */
+  async isDetachedHead(cwd: string = this.defaultCwd): Promise<boolean> {
+    try {
+      const result = await this.execGitCommand(
+        ["symbolic-ref", "-q", "HEAD"],
+        cwd,
+      );
+      return !result.stdout; // If stdout is empty, we're not on a branch
+    } catch (_error) {
+      // symbolic-ref fails when in detached HEAD
+      return true;
     }
   }
 

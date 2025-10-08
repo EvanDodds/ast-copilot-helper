@@ -402,6 +402,31 @@ yarn ast-copilot-helper parse src/
 yarn ast-copilot-helper query "functions that handle authentication"
 ```
 
+#### Git Integration for Smart Parsing
+
+Process only the files you care about using git-aware modes:
+
+```bash
+# Pre-commit validation - parse only staged files
+yarn ast-copilot-helper parse --staged
+
+# PR validation - parse files changed since main branch
+yarn ast-copilot-helper parse --base main
+
+# Development workflow - parse all working directory changes
+yarn ast-copilot-helper parse --changed
+
+# Feature branch comparison - parse changes since develop
+yarn ast-copilot-helper parse --base origin/develop
+```
+
+**Use Cases:**
+
+- **Pre-commit hooks**: `--staged` ensures only staged files are validated before commit
+- **CI/CD pipelines**: `--base main` validates only files changed in PR
+- **Local development**: `--changed` provides quick feedback on modified code
+- **Branch reviews**: `--base <branch>` compares against any git reference
+
 ### 2. Start MCP Server
 
 Enable AI agent integration:
