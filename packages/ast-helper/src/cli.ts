@@ -274,12 +274,7 @@ export class AstHelperCli {
           "Git reference for --changed comparison",
         ).default("HEAD"),
       )
-      .addOption(
-        new Option(
-          "--staged",
-          "Process only staged files (requires --changed)",
-        ),
-      )
+      .addOption(new Option("--staged", "Process only staged files (git add)"))
       .addOption(
         new Option(
           "--force",
@@ -751,12 +746,12 @@ export class AstHelperCli {
           );
         }
 
-        // Validate staged option only works with changed
-        if (opts.staged && !opts.changed) {
+        // Validate that --staged and --changed are mutually exclusive
+        if (opts.staged && opts.changed) {
           throw ValidationErrors.invalidValue(
-            "--staged",
-            "used without --changed",
-            "The --staged option can only be used with --changed to process staged Git changes.",
+            "--staged and --changed",
+            "both specified",
+            "These options are mutually exclusive. Use --staged for staged files only, or --changed for all working directory changes.",
           );
         }
 
@@ -771,13 +766,13 @@ export class AstHelperCli {
 
         // Validate Git repository for Git-related options
         if (
-          (opts.changed || opts.staged) &&
+          (opts.changed || opts.staged || opts.base) &&
           !this.isGitRepository(opts.workspace || process.cwd())
         ) {
           throw ValidationErrors.invalidValue(
-            "--changed/--staged",
+            "--changed/--staged/--base",
             "used outside Git repository",
-            'Git repository detection required for --changed and --staged flags. Initialize git with "git init" or run from within a Git repository.',
+            'Git repository detection required for --changed, --staged, and --base flags. Initialize git with "git init" or run from within a Git repository.',
           );
         }
 
