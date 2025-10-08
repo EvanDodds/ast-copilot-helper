@@ -670,31 +670,48 @@ interface ServerConfig {
 
 ### Architecture Overview
 
-The vector database uses **WebAssembly (WASM)** for cross-platform vector similarity search, replacing the previous NAPI-based native implementation.
+The vector database uses **Rust** for high-performance vector similarity search. While the Rust code could be compiled to native binaries via NAPI, we chose **WebAssembly (WASM)** as the distribution method for practical deployment benefits.
 
-#### Key Benefits
+#### Why WASM Over Native NAPI?
 
-- **Cross-Platform**: Works on any platform supporting WASM (x64, ARM64, etc.)
-- **No Native Compilation**: No need for platform-specific binaries
-- **Browser Compatible**: Can run in browser environments
-- **Maintainable**: Single WASM binary instead of per-platform builds
+**Technical Reality**: The same Rust code (`packages/ast-core-engine/src/vector_db.rs`) provides vector operations in both approaches. WASM is a **distribution choice**, not a performance requirement.
+
+**Distribution Benefits**:
+
+- **Universal Binary**: One `.wasm` file works on all platforms (Windows, macOS, Linux × x64, ARM64)
+- **No Install-Time Compilation**: npm install "just works" - no cargo/native toolchain required
+- **Zero Platform-Specific Builds**: Previously needed 6+ pre-built binaries per release
+- **Simplified CI/CD**: Single build artifact instead of matrix builds for each platform
+- **Future Browser Compatibility**: WASM can potentially run in browsers
+
+**NAPI Challenges** (why we migrated away):
+
+- Required pre-built binaries for every platform combination
+- Install failures when pre-built binaries unavailable
+- Fallback to source compilation required cargo at install time
+- Maintenance burden for platform-specific builds
 
 ### Implementation
 
+The implementation has two layers:
+
+#### TypeScript Layer: WASM Module Loader
+
 **RustVectorDatabase** (`packages/ast-helper/src/database/vector/rust-vector-database.ts`)
 
-Simplified to a pure WASM wrapper:
+Wraps the WASM module and provides the VectorDatabase interface:
 
 ```typescript
 export class RustVectorDatabase implements VectorDatabase {
-  private wasmDb: ReturnType<typeof initWasmVectorDB>;
+  private wasmDb: WasmVectorDatabase; // Wraps WASM module
 
   async initialize(config: VectorDatabaseConfig): Promise<void> {
-    // Load WASM module
+    // Load and initialize WASM module
     this.wasmDb = await initWasmVectorDB(config.databasePath);
   }
 
   async addVector(id: string, vector: number[]): Promise<void> {
+    // Delegates to WASM implementation
     return this.wasmDb.add_vector(id, vector);
   }
 
@@ -702,16 +719,17 @@ export class RustVectorDatabase implements VectorDatabase {
     query: number[],
     k: number,
   ): Promise<Array<{ id: string; score: number }>> {
+    // Calls Rust function compiled to WASM
     return this.wasmDb.search(query, k);
   }
 }
 ```
 
-### WASM Core Engine
+#### Rust Layer: Core Vector Operations
 
-**Rust Implementation** (`packages/ast-core-engine/src/vector_db.rs`)
+**Core Implementation** (`packages/ast-core-engine/src/vector_db.rs`)
 
-High-performance vector operations in Rust:
+The actual vector similarity search logic in Rust (platform-agnostic):
 
 ```rust
 #[wasm_bindgen]
@@ -759,25 +777,34 @@ wasm-pack build --target nodejs --release
 
 ### Migration Notes
 
-**Previous Architecture: NAPI**
+**Previous Architecture: NAPI (Native Bindings)**
 
-- Required native compilation for each platform
-- Platform-specific binaries (Windows, macOS, Linux × x64/ARM64)
-- Maintenance burden for multiple targets
-- Installation issues with pre-built binaries
+The Rust vector database was exposed via Node.js native addons (NAPI):
 
-**Current Architecture: WASM**
+- Compiled to platform-specific binaries (`.node` files)
+- Required separate builds: Windows `.dll`, macOS `.dylib`, Linux `.so` × x64/ARM64
+- Installation required either pre-built binaries or source compilation
+- Distribution complexity: 6+ binary artifacts per release
+- `napi-wrapper.ts` (407 lines) handled the Node.js ↔ Rust bridge
 
-- ✅ Single universal binary
-- ✅ No platform-specific builds
-- ✅ Easier distribution
-- ✅ Browser-compatible potential
+**Current Architecture: WASM (Universal Binary)**
 
-**Removed:**
+Same Rust code, different distribution:
 
-- `packages/ast-helper/src/database/vector/napi-wrapper.ts` (407 lines)
-- Platform-specific native builds
-- Pre-built binary distribution logic
+- Compiled to WebAssembly (`.wasm` file) via `wasm-pack`
+- `wasm_bindings.rs` exposes Rust functions to JavaScript via `wasm-bindgen`
+- ✅ **One binary for all platforms** - no platform detection needed
+- ✅ **No native toolchain required** - works out of the box on npm install
+- ✅ **Simpler deployment** - single artifact, no conditional logic
+- ✅ **Easier maintenance** - one build target instead of matrix builds
+
+**What Changed:**
+
+- **Removed**: `napi-wrapper.ts` (407 lines of NAPI bindings)
+- **Removed**: Platform-specific build matrix and pre-built binary logic
+- **Added**: `wasm_bindings.rs` (WASM-specific JavaScript bindings)
+- **Added**: `wasm-vector-database.ts` (WASM module loader and wrapper)
+- **Kept**: Core vector operations in `vector_db.rs` (minimal changes)
 
 ### Future Enhancements
 

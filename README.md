@@ -55,7 +55,7 @@ This automatically:
 AST Copilot Helper bridges the gap between your codebase and AI agents by providing semantic understanding through Abstract Syntax Tree analysis. The toolkit consists of three integrated components:
 
 - **`@ast-copilot-helper/ast-helper`** - Core CLI tool that parses source code and builds semantic databases
-- **`@ast-helper/core-engine`** - High-performance Rust engine for AST processing (native NAPI)
+- **`@ast-helper/core-engine`** - High-performance Rust engine (WASM for vector ops, native for AST processing)
 - **`@ast-copilot-helper/ast-mcp-server`** - Model Context Protocol server enabling AI agents to query code semantically
 - **`@ast-copilot-helper/vscode-extension`** - VS Code extension for seamless integration (optional)
 
@@ -68,8 +68,8 @@ ast-copilot-helper/                 # Monorepo root
 │  │  ├─ src/                       # TypeScript parsing & analysis
 │  │  └─ dist/                      # Compiled output
 │  ├─ ast-core-engine/              # ⚡ High-performance Rust engine
-│  │  ├─ src/                       # Rust source (NAPI)
-│  │  ├─ pkg/                       # Build output (native)
+│  │  ├─ src/                       # Rust source (WASM + native bindings)
+│  │  ├─ pkg/                       # Build output (WASM modules)
 │  │  ├─ target/                    # Rust build artifacts
 │  │  └─ Cargo.toml                 # Rust configuration
 │  ├─ ast-mcp-server/               # 🤖 MCP protocol server
@@ -334,30 +334,32 @@ const recentEvents = await securityLogger.getRecentEvents(100, {
 
 AST Copilot Helper uses a **native-first architecture** combining TypeScript flexibility with Rust performance:
 
-### Native-First Engine Architecture
+### Hybrid Engine Architecture
 
-| Target               | Use Case                | Performance          | Compatibility              |
-| -------------------- | ----------------------- | -------------------- | -------------------------- |
-| **Native (NAPI)**    | Node.js environments    | 🔥 100% native speed | Node.js with native builds |
-| **TypeScript Core**  | Cross-platform fallback | ⚡ Good performance  | Universal compatibility    |
-| **Native (Current)** | Production environments | 🚀 Production ready  | Node.js with native builds |
+AST Copilot Helper uses a **hybrid Rust architecture** optimized for both performance and ease of distribution:
+
+| Component           | Technology | Distribution       | Rationale                       |
+| ------------------- | ---------- | ------------------ | ------------------------------- |
+| **Vector Database** | Rust       | WASM (universal)   | One binary for all platforms    |
+| **AST Processing**  | Rust       | Native (if needed) | Maximum performance for parsing |
+| **TypeScript Core** | TypeScript | Universal          | Cross-platform business logic   |
 
 ### Key Performance Features
 
-- **🚀 High-Performance Core**: Rust engine for compute-intensive operations via NAPI
-- **�️ Native-First Deployment**: Optimized native binaries with TypeScript fallback
-- **📦 Efficient Binary Distribution**: Platform-specific builds for optimal performance
+- **🚀 Rust-Powered Operations**: High-performance vector similarity search and AST processing
+- **📦 Smart Distribution**: WASM for universal compatibility, native where performance critical
+- **🌍 Zero Install Friction**: WASM eliminates platform-specific binary issues
 - **🔄 Smart Language Detection**: Intelligent grammar loading and caching
 - **💾 Incremental Processing**: Smart cache invalidation and differential updates
 
 **Current Performance Characteristics:**
 
 - AST parsing: 1-50ms depending on language tier and file size
-- Vector search: High-performance native vector operations
+- Vector search: High-performance Rust operations (compiled to WASM for universal deployment)
 - Batch processing: 5000+ files with intelligent memory management
 - Language support: 15 languages across 3 performance tiers
 
-**Note**: The system uses native-only architecture for optimal performance and reliability.
+**Architecture Note**: Vector database uses **Rust compiled to WebAssembly** for universal compatibility. While WASM adds ~10-30% overhead vs native, it eliminates platform-specific build complexity and ensures "npm install just works" everywhere.
 
 ## CI/CD Pipeline
 
