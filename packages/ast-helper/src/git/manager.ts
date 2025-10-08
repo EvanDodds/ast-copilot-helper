@@ -224,6 +224,55 @@ export class GitManager implements GitUtils {
   }
 
   /**
+   * Get list of files changed since a git reference
+   * @param ref - Git reference (branch, tag, or commit) to compare against
+   * @param cwd - Working directory (optional)
+   * @returns Array of file paths changed between ref and HEAD
+   */
+  async getChangedFilesSince(
+    ref: string,
+    cwd: string = this.defaultCwd,
+  ): Promise<string[]> {
+    // Verify this is a git repository
+    if (!(await this.isGitRepository(cwd))) {
+      throw GitErrors.notARepository(cwd);
+    }
+
+    // Validate the reference exists
+    const isValid = await this.validateGitReference(ref, cwd);
+    if (!isValid) {
+      throw new Error(
+        `Invalid git reference: '${ref}'. Please provide a valid branch, tag, or commit.`,
+      );
+    }
+
+    try {
+      // Use three-dot syntax (ref...HEAD) to get files changed on current branch
+      // since it diverged from ref. This is the most common use case for --base.
+      const result = await this.execGitCommand(
+        ["diff", "--name-only", "--relative", `${ref}...HEAD`],
+        cwd,
+      );
+
+      if (!result.stdout) {
+        return [];
+      }
+
+      return result.stdout
+        .split("\n")
+        .filter((file) => file.trim())
+        .map((file) => file.trim());
+    } catch (error) {
+      throw GitErrors.commandFailed(
+        `git diff --name-only ${ref}...HEAD`,
+        1,
+        (error as Error).message,
+        cwd,
+      );
+    }
+  }
+
+  /**
    * Find the root directory of the git repository
    */
   async getRepositoryRoot(path: string = this.defaultCwd): Promise<string> {

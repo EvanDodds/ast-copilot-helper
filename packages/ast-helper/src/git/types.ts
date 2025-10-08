@@ -108,6 +108,14 @@ export interface GitUtils {
   getStagedFiles(cwd?: string): Promise<string[]>;
 
   /**
+   * Get list of files changed since a git reference
+   * @param ref - Git reference (branch, tag, or commit) to compare against
+   * @param cwd - Working directory (optional)
+   * @returns Array of file paths changed between ref and HEAD
+   */
+  getChangedFilesSince(ref: string, cwd?: string): Promise<string[]>;
+
+  /**
    * Find the root directory of the git repository
    * @param path - Starting path to search from
    * @returns Path to repository root
