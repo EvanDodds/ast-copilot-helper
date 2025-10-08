@@ -176,7 +176,7 @@ describe("Parse Command Integration Tests (Subtask 7)", () => {
       expect(results.totalFiles).toBe(3);
       expect(results.totalTimeMs).toBeGreaterThan(0);
 
-      // In test environment, parsing may fail due to missing tree-sitter binaries
+      // In test environment, parsing may fail due to Rust binary not being available
       // We're testing workflow integration, not parsing success
       expect(results.totalFiles).toBeGreaterThan(0);
 
@@ -258,7 +258,7 @@ describe("Parse Command Integration Tests (Subtask 7)", () => {
       expect(results.totalTimeMs).toBeGreaterThan(0);
 
       // In test environment, focus on workflow integration
-      // Parsing may fail due to missing tree-sitter binaries
+      // Parsing may fail due to Rust binary not being available
       expect(results.totalFiles).toBe(3);
 
       await fileProcessor.dispose();

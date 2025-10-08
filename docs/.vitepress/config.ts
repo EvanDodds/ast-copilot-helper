@@ -71,8 +71,8 @@ export default defineConfig({
           items: [
             { text: "Advanced Features", link: "/guide/advanced-features" },
             {
-              text: "Tree-sitter Integration",
-              link: "/guides/tree-sitter-integration",
+              text: "Rust Parser Integration",
+              link: "/guides/rust-parser-integration",
             },
             { text: "Watch Enhancement", link: "/guides/watch-enhancement" },
             {

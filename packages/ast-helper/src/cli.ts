@@ -67,8 +67,13 @@ interface ParseOptions extends GlobalOptions {
  * Options for the annotate command
  */
 interface AnnotateOptions extends GlobalOptions {
-  changed?: boolean;
+  batch?: boolean;
+  batchSize?: number;
+  output?: string;
+  format?: "json" | "yaml" | "markdown";
   force?: boolean;
+  changed?: boolean;
+  storeResults?: boolean;
 }
 
 /**
@@ -345,15 +350,68 @@ export class AstHelperCli {
    */
   private setupAnnotateCommand(): void {
     this.program
-      .command("annotate")
-      .description("Generate metadata for parsed AST nodes")
-      .addOption(
-        new Option("-c, --changed", "Process only nodes from changed files"),
+      .command("annotate [path]")
+      .description(
+        "Generate semantic annotations for parsed ASTs using Rust backend",
       )
       .addOption(
-        new Option("--force", "Regenerate all annotations even if unchanged"),
+        new Option(
+          "--glob <pattern>",
+          "File pattern to annotate (overrides config parseGlob)",
+        ),
       )
-      .action(async (options: AnnotateOptions) => {
+      .addOption(
+        new Option(
+          "-c, --changed",
+          "Process only changed files since last commit",
+        ),
+      )
+      .addOption(
+        new Option(
+          "--batch",
+          "Enable batch processing mode for multiple files",
+        ),
+      )
+      .addOption(
+        new Option("--batch-size <n>", "Number of files to process in parallel")
+          .default(5)
+          .argParser((value) => {
+            const num = parseInt(value);
+            if (isNaN(num) || num < 1 || num > 50) {
+              throw new Error("--batch-size must be between 1 and 50");
+            }
+            return num;
+          }),
+      )
+      .addOption(
+        new Option(
+          "--output <file>",
+          "Save annotation results to specified file",
+        ),
+      )
+      .addOption(
+        new Option(
+          "--format <format>",
+          "Output format (json, yaml, markdown)",
+        ).default("json"),
+      )
+      .addOption(
+        new Option(
+          "--force",
+          "Regenerate annotations even if they already exist",
+        ),
+      )
+      .addOption(
+        new Option(
+          "--store-results",
+          "Store annotation results in database",
+        ).default(true),
+      )
+      .action(async (path: string | undefined, options: AnnotateOptions) => {
+        // If path is provided, set it in options for backward compatibility
+        if (path) {
+          (options as any).targetPath = path;
+        }
         await this.executeCommand("annotate", options);
       });
   }
@@ -830,10 +888,8 @@ export class AstHelperCli {
       case "parse":
         return new ParseCommandHandler();
       case "annotate": {
-        const { AnnotateCommandHandler } = await import(
-          "./commands/annotate.js"
-        );
-        return new AnnotateCommandHandler();
+        const { AnnotateCommand } = await import("./commands/annotate.js");
+        return new AnnotateCommand();
       }
       case "embed": {
         return new EmbedCommandHandler();

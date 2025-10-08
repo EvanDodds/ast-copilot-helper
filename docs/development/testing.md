@@ -82,8 +82,8 @@ tests/
 │   │   ├── python-sample/
 │   │   └── javascript-sample/
 │   ├── expected-results/
-│   │   ├── typescript-annotations.json
-│   │   └── python-annotations.json
+│   │   ├── rust-annotation-outputs.json
+│   │   └── complexity-analysis-results.json
 │   └── test-files/
 │       ├── valid-syntax/
 │       └── invalid-syntax/

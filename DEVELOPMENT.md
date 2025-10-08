@@ -149,9 +149,51 @@ yarn run test:rust:fmt        # Code formatting check (cargo fmt --check)
 
 - **Compilation**: Ensures all Rust code compiles without errors
 - **Unit Tests**: Validates core engine functionality and edge cases
-- **Integration Tests**: Tests WASM bindings and Node.js integration
+- **Integration Tests**: Tests native bindings and Node.js integration
 - **Code Quality**: Clippy linting catches common issues and suggests improvements
 - **Formatting**: Consistent code style with `rustfmt`
+
+#### Tree-sitter Language Ecosystem
+
+The Rust core engine uses **tree-sitter 0.25.10** with a comprehensive language parser ecosystem:
+
+**Supported Languages (15 total):**
+
+- **Tier 1:** JavaScript (0.25.0), TypeScript (0.23.2), Python (0.25.0), Rust (0.24.0)
+- **Tier 2:** Java (0.23.5), C++ (0.23.4), C (0.24.1), C# (0.23.1), Go (0.25.0), Ruby (0.23.1), PHP (0.24.2)
+- **Tier 3:** Kotlin (1.1.0), Swift (0.7.1), Scala (0.24.0), Bash (0.25.0)
+
+**API Compatibility:**
+
+```rust
+// Modern tree-sitter 0.25.x API
+grammar: tree_sitter_javascript::LANGUAGE.into(),
+grammar: tree_sitter_python::LANGUAGE.into(),
+
+// Special cases
+grammar: tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
+grammar: tree_sitter_php::LANGUAGE_PHP.into(),
+```
+
+**Build Requirements:**
+
+- Rust toolchain automatically handles tree-sitter dependencies
+- No manual grammar downloads required - all included in Cargo.toml
+- WASM target requires `wasm-pack` for comprehensive testing
+
+**Testing tree-sitter Languages:**
+
+```bash
+# Validate all parsers work
+cd packages/ast-core-engine
+cargo build --bin ast-parser
+
+# Test specific language parsing
+echo 'console.log("Hello");' | ./target/debug/ast-parser parse --stdin --language javascript
+
+# List all supported languages
+./target/debug/ast-parser languages
+```
 
 #### Performance Considerations
 
@@ -161,9 +203,9 @@ The Rust core engine is optimized for development speed:
 - Production builds use full optimization for maximum performance
 - Testing validates both compilation correctness and runtime behavior
 
-### Native-First Architecture with WASM Development
+### Native-Only Architecture
 
-The core engine uses a native-first approach with NAPI bindings for production deployments, with WASM builds planned for future universal deployment.
+The core engine uses a native-only approach with NAPI bindings for optimal performance and reliability.
 
 #### Current Architecture: Native NAPI
 
@@ -181,48 +223,16 @@ cargo build --release     # Native compilation for current platform
 - Direct system integration and I/O capabilities
 - Full access to Rust ecosystem including networking and file system
 
-#### WASM Build Infrastructure (In Development)
+#### Native Architecture
 
-WASM build infrastructure is implemented but currently limited by dependency compatibility.
-
-**Prerequisites:**
-
-```bash
-# Install WASM target (configured but not production-ready)
-rustup target add wasm32-unknown-unknown
-cargo install wasm-pack
-```
-
-**Build Commands (Development Only):**
-
-```bash
-# WASM build attempts (currently blocked by dependency issues)
-cd packages/ast-core-engine
-npm run build:wasm         # Will fail due to tokio/mio incompatibility
-npm run build:wasm:release # Not currently functional
-```
-
-**Current WASM Limitations:**
-
-- `tokio` with networking features requires `mio` which doesn't support WASM
-- Vector database dependencies may have similar compatibility issues
-- See `packages/ast-core-engine/WASM_BUILD_NOTES.md` for full technical analysis
-
-#### Native-First Code Structure
-
-The codebase is structured for native performance with WASM compatibility planned:
+The codebase uses native-only architecture for optimal performance:
 
 ```rust
-// Native-optimized code (current production target)
+// Native-optimized code (production target)
 use napi::bindgen_prelude::*;
 use tokio::runtime::Runtime;
 
-// WASM-compatible subset (future target)
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-
-// Conditional compilation for different targets
-#[cfg(not(target_arch = "wasm32"))]
+// Native implementation
 use crate::native_impl::*;
 ```
 
@@ -295,9 +305,9 @@ The core parsing functionality is implemented in `packages/ast-helper/src/parser
 #### Basic Parsing
 
 ```typescript
-import { NativeTreeSitterParser } from "@ast-copilot-helper/ast-helper";
+import { createRustParserAdapter } from "@ast-copilot-helper/ast-helper";
 
-const parser = new NativeTreeSitterParser();
+const parser = await createRustParserAdapter();
 const result = await parser.parseFile("/path/to/file.ts");
 console.log(result.nodes.length); // AST node count
 ```

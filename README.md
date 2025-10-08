@@ -11,17 +11,19 @@ Transform your codebase into an AI-accessible knowledge base:
 - **⚡ Performance**: Fast parsing with intelligent caching and incremental updates
 - **🌐 Multi-Language**: Support for 15 programming languages across 3 tiers
 
-### 🏢 Tier 1: Enterprise (6 languages)
+### 🏢 Tier 1: Core Languages (4 languages)
 
-TypeScript • JavaScript • Python • Java • C++ • C#
+JavaScript • TypeScript • Python • Rust
 
-### 👩‍💻 Tier 2: Developer (5 languages)
+### 👩‍💻 Tier 2: Popular Languages (7 languages)
 
-Go • Rust • PHP • Ruby • Swift
+Java • C++ • C • C# • Go • Ruby • PHP
 
-### 🎯 Tier 3: Specialized (4 languages)
+### 🎯 Tier 3: Specialized Languages (4 languages)
 
-Kotlin • Scala • Dart • Lua
+Kotlin • Swift • Scala • Bash
+
+**Powered by tree-sitter 0.25.x ecosystem**
 
 **[📚 Complete Language Guide →](docs/guide/multi-language-support.md)**
 
@@ -66,7 +68,7 @@ ast-copilot-helper/                 # Monorepo root
 │  │  └─ dist/                      # Compiled output
 │  ├─ ast-core-engine/              # ⚡ High-performance Rust engine
 │  │  ├─ src/                       # Rust source (NAPI)
-│  │  ├─ pkg/                       # Build output (WASM planned)
+│  │  ├─ pkg/                       # Build output (native)
 │  │  ├─ target/                    # Rust build artifacts
 │  │  └─ Cargo.toml                 # Rust configuration
 │  ├─ ast-mcp-server/               # 🤖 MCP protocol server
@@ -91,11 +93,11 @@ ast-copilot-helper/                 # Monorepo root
 
 AST Copilot Helper supports **15 programming languages** organized into 3 tiers:
 
-| Tier               | Languages                                     | Use Cases                                       |
-| ------------------ | --------------------------------------------- | ----------------------------------------------- |
-| **🏢 Enterprise**  | TypeScript, JavaScript, Python, Java, C++, C# | Production applications, enterprise codebases   |
-| **👩‍💻 Developer**   | Go, Rust, PHP, Ruby, Swift                    | Popular development languages, strong community |
-| **🎯 Specialized** | Kotlin, Scala, Dart, Lua                      | Domain-specific, emerging technologies          |
+| Tier               | Languages                            | Use Cases                                  |
+| ------------------ | ------------------------------------ | ------------------------------------------ |
+| **🏢 Core**        | JavaScript, TypeScript, Python, Rust | Foundation languages, highest optimization |
+| **👩‍💻 Popular**     | Java, C++, C, C#, Go, Ruby, PHP      | Widely-used production languages           |
+| **🎯 Specialized** | Kotlin, Swift, Scala, Bash           | Domain-specific and emerging technologies  |
 
 ### Quick Example
 
@@ -132,11 +134,11 @@ AST Copilot Helper uses a **native-first architecture** combining TypeScript fle
 
 ### Native-First Engine Architecture
 
-| Target              | Use Case                        | Performance          | Compatibility              |
-| ------------------- | ------------------------------- | -------------------- | -------------------------- |
-| **Native (NAPI)**   | Node.js environments            | 🔥 100% native speed | Node.js with native builds |
-| **TypeScript Core** | Cross-platform fallback         | ⚡ Good performance  | Universal compatibility    |
-| **WASM (Future)**   | Browsers, edge (in development) | � Under development  | Universal (when ready)     |
+| Target               | Use Case                | Performance          | Compatibility              |
+| -------------------- | ----------------------- | -------------------- | -------------------------- |
+| **Native (NAPI)**    | Node.js environments    | 🔥 100% native speed | Node.js with native builds |
+| **TypeScript Core**  | Cross-platform fallback | ⚡ Good performance  | Universal compatibility    |
+| **Native (Current)** | Production environments | 🚀 Production ready  | Node.js with native builds |
 
 ### Key Performance Features
 
@@ -153,7 +155,7 @@ AST Copilot Helper uses a **native-first architecture** combining TypeScript fle
 - Batch processing: 5000+ files with intelligent memory management
 - Language support: 15 languages across 3 performance tiers
 
-**Note**: WASM builds are in development but currently limited by dependency compatibility issues. Production deployments use native NAPI builds for optimal performance.
+**Note**: The system uses native-only architecture for optimal performance and reliability.
 
 ## CI/CD Pipeline
 

@@ -7,11 +7,114 @@ import { EventEmitter } from "events";
 import * as path from "path";
 import * as fs from "fs/promises";
 import type { BaseParser } from "./parsers/base-parser.js";
-import { parseErrorHandler } from "./parse-errors.js";
 import type { ParseResult, ASTNode } from "./types.js";
-import { isFileSupported, detectLanguage } from "./languages.js";
 import crypto from "crypto";
 import os from "os";
+
+// Helper functions for extension and language detection
+function isExtensionSupported(extension: string): boolean {
+  const supportedExtensions = [
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".py",
+    ".pyx",
+    ".pyi",
+    ".rs",
+    ".java",
+    ".cpp",
+    ".cc",
+    ".cxx",
+    ".c++",
+    ".hpp",
+    ".hh",
+    ".hxx",
+    ".h++",
+    ".c",
+    ".h",
+    ".cs",
+    ".go",
+  ];
+  return supportedExtensions.includes(extension.toLowerCase());
+}
+
+function getLanguageFromExtension(extension: string): string | null {
+  const ext = extension.toLowerCase().replace(".", "");
+  switch (ext) {
+    case "js":
+    case "jsx":
+    case "mjs":
+    case "cjs":
+      return "javascript";
+    case "ts":
+    case "tsx":
+      return "typescript";
+    case "py":
+    case "pyx":
+    case "pyi":
+      return "python";
+    case "rs":
+      return "rust";
+    case "java":
+      return "java";
+    case "cpp":
+    case "cc":
+    case "cxx":
+    case "c++":
+    case "hpp":
+    case "hh":
+    case "hxx":
+    case "h++":
+      return "cpp";
+    case "c":
+    case "h":
+      return "c";
+    case "cs":
+      return "csharp";
+    case "go":
+      return "go";
+    default:
+      return null;
+  }
+}
+
+// Simple error handler for batch processing
+const parseErrorHandler = {
+  createTimeoutError: (
+    message: string,
+  ): { type: "timeout"; message: string } => ({
+    type: "timeout",
+    message: `Timeout: ${message}`,
+  }),
+  createFileSystemError: (
+    message: string,
+  ): { type: "file_system"; message: string } => ({
+    type: "file_system",
+    message: `File System: ${message}`,
+  }),
+  createMemoryError: (
+    message: string,
+  ): { type: "memory"; message: string } => ({
+    type: "memory",
+    message: `Memory: ${message}`,
+  }),
+  createRuntimeError: (
+    message: string,
+  ): { type: "runtime"; message: string } => ({
+    type: "runtime",
+    message: `Runtime: ${message}`,
+  }),
+  logError: (error: { type: string; message: string }) => {
+    // Log error silently for now (production systems should use proper logging)
+    if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
+      console.error(`Parse Error [${error.type}]:`, error.message);
+    }
+  },
+};
 
 export interface BatchProcessingOptions {
   /** Maximum number of concurrent parsing operations */
@@ -442,7 +545,8 @@ export class BatchProcessor extends EventEmitter {
     for (const file of files) {
       try {
         // Check if file type is supported
-        if (!isFileSupported(file)) {
+        const extension = path.extname(file);
+        if (!isExtensionSupported(extension)) {
           unsupportedFiles.push(file);
           continue;
         }
@@ -458,7 +562,7 @@ export class BatchProcessor extends EventEmitter {
         }
 
         supportedFiles.push(file);
-      } catch (error) {
+      } catch (_error) {
         // File doesn't exist or can't be accessed
         unsupportedFiles.push(file);
       }
@@ -493,7 +597,7 @@ export class BatchProcessor extends EventEmitter {
             context: `filePath: ${file}`,
           },
         ],
-        language: detectLanguage(file) || "",
+        language: getLanguageFromExtension(path.extname(file)) || "",
         parseTime: 0,
       });
 
@@ -646,7 +750,7 @@ export class BatchProcessor extends EventEmitter {
   /**
    * Create error result for failed files
    */
-  private createErrorResult(file: string, error: any): ParseResult {
+  private createErrorResult(file: string, error: unknown): ParseResult {
     // Use the new error handling system to log and categorize errors
     let parsedError;
 
@@ -654,51 +758,37 @@ export class BatchProcessor extends EventEmitter {
       // Determine error type based on error message patterns
       if (error.message.includes("timeout")) {
         parsedError = parseErrorHandler.createTimeoutError(
-          error.message,
-          file,
-          undefined,
-          "Batch processing timeout",
+          `${error.message} (file: ${file})`,
         );
       } else if (
         error.message.includes("ENOENT") ||
         error.message.includes("no such file")
       ) {
         parsedError = parseErrorHandler.createFileSystemError(
-          error.message,
-          file,
-          "File access during batch processing",
+          `${error.message} (file: ${file})`,
         );
       } else if (
         error.message.includes("EACCES") ||
         error.message.includes("permission")
       ) {
         parsedError = parseErrorHandler.createFileSystemError(
-          error.message,
-          file,
-          "Permission error during batch processing",
+          `${error.message} (file: ${file})`,
         );
       } else if (
         error.message.includes("memory") ||
         error.message.includes("heap")
       ) {
         parsedError = parseErrorHandler.createMemoryError(
-          error.message,
-          file,
-          undefined,
-          "Memory error during batch processing",
+          `${error.message} (file: ${file})`,
         );
       } else {
         parsedError = parseErrorHandler.createRuntimeError(
-          error.message,
-          file,
-          "Batch processing runtime error",
+          `${error.message} (file: ${file})`,
         );
       }
     } else {
       parsedError = parseErrorHandler.createRuntimeError(
-        `Processing error: ${String(error)}`,
-        file,
-        "Unknown error during batch processing",
+        `Processing error: ${String(error)} (file: ${file})`,
       );
     }
 
@@ -708,7 +798,7 @@ export class BatchProcessor extends EventEmitter {
     return {
       nodes: [],
       errors: [parsedError],
-      language: detectLanguage(file) || "",
+      language: getLanguageFromExtension(path.extname(file)) || "",
       parseTime: 0,
     };
   }
@@ -726,7 +816,10 @@ export class BatchProcessor extends EventEmitter {
       errorSummary.set(type, []);
     }
 
-    const errors = errorSummary.get(type)!;
+    const errors = errorSummary.get(type);
+    if (!errors) {
+      return;
+    }
     let existing = errors.find((e) => e.message === message);
 
     if (!existing) {
@@ -805,7 +898,10 @@ export class BatchProcessor extends EventEmitter {
       });
     }
 
-    const stats = this.performanceMetrics.languageStats.get(language)!;
+    const stats = this.performanceMetrics.languageStats.get(language);
+    if (!stats) {
+      return;
+    }
     stats.files++;
     stats.nodes += result.nodes.length;
     stats.parseTime += result.parseTime;

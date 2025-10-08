@@ -98,11 +98,19 @@ pub fn detect_language_from_path(
     let language = match extension {
         "ts" | "tsx" => "typescript",
         "js" | "jsx" | "mjs" | "cjs" => "javascript",
-        "py" | "pyi" => "python",
+        "py" | "pyi" | "pyw" => "python",
         "rs" => "rust",
         "java" => "java",
-        "cpp" | "cc" | "cxx" | "c++" | "hpp" | "hh" | "hxx" => "cpp",
+        "cpp" | "cc" | "cxx" | "c++" | "hpp" | "hh" | "hxx" | "h++" => "cpp",
         "c" | "h" => "c",
+        "cs" => "c_sharp",
+        "go" => "go",
+        "rb" => "ruby",
+        "php" => "php",
+        "kt" => "kotlin",
+        "swift" => "swift",
+        "scala" => "scala",
+        "sh" | "bash" => "bash",
         _ => {
             return Err(crate::error::ASTProcessingError::UnsupportedLanguage(
                 format!("No language mapping found for extension: {}", extension),

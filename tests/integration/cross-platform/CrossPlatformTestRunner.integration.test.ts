@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect } from "vitest";
-import { CrossPlatformTestRunner } from "./CrossPlatformTestRunner.js";
+import { CrossPlatformTestRunner } from "./CrossPlatformTestRunner";
 
 describe("CrossPlatformTestRunner Integration", () => {
   test("should include performance tests when enabled", async () => {

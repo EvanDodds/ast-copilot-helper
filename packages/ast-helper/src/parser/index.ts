@@ -1,9 +1,20 @@
 /**
- * Tree-sitter AST Parser - Main exports
+ * Rust-based AST Parser - Main exports
  */
 
-export { RuntimeDetector } from "./runtime-detector.js";
-export { TreeSitterGrammarManager } from "./grammar-manager.js";
 export * from "./types.js";
-export * from "./languages.js";
 export * from "./parsers/index.js";
+export {
+  RustParserAdapter,
+  createRustParserAdapter,
+} from "./rust-parser-adapter.js";
+export {
+  RustParserCli,
+  parseCode,
+  parseBatch,
+  parseFile,
+  parseFiles,
+  getSupportedLanguages,
+  isLanguageSupported,
+  checkCliAvailable,
+} from "./rust-cli.js";

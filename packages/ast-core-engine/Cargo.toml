@@ -10,6 +10,11 @@ repository = "https://github.com/EvanDodds/ast-copilot-helper"
 [lib]
 crate-type = ["lib", "cdylib"]
 
+[[bin]]
+name = "ast-parser"
+path = "src/bin/ast_parser.rs"
+required-features = ["full-system"]
+
 [dependencies]
 # WASM-specific dependencies
 wasm-bindgen = { version = "0.2" }
@@ -20,7 +25,11 @@ getrandom = { version = "0.2", features = ["js"] }
 uuid = { version = "1.10", features = ["v4", "serde", "js"], default-features = false }
 
 # Async runtime - features depend on target
-tokio = { version = "1.0", features = ["macros", "rt", "sync", "time"], default-features = false }
+tokio = { version = "1.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time", "fs"], default-features = false }
+
+# CLI parsing for binary
+clap = { version = "4.5", features = ["derive"], optional = true }
+serde_yaml = { version = "0.9", optional = true }
 
 # Database and storage (WASM-compatible)
 sqlx = { version = "0.8", features = ["sqlite", "chrono", "uuid"], default-features = false, optional = true }
@@ -36,7 +45,27 @@ num_cpus = { version = "1.16", optional = true }
 libc = { version = "0.2", optional = true }
 
 # AST parsing
-tree-sitter = { version = "0.20", optional = true }
+tree-sitter = { version = "0.25", optional = true }
+
+# Tree-sitter language parsers - updated to latest versions
+tree-sitter-javascript = { version = "0.25.0", optional = true }
+tree-sitter-python = { version = "0.25.0", optional = true }
+tree-sitter-typescript = { version = "0.23.2", optional = true }
+tree-sitter-c = { version = "0.24.1", optional = true }
+tree-sitter-java = { version = "0.23.5", optional = true }
+tree-sitter-cpp = { version = "0.23.4", optional = true }
+tree-sitter-c-sharp = { version = "0.23.1", optional = true }
+tree-sitter-rust = { version = "0.24.0", optional = true }
+tree-sitter-go = { version = "0.25.0", optional = true }
+
+# Additional language parsers - updated to latest versions
+tree-sitter-ruby = { version = "0.23.1", optional = true }
+tree-sitter-php = { version = "0.24.2", optional = true }
+tree-sitter-kotlin = { version = "1.1.0", optional = true, package = "tree-sitter-kotlin-ng" }
+tree-sitter-swift = { version = "0.7.1", optional = true }
+tree-sitter-scala = { version = "0.24.0", optional = true }
+tree-sitter-bash = { version = "0.25.0", optional = true }
+# tree-sitter-dart = { version = "0.0.4", optional = true } # Uses older tree-sitter API
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -55,6 +84,8 @@ futures = "0.3"
 # Random utilities
 fastrand = "2.0"
 
+# CLI dependencies removed - already defined above
+
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 tokio = { version = "1.0", features = ["full"] }
@@ -63,7 +94,7 @@ tempfile = "3.0"
 [features]
 default = ["full-system"]
 wasm = [] # WASM build without system dependencies
-full-system = ["sqlx", "sysinfo", "num_cpus", "tree-sitter", "libc", "tokio/fs", "sqlx/runtime-tokio"] # Include system dependencies for native builds
+full-system = ["tree-sitter", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript", "tree-sitter-c", "tree-sitter-java", "tree-sitter-cpp", "tree-sitter-c-sharp", "tree-sitter-rust", "tree-sitter-go", "tree-sitter-ruby", "tree-sitter-php", "tree-sitter-kotlin", "tree-sitter-swift", "tree-sitter-scala", "tree-sitter-bash", "sqlx", "sysinfo", "num_cpus", "libc", "clap", "serde_yaml"] # Include system dependencies for native builds
 
 [profile.release]
 lto = true

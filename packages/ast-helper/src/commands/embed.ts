@@ -243,26 +243,87 @@ export class EmbedCommand {
         this.embeddingDb = new EmbeddingDatabaseManager(this.dbManager);
       }
 
-      // For now, return mock annotations as the annotation database structure is not yet implemented
-      // In a real implementation, this would query the annotations database
-      this.logger.warn(
-        "⚠️  Annotation database integration not yet implemented, using mock data",
-      );
+      // Load real annotations from the database
+      const annotations = await this.loadAnnotationsFromDatabaseFiles();
 
-      return [
-        {
-          nodeId: "mock-1",
-          signature: "function example()",
-          summary: "Example function for testing",
-          sourceSnippet: 'function example() { return "test"; }',
-        },
-        {
-          nodeId: "mock-2",
-          signature: "class TestClass",
-          summary: "Test class for embedding",
-          sourceSnippet: "class TestClass {\n  constructor() {}\n}",
-        },
-      ];
+      if (annotations.length === 0) {
+        this.logger.warn(
+          "No annotations found in database. Run 'ast-helper annotate' first to generate annotations.",
+        );
+      } else {
+        this.logger.info(
+          `Loaded ${annotations.length} annotations from database`,
+        );
+      }
+
+      return annotations;
+    } catch (error: any) {
+      throw new Error(
+        `Failed to load annotations from database: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Load annotations from database files
+   */
+  private async loadAnnotationsFromDatabaseFiles(): Promise<Annotation[]> {
+    try {
+      if (!this.dbManager) {
+        throw new Error("Database manager not initialized");
+      }
+
+      const fs = await import("fs/promises");
+      const annotationsDir = path.join(this.dbManager.astdbPath, "annotations");
+
+      // Check if annotations directory exists
+      try {
+        await fs.access(annotationsDir);
+      } catch {
+        // Annotations directory doesn't exist, return empty array
+        return [];
+      }
+
+      const files = await fs.readdir(annotationsDir);
+      const jsonFiles = files.filter((file) => file.endsWith(".json"));
+
+      if (jsonFiles.length === 0) {
+        return [];
+      }
+
+      const annotations: Annotation[] = [];
+
+      for (const file of jsonFiles) {
+        try {
+          const filePath = path.join(annotationsDir, file);
+          const data = await fs.readFile(filePath, "utf-8");
+          const fileAnnotations = JSON.parse(data);
+
+          if (Array.isArray(fileAnnotations)) {
+            // Convert from stored format to embed format
+            for (const annotation of fileAnnotations) {
+              annotations.push({
+                nodeId:
+                  annotation.node_id ||
+                  `${file}-${annotation.signature || "unknown"}`,
+                signature: annotation.signature || annotation.name || "Unknown",
+                summary:
+                  annotation.summary ||
+                  annotation.description ||
+                  "No summary available",
+                sourceSnippet:
+                  annotation.code_snippet || annotation.source_snippet || "",
+              });
+            }
+          }
+        } catch (parseError) {
+          this.logger.warn(
+            `Failed to parse annotation file ${file}: ${parseError}`,
+          );
+        }
+      }
+
+      return annotations;
     } catch (error: any) {
       throw new Error(
         `Failed to load annotations from database: ${error.message}`,

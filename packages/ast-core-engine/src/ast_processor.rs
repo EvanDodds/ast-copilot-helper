@@ -1,4 +1,5 @@
 use crate::error::{ASTProcessingError, EngineError};
+use crate::language_config::LanguageConfig;
 use crate::types::ProcessingOptions;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
@@ -27,6 +28,15 @@ pub enum SupportedLanguage {
     Rust,
     Java,
     Cpp,
+    C,
+    CSharp,
+    Go,
+    Ruby,
+    Php,
+    Kotlin,
+    Swift,
+    Scala,
+    Bash,
 }
 
 /// AST node information for analysis
@@ -70,6 +80,7 @@ impl ParserPool {
     }
 
     /// Get a parser for the specified language, creating if necessary
+    #[cfg(feature = "full-system")]
     pub fn get_parser(&self, language: SupportedLanguage) -> Result<Parser, EngineError> {
         let mut parser_entry = self.parsers.entry(language.clone()).or_default();
 
@@ -77,13 +88,24 @@ impl ParserPool {
             return Ok(parser);
         }
 
-        // Create new parser if pool is empty
+        // Create new parser with proper language configuration
+        let mut parser = Parser::new();
+        LanguageConfig::configure_parser(&mut parser, &language)?;
+
+        Ok(parser)
+    }
+
+    /// Get a parser for WASM builds (fallback implementation)
+    #[cfg(not(feature = "full-system"))]
+    pub fn get_parser(&self, language: SupportedLanguage) -> Result<Parser, EngineError> {
+        let mut parser_entry = self.parsers.entry(language.clone()).or_default();
+
+        if let Some(parser) = parser_entry.pop() {
+            return Ok(parser);
+        }
+
+        // Create new parser (WASM stub)
         let parser = Parser::new();
-
-        // For now, we'll just return the parser without setting language
-        // This allows compilation while we focus on the structure
-        // TODO: Add language setting when Tree-sitter grammars are available
-
         Ok(parser)
     }
 
@@ -110,7 +132,8 @@ impl AstProcessor {
         }
     }
 
-    /// Parse source code and extract AST nodes (simplified version)
+    /// Parse source code and extract AST nodes using Tree-sitter
+    #[cfg(feature = "full-system")]
     pub fn parse_code(
         &self,
         source_code: &str,
@@ -120,8 +143,48 @@ impl AstProcessor {
     ) -> Result<AstProcessingResult, EngineError> {
         let start_time = std::time::Instant::now();
 
-        // For now, return a mock result to test the structure
-        // TODO: Implement actual Tree-sitter parsing when grammars are available
+        // Get parser from pool
+        let mut parser = self.parser_pool.get_parser(language.clone())?;
+
+        // Parse the source code
+        let tree = parser.parse(source_code, None).ok_or_else(|| {
+            EngineError::ASTProcessing(ASTProcessingError::TreeSitter(
+                "Failed to parse source code".to_string(),
+            ))
+        })?;
+
+        // Extract AST nodes from Tree-sitter tree
+        let nodes = self.extract_ast_nodes(&tree, source_code);
+        let total_nodes = nodes.len() as u32;
+        let error_count = self.count_syntax_errors(&tree);
+
+        // Return parser to pool
+        self.parser_pool.return_parser(language.clone(), parser);
+
+        let processing_time = start_time.elapsed().as_millis() as u32;
+
+        Ok(AstProcessingResult {
+            nodes,
+            language: format!("{:?}", language),
+            file_path: file_path.to_string(),
+            processing_time_ms: processing_time,
+            total_nodes,
+            error_count,
+        })
+    }
+
+    /// Parse source code - WASM fallback version
+    #[cfg(not(feature = "full-system"))]
+    pub fn parse_code(
+        &self,
+        source_code: &str,
+        language: SupportedLanguage,
+        file_path: &str,
+        _options: &ProcessingOptions,
+    ) -> Result<AstProcessingResult, EngineError> {
+        let start_time = std::time::Instant::now();
+
+        // WASM fallback - basic parsing structure
         let nodes = vec![AstNode {
             node_type: "program".to_string(),
             start_byte: 0,
@@ -145,6 +208,130 @@ impl AstProcessor {
             total_nodes: 1,
             error_count: 0,
         })
+    }
+
+    /// Extract AST nodes from Tree-sitter tree
+    #[cfg(feature = "full-system")]
+    fn extract_ast_nodes(&self, tree: &tree_sitter::Tree, source_code: &str) -> Vec<AstNode> {
+        let mut nodes = Vec::new();
+        let mut cursor = tree.walk();
+
+        // Walk the tree and extract significant nodes
+        self.walk_tree_nodes(&mut cursor, source_code, &mut nodes);
+
+        nodes
+    }
+
+    /// Recursively walk Tree-sitter nodes and extract significant ones
+    #[cfg(feature = "full-system")]
+    fn walk_tree_nodes(
+        &self,
+        cursor: &mut tree_sitter::TreeCursor,
+        source_code: &str,
+        nodes: &mut Vec<AstNode>,
+    ) {
+        let node = cursor.node();
+
+        // Only process named nodes (skip anonymous tokens)
+        if node.is_named() && self.is_significant_node_type(node.kind()) {
+            let text = node.utf8_text(source_code.as_bytes()).unwrap_or("");
+
+            nodes.push(AstNode {
+                node_type: node.kind().to_string(),
+                start_byte: node.start_byte() as u32,
+                end_byte: node.end_byte() as u32,
+                start_row: node.start_position().row as u32,
+                end_row: node.end_position().row as u32,
+                start_column: node.start_position().column as u32,
+                end_column: node.end_position().column as u32,
+                text: if text.len() > 200 {
+                    format!("{}...", &text[..200])
+                } else {
+                    text.to_string()
+                },
+                children_count: node.child_count() as u32,
+                is_named: node.is_named(),
+            });
+        }
+
+        // Visit children
+        if cursor.goto_first_child() {
+            loop {
+                self.walk_tree_nodes(cursor, source_code, nodes);
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+            cursor.goto_parent();
+        }
+    }
+
+    /// Check if a node type is significant for AST analysis
+    fn is_significant_node_type(&self, node_type: &str) -> bool {
+        matches!(
+            node_type,
+            "program"
+                | "source_file"
+                | "module"
+                | "function_declaration"
+                | "function_definition"
+                | "function"
+                | "method_declaration"
+                | "method_definition"
+                | "method"
+                | "class_declaration"
+                | "class_definition"
+                | "class"
+                | "interface_declaration"
+                | "interface"
+                | "variable_declaration"
+                | "variable_declarator"
+                | "assignment_expression"
+                | "import_declaration"
+                | "import_statement"
+                | "export_declaration"
+                | "if_statement"
+                | "for_statement"
+                | "while_statement"
+                | "try_statement"
+                | "block"
+                | "statement_block"
+                | "compound_statement"
+                | "call_expression"
+                | "identifier"
+                | "property_identifier"
+        ) || node_type.contains("_statement")
+            || node_type.contains("_expression")
+    }
+
+    /// Count syntax errors in the parsed tree
+    #[cfg(feature = "full-system")]
+    fn count_syntax_errors(&self, tree: &tree_sitter::Tree) -> u32 {
+        let mut error_count = 0;
+        let mut cursor = tree.walk();
+
+        Self::count_errors_recursive(&mut cursor, &mut error_count);
+        error_count
+    }
+
+    /// Recursively count syntax errors in tree
+    #[cfg(feature = "full-system")]
+    fn count_errors_recursive(cursor: &mut tree_sitter::TreeCursor, error_count: &mut u32) {
+        let node = cursor.node();
+
+        if node.has_error() || node.is_error() {
+            *error_count += 1;
+        }
+
+        if cursor.goto_first_child() {
+            loop {
+                Self::count_errors_recursive(cursor, error_count);
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+            cursor.goto_parent();
+        }
     }
 
     /// Process multiple files in parallel
@@ -310,6 +497,9 @@ mod tests {
             SupportedLanguage::Rust,
             SupportedLanguage::Java,
             SupportedLanguage::Cpp,
+            SupportedLanguage::C,
+            SupportedLanguage::CSharp,
+            SupportedLanguage::Go,
         ];
 
         for lang in languages {

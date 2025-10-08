@@ -1,143 +1,149 @@
 /**
- * Annotation Command Implementation
- *
- * Processes AST nodes and generates comprehensive annotations as specified in issue #10.
- * Implements batch processing, progress reporting, and atomic file operations.
+ * Annotate Command Implementation
+ * Provides TypeScript CLI interface to Rust annotation functionality
  */
 
-import { join, basename } from "node:path";
-import { readFile, readdir, access, mkdir } from "node:fs/promises";
-import { performance } from "node:perf_hooks";
+import { performance } from "perf_hooks";
 import { createLogger } from "../logging/index.js";
-import { ASTDatabaseManager } from "../database/manager.js";
-import { FileSystemManager } from "../filesystem/manager.js";
-import type { ASTNode } from "../parser/ast-schema.js";
-import type { AnnotationContext } from "../parser/annotation-generator.js";
-import { AnnotationGenerator } from "../parser/annotation-generator.js";
-import type {
-  Annotation,
-  AnnotationConfig,
-} from "../parser/annotation-types.js";
 import type { Config } from "../types.js";
+import { rustParser, type RustAnnotateResult } from "../parser/rust-cli.js";
+import { ASTDatabaseManager } from "../database/manager.js";
+import { FileSelectionEngine } from "../file-selection/index.js";
+import { ValidationErrors } from "../errors/index.js";
+import * as path from "path";
+import * as fs from "fs/promises";
 
 /**
  * Options for the annotate command
  */
-export interface AnnotateCommandOptions {
-  changed?: boolean;
-  force?: boolean;
-  config?: string;
-  workspace?: string;
+export interface AnnotateOptions {
+  /** File glob pattern or specific file paths */
+  glob?: string;
+  /** Single file to annotate */
+  file?: string;
+  /** Language override */
+  language?: string;
+  /** Batch size for processing multiple files */
   batchSize?: number;
+  /** Maximum concurrency */
   maxConcurrency?: number;
+  /** Force re-annotation of existing files */
+  force?: boolean;
+  /** Show detailed output */
+  verbose?: boolean;
+  /** Dry run mode */
   dryRun?: boolean;
-  outputStats?: boolean;
+  /** Output format */
+  format?: "json" | "yaml" | "summary";
+  /** Output file path */
+  outputFile?: string;
+  /** Only process changed files */
+  changed?: boolean;
+  /** Workspace directory */
+  workspace?: string;
+  /** Config file path */
+  config?: string;
+  /** Store results in database */
+  storeResults?: boolean;
 }
 
 /**
- * Statistics for annotation processing
+ * Annotation processing result
  */
-export interface AnnotationStats {
-  totalNodes: number;
-  annotatedNodes: number;
-  skippedNodes: number;
-  errorNodes: number;
-  processingTimeMs: number;
-  averageTimePerNodeMs: number;
-  memoryUsage: {
-    peakMB: number;
-    averageMB: number;
-  };
-  languageBreakdown: Record<string, number>;
-  qualityBreakdown: {
-    highQuality: number;
-    mediumQuality: number;
-    lowQuality: number;
-  };
+export interface AnnotationResult {
+  filePath: string;
+  success: boolean;
+  annotations?: RustAnnotateResult;
+  error?: string;
+  processingTime: number;
 }
 
 /**
- * Progress callback for annotation processing
+ * Batch annotation results
  */
-export type AnnotationProgressCallback = (
-  completed: number,
-  total: number,
-  currentNode?: string,
-) => void;
+export interface BatchAnnotationResult {
+  totalFiles: number;
+  processedFiles: number;
+  failedFiles: number;
+  totalAnnotations: number;
+  totalProcessingTime: number;
+  results: AnnotationResult[];
+  errors: string[];
+}
 
 /**
- * Annotation Command Handler
- *
- * Processes parsed AST files and generates comprehensive annotations
- * following the requirements specified in issue #10.
+ * Annotate command implementation
  */
-export class AnnotateCommandHandler {
-  private logger = createLogger();
-  private dbManager!: ASTDatabaseManager;
-  private fsManager = new FileSystemManager();
-  private annotationGenerator!: AnnotationGenerator;
+export class AnnotateCommand {
+  private logger = createLogger({ operation: "annotate" });
+  private fileSelectionEngine: FileSelectionEngine;
+  private dbManager?: ASTDatabaseManager;
+
+  constructor() {
+    this.fileSelectionEngine = new FileSelectionEngine();
+  }
 
   /**
-   * Execute the annotation command
+   * Execute the annotate command
    */
-  async execute(
-    options: AnnotateCommandOptions,
-    config: Config,
-  ): Promise<void> {
+  async execute(options: AnnotateOptions, config: Config): Promise<void> {
     const startTime = performance.now();
-    const startMemory = process.memoryUsage().heapUsed / 1024 / 1024;
 
     try {
-      // Initialize managers and configuration
-      await this.initialize(config, options);
+      this.logger.info("Annotate command started", {
+        options: this.sanitizeOptionsForLogging(options),
+      });
 
-      // Get AST files to process
-      const astFiles = await this.getASTFilesToProcess(options);
+      // Validate options and configuration
+      await this.validateOptions(options, config);
 
-      if (astFiles.length === 0) {
-        this.logger.info("No AST files found to annotate");
+      // Initialize database manager if needed
+      if (!options.dryRun) {
+        await this.initializeDatabaseManager(config);
+      }
+
+      // Get files to annotate
+      const files = await this.selectFiles(options, config);
+
+      if (files.length === 0) {
+        this.logger.warn("No files found to annotate");
         return;
       }
 
-      this.logger.info("Starting annotation generation", {
-        files: astFiles.length,
-        batchSize: options.batchSize || config.batchSize,
-        force: options.force,
-      });
+      this.logger.info(`Found ${files.length} files to annotate`);
 
-      // Process files in batches
-      const stats = await this.processASTFiles(
-        astFiles,
-        options,
-        config,
-        this.createProgressCallback(),
-      );
+      // Handle dry run
+      if (options.dryRun) {
+        this.logger.info(
+          "Dry run mode - showing files that would be annotated:",
+        );
+        files.forEach((file, index) => {
+          // eslint-disable-next-line no-console
+          console.log(`  ${index + 1}. ${file}`);
+        });
+        return;
+      }
 
-      // Calculate final statistics
-      const endTime = performance.now();
-      const endMemory = process.memoryUsage().heapUsed / 1024 / 1024;
+      // Process annotations
+      const result = await this.processAnnotations(files, options, config);
 
-      stats.processingTimeMs = endTime - startTime;
-      stats.averageTimePerNodeMs =
-        stats.totalNodes > 0 ? stats.processingTimeMs / stats.totalNodes : 0;
-      stats.memoryUsage = {
-        peakMB: Math.max(startMemory, endMemory),
-        averageMB: (startMemory + endMemory) / 2,
-      };
+      // Store results in database
+      if (options.storeResults !== false) {
+        await this.storeAnnotations(result.results);
+      }
 
       // Output results
-      await this.outputResults(stats, options);
+      await this.outputResults(result, options);
 
-      this.logger.info("Annotation generation completed", {
-        totalNodes: stats.totalNodes,
-        annotated: stats.annotatedNodes,
-        timeMs: Math.round(stats.processingTimeMs),
-        throughput: Math.round(
-          stats.totalNodes / (stats.processingTimeMs / 1000),
-        ),
+      const totalTime = performance.now() - startTime;
+      this.logger.info("Annotate command completed", {
+        totalFiles: result.totalFiles,
+        processedFiles: result.processedFiles,
+        totalAnnotations: result.totalAnnotations,
+        totalTime: Math.round(totalTime),
       });
     } catch (error) {
-      this.logger.error("Annotation command failed", {
+      this.logger.error("Annotate command failed", {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -145,548 +151,351 @@ export class AnnotateCommandHandler {
   }
 
   /**
-   * Initialize managers and configuration
+   * Validate options and configuration
    */
-  private async initialize(
+  private async validateOptions(
+    options: AnnotateOptions,
     config: Config,
-    options: AnnotateCommandOptions,
   ): Promise<void> {
-    // Initialize database manager with workspace path, not outputDir
-    // ASTDatabaseManager will create .astdb inside the workspace
-    const workspacePath = options.workspace || process.cwd();
-    this.dbManager = new ASTDatabaseManager(workspacePath);
+    // Check if Rust CLI is available
+    const cliAvailable = await rustParser.checkCliAvailable();
+    if (!cliAvailable) {
+      throw new Error(
+        "Rust CLI binary not found. Please ensure ast-parser is built and available in PATH.",
+      );
+    }
 
-    // Ensure database structure exists
-    await this.dbManager.createDirectoryStructure({ force: false });
+    // Validate batch size
+    if (
+      options.batchSize &&
+      (options.batchSize < 1 || options.batchSize > 100)
+    ) {
+      throw ValidationErrors.invalidValue(
+        "batchSize",
+        options.batchSize.toString(),
+        "Batch size must be between 1 and 100",
+      );
+    }
 
-    // Initialize annotation generator with merged config
-    const annotationConfig: Partial<AnnotationConfig> = {
-      performance: {
-        batchSize: options.batchSize || config.batchSize,
-        maxConcurrency: options.maxConcurrency || config.concurrency,
-        progressReporting: true,
-      },
-      output: {
-        atomicWrites: true,
-        validateSchema: true,
-        prettifyJson: !options.dryRun,
-      },
-    };
+    // Validate concurrency
+    if (
+      options.maxConcurrency &&
+      (options.maxConcurrency < 1 || options.maxConcurrency > 20)
+    ) {
+      throw ValidationErrors.invalidValue(
+        "maxConcurrency",
+        options.maxConcurrency.toString(),
+        "Max concurrency must be between 1 and 20",
+      );
+    }
 
-    this.annotationGenerator = new AnnotationGenerator(annotationConfig);
+    // Validate output directory exists if not dry run
+    if (!options.dryRun && !config.outputDir) {
+      throw ValidationErrors.invalidValue(
+        "outputDir",
+        "undefined",
+        'Output directory must be configured. Run "ast-helper init" first.',
+      );
+    }
   }
 
   /**
-   * Get AST files that need annotation processing
+   * Initialize database manager
    */
-  private async getASTFilesToProcess(
-    options: AnnotateCommandOptions,
-  ): Promise<string[]> {
-    const structure = this.dbManager.getDatabaseStructure();
+  private async initializeDatabaseManager(config: Config): Promise<void> {
+    if (!config.outputDir) {
+      throw new Error("Output directory not configured");
+    }
 
+    this.dbManager = new ASTDatabaseManager(config.outputDir);
+
+    // Ensure annotation directory exists
+    const annotationDir = path.join(config.outputDir, "annotations");
     try {
-      await access(structure.asts);
-    } catch {
-      this.logger.warn("AST directory does not exist", {
-        path: structure.asts,
-      });
-      return [];
+      await fs.mkdir(annotationDir, { recursive: true });
+    } catch (error) {
+      // Directory might already exist, that's fine
     }
-
-    const allAstFiles = await readdir(structure.asts);
-    const astJsonFiles = allAstFiles.filter((f) => f.endsWith(".json"));
-
-    if (options.changed) {
-      // Only process files that have changed or don't have annotations
-      return this.filterChangedFiles(astJsonFiles, structure);
-    }
-
-    if (options.force) {
-      // Process all files
-      return astJsonFiles.map((f) => join(structure.asts, f));
-    }
-
-    // Process files that don't have annotations
-    return this.filterUnannotatedFiles(astJsonFiles, structure);
   }
 
   /**
-   * Filter files that have changed since last annotation
+   * Select files to annotate
    */
-  private async filterChangedFiles(
-    astFiles: string[],
-    structure: any,
-  ): Promise<string[]> {
-    const changedFiles: string[] = [];
-
-    for (const astFile of astFiles) {
-      const astPath = join(structure.asts, astFile);
-
-      try {
-        // Read AST file to get metadata
-        const astContent = await readFile(astPath, "utf8");
-        const astData = JSON.parse(astContent);
-
-        if (
-          astData.parseResult?.nodes &&
-          Array.isArray(astData.parseResult.nodes)
-        ) {
-          // Check if any nodes need re-annotation
-          const needsUpdate = await this.checkNodesNeedUpdate(
-            astData.parseResult.nodes,
-            structure,
-          );
-          if (needsUpdate) {
-            changedFiles.push(astPath);
-          }
-        }
-      } catch (error) {
-        this.logger.warn("Failed to check AST file for changes", {
-          file: astFile,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        // Include file if we can't determine status
-        changedFiles.push(astPath);
-      }
-    }
-
-    return changedFiles;
-  }
-
-  /**
-   * Filter files that don't have annotations
-   */
-  private async filterUnannotatedFiles(
-    astFiles: string[],
-    structure: any,
-  ): Promise<string[]> {
-    const unannotatedFiles: string[] = [];
-
-    for (const astFile of astFiles) {
-      const astPath = join(structure.asts, astFile);
-
-      try {
-        const astContent = await readFile(astPath, "utf8");
-        const astData = JSON.parse(astContent);
-
-        if (
-          astData.parseResult?.nodes &&
-          Array.isArray(astData.parseResult.nodes)
-        ) {
-          // Check if any nodes lack annotations
-          const hasUnannotatedNodes = await this.hasUnannotatedNodes(
-            astData.parseResult.nodes,
-            structure,
-          );
-          if (hasUnannotatedNodes) {
-            unannotatedFiles.push(astPath);
-          }
-        }
-      } catch (error) {
-        this.logger.warn("Failed to check AST file annotations", {
-          file: astFile,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        unannotatedFiles.push(astPath);
-      }
-    }
-
-    return unannotatedFiles;
-  }
-
-  /**
-   * Check if nodes need annotation updates
-   */
-  private async checkNodesNeedUpdate(
-    nodes: ASTNode[],
-    structure: any,
-  ): Promise<boolean> {
-    for (const node of nodes.slice(0, 5)) {
-      // Check first 5 nodes only for performance
-      const annotationPath = join(structure.annots, `${node.id}.json`);
-
-      try {
-        await access(annotationPath);
-        // Could add hash comparison here for more sophisticated change detection
-      } catch {
-        // Annotation doesn't exist
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Check if file has nodes without annotations
-   */
-  private async hasUnannotatedNodes(
-    nodes: ASTNode[],
-    structure: any,
-  ): Promise<boolean> {
-    for (const node of nodes.slice(0, 10)) {
-      // Check first 10 nodes for performance
-      const annotationPath = join(structure.annots, `${node.id}.json`);
-
-      try {
-        await access(annotationPath);
-      } catch {
-        // Annotation doesn't exist
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Process AST files and generate annotations
-   */
-  private async processASTFiles(
-    astFiles: string[],
-    options: AnnotateCommandOptions,
+  private async selectFiles(
+    options: AnnotateOptions,
     config: Config,
-    onProgress: AnnotationProgressCallback,
-  ): Promise<AnnotationStats> {
-    const stats: AnnotationStats = {
-      totalNodes: 0,
-      annotatedNodes: 0,
-      skippedNodes: 0,
-      errorNodes: 0,
-      processingTimeMs: 0,
-      averageTimePerNodeMs: 0,
-      memoryUsage: { peakMB: 0, averageMB: 0 },
-      languageBreakdown: {},
-      qualityBreakdown: { highQuality: 0, mediumQuality: 0, lowQuality: 0 },
-    };
+  ): Promise<string[]> {
+    let files: string[] = [];
 
-    const batchSize = options.batchSize || config.batchSize || 10;
-    let processedFiles = 0;
+    if (options.file) {
+      // Single file specified
+      files = [path.resolve(options.file)];
+    } else {
+      // Use file selection engine
+      const selectionOptions = {
+        glob: options.glob,
+        changed: options.changed,
+        workspace: options.workspace || process.cwd(),
+      };
 
-    for (let i = 0; i < astFiles.length; i += batchSize) {
-      const batch = astFiles.slice(i, i + batchSize);
-
-      this.logger.debug("Processing batch", {
-        batch: Math.floor(i / batchSize) + 1,
-        totalBatches: Math.ceil(astFiles.length / batchSize),
-        files: batch.length,
-      });
-
-      // Process batch of files
-      const batchStats = await this.processBatch(
-        batch,
-        options,
+      const selectionResult = await this.fileSelectionEngine.selectFiles(
+        selectionOptions,
         config,
-        onProgress,
       );
 
-      // Merge statistics
-      this.mergeStats(stats, batchStats);
-
-      processedFiles += batch.length;
-
-      // Report progress
-      this.logger.info("Batch completed", {
-        processed: processedFiles,
-        total: astFiles.length,
-        nodesInBatch: batchStats.totalNodes,
-      });
+      files = selectionResult.files;
     }
 
-    return stats;
-  }
-
-  /**
-   * Process a batch of AST files
-   */
-  private async processBatch(
-    astFiles: string[],
-    options: AnnotateCommandOptions,
-    config: Config,
-    onProgress: AnnotationProgressCallback,
-  ): Promise<AnnotationStats> {
-    const batchStats: AnnotationStats = {
-      totalNodes: 0,
-      annotatedNodes: 0,
-      skippedNodes: 0,
-      errorNodes: 0,
-      processingTimeMs: 0,
-      averageTimePerNodeMs: 0,
-      memoryUsage: { peakMB: 0, averageMB: 0 },
-      languageBreakdown: {},
-      qualityBreakdown: { highQuality: 0, mediumQuality: 0, lowQuality: 0 },
-    };
-
-    for (const astFile of astFiles) {
+    // Filter out files that don't exist
+    const existingFiles: string[] = [];
+    for (const file of files) {
       try {
-        const fileStats = await this.processASTFile(
-          astFile,
-          options,
-          config,
-          onProgress,
-        );
-        this.mergeStats(batchStats, fileStats);
-      } catch (error) {
-        this.logger.error("Failed to process AST file", {
-          file: astFile,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        batchStats.errorNodes++;
+        await fs.access(file);
+        existingFiles.push(file);
+      } catch {
+        this.logger.warn(`File not found: ${file}`);
       }
     }
 
-    return batchStats;
+    return existingFiles;
   }
 
   /**
-   * Process a single AST file and generate annotations
+   * Process annotations for all files
    */
-  private async processASTFile(
-    astFilePath: string,
-    options: AnnotateCommandOptions,
+  private async processAnnotations(
+    files: string[],
+    options: AnnotateOptions,
     _config: Config,
-    onProgress: AnnotationProgressCallback,
-  ): Promise<AnnotationStats> {
-    const fileStats: AnnotationStats = {
-      totalNodes: 0,
-      annotatedNodes: 0,
-      skippedNodes: 0,
-      errorNodes: 0,
-      processingTimeMs: 0,
-      averageTimePerNodeMs: 0,
-      memoryUsage: { peakMB: 0, averageMB: 0 },
-      languageBreakdown: {},
-      qualityBreakdown: { highQuality: 0, mediumQuality: 0, lowQuality: 0 },
-    };
+  ): Promise<BatchAnnotationResult> {
+    const results: AnnotationResult[] = [];
+    const errors: string[] = [];
+    let totalAnnotations = 0;
+    const startTime = performance.now();
 
-    // Read and parse AST file
-    const astContent = await readFile(astFilePath, "utf8");
-    const astData = JSON.parse(astContent);
+    const batchSize = options.batchSize || 10;
+    const concurrency = options.maxConcurrency || 4;
 
-    if (
-      !astData.parseResult?.nodes ||
-      !Array.isArray(astData.parseResult.nodes)
-    ) {
-      this.logger.warn("AST file has no nodes array", { file: astFilePath });
-      return fileStats;
+    this.logger.info(
+      `Processing ${files.length} files in batches of ${batchSize}`,
+    );
+
+    // Process files in batches
+    for (let i = 0; i < files.length; i += batchSize) {
+      const batch = files.slice(i, i + batchSize);
+
+      this.logger.debug(
+        `Processing batch ${Math.floor(i / batchSize) + 1}: ${batch.length} files`,
+      );
+
+      try {
+        // Use Rust CLI batch processing
+        const batchResult = await rustParser.annotateFiles(batch, {
+          language: options.language,
+          maxConcurrency: concurrency,
+        });
+
+        // Convert results
+        for (const [filePath, result] of Object.entries(batchResult.results)) {
+          const annotationResult: AnnotationResult = {
+            filePath,
+            success: result.success,
+            processingTime: 0, // Individual timing not available from batch
+          };
+
+          if (result.success && result.result) {
+            annotationResult.annotations = result.result;
+            totalAnnotations += result.result.annotations.length;
+          } else {
+            annotationResult.error = result.error || "Unknown error";
+            errors.push(`${filePath}: ${annotationResult.error}`);
+          }
+
+          results.push(annotationResult);
+        }
+      } catch (error) {
+        // Handle batch failure by processing files individually
+        this.logger.warn(
+          `Batch processing failed, falling back to individual processing: ${error}`,
+        );
+
+        for (const filePath of batch) {
+          try {
+            const fileStartTime = performance.now();
+            const annotations = await rustParser.annotateFile(
+              filePath,
+              options.language,
+            );
+            const processingTime = performance.now() - fileStartTime;
+
+            results.push({
+              filePath,
+              success: true,
+              annotations,
+              processingTime,
+            });
+
+            totalAnnotations += annotations.annotations.length;
+          } catch (fileError) {
+            const errorMsg =
+              fileError instanceof Error
+                ? fileError.message
+                : String(fileError);
+            errors.push(`${filePath}: ${errorMsg}`);
+
+            results.push({
+              filePath,
+              success: false,
+              error: errorMsg,
+              processingTime: 0,
+            });
+          }
+        }
+      }
     }
 
-    const nodes: ASTNode[] = astData.parseResult.nodes;
-    fileStats.totalNodes = nodes.length;
+    const totalTime = performance.now() - startTime;
+    const successfulResults = results.filter((r) => r.success);
 
-    // Create annotation context
-    const context: AnnotationContext = {
-      filePath: astData.metadata?.filePath || astFilePath,
-      language: astData.metadata?.language || "unknown",
-      sourceText: await this.loadSourceText(astData.metadata?.filePath),
-      allNodes: nodes,
-      imports: new Map(),
-      exports: new Set(),
+    return {
+      totalFiles: files.length,
+      processedFiles: successfulResults.length,
+      failedFiles: files.length - successfulResults.length,
+      totalAnnotations,
+      totalProcessingTime: totalTime,
+      results,
+      errors,
     };
+  }
 
-    // Update language breakdown
-    fileStats.languageBreakdown[context.language] =
-      (fileStats.languageBreakdown[context.language] || 0) + nodes.length;
+  /**
+   * Store annotations in database
+   */
+  private async storeAnnotations(results: AnnotationResult[]): Promise<void> {
+    if (!this.dbManager) {
+      throw new Error("Database manager not initialized");
+    }
 
-    this.logger.debug("Processing AST file", {
-      file: basename(astFilePath),
-      nodes: nodes.length,
-      language: context.language,
-    });
-
-    // Process each node
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-
-      if (!node) {
-        this.logger.warn("Encountered undefined node at index", { index: i });
+    for (const result of results) {
+      if (!result.success || !result.annotations) {
         continue;
       }
 
       try {
-        // Generate annotation
-        const annotation = await this.annotationGenerator.generateAnnotation(
-          node,
-          context,
+        // Create annotation file path
+        const relativePath = path.relative(process.cwd(), result.filePath);
+        const safePath = relativePath.replace(/[/\\]/g, "_");
+        const annotationsDir = path.join(
+          this.dbManager.astdbPath,
+          "annotations",
+        );
+        const annotationPath = path.join(annotationsDir, `${safePath}.json`);
+
+        // Ensure annotations directory exists
+        await fs.mkdir(annotationsDir, { recursive: true });
+
+        // Store annotation data
+        await fs.writeFile(
+          annotationPath,
+          JSON.stringify(result.annotations, null, 2),
+          "utf-8",
         );
 
-        // Save annotation (unless dry run)
-        if (!options.dryRun) {
-          await this.saveAnnotation(annotation);
-        }
-
-        fileStats.annotatedNodes++;
-
-        // Update quality breakdown
-        this.updateQualityBreakdown(fileStats, annotation);
-
-        // Report progress
-        onProgress(fileStats.annotatedNodes, fileStats.totalNodes, node.name);
+        this.logger.debug(`Stored annotations for ${result.filePath}`);
       } catch (error) {
-        this.logger.warn("Failed to annotate node", {
-          nodeId: node.id,
-          nodeName: node.name,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        fileStats.errorNodes++;
+        this.logger.error(
+          `Failed to store annotations for ${result.filePath}:`,
+          {
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
       }
     }
-
-    return fileStats;
   }
 
   /**
-   * Load source text for a file (with caching and error handling)
-   */
-  private async loadSourceText(filePath?: string): Promise<string> {
-    if (!filePath) {
-      return "";
-    }
-
-    try {
-      return await readFile(filePath, "utf8");
-    } catch (error) {
-      this.logger.warn("Failed to load source text", {
-        filePath,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return "";
-    }
-  }
-
-  /**
-   * Save annotation to disk with atomic writes
-   */
-  private async saveAnnotation(annotation: Annotation): Promise<void> {
-    const structure = this.dbManager.getDatabaseStructure();
-    const annotationPath = join(structure.annots, `${annotation.nodeId}.json`);
-
-    // Ensure annots directory exists
-    await mkdir(structure.annots, { recursive: true });
-
-    // Perform atomic write
-    await this.fsManager.atomicWriteFile(
-      annotationPath,
-      JSON.stringify(annotation, null, 2),
-    );
-  }
-
-  /**
-   * Create progress callback for reporting
-   */
-  private createProgressCallback(): AnnotationProgressCallback {
-    let lastReportTime = 0;
-    const reportInterval = 1000; // Report every second
-
-    return (completed: number, total: number, currentNode?: string) => {
-      const now = Date.now();
-
-      if (now - lastReportTime >= reportInterval) {
-        const percentage =
-          total > 0 ? Math.round((completed / total) * 100) : 0;
-
-        this.logger.info("Annotation progress", {
-          completed,
-          total,
-          percentage,
-          currentNode: currentNode || "unknown",
-        });
-
-        lastReportTime = now;
-      }
-    };
-  }
-
-  /**
-   * Merge statistics from multiple sources
-   */
-  private mergeStats(target: AnnotationStats, source: AnnotationStats): void {
-    target.totalNodes += source.totalNodes;
-    target.annotatedNodes += source.annotatedNodes;
-    target.skippedNodes += source.skippedNodes;
-    target.errorNodes += source.errorNodes;
-
-    // Merge language breakdown
-    for (const [language, count] of Object.entries(source.languageBreakdown)) {
-      target.languageBreakdown[language] =
-        (target.languageBreakdown[language] || 0) + count;
-    }
-
-    // Merge quality breakdown
-    target.qualityBreakdown.highQuality += source.qualityBreakdown.highQuality;
-    target.qualityBreakdown.mediumQuality +=
-      source.qualityBreakdown.mediumQuality;
-    target.qualityBreakdown.lowQuality += source.qualityBreakdown.lowQuality;
-  }
-
-  /**
-   * Update quality breakdown based on annotation
-   */
-  private updateQualityBreakdown(
-    stats: AnnotationStats,
-    annotation: Annotation,
-  ): void {
-    const avgConfidence =
-      (annotation.metadata.quality.signatureConfidence +
-        annotation.metadata.quality.summaryConfidence) /
-      2;
-
-    if (avgConfidence >= 0.8 && annotation.metadata.quality.isComplete) {
-      stats.qualityBreakdown.highQuality++;
-    } else if (avgConfidence >= 0.5) {
-      stats.qualityBreakdown.mediumQuality++;
-    } else {
-      stats.qualityBreakdown.lowQuality++;
-    }
-  }
-
-  /**
-   * Output results and statistics
+   * Output results in the specified format
    */
   private async outputResults(
-    stats: AnnotationStats,
-    options: AnnotateCommandOptions,
+    result: BatchAnnotationResult,
+    options: AnnotateOptions,
   ): Promise<void> {
-    if (options.outputStats) {
-      console.log("\n=== Annotation Generation Statistics ===");
-      console.log(`Total nodes processed: ${stats.totalNodes}`);
-      console.log(`Successfully annotated: ${stats.annotatedNodes}`);
-      console.log(`Skipped: ${stats.skippedNodes}`);
-      console.log(`Errors: ${stats.errorNodes}`);
-      console.log(`Processing time: ${Math.round(stats.processingTimeMs)}ms`);
-      console.log(
-        `Average per node: ${Math.round(stats.averageTimePerNodeMs)}ms`,
-      );
-      console.log(`Peak memory: ${Math.round(stats.memoryUsage.peakMB)}MB`);
+    const format = options.format || "summary";
 
-      console.log("\nLanguage breakdown:");
-      for (const [language, count] of Object.entries(stats.languageBreakdown)) {
-        console.log(`  ${language}: ${count} nodes`);
+    let output: string;
+
+    switch (format) {
+      case "json":
+        output = JSON.stringify(result, null, 2);
+        break;
+
+      case "yaml":
+        // Simple YAML-like output
+        output = `total_files: ${result.totalFiles}\n`;
+        output += `processed_files: ${result.processedFiles}\n`;
+        output += `failed_files: ${result.failedFiles}\n`;
+        output += `total_annotations: ${result.totalAnnotations}\n`;
+        output += `processing_time_ms: ${Math.round(result.totalProcessingTime)}\n`;
+        break;
+
+      case "summary":
+      default:
+        output = this.formatSummary(result);
+        break;
+    }
+
+    if (options.outputFile) {
+      await fs.writeFile(options.outputFile, output, "utf-8");
+      this.logger.info(`Results written to ${options.outputFile}`);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(output);
+    }
+  }
+
+  /**
+   * Format summary output
+   */
+  private formatSummary(result: BatchAnnotationResult): string {
+    let output = "\n✅ Annotation Summary:\n";
+    output += `   Files processed: ${result.processedFiles}/${result.totalFiles}\n`;
+    output += `   Total annotations: ${result.totalAnnotations}\n`;
+    output += `   Processing time: ${Math.round(result.totalProcessingTime)}ms\n`;
+
+    if (result.errors.length > 0) {
+      output += `\n❌ Errors (${result.errors.length}):\n`;
+      result.errors.slice(0, 5).forEach((error) => {
+        output += `   ${error}\n`;
+      });
+      if (result.errors.length > 5) {
+        output += `   ... and ${result.errors.length - 5} more\n`;
       }
-
-      console.log("\nQuality breakdown:");
-      console.log(`  High quality: ${stats.qualityBreakdown.highQuality}`);
-      console.log(`  Medium quality: ${stats.qualityBreakdown.mediumQuality}`);
-      console.log(`  Low quality: ${stats.qualityBreakdown.lowQuality}`);
     }
 
-    // Performance validation
-    const targetTimeMs = 3 * 60 * 1000; // 3 minutes
-    const targetNodes = 15000;
+    return output;
+  }
 
-    if (stats.totalNodes >= targetNodes) {
-      const meetsRequirement = stats.processingTimeMs <= targetTimeMs;
-      const throughput = Math.round(
-        stats.totalNodes / (stats.processingTimeMs / 1000),
-      );
+  /**
+   * Sanitize options for logging
+   */
+  private sanitizeOptionsForLogging(
+    options: AnnotateOptions,
+  ): Record<string, unknown> {
+    const sanitized = { ...options };
 
-      console.log(`\n=== Performance Validation ===`);
-      console.log(`Target: ${targetNodes} nodes in ${targetTimeMs / 1000}s`);
-      console.log(
-        `Actual: ${stats.totalNodes} nodes in ${Math.round(stats.processingTimeMs / 1000)}s`,
-      );
-      console.log(`Throughput: ${throughput} nodes/second`);
-      console.log(`Requirement ${meetsRequirement ? "✅ MET" : "❌ NOT MET"}`);
-    }
+    // Remove potentially sensitive data
+    delete sanitized.config;
+
+    return sanitized;
+  }
+}
+
+/**
+ * Annotate command handler for CLI integration
+ */
+export class AnnotateCommandHandler {
+  async execute(options: AnnotateOptions, config: Config): Promise<void> {
+    const command = new AnnotateCommand();
+    await command.execute(options, config);
   }
 }

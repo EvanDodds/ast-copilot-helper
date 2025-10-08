@@ -6,8 +6,12 @@ beforeEach(() => {
   // Setup before each test
 });
 
-afterEach(() => {
+afterEach(async () => {
   // Cleanup after each test
+
+  // Add a small delay to allow any pending async operations to complete
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
   // Force garbage collection if available to prevent memory leaks
   if (typeof global !== "undefined" && global.gc) {
     global.gc();
