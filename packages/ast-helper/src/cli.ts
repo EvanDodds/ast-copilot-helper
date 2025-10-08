@@ -249,6 +249,7 @@ export class AstHelperCli {
     this.setupWatchCommand();
     this.setupModelCommands();
     this.setupCacheCommands();
+    this.setupSnapshotCommands();
     this.setupPerformanceCommand();
   }
 
@@ -751,6 +752,223 @@ export class AstHelperCli {
   }
 
   /**
+   * Set up snapshot management commands
+   */
+  private setupSnapshotCommands(): void {
+    // Import types from snapshot command file
+    type CreateSnapshotCommandOptions = {
+      version?: string;
+      description?: string;
+      tags?: string;
+      compression?: number;
+      includeModels?: boolean;
+      includeCache?: boolean;
+      includeLogs?: boolean;
+      output?: string;
+      verbose?: boolean;
+    };
+
+    type RestoreSnapshotCommandOptions = {
+      target?: string;
+      skipBackup?: boolean;
+      skipChecksum?: boolean;
+      skipModels?: boolean;
+      force?: boolean;
+      verbose?: boolean;
+    };
+
+    type ListSnapshotCommandOptions = {
+      location?: "local" | "remote" | "all";
+      tags?: string;
+      sortBy?: "created" | "version" | "size";
+      order?: "asc" | "desc";
+      json?: boolean;
+      verbose?: boolean;
+    };
+
+    type PublishSnapshotCommandOptions = {
+      remote?: string;
+      verbose?: boolean;
+    };
+
+    type DownloadSnapshotCommandOptions = {
+      remote?: string;
+      output?: string;
+      verbose?: boolean;
+    };
+
+    type DeleteSnapshotCommandOptions = {
+      location?: "local" | "remote";
+      confirm?: boolean;
+      verbose?: boolean;
+    };
+
+    // Create snapshot command group
+    const snapshotCmd = this.program
+      .command("snapshot")
+      .description("Manage .astdb directory snapshots");
+
+    // snapshot create - Create compressed snapshot
+    snapshotCmd
+      .command("create")
+      .description("Create compressed snapshot from .astdb directory")
+      .addOption(
+        new Option(
+          "-v, --version <version>",
+          "Snapshot version (e.g., '1.0.0')",
+        ),
+      )
+      .addOption(
+        new Option("-d, --description <description>", "Snapshot description"),
+      )
+      .addOption(new Option("-t, --tags <tags>", "Comma-separated tags"))
+      .addOption(
+        new Option(
+          "-c, --compression <level>",
+          "Compression level (0-9, default 6)",
+        ).argParser(parseInt),
+      )
+      .addOption(
+        new Option("--include-models", "Include model files (can be large)"),
+      )
+      .addOption(new Option("--include-cache", "Include cache files"))
+      .addOption(new Option("--include-logs", "Include log files"))
+      .addOption(
+        new Option("-o, --output <path>", "Output path for snapshot file"),
+      )
+      .addOption(new Option("--verbose", "Show detailed progress"))
+      .action(async (options: CreateSnapshotCommandOptions) => {
+        await this.executeCommand("snapshot:create", options);
+      });
+
+    // snapshot restore - Restore snapshot to .astdb directory
+    snapshotCmd
+      .command("restore <snapshot-path>")
+      .description("Restore snapshot to .astdb directory")
+      .addOption(
+        new Option(
+          "-t, --target <path>",
+          "Target directory (default: current .astdb)",
+        ),
+      )
+      .addOption(
+        new Option("--skip-backup", "Skip backup of existing .astdb directory"),
+      )
+      .addOption(new Option("--skip-checksum", "Skip checksum validation"))
+      .addOption(
+        new Option("--skip-models", "Skip model files during restoration"),
+      )
+      .addOption(new Option("-f, --force", "Overwrite existing files"))
+      .addOption(new Option("--verbose", "Show detailed progress"))
+      .action(
+        async (
+          snapshotPath: string,
+          options: RestoreSnapshotCommandOptions,
+        ) => {
+          await this.executeCommand("snapshot:restore", {
+            ...options,
+            snapshotPath,
+          });
+        },
+      );
+
+    // snapshot list - List available snapshots
+    snapshotCmd
+      .command("list")
+      .description("List available snapshots")
+      .addOption(
+        new Option("-l, --location <location>", "Snapshot location")
+          .choices(["local", "remote", "all"])
+          .default("all"),
+      )
+      .addOption(new Option("-t, --tags <tags>", "Filter by tags"))
+      .addOption(
+        new Option("--sort-by <field>", "Sort by field")
+          .choices(["created", "version", "size"])
+          .default("created"),
+      )
+      .addOption(
+        new Option("--order <order>", "Sort order")
+          .choices(["asc", "desc"])
+          .default("desc"),
+      )
+      .addOption(new Option("--json", "Output in JSON format"))
+      .addOption(new Option("--verbose", "Show detailed information"))
+      .action(async (options: ListSnapshotCommandOptions) => {
+        await this.executeCommand("snapshot:list", options);
+      });
+
+    // snapshot publish - Publish to remote storage
+    snapshotCmd
+      .command("publish <snapshot-path>")
+      .description("Publish snapshot to remote storage (GitHub Releases)")
+      .addOption(
+        new Option(
+          "-r, --remote <index>",
+          "Remote storage index (default: 0)",
+        ).argParser(parseInt),
+      )
+      .addOption(new Option("--verbose", "Show detailed progress"))
+      .action(
+        async (
+          snapshotPath: string,
+          options: PublishSnapshotCommandOptions,
+        ) => {
+          await this.executeCommand("snapshot:publish", {
+            ...options,
+            snapshotPath,
+          });
+        },
+      );
+
+    // snapshot download - Download from remote storage
+    snapshotCmd
+      .command("download <remote-id>")
+      .description("Download snapshot from remote storage")
+      .addOption(
+        new Option(
+          "-r, --remote <index>",
+          "Remote storage index (default: 0)",
+        ).argParser(parseInt),
+      )
+      .addOption(
+        new Option(
+          "-o, --output <path>",
+          "Output path for downloaded snapshot",
+        ),
+      )
+      .addOption(new Option("--verbose", "Show detailed progress"))
+      .action(
+        async (remoteId: string, options: DownloadSnapshotCommandOptions) => {
+          await this.executeCommand("snapshot:download", {
+            ...options,
+            remoteId,
+          });
+        },
+      );
+
+    // snapshot delete - Delete snapshot
+    snapshotCmd
+      .command("delete <identifier>")
+      .description("Delete snapshot from local or remote storage")
+      .addOption(
+        new Option("-l, --location <location>", "Snapshot location")
+          .choices(["local", "remote"])
+          .default("local"),
+      )
+      .addOption(new Option("-y, --confirm", "Skip confirmation prompt"))
+      .addOption(new Option("--verbose", "Show detailed information"))
+      .action(
+        async (identifier: string, options: DeleteSnapshotCommandOptions) => {
+          await this.executeCommand("snapshot:delete", {
+            ...options,
+            identifier,
+          });
+        },
+      );
+  }
+
+  /**
    * Set up performance testing commands
    */
   private setupPerformanceCommand(): void {
@@ -1125,6 +1343,42 @@ export class AstHelperCli {
           "./commands/performance-monitor.js"
         );
         return new PerformanceMonitorCommandHandler();
+      }
+      case "snapshot:create": {
+        const { SnapshotCreateCommandHandler } = await import(
+          "./commands/snapshot.js"
+        );
+        return new SnapshotCreateCommandHandler();
+      }
+      case "snapshot:restore": {
+        const { SnapshotRestoreCommandHandler } = await import(
+          "./commands/snapshot.js"
+        );
+        return new SnapshotRestoreCommandHandler();
+      }
+      case "snapshot:list": {
+        const { SnapshotListCommandHandler } = await import(
+          "./commands/snapshot.js"
+        );
+        return new SnapshotListCommandHandler();
+      }
+      case "snapshot:publish": {
+        const { SnapshotPublishCommandHandler } = await import(
+          "./commands/snapshot.js"
+        );
+        return new SnapshotPublishCommandHandler();
+      }
+      case "snapshot:download": {
+        const { SnapshotDownloadCommandHandler } = await import(
+          "./commands/snapshot.js"
+        );
+        return new SnapshotDownloadCommandHandler();
+      }
+      case "snapshot:delete": {
+        const { SnapshotDeleteCommandHandler } = await import(
+          "./commands/snapshot.js"
+        );
+        return new SnapshotDeleteCommandHandler();
       }
       default:
         throw ValidationErrors.invalidValue(
