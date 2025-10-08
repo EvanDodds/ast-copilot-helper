@@ -333,7 +333,7 @@ mod tests {
                 row: 0,
                 column: text.len() as u32,
             },
-            children: vec![],
+            children_ids: vec![],
         }
     }
 

@@ -35,6 +35,13 @@ pub struct ParseResult {
     pub error: Option<String>,
 }
 
+impl ParseResult {
+    /// Check if the parsing was successful
+    pub fn is_ok(&self) -> bool {
+        self.success
+    }
+}
+
 /// Result from batch parsing operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BatchParseResult {

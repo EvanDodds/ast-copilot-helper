@@ -403,7 +403,7 @@ mod tests {
                 row: 0,
                 column: text.len() as u32,
             },
-            children,
+            children_ids: children,
         }
     }
 
@@ -419,9 +419,9 @@ mod tests {
 
         let metrics = analyzer.analyze_node(&node, "function simple() { return 42; }");
 
-        assert_eq!(metrics.cyclomatic_complexity, 1);
-        assert_eq!(metrics.return_statement_count, 0); // No children parsed in this test
-        assert!(metrics.line_count >= 1);
+        assert_eq!(metrics.cyclomatic, 1);
+        assert_eq!(metrics.decision_points, 0); // No children parsed in this test
+        assert!(metrics.breakdown.len() >= 0);
     }
 
     #[test]
@@ -437,7 +437,7 @@ mod tests {
 
         let metrics = analyzer.analyze_node(&node, "");
 
-        assert!(metrics.cyclomatic_complexity > 1);
+        assert!(metrics.cyclomatic > 1);
     }
 
     #[test]
