@@ -255,11 +255,18 @@ export class AstHelperCli {
   private setupParseCommand(): void {
     this.program
       .command("parse [path]")
-      .description("Extract AST from source files and save to .astdb database")
+      .description(
+        "Extract AST from source files and save to .astdb database\n\n" +
+          "Git Integration Examples:\n" +
+          "  ast-helper parse --staged              # Parse only staged files (pre-commit)\n" +
+          "  ast-helper parse --changed             # Parse all working directory changes\n" +
+          "  ast-helper parse --base main           # Parse files changed since main branch\n" +
+          "  ast-helper parse --base origin/develop # Parse files changed since develop",
+      )
       .addOption(
         new Option(
           "-c, --changed",
-          "Process only changed files since last commit",
+          "Process only changed files in working directory (modified, added, renamed, etc.)",
         ),
       )
       .addOption(
@@ -271,10 +278,15 @@ export class AstHelperCli {
       .addOption(
         new Option(
           "--base <ref>",
-          "Git reference for --changed comparison",
+          "Git reference to compare against (e.g., main, origin/main, abc123). Example: --base main",
         ).default("HEAD"),
       )
-      .addOption(new Option("--staged", "Process only staged files (git add)"))
+      .addOption(
+        new Option(
+          "--staged",
+          "Process only staged files (files added with 'git add'). Useful for pre-commit hooks.",
+        ),
+      )
       .addOption(
         new Option(
           "--force",
