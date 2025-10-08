@@ -25,7 +25,7 @@ describe("PerformanceMonitor", () => {
   });
 
   describe("query response caching", () => {
-    it("should cache and retrieve query responses", () => {
+    it("should cache and retrieve query responses", async () => {
       const mockQuery: MCPQuery = {
         type: "semantic",
         text: "test query",
@@ -46,14 +46,14 @@ describe("PerformanceMonitor", () => {
         },
       };
 
-      performanceMonitor.cacheQueryResponse(mockQuery, mockResponse);
+      await performanceMonitor.cacheQueryResponse(mockQuery, mockResponse);
       const cachedResponse =
-        performanceMonitor.getCachedQueryResponse(mockQuery);
+        await performanceMonitor.getCachedQueryResponse(mockQuery);
 
       expect(cachedResponse).toEqual(mockResponse);
     });
 
-    it("should return null for uncached queries", () => {
+    it("should return null for uncached queries", async () => {
       const mockQuery: MCPQuery = {
         type: "semantic",
         text: "uncached query",
@@ -61,7 +61,7 @@ describe("PerformanceMonitor", () => {
       };
 
       const cachedResponse =
-        performanceMonitor.getCachedQueryResponse(mockQuery);
+        await performanceMonitor.getCachedQueryResponse(mockQuery);
       expect(cachedResponse).toBeNull();
     });
 
@@ -147,7 +147,7 @@ describe("PerformanceMonitor", () => {
   });
 
   describe("cache management", () => {
-    it("should clear all caches", () => {
+    it("should clear all caches", async () => {
       const mockQuery: MCPQuery = {
         type: "semantic",
         text: "clear test",
@@ -168,31 +168,31 @@ describe("PerformanceMonitor", () => {
         },
       };
 
-      performanceMonitor.cacheQueryResponse(mockQuery, mockResponse);
+      await performanceMonitor.cacheQueryResponse(mockQuery, mockResponse);
       performanceMonitor.cacheEmbedding("test text", [0.1, 0.2]);
 
       // Verify items are cached
-      expect(performanceMonitor.getCachedQueryResponse(mockQuery)).toEqual(
-        mockResponse,
-      );
+      expect(
+        await performanceMonitor.getCachedQueryResponse(mockQuery),
+      ).toEqual(mockResponse);
       expect(performanceMonitor.getCachedEmbedding("test text")).toEqual([
         0.1, 0.2,
       ]);
 
       // Clear caches
-      performanceMonitor.clearCaches();
+      await performanceMonitor.clearCaches();
 
       // Verify items are no longer cached
-      expect(performanceMonitor.getCachedQueryResponse(mockQuery)).toBeNull();
+      expect(
+        await performanceMonitor.getCachedQueryResponse(mockQuery),
+      ).toBeNull();
       expect(performanceMonitor.getCachedEmbedding("test text")).toBeNull();
     });
   });
 
   describe("lifecycle management", () => {
-    it("should shutdown gracefully", () => {
-      expect(() => {
-        performanceMonitor.shutdown();
-      }).not.toThrow();
+    it("should shutdown gracefully", async () => {
+      await expect(performanceMonitor.shutdown()).resolves.not.toThrow();
     });
 
     it("should handle multiple shutdown calls", () => {

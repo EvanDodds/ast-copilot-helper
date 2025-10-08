@@ -6,6 +6,8 @@
  */
 
 import { createLogger } from "../../../ast-helper/src/logging/index.js";
+import { MultiLevelCacheManager } from "./cache/multi-level-cache.js";
+import type { MultiLevelCacheConfig } from "./cache/types.js";
 
 import type { MCPQuery, QueryResponse, PerformanceMetrics } from "./types.js";
 
@@ -285,9 +287,9 @@ export class PerformanceMonitor {
   private performanceConfig: PerformanceConfig;
 
   // Caches
-  private queryCache: LRUCache<QueryResponse>;
+  private multiLevelCache: MultiLevelCacheManager;
   private embeddingCache: LRUCache<number[]>;
-  private metadataCache: LRUCache<any>;
+  private metadataCache: LRUCache<Record<string, unknown>>;
 
   // Performance tracking
   private metrics: PerformanceMetrics = {
@@ -311,6 +313,7 @@ export class PerformanceMonitor {
   constructor(
     cacheConfig: Partial<CacheConfig> = {},
     performanceConfig: Partial<PerformanceConfig> = {},
+    multiLevelCacheConfig?: MultiLevelCacheConfig,
   ) {
     // Initialize cache configuration with defaults
     this.cacheConfig = {
@@ -332,10 +335,37 @@ export class PerformanceMonitor {
       ...performanceConfig,
     };
 
-    // Initialize caches
-    this.queryCache = new LRUCache<QueryResponse>(this.cacheConfig);
+    // Initialize multi-level cache for query responses
+    this.multiLevelCache = new MultiLevelCacheManager<QueryResponse>(
+      multiLevelCacheConfig ?? {
+        memory: {
+          enabled: true,
+          maxSize: 100,
+          defaultTTL: 5 * 60 * 1000, // 5 minutes
+        },
+        disk: {
+          enabled: true,
+          maxSize: 1000,
+          defaultTTL: 60 * 60 * 1000, // 1 hour
+          path: ".astdb/cache",
+        },
+        database: {
+          enabled: true,
+          maxSize: 10000,
+          defaultTTL: 24 * 60 * 60 * 1000, // 24 hours
+        },
+        enablePromotion: true,
+        enableWarming: false, // Will be enabled in warming phase
+        warmingQueryCount: 50,
+      },
+      ".astdb",
+    );
+
+    // Initialize legacy caches for embeddings and metadata
     this.embeddingCache = new LRUCache<number[]>(this.cacheConfig);
-    this.metadataCache = new LRUCache<any>(this.cacheConfig);
+    this.metadataCache = new LRUCache<Record<string, unknown>>(
+      this.cacheConfig,
+    );
 
     // Start metrics collection
     if (this.performanceConfig.enableDetailedTracking) {
@@ -366,20 +396,29 @@ export class PerformanceMonitor {
   /**
    * Get cached query response
    */
-  getCachedQueryResponse(query: MCPQuery): QueryResponse | null {
+  async getCachedQueryResponse(query: MCPQuery): Promise<QueryResponse | null> {
     const cacheKey = this.generateQueryCacheKey(query);
-    return this.queryCache.get(cacheKey);
+    const result = await this.multiLevelCache.get(cacheKey);
+
+    if (result.success && result.value) {
+      return result.value as QueryResponse;
+    }
+
+    return null;
   }
 
   /**
    * Cache query response
    */
-  cacheQueryResponse(query: MCPQuery, response: QueryResponse): void {
+  async cacheQueryResponse(
+    query: MCPQuery,
+    response: QueryResponse,
+  ): Promise<void> {
     const cacheKey = this.generateQueryCacheKey(query);
 
     // Cache all responses, including empty ones, but limit very large result sets
     if (response.results.length < 100) {
-      this.queryCache.set(cacheKey, response);
+      await this.multiLevelCache.set(cacheKey, response);
       this.cacheableQueries++;
     }
   }
@@ -506,26 +545,26 @@ export class PerformanceMonitor {
    */
   private startMetricsCollection(): void {
     this.metricsTimer = setInterval(() => {
-      this.collectMetrics();
+      void this.collectMetrics();
     }, this.performanceConfig.metricCollectionInterval);
   }
 
   /**
    * Collect and log metrics
    */
-  private collectMetrics(): void {
-    const queryCacheStats = this.queryCache.getStats();
+  private async collectMetrics(): Promise<void> {
+    const queryCacheStats = await this.multiLevelCache.getStats();
     const embeddingCacheStats = this.embeddingCache.getStats();
 
-    // Check cache hit ratio alerts
-    if (queryCacheStats.hitRatio < this.cacheConfig.hitRatioThreshold) {
+    // Check overall cache hit ratio alerts
+    if (queryCacheStats.overallHitRate < this.cacheConfig.hitRatioThreshold) {
       this.addAlert({
         type: "cache_hit_ratio",
         severity: "warning",
-        message: `Query cache hit ratio ${queryCacheStats.hitRatio.toFixed(2)} below threshold ${this.cacheConfig.hitRatioThreshold}`,
+        message: `Query cache hit ratio ${queryCacheStats.overallHitRate.toFixed(2)} below threshold ${this.cacheConfig.hitRatioThreshold}`,
         timestamp: new Date(),
         metrics: {
-          hitRatio: queryCacheStats.hitRatio,
+          hitRatio: queryCacheStats.overallHitRate,
           threshold: this.cacheConfig.hitRatioThreshold,
         },
       });
@@ -543,10 +582,12 @@ export class PerformanceMonitor {
   /**
    * Get comprehensive performance statistics
    */
-  getPerformanceStats() {
+  async getPerformanceStats() {
+    const queryCacheStats = await this.multiLevelCache.getStats();
+
     return {
       metrics: this.metrics,
-      queryCache: this.queryCache.getStats(),
+      queryCache: queryCacheStats,
       embeddingCache: this.embeddingCache.getStats(),
       metadataCache: this.metadataCache.getStats(),
       totalQueries: this.totalQueries,
@@ -563,8 +604,8 @@ export class PerformanceMonitor {
   /**
    * Clear all caches
    */
-  clearCaches(): void {
-    this.queryCache.clear();
+  async clearCaches(): Promise<void> {
+    await this.multiLevelCache.clear();
     this.embeddingCache.clear();
     this.metadataCache.clear();
 
@@ -572,14 +613,34 @@ export class PerformanceMonitor {
   }
 
   /**
+   * Invalidate cache entries for a specific file
+   */
+  async invalidateCacheForFile(filePath: string): Promise<void> {
+    // Invalidate all queries that might reference this file
+    const pattern = new RegExp(
+      `.*${filePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}.*`,
+    );
+    await this.multiLevelCache.invalidate(pattern);
+    this.logger.info("Cache invalidated for file", { filePath });
+  }
+
+  /**
+   * Invalidate cache entries matching a pattern
+   */
+  async invalidateCachePattern(pattern: string): Promise<void> {
+    await this.multiLevelCache.invalidate(pattern);
+    this.logger.info("Cache invalidated for pattern", { pattern });
+  }
+
+  /**
    * Shutdown performance monitor
    */
-  shutdown(): void {
+  async shutdown(): Promise<void> {
     if (this.metricsTimer) {
       clearInterval(this.metricsTimer);
     }
 
-    this.queryCache.shutdown();
+    await this.multiLevelCache.shutdown();
     this.embeddingCache.shutdown();
     this.metadataCache.shutdown();
 
