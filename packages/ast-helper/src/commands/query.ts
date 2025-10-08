@@ -16,6 +16,7 @@ import type {
   SearchResult,
 } from "../database/vector/types.js";
 import { XenovaEmbeddingGenerator } from "../embedder/XenovaEmbeddingGenerator.js";
+import { QueryCache } from "../cache/query-cache.js";
 
 import { createLogger } from "../logging/index.js";
 
@@ -65,6 +66,7 @@ export interface QueryResult {
 export class QueryCommandHandler {
   private vectorDB: VectorDatabase | null = null;
   private embeddingGenerator: XenovaEmbeddingGenerator | null = null;
+  private queryCache: QueryCache<QueryResult[]> | null = null;
 
   /**
    * Execute the query command
@@ -75,21 +77,54 @@ export class QueryCommandHandler {
     try {
       logger.info(`Starting semantic query: "${options.intent}"`);
 
-      // Initialize systems
+      // Initialize systems (including cache)
       await this.initialize(config);
 
-      // Generate embedding for query text
-      const queryEmbedding = await this.generateQueryEmbedding(options.intent);
+      // Build cache options for consistent caching
+      const cacheOptions = {
+        top: options.top || 5,
+        minScore: options.minScore || 0.0,
+        workspace: options.workspace,
+      };
 
-      // Search vector database
-      const searchResults = await this.searchSimilar(
-        queryEmbedding,
-        options.top || 5,
-        options.minScore || 0.0,
-      );
+      // Check cache first
+      let formattedResults: QueryResult[] | null = null;
+      if (this.queryCache) {
+        formattedResults = await this.queryCache.get(
+          options.intent,
+          cacheOptions,
+        );
+      }
 
-      // Format results
-      const formattedResults = await this.formatResults(searchResults, config);
+      if (formattedResults) {
+        logger.info("Cache hit - returning cached results");
+      } else {
+        logger.debug("Cache miss - executing query");
+
+        // Generate embedding for query text
+        const queryEmbedding = await this.generateQueryEmbedding(
+          options.intent,
+        );
+
+        // Search vector database
+        const searchResults = await this.searchSimilar(
+          queryEmbedding,
+          options.top || 5,
+          options.minScore || 0.0,
+        );
+
+        // Format results
+        formattedResults = await this.formatResults(searchResults, config);
+
+        // Cache the results
+        if (this.queryCache && formattedResults) {
+          await this.queryCache.set(
+            options.intent,
+            cacheOptions,
+            formattedResults,
+          );
+        }
+      }
 
       // Output results
       await this.outputResults(formattedResults, options.format || "plain");
@@ -153,7 +188,51 @@ export class QueryCommandHandler {
     const modelPath = path.join(outputDir, "models", "codebert");
     await this.embeddingGenerator.initialize(modelPath);
 
-    logger.info("Query systems initialized successfully");
+    // Initialize query cache
+    // Get index version from database for cache invalidation
+    const indexVersion = await this.getIndexVersion(outputDir);
+
+    // Check if caching is enabled (default: true)
+    const cacheEnabled = true; // TODO: Add cache config to Config type
+
+    this.queryCache = new QueryCache<QueryResult[]>({
+      cacheDir: path.join(outputDir, "cache"),
+      l1MaxEntries: 50,
+      l2MaxSizeBytes: 50 * 1024 * 1024, // 50MB
+      l3TtlMs: 7 * 24 * 60 * 60 * 1000, // 7 days
+      enabled: cacheEnabled,
+      indexVersion,
+    });
+    await this.queryCache.initialize();
+
+    logger.info("Query systems initialized successfully", {
+      cacheEnabled,
+      indexVersion,
+    });
+  }
+
+  /**
+   * Get index version for cache invalidation
+   */
+  private async getIndexVersion(outputDir: string): Promise<string> {
+    try {
+      const versionFile = path.join(outputDir, "index-version.txt");
+      if (existsSync(versionFile)) {
+        const version = await fs.readFile(versionFile, "utf-8");
+        return version.trim();
+      }
+    } catch (_error) {
+      // If version file doesn't exist, use timestamp of index file
+    }
+
+    // Fallback: use index file modification time
+    try {
+      const indexFile = path.join(outputDir, "vectors", "index.bin");
+      const stats = await fs.stat(indexFile);
+      return stats.mtime.getTime().toString();
+    } catch (_error) {
+      return "unknown";
+    }
   }
 
   /**

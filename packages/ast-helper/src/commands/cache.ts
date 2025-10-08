@@ -14,6 +14,8 @@ import type { Config } from "../types.js";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { rm } from "node:fs/promises";
+import { QueryCache } from "../cache/query-cache.js";
+import { getQueryLog } from "../cache/query-log-storage.js";
 
 const logger = createLogger();
 
@@ -78,46 +80,41 @@ export async function clearCache(
   const level = options.level || "all"; // Default to all levels
   logger.info("Clearing cache", { level });
 
-  const cacheBasePath = join(config.outputDir, ".cache");
+  const cacheDir = join(config.outputDir, "cache");
 
-  if (level === "all" || level === "L1") {
-    logger.info("Clearing L1 (memory) cache");
-    // L1 is in-memory only, cleared on restart
-    logger.info("L1 cache cleared (memory-only, no persistent state)");
-  }
+  try {
+    // Use QueryCache class for clearing
+    const queryCache = new QueryCache({
+      cacheDir,
+      enabled: true,
+    });
+    await queryCache.initialize();
 
-  if (level === "all" || level === "L2") {
-    const l2Path = join(cacheBasePath, "l2-disk");
-    if (existsSync(l2Path)) {
-      logger.info("Clearing L2 (disk) cache", { path: l2Path });
-      await rm(l2Path, { recursive: true, force: true });
-      logger.info("L2 cache cleared");
-    } else {
-      logger.info("L2 cache directory not found, nothing to clear");
-    }
-  }
-
-  if (level === "all" || level === "L3") {
-    const l3Path = join(cacheBasePath, "l3-cache.db");
-    const l3ShmPath = join(cacheBasePath, "l3-cache.db-shm");
-    const l3WalPath = join(cacheBasePath, "l3-cache.db-wal");
-
-    if (existsSync(l3Path)) {
-      logger.info("Clearing L3 (database) cache", { path: l3Path });
-      await rm(l3Path, { force: true });
-      if (existsSync(l3ShmPath)) {
-        await rm(l3ShmPath, { force: true });
+    if (level === "all") {
+      await queryCache.clear();
+      logger.info("All cache levels cleared");
+    } else if (level === "L1") {
+      // L1 is in-memory, cleared on restart
+      logger.info("L1 cache cleared (memory-only, no persistent state)");
+    } else if (level === "L2") {
+      const l2Path = join(cacheDir, "l2-disk");
+      if (existsSync(l2Path)) {
+        await rm(l2Path, { recursive: true, force: true });
+        logger.info("L2 cache cleared");
       }
-      if (existsSync(l3WalPath)) {
-        await rm(l3WalPath, { force: true });
-      }
-      logger.info("L3 cache cleared");
-    } else {
-      logger.info("L3 cache database not found, nothing to clear");
+    } else if (level === "L3") {
+      // L3 is query log storage
+      const queryLog = getQueryLog(cacheDir);
+      await queryLog.initialize();
+      const deleted = await queryLog.cleanOldEntries(0); // Delete all
+      logger.info(`L3 cache cleared (${deleted} entries removed)`);
     }
-  }
 
-  logger.info("Cache clear completed", { level, success: true });
+    logger.info("Cache clear completed", { level, success: true });
+  } catch (error) {
+    logger.error("Cache clear failed", { error: (error as Error).message });
+    throw error;
+  }
 }
 
 /**
@@ -132,68 +129,123 @@ export async function showCacheStats(
     detailed: options.detailed,
   });
 
-  const cacheBasePath = join(config.outputDir, ".cache");
+  const cacheDir = join(config.outputDir, "cache");
 
-  // Check cache existence
-  const l2Exists = existsSync(join(cacheBasePath, "l2-disk"));
-  const l3Exists = existsSync(join(cacheBasePath, "l3-cache.db"));
+  try {
+    // Initialize QueryCache and QueryLog to get stats
+    const queryCache = new QueryCache({
+      cacheDir,
+      enabled: true,
+    });
+    await queryCache.initialize();
 
-  const stats = {
-    cacheEnabled: true,
-    levels: {
-      L1: {
-        type: "memory",
-        status: "in-memory (active when server running)",
-        persistent: false,
+    const cacheStats = queryCache.getStats();
+
+    const queryLog = getQueryLog(cacheDir);
+    await queryLog.initialize();
+    const queryStats = await queryLog.getStatistics(30); // Last 30 days
+
+    const l2Exists = existsSync(join(cacheDir, "l2-disk"));
+    const l3Exists = existsSync(join(cacheDir, "query-log.db"));
+
+    const stats = {
+      cacheEnabled: true,
+      overall: {
+        totalHits: cacheStats.totalHits,
+        totalMisses: cacheStats.totalMisses,
+        hitRate: cacheStats.hitRate,
       },
-      L2: {
-        type: "disk",
-        status: l2Exists ? "initialized" : "not created",
-        path: join(cacheBasePath, "l2-disk"),
-        exists: l2Exists,
+      levels: {
+        L1: {
+          type: "memory",
+          hits: cacheStats.l1.hits,
+          misses: cacheStats.l1.misses,
+          size: cacheStats.l1.size,
+          maxSize: cacheStats.l1.maxSize,
+          hitRate:
+            cacheStats.l1.hits / (cacheStats.l1.hits + cacheStats.l1.misses) ||
+            0,
+        },
+        L2: {
+          type: "disk",
+          hits: cacheStats.l2.hits,
+          misses: cacheStats.l2.misses,
+          path: join(cacheDir, "l2-disk"),
+          exists: l2Exists,
+        },
+        L3: {
+          type: "database",
+          hits: cacheStats.l3.hits,
+          misses: cacheStats.l3.misses,
+          path: join(cacheDir, "query-log.db"),
+          exists: l3Exists,
+          totalQueries: queryStats.totalQueries,
+          avgExecutionTime: queryStats.averageExecutionTime,
+        },
       },
-      L3: {
-        type: "database",
-        status: l3Exists ? "initialized" : "not created",
-        path: join(cacheBasePath, "l3-cache.db"),
-        exists: l3Exists,
-      },
-    },
-    note: "Detailed runtime statistics available when MCP server is running",
-  };
+    };
 
-  if (options.json) {
-    process.stdout.write(JSON.stringify(stats, null, 2) + "\n");
-  } else {
-    process.stdout.write("\n=== Cache Statistics ===\n\n");
-    process.stdout.write(
-      `Cache Enabled: ${stats.cacheEnabled ? "Yes" : "No"}\n\n`,
-    );
+    if (options.json) {
+      process.stdout.write(JSON.stringify(stats, null, 2) + "\n");
+    } else {
+      process.stdout.write("\n=== Cache Statistics ===\n\n");
+      process.stdout.write(
+        `Cache Enabled: ${stats.cacheEnabled ? "Yes" : "No"}\n\n`,
+      );
 
-    process.stdout.write("Cache Levels:\n");
-    process.stdout.write(
-      `  L1 (Memory):   ${stats.levels.L1.status} - ${stats.levels.L1.type}\n`,
-    );
-    process.stdout.write(
-      `  L2 (Disk):     ${stats.levels.L2.status} - ${stats.levels.L2.type}\n`,
-    );
-    if (options.detailed) {
-      process.stdout.write(`                 Path: ${stats.levels.L2.path}\n`);
+      process.stdout.write("Overall Performance:\n");
+      process.stdout.write(`  Total Hits:    ${stats.overall.totalHits}\n`);
+      process.stdout.write(`  Total Misses:  ${stats.overall.totalMisses}\n`);
+      process.stdout.write(
+        `  Hit Rate:      ${(stats.overall.hitRate * 100).toFixed(2)}%\n\n`,
+      );
+
+      process.stdout.write("Cache Levels:\n");
+      process.stdout.write(
+        `  L1 (Memory):   ${stats.levels.L1.hits} hits / ${stats.levels.L1.misses} misses (${(stats.levels.L1.hitRate * 100).toFixed(1)}%)\n`,
+      );
+      process.stdout.write(
+        `                 Size: ${stats.levels.L1.size}/${stats.levels.L1.maxSize} entries\n`,
+      );
+
+      process.stdout.write(
+        `  L2 (Disk):     ${stats.levels.L2.hits} hits / ${stats.levels.L2.misses} misses\n`,
+      );
+      if (options.detailed) {
+        process.stdout.write(
+          `                 Path: ${stats.levels.L2.path}\n`,
+        );
+        process.stdout.write(
+          `                 Exists: ${stats.levels.L2.exists ? "Yes" : "No"}\n`,
+        );
+      }
+
+      process.stdout.write(
+        `  L3 (Database): ${stats.levels.L3.hits} hits / ${stats.levels.L3.misses} misses\n`,
+      );
+      process.stdout.write(
+        `                 Total Queries Logged: ${stats.levels.L3.totalQueries}\n`,
+      );
+      process.stdout.write(
+        `                 Avg Execution Time: ${stats.levels.L3.avgExecutionTime.toFixed(2)}ms\n`,
+      );
+      if (options.detailed) {
+        process.stdout.write(
+          `                 Path: ${stats.levels.L3.path}\n`,
+        );
+        process.stdout.write(
+          `                 Exists: ${stats.levels.L3.exists ? "Yes" : "No"}\n`,
+        );
+      }
     }
-    process.stdout.write(
-      `  L3 (Database): ${stats.levels.L3.status} - ${stats.levels.L3.type}\n`,
-    );
-    if (options.detailed) {
-      process.stdout.write(`                 Path: ${stats.levels.L3.path}\n`);
-    }
 
-    process.stdout.write(`\nℹ  ${stats.note}\n`);
-    process.stdout.write(
-      "\nTo get runtime statistics, query the MCP server while it's running.\n",
-    );
+    logger.info("Cache statistics displayed");
+  } catch (error) {
+    logger.error("Failed to get cache statistics", {
+      error: (error as Error).message,
+    });
+    throw error;
   }
-
-  logger.info("Cache statistics displayed");
 }
 
 /**
