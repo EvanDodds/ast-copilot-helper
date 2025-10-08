@@ -10,6 +10,7 @@ Transform your codebase into an AI-accessible knowledge base:
 - **🤖 MCP Integration**: Enable AI agents to understand your code structure
 - **⚡ Performance**: Fast parsing with intelligent caching and incremental updates
 - **🌐 Multi-Language**: Support for 15 programming languages across 3 tiers
+- **📦 Snapshot Distribution**: Share pre-built databases for instant team onboarding
 
 ### 🏢 Tier 1: Core Languages (4 languages)
 
@@ -127,6 +128,48 @@ const goResult = await parser.parseCode(
 ```
 
 **[📖 Complete Language Guide](docs/guide/multi-language-support.md)** • **[⚡ Performance Benchmarks](docs/guide/performance.md)** • **[🔧 API Reference](docs/api/interfaces.md)**
+
+## 📦 Snapshot Distribution System
+
+Share pre-built `.astdb` databases to reduce onboarding time from hours to minutes:
+
+```bash
+# Create and publish a snapshot
+yarn ast-helper snapshot create --version 1.0.0 --description "Production snapshot"
+yarn ast-helper snapshot publish snapshot-1.0.0.tar.gz
+
+# On another machine, download and restore
+yarn ast-helper snapshot download 1.0.0
+yarn ast-helper snapshot restore snapshot-1.0.0.tar.gz
+# Ready to work instantly!
+```
+
+### Key Features
+
+- **⚡ Instant Setup**: Skip parsing, restore pre-built databases in seconds
+- **🌐 Team Collaboration**: Share snapshots via GitHub Releases or custom backends
+- **🔄 CI/CD Integration**: Automated snapshot creation and publishing
+- **📝 Versioning**: Semantic versioning with tags and metadata
+- **🔐 Validation**: Checksum verification and backup creation
+- **📊 Compression**: Configurable compression (0-9) for optimal size/speed
+
+### Use Cases
+
+- **New Developer Onboarding**: Instant access to parsed codebase
+- **CI/CD Pipelines**: Skip parsing in every pipeline run
+- **Team Synchronization**: Ensure everyone has identical database states
+- **Release Snapshots**: Reproducible database states for each version
+
+### Automated Snapshots
+
+The project includes GitHub Actions workflow for automated snapshot creation:
+
+- **Push to Main**: Creates latest snapshot after code changes
+- **Nightly Schedule**: Daily snapshots at 2 AM UTC
+- **Release Events**: Tagged snapshots for each release
+- **Manual Trigger**: On-demand snapshot creation
+
+**[📚 Complete Snapshot Guide →](docs/SNAPSHOT_SYSTEM.md)**
 
 ## 🔒 Security Features
 

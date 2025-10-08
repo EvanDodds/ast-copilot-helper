@@ -30,7 +30,51 @@ import type {
 const logger = createLogger({ operation: "snapshot-manager" });
 
 /**
- * Manages all snapshot operations
+ * Manages all snapshot operations including creation, restoration, and remote synchronization
+ *
+ * @remarks
+ * The SnapshotManager provides a high-level API for orchestrating snapshot workflows.
+ * It coordinates SnapshotCreator, SnapshotRestorer, and RemoteStorage backends to
+ * provide a complete snapshot management solution.
+ *
+ * Features:
+ * - Unified API for all snapshot operations
+ * - Multiple remote storage backend support (GitHub, S3, custom)
+ * - Automatic snapshot scheduling and rotation
+ * - Local and remote snapshot listing and statistics
+ * - Integrated progress reporting and error handling
+ *
+ * @example
+ * ```typescript
+ * // Create manager with GitHub storage
+ * const manager = new SnapshotManager({
+ *   localStoragePath: './.snapshots',
+ *   defaultCompressionLevel: 6,
+ *   remoteStorage: [{
+ *     type: 'github',
+ *     config: {
+ *       owner: 'myorg',
+ *       repo: 'myrepo',
+ *       token: process.env.GITHUB_TOKEN,
+ *       releaseTag: 'snapshots'
+ *     }
+ *   }],
+ *   autoSnapshot: {
+ *     enabled: true,
+ *     afterCommits: 10,
+ *     afterDays: 7,
+ *     onPush: true
+ *   }
+ * });
+ *
+ * // Complete workflow: create, publish, download, restore
+ * const created = await manager.createSnapshot({ version: '1.0.0' });
+ * await manager.publishSnapshot(created.snapshotPath);
+ *
+ * // On another machine
+ * await manager.downloadSnapshot('1.0.0');
+ * await manager.restoreSnapshot({ snapshotPath: './.snapshots/snapshot-1.0.0.tar.gz' });
+ * ```
  */
 export class SnapshotManager {
   private config: SnapshotSystemConfig;
@@ -38,6 +82,56 @@ export class SnapshotManager {
   private restorer: SnapshotRestorer;
   private remoteStorages: RemoteStorage[];
 
+  /**
+   * Create a new SnapshotManager instance
+   *
+   * @param config - Optional snapshot system configuration
+   *
+   * @remarks
+   * The manager can be created with default configuration or customized:
+   *
+   * - `localStoragePath`: Where to store snapshots locally (default: "./.snapshots")
+   * - `defaultCompressionLevel`: Default compression 0-9 (default: 6)
+   * - `remoteStorage`: Array of remote storage backends
+   * - `defaultRemoteIndex`: Which remote to use by default
+   * - `autoSnapshot`: Automatic snapshot configuration
+   *
+   * @example
+   * ```typescript
+   * // Default configuration
+   * const manager = new SnapshotManager();
+   *
+   * // Custom local path
+   * const manager = new SnapshotManager({
+   *   localStoragePath: './my-snapshots'
+   * });
+   *
+   * // With GitHub remote storage
+   * const manager = new SnapshotManager({
+   *   localStoragePath: './.snapshots',
+   *   remoteStorage: [{
+   *     type: 'github',
+   *     config: {
+   *       owner: process.env.GITHUB_OWNER,
+   *       repo: process.env.GITHUB_REPO,
+   *       token: process.env.GITHUB_TOKEN,
+   *       releaseTag: 'snapshots',
+   *       createRelease: true
+   *     }
+   *   }]
+   * });
+   *
+   * // With auto-snapshot
+   * const manager = new SnapshotManager({
+   *   autoSnapshot: {
+   *     enabled: true,
+   *     afterCommits: 10,    // Create snapshot every 10 commits
+   *     afterDays: 7,        // Or every 7 days
+   *     onPush: true         // Or on git push
+   *   }
+   * });
+   * ```
+   */
   constructor(config?: Partial<SnapshotSystemConfig>) {
     this.config = {
       localStoragePath: config?.localStoragePath || "./.snapshots",
@@ -58,7 +152,41 @@ export class SnapshotManager {
   }
 
   /**
-   * Create a new snapshot
+   * Create a new snapshot with sensible defaults
+   *
+   * @param options - Partial snapshot creation options (uses defaults for omitted fields)
+   * @returns Promise resolving to creation result
+   *
+   * @remarks
+   * This method wraps SnapshotCreator with defaults from manager configuration:
+   * - `astdbPath`: Defaults to "./.astdb"
+   * - `outputPath`: Auto-generated in local storage path
+   * - `compressionLevel`: Uses manager's defaultCompressionLevel
+   * - Other options use sensible defaults (includeModels: true, includeCache: false, etc.)
+   *
+   * @example
+   * ```typescript
+   * // Minimal - uses all defaults
+   * const result = await manager.createSnapshot({
+   *   version: '1.0.0'
+   * });
+   *
+   * // With description and tags
+   * const result = await manager.createSnapshot({
+   *   version: '1.0.0',
+   *   description: 'Production release',
+   *   tags: ['production', 'stable']
+   * });
+   *
+   * // Custom compression and filters
+   * const result = await manager.createSnapshot({
+   *   version: '1.0.0',
+   *   compressionLevel: 9,
+   *   includeModels: false,
+   *   includeCache: false,
+   *   onProgress: (p) => console.log(`${p.percentage}%`)
+   * });
+   * ```
    */
   async createSnapshot(
     options: Partial<SnapshotCreateOptions>,
@@ -92,7 +220,42 @@ export class SnapshotManager {
   }
 
   /**
-   * Restore a snapshot
+   * Restore a snapshot with sensible defaults
+   *
+   * @param options - Partial snapshot restoration options
+   * @returns Promise resolving to restoration result
+   *
+   * @remarks
+   * This method wraps SnapshotRestorer with defaults:
+   * - `targetPath`: Defaults to "./.astdb"
+   * - `createBackup`: Recommended to enable (default: false)
+   * - `validateChecksum`: Recommended to enable (default: false)
+   * - `overwrite`: Defaults to false (prompts on conflicts)
+   *
+   * @example
+   * ```typescript
+   * // Minimal - restore to default location
+   * const result = await manager.restoreSnapshot({
+   *   snapshotPath: './.snapshots/snapshot-1.0.0.tar.gz'
+   * });
+   *
+   * // Recommended - with backup and validation
+   * const result = await manager.restoreSnapshot({
+   *   snapshotPath: './.snapshots/snapshot-1.0.0.tar.gz',
+   *   createBackup: true,
+   *   validateChecksum: true,
+   *   onProgress: (p) => console.log(`${p.phase}: ${p.percentage}%`)
+   * });
+   *
+   * // Custom target with options
+   * const result = await manager.restoreSnapshot({
+   *   snapshotPath: './snapshots/snapshot-1.0.0.tar.gz',
+   *   targetPath: './custom-astdb',
+   *   createBackup: true,
+   *   overwrite: true,
+   *   skipModels: true
+   * });
+   * ```
    */
   async restoreSnapshot(
     options: Partial<SnapshotRestoreOptions>,

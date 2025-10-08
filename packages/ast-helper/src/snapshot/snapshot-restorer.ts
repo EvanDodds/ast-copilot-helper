@@ -21,11 +21,102 @@ import { SnapshotPhase } from "./types.js";
 const logger = createLogger({ operation: "snapshot-restorer" });
 
 /**
- * Restores snapshots to .astdb directories
+ * Restores compressed snapshots to .astdb directories
+ *
+ * @remarks
+ * The SnapshotRestorer handles decompression and restoration of snapshot files
+ * to target .astdb directories. It includes checksum validation, backup creation,
+ * and progress reporting for safe and transparent restoration.
+ *
+ * @example
+ * ```typescript
+ * const restorer = new SnapshotRestorer();
+ *
+ * const result = await restorer.restore({
+ *   snapshotPath: './snapshot-1.0.0.tar.gz',
+ *   targetPath: './.astdb',
+ *   createBackup: true,
+ *   validateChecksum: true,
+ *   onProgress: (progress) => {
+ *     console.log(`${progress.phase}: ${progress.percentage}%`);
+ *   }
+ * });
+ *
+ * if (result.success) {
+ *   console.log(`Restored to: ${result.targetPath}`);
+ *   console.log(`Files restored: ${result.filesRestored}`);
+ *   if (result.backupPath) {
+ *     console.log(`Backup created: ${result.backupPath}`);
+ *   }
+ * }
+ * ```
  */
 export class SnapshotRestorer {
   /**
    * Restore a snapshot to an .astdb directory
+   *
+   * @param options - Snapshot restoration configuration
+   * @returns Promise resolving to restoration result with metadata and status
+   *
+   * @remarks
+   * This method:
+   * - Validates snapshot file exists and is readable
+   * - Optionally creates backup of existing target directory
+   * - Validates checksum if requested (recommended)
+   * - Extracts compressed archive to target location
+   * - Reports progress through optional callback
+   * - Provides detailed restoration statistics
+   *
+   * Like SnapshotCreator, this method returns a result object with `success: false`
+   * and detailed error information on failure rather than throwing exceptions.
+   *
+   * @example
+   * ```typescript
+   * // Minimal required options
+   * const result = await restorer.restore({
+   *   snapshotPath: './snapshot.tar.gz',
+   *   targetPath: './.astdb'
+   * });
+   *
+   * // Recommended: with backup and validation
+   * const result = await restorer.restore({
+   *   snapshotPath: './snapshot-1.0.0.tar.gz',
+   *   targetPath: './.astdb',
+   *   createBackup: true,           // Backup existing directory
+   *   validateChecksum: true,        // Verify snapshot integrity
+   *   overwrite: true,               // Overwrite existing files
+   *   onProgress: (progress) => {
+   *     console.log(`[${progress.phase}] ${progress.step}`);
+   *     console.log(`${progress.percentage}% complete`);
+   *   },
+   *   onFileRestored: (filePath) => {
+   *     console.log(`Restored: ${filePath}`);
+   *   }
+   * });
+   *
+   * // Check result and handle errors
+   * if (result.success) {
+   *   console.log(`✅ Snapshot restored successfully`);
+   *   console.log(`Target: ${result.targetPath}`);
+   *   console.log(`Files restored: ${result.filesRestored}`);
+   *   console.log(`Duration: ${result.durationMs}ms`);
+   *
+   *   if (result.backupPath) {
+   *     console.log(`Backup: ${result.backupPath}`);
+   *     // Optional: cleanup backup after verification
+   *     // await fs.rm(result.backupPath, { recursive: true });
+   *   }
+   *
+   *   console.log(`Metadata:`, result.metadata);
+   * } else {
+   *   console.error(`❌ Restoration failed: ${result.error}`);
+   *
+   *   // Backup is preserved on failure for recovery
+   *   if (result.backupPath) {
+   *     console.log(`Original files preserved at: ${result.backupPath}`);
+   *   }
+   * }
+   * ```
    */
   async restore(
     options: SnapshotRestoreOptions,

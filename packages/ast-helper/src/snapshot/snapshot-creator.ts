@@ -21,11 +21,98 @@ import { SnapshotPhase } from "./types.js";
 const logger = createLogger({ operation: "snapshot-creator" });
 
 /**
- * Creates snapshots from .astdb directories
+ * Creates compressed snapshots from .astdb directories
+ *
+ * @remarks
+ * The SnapshotCreator handles the creation of portable, compressed snapshot files
+ * from existing .astdb directories. Snapshots include metadata, checksums, and
+ * configurable compression levels for optimal distribution.
+ *
+ * @example
+ * ```typescript
+ * const creator = new SnapshotCreator();
+ *
+ * const result = await creator.create({
+ *   astdbPath: './.astdb',
+ *   outputPath: './snapshot.tar.gz',
+ *   version: '1.0.0',
+ *   description: 'Production snapshot',
+ *   tags: ['production', 'release'],
+ *   compressionLevel: 6,
+ *   filters: {
+ *     includeModels: false,
+ *     includeCache: false,
+ *     includeLogs: false
+ *   },
+ *   onProgress: (progress) => {
+ *     console.log(`${progress.phase}: ${progress.percentage}%`);
+ *   }
+ * });
+ *
+ * if (result.success) {
+ *   console.log(`Created: ${result.snapshotPath}`);
+ *   console.log(`Size: ${result.metadata.size.compressed} bytes`);
+ *   console.log(`Compression: ${(result.metadata.size.ratio * 100).toFixed(1)}%`);
+ * }
+ * ```
  */
 export class SnapshotCreator {
   /**
    * Create a snapshot from an .astdb directory
+   *
+   * @param options - Snapshot creation configuration
+   * @returns Promise resolving to creation result with metadata and status
+   *
+   * @remarks
+   * This method:
+   * - Validates source directory exists and is readable
+   * - Scans and filters files based on provided options
+   * - Creates compressed tar.gz archive with metadata
+   * - Generates SHA256 checksum for integrity verification
+   * - Reports progress through optional callback
+   *
+   * The method returns a result object with `success: false` and detailed error
+   * information if any step fails, rather than throwing exceptions. This enables
+   * graceful error handling in production environments.
+   *
+   * @example
+   * ```typescript
+   * // Minimal required options
+   * const result = await creator.create({
+   *   astdbPath: './.astdb',
+   *   outputPath: './snapshot.tar.gz'
+   * });
+   *
+   * // Full options with progress tracking
+   * const result = await creator.create({
+   *   astdbPath: './.astdb',
+   *   outputPath: './snapshots/snapshot-1.0.0.tar.gz',
+   *   version: '1.0.0',
+   *   description: 'Production snapshot for v1.0 release',
+   *   tags: ['production', 'stable', 'v1.0'],
+   *   compressionLevel: 9, // Maximum compression
+   *   filters: {
+   *     includeModels: false,  // Exclude large model files
+   *     includeCache: false,   // Exclude temporary cache
+   *     includeLogs: false     // Exclude log files
+   *   },
+   *   onProgress: (progress) => {
+   *     console.log(`[${progress.phase}] ${progress.step}`);
+   *     console.log(`Progress: ${progress.percentage}% (${progress.filesProcessed}/${progress.totalFiles} files)`);
+   *   },
+   *   onFileProcessed: (filePath) => {
+   *     console.log(`Processed: ${filePath}`);
+   *   }
+   * });
+   *
+   * // Check result
+   * if (result.success) {
+   *   console.log(`✅ Snapshot created: ${result.snapshotPath}`);
+   *   console.log(`Metadata:`, result.metadata);
+   * } else {
+   *   console.error(`❌ Creation failed: ${result.error}`);
+   * }
+   * ```
    */
   async create(options: SnapshotCreateOptions): Promise<SnapshotCreateResult> {
     const startTime = Date.now();
