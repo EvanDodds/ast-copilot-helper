@@ -11,17 +11,19 @@ Transform your codebase into an AI-accessible knowledge base:
 - **⚡ Performance**: Fast parsing with intelligent caching and incremental updates
 - **🌐 Multi-Language**: Support for 15 programming languages across 3 tiers
 
-### 🏢 Tier 1: Enterprise (6 languages)
+### 🏢 Tier 1: Core Languages (4 languages)
 
-TypeScript • JavaScript • Python • Java • C++ • C#
+JavaScript • TypeScript • Python • Rust
 
-### 👩‍💻 Tier 2: Developer (5 languages)
+### 👩‍💻 Tier 2: Popular Languages (7 languages)
 
-Go • Rust • PHP • Ruby • Swift
+Java • C++ • C • C# • Go • Ruby • PHP
 
-### 🎯 Tier 3: Specialized (4 languages)
+### 🎯 Tier 3: Specialized Languages (4 languages)
 
-Kotlin • Scala • Dart • Lua
+Kotlin • Swift • Scala • Bash
+
+**Powered by tree-sitter 0.25.x ecosystem**
 
 **[📚 Complete Language Guide →](docs/guide/multi-language-support.md)**
 
@@ -91,11 +93,11 @@ ast-copilot-helper/                 # Monorepo root
 
 AST Copilot Helper supports **15 programming languages** organized into 3 tiers:
 
-| Tier               | Languages                                     | Use Cases                                       |
-| ------------------ | --------------------------------------------- | ----------------------------------------------- |
-| **🏢 Enterprise**  | TypeScript, JavaScript, Python, Java, C++, C# | Production applications, enterprise codebases   |
-| **👩‍💻 Developer**   | Go, Rust, PHP, Ruby, Swift                    | Popular development languages, strong community |
-| **🎯 Specialized** | Kotlin, Scala, Dart, Lua                      | Domain-specific, emerging technologies          |
+| Tier               | Languages                            | Use Cases                                  |
+| ------------------ | ------------------------------------ | ------------------------------------------ |
+| **🏢 Core**        | JavaScript, TypeScript, Python, Rust | Foundation languages, highest optimization |
+| **👩‍💻 Popular**     | Java, C++, C, C#, Go, Ruby, PHP      | Widely-used production languages           |
+| **🎯 Specialized** | Kotlin, Swift, Scala, Bash           | Domain-specific and emerging technologies  |
 
 ### Quick Example
 

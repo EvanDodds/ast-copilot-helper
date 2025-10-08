@@ -22,6 +22,21 @@ use tree_sitter_python;
 use tree_sitter_rust;
 #[cfg(feature = "full-system")]
 use tree_sitter_typescript;
+// #[cfg(feature = "full-system")]
+// use tree_sitter_dart; // Uses older tree-sitter API
+// All additional parsers now enabled with newer tree-sitter
+#[cfg(feature = "full-system")]
+use tree_sitter_bash;
+#[cfg(feature = "full-system")]
+use tree_sitter_kotlin;
+#[cfg(feature = "full-system")]
+use tree_sitter_php;
+#[cfg(feature = "full-system")]
+use tree_sitter_ruby;
+#[cfg(feature = "full-system")]
+use tree_sitter_scala;
+#[cfg(feature = "full-system")]
+use tree_sitter_swift;
 
 /// Language configuration for Tree-sitter parsers
 #[cfg(feature = "full-system")]
@@ -38,48 +53,79 @@ impl LanguageConfig {
         vec![
             LanguageConfig {
                 language: SupportedLanguage::JavaScript,
-                grammar: tree_sitter_javascript::language(),
+                grammar: tree_sitter_javascript::LANGUAGE.into(),
                 extensions: vec!["js", "jsx", "mjs", "cjs"],
             },
             LanguageConfig {
                 language: SupportedLanguage::TypeScript,
-                grammar: tree_sitter_typescript::language_typescript(),
+                grammar: tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
                 extensions: vec!["ts", "tsx"],
             },
             LanguageConfig {
                 language: SupportedLanguage::Python,
-                grammar: tree_sitter_python::language(),
+                grammar: tree_sitter_python::LANGUAGE.into(),
                 extensions: vec!["py", "pyx", "pyi"],
             },
             LanguageConfig {
                 language: SupportedLanguage::Rust,
-                grammar: tree_sitter_rust::language(),
+                grammar: tree_sitter_rust::LANGUAGE.into(),
                 extensions: vec!["rs"],
             },
             LanguageConfig {
                 language: SupportedLanguage::Java,
-                grammar: tree_sitter_java::language(),
+                grammar: tree_sitter_java::LANGUAGE.into(),
                 extensions: vec!["java"],
             },
             LanguageConfig {
                 language: SupportedLanguage::Cpp,
-                grammar: tree_sitter_cpp::language(),
+                grammar: tree_sitter_cpp::LANGUAGE.into(),
                 extensions: vec!["cpp", "cc", "cxx", "c++", "hpp", "hh", "hxx", "h++"],
             },
             LanguageConfig {
                 language: SupportedLanguage::C,
-                grammar: tree_sitter_c::language(),
+                grammar: tree_sitter_c::LANGUAGE.into(),
                 extensions: vec!["c", "h"],
             },
             LanguageConfig {
                 language: SupportedLanguage::CSharp,
-                grammar: tree_sitter_c_sharp::language(),
+                grammar: tree_sitter_c_sharp::LANGUAGE.into(),
                 extensions: vec!["cs"],
             },
             LanguageConfig {
                 language: SupportedLanguage::Go,
-                grammar: tree_sitter_go::language(),
+                grammar: tree_sitter_go::LANGUAGE.into(),
                 extensions: vec!["go"],
+            },
+            // Additional language configurations - add incrementally with compatibility testing
+            LanguageConfig {
+                language: SupportedLanguage::Ruby,
+                grammar: tree_sitter_ruby::LANGUAGE.into(),
+                extensions: vec!["rb"],
+            },
+            LanguageConfig {
+                language: SupportedLanguage::Php,
+                grammar: tree_sitter_php::LANGUAGE_PHP.into(),
+                extensions: vec!["php"],
+            },
+            LanguageConfig {
+                language: SupportedLanguage::Kotlin,
+                grammar: tree_sitter_kotlin::LANGUAGE.into(),
+                extensions: vec!["kt"],
+            },
+            LanguageConfig {
+                language: SupportedLanguage::Swift,
+                grammar: tree_sitter_swift::LANGUAGE.into(),
+                extensions: vec!["swift"],
+            },
+            LanguageConfig {
+                language: SupportedLanguage::Scala,
+                grammar: tree_sitter_scala::LANGUAGE.into(),
+                extensions: vec!["scala"],
+            },
+            LanguageConfig {
+                language: SupportedLanguage::Bash,
+                grammar: tree_sitter_bash::LANGUAGE.into(),
+                extensions: vec!["sh", "bash"],
             },
         ]
     }
@@ -110,7 +156,7 @@ impl LanguageConfig {
         language: &SupportedLanguage,
     ) -> Result<(), EngineError> {
         if let Some(config) = Self::get_language_config(language) {
-            parser.set_language(config.grammar).map_err(|e| {
+            parser.set_language(&config.grammar).map_err(|e| {
                 EngineError::ASTProcessing(crate::error::ASTProcessingError::TreeSitter(format!(
                     "Failed to set language for {:?}: {}",
                     language, e
@@ -142,6 +188,12 @@ impl SupportedLanguage {
             SupportedLanguage::C,
             SupportedLanguage::CSharp,
             SupportedLanguage::Go,
+            SupportedLanguage::Ruby,
+            SupportedLanguage::Php,
+            SupportedLanguage::Kotlin,
+            SupportedLanguage::Swift,
+            SupportedLanguage::Scala,
+            SupportedLanguage::Bash,
         ]
     }
 
@@ -157,6 +209,12 @@ impl SupportedLanguage {
             SupportedLanguage::C => "c",
             SupportedLanguage::CSharp => "c_sharp",
             SupportedLanguage::Go => "go",
+            SupportedLanguage::Ruby => "ruby",
+            SupportedLanguage::Php => "php",
+            SupportedLanguage::Kotlin => "kotlin",
+            SupportedLanguage::Swift => "swift",
+            SupportedLanguage::Scala => "scala",
+            SupportedLanguage::Bash => "bash",
         }
     }
 
@@ -172,6 +230,12 @@ impl SupportedLanguage {
             SupportedLanguage::C => vec!["c", "h"],
             SupportedLanguage::CSharp => vec!["cs"],
             SupportedLanguage::Go => vec!["go"],
+            SupportedLanguage::Ruby => vec!["rb"],
+            SupportedLanguage::Php => vec!["php"],
+            SupportedLanguage::Kotlin => vec!["kt"],
+            SupportedLanguage::Swift => vec!["swift"],
+            SupportedLanguage::Scala => vec!["scala"],
+            SupportedLanguage::Bash => vec!["sh", "bash"],
         }
     }
 }
@@ -195,6 +259,12 @@ impl LanguageConfig {
             "c" | "h" => Some(SupportedLanguage::C),
             "cs" => Some(SupportedLanguage::CSharp),
             "go" => Some(SupportedLanguage::Go),
+            "rb" => Some(SupportedLanguage::Ruby),
+            "php" => Some(SupportedLanguage::Php),
+            "kt" => Some(SupportedLanguage::Kotlin),
+            "swift" => Some(SupportedLanguage::Swift),
+            "scala" => Some(SupportedLanguage::Scala),
+            "sh" | "bash" => Some(SupportedLanguage::Bash),
             _ => None,
         }
     }

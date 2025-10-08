@@ -184,6 +184,12 @@ fn string_to_language(lang_str: &str) -> Option<SupportedLanguage> {
         "c" => Some(SupportedLanguage::C),
         "csharp" | "c#" | "cs" => Some(SupportedLanguage::CSharp),
         "go" => Some(SupportedLanguage::Go),
+        "ruby" | "rb" => Some(SupportedLanguage::Ruby),
+        "php" => Some(SupportedLanguage::Php),
+        "kotlin" | "kt" => Some(SupportedLanguage::Kotlin),
+        "swift" => Some(SupportedLanguage::Swift),
+        "scala" => Some(SupportedLanguage::Scala),
+        "bash" | "sh" => Some(SupportedLanguage::Bash),
         _ => None,
     }
 }

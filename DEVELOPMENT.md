@@ -153,6 +153,48 @@ yarn run test:rust:fmt        # Code formatting check (cargo fmt --check)
 - **Code Quality**: Clippy linting catches common issues and suggests improvements
 - **Formatting**: Consistent code style with `rustfmt`
 
+#### Tree-sitter Language Ecosystem
+
+The Rust core engine uses **tree-sitter 0.25.10** with a comprehensive language parser ecosystem:
+
+**Supported Languages (15 total):**
+
+- **Tier 1:** JavaScript (0.25.0), TypeScript (0.23.2), Python (0.25.0), Rust (0.24.0)
+- **Tier 2:** Java (0.23.5), C++ (0.23.4), C (0.24.1), C# (0.23.1), Go (0.25.0), Ruby (0.23.1), PHP (0.24.2)
+- **Tier 3:** Kotlin (1.1.0), Swift (0.7.1), Scala (0.24.0), Bash (0.25.0)
+
+**API Compatibility:**
+
+```rust
+// Modern tree-sitter 0.25.x API
+grammar: tree_sitter_javascript::LANGUAGE.into(),
+grammar: tree_sitter_python::LANGUAGE.into(),
+
+// Special cases
+grammar: tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
+grammar: tree_sitter_php::LANGUAGE_PHP.into(),
+```
+
+**Build Requirements:**
+
+- Rust toolchain automatically handles tree-sitter dependencies
+- No manual grammar downloads required - all included in Cargo.toml
+- WASM target requires `wasm-pack` for comprehensive testing
+
+**Testing tree-sitter Languages:**
+
+```bash
+# Validate all parsers work
+cd packages/ast-core-engine
+cargo build --bin ast-parser
+
+# Test specific language parsing
+echo 'console.log("Hello");' | ./target/debug/ast-parser parse --stdin --language javascript
+
+# List all supported languages
+./target/debug/ast-parser languages
+```
+
 #### Performance Considerations
 
 The Rust core engine is optimized for development speed:

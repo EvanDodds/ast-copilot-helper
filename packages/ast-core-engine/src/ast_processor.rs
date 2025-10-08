@@ -31,6 +31,12 @@ pub enum SupportedLanguage {
     C,
     CSharp,
     Go,
+    Ruby,
+    Php,
+    Kotlin,
+    Swift,
+    Scala,
+    Bash,
 }
 
 /// AST node information for analysis
