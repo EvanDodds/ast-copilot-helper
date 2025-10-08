@@ -78,6 +78,7 @@ export class IncrementalUpdateManager {
   private fileHashes = new Map<string, string>();
   private recentRenames = new Map<string, string>(); // hash -> path
   private readonly renameWindow = 5000; // 5 seconds
+  private deletedFileHashes = new Map<string, string>(); // hash -> deleted path
 
   constructor(stateManager: WatchStateManager) {
     this.stateManager = stateManager;
@@ -96,29 +97,43 @@ export class IncrementalUpdateManager {
       dependencies: new Map(),
     };
 
-    logger.info("Analyzing file changes", { fileCount: files.length });
+    logger.info("Analyzing changes", { fileCount: files.length });
 
+    // First pass: identify deleted files and track their hashes
+    const existingFiles = new Set<string>();
     for (const file of files) {
-      try {
-        // Check if file exists
-        const stats = await fs.stat(file).catch(() => null);
-
-        if (!stats) {
-          // File was deleted
-          changeSet.deleted.push(file);
-          this.stateManager.removeFileState(file);
-          continue;
+      const stats = await fs.stat(file).catch(() => null);
+      if (stats) {
+        existingFiles.add(file);
+      } else {
+        // File was deleted - save its hash for rename detection
+        const fileState = this.stateManager.getFileState(file);
+        if (fileState && fileState.contentHash) {
+          this.deletedFileHashes.set(fileState.contentHash, file);
         }
+        changeSet.deleted.push(file);
+        this.stateManager.removeFileState(file);
+      }
+    }
 
+    // Second pass: analyze existing files and detect renames
+    for (const file of existingFiles) {
+      try {
         // Get file state
         const fileState = this.stateManager.getFileState(file);
         const currentHash = await this.stateManager.calculateFileHash(file);
 
         if (!fileState) {
-          // New file - check if it's a rename
+          // New file - check if it's a rename by comparing with deleted file hashes
           const renamedFrom = this.detectRename(currentHash);
 
           if (renamedFrom) {
+            // Remove from deleted list since it was actually renamed
+            const deletedIndex = changeSet.deleted.indexOf(renamedFrom);
+            if (deletedIndex !== -1) {
+              changeSet.deleted.splice(deletedIndex, 1);
+            }
+
             changeSet.renamed.push({ from: renamedFrom, to: file });
 
             logger.debug("Detected file rename", {
@@ -129,7 +144,7 @@ export class IncrementalUpdateManager {
             changeSet.added.push(file);
           }
 
-          // Track hash for potential rename detection
+          // Track hash for potential future rename detection
           this.trackHash(currentHash, file);
           continue;
         }
@@ -149,6 +164,9 @@ export class IncrementalUpdateManager {
         changeSet.modified.push(file);
       }
     }
+
+    // Clean up deleted file hashes after analysis
+    this.deletedFileHashes.clear();
 
     // Detect dependencies
     await this.analyzeDependencies(changeSet);
@@ -256,14 +274,25 @@ export class IncrementalUpdateManager {
 
   /**
    * Detect if a file was renamed based on content hash
+   * Checks both recent time-based renames and deleted file hashes
    */
   private detectRename(contentHash: string): string | null {
+    // First check time-based rename detection (for quick renames)
     const recentPath = this.recentRenames.get(contentHash);
 
     if (recentPath) {
       // Remove from recent renames to prevent duplicate detection
       this.recentRenames.delete(contentHash);
       return recentPath;
+    }
+
+    // Then check deleted file hashes (for cross-directory moves)
+    const deletedPath = this.deletedFileHashes.get(contentHash);
+
+    if (deletedPath) {
+      // Remove from deleted hashes to prevent duplicate detection
+      this.deletedFileHashes.delete(contentHash);
+      return deletedPath;
     }
 
     return null;
