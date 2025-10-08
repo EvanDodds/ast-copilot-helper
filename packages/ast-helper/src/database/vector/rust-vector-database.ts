@@ -350,6 +350,11 @@ export class RustVectorDatabase implements VectorDatabase {
     this.ensureInitialized();
 
     try {
+      // Notify external systems (e.g., MCP server cache) before rebuild
+      if (this.config.onIndexRebuild) {
+        await this.config.onIndexRebuild();
+      }
+
       // Clear Rust vector database
       if (rustEngine) {
         rustEngine.clearVectorDatabase();

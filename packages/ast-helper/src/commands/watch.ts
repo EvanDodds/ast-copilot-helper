@@ -19,6 +19,17 @@ import type { IncrementalUpdateManager } from "./incremental-update.js";
 import type { ChangeSet } from "./incremental-update.js";
 
 /**
+ * Cache invalidation callback for file changes
+ * Allows external cache systems (like MCP server) to be notified of file changes
+ */
+export type CacheInvalidationCallback = (changes: {
+  added: string[];
+  modified: string[];
+  renamed: Array<{ from: string; to: string }>;
+  deleted: string[];
+}) => Promise<void> | void;
+
+/**
  * Watch command options interface
  */
 export interface WatchCommandOptions {
@@ -45,6 +56,9 @@ export interface WatchCommandOptions {
 
   /** Maximum batch processing delay in ms (default: 1000) */
   maxBatchDelay?: number;
+
+  /** Optional cache invalidation callback for external cache systems */
+  onCacheInvalidation?: CacheInvalidationCallback;
 }
 
 /**
@@ -600,6 +614,32 @@ export class WatchCommand extends EventEmitter {
           deleted: changeSet.deleted.length,
           dependencies: changeSet.dependencies.size,
         });
+
+        // Trigger cache invalidation if callback is provided
+        if (this.options.onCacheInvalidation && changeSet) {
+          try {
+            const invalidationStart = Date.now();
+            await this.options.onCacheInvalidation({
+              added: changeSet.added,
+              modified: changeSet.modified,
+              renamed: changeSet.renamed,
+              deleted: [...changeSet.deleted, ...deletedFiles],
+            });
+            this.logger.debug("Cache invalidation completed", {
+              durationMs: Date.now() - invalidationStart,
+              affectedFiles:
+                changeSet.added.length +
+                changeSet.modified.length +
+                changeSet.renamed.length +
+                changeSet.deleted.length +
+                deletedFiles.length,
+            });
+          } catch (error) {
+            this.logger.warn("Cache invalidation failed", {
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
+        }
 
         // Skip processing unchanged files
         if (changeSet.unchanged.length > 0) {

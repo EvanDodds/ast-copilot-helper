@@ -15,6 +15,12 @@ export {
   type WarmingResult,
   type QueryExecutor,
 } from "./cache-warmer.js";
+export {
+  CacheInvalidator,
+  type InvalidationResult,
+  type FileChangeInfo,
+  type InvalidationReason,
+} from "./invalidation.js";
 
 export type {
   CacheLevel,
