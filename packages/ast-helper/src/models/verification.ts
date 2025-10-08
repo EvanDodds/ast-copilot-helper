@@ -9,6 +9,7 @@ import { join } from "path";
 import type { ValidationResult, ModelConfig } from "./types.js";
 import { createModuleLogger } from "../logging/index.js";
 import { getModelRegistry } from "./registry-storage.js";
+import { signatureVerifier, type SignedModelConfig } from "./signature.js";
 
 const logger = createModuleLogger("ModelVerification");
 
@@ -74,11 +75,12 @@ export class FileVerifier {
    * - ✅ SHA256 checksum verification
    * - ✅ File size validation
    * - ✅ ONNX header verification
+   * - ✅ Digital signature verification (optional)
    * - ✅ Quarantine failed downloads
    */
   async verifyModelFile(
     filePath: string,
-    modelConfig: ModelConfig,
+    modelConfig: ModelConfig | SignedModelConfig,
     options: VerificationOptions = {},
   ): Promise<ValidationResult> {
     try {
@@ -141,8 +143,32 @@ export class FileVerifier {
         }
       }
 
+      // 4. Digital signature verification (optional)
+      let signatureVerified: boolean | null = null;
+      const signedConfig = modelConfig as SignedModelConfig;
+      if (signedConfig.signature) {
+        await signatureVerifier.initialize();
+        const sigResult = await signatureVerifier.verifySignature(
+          filePath,
+          signedConfig.signature,
+        );
+
+        signatureVerified = sigResult.verified;
+
+        if (!signatureVerified) {
+          const error = `Digital signature verification failed: ${sigResult.errors.join(", ")}`;
+          errors.push(error);
+          logger.warn(error, { modelName: modelConfig.name });
+        } else {
+          logger.info("Digital signature verified successfully", {
+            modelName: modelConfig.name,
+            algorithm: sigResult.signatureMethod,
+            keyId: sigResult.publicKeyId,
+          });
+        }
+      }
+
       const checksumVerified = errors.length === 0;
-      const signatureVerified = false; // Signature verification not yet implemented
 
       // Record verification result in registry
       try {
@@ -157,7 +183,7 @@ export class FileVerifier {
           await registry.updateVerificationStatus(
             modelConfig.name,
             checksumVerified,
-            signatureVerified,
+            signatureVerified ?? false,
           );
         } else {
           // Register new model
@@ -171,7 +197,7 @@ export class FileVerifier {
           await registry.updateVerificationStatus(
             modelConfig.name,
             checksumVerified,
-            signatureVerified,
+            signatureVerified ?? false,
           );
         }
 
