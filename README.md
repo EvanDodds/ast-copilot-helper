@@ -171,6 +171,102 @@ The project includes GitHub Actions workflow for automated snapshot creation:
 
 **[📚 Complete Snapshot Guide →](docs/SNAPSHOT_SYSTEM.md)**
 
+## 🤖 MCP Server Integration
+
+The AST Copilot Helper includes a full-featured Model Context Protocol (MCP) server, enabling AI agents like Claude Desktop, Cline, and other MCP-compatible tools to query your codebase semantically.
+
+### Quick Start with MCP
+
+```bash
+# Start the MCP server
+yarn ast-mcp-server start
+
+# Or use with Claude Desktop
+# Add to Claude Desktop config (~/.config/Claude/config.json):
+{
+  "mcpServers": {
+    "ast-helper": {
+      "command": "node",
+      "args": ["/path/to/ast-copilot-helper/packages/ast-mcp-server/dist/index.js"],
+      "cwd": "/path/to/your/project"
+    }
+  }
+}
+```
+
+### Available MCP Tools
+
+The server exposes these tools for AI agents:
+
+| Tool                   | Description                             |
+| ---------------------- | --------------------------------------- |
+| `query_ast_context`    | Semantic search across your codebase    |
+| `ast_file_query`       | Analyze specific files with AST parsing |
+| `ast_index_status`     | Get indexing status and statistics      |
+| `ast_find_references`  | Find all references to a symbol         |
+| `ast_find_definitions` | Locate symbol definitions               |
+| `ast_symbol_search`    | Search for symbols by name or pattern   |
+
+### VS Code Extension Integration
+
+The VS Code extension provides seamless MCP client integration:
+
+- **Automatic Server Management**: Extension spawns and manages the MCP server process
+- **Custom Transport**: Uses managed process with sophisticated lifecycle handling
+- **Connection Monitoring**: Auto-reconnect, heartbeat, health checks
+- **Status Bar Integration**: Real-time connection status indicator
+- **Output Channel**: Detailed logs for debugging
+
+#### Extension Features
+
+```typescript
+// The extension uses real MCP SDK with custom Transport
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+
+// Custom Transport wraps managed process
+class ManagedProcessTransport implements Transport {
+  // Handles JSON-RPC over stdin/stdout
+  // Preserves VS Code extension's process management
+}
+
+// Client connects to server
+await client.connect(transport);
+const result = await client.callTool({
+  name: "query_ast_context",
+  arguments: { query: "find all functions" },
+});
+```
+
+### Architecture Benefits
+
+**Why Custom Transport?**
+
+- Preserves VS Code extension patterns (extensions manage their servers)
+- Enables custom monitoring, logging, and UI integration
+- Allows sophisticated restart logic and health checks
+- MCP server remains usable by other tools (Claude Desktop, Cline)
+
+**Process Lifecycle**
+
+```
+ServerProcessManager → Spawns & monitors MCP server
+     ↓
+ManagedProcessTransport → Wraps process stdio for JSON-RPC
+     ↓
+MCP SDK Client → Standard protocol communication
+     ↓
+AI Agent → Queries codebase semantically
+```
+
+### Use Cases
+
+- **Claude Desktop**: Chat with your codebase using Claude
+- **VS Code Extension**: Integrated code understanding in your editor
+- **Cline**: AI-powered code generation with context
+- **Custom Integrations**: Build your own MCP-compatible tools
+
+**[📖 MCP Testing Guide →](packages/vscode-extension/MANUAL_MCP_TESTING.md)** • **[🔧 Integration Status →](MCP_CLIENT_INTEGRATION_STATUS.md)**
+
 ## 🔒 Security Features
 
 AST Copilot Helper includes comprehensive security features for model verification and secure downloads:
