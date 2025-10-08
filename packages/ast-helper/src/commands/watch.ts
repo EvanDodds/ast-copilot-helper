@@ -14,6 +14,9 @@ import type {
 import type { Config } from "../types.js";
 import { ParseCommand } from "./parse.js";
 import { EmbedCommand } from "./embed.js";
+import type { WatchStateManager } from "./watch-state.js";
+import type { IncrementalUpdateManager } from "./incremental-update.js";
+import type { ChangeSet } from "./incremental-update.js";
 
 /**
  * Watch command options interface
@@ -66,6 +69,10 @@ export class WatchCommand extends EventEmitter {
   private restartAttempts = 0;
   private readonly maxRestartAttempts = 5;
 
+  // Enhanced state management and incremental processing
+  private stateManager: WatchStateManager;
+  private incrementalManager: IncrementalUpdateManager;
+
   constructor(config: Config, options: WatchCommandOptions) {
     super();
     this.config = config;
@@ -77,6 +84,11 @@ export class WatchCommand extends EventEmitter {
       // Always enable embedding when annotation is enabled for complete pipeline
       this.embedCommand = new EmbedCommand(config, this.logger);
     }
+
+    // Initialize state management and incremental processing
+    // Will be fully initialized in start() method
+    this.stateManager = null as unknown as WatchStateManager;
+    this.incrementalManager = null as unknown as IncrementalUpdateManager;
   }
 
   /**
@@ -93,6 +105,28 @@ export class WatchCommand extends EventEmitter {
         glob: this.options.glob || this.config.watchGlob,
         debounce: this.options.debounce || 200,
         includeAnnotation: this.options.includeAnnotation,
+      });
+
+      // Initialize state manager and incremental update manager
+      const { WatchStateManager: StateManager } = await import(
+        "./watch-state.js"
+      );
+      const { IncrementalUpdateManager: UpdateManager } = await import(
+        "./incremental-update.js"
+      );
+
+      const workspacePath = this.config.outputDir || process.cwd();
+      this.stateManager = new StateManager(workspacePath);
+      await this.stateManager.initialize();
+
+      this.incrementalManager = new UpdateManager(this.stateManager);
+
+      // Get file processing statistics
+      const filesToProcess = await this.stateManager.getFilesToProcess([]);
+      this.logger.info("Initialized state management for watch session", {
+        workspacePath,
+        changedFiles: filesToProcess.changed.length,
+        unchangedFiles: filesToProcess.unchanged.length,
       });
 
       // Create file watcher configuration
@@ -184,6 +218,12 @@ export class WatchCommand extends EventEmitter {
       if (this.fileWatcher) {
         await this.fileWatcher.stop();
         this.fileWatcher = null;
+      }
+
+      // Shutdown state manager (saves final state)
+      if (this.stateManager) {
+        await this.stateManager.shutdown();
+        this.logger.info("State manager shutdown complete");
       }
 
       this.isRunning = false;
@@ -457,11 +497,43 @@ export class WatchCommand extends EventEmitter {
       let processedCount = 0;
       const processingErrors: string[] = [];
 
-      // Process changed/added files
-      if (changedFiles.length > 0) {
+      // Use incremental update manager to analyze changes
+      let changeSet: ChangeSet | null = null;
+      if (this.incrementalManager && changedFiles.length > 0) {
+        changeSet = await this.incrementalManager.analyzeChanges(changedFiles);
+
+        this.logger.info("Incremental change analysis complete", {
+          added: changeSet.added.length,
+          modified: changeSet.modified.length,
+          renamed: changeSet.renamed.length,
+          unchanged: changeSet.unchanged.length,
+          deleted: changeSet.deleted.length,
+          dependencies: changeSet.dependencies.size,
+        });
+
+        // Skip processing unchanged files
+        if (changeSet.unchanged.length > 0) {
+          this.logger.debug("Skipping unchanged files", {
+            count: changeSet.unchanged.length,
+            files: changeSet.unchanged.slice(0, 10), // Log first 10
+          });
+        }
+      }
+
+      // Process changed/added files (only those that actually need processing)
+      // Extract file paths from renamed files (they have {from, to} structure)
+      const renamedFilePaths = changeSet
+        ? changeSet.renamed.map((r) => (typeof r === "string" ? r : r.to))
+        : [];
+      const filesToProcess = changeSet
+        ? [...changeSet.added, ...changeSet.modified, ...renamedFilePaths]
+        : changedFiles;
+
+      if (filesToProcess.length > 0) {
         try {
           this.logger.info("Parsing changed files", {
-            fileCount: changedFiles.length,
+            fileCount: filesToProcess.length,
+            skipped: changeSet ? changeSet.unchanged.length : 0,
           });
 
           const effectiveBatchSize = Math.min(
@@ -472,14 +544,33 @@ export class WatchCommand extends EventEmitter {
           // Use parse command to process files
           await this.parseCommand.execute(
             {
-              glob: changedFiles.join(","),
+              glob: filesToProcess.join(","),
               force: true,
               batchSize: effectiveBatchSize,
             },
             this.config,
           );
 
-          processedCount += changedFiles.length;
+          // Update state manager for successfully processed files
+          if (this.stateManager) {
+            for (const filePath of filesToProcess) {
+              const currentState = this.stateManager.getFileState(filePath);
+              await this.stateManager.updateFileState(filePath, {
+                stagesCompleted: {
+                  parsed: true,
+                  annotated: currentState?.stagesCompleted?.annotated || false,
+                  embedded: currentState?.stagesCompleted?.embedded || false,
+                },
+              });
+              this.stateManager.recordSuccess(
+                filePath,
+                { parsed: true, annotated: false, embedded: false },
+                Date.now(),
+              );
+            }
+          }
+
+          processedCount += filesToProcess.length;
 
           // Note: Annotation is now handled by Rust CLI (ast-parser annotate)
           // Run embedding if enabled for the pipeline
@@ -492,11 +583,36 @@ export class WatchCommand extends EventEmitter {
               batchSize: effectiveBatchSize,
               verbose: false, // Keep quiet for watch mode
             });
+
+            // Update state manager for embedding completion
+            if (this.stateManager) {
+              for (const filePath of filesToProcess) {
+                const currentState = this.stateManager.getFileState(filePath);
+                await this.stateManager.updateFileState(filePath, {
+                  stagesCompleted: {
+                    parsed: currentState?.stagesCompleted?.parsed || true,
+                    annotated:
+                      currentState?.stagesCompleted?.annotated || false,
+                    embedded: true,
+                  },
+                });
+              }
+            }
           }
         } catch (error) {
           const errorMsg = `Failed to process changed files: ${error instanceof Error ? error.message : String(error)}`;
           processingErrors.push(errorMsg);
-          this.logger.error(errorMsg, { error, files: changedFiles });
+          this.logger.error(errorMsg, { error, files: filesToProcess });
+
+          // Record errors for failed files
+          if (this.stateManager) {
+            for (const filePath of filesToProcess) {
+              this.stateManager.recordError(
+                filePath,
+                error instanceof Error ? error.message : String(error),
+              );
+            }
+          }
         }
       }
 
