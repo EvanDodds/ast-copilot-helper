@@ -243,21 +243,32 @@ export class GitFileSelector {
   ): Promise<string[]> {
     const gitManager = this.gitValidator.getGitManager();
 
+    // Handle --staged mode: only staged files
+    if (options.staged && !options.changed && !options.base) {
+      this.logger.debug("Using staged files mode");
+      return await gitManager.getStagedFiles(workspaceDir);
+    }
+
+    // Handle --base mode: files changed since a reference
+    if (options.base && options.base !== "HEAD") {
+      this.logger.debug("Using base reference mode", { base: options.base });
+      return await gitManager.getChangedFilesSince(options.base, workspaceDir);
+    }
+
+    // Handle --changed mode: all working directory changes
+    // Use getChangedFiles for comprehensive status detection
     const gitOptions: ChangedFilesOptions = {
       cwd: workspaceDir,
-      base: options.base || "HEAD",
-      staged: options.staged || false,
+      base: "HEAD",
+      staged: false,
       includeUntracked: true, // Include new files that might not be staged yet
-      filterTypes: ["A", "C", "M", "R", "T"], // All change types
+      filterTypes: ["A", "C", "M", "R", "T"], // All change types: Added, Copied, Modified, Renamed, Type-changed
     };
 
-    if (options.staged && !options.changed) {
-      // Only get staged files
-      return await gitManager.getStagedFiles(workspaceDir);
-    } else {
-      // Get changed files with options
-      return await gitManager.getChangedFiles(gitOptions);
-    }
+    this.logger.debug(
+      "Using changed files mode with comprehensive status detection",
+    );
+    return await gitManager.getChangedFiles(gitOptions);
   }
 
   /**
