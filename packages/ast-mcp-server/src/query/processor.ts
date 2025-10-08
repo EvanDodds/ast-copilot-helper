@@ -338,7 +338,7 @@ export class MainQueryProcessor implements QueryProcessor {
 
       // Check cache first
       const cachedResult =
-        this.performanceMonitor.getCachedQueryResponse(query);
+        await this.performanceMonitor.getCachedQueryResponse(query);
       if (cachedResult) {
         const queryTime = Date.now() - startTime;
         this.performanceMonitor.trackQueryPerformance(queryTime, query);
@@ -403,7 +403,7 @@ export class MainQueryProcessor implements QueryProcessor {
       response.queryTime = queryTime;
 
       // Cache the response for future queries
-      this.performanceMonitor.cacheQueryResponse(query, response);
+      await this.performanceMonitor.cacheQueryResponse(query, response);
 
       // Track performance metrics
       this.performanceMonitor.trackQueryPerformance(queryTime, query);

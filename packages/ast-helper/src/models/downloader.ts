@@ -6,6 +6,9 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { createWriteStream } from "fs";
 import type { ModelConfig, DownloadProgress } from "./types.js";
+import { SecurityHooksManager } from "./security-hooks.js";
+import { securityLogger } from "./security-logger.js";
+import type { SignedModelConfig } from "./signature.js";
 
 /**
  * Progress callback function type
@@ -241,15 +244,20 @@ export class ModelDownloader {
   private readonly defaultOptions: DownloadOptions = {
     maxRetries: 3,
     timeout: 300000, // 5 minutes
-    onProgress: () => {}, // No-op default
+    onProgress: () => {
+      // No-op default progress callback
+    },
     resumeDownload: true,
     proxy: undefined,
     rateLimit: {},
   };
 
   private rateLimiter?: RateLimiter;
+  private securityHooks: SecurityHooksManager;
 
-  constructor(private logger?: Console) {}
+  constructor(private logger?: Console) {
+    this.securityHooks = new SecurityHooksManager();
+  }
 
   /**
    * Download a model file with retry logic and progress tracking
@@ -272,6 +280,30 @@ export class ModelDownloader {
     this.log(`Destination: ${destinationPath}`);
     this.log(`Expected size: ${this.formatBytes(modelConfig.size)}`);
 
+    // Log download started
+    await securityLogger.logDownloadStarted(
+      modelConfig.name,
+      modelConfig.version || "unknown",
+      modelConfig.url,
+    );
+
+    // Execute pre-download security hooks
+    const signedModelConfig: SignedModelConfig =
+      modelConfig as SignedModelConfig;
+    const preHookResult =
+      await this.securityHooks.executePreDownloadHooks(signedModelConfig);
+
+    if (!preHookResult.allowed) {
+      const errors = preHookResult.errors.join(", ");
+
+      await securityLogger.logPolicyViolation(
+        `Pre-download checks failed: ${errors}`,
+        modelConfig.name,
+      );
+
+      throw new Error(`Security validation failed: ${errors}`);
+    }
+
     if (opts.proxy) {
       this.log(
         `Using proxy: ${opts.proxy.protocol || "http"}://${opts.proxy.host}:${opts.proxy.port}`,
@@ -279,9 +311,10 @@ export class ModelDownloader {
     }
 
     if (this.rateLimiter) {
-      const config = opts.rateLimit!;
+      const config = opts.rateLimit ?? {};
+      const maxBytesPerSecond = config.maxBytesPerSecond ?? 0;
       this.log(
-        `Rate limiting enabled: ${config.maxBytesPerSecond ? this.formatBytes(config.maxBytesPerSecond) + "/s" : "no bandwidth limit"}`,
+        `Rate limiting enabled: ${maxBytesPerSecond > 0 ? this.formatBytes(maxBytesPerSecond) + "/s" : "no bandwidth limit"}`,
       );
     }
 
@@ -296,6 +329,39 @@ export class ModelDownloader {
         opts,
       );
 
+      // Execute post-download security hooks
+      const postHookResult = await this.securityHooks.executePostDownloadHooks(
+        signedModelConfig,
+        destinationPath,
+      );
+
+      if (!postHookResult.allowed) {
+        const errors = postHookResult.errors.join(", ");
+
+        await securityLogger.logVerificationFailed(
+          modelConfig.name,
+          modelConfig.version || "unknown",
+          destinationPath,
+          errors,
+        );
+
+        // Cleanup failed download
+        try {
+          await fs.unlink(destinationPath);
+        } catch {
+          // Ignore cleanup errors
+        }
+
+        throw new Error(`Post-download validation failed: ${errors}`);
+      }
+
+      // Log successful download and verification
+      await securityLogger.logDownloadCompleted(
+        modelConfig.name,
+        modelConfig.version || "unknown",
+        destinationPath,
+      );
+
       this.log(`Download completed: ${modelConfig.name}`);
       return destinationPath;
     } catch (error) {
@@ -306,10 +372,12 @@ export class ModelDownloader {
         // Ignore cleanup errors
       }
 
+      const maxRetries = opts.maxRetries ?? this.defaultOptions.maxRetries ?? 3;
+
       throw new DownloadError(
-        `Failed to download ${modelConfig.name} after ${opts.maxRetries} attempts`,
+        `Failed to download ${modelConfig.name} after ${maxRetries} attempts`,
         modelConfig.url,
-        opts.maxRetries!,
+        maxRetries,
         error instanceof Error ? error : new Error(String(error)),
       );
     }
@@ -324,7 +392,8 @@ export class ModelDownloader {
     expectedSize: number,
     options: DownloadOptions,
   ): Promise<void> {
-    const maxRetries = options.maxRetries || this.defaultOptions.maxRetries!;
+    const maxRetries =
+      options.maxRetries ?? this.defaultOptions.maxRetries ?? 3;
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -376,7 +445,7 @@ export class ModelDownloader {
     resumeFrom: number,
     options: DownloadOptions,
   ): Promise<void> {
-    const timeout = options.timeout || this.defaultOptions.timeout!;
+    const timeout = options.timeout ?? this.defaultOptions.timeout ?? 300000;
     const controller = new AbortController();
 
     // Setup timeout
@@ -479,7 +548,11 @@ export class ModelDownloader {
           // Update progress
           const progress = progressTracker.updateProgress(downloadedBytes);
           const onProgress =
-            options.onProgress || this.defaultOptions.onProgress!;
+            options.onProgress ??
+            this.defaultOptions.onProgress ??
+            (() => {
+              // Default no-op
+            });
           onProgress(progress);
         }
       } finally {
@@ -489,7 +562,12 @@ export class ModelDownloader {
       // Final progress update
       const finalProgress = progressTracker.updateProgress(downloadedBytes);
       finalProgress.phase = "complete";
-      const onProgress = options.onProgress || this.defaultOptions.onProgress!;
+      const onProgress =
+        options.onProgress ??
+        this.defaultOptions.onProgress ??
+        (() => {
+          // Default no-op
+        });
       onProgress(finalProgress);
     } finally {
       clearTimeout(timeoutId);

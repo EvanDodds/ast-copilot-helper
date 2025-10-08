@@ -33,6 +33,11 @@ export interface VectorDatabase {
 // ===== Configuration Types =====
 
 /**
+ * Callback for notifying external systems (like MCP server cache) of index rebuild
+ */
+export type IndexRebuildCallback = () => Promise<void> | void;
+
+/**
  * Vector database configuration parameters
  */
 export interface VectorDBConfig {
@@ -47,6 +52,9 @@ export interface VectorDBConfig {
 
   /** HNSW build parameter efConstruction (default: 200) */
   efConstruction: number;
+
+  /** Optional callback to notify of index rebuild (for cache invalidation) */
+  onIndexRebuild?: IndexRebuildCallback;
 
   /** Distance metric for similarity calculations */
   space: "cosine" | "l2" | "ip";

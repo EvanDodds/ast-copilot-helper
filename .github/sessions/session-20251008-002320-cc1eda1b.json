@@ -1,0 +1,240 @@
+{
+  "sessionId": "session-20251008-002320-cc1eda1b",
+  "timestamp": "2025-10-08T00:23:20Z",
+  "issues": [158, 159, 160, 161],
+  "parentIssues": [],
+  "relatedIssues": [
+    {
+      "number": 157,
+      "title": "Complete Git Integration for Enhanced Change Detection",
+      "status": "closed",
+      "relationship": "dependency-completed",
+      "completedAt": "2025-10-08T04:22:02Z"
+    }
+  ],
+  "repoOwner": "EvanDodds",
+  "repoName": "ast-copilot-helper",
+  "currentStep": "0.5",
+  "status": "strategy-planning",
+  "existingWork": {
+    "checkedBranches": true,
+    "foundExistingBranches": false,
+    "foundSessionFiles": [
+      "copilot-session-issue153-complete.json",
+      "copilot-session-20251005-165303-e792d83c.json"
+    ],
+    "foundTodos": false,
+    "partialImplementations": {
+      "issue158": {
+        "location": "/packages/ast-helper/src/models/verification.ts",
+        "description": "SHA256 verification exists in FileVerifier.verifyModelFile()",
+        "completeness": "60%",
+        "missing": [
+          "Signature verification",
+          "Registry database",
+          "Download hooks"
+        ]
+      },
+      "issue159": {
+        "location": "/packages/ast-helper/src/commands/watch.ts",
+        "description": "Watch command exists with file monitoring via chokidar",
+        "completeness": "69%",
+        "missing": [
+          "Full pipeline integration",
+          "Incremental embedding",
+          "State management"
+        ]
+      },
+      "issue160": {
+        "location": "/packages/ast-mcp-server/src/query/performance-monitor.ts",
+        "description": "Basic LRU cache exists in PerformanceMonitor",
+        "completeness": "30%",
+        "missing": [
+          "Multi-level cache",
+          "Intelligent invalidation",
+          "Cache warming"
+        ]
+      },
+      "issue161": {
+        "location": "NOT_IMPLEMENTED",
+        "description": "No snapshot distribution system exists",
+        "completeness": "0%",
+        "missing": [
+          "Snapshot creation",
+          "Restore",
+          "Remote storage",
+          "CI/CD integration"
+        ]
+      }
+    }
+  },
+  "issueDetails": {
+    "158": {
+      "title": "Complete SHA256 Model Verification and Security Hardening",
+      "state": "open",
+      "priority": "HIGH",
+      "labels": ["enhancement", "security", "high-priority", "spec-compliance"],
+      "currentStatus": "Partial Implementation",
+      "type": "security-feature",
+      "acceptanceCriteria": {
+        "required": [
+          "SHA256 checksum verification for all model downloads",
+          "Digital signature verification (optional)",
+          "Model registry database with authorized models",
+          "Pre/post download verification hooks",
+          "Quarantine system for failed verifications",
+          "Comprehensive security logging"
+        ],
+        "enhanced": [
+          "Support for multiple hash algorithms",
+          "Automatic signature key rotation",
+          "Security audit trail",
+          "Tamper detection mechanisms"
+        ],
+        "niceToHave": [
+          "Integration with external security scanners",
+          "Automated vulnerability reporting"
+        ]
+      },
+      "estimatedComplexity": "MEDIUM",
+      "estimatedHours": "8-12"
+    },
+    "159": {
+      "title": "Optimize Watch Command with Full Incremental Update Pipeline",
+      "state": "open",
+      "priority": "MEDIUM-HIGH",
+      "labels": [
+        "enhancement",
+        "performance",
+        "medium-priority",
+        "spec-compliance"
+      ],
+      "currentStatus": "69% Complete (5.5/8 features)",
+      "type": "optimization-feature",
+      "acceptanceCriteria": {
+        "required": [
+          "Full pipeline: parse → annotate → embed on file changes",
+          "Intelligent incremental updates (only changed files)",
+          "State management for tracking processed files",
+          "Memory-efficient for long-running sessions",
+          "Git integration for change detection",
+          "Proper error recovery and retry"
+        ],
+        "enhanced": [
+          "Batch processing optimization",
+          "Debouncing and coalescing",
+          "Progress reporting",
+          "Performance metrics collection"
+        ],
+        "niceToHave": [
+          "Configurable pipeline stages",
+          "Plugin system for custom processors"
+        ]
+      },
+      "estimatedComplexity": "MEDIUM-HIGH",
+      "estimatedHours": "12-16"
+    },
+    "160": {
+      "title": "Implement Advanced Query Result Caching System",
+      "state": "open",
+      "priority": "MEDIUM",
+      "labels": [
+        "enhancement",
+        "performance",
+        "medium-priority",
+        "spec-compliance"
+      ],
+      "currentStatus": "Basic caching exists but needs enhancement",
+      "type": "performance-feature",
+      "acceptanceCriteria": {
+        "required": [
+          "Multi-level cache (L1: memory, L2: disk, L3: distributed)",
+          "Intelligent cache invalidation based on file changes",
+          "Cache warming for frequent queries",
+          "TTL and size-based eviction",
+          "Cache hit/miss metrics",
+          "Query result normalization"
+        ],
+        "enhanced": [
+          "Adaptive cache sizing",
+          "Predictive cache warming",
+          "Distributed cache support",
+          "Cache compression"
+        ],
+        "niceToHave": [
+          "Machine learning for cache prediction",
+          "Integration with Redis/Memcached"
+        ]
+      },
+      "estimatedComplexity": "MEDIUM-HIGH",
+      "estimatedHours": "12-16"
+    },
+    "161": {
+      "title": "Implement Repository Snapshot Distribution System",
+      "state": "open",
+      "priority": "LOW",
+      "labels": [
+        "enhancement",
+        "spec-compliance",
+        "low-priority",
+        "collaboration"
+      ],
+      "currentStatus": "Not implemented (0%)",
+      "type": "collaboration-feature",
+      "acceptanceCriteria": {
+        "required": [
+          "Create snapshot of .astdb/ directory",
+          "Restore from snapshot with validation",
+          "Remote storage support (S3, GitHub Releases)",
+          "Snapshot versioning and metadata",
+          "CI/CD integration for automated snapshots",
+          "Compression and optimization"
+        ],
+        "enhanced": [
+          "Incremental snapshots",
+          "Multi-repository snapshots",
+          "Snapshot diff visualization",
+          "Automated cleanup policies"
+        ],
+        "niceToHave": ["Cloud provider integrations", "Team sharing dashboards"]
+      },
+      "estimatedComplexity": "MEDIUM",
+      "estimatedHours": "10-14"
+    }
+  },
+  "implementationStrategy": {
+    "approach": "SEQUENTIAL_BY_PRIORITY",
+    "reasoning": "Issues have clear priority levels (HIGH, MEDIUM-HIGH, MEDIUM, LOW) and some dependencies. Sequential implementation ensures quality and allows each issue to build on previous work.",
+    "order": [
+      {
+        "issueNumber": 158,
+        "phase": 1,
+        "justification": "Highest priority (HIGH), security critical, partial implementation exists (60% complete)"
+      },
+      {
+        "issueNumber": 159,
+        "phase": 2,
+        "justification": "Medium-high priority, depends on git integration (#157 already complete), 69% complete"
+      },
+      {
+        "issueNumber": 160,
+        "phase": 3,
+        "justification": "Medium priority, can leverage completed work from #159 for cache invalidation"
+      },
+      {
+        "issueNumber": 161,
+        "phase": 4,
+        "justification": "Lowest priority (LOW), collaboration feature, can leverage distribution system code"
+      }
+    ],
+    "estimatedTotalHours": "42-58 hours",
+    "checkpoints": [
+      "After Issue #158: Verify security hardening complete",
+      "After Issue #159: Verify watch pipeline optimization",
+      "After Issue #160: Verify caching performance gains",
+      "After Issue #161: Verify snapshot distribution working"
+    ]
+  },
+  "primaryIssue": 158,
+  "primaryIssueJustification": "Issue #158 has highest priority (HIGH), is security-critical, and already has 60% implementation in FileVerifier. Starting here provides immediate security value and establishes patterns for subsequent issues."
+}

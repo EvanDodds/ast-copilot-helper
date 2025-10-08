@@ -10,6 +10,7 @@ Transform your codebase into an AI-accessible knowledge base:
 - **🤖 MCP Integration**: Enable AI agents to understand your code structure
 - **⚡ Performance**: Fast parsing with intelligent caching and incremental updates
 - **🌐 Multi-Language**: Support for 15 programming languages across 3 tiers
+- **📦 Snapshot Distribution**: Share pre-built databases for instant team onboarding
 
 ### 🏢 Tier 1: Core Languages (4 languages)
 
@@ -54,7 +55,7 @@ This automatically:
 AST Copilot Helper bridges the gap between your codebase and AI agents by providing semantic understanding through Abstract Syntax Tree analysis. The toolkit consists of three integrated components:
 
 - **`@ast-copilot-helper/ast-helper`** - Core CLI tool that parses source code and builds semantic databases
-- **`@ast-helper/core-engine`** - High-performance Rust engine for AST processing (native NAPI)
+- **`@ast-helper/core-engine`** - High-performance Rust engine (WASM for vector ops, native for AST processing)
 - **`@ast-copilot-helper/ast-mcp-server`** - Model Context Protocol server enabling AI agents to query code semantically
 - **`@ast-copilot-helper/vscode-extension`** - VS Code extension for seamless integration (optional)
 
@@ -67,8 +68,8 @@ ast-copilot-helper/                 # Monorepo root
 │  │  ├─ src/                       # TypeScript parsing & analysis
 │  │  └─ dist/                      # Compiled output
 │  ├─ ast-core-engine/              # ⚡ High-performance Rust engine
-│  │  ├─ src/                       # Rust source (NAPI)
-│  │  ├─ pkg/                       # Build output (native)
+│  │  ├─ src/                       # Rust source (WASM + native bindings)
+│  │  ├─ pkg/                       # Build output (WASM modules)
 │  │  ├─ target/                    # Rust build artifacts
 │  │  └─ Cargo.toml                 # Rust configuration
 │  ├─ ast-mcp-server/               # 🤖 MCP protocol server
@@ -128,34 +129,237 @@ const goResult = await parser.parseCode(
 
 **[📖 Complete Language Guide](docs/guide/multi-language-support.md)** • **[⚡ Performance Benchmarks](docs/guide/performance.md)** • **[🔧 API Reference](docs/api/interfaces.md)**
 
+## 📦 Snapshot Distribution System
+
+Share pre-built `.astdb` databases to reduce onboarding time from hours to minutes:
+
+```bash
+# Create and publish a snapshot
+yarn ast-helper snapshot create --version 1.0.0 --description "Production snapshot"
+yarn ast-helper snapshot publish snapshot-1.0.0.tar.gz
+
+# On another machine, download and restore
+yarn ast-helper snapshot download 1.0.0
+yarn ast-helper snapshot restore snapshot-1.0.0.tar.gz
+# Ready to work instantly!
+```
+
+### Key Features
+
+- **⚡ Instant Setup**: Skip parsing, restore pre-built databases in seconds
+- **🌐 Team Collaboration**: Share snapshots via GitHub Releases or custom backends
+- **🔄 CI/CD Integration**: Automated snapshot creation and publishing
+- **📝 Versioning**: Semantic versioning with tags and metadata
+- **🔐 Validation**: Checksum verification and backup creation
+- **📊 Compression**: Configurable compression (0-9) for optimal size/speed
+
+### Use Cases
+
+- **New Developer Onboarding**: Instant access to parsed codebase
+- **CI/CD Pipelines**: Skip parsing in every pipeline run
+- **Team Synchronization**: Ensure everyone has identical database states
+- **Release Snapshots**: Reproducible database states for each version
+
+### Automated Snapshots
+
+The project includes GitHub Actions workflow for automated snapshot creation:
+
+- **Push to Main**: Creates latest snapshot after code changes
+- **Nightly Schedule**: Daily snapshots at 2 AM UTC
+- **Release Events**: Tagged snapshots for each release
+- **Manual Trigger**: On-demand snapshot creation
+
+**[📚 Complete Snapshot Guide →](docs/SNAPSHOT_SYSTEM.md)**
+
+## 🤖 MCP Server Integration
+
+The AST Copilot Helper includes a full-featured Model Context Protocol (MCP) server, enabling AI agents like Claude Desktop, Cline, and other MCP-compatible tools to query your codebase semantically.
+
+### Quick Start with MCP
+
+```bash
+# Start the MCP server
+yarn ast-mcp-server start
+
+# Or use with Claude Desktop
+# Add to Claude Desktop config (~/.config/Claude/config.json):
+{
+  "mcpServers": {
+    "ast-helper": {
+      "command": "node",
+      "args": ["/path/to/ast-copilot-helper/packages/ast-mcp-server/dist/index.js"],
+      "cwd": "/path/to/your/project"
+    }
+  }
+}
+```
+
+### Available MCP Tools
+
+The server exposes these tools for AI agents:
+
+| Tool                   | Description                             |
+| ---------------------- | --------------------------------------- |
+| `query_ast_context`    | Semantic search across your codebase    |
+| `ast_file_query`       | Analyze specific files with AST parsing |
+| `ast_index_status`     | Get indexing status and statistics      |
+| `ast_find_references`  | Find all references to a symbol         |
+| `ast_find_definitions` | Locate symbol definitions               |
+| `ast_symbol_search`    | Search for symbols by name or pattern   |
+
+### VS Code Extension Integration
+
+The VS Code extension provides seamless MCP client integration:
+
+- **Automatic Server Management**: Extension spawns and manages the MCP server process
+- **Custom Transport**: Uses managed process with sophisticated lifecycle handling
+- **Connection Monitoring**: Auto-reconnect, heartbeat, health checks
+- **Status Bar Integration**: Real-time connection status indicator
+- **Output Channel**: Detailed logs for debugging
+
+#### Extension Features
+
+```typescript
+// The extension uses real MCP SDK with custom Transport
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+
+// Custom Transport wraps managed process
+class ManagedProcessTransport implements Transport {
+  // Handles JSON-RPC over stdin/stdout
+  // Preserves VS Code extension's process management
+}
+
+// Client connects to server
+await client.connect(transport);
+const result = await client.callTool({
+  name: "query_ast_context",
+  arguments: { query: "find all functions" },
+});
+```
+
+### Architecture Benefits
+
+**Why Custom Transport?**
+
+- Preserves VS Code extension patterns (extensions manage their servers)
+- Enables custom monitoring, logging, and UI integration
+- Allows sophisticated restart logic and health checks
+- MCP server remains usable by other tools (Claude Desktop, Cline)
+
+**Process Lifecycle**
+
+```
+ServerProcessManager → Spawns & monitors MCP server
+     ↓
+ManagedProcessTransport → Wraps process stdio for JSON-RPC
+     ↓
+MCP SDK Client → Standard protocol communication
+     ↓
+AI Agent → Queries codebase semantically
+```
+
+### Use Cases
+
+- **Claude Desktop**: Chat with your codebase using Claude
+- **VS Code Extension**: Integrated code understanding in your editor
+- **Cline**: AI-powered code generation with context
+- **Custom Integrations**: Build your own MCP-compatible tools
+
+**[📖 MCP Testing Guide →](packages/vscode-extension/MANUAL_MCP_TESTING.md)** • **[🔧 Integration Status →](MCP_CLIENT_INTEGRATION_STATUS.md)**
+
+## 🔒 Security Features
+
+AST Copilot Helper includes comprehensive security features for model verification and secure downloads:
+
+### Model Verification & Security
+
+- **✅ SHA256 Checksum Verification**: Automatic integrity validation for all downloaded models
+- **🔐 Digital Signature Verification**: RSA/ECDSA signature validation for model authenticity
+- **🛡️ Security Hooks System**: Extensible pre/post download verification framework
+- **📋 Comprehensive Audit Logging**: Security event tracking with JSONL-based audit trails
+- **⚠️ Automatic Quarantine**: Suspect files automatically quarantined for investigation
+
+### Security Components
+
+```typescript
+import {
+  SignatureVerifier,
+  SecurityHooksManager,
+  securityLogger,
+  SecurityEventType,
+} from "@ast-copilot-helper/ast-helper";
+
+// Initialize signature verification
+const verifier = new SignatureVerifier();
+await verifier.initialize();
+
+// Add trusted public key
+await verifier.addPublicKey("model-provider-key", publicKeyPem, {
+  keyId: "model-provider-key",
+  algorithm: "RSA",
+  issuedBy: "Model Provider Inc",
+  validUntil: new Date("2026-12-31"),
+});
+
+// Security hooks automatically validate downloads
+const hooksManager = new SecurityHooksManager();
+
+// Register custom security hook
+hooksManager.registerHook(HookType.PRE_DOWNLOAD, async (context) => {
+  // Custom validation logic
+  return {
+    allowed: true,
+    errors: [],
+    warnings: [],
+  };
+});
+
+// Query security audit log
+const recentEvents = await securityLogger.getRecentEvents(100, {
+  type: SecurityEventType.VERIFICATION_FAILED,
+  severity: SecuritySeverity.ERROR,
+});
+```
+
+**Default Security Checks:**
+
+- HTTPS URL validation (prevents insecure downloads)
+- Metadata validation (ensures required fields)
+- File integrity verification (SHA256 checksums)
+- Digital signature verification (when signatures provided)
+
+**[📚 Security Guide](docs/guide/security.md)** • **[🔐 API Reference](docs/api/security.md)**
+
 ## ⚡ Performance & Architecture
 
 AST Copilot Helper uses a **native-first architecture** combining TypeScript flexibility with Rust performance:
 
-### Native-First Engine Architecture
+### Hybrid Engine Architecture
 
-| Target               | Use Case                | Performance          | Compatibility              |
-| -------------------- | ----------------------- | -------------------- | -------------------------- |
-| **Native (NAPI)**    | Node.js environments    | 🔥 100% native speed | Node.js with native builds |
-| **TypeScript Core**  | Cross-platform fallback | ⚡ Good performance  | Universal compatibility    |
-| **Native (Current)** | Production environments | 🚀 Production ready  | Node.js with native builds |
+AST Copilot Helper uses a **hybrid Rust architecture** optimized for both performance and ease of distribution:
+
+| Component           | Technology | Distribution       | Rationale                       |
+| ------------------- | ---------- | ------------------ | ------------------------------- |
+| **Vector Database** | Rust       | WASM (universal)   | One binary for all platforms    |
+| **AST Processing**  | Rust       | Native (if needed) | Maximum performance for parsing |
+| **TypeScript Core** | TypeScript | Universal          | Cross-platform business logic   |
 
 ### Key Performance Features
 
-- **🚀 High-Performance Core**: Rust engine for compute-intensive operations via NAPI
-- **�️ Native-First Deployment**: Optimized native binaries with TypeScript fallback
-- **📦 Efficient Binary Distribution**: Platform-specific builds for optimal performance
+- **🚀 Rust-Powered Operations**: High-performance vector similarity search and AST processing
+- **📦 Smart Distribution**: WASM for universal compatibility, native where performance critical
+- **🌍 Zero Install Friction**: WASM eliminates platform-specific binary issues
 - **🔄 Smart Language Detection**: Intelligent grammar loading and caching
 - **💾 Incremental Processing**: Smart cache invalidation and differential updates
 
 **Current Performance Characteristics:**
 
 - AST parsing: 1-50ms depending on language tier and file size
-- Vector search: High-performance native vector operations
+- Vector search: High-performance Rust operations (compiled to WASM for universal deployment)
 - Batch processing: 5000+ files with intelligent memory management
 - Language support: 15 languages across 3 performance tiers
 
-**Note**: The system uses native-only architecture for optimal performance and reliability.
+**Architecture Note**: Vector database uses **Rust compiled to WebAssembly** for universal compatibility. While WASM adds ~10-30% overhead vs native, it eliminates platform-specific build complexity and ensures "npm install just works" everywhere.
 
 ## CI/CD Pipeline
 
@@ -427,7 +631,141 @@ yarn ast-copilot-helper parse --base origin/develop
 - **Local development**: `--changed` provides quick feedback on modified code
 - **Branch reviews**: `--base <branch>` compares against any git reference
 
-### 2. Start MCP Server
+### 2. Watch for Changes
+
+Monitor your codebase for changes with intelligent incremental updates:
+
+```bash
+# Basic watch mode (parse only)
+yarn ast-copilot-helper watch
+
+# Full pipeline: parse → annotate → embed
+yarn ast-copilot-helper watch --full-pipeline
+
+# Parse and annotate only (no embedding)
+yarn ast-copilot-helper watch --full-pipeline --no-embed
+
+# Watch with custom glob pattern
+yarn ast-copilot-helper watch --glob "src/**/*.ts"
+
+# Optimize for large codebases
+yarn ast-copilot-helper watch --batch-size 100 --debounce 500
+```
+
+**Key Features:**
+
+- **Intelligent Skip Detection**: Automatically skips files with unchanged content using SHA256 hashing
+- **Content-Based Rename Detection**: Detects renamed/moved files using content hashes without re-parsing
+- **Cross-Directory Moves**: Tracks file moves across directories (e.g., `src/old.ts` → `lib/new.ts`)
+- **Two-Pass Analysis**: First detects deletions, then matches additions to prevent false positives
+- **Persistent State**: Resumes from crash with `.astdb/watch-state.json`
+- **Pipeline Integration**: Optional automatic annotation via Rust CLI and embedding
+- **Performance Statistics**: Tracks files processed, skipped, errors, and timing
+
+**Rename Detection Workflow:**
+
+1. **Pass 1 - Deletions**: Identify deleted files and store their content hashes
+2. **Pass 2 - Additions**: Match new files against deleted file hashes
+3. **Rename Window**: 5-second window to match renames (configurable)
+4. **Database Update**: Update paths in database instead of re-parsing
+
+**Performance Impact:**
+
+- **Without Rename Detection**: ~500ms per file (full re-parse)
+- **With Rename Detection**: ~50ms per file (database path update)
+- **Savings**: ~90% faster for renamed/moved files
+
+**Use Cases:**
+
+- **Development Workflow**: Automatic parsing as you code with instant feedback
+- **Long-Running Sessions**: Stable memory usage with auto-save and crash recovery
+- **CI/CD Integration**: Watch mode for continuous validation during development
+- **Large Codebases**: Smart batching and skip detection for optimal performance
+
+### 3. Model Verification & Registry
+
+Manage and verify ONNX embedding models with built-in security:
+
+```bash
+# Register a new model in the registry
+yarn ast-helper model register my-model \\
+  --version 1.0.0 \\
+  --url https://example.com/model.onnx \\
+  --checksum sha256:abc123... \\
+  --format onnx
+
+# Verify model integrity (checksum, format, optional signature)
+yarn ast-helper model verify my-model
+
+# List all registered models
+yarn ast-helper model list
+
+# View model details and verification history
+yarn ast-helper model info my-model
+
+# Delete a model from registry
+yarn ast-helper model delete my-model
+```
+
+**Key Features:**
+
+- **🔐 SHA256 Checksum Verification**: Automatic integrity validation on download and use
+- **✍️ Digital Signature Verification**: Optional RSA/ECDSA signature validation for authenticity
+- **📝 Verification History**: Complete audit trail of all verification attempts
+- **📊 Statistics Dashboard**: Track verification success rates and model health
+- **🗄️ SQLite Registry**: Persistent model metadata storage
+
+**Verification Workflow:**
+
+1. Model is registered with URL, checksum, and optional signature
+2. On first use, model is downloaded and verified (checksum + signature)
+3. Verification status is recorded in registry with timestamp
+4. Subsequent uses check if re-verification is needed (configurable interval)
+5. Failed verifications are logged with detailed error messages
+
+### 4. Query Cache Management
+
+Optimize query performance with multi-level caching:
+
+```bash
+# Warm the cache with frequently used queries
+yarn ast-helper cache warm --top 50
+
+# Analyze cache performance and hit rates
+yarn ast-helper cache analyze
+
+# Prune old or least-used cache entries
+yarn ast-helper cache prune --max-age 30 --max-entries 1000
+
+# Clear all caches (L1 memory, L2 disk, L3 database)
+yarn ast-helper cache clear
+
+# View cache statistics
+yarn ast-helper cache stats
+```
+
+**Cache Architecture:**
+
+- **L1 (Memory)**: Hot queries, ~100ms access time, LRU eviction
+- **L2 (Disk)**: Recent queries, ~500ms access time, size-based eviction
+- **L3 (Database)**: Historical queries, ~2s access time, TTL-based cleanup
+
+**Key Features:**
+
+- **📈 Automatic Promotion**: L3 hits promoted to L2, L2 hits promoted to L1
+- **🔄 Smart Invalidation**: Automatic cache invalidation on file/index changes
+- **📊 Query Analytics**: Track query frequency, execution time, and cache hit rates
+- **🎯 Cache Warming**: Pre-populate cache with frequently used queries
+- **⚡ Performance Gains**: Up to 10x faster on cached queries
+
+**Use Cases:**
+
+- **Production Optimization**: Pre-warm cache with common queries before deployment
+- **Development Speed**: Cache warm during dev for instant query responses
+- **Resource Management**: Prune old cache entries to manage disk space
+- **Performance Monitoring**: Analyze cache hit rates and query patterns
+
+### 5. Start MCP Server
 
 Enable AI agent integration:
 

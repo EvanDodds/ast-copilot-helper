@@ -288,6 +288,14 @@ export class ServerProcessManager extends EventEmitter {
   }
 
   /**
+   * Get the underlying ChildProcess
+   * This is used by MCPClientManager to create a custom Transport
+   */
+  public getProcess(): ChildProcess | null {
+    return this.process;
+  }
+
+  /**
    * Get server process information
    */
   public getProcessInfo(): ServerProcessInfo {

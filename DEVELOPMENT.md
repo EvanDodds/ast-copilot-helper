@@ -495,6 +495,324 @@ tests/
 - Security audit must be clean
 - Type checking must succeed
 
+## MCP Client Integration
+
+### Architecture Overview
+
+The VS Code extension integrates with the MCP (Model Context Protocol) server using a custom Transport implementation that preserves the extension's sophisticated process lifecycle management.
+
+#### Key Components
+
+**1. ManagedProcessTransport** (`packages/vscode-extension/src/mcp/ManagedProcessTransport.ts`)
+
+Custom MCP Transport that wraps an existing managed `ChildProcess`:
+
+- **Purpose**: Handles JSON-RPC communication over existing process stdio
+- **Does NOT**: Spawn or manage process lifecycle (that's ServerProcessManager's job)
+- **Message Format**: Newline-delimited JSON-RPC over stdin/stdout
+- **Error Handling**: Robust parsing with buffer management
+
+**2. MCPClientManager** (`packages/vscode-extension/src/managers/MCPClientManager.ts`)
+
+Manages MCP SDK Client with connection lifecycle:
+
+- **Client**: Real MCP SDK Client from `@modelcontextprotocol/sdk`
+- **Connection**: Automatic initialization via `client.connect(transport)`
+- **Reconnection**: Automatic reconnection attempts with exponential backoff
+- **Events**: Connected, disconnected, error, serverCapabilities events
+
+**3. ServerProcessManager** (`packages/vscode-extension/src/managers/ServerProcessManager.ts`)
+
+Manages MCP server process lifecycle:
+
+- **Process Control**: Spawn, restart, stop, health checks
+- **State Machine**: Starting, running, stopping, stopped, error states
+- **Monitoring**: Heartbeat, startup timeout, crash detection
+- **Integration**: Exposes `getProcess()` for Transport creation
+
+#### Architecture Decision
+
+We chose **Custom Transport + Managed Process** over letting the MCP SDK spawn its own process:
+
+**Rationale:**
+
+- Preserves 600+ lines of mature process management code
+- Maintains VS Code extension patterns (extensions manage their servers)
+- Allows custom monitoring, logging, UI integration
+- Enables sophisticated restart logic and health checks
+- MCP SDK Transport interface designed for this flexibility
+
+**Alternative Rejected:**
+
+- Let `StdioClientTransport` spawn process → Would lose all custom process management
+
+### Message Flow
+
+```
+1. VS Code Extension starts
+   ↓
+2. ServerProcessManager spawns MCP server process
+   ↓
+3. MCPClientManager creates ManagedProcessTransport
+   ↓
+4. Transport wraps existing process stdin/stdout
+   ↓
+5. MCP Client connects via Transport
+   ↓
+6. Client.callTool() → Transport.send() → process.stdin
+   ↓
+7. process.stdout → Transport.onmessage → Client receives response
+```
+
+### Usage Example
+
+```typescript
+// In extension.ts
+const serverProcessManager = new ServerProcessManager(config, outputChannel);
+await serverProcessManager.start();
+
+const clientManager = new MCPClientManager(
+  serverProcessManager,
+  clientConfig,
+  outputChannel,
+);
+
+await clientManager.connect();
+
+// Use the client
+const client = clientManager.getClient();
+const result = await client.callTool({
+  name: "query_ast_context",
+  arguments: { query: "find all functions" },
+});
+```
+
+### Testing
+
+#### Manual Testing
+
+Follow the comprehensive manual testing guide:
+
+- **Full Guide**: `packages/vscode-extension/MANUAL_MCP_TESTING.md`
+- **Quick Start**: `QUICK_MCP_TEST.md`
+
+#### Test Command
+
+The extension includes a test command utility:
+
+```typescript
+import { registerMCPTestCommand } from "./test/mcpTestCommand";
+
+// In extension.ts activate()
+const testCmd = registerMCPTestCommand(context, clientManager);
+context.subscriptions.push(testCmd);
+
+// Run via Command Palette: "AST Helper: Test MCP Client"
+```
+
+### Configuration
+
+#### Client Configuration
+
+```typescript
+interface ClientConfig {
+  autoConnect: boolean; // Auto-connect on server start
+  maxReconnectAttempts: number; // Default: 5
+  reconnectDelay: number; // Default: 2000ms
+  connectionTimeout: number; // Default: 10000ms
+  heartbeatInterval: number; // Default: 30000ms
+  enableLogging: boolean; // Default: true
+}
+```
+
+#### Server Configuration
+
+```typescript
+interface ServerConfig {
+  serverPath: string; // Path to MCP server executable
+  workingDirectory: string; // Server working directory
+  args: string[]; // Command-line arguments
+  env: Record<string, string>; // Environment variables
+  startupTimeout: number; // Default: 10000ms
+  healthCheckInterval: number; // Default: 30000ms
+}
+```
+
+### Debugging
+
+#### View Logs
+
+- **Extension Output**: Output panel → "AST Helper Server"
+- **MCP Server Stderr**: Captured in extension output
+- **Transport Messages**: Enable `enableLogging` in client config
+
+#### Common Issues
+
+1. **"Server process not available"**
+
+   ```bash
+   # Verify server build
+   cd packages/ast-mcp-server && yarn build
+   ls -la dist/index.js
+   ```
+
+2. **"Failed to parse JSON-RPC message"**
+   - Check server stdout for non-JSON output
+   - Verify newline-delimited JSON format
+   - Check stderr contamination of stdout
+
+3. **Connection timeout**
+   - Increase `connectionTimeout` in configuration
+   - Check server startup logs
+   - Verify server responds to initialization
+
+## WASM Vector Database
+
+### Architecture Overview
+
+The vector database uses **Rust** for high-performance vector similarity search. While the Rust code could be compiled to native binaries via NAPI, we chose **WebAssembly (WASM)** as the distribution method for practical deployment benefits.
+
+#### Why WASM Over Native NAPI?
+
+**Technical Reality**: The same Rust code (`packages/ast-core-engine/src/vector_db.rs`) provides vector operations in both approaches. WASM is a **distribution choice**, not a performance requirement.
+
+**Distribution Benefits**:
+
+- **Universal Binary**: One `.wasm` file works on all platforms (Windows, macOS, Linux × x64, ARM64)
+- **No Install-Time Compilation**: npm install "just works" - no cargo/native toolchain required
+- **Zero Platform-Specific Builds**: Previously needed 6+ pre-built binaries per release
+- **Simplified CI/CD**: Single build artifact instead of matrix builds for each platform
+- **Future Browser Compatibility**: WASM can potentially run in browsers
+
+**NAPI Challenges** (why we migrated away):
+
+- Required pre-built binaries for every platform combination
+- Install failures when pre-built binaries unavailable
+- Fallback to source compilation required cargo at install time
+- Maintenance burden for platform-specific builds
+
+### Implementation
+
+The implementation has two layers:
+
+#### TypeScript Layer: WASM Module Loader
+
+**RustVectorDatabase** (`packages/ast-helper/src/database/vector/rust-vector-database.ts`)
+
+Wraps the WASM module and provides the VectorDatabase interface:
+
+```typescript
+export class RustVectorDatabase implements VectorDatabase {
+  private wasmDb: WasmVectorDatabase; // Wraps WASM module
+
+  async initialize(config: VectorDatabaseConfig): Promise<void> {
+    // Load and initialize WASM module
+    this.wasmDb = await initWasmVectorDB(config.databasePath);
+  }
+
+  async addVector(id: string, vector: number[]): Promise<void> {
+    // Delegates to WASM implementation
+    return this.wasmDb.add_vector(id, vector);
+  }
+
+  async search(
+    query: number[],
+    k: number,
+  ): Promise<Array<{ id: string; score: number }>> {
+    // Calls Rust function compiled to WASM
+    return this.wasmDb.search(query, k);
+  }
+}
+```
+
+#### Rust Layer: Core Vector Operations
+
+**Core Implementation** (`packages/ast-core-engine/src/vector_db.rs`)
+
+The actual vector similarity search logic in Rust (platform-agnostic):
+
+```rust
+#[wasm_bindgen]
+pub struct WasmVectorDB {
+    vectors: HashMap<String, Vec<f32>>,
+}
+
+#[wasm_bindgen]
+impl WasmVectorDB {
+    pub fn add_vector(&mut self, id: String, vector: Vec<f32>) {
+        self.vectors.insert(id, vector);
+    }
+
+    pub fn search(&self, query: Vec<f32>, k: usize) -> Vec<SearchResult> {
+        // Cosine similarity search
+        // Returns top-k results
+    }
+}
+```
+
+### Building WASM
+
+```bash
+# Build WASM module
+cd packages/ast-core-engine
+cargo build --target wasm32-unknown-unknown --release
+
+# Or use wasm-pack for optimized build
+wasm-pack build --target nodejs --release
+```
+
+### Performance Characteristics
+
+- **Initialization**: ~10-50ms (WASM module load)
+- **Add Vector**: ~0.1ms per vector
+- **Search**: ~1-10ms for 1000 vectors (depends on k)
+- **Memory**: ~4 bytes per dimension per vector
+
+### Limitations
+
+1. **Memory Model**: WASM has 32-bit linear memory (max ~2GB)
+2. **Single-Threaded**: WASM runs on single thread (for now)
+3. **No SIMD (yet)**: WASM SIMD support is experimental
+4. **Serialization Overhead**: JS ↔ WASM boundary has some cost
+
+### Migration Notes
+
+**Previous Architecture: NAPI (Native Bindings)**
+
+The Rust vector database was exposed via Node.js native addons (NAPI):
+
+- Compiled to platform-specific binaries (`.node` files)
+- Required separate builds: Windows `.dll`, macOS `.dylib`, Linux `.so` × x64/ARM64
+- Installation required either pre-built binaries or source compilation
+- Distribution complexity: 6+ binary artifacts per release
+- `napi-wrapper.ts` (407 lines) handled the Node.js ↔ Rust bridge
+
+**Current Architecture: WASM (Universal Binary)**
+
+Same Rust code, different distribution:
+
+- Compiled to WebAssembly (`.wasm` file) via `wasm-pack`
+- `wasm_bindings.rs` exposes Rust functions to JavaScript via `wasm-bindgen`
+- ✅ **One binary for all platforms** - no platform detection needed
+- ✅ **No native toolchain required** - works out of the box on npm install
+- ✅ **Simpler deployment** - single artifact, no conditional logic
+- ✅ **Easier maintenance** - one build target instead of matrix builds
+
+**What Changed:**
+
+- **Removed**: `napi-wrapper.ts` (407 lines of NAPI bindings)
+- **Removed**: Platform-specific build matrix and pre-built binary logic
+- **Added**: `wasm_bindings.rs` (WASM-specific JavaScript bindings)
+- **Added**: `wasm-vector-database.ts` (WASM module loader and wrapper)
+- **Kept**: Core vector operations in `vector_db.rs` (minimal changes)
+
+### Future Enhancements
+
+1. **WASM SIMD**: Use SIMD intrinsics when stable
+2. **Web Workers**: Multi-threaded search via Workers
+3. **Streaming**: Incremental vector addition
+4. **Compression**: Quantization for memory efficiency
+
 ## Contributing
 
 1. **Create Feature Branch**

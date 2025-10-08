@@ -453,6 +453,11 @@ export class HNSWVectorDatabase implements VectorDatabase {
     this.ensureInitialized();
 
     try {
+      // Notify external systems (e.g., MCP server cache) before rebuild
+      if (this.config.onIndexRebuild) {
+        await this.config.onIndexRebuild();
+      }
+
       // Get all stored vectors
       const allNodeIds = await this.storage.getAllNodeIds();
 

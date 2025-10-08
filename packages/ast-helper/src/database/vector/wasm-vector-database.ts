@@ -679,6 +679,11 @@ export class WasmVectorDatabase implements VectorDatabase {
     this.ensureInitialized();
 
     try {
+      // Notify external systems (e.g., MCP server cache) before rebuild
+      if (this.config.onIndexRebuild) {
+        await this.config.onIndexRebuild();
+      }
+
       // Clear WASM database
       if (this.wasmModule) {
         this.wasmModule.clear_vector_database_wasm();

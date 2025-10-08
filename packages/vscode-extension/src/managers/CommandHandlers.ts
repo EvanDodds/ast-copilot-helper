@@ -1,6 +1,10 @@
 import * as vscode from "vscode";
 import type { ServerProcessManager } from "./ServerProcessManager";
 import type { MCPClientManager } from "./MCPClientManager";
+import {
+  runMCPCacheTests,
+  showCacheStats,
+} from "../test/mcpCacheTestCommand.js";
 
 /**
  * Command Handlers for AST Copilot Helper Extension
@@ -106,6 +110,18 @@ export class CommandHandlers {
         command: "astCopilotHelper.validateConfiguration",
         handler: this.handleValidateConfiguration.bind(this),
         title: "Validate Configuration",
+      },
+
+      // Cache management commands
+      {
+        command: "astCopilotHelper.testCache",
+        handler: this.handleTestCache.bind(this),
+        title: "Test MCP Cache Integration",
+      },
+      {
+        command: "astCopilotHelper.showCacheStats",
+        handler: this.handleShowCacheStats.bind(this),
+        title: "Show Cache Statistics",
       },
     ];
 
@@ -871,6 +887,71 @@ export class CommandHandlers {
       );
     } catch (error) {
       const errorMsg = `Configuration validation failed: ${error}`;
+      this.outputChannel.appendLine(errorMsg);
+      vscode.window.showErrorMessage(errorMsg);
+    }
+  }
+
+  // ===========================================
+  // Cache Management Command Handlers
+  // ===========================================
+
+  /**
+   * Test MCP Cache Integration
+   */
+  private async handleTestCache(): Promise<void> {
+    this.outputChannel.appendLine("Running MCP cache integration tests...");
+
+    if (!this.mcpClientManager) {
+      const message = "MCP client manager not initialized";
+      this.outputChannel.appendLine(message);
+      vscode.window.showErrorMessage(message);
+      return;
+    }
+
+    if (!this.mcpClientManager.isConnected()) {
+      const message = "MCP client not connected. Start the server first.";
+      this.outputChannel.appendLine(message);
+      vscode.window.showErrorMessage(message);
+      return;
+    }
+
+    try {
+      await runMCPCacheTests(this.outputChannel, this.mcpClientManager);
+      vscode.window.showInformationMessage(
+        "Cache integration tests completed!",
+      );
+    } catch (error) {
+      const errorMsg = `Cache tests failed: ${error}`;
+      this.outputChannel.appendLine(errorMsg);
+      vscode.window.showErrorMessage(errorMsg);
+    }
+  }
+
+  /**
+   * Show Cache Statistics
+   */
+  private async handleShowCacheStats(): Promise<void> {
+    this.outputChannel.appendLine("Fetching cache statistics...");
+
+    if (!this.mcpClientManager) {
+      const message = "MCP client manager not initialized";
+      this.outputChannel.appendLine(message);
+      vscode.window.showErrorMessage(message);
+      return;
+    }
+
+    if (!this.mcpClientManager.isConnected()) {
+      const message = "MCP client not connected. Start the server first.";
+      this.outputChannel.appendLine(message);
+      vscode.window.showErrorMessage(message);
+      return;
+    }
+
+    try {
+      await showCacheStats(this.outputChannel, this.mcpClientManager);
+    } catch (error) {
+      const errorMsg = `Failed to get cache statistics: ${error}`;
       this.outputChannel.appendLine(errorMsg);
       vscode.window.showErrorMessage(errorMsg);
     }

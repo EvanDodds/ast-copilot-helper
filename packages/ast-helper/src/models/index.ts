@@ -28,6 +28,34 @@ export {
   type VerificationOptions,
 } from "./verification.js";
 
+// Security: Digital signature verification
+export {
+  SignatureVerifier,
+  signatureVerifier,
+  type SignatureVerificationResult,
+  type ModelSignature,
+  type PublicKey,
+  type SignedModelConfig,
+} from "./signature.js";
+
+// Security: Pre/post download hooks
+export {
+  SecurityHooksManager,
+  HookType,
+  type SecurityHook,
+  type HookContext,
+  type HookResult,
+} from "./security-hooks.js";
+
+// Security: Audit logging
+export {
+  SecurityLogger,
+  securityLogger,
+  SecurityEventType,
+  SecuritySeverity,
+  type SecurityEvent,
+} from "./security-logger.js";
+
 // Model caching system
 export {
   ModelCache,
