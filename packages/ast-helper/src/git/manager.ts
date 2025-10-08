@@ -19,6 +19,8 @@ import type {
  */
 export class GitManager implements GitUtils {
   private defaultCwd: string;
+  private repositoryCheckCache: Map<string, boolean> = new Map();
+  private repositoryRootCache: Map<string, string> = new Map();
 
   constructor(cwd?: string) {
     const workingDir =
@@ -94,15 +96,24 @@ export class GitManager implements GitUtils {
    * Check if the given path is within a git repository
    */
   async isGitRepository(path: string = this.defaultCwd): Promise<boolean> {
+    const resolvedPath = resolve(path);
+
+    // Check cache first to avoid redundant git calls
+    const cached = this.repositoryCheckCache.get(resolvedPath);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     try {
-      const resolvedPath = resolve(path);
       await this.execGitCommand(["rev-parse", "--git-dir"], resolvedPath);
+      this.repositoryCheckCache.set(resolvedPath, true);
       return true;
     } catch (error) {
       // Only return false for repository-specific errors (exit code 128)
       // Re-throw other errors like permission issues
       if (error instanceof GitError) {
         if (error.context?.exitCode === 128) {
+          this.repositoryCheckCache.set(resolvedPath, false);
           return false;
         }
       }
@@ -112,6 +123,7 @@ export class GitManager implements GitUtils {
           error.message.includes("not a git repository") ||
           error.message.includes("fatal: not a git repository")
         ) {
+          this.repositoryCheckCache.set(resolvedPath, false);
           return false;
         }
       }
@@ -322,6 +334,12 @@ export class GitManager implements GitUtils {
   async getRepositoryRoot(path: string = this.defaultCwd): Promise<string> {
     const resolvedPath = resolve(path);
 
+    // Check cache first to avoid redundant git calls
+    const cachedRoot = this.repositoryRootCache.get(resolvedPath);
+    if (cachedRoot !== undefined) {
+      return cachedRoot;
+    }
+
     if (!(await this.isGitRepository(resolvedPath))) {
       throw GitErrors.notARepository(resolvedPath);
     }
@@ -332,8 +350,10 @@ export class GitManager implements GitUtils {
         resolvedPath,
       );
       // Normalize path to match the format used by Node.js on current platform
-      return resolve(result.stdout);
-    } catch (error) {
+      const root = resolve(result.stdout);
+      this.repositoryRootCache.set(resolvedPath, root);
+      return root;
+    } catch (_error) {
       throw GitErrors.repositoryNotFound(resolvedPath);
     }
   }
