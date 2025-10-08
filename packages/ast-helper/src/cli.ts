@@ -141,6 +141,40 @@ interface ModelStatusOptions extends GlobalOptions {
 }
 
 /**
+ * Options for cache management commands
+ */
+interface CacheClearOptions extends GlobalOptions {
+  level?: "L1" | "L2" | "L3" | "all";
+  confirm?: boolean;
+  verbose?: boolean;
+}
+
+interface CacheStatsOptions extends GlobalOptions {
+  json?: boolean;
+  detailed?: boolean;
+  level?: "L1" | "L2" | "L3" | "all";
+}
+
+interface CacheWarmOptions extends GlobalOptions {
+  count?: number;
+  verbose?: boolean;
+  dryRun?: boolean;
+}
+
+interface CachePruneOptions extends GlobalOptions {
+  olderThan?: string;
+  level?: "L1" | "L2" | "L3" | "all";
+  dryRun?: boolean;
+  verbose?: boolean;
+}
+
+interface CacheAnalyzeOptions extends GlobalOptions {
+  topQueries?: number;
+  format?: "text" | "json" | "markdown";
+  recommendations?: boolean;
+}
+
+/**
  * Options for the performance command
  */
 interface PerformanceOptions extends GlobalOptions {
@@ -214,6 +248,7 @@ export class AstHelperCli {
     this.setupQueryCommand();
     this.setupWatchCommand();
     this.setupModelCommands();
+    this.setupCacheCommands();
     this.setupPerformanceCommand();
   }
 
@@ -614,6 +649,108 @@ export class AstHelperCli {
   }
 
   /**
+   * Set up cache management commands
+   */
+  private setupCacheCommands(): void {
+    // Create cache command group
+    const cacheCmd = this.program
+      .command("cache")
+      .description("Manage query result cache");
+
+    // cache clear - Clear cache entries
+    cacheCmd
+      .command("clear")
+      .description("Clear cache entries at specified level(s)")
+      .addOption(
+        new Option("-l, --level <level>", "Cache level to clear")
+          .choices(["L1", "L2", "L3", "all"])
+          .default("all"),
+      )
+      .addOption(new Option("-y, --confirm", "Skip confirmation prompt"))
+      .addOption(new Option("-v, --verbose", "Verbose output"))
+      .action(async (options: CacheClearOptions) => {
+        await this.executeCommand("cache:clear", options);
+      });
+
+    // cache stats - Show cache statistics
+    cacheCmd
+      .command("stats")
+      .description("Display cache statistics and performance metrics")
+      .addOption(new Option("--json", "Output in JSON format"))
+      .addOption(new Option("--detailed", "Show detailed statistics"))
+      .addOption(
+        new Option(
+          "-l, --level <level>",
+          "Show stats for specific level",
+        ).choices(["L1", "L2", "L3", "all"]),
+      )
+      .action(async (options: CacheStatsOptions) => {
+        await this.executeCommand("cache:stats", options);
+      });
+
+    // cache warm - Pre-populate cache
+    cacheCmd
+      .command("warm")
+      .description("Pre-populate cache with frequent queries")
+      .addOption(
+        new Option(
+          "-c, --count <n>",
+          "Number of queries to warm (default: 50)",
+        ).argParser(parseInt),
+      )
+      .addOption(new Option("-v, --verbose", "Verbose output"))
+      .addOption(
+        new Option("--dry-run", "Show what would be done without caching"),
+      )
+      .action(async (options: CacheWarmOptions) => {
+        await this.executeCommand("cache:warm", options);
+      });
+
+    // cache prune - Remove old entries
+    cacheCmd
+      .command("prune")
+      .description("Remove old cache entries")
+      .addOption(
+        new Option(
+          "-o, --older-than <duration>",
+          'Remove entries older than duration (e.g., "7d", "24h", "30m")',
+        ).default("7d"),
+      )
+      .addOption(
+        new Option("-l, --level <level>", "Cache level to prune")
+          .choices(["L1", "L2", "L3", "all"])
+          .default("all"),
+      )
+      .addOption(
+        new Option("--dry-run", "Show what would be pruned without removing"),
+      )
+      .addOption(new Option("-v, --verbose", "Verbose output"))
+      .action(async (options: CachePruneOptions) => {
+        await this.executeCommand("cache:prune", options);
+      });
+
+    // cache analyze - Analyze cache usage
+    cacheCmd
+      .command("analyze")
+      .description("Analyze cache usage and provide recommendations")
+      .addOption(
+        new Option(
+          "-t, --top-queries <n>",
+          "Number of top queries to show (default: 20)",
+        ).argParser(parseInt),
+      )
+      .addOption(
+        new Option("-f, --format <fmt>", "Output format")
+          .choices(["text", "json", "markdown"])
+          .default("text"),
+      )
+      .addOption(new Option("-r, --recommendations", "Show recommendations"))
+      .action(async (options: CacheAnalyzeOptions) => {
+        await this.executeCommand("cache:analyze", options);
+      });
+  }
+
+  /**
    * Set up performance testing commands
    */
   private setupPerformanceCommand(): void {
@@ -936,6 +1073,34 @@ export class AstHelperCli {
           "./commands/model-status.js"
         );
         return new ModelStatusCommandHandler();
+      }
+      case "cache:clear": {
+        const { CacheClearCommandHandler } = await import(
+          "./commands/cache.js"
+        );
+        return new CacheClearCommandHandler();
+      }
+      case "cache:stats": {
+        const { CacheStatsCommandHandler } = await import(
+          "./commands/cache.js"
+        );
+        return new CacheStatsCommandHandler();
+      }
+      case "cache:warm": {
+        const { CacheWarmCommandHandler } = await import("./commands/cache.js");
+        return new CacheWarmCommandHandler();
+      }
+      case "cache:prune": {
+        const { CachePruneCommandHandler } = await import(
+          "./commands/cache.js"
+        );
+        return new CachePruneCommandHandler();
+      }
+      case "cache:analyze": {
+        const { CacheAnalyzeCommandHandler } = await import(
+          "./commands/cache.js"
+        );
+        return new CacheAnalyzeCommandHandler();
       }
       case "performance:benchmark": {
         const { PerformanceBenchmarkCommandHandler } = await import(
