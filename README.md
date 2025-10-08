@@ -128,6 +128,69 @@ const goResult = await parser.parseCode(
 
 **[📖 Complete Language Guide](docs/guide/multi-language-support.md)** • **[⚡ Performance Benchmarks](docs/guide/performance.md)** • **[🔧 API Reference](docs/api/interfaces.md)**
 
+## 🔒 Security Features
+
+AST Copilot Helper includes comprehensive security features for model verification and secure downloads:
+
+### Model Verification & Security
+
+- **✅ SHA256 Checksum Verification**: Automatic integrity validation for all downloaded models
+- **🔐 Digital Signature Verification**: RSA/ECDSA signature validation for model authenticity
+- **🛡️ Security Hooks System**: Extensible pre/post download verification framework
+- **📋 Comprehensive Audit Logging**: Security event tracking with JSONL-based audit trails
+- **⚠️ Automatic Quarantine**: Suspect files automatically quarantined for investigation
+
+### Security Components
+
+```typescript
+import {
+  SignatureVerifier,
+  SecurityHooksManager,
+  securityLogger,
+  SecurityEventType,
+} from "@ast-copilot-helper/ast-helper";
+
+// Initialize signature verification
+const verifier = new SignatureVerifier();
+await verifier.initialize();
+
+// Add trusted public key
+await verifier.addPublicKey("model-provider-key", publicKeyPem, {
+  keyId: "model-provider-key",
+  algorithm: "RSA",
+  issuedBy: "Model Provider Inc",
+  validUntil: new Date("2026-12-31"),
+});
+
+// Security hooks automatically validate downloads
+const hooksManager = new SecurityHooksManager();
+
+// Register custom security hook
+hooksManager.registerHook(HookType.PRE_DOWNLOAD, async (context) => {
+  // Custom validation logic
+  return {
+    allowed: true,
+    errors: [],
+    warnings: [],
+  };
+});
+
+// Query security audit log
+const recentEvents = await securityLogger.getRecentEvents(100, {
+  type: SecurityEventType.VERIFICATION_FAILED,
+  severity: SecuritySeverity.ERROR,
+});
+```
+
+**Default Security Checks:**
+
+- HTTPS URL validation (prevents insecure downloads)
+- Metadata validation (ensures required fields)
+- File integrity verification (SHA256 checksums)
+- Digital signature verification (when signatures provided)
+
+**[📚 Security Guide](docs/guide/security.md)** • **[🔐 API Reference](docs/api/security.md)**
+
 ## ⚡ Performance & Architecture
 
 AST Copilot Helper uses a **native-first architecture** combining TypeScript flexibility with Rust performance:
