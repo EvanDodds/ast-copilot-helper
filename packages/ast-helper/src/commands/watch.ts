@@ -30,6 +30,21 @@ export interface WatchCommandOptions {
   batch?: boolean;
   recursive?: boolean;
   followSymlinks?: boolean;
+
+  /** Enable full pipeline (parse → annotate → embed) */
+  fullPipeline?: boolean;
+
+  /** Disable embedding step (useful for faster parsing-only mode) */
+  noEmbed?: boolean;
+
+  /** Enable concurrent batch processing */
+  concurrent?: boolean;
+
+  /** Maximum concurrent batches (default: 2) */
+  maxConcurrent?: number;
+
+  /** Maximum batch processing delay in ms (default: 1000) */
+  maxBatchDelay?: number;
 }
 
 /**
@@ -79,9 +94,13 @@ export class WatchCommand extends EventEmitter {
     this.options = options;
     this.parseCommand = new ParseCommand();
 
-    if (options.includeAnnotation) {
+    // Determine if embedding should be enabled based on options
+    const enableEmbedding =
+      (options.includeAnnotation || options.fullPipeline) && !options.noEmbed;
+
+    if (enableEmbedding) {
       // Annotation is now handled by Rust CLI (ast-parser annotate)
-      // Always enable embedding when annotation is enabled for complete pipeline
+      // Enable embedding for complete pipeline
       this.embedCommand = new EmbedCommand(config, this.logger);
     }
 
@@ -105,6 +124,14 @@ export class WatchCommand extends EventEmitter {
         glob: this.options.glob || this.config.watchGlob,
         debounce: this.options.debounce || 200,
         includeAnnotation: this.options.includeAnnotation,
+        fullPipeline: this.options.fullPipeline,
+        noEmbed: this.options.noEmbed,
+        concurrent: this.options.concurrent,
+        pipelineStages: {
+          parse: true,
+          annotate: this.options.includeAnnotation || this.options.fullPipeline,
+          embed: this.embedCommand !== undefined,
+        },
       });
 
       // Initialize state manager and incremental update manager
@@ -469,6 +496,69 @@ export class WatchCommand extends EventEmitter {
   }
 
   /**
+   * Run annotation via Rust CLI (ast-parser annotate)
+   */
+  private async runAnnotation(files: string[]): Promise<void> {
+    if (files.length === 0) {
+      return;
+    }
+
+    try {
+      this.logger.info("Running annotation via Rust CLI", {
+        fileCount: files.length,
+      });
+
+      const { promisify } = await import("node:util");
+      const execAsync = promisify((await import("node:child_process")).exec);
+
+      // Build annotation command
+      const astParserPath = "ast-parser"; // Assuming ast-parser is in PATH
+      const workspacePath = this.config.outputDir || process.cwd();
+
+      // Run annotation for all files in batch
+      const command = `${astParserPath} annotate --workspace "${workspacePath}" ${files.map((f) => `"${f}"`).join(" ")}`;
+
+      this.logger.debug("Executing annotation command", { command });
+
+      const { stdout, stderr } = await execAsync(command, {
+        maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+      });
+
+      if (stdout) {
+        this.logger.debug("Annotation stdout", { output: stdout.trim() });
+      }
+
+      if (stderr) {
+        this.logger.warn("Annotation stderr", { output: stderr.trim() });
+      }
+
+      this.logger.info("Annotation complete", {
+        fileCount: files.length,
+      });
+
+      // Update state manager for annotated files
+      if (this.stateManager) {
+        for (const filePath of files) {
+          const currentState = this.stateManager.getFileState(filePath);
+          await this.stateManager.updateFileState(filePath, {
+            stagesCompleted: {
+              parsed: currentState?.stagesCompleted?.parsed || true,
+              annotated: true,
+              embedded: currentState?.stagesCompleted?.embedded || false,
+            },
+          });
+        }
+      }
+    } catch (error) {
+      this.logger.error("Annotation failed", {
+        error: error instanceof Error ? error.message : String(error),
+        files,
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Process all pending file changes
    */
   private async processChanges(): Promise<void> {
@@ -572,12 +662,23 @@ export class WatchCommand extends EventEmitter {
 
           processedCount += filesToProcess.length;
 
-          // Note: Annotation is now handled by Rust CLI (ast-parser annotate)
+          // Run annotation via Rust CLI if enabled
+          if (
+            (this.options.includeAnnotation || this.options.fullPipeline) &&
+            processedCount > 0
+          ) {
+            try {
+              await this.runAnnotation(filesToProcess);
+            } catch (error) {
+              this.logger.warn("Annotation failed, continuing with embedding", {
+                error: error instanceof Error ? error.message : String(error),
+              });
+            }
+          }
+
           // Run embedding if enabled for the pipeline
           if (this.embedCommand && processedCount > 0) {
-            this.logger.info(
-              "Generating embeddings for files (annotation via Rust CLI)",
-            );
+            this.logger.info("Generating embeddings for files");
             await this.embedCommand.execute({
               force: true,
               batchSize: effectiveBatchSize,
