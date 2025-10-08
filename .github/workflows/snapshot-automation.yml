@@ -1,0 +1,334 @@
+name: Snapshot Automation
+
+# Automatically create and publish .astdb snapshots for faster team onboarding
+# Part of Issue #161 - Repository Snapshot Distribution System
+
+on:
+  # Trigger on pushes to main branch
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - 'src/**'
+      - '!**/*.md'
+      - '!docs/**'
+  
+  # Trigger on releases
+  release:
+    types: [published]
+  
+  # Nightly snapshots
+  schedule:
+    - cron: '0 2 * * *'  # 2 AM UTC daily
+  
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      snapshot_version:
+        description: 'Snapshot version (e.g., 1.0.0)'
+        required: false
+        default: ''
+      snapshot_description:
+        description: 'Snapshot description'
+        required: false
+        default: 'Manual snapshot'
+      include_models:
+        description: 'Include model files (increases size)'
+        required: false
+        type: boolean
+        default: false
+      publish_to_release:
+        description: 'Publish to GitHub Releases'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  create-snapshot:
+    name: Create and Publish Snapshot
+    runs-on: ubuntu-latest
+    
+    # Only run if repository has meaningful content
+    if: github.repository != 'github/template-repo'
+    
+    permissions:
+      contents: write  # Required for creating releases and uploading assets
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git info
+          
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        
+      - name: Build project
+        run: yarn build
+        
+      - name: Initialize .astdb
+        id: init_astdb
+        run: |
+          echo "Initializing .astdb directory..."
+          yarn ast-helper init --force
+          
+          # Verify initialization
+          if [ ! -d ".astdb" ]; then
+            echo "Error: .astdb directory not created"
+            exit 1
+          fi
+          
+          echo "✅ .astdb initialized successfully"
+          
+      - name: Parse repository files
+        run: |
+          echo "Parsing repository files..."
+          
+          # Parse all supported files
+          yarn ast-helper parse \
+            --glob "**/*.{ts,js,py,java,cpp,c,go,rs,rb,php,cs}" \
+            --batch-size 50
+          
+          echo "✅ Repository files parsed"
+          
+      - name: Generate annotations
+        run: |
+          echo "Generating annotations..."
+          yarn ast-helper annotate --batch
+          echo "✅ Annotations generated"
+          
+      - name: Determine snapshot version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            # Use release tag
+            VERSION="${{ github.event.release.tag_name }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.snapshot_version }}" ]; then
+            # Use manual input
+            VERSION="${{ github.event.inputs.snapshot_version }}"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            # Use date for nightly
+            VERSION="nightly-$(date +%Y%m%d)"
+          else
+            # Use commit SHA for push events
+            VERSION="commit-$(git rev-parse --short HEAD)"
+          fi
+          
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "📦 Snapshot version: ${VERSION}"
+          
+      - name: Determine snapshot description
+        id: description
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            DESC="Release ${{ github.event.release.tag_name }}: ${{ github.event.release.name }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DESC="${{ github.event.inputs.snapshot_description }}"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            DESC="Nightly snapshot for $(date +%Y-%m-%d)"
+          else
+            DESC="Snapshot from commit $(git rev-parse --short HEAD) on ${{ github.ref_name }}"
+          fi
+          
+          echo "description=${DESC}" >> $GITHUB_OUTPUT
+          echo "📝 Description: ${DESC}"
+          
+      - name: Create snapshot
+        id: create
+        run: |
+          echo "Creating snapshot..."
+          
+          # Determine options
+          INCLUDE_MODELS=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.include_models }}" = "true" ]; then
+            INCLUDE_MODELS="--include-models"
+          fi
+          
+          # Generate snapshot filename
+          SNAPSHOT_FILE=".astdb-snapshot-${{ steps.version.outputs.version }}.tar.gz"
+          
+          # Create snapshot
+          yarn ast-helper snapshot create \
+            --version "${{ steps.version.outputs.version }}" \
+            --description "${{ steps.description.outputs.description }}" \
+            --tags "automated,ci,${{ github.event_name }}" \
+            --compression 6 \
+            ${INCLUDE_MODELS} \
+            --output "${SNAPSHOT_FILE}" \
+            --verbose
+          
+          # Verify snapshot created
+          if [ ! -f "${SNAPSHOT_FILE}" ]; then
+            echo "Error: Snapshot file not created"
+            exit 1
+          fi
+          
+          # Get file size
+          SIZE=$(stat -f%z "${SNAPSHOT_FILE}" 2>/dev/null || stat -c%s "${SNAPSHOT_FILE}")
+          SIZE_MB=$((SIZE / 1024 / 1024))
+          
+          echo "snapshot_file=${SNAPSHOT_FILE}" >> $GITHUB_OUTPUT
+          echo "snapshot_size_mb=${SIZE_MB}" >> $GITHUB_OUTPUT
+          echo "✅ Snapshot created: ${SNAPSHOT_FILE} (${SIZE_MB} MB)"
+          
+      - name: Publish snapshot to GitHub Releases
+        if: |
+          (github.event_name != 'workflow_dispatch' || github.event.inputs.publish_to_release == 'true') &&
+          github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO: ${{ github.event.repository.name }}
+          GITHUB_RELEASE_TAG: 'snapshots'
+        run: |
+          echo "Publishing snapshot to GitHub Releases..."
+          
+          yarn ast-helper snapshot publish \
+            "${{ steps.create.outputs.snapshot_file }}" \
+            --verbose
+          
+          echo "✅ Snapshot published to GitHub Releases"
+          
+      - name: Upload snapshot as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: astdb-snapshot-${{ steps.version.outputs.version }}
+          path: ${{ steps.create.outputs.snapshot_file }}
+          retention-days: 30
+          compression-level: 0  # Already compressed
+          
+      - name: Create job summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 📦 Snapshot Created Successfully
+          
+          **Version:** \`${{ steps.version.outputs.version }}\`
+          **Description:** ${{ steps.description.outputs.description }}
+          **Size:** ${{ steps.create.outputs.snapshot_size_mb }} MB
+          **Trigger:** ${{ github.event_name }}
+          **Branch:** ${{ github.ref_name }}
+          **Commit:** \`$(git rev-parse --short HEAD)\`
+          
+          ### How to Use This Snapshot
+          
+          #### Download and Restore:
+          \`\`\`bash
+          # Download snapshot
+          yarn ast-helper snapshot download ${{ steps.version.outputs.version }}
+          
+          # Restore to .astdb directory
+          yarn ast-helper snapshot restore .astdb-snapshot-${{ steps.version.outputs.version }}.tar.gz
+          \`\`\`
+          
+          #### Or Use Workflow Artifact:
+          - Download artifact from this workflow run
+          - Extract: \`yarn ast-helper snapshot restore <downloaded-file>\`
+          
+          ### Configuration
+          
+          Set these environment variables to enable automatic publishing:
+          - \`GITHUB_TOKEN\`: Personal access token (automatically provided in Actions)
+          - \`GITHUB_OWNER\`: Repository owner (automatically set)
+          - \`GITHUB_REPO\`: Repository name (automatically set)
+          
+          ### Snapshot Contents
+          - Parsed AST data for all supported file types
+          - Annotations and semantic information
+          - Database indexes for fast querying
+          - Repository metadata (commit, branch, etc.)
+          EOF
+          
+          # Add models info if included
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.include_models }}" = "true" ]; then
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          - **Model files included** (increases size)
+          EOF
+          fi
+          
+      - name: Cleanup old snapshots
+        if: github.event_name == 'schedule'
+        run: |
+          echo "Cleaning up old nightly snapshots..."
+          
+          # Keep only last 7 days of nightly snapshots
+          CUTOFF_DATE=$(date -d '7 days ago' +%Y%m%d 2>/dev/null || date -v-7d +%Y%m%d)
+          
+          # List and filter snapshots
+          yarn ast-helper snapshot list --location remote --json > snapshots.json
+          
+          # Parse and delete old snapshots (requires jq)
+          if command -v jq &> /dev/null; then
+            jq -r ".remote[] | select(.metadata.tags | contains([\"automated\", \"ci\"])) | select(.metadata.version | startswith(\"nightly-\")) | select(.metadata.version | split(\"-\")[1] < \"${CUTOFF_DATE}\") | .id" snapshots.json | while read -r id; do
+              echo "Deleting old snapshot: ${id}"
+              yarn ast-helper snapshot delete "${id}" --location remote --confirm
+            done
+            
+            rm snapshots.json
+            echo "✅ Cleanup completed"
+          else
+            echo "⚠️  jq not available, skipping cleanup"
+          fi
+          
+  notify-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: create-snapshot
+    if: failure() && github.event_name != 'workflow_dispatch'
+    
+    steps:
+      - name: Create failure issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 Snapshot Automation Failed';
+            const body = `
+            ## Snapshot Creation Failed
+            
+            **Workflow:** ${context.workflow}
+            **Run:** ${context.runId}
+            **Trigger:** ${context.eventName}
+            **Branch:** ${context.ref}
+            **Commit:** ${context.sha}
+            
+            **URL:** ${context.payload.repository.html_url}/actions/runs/${context.runId}
+            
+            Please review the workflow logs and fix any issues.
+            `;
+            
+            // Check if similar issue exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci,snapshot,bug',
+            });
+            
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Snapshot Automation Failed')
+            );
+            
+            if (existingIssue) {
+              // Comment on existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `Another failure occurred:\n\n${body}`,
+              });
+            } else {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['ci', 'snapshot', 'bug'],
+              });
+            }
