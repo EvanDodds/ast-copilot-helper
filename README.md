@@ -490,7 +490,43 @@ yarn ast-copilot-helper parse --base origin/develop
 - **Local development**: `--changed` provides quick feedback on modified code
 - **Branch reviews**: `--base <branch>` compares against any git reference
 
-### 2. Start MCP Server
+### 2. Watch for Changes
+
+Monitor your codebase for changes with intelligent incremental updates:
+
+```bash
+# Basic watch mode (parse only)
+yarn ast-copilot-helper watch
+
+# Full pipeline: parse → annotate → embed
+yarn ast-copilot-helper watch --full-pipeline
+
+# Parse and annotate only (no embedding)
+yarn ast-copilot-helper watch --full-pipeline --no-embed
+
+# Watch with custom glob pattern
+yarn ast-copilot-helper watch --glob "src/**/*.ts"
+
+# Optimize for large codebases
+yarn ast-copilot-helper watch --batch-size 100 --debounce 500
+```
+
+**Key Features:**
+
+- **Intelligent Skip Detection**: Automatically skips files with unchanged content using SHA256 hashing
+- **Rename Detection**: Detects renamed files without re-parsing (saves ~500ms per file)
+- **Persistent State**: Resumes from crash with `.astdb/watch-state.json`
+- **Pipeline Integration**: Optional automatic annotation via Rust CLI and embedding
+- **Performance Statistics**: Tracks files processed, skipped, errors, and timing
+
+**Use Cases:**
+
+- **Development Workflow**: Automatic parsing as you code with instant feedback
+- **Long-Running Sessions**: Stable memory usage with auto-save and crash recovery
+- **CI/CD Integration**: Watch mode for continuous validation during development
+- **Large Codebases**: Smart batching and skip detection for optimal performance
+
+### 3. Start MCP Server
 
 Enable AI agent integration:
 
