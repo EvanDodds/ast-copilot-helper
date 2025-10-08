@@ -116,6 +116,20 @@ export interface GitUtils {
   getChangedFilesSince(ref: string, cwd?: string): Promise<string[]>;
 
   /**
+   * Check if repository has any commits
+   * @param cwd - Working directory (optional)
+   * @returns True if repository has at least one commit
+   */
+  hasCommits(cwd?: string): Promise<boolean>;
+
+  /**
+   * Check if repository is in detached HEAD state
+   * @param cwd - Working directory (optional)
+   * @returns True if in detached HEAD state
+   */
+  isDetachedHead(cwd?: string): Promise<boolean>;
+
+  /**
    * Find the root directory of the git repository
    * @param path - Starting path to search from
    * @returns Path to repository root

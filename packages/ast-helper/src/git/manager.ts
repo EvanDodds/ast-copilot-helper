@@ -197,11 +197,35 @@ export class GitManager implements GitUtils {
    * Get list of staged files
    */
   async getStagedFiles(cwd: string = this.defaultCwd): Promise<string[]> {
+    // Verify this is a git repository
+    if (!(await this.isGitRepository(cwd))) {
+      throw GitErrors.notARepository(cwd);
+    }
+
     try {
+      // Check if this is an initial commit (no HEAD yet)
+      const hasCommits = await this.hasCommits(cwd);
+
+      if (!hasCommits) {
+        // For initial commit, use ls-files to get staged files
+        const result = await this.execGitCommand(["ls-files", "--cached"], cwd);
+
+        if (!result.stdout) {
+          return [];
+        }
+
+        return result.stdout
+          .split("\n")
+          .filter((file) => file.trim())
+          .map((file) => file.trim());
+      }
+
+      // Normal case: compare staged against HEAD
       const result = await this.execGitCommand(
         ["diff", "--name-only", "--cached", "--relative"],
         cwd,
       );
+
       if (!result.stdout) {
         return [];
       }
@@ -211,9 +235,6 @@ export class GitManager implements GitUtils {
         .filter((file) => file.trim())
         .map((file) => file.trim());
     } catch (error) {
-      if (!(await this.isGitRepository(cwd))) {
-        throw GitErrors.notARepository(cwd);
-      }
       throw GitErrors.commandFailed(
         "git diff --cached --name-only",
         1,
@@ -236,6 +257,14 @@ export class GitManager implements GitUtils {
     // Verify this is a git repository
     if (!(await this.isGitRepository(cwd))) {
       throw GitErrors.notARepository(cwd);
+    }
+
+    // Check for initial commit state
+    const hasCommits = await this.hasCommits(cwd);
+    if (!hasCommits) {
+      throw new Error(
+        "Repository has no commits yet. Commit your changes first or use --staged to process staged files.",
+      );
     }
 
     // Validate the reference exists
@@ -263,10 +292,25 @@ export class GitManager implements GitUtils {
         .filter((file) => file.trim())
         .map((file) => file.trim());
     } catch (error) {
+      // Provide helpful error messages for common issues
+      const errorMsg = (error as Error).message;
+      if (
+        errorMsg.includes("bad revision") ||
+        errorMsg.includes("unknown revision")
+      ) {
+        throw new Error(
+          `Git reference '${ref}' could not be resolved. Check that the branch/tag exists and try again.`,
+        );
+      }
+      if (errorMsg.includes("ambiguous argument")) {
+        throw new Error(
+          `Git reference '${ref}' is ambiguous. Use a full reference like 'origin/${ref}' or a commit SHA.`,
+        );
+      }
       throw GitErrors.commandFailed(
         `git diff --name-only ${ref}...HEAD`,
         1,
-        (error as Error).message,
+        errorMsg,
         cwd,
       );
     }
@@ -313,6 +357,34 @@ export class GitManager implements GitUtils {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Check if repository has any commits (not in initial state)
+   */
+  async hasCommits(cwd: string = this.defaultCwd): Promise<boolean> {
+    try {
+      await this.execGitCommand(["rev-parse", "HEAD"], cwd);
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if repository is in detached HEAD state
+   */
+  async isDetachedHead(cwd: string = this.defaultCwd): Promise<boolean> {
+    try {
+      const result = await this.execGitCommand(
+        ["symbolic-ref", "-q", "HEAD"],
+        cwd,
+      );
+      return !result.stdout; // If stdout is empty, we're not on a branch
+    } catch (_error) {
+      // symbolic-ref fails when in detached HEAD
+      return true;
     }
   }
 
