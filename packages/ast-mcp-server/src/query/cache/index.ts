@@ -8,6 +8,13 @@ export { MemoryCache } from "./memory-cache.js";
 export { DiskCache } from "./disk-cache.js";
 export { DatabaseCache } from "./database-cache.js";
 export { MultiLevelCacheManager } from "./multi-level-cache.js";
+export {
+  CacheWarmer,
+  type WarmingQuery,
+  type WarmingProgress,
+  type WarmingResult,
+  type QueryExecutor,
+} from "./cache-warmer.js";
 
 export type {
   CacheLevel,
