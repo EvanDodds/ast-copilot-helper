@@ -80,7 +80,7 @@ const MODEL_REGISTRY_TABLES = {
       checksum_match INTEGER NOT NULL,
       signature_match INTEGER,
       error_message TEXT,
-      FOREIGN KEY (model_name) REFERENCES model_registry(model_name)
+      FOREIGN KEY (model_name) REFERENCES model_registry(model_name) ON DELETE CASCADE
     )
   `,
 
@@ -136,6 +136,9 @@ export class ModelRegistryStorage {
     }
 
     this.db = new Database(this.dbPath);
+
+    // Enable foreign key constraints
+    this.db.pragma("foreign_keys = ON");
 
     // Configure SQLite for performance
     this.db.pragma("journal_mode = WAL");
@@ -498,7 +501,7 @@ export class ModelRegistryStorage {
    */
   private prepareStatements(): void {
     this.insertRegistryStmt = this.db.prepare(`
-      INSERT INTO model_registry (
+      INSERT OR REPLACE INTO model_registry (
         model_name, version, download_date, checksum,
         checksum_verified, signature_verified, last_verification,
         file_size, file_path, format, url
