@@ -8,6 +8,7 @@ import { promises as fs } from "fs";
 import { join } from "path";
 import type { ValidationResult, ModelConfig } from "./types.js";
 import { createModuleLogger } from "../logging/index.js";
+import { getModelRegistry } from "./registry-storage.js";
 
 const logger = createModuleLogger("ModelVerification");
 
@@ -140,6 +141,59 @@ export class FileVerifier {
         }
       }
 
+      const checksumVerified = errors.length === 0;
+      const signatureVerified = false; // Signature verification not yet implemented
+
+      // Record verification result in registry
+      try {
+        const registry = getModelRegistry();
+        await registry.initialize();
+
+        // Check if model is already registered
+        const existingEntry = await registry.getModel(modelConfig.name);
+
+        if (existingEntry) {
+          // Update verification status
+          await registry.updateVerificationStatus(
+            modelConfig.name,
+            checksumVerified,
+            signatureVerified,
+          );
+        } else {
+          // Register new model
+          await registry.registerModel(
+            modelConfig.name,
+            modelConfig,
+            filePath,
+            fileStats.size,
+          );
+
+          await registry.updateVerificationStatus(
+            modelConfig.name,
+            checksumVerified,
+            signatureVerified,
+          );
+        }
+
+        // Add to verification history
+        await registry.addVerificationHistory({
+          modelName: modelConfig.name,
+          timestamp: Date.now(),
+          result: checksumVerified ? "success" : "failure",
+          checksumMatch: checksumVerified,
+          signatureMatch: signatureVerified,
+          errorMessage: errors.length > 0 ? errors.join("; ") : null,
+        });
+      } catch (registryError) {
+        logger.warn("Failed to record verification in registry", {
+          error:
+            registryError instanceof Error
+              ? registryError.message
+              : String(registryError),
+        });
+        // Don't fail verification if registry recording fails
+      }
+
       if (errors.length > 0) {
         logger.error(`File verification failed: ${errors.join(", ")}`);
         return { valid: false, errors, warnings: [] };
@@ -156,6 +210,22 @@ export class FileVerifier {
         reason: QuarantineReason.UNKNOWN_ERROR,
         errorDetails: errorMessage,
       });
+
+      // Record failed verification in registry
+      try {
+        const registry = getModelRegistry();
+        await registry.initialize();
+        await registry.addVerificationHistory({
+          modelName: modelConfig.name,
+          timestamp: Date.now(),
+          result: "failure",
+          checksumMatch: false,
+          signatureMatch: null,
+          errorMessage,
+        });
+      } catch (_registryError) {
+        // Ignore registry errors during exception handling
+      }
 
       return {
         valid: false,
@@ -272,7 +342,7 @@ export class FileVerifier {
             while (
               offset < buffer.length &&
               buffer[offset] !== undefined &&
-              buffer[offset]! & 0x80
+              (buffer[offset] as number) & 0x80
             ) {
               offset++;
             }
