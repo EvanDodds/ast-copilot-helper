@@ -30,10 +30,54 @@ These standards emerged from a comprehensive verification that identified 19% fa
    yarn run build
    ```
 
-3. **Run tests**
+3. **Initialize database** (optional - creates `.astdb/` directory)
+
+   ```bash
+   yarn ast-copilot-helper init
+   ```
+
+   Note: The `.astdb/` directory contains generated files (databases, vector indexes, models, cache) that should not be committed to version control. The `init` command automatically creates or updates `.gitignore` to exclude these files. Use `--no-gitignore` if you have custom version control setup.
+
+4. **Run tests**
    ```bash
    yarn run test:all
    ```
+
+## Database Files and Version Control
+
+The `.astdb/` directory is created by the `ast-copilot-helper init` command and contains:
+
+- **SQLite databases**: `*.db`, `*.db-shm`, `*.db-wal` (parsed AST data, metadata)
+- **Vector indexes**: `index.bin`, `index.meta.json` (semantic search)
+- **ML models**: `models/` (downloaded embedding models)
+- **Cache files**: `cache/` (temporary parsed data)
+- **Lock files**: `.lock` (prevent concurrent access)
+- **Annotations**: `annotations/` (user-defined metadata)
+
+**Version Control Best Practices:**
+
+- ✅ **DO commit**: Source code, configuration files, documentation
+- ❌ **DON'T commit**: `.astdb/` directory and its contents
+- ✅ **Automatic gitignore**: The `init` command creates/updates `.gitignore` with all necessary patterns
+- ⚠️ **Custom setup**: Use `ast-copilot-helper init --no-gitignore` to skip automatic gitignore generation
+
+**Why exclude `.astdb/` from git?**
+
+1. **Large files**: Databases and models can be hundreds of MB
+2. **Machine-specific**: Indexes are optimized for local machine architecture
+3. **Regeneratable**: All data can be regenerated from source code with `parse` command
+4. **Merge conflicts**: Binary files don't merge well in version control
+5. **CI/CD**: Each environment should generate its own database
+
+**Regenerating database after clone:**
+
+```bash
+git clone <repository>
+cd <repository>
+yarn install
+yarn ast-copilot-helper init        # Creates .astdb/ directory
+yarn ast-copilot-helper parse src/  # Populates database
+```
 
 ## Package Manager
 

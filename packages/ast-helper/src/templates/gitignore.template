@@ -1,0 +1,26 @@
+# ast-copilot-helper generated files
+# Database files should not be committed to version control
+
+# Main database directory
+.astdb/
+
+# Database files (SQLite)
+.astdb/*.db
+.astdb/*.db-shm
+.astdb/*.db-wal
+
+# Vector index files (binary, regenerable)
+.astdb/index.bin
+.astdb/index.meta.json
+
+# Downloaded models (large files, can be re-downloaded)
+.astdb/models/
+
+# Cache and temporary files
+.astdb/cache/
+
+# Lock files
+.astdb/.lock
+
+# Annotations (can be regenerated from source)
+.astdb/annotations/

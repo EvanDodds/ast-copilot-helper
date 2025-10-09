@@ -40,6 +40,7 @@ interface InitOptions extends GlobalOptions {
   verbose?: boolean;
   dryRun?: boolean;
   dbPath?: string;
+  noGitignore?: boolean;
 }
 
 /**
@@ -280,6 +281,12 @@ export class AstHelperCli {
         new Option(
           "--db-path <path>",
           "Custom path for AST database directory (defaults to workspace/.astdb)",
+        ),
+      )
+      .addOption(
+        new Option(
+          "--no-gitignore",
+          "Skip .gitignore generation (database files will not be automatically excluded)",
         ),
       )
       .action(async (options: InitOptions) => {
@@ -1766,6 +1773,14 @@ class InitCommandHandler implements CommandHandler<InitOptions> {
         console.log("");
       }
 
+      // Step 6.5: Set up .gitignore (if not disabled)
+      if (!options.noGitignore) {
+        await this.setupGitignore(workspaceInfo.root, {
+          dryRun,
+          verbose,
+        });
+      }
+
       // Success message
       if (dryRun) {
         console.log("✅ Dry run completed successfully!");
@@ -1800,6 +1815,130 @@ class InitCommandHandler implements CommandHandler<InitOptions> {
       });
 
       process.exit(1);
+    }
+  }
+
+  /**
+   * Set up .gitignore with .astdb/ exclusions
+   */
+  private async setupGitignore(
+    workspaceRoot: string,
+    options: { dryRun?: boolean; verbose?: boolean },
+  ): Promise<void> {
+    const gitignorePath = path.join(workspaceRoot, ".gitignore");
+
+    if (options.verbose) {
+      console.log("📝 Setting up .gitignore...");
+    }
+
+    try {
+      // Check if update is needed
+      const needsUpdate = await this.needsGitignoreUpdate(gitignorePath);
+
+      if (!needsUpdate) {
+        if (options.verbose) {
+          console.log("   ℹ️  .astdb/ already in .gitignore, skipping");
+        }
+        return;
+      }
+
+      // Load template
+      const template = await this.loadGitignoreTemplate();
+
+      // Apply template
+      if (!options.dryRun) {
+        await this.applyGitignoreTemplate(gitignorePath, template);
+      }
+
+      if (options.verbose) {
+        const fileExists = await this.fileExists(gitignorePath);
+        const action = fileExists ? "Updated" : "Created";
+        console.log(`   ✅ ${action} .gitignore with .astdb/ exclusions`);
+      }
+    } catch (error) {
+      // Non-fatal error - log but don't fail init
+      this.logger.warn("Failed to update .gitignore", {
+        error: (error as Error).message,
+      });
+
+      if (options.verbose) {
+        console.log(
+          `   ⚠️  Could not update .gitignore: ${(error as Error).message}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Check if .gitignore needs to be updated with .astdb/ patterns
+   */
+  private async needsGitignoreUpdate(gitignorePath: string): Promise<boolean> {
+    if (!(await this.fileExists(gitignorePath))) {
+      return true; // Need to create
+    }
+
+    const content = await fs.readFile(gitignorePath, "utf-8");
+
+    // Check for .astdb/ or .astdb (with or without trailing slash)
+    // Use regex that matches common patterns:
+    // - .astdb/
+    // - .astdb
+    // - /.astdb/
+    // - *.astdb/
+    const astdbPattern = /(?:^|\/)\.astdb\/?(?:\s|$)/m;
+
+    return !astdbPattern.test(content);
+  }
+
+  /**
+   * Load gitignore template from templates directory
+   */
+  private async loadGitignoreTemplate(): Promise<string> {
+    const templatePath = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "templates",
+      "gitignore.template",
+    );
+
+    return await fs.readFile(templatePath, "utf-8");
+  }
+
+  /**
+   * Apply gitignore template to file
+   */
+  private async applyGitignoreTemplate(
+    gitignorePath: string,
+    template: string,
+  ): Promise<void> {
+    let content = "";
+
+    if (await this.fileExists(gitignorePath)) {
+      content = await fs.readFile(gitignorePath, "utf-8");
+    }
+
+    // Ensure proper spacing
+    const separator =
+      content.length > 0 ? (content.endsWith("\n") ? "\n" : "\n\n") : "";
+
+    const newContent = content + separator + template;
+
+    // Ensure file ends with newline
+    const finalContent = newContent.endsWith("\n")
+      ? newContent
+      : newContent + "\n";
+
+    await fs.writeFile(gitignorePath, finalContent, "utf-8");
+  }
+
+  /**
+   * Check if file exists
+   */
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
     }
   }
 }
