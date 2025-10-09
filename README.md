@@ -9,7 +9,25 @@ Transform your codebase into an AI-accessible knowledge base:
 - **🔍 Semantic Search**: Query code using natural language
 - **🤖 MCP Integration**: Enable AI agents to understand your code structure
 - **⚡ Performance**: Fast parsing with intelligent caching and incremental updates
-- **🌐 Multi-Language**: Support for 15 programming languages across 3 tiers
+- **🌐 Multi-Language**:Extract semantic information from your codebase:
+
+```bash
+# Initialize configuration and database
+# Automatically creates .gitignore to exclude .astdb/ directory
+yarn ast-copilot-helper init
+
+# Skip .gitignore creation if you have custom version control setup
+yarn ast-copilot-helper init --no-gitignore
+
+# Parse a directory
+yarn ast-copilot-helper parse src/
+
+# Parse with natural language query
+yarn ast-copilot-helper query "functions that handle authentication"
+```
+
+**Note:** The `init` command automatically creates or updates `.gitignore` to exclude the `.astdb/` directory (database files, vector indexes, models, cache) from version control. This prevents accidentally committing large generated files. Use `--no-gitignore` if you prefer custom gitignore handling. 15 programming languages across 3 tiers
+
 - **📦 Snapshot Distribution**: Share pre-built databases for instant team onboarding
 
 ### 🏢 Tier 1: Core Languages (4 languages)
@@ -596,8 +614,12 @@ For detailed security information, see [SECURITY.md](SECURITY.md).
 Extract semantic information from your codebase:
 
 ```bash
-# Initialize configuration
+# Initialize configuration and database
+# Automatically creates .gitignore to exclude .astdb/ directory
 yarn ast-copilot-helper init
+
+# Skip .gitignore creation if you have custom version control setup
+yarn ast-copilot-helper init --no-gitignore
 
 # Parse a directory
 yarn ast-copilot-helper parse src/
@@ -605,6 +627,8 @@ yarn ast-copilot-helper parse src/
 # Parse with natural language query
 yarn ast-copilot-helper query "functions that handle authentication"
 ```
+
+**Note:** The `init` command automatically creates or updates `.gitignore` to exclude the `.astdb/` directory (database files, vector indexes, models, cache) from version control. This prevents accidentally committing large generated files. Use `--no-gitignore` if you prefer custom gitignore handling.
 
 #### Git Integration for Smart Parsing
 
