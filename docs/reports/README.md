@@ -13,6 +13,9 @@ This directory contains historical completion reports and verification summaries
 - **HIGH_PRIORITY_COMPLETION_REPORT.md** - High priority feature completions
 - **MEDIUM_PRIORITY_COMPLETION_REPORT.md** - Medium priority feature completions
 - **RUST_ANNOTATION_EXTRACTORS_IMPLEMENTATION.md** - Rust annotation extractors implementation details
+- **IMPLEMENTATION_SUMMARY.md** - High-performance core engine (Rust migration) implementation summary
+- **NAPI_TO_WASM_ANALYSIS.md** - NAPI to WASM migration analysis
+- **WASM_BUILD_NOTES.md** - WASM build notes and configuration
 
 ## Upgrade and Migration Reports
 

@@ -106,7 +106,7 @@ Client.callTool()
 ### Completed
 
 - ✅ **Code Implementation** - All code written and compiling
-- ✅ **Manual Testing Guide** - Created comprehensive guide (`MANUAL_MCP_TESTING.md`)
+- ✅ **Manual Testing Guide** - Created comprehensive guide (`docs/testing/manual-mcp-testing.md`)
 
 ### Pending
 
@@ -131,7 +131,7 @@ Client.callTool()
 
 ### Immediate (Priority 1)
 
-1. **Manual Testing** - Follow `MANUAL_MCP_TESTING.md` guide:
+1. **Manual Testing** - Follow `docs/testing/manual-mcp-testing.md` guide:
    - Start extension in development host (F5)
    - Verify server starts and client connects
    - Test tool invocation (`ast_index_status`, `query_ast_context`, etc.)

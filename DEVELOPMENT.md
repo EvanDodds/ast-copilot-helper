@@ -603,7 +603,7 @@ const result = await client.callTool({
 
 Follow the comprehensive manual testing guide:
 
-- **Full Guide**: `packages/vscode-extension/MANUAL_MCP_TESTING.md`
+- **Full Guide**: `docs/testing/manual-mcp-testing.md`
 - **Quick Start**: `QUICK_MCP_TEST.md`
 
 #### Test Command
