@@ -1,0 +1,117 @@
+{
+  "sessionId": "session-1760053123-b0a9df",
+  "timestamp": "2025-10-09T17:25:23Z",
+  "issues": [172],
+  "repoOwner": "EvanDodds",
+  "repoName": "ast-copilot-helper",
+  "mainBranch": "main",
+  "currentStep": "0.complete",
+  "status": "analysis-complete",
+  "issueNetwork": {
+    "primary": [172],
+    "related": [],
+    "relationships": {}
+  },
+  "issueDetails": {
+    "172": {
+      "title": "Measure performance benchmarks and update specification",
+      "state": "OPEN",
+      "labels": ["performance", "validation", "Sprint 4"],
+      "references": "Gap #5, Section 9.1 of Specification Feature Evaluation",
+      "estimatedHours": "8-12",
+      "description": "Run comprehensive performance benchmarks, validate against specification targets, and update specification with measured results"
+    }
+  },
+  "acceptanceCriteria": [
+    {
+      "id": 1,
+      "text": "Run benchmark suite on standard hardware (2-CPU 8GB VM)",
+      "source": 172,
+      "priority": "required",
+      "existingStatus": "infrastructure-exists"
+    },
+    {
+      "id": 2,
+      "text": "Create synthetic 100k node repository for testing",
+      "source": 172,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 3,
+      "text": "Document actual performance metrics (parse time, query latency, memory, throughput)",
+      "source": 172,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 4,
+      "text": "Update specification with measured results",
+      "source": 172,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 5,
+      "text": "Add ±10% variance tolerance to targets",
+      "source": 172,
+      "priority": "enhanced",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 6,
+      "text": "Set up CI performance regression detection",
+      "source": 172,
+      "priority": "enhanced",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 7,
+      "text": "Validate Parse time: <10 min for 100k nodes",
+      "source": 172,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 8,
+      "text": "Validate Query latency: <200ms P95",
+      "source": 172,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 9,
+      "text": "Validate Memory usage: <4GB peak",
+      "source": 172,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 10,
+      "text": "Validate Database size: <200MB",
+      "source": 172,
+      "priority": "required",
+      "existingStatus": "not-started"
+    }
+  ],
+  "existingWork": {
+    "complete": [
+      "tests/benchmarks/performance.test.ts: Performance benchmarking infrastructure",
+      "tests/unit/performance/*.test.ts: Query, concurrency, memory profiling tests",
+      "packages/ast-helper/src/performance/: Complete benchmarking framework",
+      "vitest.benchmarks.config.ts: Benchmark configuration"
+    ],
+    "partial": [
+      "Benchmark suite exists but not run against 100k nodes",
+      "Specification targets defined but not validated",
+      "Performance baselines not documented"
+    ],
+    "missing": [
+      "Synthetic 100k node repository",
+      "Comprehensive performance report",
+      "Updated specification with measured results",
+      "CI performance regression tests"
+    ]
+  },
+  "strategy": "simple"
+}
