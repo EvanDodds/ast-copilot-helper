@@ -48,11 +48,12 @@ These standards emerged from a comprehensive verification that identified 19% fa
 The `.astdb/` directory is created by the `ast-copilot-helper init` command and contains:
 
 - **SQLite databases**: `*.db`, `*.db-shm`, `*.db-wal` (parsed AST data, metadata)
+  - `ast.db` - Main AST storage with nodes, edges, and metadata
+  - `annotations.sqlite` - Annotation storage (node metadata, complexity metrics, dependencies)
 - **Vector indexes**: `index.bin`, `index.meta.json` (semantic search)
 - **ML models**: `models/` (downloaded embedding models)
 - **Cache files**: `cache/` (temporary parsed data)
 - **Lock files**: `.lock` (prevent concurrent access)
-- **Annotations**: `annotations/` (user-defined metadata)
 
 **Version Control Best Practices:**
 

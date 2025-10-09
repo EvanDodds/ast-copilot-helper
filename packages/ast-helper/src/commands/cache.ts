@@ -16,6 +16,8 @@ import { join } from "node:path";
 import { rm } from "node:fs/promises";
 import { QueryCache } from "../cache/query-cache.js";
 import { getQueryLog } from "../cache/query-log-storage.js";
+import { ASTDatabaseManager } from "../database/manager.js";
+import { AnnotationDatabaseManager } from "../database/annotation-manager.js";
 
 const logger = createLogger();
 
@@ -236,6 +238,64 @@ export async function showCacheStats(
         process.stdout.write(
           `                 Exists: ${stats.levels.L3.exists ? "Yes" : "No"}\n`,
         );
+      }
+
+      // Display annotation statistics
+      try {
+        const dbManager = new ASTDatabaseManager(config.outputDir);
+        const annotationManager = new AnnotationDatabaseManager(dbManager);
+
+        const annotationDbExists = existsSync(
+          annotationManager.getDatabasePath(),
+        );
+        if (annotationDbExists) {
+          await annotationManager.initialize();
+          const annotationStats = await annotationManager.getStatistics();
+
+          process.stdout.write("\n=== Annotation Database ===\n\n");
+          process.stdout.write(
+            `  Total Annotations:  ${annotationStats.total_annotations}\n`,
+          );
+          process.stdout.write(
+            `  Files with Annotations: ${annotationStats.files_count}\n`,
+          );
+
+          if (annotationStats.avg_complexity !== null) {
+            process.stdout.write(
+              `  Average Complexity: ${annotationStats.avg_complexity.toFixed(2)}\n`,
+            );
+          }
+
+          if (Object.keys(annotationStats.node_types).length > 0) {
+            process.stdout.write("\n  Node Type Distribution:\n");
+            for (const [nodeType, count] of Object.entries(
+              annotationStats.node_types,
+            ).sort((a, b) => b[1] - a[1])) {
+              process.stdout.write(`    ${nodeType.padEnd(12)}: ${count}\n`);
+            }
+          }
+
+          if (options.detailed && annotationStats.last_updated) {
+            const lastUpdated = new Date(annotationStats.last_updated);
+            process.stdout.write(
+              `\n  Last Updated: ${lastUpdated.toLocaleString()}\n`,
+            );
+          }
+
+          annotationManager.close();
+        } else {
+          process.stdout.write("\n=== Annotation Database ===\n\n");
+          process.stdout.write(
+            "  No annotations found. Run 'ast-copilot-helper annotate' to generate annotations.\n",
+          );
+        }
+      } catch (annotationError) {
+        logger.warn("Could not retrieve annotation statistics", {
+          error:
+            annotationError instanceof Error
+              ? annotationError.message
+              : String(annotationError),
+        });
       }
     }
 
