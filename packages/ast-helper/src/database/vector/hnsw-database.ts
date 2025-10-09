@@ -9,6 +9,11 @@ import type {
   VectorDBStats,
   VectorInsert,
 } from "./types.js";
+import {
+  verifyIndexIntegrity,
+  storeChecksum,
+  promptRebuild,
+} from "./corruption-detector.js";
 
 /**
  * HNSW Vector Database Implementation
@@ -34,6 +39,7 @@ export class HNSWVectorDatabase implements VectorDatabase {
   private searchTimes: number[] = []; // Rolling window of search times
   private readonly maxSearchTimeHistory = 100; // Keep last 100 search times
   private lastBuildTime = 0; // Track last index build time in ms
+  private lastBuildTimestamp: Date | null = null; // Track when index was last built
 
   constructor(config: VectorDBConfig) {
     this.config = config;
@@ -84,7 +90,38 @@ export class HNSWVectorDatabase implements VectorDatabase {
       // Check if we need to rebuild index from existing storage
       const stats = await this.storage.getStats();
       if (stats.vectorCount > 0) {
-        await this.rebuildIndexFromStorage();
+        // VERIFY INTEGRITY BEFORE LOADING
+        const verificationResult = await verifyIndexIntegrity(
+          this.config.storageFile,
+        );
+
+        if (!verificationResult.isValid) {
+          /* eslint-disable no-console */
+          console.warn("⚠️  Storage corruption detected");
+          console.warn(`   Reason: ${verificationResult.error}`);
+
+          // Prompt for rebuild (only in CLI context)
+          if (process.stdin.isTTY) {
+            const shouldRebuild = await promptRebuild();
+            if (shouldRebuild) {
+              console.log("🔄 Rebuilding index...");
+              await this.rebuildIndexFromStorage();
+              console.log("✅ Index rebuilt successfully");
+            } else {
+              console.log("⏭️  Skipping rebuild (index may be unusable)");
+              // Still try to rebuild in case storage is recoverable
+              await this.rebuildIndexFromStorage();
+            }
+          } else {
+            console.warn("   Run `ast-helper rebuild-index` to fix");
+            // Try to rebuild anyway in non-interactive mode
+            await this.rebuildIndexFromStorage();
+          }
+          /* eslint-enable no-console */
+        } else {
+          // Load existing index with verified integrity
+          await this.rebuildIndexFromStorage();
+        }
       } else {
         // Initialize empty index with max elements and HNSW parameters
         this.index.initIndex(
@@ -135,8 +172,16 @@ export class HNSWVectorDatabase implements VectorDatabase {
         }
       }
 
-      // Track build time
+      // Track build time and store checksum
       this.lastBuildTime = Date.now() - buildStartTime;
+      this.lastBuildTimestamp = new Date();
+
+      // Store checksum after successful build
+      await storeChecksum(
+        this.config.storageFile,
+        allNodeIds.length,
+        this.lastBuildTime,
+      );
     } catch (error) {
       throw new Error(
         `Failed to rebuild index from storage: ${(error as Error).message}`,
@@ -418,6 +463,18 @@ export class HNSWVectorDatabase implements VectorDatabase {
   }
 
   /**
+   * Get build metrics (time and timestamp)
+   *
+   * @returns Build metrics including time in ms and timestamp
+   */
+  getBuildMetrics(): { buildTime: number; timestamp: Date | null } {
+    return {
+      buildTime: this.lastBuildTime,
+      timestamp: this.lastBuildTimestamp,
+    };
+  }
+
+  /**
    * Estimate memory usage of the HNSW index
    */
   private getMemoryUsage(): number {
@@ -459,6 +516,8 @@ export class HNSWVectorDatabase implements VectorDatabase {
   async rebuild(): Promise<void> {
     this.ensureInitialized();
 
+    const startTime = Date.now();
+
     try {
       // Notify external systems (e.g., MCP server cache) before rebuild
       if (this.config.onIndexRebuild) {
@@ -491,7 +550,22 @@ export class HNSWVectorDatabase implements VectorDatabase {
         }
       }
 
-      console.log(`Rebuilt HNSW index with ${allNodeIds.length} vectors`);
+      // COMPUTE AND STORE CHECKSUM
+      const buildTime = Date.now() - startTime;
+      this.lastBuildTime = buildTime;
+      this.lastBuildTimestamp = new Date();
+
+      await storeChecksum(
+        this.config.storageFile,
+        allNodeIds.length,
+        buildTime,
+      );
+
+      /* eslint-disable no-console */
+      console.log(
+        `✅ Rebuilt HNSW index with ${allNodeIds.length} vectors in ${buildTime}ms`,
+      );
+      /* eslint-enable no-console */
     } catch (error) {
       throw new Error(`Failed to rebuild index: ${(error as Error).message}`);
     }
