@@ -32,6 +32,7 @@ export class HNSWVectorDatabase implements VectorDatabase {
   private isDirty = false; // Track if index has unsaved changes
   private searchTimes: number[] = []; // Rolling window of search times
   private readonly maxSearchTimeHistory = 100; // Keep last 100 search times
+  private lastBuildTime = 0; // Track last index build time in ms
 
   constructor(config: VectorDBConfig) {
     this.config = config;
@@ -106,6 +107,8 @@ export class HNSWVectorDatabase implements VectorDatabase {
       throw new Error("HNSW index not initialized");
     }
 
+    const buildStartTime = Date.now();
+
     try {
       const stats = await this.storage.getStats();
 
@@ -130,6 +133,9 @@ export class HNSWVectorDatabase implements VectorDatabase {
           }
         }
       }
+
+      // Track build time
+      this.lastBuildTime = Date.now() - buildStartTime;
     } catch (error) {
       throw new Error(
         `Failed to rebuild index from storage: ${(error as Error).message}`,
@@ -391,7 +397,7 @@ export class HNSWVectorDatabase implements VectorDatabase {
         indexFileSize: 0, // HNSW index is in-memory only
         storageFileSize: storageStats.storageSize,
         lastSaved: new Date(), // Current time since we save immediately
-        buildTime: 0, // TODO: Track build time
+        buildTime: this.lastBuildTime,
         averageSearchTime: this.getAverageSearchTime(),
         status: this.isInitialized ? "ready" : "initializing",
       };

@@ -1,7 +1,10 @@
-//! Core engine implementation stubs
+//! Core engine implementation
 //!
-//! This module contains the main engine implementation.
-//! Individual components will be implemented in separate modules.
+//! This module contains the main engine configuration and initialization.
+//! Actual component implementations are in separate modules:
+//! - Vector database: `crate::vector_db::SimpleVectorDb`
+//! - AST processor: `crate::ast_processor::AstProcessor`
+//! - Batch processor: `crate::batch_processor::BatchProcessor`
 
 use crate::{config::EngineConfig, error::EngineError};
 
@@ -19,50 +22,5 @@ impl ASTCoreEngine {
     /// Get engine configuration
     pub fn config(&self) -> &EngineConfig {
         &self.config
-    }
-}
-
-// Placeholder implementations - will be replaced with actual implementations
-// in subsequent subtasks
-
-/// Placeholder for vector database
-pub mod vector_db {
-    use super::*;
-
-    pub struct VectorDatabase;
-
-    impl VectorDatabase {
-        pub fn new(_config: &EngineConfig) -> Result<Self, EngineError> {
-            // TODO: Implement HNSW vector database
-            Ok(Self)
-        }
-    }
-}
-
-/// Placeholder for AST processor
-pub mod ast_processor {
-    use super::*;
-
-    pub struct ASTProcessor;
-
-    impl ASTProcessor {
-        pub fn new(_config: &EngineConfig) -> Result<Self, EngineError> {
-            // TODO: Implement Tree-sitter AST processor
-            Ok(Self)
-        }
-    }
-}
-
-/// Placeholder for batch processor
-pub mod batch_processor {
-    use super::*;
-
-    pub struct BatchProcessor;
-
-    impl BatchProcessor {
-        pub fn new(_config: &EngineConfig) -> Result<Self, EngineError> {
-            // TODO: Implement memory-efficient batch processor
-            Ok(Self)
-        }
     }
 }

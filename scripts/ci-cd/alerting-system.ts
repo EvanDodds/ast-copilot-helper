@@ -714,6 +714,88 @@ ${alert.message}
     }
   }
 
+  private async sendWebhookAlert(
+    alert: Alert,
+    channel: NotificationChannel,
+  ): Promise<void> {
+    if (!channel.config.webhookUrl) {
+      this.log("Webhook URL not configured, skipping webhook notification");
+      return;
+    }
+
+    const payload = {
+      id: alert.id,
+      timestamp: alert.timestamp.toISOString(),
+      severity: alert.severity,
+      title: alert.title,
+      message: alert.message,
+      metric: alert.metric,
+      value: alert.value,
+      threshold: alert.threshold,
+      context: alert.context,
+      recommendations: alert.recommendations,
+    };
+
+    try {
+      // Dynamically import https/http module
+      const url = new URL(channel.config.webhookUrl);
+      const isHttps = url.protocol === "https:";
+      const httpModule = isHttps
+        ? await import("https")
+        : await import("http");
+
+      const options = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "AST-Copilot-Helper-Alerting-System/1.0",
+        },
+      };
+
+      // Send HTTP POST request
+      await new Promise<void>((resolve, reject) => {
+        const req = httpModule.request(
+          channel.config.webhookUrl!,
+          options,
+          (res) => {
+            let data = "";
+            res.on("data", (chunk) => (data += chunk));
+            res.on("end", () => {
+              if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                this.log(`Webhook alert sent successfully to ${url.hostname}`);
+                resolve();
+              } else {
+                reject(
+                  new Error(
+                    `Webhook returned status ${res.statusCode}: ${data}`,
+                  ),
+                );
+              }
+            });
+          },
+        );
+
+        req.on("error", (error) => {
+          reject(error);
+        });
+
+        // Set timeout
+        req.setTimeout(10000, () => {
+          req.destroy();
+          reject(new Error("Webhook request timed out"));
+        });
+
+        req.write(JSON.stringify(payload));
+        req.end();
+      });
+
+      this.log(`Webhook notification sent for alert ${alert.id}`);
+    } catch (error: any) {
+      this.log(`Failed to send webhook notification: ${error.message}`);
+      throw error;
+    }
+  }
+
   private async sendAlert(alert: Alert): Promise<void> {
     this.log(`📨 Sending ${alert.severity} alert: ${alert.title}`);
 
@@ -739,8 +821,7 @@ ${alert.message}
             promises.push(this.sendGitHubAlert(alert, channel));
             break;
           case "webhook":
-            // Custom webhook implementation would go here
-            this.log(`Webhook notifications not yet implemented`);
+            promises.push(this.sendWebhookAlert(alert, channel));
             break;
         }
       } catch (error: any) {

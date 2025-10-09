@@ -16,5 +16,8 @@ export {
   type WorkspaceDetectorOptions,
   type WorkspaceInfo,
 } from "./workspace.js";
-// TODO: Add other database modules as they are implemented
+export { IntegrityValidator, type IntegrityReport } from "./integrity.js";
 export * from "./types.js";
+
+// Vector database exports
+export * from "./vector/index.js";

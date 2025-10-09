@@ -471,17 +471,24 @@ export class EmbedCommand {
     }
 
     try {
-      // Prepare model information
-      const modelInfo = {
-        name: results[0]?.modelUsed || "unknown",
-        version: "1.0.0", // TODO: Get actual model version
+      // Get actual model version from the generator
+      if (!this.generator) {
+        throw new Error("Embedding generator not initialized");
+      }
+
+      const modelInfo = this.generator.getModelInfo();
+
+      // Prepare model information for database storage
+      const dbModelInfo = {
+        name: modelInfo.name,
+        version: modelInfo.version,
         dimensions: results[0]?.embedding.length || 768,
       };
 
       // Store embeddings with configuration
       await this.embeddingDb.storeEmbeddings(
         results,
-        modelInfo,
+        dbModelInfo,
         this.config.embeddings,
       );
 
