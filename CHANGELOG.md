@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added - Sprint 3: Issues #169, #170, #171
+
+#### 🔧 MCP Server Configuration (Issue #170)
+
+- **MCP server config validation**: Added `mcpServers` field to configuration with comprehensive validation
+- **Type-safe configuration**: `McpServerConfig` interface with command, args, env, and disabled fields
+- **Validation functions**: `validateMcpServerConfig()` ensures proper server configuration
+- **Unit tests**: 24 comprehensive tests covering all validation scenarios
+- **Documentation**: Updated README with MCP server configuration examples
+
+#### 🗂️ XDG Base Directory Support (Issue #171)
+
+- **XDG paths module**: Created `xdg-paths.ts` with `getXdgConfigHome()`, `getXdgDataHome()`, `getXdgCacheHome()`
+- **User config support**: `--user-config` CLI flag for custom config location
+- **Config hierarchy**: CLI args > env vars > project config > user config > defaults
+- **Cross-platform paths**: Proper handling of Windows (AppData) and Unix (XDG) paths
+- **Directory creation**: Automatic creation of config directories if missing
+- **Unit tests**: 21 comprehensive tests covering all path resolution scenarios
+- **Documentation**: Updated README with XDG configuration examples
+
+#### 🛡️ HNSW Index Corruption Detection (Issue #169)
+
+- **Corruption detection**: SHA-256 checksum-based integrity verification for HNSW indices
+- **Automatic verification**: Index integrity checked on database initialization
+- **Checksum storage**: Metadata stored in `.checksum` files alongside index files
+- **Interactive rebuilds**: User prompted to rebuild corrupted indices in terminal mode
+- **Auto-rebuild**: Non-interactive mode automatically rebuilds corrupted indices
+- **CLI command**: `rebuild-index` command for manual index reconstruction
+- **Build metrics**: Track build time, vector count, and memory usage
+- **Unit tests**: 23 comprehensive tests covering all corruption detection scenarios
+- **Documentation**: Updated README with corruption detection and rebuild examples
+
+### Changed
+
+- **Config system**: Extended configuration types to support MCP servers and user config paths
+- **HNSW database**: Enhanced with integrity verification and automatic corruption recovery
+- **CLI**: Added `--user-config` flag and `rebuild-index` command
+
+### Security
+
+- **Index integrity**: SHA-256 checksums protect against index corruption
+- **Config validation**: Strict validation of MCP server configurations prevents invalid setups
+- **Path security**: Proper path handling prevents traversal vulnerabilities
+
 ## [2.0.0] - 2024-01-XX
 
 ### Added - Issue #150: Complete Specification Implementation
