@@ -75,7 +75,7 @@ describe("DatabaseVersionManager", () => {
     mockNodeReadFile.mockResolvedValue("{}");
     mockFsInstance.writeFile.mockResolvedValue(undefined);
     mockFsInstance.mkdir.mockResolvedValue(undefined);
-    
+
     // Reset node:fs/promises mocks (used by loadVersionInfo)
     mockNodeReadFile.mockResolvedValue("{}");
     mockNodeWriteFile.mockResolvedValue(undefined);
@@ -309,7 +309,9 @@ describe("DatabaseVersionManager", () => {
         },
       };
 
-      mockNodeReadFile.mockResolvedValue(JSON.stringify(incompatibleVersionInfo));
+      mockNodeReadFile.mockResolvedValue(
+        JSON.stringify(incompatibleVersionInfo),
+      );
       mockFs.existsSync.mockReturnValue(true);
       mockFs.readFileSync.mockReturnValue('{"version": "1.0.0"}');
 

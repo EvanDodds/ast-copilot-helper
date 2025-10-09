@@ -740,9 +740,7 @@ ${alert.message}
       // Dynamically import https/http module
       const url = new URL(channel.config.webhookUrl);
       const isHttps = url.protocol === "https:";
-      const httpModule = isHttps
-        ? await import("https")
-        : await import("http");
+      const httpModule = isHttps ? await import("https") : await import("http");
 
       const options = {
         method: "POST",
@@ -761,7 +759,11 @@ ${alert.message}
             let data = "";
             res.on("data", (chunk) => (data += chunk));
             res.on("end", () => {
-              if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              if (
+                res.statusCode &&
+                res.statusCode >= 200 &&
+                res.statusCode < 300
+              ) {
                 this.log(`Webhook alert sent successfully to ${url.hostname}`);
                 resolve();
               } else {

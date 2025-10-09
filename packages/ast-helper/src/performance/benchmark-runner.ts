@@ -354,7 +354,7 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
 
   private async runParsingBenchmarks(): Promise<ParsingBenchmark[]> {
     console.log("Running parsing benchmarks...");
-    
+
     const benchmarks: ParsingBenchmark[] = [];
     const languages = ["typescript", "javascript", "python"];
     const nodeCounts = [100, 500, 1000, 5000];
@@ -363,13 +363,13 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
       for (const nodeCount of nodeCounts) {
         const startTime = Date.now();
         const startMem = process.memoryUsage().heapUsed / 1024 / 1024;
-        
+
         try {
           // Simulate parsing workload
           const significantNodes = Math.floor(nodeCount * 0.3); // ~30% significant nodes
           const parseTime = Date.now() - startTime;
           const endMem = process.memoryUsage().heapUsed / 1024 / 1024;
-          
+
           benchmarks.push({
             testName: `${language}-${nodeCount}-nodes`,
             fileCount: Math.ceil(nodeCount / 50), // ~50 nodes per file
@@ -381,7 +381,7 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
             cpuUsage: 0, // CPU profiling requires additional tooling
             language,
           });
-          
+
           console.log(`  ✓ ${language} (${nodeCount} nodes): ${parseTime}ms`);
         } catch (error) {
           console.error(`  ✗ ${language} (${nodeCount} nodes): ${error}`);
@@ -445,7 +445,7 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
 
   private async runEmbeddingBenchmarks(): Promise<EmbeddingBenchmark[]> {
     console.log("Running embedding benchmarks...");
-    
+
     const benchmarks: EmbeddingBenchmark[] = [];
     const nodeCounts = [10, 50, 100, 500, 1000];
     const modelSize = "gte-small"; // Default embedding model
@@ -453,17 +453,18 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
     for (const nodeCount of nodeCounts) {
       const startTime = Date.now();
       const startMem = process.memoryUsage().heapUsed / 1024 / 1024;
-      
+
       try {
         // Simulate embedding generation workload
         // In real implementation, this would call the embedding generator
         await new Promise((resolve) => setTimeout(resolve, nodeCount * 2)); // Simulate processing time
-        
+
         const embeddingTime = Date.now() - startTime;
         const endMem = process.memoryUsage().heapUsed / 1024 / 1024;
-        
-        const embeddingsPerSec = embeddingTime > 0 ? (nodeCount / embeddingTime) * 1000 : 0;
-        
+
+        const embeddingsPerSec =
+          embeddingTime > 0 ? (nodeCount / embeddingTime) * 1000 : 0;
+
         benchmarks.push({
           testName: `embed-${nodeCount}-nodes`,
           nodeCount,
@@ -472,8 +473,10 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
           memoryUsage: endMem - startMem,
           modelSize,
         });
-        
-        console.log(`  ✓ ${nodeCount} embeddings: ${embeddingTime}ms (${embeddingsPerSec.toFixed(2)} emb/s)`);
+
+        console.log(
+          `  ✓ ${nodeCount} embeddings: ${embeddingTime}ms (${embeddingsPerSec.toFixed(2)} emb/s)`,
+        );
       } catch (error) {
         console.error(`  ✗ ${nodeCount} embeddings: ${error}`);
       }
@@ -484,26 +487,28 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
 
   private async runVectorSearchBenchmarks(): Promise<VectorSearchBenchmark[]> {
     console.log("Running vector search benchmarks...");
-    
-    const benchmarks: VectorSearchBenchmark[]  = [];
+
+    const benchmarks: VectorSearchBenchmark[] = [];
     const vectorCounts = [100, 500, 1000, 5000, 10000];
     const dimensions = 384; // Standard embedding dimension for gte-small
 
     for (const vectorCount of vectorCounts) {
       const startTime = Date.now();
       const startMem = process.memoryUsage().heapUsed / 1024 / 1024;
-      
+
       try {
         // Simulate vector search workload
         // In real implementation, this would perform actual vector similarity search
-        await new Promise((resolve) => setTimeout(resolve, Math.log(vectorCount) * 5)); // Logarithmic complexity
-        
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.log(vectorCount) * 5),
+        ); // Logarithmic complexity
+
         const searchTime = Date.now() - startTime;
         const endMem = process.memoryUsage().heapUsed / 1024 / 1024;
-        
+
         // Simulate accuracy based on vector count (larger datasets = slightly lower accuracy)
         const accuracy = Math.max(85, 100 - (vectorCount / 1000) * 2);
-        
+
         benchmarks.push({
           testName: `vector-search-${vectorCount}-vectors`,
           vectorCount,
@@ -512,8 +517,10 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
           accuracy,
           memoryUsage: endMem - startMem,
         });
-        
-        console.log(`  ✓ ${vectorCount} vectors: ${searchTime}ms (${accuracy.toFixed(1)}% accuracy)`);
+
+        console.log(
+          `  ✓ ${vectorCount} vectors: ${searchTime}ms (${accuracy.toFixed(1)}% accuracy)`,
+        );
       } catch (error) {
         console.error(`  ✗ ${vectorCount} vectors: ${error}`);
       }
@@ -524,7 +531,7 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
 
   private async runSystemBenchmarks(): Promise<SystemBenchmark[]> {
     console.log("Running system benchmarks...");
-    
+
     const benchmarks: SystemBenchmark[] = [];
     const operations = [
       { name: "database-init", duration: 50 },
@@ -536,14 +543,14 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
     for (const op of operations) {
       const startMem = process.memoryUsage().heapUsed / 1024 / 1024;
       const startTime = Date.now();
-      
+
       try {
         // Simulate system operation
         await new Promise((resolve) => setTimeout(resolve, op.duration));
-        
+
         const duration = Date.now() - startTime;
         const endMem = process.memoryUsage().heapUsed / 1024 / 1024;
-        
+
         benchmarks.push({
           testName: `system-${op.name}`,
           operation: op.name,
@@ -552,7 +559,7 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
           cpuUsage: 0, // CPU profiling requires additional tooling
           diskIO: 0, // Disk I/O monitoring requires additional tooling
         });
-        
+
         console.log(`  ✓ ${op.name}: ${duration}ms`);
       } catch (error) {
         console.error(`  ✗ ${op.name}: ${error}`);
@@ -566,22 +573,24 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
     benchmarks: ParsingBenchmark[],
   ): PerformanceValidationResult[] {
     const results: PerformanceValidationResult[] = [];
-    
+
     for (const benchmark of benchmarks) {
       // Validate parsing speed (should process at least minThroughput nodes/sec)
-      const throughputPassed = benchmark.nodesPerSecond >= this.performanceTargets.minThroughput;
+      const throughputPassed =
+        benchmark.nodesPerSecond >= this.performanceTargets.minThroughput;
       results.push({
         criterion: `${benchmark.testName}-throughput`,
         target: this.performanceTargets.minThroughput,
         actual: benchmark.nodesPerSecond,
         passed: throughputPassed,
-        message: throughputPassed 
+        message: throughputPassed
           ? `Parsing throughput meets target (${benchmark.nodesPerSecond.toFixed(0)} nodes/sec >= ${this.performanceTargets.minThroughput})`
           : `Parsing throughput below target (${benchmark.nodesPerSecond.toFixed(0)} nodes/sec < ${this.performanceTargets.minThroughput})`,
       });
-      
+
       // Validate memory usage
-      const memoryPassed = benchmark.memoryUsage < this.performanceTargets.maxMemoryUsage;
+      const memoryPassed =
+        benchmark.memoryUsage < this.performanceTargets.maxMemoryUsage;
       results.push({
         criterion: `${benchmark.testName}-memory`,
         target: this.performanceTargets.maxMemoryUsage,
@@ -592,7 +601,7 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
           : `Memory usage exceeds limits (${benchmark.memoryUsage.toFixed(0)}MB >= ${this.performanceTargets.maxMemoryUsage}MB)`,
       });
     }
-    
+
     return results;
   }
 
@@ -600,13 +609,13 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
     benchmarks: QueryBenchmark[],
   ): PerformanceValidationResult[] {
     const results: PerformanceValidationResult[] = [];
-    
+
     for (const benchmark of benchmarks) {
       // Use MCP timeout for MCP queries, CLI timeout for others
-      const targetTime = benchmark.testName.includes("mcp") 
-        ? this.performanceTargets.maxMCPQueryTime 
+      const targetTime = benchmark.testName.includes("mcp")
+        ? this.performanceTargets.maxMCPQueryTime
         : this.performanceTargets.maxCLIQueryTime;
-      
+
       const timePassed = benchmark.responseTime <= targetTime;
       results.push({
         criterion: `${benchmark.testName}-response-time`,
@@ -617,9 +626,10 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
           ? `Query response time meets target (${benchmark.responseTime.toFixed(0)}ms <= ${targetTime}ms)`
           : `Query response time exceeds target (${benchmark.responseTime.toFixed(0)}ms > ${targetTime}ms)`,
       });
-      
+
       // Validate memory allocation
-      const memoryPassed = benchmark.memoryAllocated < this.performanceTargets.maxMemoryUsage;
+      const memoryPassed =
+        benchmark.memoryAllocated < this.performanceTargets.maxMemoryUsage;
       results.push({
         criterion: `${benchmark.testName}-memory`,
         target: this.performanceTargets.maxMemoryUsage,
@@ -630,7 +640,7 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
           : `Query memory usage exceeds limits (${benchmark.memoryAllocated.toFixed(0)}MB >= ${this.performanceTargets.maxMemoryUsage}MB)`,
       });
     }
-    
+
     return results;
   }
 
@@ -639,41 +649,45 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
     const responseTimes: number[] = [];
     let successCount = 0;
     let failureCount = 0;
-    
+
     const numTasks = level * 10; // 10 tasks per concurrency level
-    
+
     // Execute tasks in batches of 'level' concurrent tasks
     for (let i = 0; i < numTasks; i += level) {
       const batchPromises: Promise<number>[] = [];
-      
-      for (let j = 0; j < level && (i + j) < numTasks; j++) {
+
+      for (let j = 0; j < level && i + j < numTasks; j++) {
         batchPromises.push(
           (async () => {
             const taskStart = Date.now();
             try {
               // Simulate query workload
-              await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 50));
+              await new Promise((resolve) =>
+                setTimeout(resolve, 50 + Math.random() * 50),
+              );
               successCount++;
               return Date.now() - taskStart;
             } catch {
               failureCount++;
               return 0;
             }
-          })()
+          })(),
         );
       }
-      
+
       const batchTimes = await Promise.all(batchPromises);
-      responseTimes.push(...batchTimes.filter(t => t > 0));
+      responseTimes.push(...batchTimes.filter((t) => t > 0));
     }
-    
+
     const totalTime = Date.now() - startTime;
-    const avgResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length 
-      : 0;
-    const maxResponseTime = responseTimes.length > 0 ? Math.max(...responseTimes) : 0;
+    const avgResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+        : 0;
+    const maxResponseTime =
+      responseTimes.length > 0 ? Math.max(...responseTimes) : 0;
     const throughput = totalTime > 0 ? (successCount / totalTime) * 1000 : 0;
-    
+
     return {
       concurrencyLevel: level,
       totalTime,
@@ -689,29 +703,30 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
     size: number,
   ): Promise<ScalabilityResult> {
     const startMem = process.memoryUsage().heapUsed / 1024 / 1024;
-    
+
     // Simulate indexing
     const indexStart = Date.now();
     await new Promise((resolve) => setTimeout(resolve, size / 100)); // Simulate indexing time
     const indexingTime = Date.now() - indexStart;
-    
+
     // Simulate queries at this scale
     const queryTimes: number[] = [];
     const numQueries = 10;
-    
+
     for (let i = 0; i < numQueries; i++) {
       const queryStart = Date.now();
       await new Promise((resolve) => setTimeout(resolve, Math.log(size) * 10)); // Logarithmic query time
       queryTimes.push(Date.now() - queryStart);
     }
-    
-    const avgQueryTime = queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length;
+
+    const avgQueryTime =
+      queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length;
     const maxQueryTime = Math.max(...queryTimes);
     const endMem = process.memoryUsage().heapUsed / 1024 / 1024;
-    
+
     // Estimate index size (rough approximation: 1KB per annotation)
     const indexSize = (size / 1024) * 1024; // Convert to KB
-    
+
     return {
       annotationCount: size,
       indexingTime,
@@ -728,38 +743,50 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
     if (results.length < 2) {
       return {};
     }
-    
+
     const factors: Record<string, number> = {};
-    
+
     // Calculate indexing time scaling factor (time per 1000 annotations)
     const firstResult = results[0];
     const lastResult = results[results.length - 1];
-    
+
     if (lastResult && firstResult) {
-      const indexingFactor = lastResult.annotationCount > firstResult.annotationCount
-        ? (lastResult.indexingTime - firstResult.indexingTime) / (lastResult.annotationCount - firstResult.annotationCount) * 1000
-        : 0;
+      const indexingFactor =
+        lastResult.annotationCount > firstResult.annotationCount
+          ? ((lastResult.indexingTime - firstResult.indexingTime) /
+              (lastResult.annotationCount - firstResult.annotationCount)) *
+            1000
+          : 0;
       factors.indexingTimePerK = indexingFactor;
-      
+
       // Calculate query time scaling factor
-      const queryFactor = lastResult.annotationCount > firstResult.annotationCount
-        ? (lastResult.avgQueryTime - firstResult.avgQueryTime) / (lastResult.annotationCount - firstResult.annotationCount) * 1000
-        : 0;
+      const queryFactor =
+        lastResult.annotationCount > firstResult.annotationCount
+          ? ((lastResult.avgQueryTime - firstResult.avgQueryTime) /
+              (lastResult.annotationCount - firstResult.annotationCount)) *
+            1000
+          : 0;
       factors.queryTimePerK = queryFactor;
-      
+
       // Calculate memory scaling factor (MB per 1000 annotations)
-      const memoryFactor = lastResult.annotationCount > firstResult.annotationCount
-        ? (lastResult.memoryUsage - firstResult.memoryUsage) / (lastResult.annotationCount - firstResult.annotationCount) * 1000
-        : 0;
+      const memoryFactor =
+        lastResult.annotationCount > firstResult.annotationCount
+          ? ((lastResult.memoryUsage - firstResult.memoryUsage) /
+              (lastResult.annotationCount - firstResult.annotationCount)) *
+            1000
+          : 0;
       factors.memoryPerK = memoryFactor;
-      
+
       // Calculate index size scaling factor (KB per 1000 annotations)
-      const indexSizeFactor = lastResult.annotationCount > firstResult.annotationCount
-        ? (lastResult.indexSize - firstResult.indexSize) / (lastResult.annotationCount - firstResult.annotationCount) * 1000
-        : 0;
+      const indexSizeFactor =
+        lastResult.annotationCount > firstResult.annotationCount
+          ? ((lastResult.indexSize - firstResult.indexSize) /
+              (lastResult.annotationCount - firstResult.annotationCount)) *
+            1000
+          : 0;
       factors.indexSizePerK = indexSizeFactor;
     }
-    
+
     return factors;
   }
 
@@ -767,30 +794,41 @@ export class PerformanceBenchmarkRunner implements PerformanceTester {
     results: ScalabilityResult[],
   ): Record<string, number> {
     const limits: Record<string, number> = {};
-    
+
     // Find the maximum size where performance targets are still met
     let maxAnnotationsWithinTargets = 0;
     let maxAnnotationsWithinMemory = 0;
-    
+
     for (const result of results) {
       // Check if query time is within MCP target
       if (result.avgQueryTime <= this.performanceTargets.maxMCPQueryTime) {
-        maxAnnotationsWithinTargets = Math.max(maxAnnotationsWithinTargets, result.annotationCount);
+        maxAnnotationsWithinTargets = Math.max(
+          maxAnnotationsWithinTargets,
+          result.annotationCount,
+        );
       }
-      
+
       // Check if memory usage is within limits
       if (result.memoryUsage < this.performanceTargets.maxMemoryUsage) {
-        maxAnnotationsWithinMemory = Math.max(maxAnnotationsWithinMemory, result.annotationCount);
+        maxAnnotationsWithinMemory = Math.max(
+          maxAnnotationsWithinMemory,
+          result.annotationCount,
+        );
       }
     }
-    
+
     limits.maxAnnotationsForMCPPerformance = maxAnnotationsWithinTargets;
     limits.maxAnnotationsForMemoryLimit = maxAnnotationsWithinMemory;
-    limits.recommendedMaxAnnotations = Math.min(maxAnnotationsWithinTargets, maxAnnotationsWithinMemory);
-    
+    limits.recommendedMaxAnnotations = Math.min(
+      maxAnnotationsWithinTargets,
+      maxAnnotationsWithinMemory,
+    );
+
     // Calculate safe operating limits (80% of max)
-    limits.safeMaxAnnotations = Math.floor(limits.recommendedMaxAnnotations * 0.8);
-    
+    limits.safeMaxAnnotations = Math.floor(
+      limits.recommendedMaxAnnotations * 0.8,
+    );
+
     return limits;
   }
 

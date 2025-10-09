@@ -471,18 +471,20 @@ export class ModelDownloader {
       if (options.proxy) {
         const proxyProtocol = options.proxy.protocol || "http";
         let proxyUrl = `${proxyProtocol}://${options.proxy.host}:${options.proxy.port}`;
-        
+
         // Include authentication in URL if provided
         if (options.proxy.auth) {
           const { username, password } = options.proxy.auth;
           proxyUrl = `${proxyProtocol}://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${options.proxy.host}:${options.proxy.port}`;
         }
-        
-        this.log(`Using proxy: ${proxyProtocol}://${options.proxy.host}:${options.proxy.port}`);
-        
+
+        this.log(
+          `Using proxy: ${proxyProtocol}://${options.proxy.host}:${options.proxy.port}`,
+        );
+
         // Create proxy agent for HTTPS requests
         const proxyAgent = new HttpsProxyAgent(proxyUrl);
-        
+
         // Add agent to fetch options (Node.js fetch supports agent via dispatcher)
         // @ts-expect-error - agent is supported by undici/node fetch but not in types
         fetchOptions.dispatcher = proxyAgent;

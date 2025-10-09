@@ -1062,16 +1062,24 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
       (v) => v.severity === "high",
     ).length;
 
-    if (criticalCount > 0) {return "critical";}
-    if (highCount > 0) {return "high";}
-    if (vulnerabilities.length > 0) {return "medium";}
+    if (criticalCount > 0) {
+      return "critical";
+    }
+    if (highCount > 0) {
+      return "high";
+    }
+    if (vulnerabilities.length > 0) {
+      return "medium";
+    }
     return "low";
   }
 
   private calculateSecurityScore(
     auditSections: SecurityAuditSection[],
   ): number {
-    if (auditSections.length === 0) {return 0;}
+    if (auditSections.length === 0) {
+      return 0;
+    }
 
     const totalScore = auditSections.reduce(
       (sum, section) => sum + (section.score || 0),
@@ -1085,9 +1093,15 @@ export class ComprehensiveSecurityAuditor implements SecurityAuditor {
   ): SecuritySeverity {
     const severities = auditSections.map((section) => section.severity);
 
-    if (severities.includes("critical")) {return "critical";}
-    if (severities.includes("high")) {return "high";}
-    if (severities.includes("medium")) {return "medium";}
+    if (severities.includes("critical")) {
+      return "critical";
+    }
+    if (severities.includes("high")) {
+      return "high";
+    }
+    if (severities.includes("medium")) {
+      return "medium";
+    }
     return "low";
   }
 

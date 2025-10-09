@@ -76,7 +76,9 @@ describe("ModelCache", () => {
 
       expect(existsSync(TEST_CACHE_DIR)).toBe(true);
       expect(existsSync(join(TEST_CACHE_DIR, "temp"))).toBe(true);
-      expect(existsSync(join(TEST_CACHE_DIR, "cache-metadata.json"))).toBe(true);
+      expect(existsSync(join(TEST_CACHE_DIR, "cache-metadata.json"))).toBe(
+        true,
+      );
     });
 
     it("should handle existing cache directory", async () => {
@@ -115,7 +117,7 @@ describe("ModelCache", () => {
 
     it("should detect corrupted cache entries", async () => {
       const { fileVerifier } = await import("./verification.js");
-      
+
       // Create test file
       const testFilePath = join(TEST_CACHE_DIR, "test-file.onnx");
       await fs.writeFile(testFilePath, "test content");
