@@ -63,7 +63,7 @@ describe("EventCoordinator", () => {
       expect(results).toContain("listener2: test");
     });
 
-    it.skip("should remove event listeners", () => {
+    it("should remove event listeners", () => {
       let eventFired = false;
 
       const listener = () => {
