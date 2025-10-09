@@ -8,7 +8,7 @@
 
 ## Process Improvements
 
-For code quality and documentation standards, see [PROCESS_IMPROVEMENTS.md](PROCESS_IMPROVEMENTS.md). This document outlines:
+For code quality and documentation standards, see [Process Improvements](docs/development/process-improvements.md). This document outlines:
 
 - **Code Organization Standards**: Avoid misleading stubs, use clear module patterns
 - **Documentation Synchronization**: Regular audits and automated checks

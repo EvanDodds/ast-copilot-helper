@@ -137,4 +137,4 @@ When finding a TODO or potential gap, always:
 - Reality: Full implementation in commands/watch.ts (945 lines)
 - Lesson: Distinguish integration points from missing implementations
 
-For complete details, see PROCESS_IMPROVEMENTS.md.
+For complete details, see [docs/development/process-improvements.md](../docs/development/process-improvements.md).
