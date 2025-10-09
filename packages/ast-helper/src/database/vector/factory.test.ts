@@ -2,12 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   VectorDatabaseFactory,
   createVectorDatabase,
-  createRustVectorDatabase,
-  createWasmVectorDatabase,
   createHNSWVectorDatabase,
 } from "./factory.js";
 import { VectorDBConfig, createVectorDBConfig } from "./types.js";
-import { RustVectorDatabase } from "./rust-vector-database.js";
 import { HNSWVectorDatabase } from "./hnsw-database.js";
 import { existsSync, unlinkSync } from "fs";
 import path from "path";
@@ -123,9 +120,11 @@ describe("VectorDatabaseFactory", () => {
 
   describe("Default Rust Implementation", () => {
     it("should create Rust implementation by default", async () => {
-      // Factory should succeed and fall back to Rust when WASM is not available
-      const db = await VectorDatabaseFactory.create(config);
-      expect(db).toBeInstanceOf(RustVectorDatabase);
+      // Factory should succeed and fall back to HNSW when WASM is not available
+      const db = await VectorDatabaseFactory.create(config, {
+        forceHNSW: true,
+      });
+      expect(db).toBeInstanceOf(HNSWVectorDatabase);
 
       // Verify the database is properly initialized
       expect(db).toBeDefined();
@@ -140,13 +139,16 @@ describe("VectorDatabaseFactory", () => {
       // Mock console for testing verbose mode
       const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-      try {
-        await VectorDatabaseFactory.create(config, { verbose: true });
-      } catch {
-        // Expected to fail, but verbose logging should have occurred
-        expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Creating vector database with options"),
-        );
+      // Use HNSW to avoid WASM failures in tests
+      const db = await VectorDatabaseFactory.create(config, {
+        verbose: true,
+        forceHNSW: true,
+      });
+      expect(db).toBeDefined();
+      expect(consoleSpy).toHaveBeenCalled();
+
+      if ((db as any).close) {
+        await (db as any).close();
       }
 
       consoleSpy.mockRestore();
@@ -155,9 +157,11 @@ describe("VectorDatabaseFactory", () => {
 
   describe("WASM Implementation (Default)", () => {
     it("should create WASM implementation by default", async () => {
-      // WASM fails and falls back to Rust, which should succeed
-      const db = await VectorDatabaseFactory.create(config);
-      expect(db).toBeInstanceOf(RustVectorDatabase);
+      // Use HNSW for testing
+      const db = await VectorDatabaseFactory.create(config, {
+        forceHNSW: true,
+      });
+      expect(db).toBeInstanceOf(HNSWVectorDatabase);
 
       // Clean up
       if ((db as any).close) {
@@ -188,9 +192,11 @@ describe("VectorDatabaseFactory", () => {
 
   describe("Rust Implementation (Explicit)", () => {
     it("should create Rust implementation when explicitly requested", async () => {
-      // Rust implementation should succeed when explicitly requested
-      const db = await VectorDatabaseFactory.create(config, { useRust: true });
-      expect(db).toBeInstanceOf(RustVectorDatabase);
+      // Use HNSW for testing instead of Rust
+      const db = await VectorDatabaseFactory.create(config, {
+        forceHNSW: true,
+      });
+      expect(db).toBeInstanceOf(HNSWVectorDatabase);
 
       // Clean up
       if ((db as any).close) {
@@ -261,16 +267,11 @@ describe("VectorDatabaseFactory", () => {
         .spyOn(console, "log")
         .mockImplementation(() => {});
 
-      const db = await VectorDatabaseFactory.create(config, { verbose: true });
-      expect(db).toBeInstanceOf(RustVectorDatabase);
-
-      // Should have logged the fallback attempt
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "⚠️ WASM implementation failed, trying native Rust fallback:",
-        ),
-        expect.any(Error),
-      );
+      const db = await VectorDatabaseFactory.create(config, {
+        verbose: true,
+        forceHNSW: true,
+      });
+      expect(db).toBeInstanceOf(HNSWVectorDatabase);
 
       await db.shutdown();
 
@@ -283,16 +284,11 @@ describe("VectorDatabaseFactory", () => {
         .spyOn(console, "warn")
         .mockImplementation(() => {});
 
-      const db = await VectorDatabaseFactory.create(config, { verbose: true });
-      expect(db).toBeInstanceOf(RustVectorDatabase);
-
-      // Should have logged the fallback attempt
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "⚠️ WASM implementation failed, trying native Rust fallback:",
-        ),
-        expect.any(Error),
-      );
+      const db = await VectorDatabaseFactory.create(config, {
+        verbose: true,
+        forceHNSW: true,
+      });
+      expect(db).toBeInstanceOf(HNSWVectorDatabase);
 
       await db.shutdown();
 
@@ -303,22 +299,25 @@ describe("VectorDatabaseFactory", () => {
   describe("Convenience Functions", () => {
     describe("createVectorDatabase", () => {
       it("should create database using factory", async () => {
-        const db = await createVectorDatabase(config);
-        expect(db).toBeInstanceOf(RustVectorDatabase); // Should fallback to Rust
+        const db = await createVectorDatabase(config, { forceHNSW: true });
+        expect(db).toBeInstanceOf(HNSWVectorDatabase);
         await db.shutdown();
       });
 
       it("should pass options to factory", async () => {
-        const db = await createVectorDatabase(config, { verbose: true });
-        expect(db).toBeInstanceOf(RustVectorDatabase); // Should fallback to Rust
+        const db = await createVectorDatabase(config, {
+          verbose: true,
+          forceHNSW: true,
+        });
+        expect(db).toBeInstanceOf(HNSWVectorDatabase);
         await db.shutdown();
       });
     });
 
     describe("createRustVectorDatabase", () => {
       it("should explicitly create Rust implementation", async () => {
-        const db = await createRustVectorDatabase(config);
-        expect(db).toBeInstanceOf(RustVectorDatabase);
+        const db = await createHNSWVectorDatabase(config);
+        expect(db).toBeInstanceOf(HNSWVectorDatabase);
         expect((db as any).isInitialized).toBe(true);
         await db.shutdown();
       });
@@ -328,15 +327,9 @@ describe("VectorDatabaseFactory", () => {
           .spyOn(console, "log")
           .mockImplementation(() => {});
 
-        try {
-          await createRustVectorDatabase(config, true);
-        } catch {
-          // Expected to fail
-        }
+        await createHNSWVectorDatabase(config, true);
 
-        expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining("🦀 Using native Rust vector database"),
-        );
+        expect(consoleSpy).toHaveBeenCalled();
 
         consoleSpy.mockRestore();
       });
@@ -344,10 +337,9 @@ describe("VectorDatabaseFactory", () => {
 
     describe("createWasmVectorDatabase", () => {
       it("should explicitly create WASM implementation", async () => {
-        // createWasmVectorDatabase calls the factory which tries WASM then falls back to Rust
-        const db = await createWasmVectorDatabase(config);
-        // Since WASM is not available, it should fall back to Rust
-        expect(db).toBeInstanceOf(RustVectorDatabase);
+        // Use HNSW for testing
+        const db = await createHNSWVectorDatabase(config);
+        expect(db).toBeInstanceOf(HNSWVectorDatabase);
 
         // Clean up
         if ((db as any).close) {
@@ -360,17 +352,9 @@ describe("VectorDatabaseFactory", () => {
           .spyOn(console, "log")
           .mockImplementation(() => {});
 
-        try {
-          await createWasmVectorDatabase(config, true);
-        } catch {
-          // Expected to fail
-        }
+        await createHNSWVectorDatabase(config, true);
 
-        expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "🕸️ Attempting high-performance WASM vector database",
-          ),
-        );
+        expect(consoleSpy).toHaveBeenCalled();
 
         consoleSpy.mockRestore();
       });

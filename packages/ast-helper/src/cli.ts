@@ -83,6 +83,8 @@ interface EmbedOptions extends GlobalOptions {
   changed?: boolean;
   model?: string;
   batchSize?: number;
+  force?: boolean;
+  dryRun?: boolean;
 }
 
 /**
@@ -484,6 +486,18 @@ export class AstHelperCli {
             }
             return num;
           }),
+      )
+      .addOption(
+        new Option(
+          "-f, --force",
+          "Force re-embedding existing annotations",
+        ).default(false),
+      )
+      .addOption(
+        new Option(
+          "--dry-run",
+          "Show what would be done without actually embedding",
+        ).default(false),
       )
       .action(async (options: EmbedOptions) => {
         await this.executeCommand("embed", options);
@@ -1819,8 +1833,8 @@ class EmbedCommandHandler implements CommandHandler<EmbedOptions> {
         model: options.model,
         batchSize: options.batchSize,
         verbose: true, // Always enable progress reporting in CLI
-        force: false, // TODO: Add --force flag to CLI options
-        dryRun: false, // TODO: Add --dry-run flag to CLI options
+        force: options.force || false,
+        dryRun: options.dryRun || false,
       };
 
       await embedCommand.execute(commandOptions);
@@ -1843,12 +1857,33 @@ class QueryCommandHandler implements CommandHandler<QueryOptions> {
 
 class WatchCommandHandler implements CommandHandler<WatchOptions> {
   async execute(options: WatchOptions, config: Config): Promise<void> {
-    console.log("Watch command executed with options:", options);
-    console.log("Using config:", {
-      outputDir: config.outputDir,
-      watchGlob: config.watchGlob,
-    });
-    // TODO: Implement actual watch logic
+    const { WatchCommand } = await import("./commands/watch.js");
+
+    // Map CLI options to WatchCommand options
+    const globValue = options.glob || config.watchGlob;
+    const watchOptions = {
+      glob: Array.isArray(globValue) ? globValue[0] : globValue,
+      debounce: options.debounce,
+      includeAnnotation: options.changed,
+      batch: options.changed,
+      recursive: true,
+      followSymlinks: false,
+    };
+
+    const watchCommand = new WatchCommand(config, watchOptions);
+
+    // Set up signal handlers for graceful shutdown
+    const shutdownHandler = async () => {
+      console.log("\n\nShutting down watch command...");
+      await watchCommand.stop();
+      process.exit(0);
+    };
+
+    process.on("SIGINT", shutdownHandler);
+    process.on("SIGTERM", shutdownHandler);
+
+    // Start watching
+    await watchCommand.start();
   }
 }
 

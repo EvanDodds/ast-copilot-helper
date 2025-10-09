@@ -265,7 +265,7 @@ AI Agent → Queries codebase semantically
 - **Cline**: AI-powered code generation with context
 - **Custom Integrations**: Build your own MCP-compatible tools
 
-**[📖 MCP Testing Guide →](packages/vscode-extension/MANUAL_MCP_TESTING.md)** • **[🔧 Integration Status →](MCP_CLIENT_INTEGRATION_STATUS.md)**
+**[📖 MCP Testing Guide →](docs/testing/manual-mcp-testing.md)** • **[🔧 Integration Status →](docs/reports/MCP_CLIENT_INTEGRATION_STATUS.md)**
 
 ## 🔒 Security Features
 

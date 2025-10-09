@@ -5,6 +5,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { createWriteStream } from "fs";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import type { ModelConfig, DownloadProgress } from "./types.js";
 import { SecurityHooksManager } from "./security-hooks.js";
 import { securityLogger } from "./security-logger.js";
@@ -466,13 +467,27 @@ export class ModelDownloader {
         signal: controller.signal,
       };
 
-      // Configure proxy if provided (Note: Proxy support requires additional libraries like node-fetch or undici)
+      // Configure proxy if provided
       if (options.proxy) {
+        const proxyProtocol = options.proxy.protocol || "http";
+        let proxyUrl = `${proxyProtocol}://${options.proxy.host}:${options.proxy.port}`;
+
+        // Include authentication in URL if provided
+        if (options.proxy.auth) {
+          const { username, password } = options.proxy.auth;
+          proxyUrl = `${proxyProtocol}://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${options.proxy.host}:${options.proxy.port}`;
+        }
+
         this.log(
-          `Proxy configuration detected but requires additional implementation for Node.js fetch`,
+          `Using proxy: ${proxyProtocol}://${options.proxy.host}:${options.proxy.port}`,
         );
-        // TODO: Implement proxy support with appropriate HTTP agent
-        // This would require libraries like https-proxy-agent or similar
+
+        // Create proxy agent for HTTPS requests
+        const proxyAgent = new HttpsProxyAgent(proxyUrl);
+
+        // Add agent to fetch options (Node.js fetch supports agent via dispatcher)
+        // @ts-expect-error - agent is supported by undici/node fetch but not in types
+        fetchOptions.dispatcher = proxyAgent;
       }
 
       // Make HTTP request

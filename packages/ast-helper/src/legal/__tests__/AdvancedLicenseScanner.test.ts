@@ -300,7 +300,7 @@ Copyright 2024 Jane Smith <jane@example.com>
       ]);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "License monitoring started for 2 directories",
+        "License monitoring active for 2 directories",
       );
       consoleSpy.mockRestore();
     });

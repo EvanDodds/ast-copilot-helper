@@ -280,11 +280,17 @@ export class XenovaEmbeddingGenerator implements EmbeddingGenerator {
    */
   getModelInfo(): {
     name: string;
+    version?: string;
     initializationTime: number;
     dimensions: number;
   } {
+    // Extract version from model name if it follows pattern: model-name-v1.0.0
+    const versionMatch = this.modelName.match(/[-_]v?(\d+\.\d+\.\d+)/);
+    const version = versionMatch ? versionMatch[1] : undefined;
+
     return {
-      name: this.modelName,
+      name: this.modelName || "unknown",
+      version,
       initializationTime: this.initializationTime,
       dimensions: DEFAULT_CONFIG.modelDimensions,
     };

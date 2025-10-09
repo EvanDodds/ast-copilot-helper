@@ -4,7 +4,7 @@ import type {
   VerificationResult,
 } from "./types.js";
 import { NPMPublisher } from "./npm-publisher.js";
-// import { VSCodeMarketplacePublisher } from './vscode-marketplace-publisher.js';
+import { MarketplacePublisher } from "./marketplace-publisher.js";
 import { GitHubReleaseManager } from "./github-release-manager.js";
 import { BinaryDistributor } from "./binary-distributor.js";
 import { AutoUpdateManager } from "./auto-update-manager.js";
@@ -55,10 +55,9 @@ export class DistributionOrchestrator {
     await npmPublisher.initialize(config);
     this.publishers.set("npm", npmPublisher);
 
-    // TODO: Uncomment when VS Code marketplace publisher is implemented
-    // const vsCodePublisher = new VSCodeMarketplacePublisher();
-    // await vsCodePublisher.initialize(config);
-    // this.publishers.set('marketplace', vsCodePublisher);
+    const marketplacePublisher = new MarketplacePublisher();
+    await marketplacePublisher.initialize(config);
+    this.publishers.set("marketplace", marketplacePublisher);
 
     const githubPublisher = new GitHubReleaseManager();
     await githubPublisher.initialize(config);

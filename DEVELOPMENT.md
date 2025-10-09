@@ -6,6 +6,16 @@
 - **Yarn**: 4.9.4 or higher (modern Yarn v4)
 - **Operating Systems**: Windows, macOS, Linux (x64, arm64)
 
+## Process Improvements
+
+For code quality and documentation standards, see [Process Improvements](docs/development/process-improvements.md). This document outlines:
+
+- **Code Organization Standards**: Avoid misleading stubs, use clear module patterns
+- **Documentation Synchronization**: Regular audits and automated checks
+- **Verification Before Flagging**: Multi-step verification process for TODOs
+
+These standards emerged from a comprehensive verification that identified 19% false positives in incomplete features inventory. They help maintain accurate project assessments and prevent misleading TODOs.
+
 ## Quick Start
 
 1. **Install dependencies**
@@ -593,7 +603,7 @@ const result = await client.callTool({
 
 Follow the comprehensive manual testing guide:
 
-- **Full Guide**: `packages/vscode-extension/MANUAL_MCP_TESTING.md`
+- **Full Guide**: `docs/testing/manual-mcp-testing.md`
 - **Quick Start**: `QUICK_MCP_TEST.md`
 
 #### Test Command

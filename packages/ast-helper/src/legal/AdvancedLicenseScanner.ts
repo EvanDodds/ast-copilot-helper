@@ -35,6 +35,7 @@ export class AdvancedLicenseScanner {
   private licensePatterns: LicensePattern[] = [];
   private watchedDirectories: Set<string> = new Set();
   private changeCallbacks: ((changes: LicenseChangeEvent[]) => void)[] = [];
+  private watchers: any[] = [];
 
   constructor(database: LicenseDatabase) {
     this.database = database;
@@ -231,12 +232,95 @@ export class AdvancedLicenseScanner {
    * Monitor license changes in directories
    */
   async startLicenseMonitoring(directories: string[]): Promise<void> {
-    // Implementation would use fs.watch or similar to monitor license file changes
-    directories.forEach((dir) => this.watchedDirectories.add(dir));
+    const fs = await import("fs");
+    const path = await import("path");
 
-    // Note: Full implementation would set up file system watchers
+    for (const dir of directories) {
+      if (this.watchedDirectories.has(dir)) {
+        continue; // Already watching
+      }
+
+      this.watchedDirectories.add(dir);
+
+      try {
+        // Watch for changes to license files
+        const watcher = fs.watch(
+          dir,
+          { recursive: true },
+          async (eventType, filename) => {
+            if (!filename) {
+              return;
+            }
+
+            const fullPath = path.join(dir, filename);
+            const basename = path.basename(filename);
+
+            // Check if it's a license-related file
+            const licenseFiles = [
+              "LICENSE",
+              "LICENSE.md",
+              "LICENSE.txt",
+              "COPYING",
+              "package.json",
+            ];
+            const isLicenseFile = licenseFiles.some((lf) =>
+              basename.toUpperCase().includes(lf.toUpperCase()),
+            );
+
+            if (
+              isLicenseFile &&
+              (eventType === "change" || eventType === "rename")
+            ) {
+              const changes: LicenseChangeEvent[] = [];
+
+              try {
+                // Detect what changed
+                if (eventType === "change") {
+                  changes.push({
+                    type: "modified",
+                    filePath: fullPath,
+                    timestamp: new Date(),
+                    oldLicense: undefined,
+                    newLicense: undefined,
+                  });
+                } else if (eventType === "rename") {
+                  changes.push({
+                    type: "added",
+                    filePath: fullPath,
+                    timestamp: new Date(),
+                    newLicense: undefined,
+                  });
+                }
+
+                // Notify all registered callbacks
+                for (const callback of this.changeCallbacks) {
+                  try {
+                    callback(changes);
+                  } catch (error) {
+                    console.error("Error in license change callback:", error);
+                  }
+                }
+              } catch (error) {
+                console.error("Error processing license change:", error);
+              }
+            }
+          },
+        );
+
+        // Store watcher for cleanup
+        if (!this.watchers) {
+          this.watchers = [];
+        }
+        this.watchers.push(watcher);
+
+        console.log(`License monitoring started for directory: ${dir}`);
+      } catch (error) {
+        console.error(`Failed to watch directory ${dir}:`, error);
+      }
+    }
+
     console.log(
-      `License monitoring started for ${directories.length} directories`,
+      `License monitoring active for ${this.watchedDirectories.size} directories`,
     );
   }
 
@@ -244,6 +328,18 @@ export class AdvancedLicenseScanner {
    * Stop monitoring license changes
    */
   async stopLicenseMonitoring(): Promise<void> {
+    // Close all file watchers
+    if ((this as any).watchers) {
+      for (const watcher of (this as any).watchers) {
+        try {
+          watcher.close();
+        } catch (_error) {
+          // Ignore errors when closing watchers
+        }
+      }
+      (this as any).watchers = [];
+    }
+
     this.watchedDirectories.clear();
     this.changeCallbacks.length = 0;
     console.log("License monitoring stopped");

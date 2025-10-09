@@ -192,14 +192,14 @@ export class QueryCommandHandler {
     // Get index version from database for cache invalidation
     const indexVersion = await this.getIndexVersion(outputDir);
 
-    // Check if caching is enabled (default: true)
-    const cacheEnabled = true; // TODO: Add cache config to Config type
+    // Check if caching is enabled from config (default: true)
+    const cacheEnabled = config.cache?.enabled ?? true;
 
     this.queryCache = new QueryCache<QueryResult[]>({
-      cacheDir: path.join(outputDir, "cache"),
+      cacheDir: config.cache?.cacheDir || path.join(outputDir, "cache"),
       l1MaxEntries: 50,
-      l2MaxSizeBytes: 50 * 1024 * 1024, // 50MB
-      l3TtlMs: 7 * 24 * 60 * 60 * 1000, // 7 days
+      l2MaxSizeBytes: config.cache?.maxCacheSize || 50 * 1024 * 1024, // Default 50MB
+      l3TtlMs: (config.cache?.cacheTTL || 7 * 24 * 60 * 60) * 1000, // Convert seconds to ms
       enabled: cacheEnabled,
       indexVersion,
     });

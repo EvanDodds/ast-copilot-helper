@@ -437,8 +437,12 @@ export class NodeSerializer {
     const typeDistribution: Record<string, number> = {};
     const significanceDistribution: Record<string, number> = {};
 
-    // Note: This is a mock implementation since we don't have a node lookup mechanism
-    // In a real implementation, you'd need a way to resolve child IDs to actual nodes
+    // Create node lookup map for resolving child IDs
+    const nodeMap = new Map<string, ASTNode>();
+    for (const node of nodes) {
+      nodeMap.set(node.id, node);
+    }
+
     const collectStats = (node: ASTNode, depth = 0) => {
       totalNodes++;
       totalDepth += depth;
@@ -450,10 +454,21 @@ export class NodeSerializer {
       // Significance distribution
       significanceDistribution[node.significance.toString()] =
         (significanceDistribution[node.significance.toString()] || 0) + 1;
+
+      // Recurse to children using the node map
+      for (const childId of node.children) {
+        const childNode = nodeMap.get(childId);
+        if (childNode) {
+          collectStats(childNode, depth + 1);
+        }
+      }
     };
 
+    // Process only root nodes (nodes without parents or with parent not in set)
     for (const node of nodes) {
-      collectStats(node);
+      if (!node.parent || !nodeMap.has(node.parent)) {
+        collectStats(node);
+      }
     }
 
     const serialized = this.serializeFile(nodes, "temp", "temp");
@@ -479,6 +494,12 @@ export class NodeSerializer {
     const significanceLevels: Record<string, number> = {};
     const nodeTypes: Record<string, number> = {};
 
+    // Create node lookup map for resolving child IDs
+    const nodeMap = new Map<string, ASTNode>();
+    for (const node of nodes) {
+      nodeMap.set(node.id, node);
+    }
+
     const collectStats = (node: ASTNode) => {
       totalNodes++;
 
@@ -487,12 +508,20 @@ export class NodeSerializer {
 
       nodeTypes[node.type] = (nodeTypes[node.type] || 0) + 1;
 
-      // Note: We can't recurse to children here since children are just IDs
-      // In a real implementation, you'd need a way to resolve child IDs
+      // Recurse to children using the node map
+      for (const childId of node.children) {
+        const childNode = nodeMap.get(childId);
+        if (childNode) {
+          collectStats(childNode);
+        }
+      }
     };
 
+    // Process only root nodes (nodes without parents or with parent not in set)
     for (const node of nodes) {
-      collectStats(node);
+      if (!node.parent || !nodeMap.has(node.parent)) {
+        collectStats(node);
+      }
     }
 
     return { totalNodes, significanceLevels, nodeTypes };

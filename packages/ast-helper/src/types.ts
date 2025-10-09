@@ -94,6 +94,20 @@ export interface Config {
     };
   };
 
+  /** Cache configuration */
+  cache?: {
+    /** Enable query cache */
+    enabled?: boolean;
+    /** Maximum cache size in MB */
+    maxCacheSize: number;
+    /** Cache time-to-live in seconds */
+    cacheTTL: number;
+    /** Enable cache compression */
+    enableCompression?: boolean;
+    /** Cache directory path */
+    cacheDir?: string;
+  };
+
   /** CLI-specific logging options */
   verbose?: boolean;
   debug?: boolean;
@@ -141,6 +155,12 @@ export type PartialConfig = Partial<{
       preserveComments: boolean;
       maxSnippetLength: number;
     }>;
+  }>;
+  cache: Partial<{
+    maxCacheSize: number;
+    cacheTTL: number;
+    enableCompression: boolean;
+    cacheDir: string;
   }>;
   verbose: boolean;
   debug: boolean;

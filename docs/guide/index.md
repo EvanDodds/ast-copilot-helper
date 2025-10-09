@@ -58,4 +58,4 @@ Having issues? Here's where to look:
 
 ---
 
-_These guides are continuously updated. If you find areas for improvement, please [contribute](/CONTRIBUTING)!_
+_These guides are continuously updated. If you find areas for improvement, please [contribute](/development/contributing)!_

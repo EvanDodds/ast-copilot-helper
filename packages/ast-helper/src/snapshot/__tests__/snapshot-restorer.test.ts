@@ -32,7 +32,9 @@ describe("SnapshotRestorer", () => {
         targetPath: "/tmp/.astdb",
       } as SnapshotRestoreOptions;
 
-      await expect(restorer.restore(options)).rejects.toThrow();
+      const result = await restorer.restore(options);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it("should require targetPath", async () => {
@@ -42,7 +44,9 @@ describe("SnapshotRestorer", () => {
         snapshotPath: "/tmp/snapshot.tar.gz",
       } as SnapshotRestoreOptions;
 
-      await expect(restorer.restore(options)).rejects.toThrow();
+      const result = await restorer.restore(options);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it("should reject non-existent snapshot file", async () => {
@@ -53,7 +57,8 @@ describe("SnapshotRestorer", () => {
         targetPath: "/tmp/.astdb",
       };
 
-      await expect(restorer.restore(options)).rejects.toThrow();
+      const result = await restorer.restore(options);
+      expect(result.success).toBe(false);
     });
   });
 

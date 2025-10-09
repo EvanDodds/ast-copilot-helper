@@ -2,7 +2,6 @@
 
 use super::types::{Parameter, SemanticTag};
 use crate::types::ASTNode;
-// HashMap removed - not currently used
 
 /// Trait for language-specific extraction logic
 pub trait LanguageExtractor: Send + Sync {
@@ -106,9 +105,51 @@ impl LanguageExtractor for TypeScriptExtractor {
         modifiers
     }
 
-    fn extract_dependencies(&self, _node: &ASTNode, _source_text: &str) -> Vec<String> {
-        // TODO: Implement dependency extraction by analyzing imports and usage
-        Vec::new()
+    fn extract_dependencies(&self, node: &ASTNode, _source_text: &str) -> Vec<String> {
+        let mut dependencies = Vec::new();
+        let text = &node.text;
+
+        // Extract from import statements
+        // Match: import { X, Y } from 'module'
+        // Match: import X from 'module'
+        // Match: import * as X from 'module'
+        // Match: require('module')
+        
+        for line in text.lines() {
+            let line = line.trim();
+            
+            // ES6 imports: import ... from "module"
+            if line.starts_with("import ") {
+                if let Some(from_pos) = line.find(" from ") {
+                    let module_part = &line[from_pos + 6..];
+                    if let Some(module) = extract_module_name(module_part) {
+                        dependencies.push(module);
+                    }
+                }
+            }
+            
+            // CommonJS require: require("module")
+            if let Some(req_pos) = line.find("require(") {
+                let after_req = &line[req_pos + 8..];
+                if let Some(module) = extract_module_name(after_req) {
+                    dependencies.push(module);
+                }
+            }
+            
+            // Dynamic imports: import("module")
+            if let Some(imp_pos) = line.find("import(") {
+                let after_imp = &line[imp_pos + 7..];
+                if let Some(module) = extract_module_name(after_imp) {
+                    dependencies.push(module);
+                }
+            }
+        }
+
+        // Remove duplicates while preserving order
+        let mut seen = std::collections::HashSet::new();
+        dependencies.retain(|dep| seen.insert(dep.clone()));
+        
+        dependencies
     }
 
     fn extract_exports(&self, node: &ASTNode, _source_text: &str) -> Vec<String> {
@@ -129,9 +170,62 @@ impl LanguageExtractor for TypeScriptExtractor {
         exports
     }
 
-    fn extract_calls(&self, _node: &ASTNode, _source_text: &str) -> Vec<String> {
-        // TODO: Implement call extraction by analyzing function calls
-        Vec::new()
+    fn extract_calls(&self, node: &ASTNode, _source_text: &str) -> Vec<String> {
+        let mut calls = Vec::new();
+        let text = &node.text;
+
+        // Match function calls: functionName(...) or object.method(...)
+        // We'll use a simple regex-like pattern matching approach
+        
+        for line in text.lines() {
+            let line = line.trim();
+            
+            // Skip comments and imports
+            if line.starts_with("//") || line.starts_with("/*") || line.starts_with("import ") {
+                continue;
+            }
+            
+            // Extract function calls using simple pattern matching
+            let chars: Vec<char> = line.chars().collect();
+            let mut i = 0;
+            
+            while i < chars.len() {
+                // Look for identifier followed by '('
+                if chars[i].is_alphabetic() || chars[i] == '_' || chars[i] == '$' {
+                    let start = i;
+                    
+                    // Collect identifier (including dots for method calls)
+                    while i < chars.len() && (chars[i].is_alphanumeric() || chars[i] == '_' || chars[i] == '$' || chars[i] == '.') {
+                        i += 1;
+                    }
+                    
+                    // Skip whitespace
+                    while i < chars.len() && chars[i].is_whitespace() {
+                        i += 1;
+                    }
+                    
+                    // Check if followed by '(' (indicating a function call)
+                    if i < chars.len() && chars[i] == '(' {
+                        let call_expr: String = chars[start..i].iter().collect();
+                        let call_expr = call_expr.trim();
+                        
+                        // Filter out keywords and special cases
+                        if !is_keyword(call_expr) && !call_expr.is_empty() {
+                            calls.push(call_expr.to_string());
+                        }
+                        i += 1;
+                    }
+                } else {
+                    i += 1;
+                }
+            }
+        }
+
+        // Remove duplicates while preserving order
+        let mut seen = std::collections::HashSet::new();
+        calls.retain(|call| seen.insert(call.clone()));
+        
+        calls
     }
 
     fn extract_semantic_tags(&self, node: &ASTNode, _source_text: &str) -> Vec<SemanticTag> {
@@ -829,3 +923,44 @@ fn parse_rust_parameter(param_str: &str) -> (String, Option<String>, Option<Stri
 
     (name, param_type, None)
 }
+
+/// Extract module name from import/require statement
+fn extract_module_name(text: &str) -> Option<String> {
+    // Remove quotes and extract module name
+    let text = text.trim();
+    
+    // Handle single quotes
+    if let Some(start) = text.find('\'') {
+        if let Some(end) = text[start + 1..].find('\'') {
+            return Some(text[start + 1..start + 1 + end].to_string());
+        }
+    }
+    
+    // Handle double quotes
+    if let Some(start) = text.find('"') {
+        if let Some(end) = text[start + 1..].find('"') {
+            return Some(text[start + 1..start + 1 + end].to_string());
+        }
+    }
+    
+    // Handle backticks (template strings)
+    if let Some(start) = text.find('`') {
+        if let Some(end) = text[start + 1..].find('`') {
+            return Some(text[start + 1..start + 1 + end].to_string());
+        }
+    }
+    
+    None
+}
+
+/// Check if a string is a JavaScript/TypeScript keyword that shouldn't be treated as a function call
+fn is_keyword(text: &str) -> bool {
+    matches!(
+        text,
+        "if" | "else" | "for" | "while" | "do" | "switch" | "case" | "break" | "continue"
+        | "return" | "throw" | "try" | "catch" | "finally" | "function" | "class" | "const"
+        | "let" | "var" | "import" | "export" | "default" | "new" | "typeof" | "instanceof"
+        | "delete" | "void" | "yield" | "await" | "async" | "static" | "get" | "set"
+    )
+}
+

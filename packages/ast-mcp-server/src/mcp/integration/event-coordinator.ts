@@ -25,6 +25,10 @@ export class EventCoordinator extends EventEmitter {
   private config: EventCoordinatorConfig;
   private eventMetrics = new Map<string, EventMetrics>();
   private eventHandlers = new Map<string, Set<(...args: any[]) => void>>();
+  private handlerMap = new Map<
+    (...args: any[]) => void,
+    (...args: any[]) => void
+  >(); // Maps original handler to wrapped handler
   private processingEvents = new Set<string>();
   private pendingWaits = new Set<{
     reject: (reason?: any) => void;
@@ -97,6 +101,10 @@ export class EventCoordinator extends EventEmitter {
       eventType,
       handler,
     );
+
+    // Store mapping between original and wrapped handler
+    this.handlerMap.set(handler, coordinatedHandler);
+
     this.on(eventType, coordinatedHandler);
 
     logger.debug("Event handler registered", {
@@ -118,7 +126,12 @@ export class EventCoordinator extends EventEmitter {
       }
     }
 
-    this.off(eventType, handler);
+    // Get the wrapped handler from the map and remove it
+    const wrappedHandler = this.handlerMap.get(handler);
+    if (wrappedHandler) {
+      this.off(eventType, wrappedHandler);
+      this.handlerMap.delete(handler);
+    }
 
     logger.debug("Event handler unregistered", {
       eventType,

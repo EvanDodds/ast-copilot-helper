@@ -454,11 +454,53 @@ export class GitManager implements GitUtils {
       const hasUntracked = untrackedFiles > 0;
       const isDirty = hasChanges || hasStaged || hasUntracked;
 
+      // Get ahead/behind tracking if we have commits and are on a branch
+      let ahead = 0;
+      let behind = 0;
+
+      try {
+        if (currentBranch && currentBranch !== "HEAD") {
+          // Get the upstream branch
+          const upstreamResult = await this.execGitCommand(
+            ["rev-parse", "--abbrev-ref", `${currentBranch}@{upstream}`],
+            cwd,
+          ).catch(() => null);
+
+          if (upstreamResult?.stdout) {
+            const upstream = upstreamResult.stdout.trim();
+
+            // Count commits ahead (local commits not in upstream)
+            const aheadResult = await this.execGitCommand(
+              ["rev-list", "--count", `${upstream}..${currentBranch}`],
+              cwd,
+            ).catch(() => null);
+
+            if (aheadResult?.stdout) {
+              ahead = parseInt(aheadResult.stdout.trim(), 10) || 0;
+            }
+
+            // Count commits behind (upstream commits not in local)
+            const behindResult = await this.execGitCommand(
+              ["rev-list", "--count", `${currentBranch}..${upstream}`],
+              cwd,
+            ).catch(() => null);
+
+            if (behindResult?.stdout) {
+              behind = parseInt(behindResult.stdout.trim(), 10) || 0;
+            }
+          }
+        }
+      } catch (_error) {
+        // If ahead/behind tracking fails, just use 0 values (no upstream configured)
+        ahead = 0;
+        behind = 0;
+      }
+
       return {
         repositoryRoot,
         branch: currentBranch,
-        ahead: 0, // TODO: implement proper ahead/behind tracking
-        behind: 0,
+        ahead,
+        behind,
         hasChanges,
         hasStaged,
         hasUntracked,

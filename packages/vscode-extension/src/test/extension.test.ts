@@ -93,8 +93,8 @@ describe("VS Code Extension", () => {
 
       activate(mockContext);
 
-      // Verify all 13 commands are registered
-      expect(vscode.commands.registerCommand).toHaveBeenCalledTimes(13);
+      // Verify all 15 commands are registered
+      expect(vscode.commands.registerCommand).toHaveBeenCalledTimes(15);
 
       const expectedCommands = [
         "astCopilotHelper.startServer",

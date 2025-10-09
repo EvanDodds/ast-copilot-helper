@@ -575,11 +575,16 @@ describe("MetadataManager", () => {
   });
 
   describe("Error Handling", () => {
-    it.skip("should handle initialization errors", async () => {
-      const invalidManager = new MetadataManager("/proc/invalid/readonly");
+    it(
+      "should handle initialization errors",
+      async () => {
+        // Use a path that will definitely fail - null byte in filename
+        const invalidManager = new MetadataManager("/tmp/test\0invalid");
 
-      await expect(invalidManager.initialize()).rejects.toThrow();
-    });
+        await expect(invalidManager.initialize()).rejects.toThrow();
+      },
+      { timeout: 5000 },
+    );
 
     it("should handle malformed index files", async () => {
       // Create malformed index file
@@ -611,44 +616,47 @@ describe("MetadataManager", () => {
   });
 
   describe("Concurrent Operations", () => {
-    // TODO: Fix test - concurrent metadata operations have race condition issues
-    // The concurrent store operations cause race conditions in index updates
-    // Need to implement proper locking mechanism for concurrent operations
-    it.skip("should handle concurrent metadata operations", async () => {
-      const models: ModelConfig[] = [];
-      const metadataList: ModelMetadata[] = [];
+    // Note: Race conditions in index updates mean we use relaxed assertions
+    // Individual file creation is verified, but index may not reflect all models
+    it(
+      "should handle concurrent metadata operations",
+      async () => {
+        const models: ModelConfig[] = [];
+        const metadataList: ModelMetadata[] = [];
 
-      // Create multiple models and metadata
-      for (let i = 0; i < 5; i++) {
-        models.push({
-          ...mockModel,
-          name: `concurrent-model-${i}`,
-          checksum: `checksum-${i}`,
-        });
-        metadataList.push(createMockMetadata(models[i]!));
-      }
+        // Create multiple models and metadata
+        for (let i = 0; i < 5; i++) {
+          models.push({
+            ...mockModel,
+            name: `concurrent-model-${i}`,
+            checksum: `checksum-${i}`,
+          });
+          metadataList.push(createMockMetadata(models[i]!));
+        }
 
-      // Store concurrently
-      const promises = models.map((model, i) =>
-        metadataManager.storeMetadata(model, metadataList[i]!),
-      );
+        // Store concurrently
+        const promises = models.map((model, i) =>
+          metadataManager.storeMetadata(model, metadataList[i]!),
+        );
 
-      await Promise.all(promises);
+        await Promise.all(promises);
 
-      // Verify operations completed successfully
-      // Note: Due to race conditions in index updates, we verify that
-      // at least some metadata was stored and all individual files exist
-      const allMetadata = await metadataManager.queryMetadata();
-      expect(allMetadata.length).toBeGreaterThan(0);
-      expect(allMetadata.length).toBeLessThanOrEqual(5);
+        // Verify operations completed successfully
+        // Note: Due to race conditions in index updates, we verify that
+        // at least some metadata was stored and all individual files exist
+        const allMetadata = await metadataManager.queryMetadata();
+        expect(allMetadata.length).toBeGreaterThan(0);
+        expect(allMetadata.length).toBeLessThanOrEqual(5);
 
-      // Verify individual files were created
-      const fs = await import("node:fs/promises");
-      for (const model of models) {
-        const metadataPath = metadataManager["getMetadataPath"](model);
-        await expect(fs.access(metadataPath)).resolves.not.toThrow();
-      }
-    });
+        // Verify individual files were created (most important check)
+        const fs = await import("node:fs/promises");
+        for (const model of models) {
+          const metadataPath = metadataManager["getMetadataPath"](model);
+          await expect(fs.access(metadataPath)).resolves.not.toThrow();
+        }
+      },
+      { timeout: 10000 },
+    );
 
     it("should handle concurrent queries", async () => {
       const metadata = createMockMetadata(mockModel);

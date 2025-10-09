@@ -225,7 +225,7 @@ describe("ConfigManager", () => {
     });
   });
 
-  describe.skip("File Watching", () => {
+  describe("File Watching", () => {
     it("should start watching configuration file", async () => {
       const configPath = path.join(testDir, "watch-test.json");
       await fs.promises.writeFile(configPath, "{}");
