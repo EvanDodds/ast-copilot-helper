@@ -1,0 +1,281 @@
+{
+  "sessionId": "session-20251009-1760034050-7b34c8bb",
+  "timestamp": "2025-10-09T16:00:50Z",
+  "issues": [165],
+  "issueNetwork": {
+    "primary": [165],
+    "related": [],
+    "relationships": {}
+  },
+  "repoOwner": "EvanDodds",
+  "repoName": "ast-copilot-helper",
+  "mainBranch": "main",
+  "currentStep": "0.complete",
+  "status": "analysis-complete",
+  "issueDetails": {
+    "165": {
+      "title": "[HIGH] Migrate annotations from JSON files to SQLite table",
+      "state": "open",
+      "labels": ["enhancement", "high-priority", "database", "Sprint 2"]
+    }
+  },
+  "acceptanceCriteria": [
+    {
+      "id": 1,
+      "text": "SQLite table 'annotations' created with proper schema (node_id PK, file_path, start_line, end_line, node_type, signature, complexity_score, dependencies JSON, metadata JSON, created_at, updated_at)",
+      "source": 165,
+      "task": 1,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 2,
+      "text": "Foreign key constraint to nodes(id) with CASCADE delete",
+      "source": 165,
+      "task": 1,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 3,
+      "text": "Indexes created on file_path and complexity_score",
+      "source": 165,
+      "task": 1,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 4,
+      "text": "Database file location decided and documented (factory.db vs annotations.db)",
+      "source": 165,
+      "task": 1,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 5,
+      "text": "AnnotationDatabaseManager class created in packages/ast-helper/src/database/",
+      "source": 165,
+      "task": 2,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 6,
+      "text": "CRUD operations: insertAnnotation, getAnnotation, getAnnotationsByFile, getAnnotationsByComplexity, deleteAnnotation, updateAnnotation",
+      "source": 165,
+      "task": 2,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 7,
+      "text": "Batch insert method with transaction support (1000 records/batch)",
+      "source": 165,
+      "task": 2,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 8,
+      "text": "WAL mode enabled for concurrent access",
+      "source": 165,
+      "task": 2,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 9,
+      "text": "Unit tests for AnnotationDatabaseManager >90% coverage",
+      "source": 165,
+      "task": 2,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 10,
+      "text": "Migration script created: scripts/migrate-annotations-to-sqlite.ts",
+      "source": 165,
+      "task": 3,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 11,
+      "text": "Migration script reads all JSON files from .astdb/annotations/",
+      "source": 165,
+      "task": 3,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 12,
+      "text": "Migration validates JSON structure before insertion",
+      "source": 165,
+      "task": 3,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 13,
+      "text": "Migration uses bulk insert with batches of 1000 records",
+      "source": 165,
+      "task": 3,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 14,
+      "text": "Migration has --dry-run and --verify flags",
+      "source": 165,
+      "task": 3,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 15,
+      "text": "Migration backs up original JSON files before deletion",
+      "source": 165,
+      "task": 3,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 16,
+      "text": "annotate command updated to write to SQLite (not JSON)",
+      "source": 165,
+      "task": 4,
+      "priority": "required",
+      "existingStatus": "partial",
+      "notes": "Currently writes to .astdb/annotations/*.json (annotate.ts:375-410)"
+    },
+    {
+      "id": 17,
+      "text": "embed command updated to read from SQLite (not JSON)",
+      "source": 165,
+      "task": 4,
+      "priority": "required",
+      "existingStatus": "partial",
+      "notes": "Currently reads from .astdb/annotations/*.json (embed.ts:271-330)"
+    },
+    {
+      "id": 18,
+      "text": "query command updated to read from SQLite (not JSON)",
+      "source": 165,
+      "task": 4,
+      "priority": "required",
+      "existingStatus": "needs-investigation"
+    },
+    {
+      "id": 19,
+      "text": "Backward compatibility: reads JSON if SQLite empty (migration prompt)",
+      "source": 165,
+      "task": 4,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 20,
+      "text": "Integration tests for each command updated",
+      "source": 165,
+      "task": 4,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 21,
+      "text": "Integration test: Full migration from 1000+ JSON files",
+      "source": 165,
+      "task": 5,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 22,
+      "text": "Performance benchmark: SQLite vs JSON (10x improvement documented)",
+      "source": 165,
+      "task": 5,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 23,
+      "text": "Concurrent access test: 5 simultaneous read/write operations",
+      "source": 165,
+      "task": 5,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 24,
+      "text": "Foreign key constraint test: Delete node, verify annotation deleted",
+      "source": 165,
+      "task": 5,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 25,
+      "text": "DEVELOPMENT.md updated with SQLite storage approach",
+      "source": 165,
+      "task": 6,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 26,
+      "text": "Migration procedure documented (new MIGRATION.md or in DEVELOPMENT.md)",
+      "source": 165,
+      "task": 6,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 27,
+      "text": "Architecture diagrams updated",
+      "source": 165,
+      "task": 6,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 28,
+      "text": ">10x performance improvement for file queries measured and documented",
+      "source": 165,
+      "overall": true,
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 29,
+      "text": "All tests passing with test coverage >85% for new code",
+      "source": 165,
+      "overall": true,
+      "priority": "required",
+      "existingStatus": "not-started"
+    }
+  ],
+  "existingWork": {
+    "complete": [
+      "SQLiteVectorStorage pattern exists (packages/ast-helper/src/database/vector/sqlite-storage.ts) - can use as template",
+      "EmbeddingDatabaseManager exists but uses JSON file storage - similar pattern needed",
+      "Database infrastructure in place: ASTDatabaseManager, connection patterns, error handling"
+    ],
+    "partial": [
+      "annotate.ts (L375-410): Writes to JSON files in .astdb/annotations/",
+      "embed.ts (L271-330): Reads from JSON files in .astdb/annotations/"
+    ],
+    "missing": [
+      "No AnnotationDatabaseManager class",
+      "No SQLite annotations table",
+      "No migration script",
+      "Query command annotation reading not yet analyzed"
+    ],
+    "patterns_to_follow": [
+      "SQLiteVectorStorage for SQLite patterns (WAL mode, prepared statements, transactions)",
+      "EmbeddingDatabaseManager for CRUD patterns"
+    ]
+  },
+  "strategy": "simple",
+  "implementationApproach": "Single issue, linear workflow with 6 clear implementation tasks. Will follow existing SQLite patterns in codebase."
+}
