@@ -1,0 +1,12 @@
+# Session Tracking Directory
+
+This directory contains session tracking files for GitHub Copilot Coding Agent implementations.
+
+Each session file (`session-{{TIMESTAMP}}-{{RANDOM_SUFFIX}}.json`) tracks:
+- Issue network discovery and relationships
+- Implementation progress and decisions
+- Acceptance criteria verification
+- Existing work analysis
+- Reentrant workflow state
+
+Session files are committed to version control for full traceability and recovery capabilities.

@@ -1,0 +1,211 @@
+{
+  "sessionId": "session-20251004210029-18f4cea6",
+  "timestamp": "2025-10-04T21:00:29Z",
+  "issues": {
+    "primary": [131],
+    "children": [132, 133, 134, 135, 136, 137],
+    "related": []
+  },
+  "repoOwner": "EvanDodds",
+  "repoName": "ast-copilot-helper",
+  "currentStep": "4.complete",
+  "status": "implementation-complete",
+  "branchName": "network-131/complete-core-functionality-implementation",
+  "prUrl": "https://github.com/EvanDodds/ast-copilot-helper/pull/138",
+  "prNumber": 138,
+  "existingWork": {
+    "summary": "Comprehensive infrastructure exists with CLI commands, but core parsing, annotation, and query functionality are mock implementations",
+    "partialImplementations": [
+      "packages/ast-helper/src/commands/parse.ts - CLI infrastructure exists, no Tree-sitter integration",
+      "packages/ast-helper/src/commands/annotate.ts - Command handler exists, uses mock AnnotationGenerator",
+      "packages/ast-helper/src/commands/query.ts - CLI setup exists, no actual query implementation",
+      "packages/ast-helper/src/parser/parsers/native-parser.ts - Mock implementation with detailed test nodes",
+      "packages/ast-helper/src/parser/parsers/wasm-parser.ts - Mock WASM parser implementation",
+      "packages/ast-mcp-server/src/mcp/tools.ts - MCP tools defined but use MockDatabaseReader"
+    ],
+    "affectedFiles": [
+      "packages/ast-helper/src/commands/parse.ts",
+      "packages/ast-helper/src/commands/annotate.ts",
+      "packages/ast-helper/src/commands/query.ts",
+      "packages/ast-helper/src/commands/watch.ts",
+      "packages/ast-helper/src/parser/parsers/native-parser.ts",
+      "packages/ast-helper/src/parser/parsers/wasm-parser.ts",
+      "packages/ast-helper/src/parser/annotation-generator.ts",
+      "packages/ast-mcp-server/src/mcp/tools.ts",
+      "packages/ast-mcp-server/src/mcp/resources.ts",
+      "packages/ast-mcp-server/src/database/mock-reader.ts"
+    ]
+  },
+  "acceptanceCriteria": [
+    {
+      "id": 1,
+      "text": "Complete AST parsing pipeline with Tree-sitter",
+      "source": "#131",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 2,
+      "text": "Real annotation generation (signatures, complexity, dependencies)",
+      "source": "#131",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 3,
+      "text": "Functional semantic query system using existing vector database",
+      "source": "#131",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 4,
+      "text": "MCP server tools fully implemented and working",
+      "source": "#131",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 5,
+      "text": "File watching for live updates",
+      "source": "#131",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 6,
+      "text": "End-to-end workflow: parse → annotate → embed → query via MCP",
+      "source": "#131",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 7,
+      "text": "Parse processes source files and generates AST JSON",
+      "source": "#132",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 8,
+      "text": "Supports --glob patterns and --changed flag",
+      "source": "#132",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 9,
+      "text": "Grammar files cached in .astdb/grammars/",
+      "source": "#132",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 10,
+      "text": "AST JSON files saved to .astdb/asts/",
+      "source": "#132",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 11,
+      "text": "Handles TypeScript, JavaScript, and Python files",
+      "source": "#132",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 12,
+      "text": "Generates accurate signatures for TS/JS/Python functions",
+      "source": "#133",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 13,
+      "text": "Calculates cyclomatic complexity correctly",
+      "source": "#133",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 14,
+      "text": "Extracts dependency information from imports",
+      "source": "#133",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 15,
+      "text": "Outputs JSON files to .astdb/annots/{nodeId}.json",
+      "source": "#133",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 16,
+      "text": "Query returns relevant code snippets with similarity scores",
+      "source": "#134",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 17,
+      "text": "Supports all CLI options (--top, --format, --min-score)",
+      "source": "#134",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 18,
+      "text": "Query latency <200ms for typical repositories",
+      "source": "#134",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 19,
+      "text": "All three core MCP tools return real data instead of placeholders",
+      "source": "#135",
+      "priority": "required",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 20,
+      "text": "Tools integrate properly with existing database systems",
+      "source": "#135",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 21,
+      "text": "Watch monitors files and processes changes automatically",
+      "source": "#136",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 22,
+      "text": "Debouncing works correctly (200ms delay, batching)",
+      "source": "#136",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 23,
+      "text": "All resource types return real data instead of placeholders",
+      "source": "#137",
+      "priority": "required",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 24,
+      "text": "URI parsing works correctly with proper URL decoding",
+      "source": "#137",
+      "priority": "required",
+      "existingStatus": "not-started"
+    }
+  ],
+  "implementationStrategy": "Complex Network - Multiple interrelated issues requiring careful sequencing",
+  "estimatedComplexity": "high"
+}
