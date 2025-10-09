@@ -108,6 +108,19 @@ export class ConfigManager {
           result.indexParams.M = source.indexParams.M;
         }
       }
+
+      // Merge nested mcp object
+      if (source.mcp) {
+        if (!result.mcp) {
+          result.mcp = {};
+        }
+        if (source.mcp.port !== undefined) {
+          result.mcp.port = source.mcp.port;
+        }
+        if (source.mcp.autoStart !== undefined) {
+          result.mcp.autoStart = source.mcp.autoStart;
+        }
+      }
     }
 
     return result;

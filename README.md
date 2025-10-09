@@ -212,6 +212,50 @@ yarn ast-mcp-server start
 }
 ```
 
+### MCP Server Configuration
+
+Configure the MCP server port and auto-start behavior in your config file:
+
+```json
+{
+  "mcp": {
+    "port": 3000,
+    "autoStart": false
+  }
+}
+```
+
+**Configuration Options:**
+
+- **`port`** (number, default: `3000`): Server port number
+  - Valid range: 1024-65535 (unprivileged ports)
+  - Automatically validated during configuration loading
+- **`autoStart`** (boolean, default: `false`): Auto-start server on initialization
+  - When `true`, the MCP server starts automatically after initialization
+  - When `false`, the server must be started manually with `yarn ast-mcp-server start`
+
+**Example Configurations:**
+
+```json
+// Development: Manual start, custom port
+{
+  "mcp": {
+    "port": 8080,
+    "autoStart": false
+  }
+}
+
+// Production: Auto-start on default port
+{
+  "mcp": {
+    "port": 3000,
+    "autoStart": true
+  }
+}
+```
+
+See `examples/config.json` for a complete configuration example.
+
 ### Available MCP Tools
 
 The server exposes these tools for AI agents:

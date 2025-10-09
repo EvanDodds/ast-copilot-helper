@@ -108,6 +108,14 @@ export interface Config {
     cacheDir?: string;
   };
 
+  /** MCP (Model Context Protocol) server configuration */
+  mcp?: {
+    /** MCP server port (1024-65535) */
+    port: number;
+    /** Auto-start MCP server with CLI */
+    autoStart: boolean;
+  };
+
   /** CLI-specific logging options */
   verbose?: boolean;
   debug?: boolean;
@@ -161,6 +169,10 @@ export type PartialConfig = Partial<{
     cacheTTL: number;
     enableCompression: boolean;
     cacheDir: string;
+  }>;
+  mcp: Partial<{
+    port: number;
+    autoStart: boolean;
   }>;
   verbose: boolean;
   debug: boolean;
