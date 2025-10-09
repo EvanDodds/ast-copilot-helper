@@ -30,6 +30,12 @@ vi.mock("../../logging/index.js", () => ({
     error: vi.fn(),
     debug: vi.fn(),
   })),
+  createModuleLogger: vi.fn(() => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  })),
 }));
 
 describe("Cache Commands", () => {

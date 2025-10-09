@@ -481,7 +481,7 @@ export class EmbedCommand {
       // Prepare model information for database storage
       const dbModelInfo = {
         name: modelInfo.name,
-        version: modelInfo.version,
+        version: modelInfo.version || "1.0.0",
         dimensions: results[0]?.embedding.length || 768,
       };
 

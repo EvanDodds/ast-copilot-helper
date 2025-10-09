@@ -1,4 +1,5 @@
-import { HierarchicalNSW } from "hnswlib-node";
+import hnswlib from "hnswlib-node";
+const { HierarchicalNSW } = hnswlib;
 import { SQLiteVectorStorage } from "./sqlite-storage.js";
 import type {
   VectorDatabase,
@@ -25,7 +26,7 @@ import type {
  */
 export class HNSWVectorDatabase implements VectorDatabase {
   private storage: SQLiteVectorStorage;
-  private index: HierarchicalNSW | null = null;
+  private index: InstanceType<typeof HierarchicalNSW> | null = null;
   private isInitialized = false;
   private readonly config: VectorDBConfig;
   private autoSaveTimer: NodeJS.Timeout | null = null;

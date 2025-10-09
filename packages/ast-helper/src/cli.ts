@@ -1860,13 +1860,14 @@ class WatchCommandHandler implements CommandHandler<WatchOptions> {
     const { WatchCommand } = await import("./commands/watch.js");
 
     // Map CLI options to WatchCommand options
+    const globValue = options.glob || config.watchGlob;
     const watchOptions = {
-      glob: options.glob || config.watchGlob,
+      glob: Array.isArray(globValue) ? globValue[0] : globValue,
       debounce: options.debounce,
-      includeAnnotation: options.annotation,
-      batch: options.batch,
-      recursive: options.recursive,
-      followSymlinks: options.followSymlinks,
+      includeAnnotation: options.changed,
+      batch: options.changed,
+      recursive: true,
+      followSymlinks: false,
     };
 
     const watchCommand = new WatchCommand(config, watchOptions);

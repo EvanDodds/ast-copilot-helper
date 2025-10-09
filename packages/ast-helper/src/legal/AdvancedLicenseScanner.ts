@@ -35,6 +35,7 @@ export class AdvancedLicenseScanner {
   private licensePatterns: LicensePattern[] = [];
   private watchedDirectories: Set<string> = new Set();
   private changeCallbacks: ((changes: LicenseChangeEvent[]) => void)[] = [];
+  private watchers: any[] = [];
 
   constructor(database: LicenseDatabase) {
     this.database = database;
@@ -247,7 +248,9 @@ export class AdvancedLicenseScanner {
           dir,
           { recursive: true },
           async (eventType, filename) => {
-            if (!filename) return;
+            if (!filename) {
+              return;
+            }
 
             const fullPath = path.join(dir, filename);
             const basename = path.basename(filename);
@@ -264,7 +267,10 @@ export class AdvancedLicenseScanner {
               basename.toUpperCase().includes(lf.toUpperCase()),
             );
 
-            if (isLicenseFile && (eventType === "change" || eventType === "rename")) {
+            if (
+              isLicenseFile &&
+              (eventType === "change" || eventType === "rename")
+            ) {
               const changes: LicenseChangeEvent[] = [];
 
               try {
@@ -272,7 +278,7 @@ export class AdvancedLicenseScanner {
                 if (eventType === "change") {
                   changes.push({
                     type: "modified",
-                    path: fullPath,
+                    filePath: fullPath,
                     timestamp: new Date(),
                     oldLicense: undefined,
                     newLicense: undefined,
@@ -280,7 +286,7 @@ export class AdvancedLicenseScanner {
                 } else if (eventType === "rename") {
                   changes.push({
                     type: "added",
-                    path: fullPath,
+                    filePath: fullPath,
                     timestamp: new Date(),
                     newLicense: undefined,
                   });

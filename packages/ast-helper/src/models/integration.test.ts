@@ -38,11 +38,13 @@ describe("Model Management System Integration", () => {
     testDir = join(tmpdir(), `ast-helper-test-${Date.now()}`);
     await fs.mkdir(testDir, { recursive: true });
 
-    // Create test content with known checksum
-    const testContent = "A".repeat(1024); // 1KB of 'A' characters
+    // Create test content with valid ONNX header (for security hook validation)
+    const onnxMagic = Buffer.from([0x08, 0x01, 0x12]); // ONNX protobuf magic
+    const paddingData = Buffer.from("A".repeat(1021)); // Pad to 1KB
+    const testContentBuffer = Buffer.concat([onnxMagic, paddingData]);
     const actualChecksum = crypto
       .createHash("sha256")
-      .update(testContent)
+      .update(testContentBuffer)
       .digest("hex");
 
     // Create mock model configuration
@@ -51,7 +53,7 @@ describe("Model Management System Integration", () => {
       version: "1.0.0",
       url: "https://example.com/test-model.onnx",
       checksum: actualChecksum,
-      size: testContent.length,
+      size: testContentBuffer.length,
       format: "onnx" as const,
       dimensions: 768,
       description: "Test model for integration testing",
@@ -74,9 +76,8 @@ describe("Model Management System Integration", () => {
         },
         body: new ReadableStream({
           start(controller) {
-            // Use consistent test content
-            const encoder = new TextEncoder();
-            controller.enqueue(encoder.encode(testContent));
+            // Use test content with valid ONNX header
+            controller.enqueue(testContentBuffer);
             controller.close();
           },
         }),

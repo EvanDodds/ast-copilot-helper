@@ -39,6 +39,7 @@ describe("GitRepositoryValidator", () => {
       isGitRepository: vi.fn(),
       getRepositoryRoot: vi.fn(),
       validateGitReference: vi.fn(),
+      getChangedFilesSince: vi.fn(),
     };
 
     MockedGitManager.mockImplementation(() => mockGitManager);
@@ -143,6 +144,7 @@ describe("GitFileSelector", () => {
       getStagedFiles: vi.fn(),
       getRepositoryRoot: vi.fn(),
       getStatus: vi.fn(),
+      getChangedFilesSince: vi.fn(),
     };
 
     mockValidator = {
@@ -295,7 +297,7 @@ describe("GitFileSelector", () => {
       const { stat } = await import("node:fs/promises");
       const mockedStat = stat as Mock;
 
-      mockedStat.mockImplementation((filePath: string) => {
+      mockedStat.mockImplementation((_filePath: string) => {
         return Promise.resolve({
           isFile: () => true,
           size: 1024,
@@ -320,7 +322,7 @@ describe("GitFileSelector", () => {
       mockValidator.validateRepository.mockResolvedValue(undefined);
       mockValidator.validateGitReference.mockResolvedValue(undefined);
       mockGitManager.getRepositoryRoot.mockResolvedValue("/test/workspace");
-      mockGitManager.getChangedFiles.mockResolvedValue([]);
+      mockGitManager.getChangedFilesSince.mockResolvedValue([]);
 
       await selector.selectFiles(optionsWithBase, mockConfig);
 

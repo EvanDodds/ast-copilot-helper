@@ -32,7 +32,9 @@ describe("SnapshotCreator", () => {
         outputPath: "/tmp/snapshot.tar.gz",
       } as SnapshotCreateOptions;
 
-      await expect(creator.create(options)).rejects.toThrow();
+      const result = await creator.create(options);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("does not exist");
     });
 
     it("should require outputPath", async () => {
@@ -42,7 +44,9 @@ describe("SnapshotCreator", () => {
         astdbPath: "/tmp/.astdb",
       } as SnapshotCreateOptions;
 
-      await expect(creator.create(options)).rejects.toThrow();
+      const result = await creator.create(options);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("does not exist");
     });
 
     it("should reject non-existent astdb directory", async () => {
@@ -53,7 +57,9 @@ describe("SnapshotCreator", () => {
         outputPath: "/tmp/snapshot.tar.gz",
       };
 
-      await expect(creator.create(options)).rejects.toThrow();
+      const result = await creator.create(options);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("does not exist");
     });
 
     it("should reject invalid compression level", async () => {
@@ -65,7 +71,9 @@ describe("SnapshotCreator", () => {
         compressionLevel: 10, // Invalid, must be 0-9
       };
 
-      await expect(creator.create(options)).rejects.toThrow();
+      const result = await creator.create(options);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it("should accept valid compression levels", () => {

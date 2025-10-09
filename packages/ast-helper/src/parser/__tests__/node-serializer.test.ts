@@ -214,7 +214,19 @@ describe("NodeSerializer", () => {
 
   describe("serializeFile", () => {
     it("should serialize multiple nodes with file metadata", () => {
-      const nodes = [sampleRootNode, sampleNode];
+      // Create a child node and a root that properly references it
+      const childNode: ASTNode = {
+        ...sampleNode,
+        id: "child-node-not-root",
+        parent: "root-node",
+      };
+
+      const rootWithChild: ASTNode = {
+        ...sampleRootNode,
+        children: ["child-node-not-root"], // Reference the child
+      };
+
+      const nodes = [rootWithChild, childNode];
       const serialized = serializer.serializeFile(
         nodes,
         "/test/file.ts",
@@ -228,6 +240,7 @@ describe("NodeSerializer", () => {
         language: "typescript",
       });
       expect(serialized.nodes).toHaveLength(2);
+      // nodeCount counts the root and its children recursively
       expect(serialized.metadata.nodeCount).toBe(2);
       expect(serialized.metadata.fileHash).toBe("hash123");
       expect(serialized.metadata.stats.totalNodes).toBe(2);
