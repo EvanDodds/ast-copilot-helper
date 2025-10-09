@@ -8,6 +8,7 @@ import { createLogger } from "../logging/index.js";
 import type { Config } from "../types.js";
 import { rustParser, type RustAnnotateResult } from "../parser/rust-cli.js";
 import { ASTDatabaseManager } from "../database/manager.js";
+import { AnnotationDatabaseManager } from "../database/annotation-manager.js";
 import { FileSelectionEngine } from "../file-selection/index.js";
 import { ValidationErrors } from "../errors/index.js";
 import * as path from "path";
@@ -78,6 +79,7 @@ export class AnnotateCommand {
   private logger = createLogger({ operation: "annotate" });
   private fileSelectionEngine: FileSelectionEngine;
   private dbManager?: ASTDatabaseManager;
+  private annotationManager?: AnnotationDatabaseManager;
 
   constructor() {
     this.fileSelectionEngine = new FileSelectionEngine();
@@ -209,13 +211,13 @@ export class AnnotateCommand {
 
     this.dbManager = new ASTDatabaseManager(config.outputDir);
 
-    // Ensure annotation directory exists
-    const annotationDir = path.join(config.outputDir, "annotations");
-    try {
-      await fs.mkdir(annotationDir, { recursive: true });
-    } catch (error) {
-      // Directory might already exist, that's fine
-    }
+    // Initialize annotation database manager
+    this.annotationManager = new AnnotationDatabaseManager(this.dbManager);
+    await this.annotationManager.initialize();
+
+    this.logger.debug("Database managers initialized", {
+      annotationDbPath: this.annotationManager.getDatabasePath(),
+    });
   }
 
   /**
@@ -369,47 +371,70 @@ export class AnnotateCommand {
   }
 
   /**
-   * Store annotations in database
+   * Store annotations in SQLite database
    */
   private async storeAnnotations(results: AnnotationResult[]): Promise<void> {
-    if (!this.dbManager) {
-      throw new Error("Database manager not initialized");
+    if (!this.annotationManager) {
+      throw new Error("Annotation manager not initialized");
     }
 
+    // Collect all annotations from successful results
+    const allAnnotations = [];
     for (const result of results) {
       if (!result.success || !result.annotations) {
         continue;
       }
 
-      try {
-        // Create annotation file path
-        const relativePath = path.relative(process.cwd(), result.filePath);
-        const safePath = relativePath.replace(/[/\\]/g, "_");
-        const annotationsDir = path.join(
-          this.dbManager.astdbPath,
-          "annotations",
-        );
-        const annotationPath = path.join(annotationsDir, `${safePath}.json`);
+      // Transform each annotation to database format
+      for (const annotation of result.annotations.annotations) {
+        // Flatten dependencies into a simple array
+        const allDeps = [
+          ...annotation.dependencies.imports,
+          ...annotation.dependencies.exports,
+          ...annotation.dependencies.calls,
+          ...annotation.dependencies.internal_dependencies,
+          ...annotation.dependencies.external_dependencies,
+        ];
 
-        // Ensure annotations directory exists
-        await fs.mkdir(annotationsDir, { recursive: true });
-
-        // Store annotation data
-        await fs.writeFile(
-          annotationPath,
-          JSON.stringify(result.annotations, null, 2),
-          "utf-8",
-        );
-
-        this.logger.debug(`Stored annotations for ${result.filePath}`);
-      } catch (error) {
-        this.logger.error(
-          `Failed to store annotations for ${result.filePath}:`,
-          {
-            error: error instanceof Error ? error.message : String(error),
+        allAnnotations.push({
+          node_id: `${result.filePath}:${annotation.start_line}:${annotation.end_line}:${annotation.node_type}`,
+          file_path: result.filePath,
+          start_line: annotation.start_line,
+          end_line: annotation.end_line,
+          node_type: annotation.node_type,
+          signature: annotation.signature,
+          complexity_score: annotation.complexity_metrics.cyclomatic,
+          dependencies: allDeps,
+          metadata: {
+            summary: annotation.summary,
+            language: annotation.language,
+            parameters: annotation.parameters,
+            return_type: annotation.return_type,
+            modifiers: annotation.modifiers,
+            semantic_tags: annotation.semantic_tags,
+            complexity_metrics: annotation.complexity_metrics,
+            dependencies_detail: annotation.dependencies,
           },
-        );
+        });
       }
+    }
+
+    if (allAnnotations.length === 0) {
+      this.logger.debug("No annotations to store");
+      return;
+    }
+
+    try {
+      // Batch insert all annotations
+      await this.annotationManager.insertAnnotations(allAnnotations);
+      this.logger.info(
+        `Stored ${allAnnotations.length} annotations in SQLite database`,
+      );
+    } catch (error) {
+      this.logger.error("Failed to store annotations in database:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     }
   }
 

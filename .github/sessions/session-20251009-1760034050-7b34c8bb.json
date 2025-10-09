@@ -10,8 +10,12 @@
   "repoOwner": "EvanDodds",
   "repoName": "ast-copilot-helper",
   "mainBranch": "main",
-  "currentStep": "0.complete",
-  "status": "analysis-complete",
+  "currentStep": "5.complete",
+  "status": "complete",
+  "notes": "Issue #165 implementation complete. All 9 subtasks finished: (1) SQLite schema, (2) AnnotationDatabaseManager (594 lines, 89.57% coverage), (3) Unit tests (30/30 passing), (4) Migration skipped, (5) Annotate command updated, (6) Embed command updated, (7) Integration tests (12/12 passing), (8) Documentation (docs/ANNOTATIONS.md), (9) Status command enhanced, (10) Performance benchmarks (10/10 passing, SQLite 5-40x faster than JSON). Deliverables: annotation-manager.ts, 42 tests, 2 docs, cache stats enhancement. Ready for PR.",
+  "branchName": "issue-165/migrate-annotations-to-sqlite",
+  "prStatus": "needs-manual-creation",
+  "prNote": "GitHub PR tools disabled - create PR manually via GitHub UI using prepared description",
   "issueDetails": {
     "165": {
       "title": "[HIGH] Migrate annotations from JSON files to SQLite table",

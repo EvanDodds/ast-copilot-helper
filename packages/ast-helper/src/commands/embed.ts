@@ -14,6 +14,7 @@ import {
   ASTDatabaseManager,
   EmbeddingDatabaseManager,
 } from "../database/index.js";
+import { AnnotationDatabaseManager } from "../database/annotation-manager.js";
 import type { Config } from "../types.js";
 import path from "path";
 
@@ -50,6 +51,7 @@ export class EmbedCommand {
   private logger: Logger;
   private dbManager: ASTDatabaseManager | null = null;
   private embeddingDb: EmbeddingDatabaseManager | null = null;
+  private annotationManager: AnnotationDatabaseManager | null = null;
 
   constructor(config: Config, logger: Logger) {
     this.config = config;
@@ -241,10 +243,12 @@ export class EmbedCommand {
         const outputDir = dbPath || config?.outputDir || ".astdb";
         this.dbManager = new ASTDatabaseManager(outputDir);
         this.embeddingDb = new EmbeddingDatabaseManager(this.dbManager);
+        this.annotationManager = new AnnotationDatabaseManager(this.dbManager);
+        await this.annotationManager.initialize();
       }
 
-      // Load real annotations from the database
-      const annotations = await this.loadAnnotationsFromDatabaseFiles();
+      // Load real annotations from the SQLite database
+      const annotations = await this.loadAnnotationsFromSQLite();
 
       if (annotations.length === 0) {
         this.logger.warn(
@@ -267,67 +271,53 @@ export class EmbedCommand {
   /**
    * Load annotations from database files
    */
-  private async loadAnnotationsFromDatabaseFiles(): Promise<Annotation[]> {
+  /**
+   * Load annotations from SQLite database
+   */
+  private async loadAnnotationsFromSQLite(): Promise<Annotation[]> {
     try {
-      if (!this.dbManager) {
-        throw new Error("Database manager not initialized");
+      if (!this.annotationManager) {
+        throw new Error("Annotation manager not initialized");
       }
 
-      const fs = await import("fs/promises");
-      const annotationsDir = path.join(this.dbManager.astdbPath, "annotations");
+      // Get all annotations from the database
+      const dbAnnotations = await this.annotationManager.getAllAnnotations();
 
-      // Check if annotations directory exists
-      try {
-        await fs.access(annotationsDir);
-      } catch {
-        // Annotations directory doesn't exist, return empty array
+      if (dbAnnotations.length === 0) {
         return [];
       }
 
-      const files = await fs.readdir(annotationsDir);
-      const jsonFiles = files.filter((file) => file.endsWith(".json"));
+      // Convert from database format to embed format
+      const annotations: Annotation[] = dbAnnotations.map((record) => {
+        // Parse metadata JSON if it exists
+        const metadata =
+          typeof record.metadata === "string"
+            ? JSON.parse(record.metadata)
+            : record.metadata || {};
 
-      if (jsonFiles.length === 0) {
-        return [];
-      }
+        return {
+          nodeId: record.node_id,
+          signature: record.signature || "Unknown",
+          summary: metadata.summary || "No summary available",
+          sourceSnippet: "", // Source snippet not stored in annotations table
+          metadata: {
+            file_path: record.file_path,
+            node_type: record.node_type,
+            start_line: record.start_line,
+            end_line: record.end_line,
+            complexity_score: record.complexity_score,
+            ...metadata,
+          },
+        };
+      });
 
-      const annotations: Annotation[] = [];
-
-      for (const file of jsonFiles) {
-        try {
-          const filePath = path.join(annotationsDir, file);
-          const data = await fs.readFile(filePath, "utf-8");
-          const fileAnnotations = JSON.parse(data);
-
-          if (Array.isArray(fileAnnotations)) {
-            // Convert from stored format to embed format
-            for (const annotation of fileAnnotations) {
-              annotations.push({
-                nodeId:
-                  annotation.node_id ||
-                  `${file}-${annotation.signature || "unknown"}`,
-                signature: annotation.signature || annotation.name || "Unknown",
-                summary:
-                  annotation.summary ||
-                  annotation.description ||
-                  "No summary available",
-                sourceSnippet:
-                  annotation.code_snippet || annotation.source_snippet || "",
-              });
-            }
-          }
-        } catch (parseError) {
-          this.logger.warn(
-            `Failed to parse annotation file ${file}: ${parseError}`,
-          );
-        }
-      }
-
-      return annotations;
-    } catch (error: any) {
-      throw new Error(
-        `Failed to load annotations from database: ${error.message}`,
+      this.logger.debug(
+        `Loaded ${annotations.length} annotations from SQLite database`,
       );
+      return annotations;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to load annotations from database: ${message}`);
     }
   }
 
