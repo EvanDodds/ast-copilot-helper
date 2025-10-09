@@ -228,6 +228,12 @@ export class AstHelperCli {
       .version(this.getVersion())
       .addOption(new Option("--config <path>", "Configuration file path"))
       .addOption(
+        new Option(
+          "--user-config <path>",
+          "User configuration file path (overrides XDG default)",
+        ),
+      )
+      .addOption(
         new Option("--workspace <path>", "Workspace directory").default(
           process.cwd(),
         ),
@@ -1483,6 +1489,7 @@ export class AstHelperCli {
       this.config = await this.configManager.loadConfig(
         workspacePath,
         cliOptions,
+        cliOptions.userConfig,
       );
     } catch (error) {
       throw ConfigurationErrors.loadFailed(

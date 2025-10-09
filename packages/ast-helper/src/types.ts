@@ -185,6 +185,7 @@ export type PartialConfig = Partial<{
  */
 export interface CliArgs {
   config?: string;
+  "user-config"?: string;
   "top-k"?: number;
   "batch-size"?: number;
   "snippet-lines"?: number;
@@ -201,6 +202,7 @@ export interface CliArgs {
   parseGlob?: string[];
   watchGlob?: string[];
   topK?: number;
+  userConfig?: string;
   watch?: boolean;
   verbose?: boolean;
   debug?: boolean;

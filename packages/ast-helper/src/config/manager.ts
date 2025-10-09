@@ -21,10 +21,16 @@ import { loadConfigFiles, resolveConfigPaths } from "./files.js";
 export class ConfigManager {
   /**
    * Load complete configuration from all sources
+   *
+   * @param workspacePath - Workspace root directory
+   * @param cliArgs - Command-line arguments
+   * @param customUserConfigPath - Optional custom user config path from --user-config flag
+   * @returns Complete validated configuration
    */
   async loadConfig(
     workspacePath: string,
     cliArgs: CliArgs = {},
+    customUserConfigPath?: string,
   ): Promise<Config> {
     try {
       // Collect configuration from all sources (reverse priority order)
@@ -33,7 +39,10 @@ export class ConfigManager {
       // 5. Built-in defaults are handled by validateConfig
 
       // 4. User config and 3. Project config
-      const fileConfigs = await loadConfigFiles(workspacePath);
+      const fileConfigs = await loadConfigFiles(
+        workspacePath,
+        customUserConfigPath,
+      );
       if (fileConfigs && Array.isArray(fileConfigs)) {
         sources.push(...fileConfigs.reverse()); // Reverse to get user config first, then project
       }
@@ -128,8 +137,15 @@ export class ConfigManager {
 
   /**
    * Get configuration file paths for the given workspace
+   *
+   * @param workspacePath - Workspace root directory
+   * @param customUserConfigPath - Optional custom user config path from --user-config flag
+   * @returns Array of config file paths in priority order
    */
-  getConfigPaths(workspacePath: string): string[] {
-    return resolveConfigPaths(workspacePath);
+  getConfigPaths(
+    workspacePath: string,
+    customUserConfigPath?: string,
+  ): string[] {
+    return resolveConfigPaths(workspacePath, customUserConfigPath);
   }
 }

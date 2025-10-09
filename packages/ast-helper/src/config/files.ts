@@ -4,9 +4,8 @@
  */
 
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { homedir } from "node:os";
 import type { PartialConfig } from "../types.js";
+import { resolveConfigPathsWithXdg } from "./xdg-paths.js";
 
 /**
  * Load configuration from a JSON file
@@ -43,23 +42,31 @@ export async function loadConfigFile(filePath: string): Promise<PartialConfig> {
 
 /**
  * Resolve configuration file paths in priority order
+ * Supports XDG Base Directory Specification
+ *
+ * @param workspacePath - Workspace root directory
+ * @param customUserConfig - Optional custom user config from --user-config flag
+ * @returns Array of config file paths in priority order
  */
-export function resolveConfigPaths(workspacePath: string): string[] {
-  return [
-    // Project config: .astdb/config.json in workspace
-    join(workspacePath, ".astdb", "config.json"),
-    // User config: ~/.config/ast-copilot-helper/config.json
-    join(homedir(), ".config", "ast-copilot-helper", "config.json"),
-  ];
+export function resolveConfigPaths(
+  workspacePath: string,
+  customUserConfig?: string,
+): string[] {
+  return resolveConfigPathsWithXdg(workspacePath, customUserConfig);
 }
 
 /**
  * Load configuration from multiple file sources
+ *
+ * @param workspacePath - Workspace root directory
+ * @param customUserConfig - Optional custom user config from --user-config flag
+ * @returns Array of loaded configurations in priority order
  */
 export async function loadConfigFiles(
   workspacePath: string,
+  customUserConfig?: string,
 ): Promise<PartialConfig[]> {
-  const configPaths = resolveConfigPaths(workspacePath);
+  const configPaths = resolveConfigPaths(workspacePath, customUserConfig);
   const configs: PartialConfig[] = [];
 
   for (const configPath of configPaths) {
