@@ -15,7 +15,7 @@ All data is stored locally in `.astdb/` with no external dependencies. The syste
 
 ### 2.1 Design Philosophy
 
-- **SQLite datastore**: All data stored in efficient SQLite database under `.astdb/` - no cloud services, optimized queries
+- **SQLite datastore**: All data stored in efficient SQLite databases under `.astdb/` - no cloud services, optimized queries with specialized databases per domain
 - **Editor agnostic**: MCP server works with any compatible AI client (Claude, VS Code, etc.)
 - **Local processing**: Code never leaves your machine, ensuring privacy and security
 - **Git integration**: Seamlessly fits into existing development workflows
@@ -26,12 +26,14 @@ All data is stored locally in `.astdb/` with no external dependencies. The syste
 ```txt
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │ ast-copilot-    │    │   .astdb/ Store  │    │ ast-mcp-server  │
-│ helper (CLI)    │    │ (SQLite Database)│    │ (MCP Protocol)  │
+│ helper (CLI)    │    │(Distributed DBs) │    │ (MCP Protocol)  │
 │                 │    │                  │    │                 │
-│ • parse (Rust)  │───▶│ database.db      │◀───│ • query_ast     │
-│ • annotate(Rust)│───▶│  ├─ nodes        │◀───│ • get_node      │
-│ • embed (WASM)  │───▶│  ├─ annotations  │◀───│ • list_changes  │
+│ • parse (Rust)  │───▶│ factory.db       │◀───│ • query_ast     │
+│ • annotate(Rust)│───▶│  └─ nodes        │◀───│ • get_node      │
+│ • embed (WASM)  │───▶│ vector.db        │◀───│ • list_changes  │
 │ • watch         │    │  └─ embeddings   │    │                 │
+│                 │    │ annotations/     │    │                 │
+│                 │    │  └─ *.json       │    │                 │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
          │                       ▲                       │
          ▼                       │                       ▲
@@ -41,12 +43,27 @@ All data is stored locally in `.astdb/` with no external dependencies. The syste
 └─────────────────┘              │              └─────────────────┘
 ```
 
+**Architecture Decision: Distributed Database Design**
+
+The system uses a distributed database approach with specialized databases per domain:
+
+- **factory.db**: AST nodes and metadata (Rust-managed)
+- **vector.db**: Vector embeddings and HNSW index (TypeScript-managed)
+- **annotations/**: File-based annotation storage (JSON files per node)
+
+This design provides:
+
+- **Isolation**: Separate databases prevent lock contention between readers/writers
+- **Language boundaries**: Rust core manages factory.db, TypeScript manages vector.db
+- **Flexibility**: Independent schema evolution and optimization per domain
+- **Resilience**: Corruption in one database doesn't affect others
+
 ### 2.3 Data Flow Pipeline
 
-1. **Parse**: Extract AST from source files (Rust engine) → SQLite `nodes` table
-2. **Annotate**: Generate metadata & complexity analysis (Rust backend) → SQLite `annotations` table
-3. **Embed**: Create vector embeddings (WASM-based CodeBERT) → SQLite `embeddings` table + HNSW index
-4. **Query**: Retrieve relevant context via MCP protocol (SQLite queries + vector search)
+1. **Parse**: Extract AST from source files (Rust engine) → `factory.db` `nodes` table
+2. **Annotate**: Generate metadata & complexity analysis (Rust backend) → `.astdb/annotations/*.json` files
+3. **Embed**: Create vector embeddings (WASM-based CodeBERT) → `vector.db` `embeddings` table + HNSW index
+4. **Query**: Retrieve relevant context via MCP protocol (distributed database queries + vector search)
 5. **Watch**: Monitor changes and update incrementally (TypeScript coordination)
 
 ---
@@ -120,11 +137,40 @@ The Rust core engine handles all parsing operations using tree-sitter 0.25.10 wi
 
 ```bash
 ast-copilot-helper init [--workspace <path>]        # Initialize .astdb/
-ast-copilot-helper parse [--changed] [--glob <pat>] # Extract ASTs
-ast-copilot-helper annotate [--changed]             # Generate metadata
-ast-copilot-helper embed [--changed]                # Create embeddings
-ast-copilot-helper query <intent> [--top <n>]       # Search context
-ast-copilot-helper watch [--glob <pattern>]         # Live monitoring
+
+ast-copilot-helper parse [options]                  # Extract ASTs
+  --changed                # Parse changed files since HEAD
+  --staged                 # Parse only staged files
+  --base <branch>          # Parse changed since branch
+  --glob <pattern>         # Parse files matching pattern
+  --force                  # Force re-parse all files
+  --batch-size <n>         # Set batch processing size
+  --dry-run                # Preview without changes
+
+ast-copilot-helper annotate [options]               # Generate metadata
+  --changed                # Annotate changed nodes only
+  --batch                  # Enable batch processing
+  --batch-size <n>         # Set batch size
+  --format <type>          # Output format (json, text)
+  --force                  # Force re-annotation
+
+ast-copilot-helper embed [options]                  # Create embeddings
+  --changed                # Embed changed nodes only
+  --model <name>           # Specify embedding model
+  --batch-size <n>         # Set batch size
+  --force                  # Force re-embedding
+  --dry-run                # Preview without changes
+
+ast-copilot-helper query <intent> [options]         # Search context
+  --top <n>                # Number of results (default: 5)
+  --format <type>          # Output format (json, text, markdown)
+  --min-score <n>          # Minimum similarity score threshold
+
+ast-copilot-helper watch [options]                  # Live monitoring
+  --glob <pattern>         # Watch files matching pattern
+  --debounce <ms>          # Debounce delay in milliseconds
+  --batch-size <n>         # Set batch processing size
+  --changed                # Process only changed files
 ```
 
 ### 4.2 MCP Server (`ast-mcp-server`)
@@ -135,9 +181,16 @@ ast-copilot-helper watch [--glob <pattern>]         # Live monitoring
 
 **MCP Tools Exposed**:
 
-- `query_ast_context`: Semantic search for relevant code
-- `get_node_details`: Retrieve specific AST node information
+**Core Tools:**
+
+- `query_ast_context`: Semantic search for relevant code using vector embeddings
+- `get_node_details`: Retrieve specific AST node information by ID
 - `list_recent_changes`: Get recently modified nodes
+
+**Enhanced Tools:**
+
+- `ast_file_query`: Query all AST nodes from a specific file with filtering
+- `ast_text_search`: Full-text search across annotations and signatures
 
 **MCP Resources**:
 
@@ -283,9 +336,10 @@ interface Annotation {
 
 **Index**: HNSW (Hierarchical Navigable Small World)
 
-- Pure JavaScript implementation (default)
-- Optional native `hnswlib-node` for performance
+- Pure JavaScript/TypeScript implementation using `hnswlib-wasm`
+- WASM-based for performance and security (no native dependencies)
 - Configurable parameters (efConstruction=200, M=16)
+- Cross-platform compatibility without native compilation
 
 **Storage**: SQLite database for embeddings
 
@@ -375,10 +429,17 @@ interface QueryResult {
 ```txt
 project-root/
 ├── src/                          # Your source code
-├── .astdb/                       # Generated database (gitignored)
-│   ├── database.db               # SQLite database (nodes, annotations, embeddings)
-│   ├── database.db-shm           # SQLite shared memory
-│   ├── database.db-wal           # SQLite write-ahead log
+├── .astdb/                       # Generated databases (gitignored)
+│   ├── factory.db                # AST nodes database (Rust-managed)
+│   ├── factory.db-shm            # SQLite shared memory
+│   ├── factory.db-wal            # SQLite write-ahead log
+│   ├── vector.db                 # Embeddings database (TypeScript-managed)
+│   ├── vector.db-shm             # SQLite shared memory
+│   ├── vector.db-wal             # SQLite write-ahead log
+│   ├── annotations/              # Annotation JSON files (per-node)
+│   │   ├── <node-id-1>.json
+│   │   ├── <node-id-2>.json
+│   │   └── ...
 │   ├── models/                   # Downloaded WASM embedding models
 │   │   └── codebert-base-wasm/
 │   ├── index.bin                 # HNSW vector index (binary format)
@@ -389,24 +450,36 @@ project-root/
 └── package.json
 ```
 
-**SQLite Database Structure**:
+**Distributed Database Structure**:
 
-The `database.db` file contains all structured data:
+**factory.db** (Rust core engine):
 
-- `nodes` table: AST node data
-- `annotations` table: Generated metadata and analysis
+- `nodes` table: AST node data with file paths, types, ranges
+- Managed by Rust storage layer for optimal performance
+- Read by TypeScript for coordination and queries
+
+**vector.db** (TypeScript embedding system):
+
 - `embeddings` table: Vector embeddings (768-dim float32)
-- Indexes for efficient querying and joins
-- Foreign key constraints for referential integrity
+- HNSW index for similarity search
+- Managed by TypeScript vector storage layer
 
-**Advantages over File-Based Storage**:
+**annotations/** (File-based storage):
 
-- **ACID transactions**: Atomic updates prevent corruption
-- **Efficient queries**: SQL indexes enable fast lookups and joins
-- **Reduced I/O**: Single database file vs. thousands of JSON files
-- **Built-in concurrency**: SQLite handles multiple readers gracefully
-- **Compression**: SQLite compacts data automatically
-- **Integrity**: Foreign keys and constraints ensure data consistency
+- Individual JSON files per AST node
+- Contains metadata, complexity analysis, dependencies
+- Fast concurrent writes during annotation phase
+- File naming: `<node-id>.json` (e.g., `src_index.ts_L10-L25.json`)
+
+**Advantages of Distributed Design**:
+
+- **Isolation**: Separate databases prevent lock contention between Rust and TypeScript components
+- **Language boundaries**: Each language manages its own domain efficiently
+- **Concurrent access**: Multiple processes can read/write to different databases simultaneously
+- **ACID transactions**: Per-database atomic updates prevent corruption
+- **Flexible schema evolution**: Databases can evolve independently
+- **Resilience**: Corruption in one database doesn't affect others
+- **Performance**: Specialized optimizations per database (e.g., Rust-optimized factory.db, TypeScript-optimized vector.db)
 
 ---
 
@@ -432,7 +505,9 @@ The `database.db` file contains all structured data:
     "ef": 64
   },
   "database": {
-    "path": ".astdb/database.db",
+    "factoryPath": ".astdb/factory.db",
+    "vectorPath": ".astdb/vector.db",
+    "annotationsDir": ".astdb/annotations",
     "walMode": true,
     "cacheSize": 10000
   },
@@ -537,7 +612,6 @@ ast-copilot-helper parse --glob "src/**/*.ts"   # Specific pattern
 
 - Use `--changed` flag for incremental updates
 - Adjust batch sizes in configuration
-- Enable memory pressure monitoring
 - Consider repository splitting for >1M LOC
 
 **Query Performance**:

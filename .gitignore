@@ -139,6 +139,9 @@ invalid_*.json
 output-test_*.json
 file[0-9]*_*.json
 
+# Exception: Track GitHub Copilot session files
+!.github/sessions/*.json
+
 # Log files in root only
 /*.log
 
