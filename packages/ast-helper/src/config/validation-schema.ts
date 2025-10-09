@@ -315,6 +315,11 @@ export const CONFIG_VALIDATION_SCHEMA: ValidationSchema = {
     followSymlinks: ValidationUtils.boolean("fileWatching.followSymlinks"),
   },
 
+  mcp: {
+    port: ValidationUtils.numericRange(1024, 65535, "mcp.port"),
+    autoStart: ValidationUtils.boolean("mcp.autoStart"),
+  },
+
   // CLI-specific options
   verbose: ValidationUtils.boolean("verbose"),
   debug: ValidationUtils.boolean("debug"),

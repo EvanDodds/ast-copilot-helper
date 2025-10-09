@@ -63,6 +63,10 @@ export const DEFAULT_CONFIG: Config = {
       maxSnippetLength: 500,
     },
   },
+  mcp: {
+    port: 3000,
+    autoStart: false,
+  },
 };
 
 /**
@@ -124,6 +128,17 @@ export function validateConfig(config: PartialConfig): Config {
       // Deep merge embeddings configuration
       result.embeddings = {
         ...DEFAULT_CONFIG.embeddings,
+        ...(value as any),
+      };
+    } else if (
+      key === "mcp" &&
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value)
+    ) {
+      // Deep merge MCP configuration
+      result.mcp = {
+        ...DEFAULT_CONFIG.mcp,
         ...(value as any),
       };
     } else {

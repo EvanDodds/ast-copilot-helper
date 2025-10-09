@@ -212,6 +212,118 @@ yarn ast-mcp-server start
 }
 ```
 
+### MCP Server Configuration
+
+Configure the MCP server port and auto-start behavior in your config file:
+
+```json
+{
+  "mcp": {
+    "port": 3000,
+    "autoStart": false
+  }
+}
+```
+
+**Configuration Options:**
+
+- **`port`** (number, default: `3000`): Server port number
+  - Valid range: 1024-65535 (unprivileged ports)
+  - Automatically validated during configuration loading
+- **`autoStart`** (boolean, default: `false`): Auto-start server on initialization
+  - When `true`, the MCP server starts automatically after initialization
+  - When `false`, the server must be started manually with `yarn ast-mcp-server start`
+
+**Example Configurations:**
+
+```json
+// Development: Manual start, custom port
+{
+  "mcp": {
+    "port": 8080,
+    "autoStart": false
+  }
+}
+
+// Production: Auto-start on default port
+{
+  "mcp": {
+    "port": 3000,
+    "autoStart": true
+  }
+}
+```
+
+See `examples/config.json` for a complete configuration example.
+
+### User Configuration
+
+AST Copilot Helper supports user-level configuration following the **XDG Base Directory Specification**, allowing you to set default preferences that apply across all projects.
+
+**Default User Config Path:**
+
+- `$XDG_CONFIG_HOME/ast-copilot-helper/config.json` (if `XDG_CONFIG_HOME` is set)
+- `~/.config/ast-copilot-helper/config.json` (fallback)
+
+**Custom User Config Path:**
+
+```bash
+ast-helper --user-config=/path/to/config.json <command>
+```
+
+**Configuration Priority** (highest to lowest):
+
+1. CLI arguments (`--top-k`, `--batch-size`, etc.)
+2. Environment variables (`AST_COPILOT_*`)
+3. **Project config** (`.astdb/config.json` in workspace)
+4. **User config** (XDG or custom path)
+5. Built-in defaults
+
+**Example User Config** (`~/.config/ast-copilot-helper/config.json`):
+
+```json
+{
+  "topK": 15,
+  "snippetLines": 7,
+  "enableTelemetry": false,
+  "model": {
+    "showProgress": true
+  },
+  "mcp": {
+    "port": 3000,
+    "autoStart": false
+  }
+}
+```
+
+**Use Cases:**
+
+- **Personal Preferences**: Set your preferred `topK` and `snippetLines` values
+- **Privacy**: Disable telemetry by default in user config
+- **Development Setup**: Configure MCP server port for your local environment
+- **Team Collaboration**: Project config (`.astdb/config.json`) overrides user config for team standards
+
+**Creating User Config:**
+
+```bash
+# Create config directory
+mkdir -p ~/.config/ast-copilot-helper
+
+# Create config file
+cat > ~/.config/ast-copilot-helper/config.json << 'EOF'
+{
+  "topK": 20,
+  "enableTelemetry": false
+}
+EOF
+```
+
+**Cross-Platform Support:**
+
+- **Linux/macOS**: Uses XDG Base Directory Specification
+- **Windows**: Falls back to `~/.config` (works with WSL and native Windows)
+- **Environment Override**: Set `XDG_CONFIG_HOME` to customize location
+
 ### Available MCP Tools
 
 The server exposes these tools for AI agents:

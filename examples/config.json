@@ -1,0 +1,49 @@
+{
+  "$schema": "../packages/ast-helper/config-schema.json",
+  "parseGlob": ["src/**/*.ts", "src/**/*.js"],
+  "watchGlob": ["src/**/*.ts"],
+  "outputDir": ".astdb",
+  "topK": 10,
+  "snippetLines": 5,
+  "indexParams": {
+    "efConstruction": 200,
+    "M": 16
+  },
+  "modelHost": "https://huggingface.co",
+  "model": {
+    "defaultModel": "codebert-base",
+    "modelsDir": ".astdb/models",
+    "downloadTimeout": 300000,
+    "maxConcurrentDownloads": 3,
+    "showProgress": true
+  },
+  "enableTelemetry": false,
+  "concurrency": 4,
+  "batchSize": 1000,
+  "embeddings": {
+    "model": "codebert-base",
+    "modelPath": ".astdb/models/codebert-base",
+    "batchSize": 32,
+    "maxConcurrency": 2,
+    "memoryLimit": 2048,
+    "showProgress": true,
+    "enableConfidenceScoring": true,
+    "textProcessing": {
+      "maxTokenLength": 2048,
+      "preserveCodeStructure": true,
+      "normalizeWhitespace": true,
+      "preserveComments": false,
+      "maxSnippetLength": 500
+    }
+  },
+  "mcp": {
+    "port": 3000,
+    "autoStart": false
+  },
+  "cache": {
+    "enabled": true,
+    "maxCacheSize": 100,
+    "cacheTTL": 3600,
+    "enableCompression": true
+  }
+}

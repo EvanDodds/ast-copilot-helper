@@ -1,0 +1,146 @@
+{
+  "sessionId": "session-1760046252-0ebbc2",
+  "timestamp": "2025-01-09T19:10:52.000Z",
+  "issues": [169, 170, 171],
+  "issueType": "network",
+  "relatedIssues": [172],
+  "branch": "sprint-3/issues-169-170-171",
+  "prNumber": null,
+  "status": "step-0-complete",
+  "currentStep": 0,
+  "completedSteps": [],
+  "issues_detail": {
+    "169": {
+      "title": "Add HNSW index corruption detection and auto-rebuild",
+      "state": "OPEN",
+      "labels": ["enhancement", "medium-priority", "robustness", "Sprint 3"],
+      "references": "Gap #7, Section 4.3",
+      "estimatedHours": "6-8",
+      "acceptanceCriteria": [
+        "Add metadata file with index checksum tracking",
+        "Implement checksum verification on index load",
+        "Auto-detect corruption and prompt for rebuild",
+        "Provide --rebuild-index CLI command",
+        "Add corruption detection tests",
+        "Document rebuild process in user guide",
+        "Ensure rebuild preserves SQLite storage integrity"
+      ]
+    },
+    "170": {
+      "title": "Add MCP server configuration section to config.json",
+      "state": "OPEN",
+      "labels": ["enhancement", "medium-priority", "Sprint 3", "configuration"],
+      "references": "Gap #9, Section 7.1",
+      "estimatedHours": "2-3",
+      "acceptanceCriteria": [
+        "Add mcp section to ConfigSchema",
+        "Support port configuration (default: 3000)",
+        "Support autoStart flag for VS Code extension",
+        "Update example config.json file",
+        "Add tests for MCP config validation",
+        "Document MCP configuration options"
+      ]
+    },
+    "171": {
+      "title": "Implement XDG Base Directory and user config support",
+      "state": "OPEN",
+      "labels": ["enhancement", "medium-priority", "Sprint 3", "configuration"],
+      "references": "Gap #10, Section 7.2",
+      "estimatedHours": "2-4",
+      "acceptanceCriteria": [
+        "Implement XDG Base Directory path resolution",
+        "Support $XDG_CONFIG_HOME/.config/ast-copilot-helper/config.json",
+        "Add config file discovery hierarchy (workspace > user > default)",
+        "Add --user-config flag to specify custom config path",
+        "Add tests for config discovery",
+        "Document user config in README"
+      ]
+    },
+    "172": {
+      "title": "Measure performance benchmarks and update specification",
+      "state": "OPEN",
+      "labels": ["performance", "validation", "Sprint 4"],
+      "references": "Gap #5, Section 9.1",
+      "estimatedHours": "8-12",
+      "note": "Related but different sprint - discovered during relationship analysis"
+    }
+  },
+  "acceptanceCriteria": {
+    "169": 7,
+    "170": 6,
+    "171": 6
+  },
+  "totalAcceptanceCriteria": 19,
+  "estimatedEffort": "10-15 hours combined",
+  "dependencies": {
+    "shared": [
+      "packages/ast-helper/src/config/schema.ts",
+      "packages/ast-helper/src/database/vector/hnsw-database.ts"
+    ],
+    "169": [
+      "packages/ast-helper/src/database/vector/hnsw-database.ts",
+      "packages/ast-helper/src/database/vector/types.ts",
+      "New: packages/ast-helper/src/database/vector/corruption-detector.ts"
+    ],
+    "170": [
+      "packages/ast-helper/src/config/schema.ts",
+      "packages/ast-helper/src/config/manager.ts",
+      "examples/config.json"
+    ],
+    "171": [
+      "packages/ast-helper/src/config/manager.ts",
+      "packages/ast-helper/src/config/xdg-paths.ts (new)",
+      "packages/ast-helper/src/cli.ts"
+    ]
+  },
+  "existingWorkFound": {
+    "branches": [],
+    "prs": [],
+    "partialImplementations": {
+      "169": {
+        "rebuild_method": "packages/ast-helper/src/database/vector/hnsw-database.ts:460-497",
+        "buildTime_tracking": "packages/ast-helper/src/database/vector/hnsw-database.ts:35,143",
+        "note": "Rebuild infrastructure exists, needs corruption detection layer"
+      },
+      "170": {
+        "schema_file": "packages/ast-helper/src/config/schema.ts",
+        "note": "Schema exists but MCP section not yet added"
+      },
+      "171": {
+        "config_manager": "packages/ast-helper/src/config/manager.ts",
+        "note": "Config manager exists, needs XDG path resolution"
+      }
+    }
+  },
+  "verificationResults": {
+    "no_conflicting_work": true,
+    "no_existing_prs": true,
+    "codebase_has_foundations": true,
+    "all_issues_fetched": true,
+    "relationships_discovered": true
+  },
+  "implementationStrategy": {
+    "approach": "network",
+    "reasoning": "Issues 170 and 171 both modify config system, issue 169 is independent but all are Sprint 3",
+    "order": ["170", "171", "169"],
+    "rationale": "Start with config foundation (170), add XDG paths (171), then HNSW corruption detection (169)"
+  },
+  "checkpoints": {
+    "step0_complete": true,
+    "step0_verification": {
+      "session_tracking_created": true,
+      "issues_fetched": true,
+      "relationships_mapped": true,
+      "existing_work_checked": true,
+      "acceptance_criteria_extracted": true,
+      "codebase_analyzed": true
+    }
+  },
+  "metadata": {
+    "repository": "EvanDodds/ast-copilot-helper",
+    "mainBranch": "main",
+    "currentBranch": "issue-165/migrate-annotations-to-sqlite",
+    "workflowVersion": "2.0",
+    "createdBy": "GitHub Copilot Coding Agent"
+  }
+}

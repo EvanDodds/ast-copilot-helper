@@ -228,6 +228,12 @@ export class AstHelperCli {
       .version(this.getVersion())
       .addOption(new Option("--config <path>", "Configuration file path"))
       .addOption(
+        new Option(
+          "--user-config <path>",
+          "User configuration file path (overrides XDG default)",
+        ),
+      )
+      .addOption(
         new Option("--workspace <path>", "Workspace directory").default(
           process.cwd(),
         ),
@@ -548,6 +554,19 @@ export class AstHelperCli {
       )
       .action(async (intent: string, options: QueryOptions) => {
         await this.executeCommand("query", { ...options, intent });
+      });
+
+    // rebuild-index - Force rebuild of HNSW vector index
+    this.program
+      .command("rebuild-index")
+      .description("Force rebuild of HNSW vector index")
+      .addOption(
+        new Option("--output-dir <path>", "Database output directory").default(
+          ".astdb",
+        ),
+      )
+      .action(async (options: { outputDir: string }) => {
+        await this.executeCommand("rebuild-index", options);
       });
   }
 
@@ -1280,6 +1299,12 @@ export class AstHelperCli {
       case "query": {
         return new QueryCommandHandler();
       }
+      case "rebuild-index": {
+        const { RebuildIndexCommandHandler } = await import(
+          "./commands/rebuild-index.js"
+        );
+        return new RebuildIndexCommandHandler();
+      }
       case "watch": {
         return new WatchCommandHandler();
       }
@@ -1483,6 +1508,7 @@ export class AstHelperCli {
       this.config = await this.configManager.loadConfig(
         workspacePath,
         cliOptions,
+        cliOptions.userConfig,
       );
     } catch (error) {
       throw ConfigurationErrors.loadFailed(

@@ -66,7 +66,10 @@ describe("Configuration Manager", () => {
     it("should load configuration with default values", async () => {
       const result = await configManager.loadConfig("/test/workspace");
 
-      expect(mockLoadConfigFiles).toHaveBeenCalledWith("/test/workspace");
+      expect(mockLoadConfigFiles).toHaveBeenCalledWith(
+        "/test/workspace",
+        undefined,
+      );
       expect(mockParseEnvironmentConfig).toHaveBeenCalled();
       expect(mockParseCliArgs).toHaveBeenCalledWith({});
       expect(mockValidateConfig).toHaveBeenCalled();
@@ -107,7 +110,10 @@ describe("Configuration Manager", () => {
 
       await configManager.loadConfig("/test/workspace");
 
-      expect(mockLoadConfigFiles).toHaveBeenCalledWith("/test/workspace");
+      expect(mockLoadConfigFiles).toHaveBeenCalledWith(
+        "/test/workspace",
+        undefined,
+      );
       expect(mockValidateConfig).toHaveBeenCalledWith(
         expect.objectContaining({
           topK: 20,

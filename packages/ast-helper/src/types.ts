@@ -108,6 +108,14 @@ export interface Config {
     cacheDir?: string;
   };
 
+  /** MCP (Model Context Protocol) server configuration */
+  mcp?: {
+    /** MCP server port (1024-65535) */
+    port: number;
+    /** Auto-start MCP server with CLI */
+    autoStart: boolean;
+  };
+
   /** CLI-specific logging options */
   verbose?: boolean;
   debug?: boolean;
@@ -162,6 +170,10 @@ export type PartialConfig = Partial<{
     enableCompression: boolean;
     cacheDir: string;
   }>;
+  mcp: Partial<{
+    port: number;
+    autoStart: boolean;
+  }>;
   verbose: boolean;
   debug: boolean;
   jsonLogs: boolean;
@@ -173,6 +185,7 @@ export type PartialConfig = Partial<{
  */
 export interface CliArgs {
   config?: string;
+  "user-config"?: string;
   "top-k"?: number;
   "batch-size"?: number;
   "snippet-lines"?: number;
@@ -189,6 +202,7 @@ export interface CliArgs {
   parseGlob?: string[];
   watchGlob?: string[];
   topK?: number;
+  userConfig?: string;
   watch?: boolean;
   verbose?: boolean;
   debug?: boolean;
