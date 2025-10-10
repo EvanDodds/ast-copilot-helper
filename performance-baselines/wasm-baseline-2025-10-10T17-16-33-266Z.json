@@ -1,13 +1,13 @@
 {
   "version": "1.5.0",
-  "timestamp": "2025-10-10T17:16:33.265Z",
+  "timestamp": "2025-10-01T14:01:34.528Z",
   "environment": {
     "nodeVersion": "v24.9.0",
     "platform": "linux",
     "arch": "x64",
-    "ci": true,
-    "cpus": 4,
-    "memory": 16772579328
+    "ci": false,
+    "cpus": 24,
+    "memory": 33611206656
   },
   "configuration": {
     "vectorCount": 1000,
