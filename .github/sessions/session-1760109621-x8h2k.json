@@ -1,0 +1,297 @@
+{
+  "sessionId": "session-1760109621-x8h2k",
+  "timestamp": "2025-10-10T14:00:21Z",
+  "issues": [183],
+  "repoOwner": "EvanDodds",
+  "repoName": "ast-copilot-helper",
+  "mainBranch": "main",
+  "currentStep": "0.complete",
+  "status": "analysis-complete",
+  "issueNetwork": {
+    "primary": [183],
+    "related": [182, 179, 180, 181, 172],
+    "relationships": {
+      "182": "parent-completed-pr",
+      "179": "grandchild-completed",
+      "180": "grandchild-completed",
+      "181": "grandchild-completed",
+      "172": "ancestor-completed"
+    }
+  },
+  "issueDetails": {
+    "183": {
+      "title": "Performance Optimization Roadmap: Deferred Enhancements from PR #182",
+      "state": "open",
+      "type": "roadmap-implementation",
+      "labels": [
+        "performance",
+        "optimization",
+        "enhancement",
+        "roadmap",
+        "documentation"
+      ],
+      "context": "Tracks 22 deferred performance optimizations from PR #182. This is a ROADMAP issue - not all items will be implemented, only Phase 1 quick wins.",
+      "created": "2025-10-10T13:53:52Z",
+      "comments": 0
+    }
+  },
+  "acceptanceCriteria": [
+    {
+      "id": 1,
+      "category": "Test Suite Performance",
+      "text": "Implement parallel test execution in Vitest (1.1)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "2-4h",
+      "benefit": "40-60% faster tests",
+      "risk": "low",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 2,
+      "category": "Test Suite Performance",
+      "text": "Implement selective test execution based on changed files (1.2)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "4-6h",
+      "benefit": "Skip irrelevant tests",
+      "risk": "medium",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 3,
+      "category": "Test Suite Performance",
+      "text": "Add test cache warming step (1.3)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "1-2h",
+      "benefit": "20-30% faster repeat runs",
+      "risk": "low",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 4,
+      "category": "Rust Build",
+      "text": "Enable incremental compilation consistently (2.1)",
+      "source": 183,
+      "priority": "high",
+      "effort": "30min",
+      "benefit": "30-50% faster rebuilds",
+      "risk": "very-low",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 5,
+      "category": "Rust Build",
+      "text": "Integrate sccache for cross-branch caching (2.2)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "2-3h",
+      "benefit": "40-70% faster branch switches",
+      "risk": "low",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 6,
+      "category": "Rust Build",
+      "text": "Split test vs build targets for clippy (2.3)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "1h",
+      "benefit": "Faster pre-commit clippy",
+      "risk": "low",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 7,
+      "category": "ESLint Performance",
+      "text": "Fix lint-staged to lint only staged files (3.1)",
+      "source": 183,
+      "priority": "high",
+      "effort": "1-2h",
+      "benefit": "70-90% faster linting",
+      "risk": "very-low",
+      "existingStatus": "broken"
+    },
+    {
+      "id": 8,
+      "category": "ESLint Performance",
+      "text": "Verify ESLint cache persistence (3.2)",
+      "source": 183,
+      "priority": "high",
+      "effort": "30min",
+      "benefit": "40-60% faster subsequent linting",
+      "risk": "very-low",
+      "existingStatus": "unknown"
+    },
+    {
+      "id": 9,
+      "category": "ESLint Performance",
+      "text": "Profile and optimize slow ESLint rules (3.3)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "2-3h",
+      "benefit": "10-30% faster linting",
+      "risk": "low",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 10,
+      "category": "TypeScript Build",
+      "text": "Optimize project references (4.1)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "3-4h",
+      "benefit": "20-40% faster incremental builds",
+      "risk": "medium",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 11,
+      "category": "TypeScript Build",
+      "text": "Enforce type-only imports (4.2)",
+      "source": 183,
+      "priority": "lower",
+      "effort": "2-3h",
+      "benefit": "Smaller bundles, faster type checking",
+      "risk": "low",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 12,
+      "category": "TypeScript Build",
+      "text": "Integrate swc for type checking (4.3)",
+      "source": 183,
+      "priority": "lower",
+      "effort": "4-6h",
+      "benefit": "10-20x faster type checking",
+      "risk": "medium",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 13,
+      "category": "CI/CD Pipeline",
+      "text": "Optimize dependency caching (5.1)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "2-3h",
+      "benefit": "50-80% faster CI runs",
+      "risk": "low",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 14,
+      "category": "CI/CD Pipeline",
+      "text": "Add parallel CI jobs (5.2)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "2-3h",
+      "benefit": "30-50% faster overall CI",
+      "risk": "low",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 15,
+      "category": "CI/CD Pipeline",
+      "text": "Add conditional job execution based on file paths (5.3)",
+      "source": 183,
+      "priority": "high",
+      "effort": "1-2h",
+      "benefit": "Save CI minutes for doc-only changes",
+      "risk": "very-low",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 16,
+      "category": "Documentation Build",
+      "text": "Implement incremental documentation builds (6.1)",
+      "source": 183,
+      "priority": "lower",
+      "effort": "4-8h",
+      "benefit": "80-95% faster doc builds",
+      "risk": "medium",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 17,
+      "category": "Documentation Build",
+      "text": "Add parallel documentation processing (6.2)",
+      "source": 183,
+      "priority": "lower",
+      "effort": "3-4h",
+      "benefit": "40-60% faster full doc builds",
+      "risk": "low",
+      "existingStatus": "not-started"
+    },
+    {
+      "id": 18,
+      "category": "Pre-commit Hooks",
+      "text": "Add smart hook selection based on file types (7.1)",
+      "source": 183,
+      "priority": "medium",
+      "effort": "1-2h",
+      "benefit": "Skip irrelevant validations",
+      "risk": "very-low",
+      "existingStatus": "partial"
+    },
+    {
+      "id": 19,
+      "category": "Pre-commit Hooks",
+      "text": "Implement validation result caching (7.3)",
+      "source": 183,
+      "priority": "lower",
+      "effort": "4-6h",
+      "benefit": "60-80% faster on cached files",
+      "risk": "medium",
+      "existingStatus": "not-started"
+    }
+  ],
+  "existingWork": {
+    "complete": [
+      "Pre-commit hooks established (.husky/pre-commit)",
+      "Vitest configuration for precommit/prepush",
+      "Rust validation in pre-commit (cargo check, clippy, fmt)",
+      "Type checking in pre-commit",
+      "CI pipeline with multiple jobs (.github/workflows/ci.yml)",
+      "ESLint configuration (eslint.config.js)",
+      "Build caching in CI (TypeScript build cache)"
+    ],
+    "partial": [
+      "Smart hook selection - Rust validation only runs if .rs files changed",
+      "Dependency caching - TypeScript build cache exists",
+      "Parallel CI jobs - Some jobs run in parallel, not optimal",
+      "Incremental compilation - Not consistently enabled for Rust"
+    ],
+    "broken": [
+      "lint-staged - Pre-commit hook reports 'could not find any staged files matching configured tasks'"
+    ],
+    "not-started": [
+      "Parallel test execution in Vitest",
+      "Selective test execution based on changed files",
+      "Test cache warming",
+      "sccache integration for Rust",
+      "Split clippy targets (lib vs all-targets)",
+      "ESLint rule profiling",
+      "Project references optimization",
+      "Type-only imports enforcement",
+      "swc integration",
+      "Conditional CI job execution",
+      "Incremental documentation builds",
+      "Parallel documentation processing",
+      "Validation result caching"
+    ]
+  },
+  "strategy": "hybrid",
+  "implementationApproach": "This is a ROADMAP issue. We will implement only Phase 1 'Quick Wins' (items 1-4 from priority list). The issue body explicitly states this is for tracking 22 opportunities, not implementing all of them. We'll create comprehensive documentation of the roadmap and implement the highest-value, lowest-risk improvements.",
+  "scopeDecision": {
+    "phaseToImplement": "Phase 1 - Quick Wins",
+    "itemsToImplement": [
+      "3.1 - Staged Files Only Linting (BROKEN, CRITICAL)",
+      "2.1 - Incremental Compilation (EASY FIX)",
+      "3.2 - ESLint Cache Optimization (QUICK VERIFICATION)",
+      "5.3 - Conditional CI Jobs (EASY, SAVES RESOURCES)"
+    ],
+    "itemsToDefer": "All other items remain as roadmap documentation for future work",
+    "rationale": "Issue explicitly describes this as a 'roadmap' for 'deferred' optimizations. Phase 1 represents immediate ROI with minimal effort (4-6h total). Other phases remain documented for future implementation."
+  }
+}
