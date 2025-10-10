@@ -32,7 +32,7 @@ clap = { version = "4.5", features = ["derive"], optional = true }
 serde_yaml = { version = "0.9", optional = true }
 
 # Database and storage (WASM-compatible)
-sqlx = { version = "0.8", features = ["sqlite", "chrono", "uuid"], default-features = false, optional = true }
+sqlx = { version = "0.8", features = ["sqlite", "chrono", "uuid", "runtime-tokio"], default-features = false, optional = true }
 
 # Concurrent data structures and sync
 dashmap = "6.1"

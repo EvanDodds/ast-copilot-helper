@@ -359,7 +359,7 @@ mod tests {
     #[test]
     fn test_all_languages() {
         let languages = SupportedLanguage::all();
-        assert_eq!(languages.len(), 9);
+        assert_eq!(languages.len(), 15);
         assert!(languages.contains(&SupportedLanguage::JavaScript));
         assert!(languages.contains(&SupportedLanguage::TypeScript));
         assert!(languages.contains(&SupportedLanguage::Python));
@@ -369,5 +369,11 @@ mod tests {
         assert!(languages.contains(&SupportedLanguage::C));
         assert!(languages.contains(&SupportedLanguage::CSharp));
         assert!(languages.contains(&SupportedLanguage::Go));
+        assert!(languages.contains(&SupportedLanguage::Ruby));
+        assert!(languages.contains(&SupportedLanguage::Php));
+        assert!(languages.contains(&SupportedLanguage::Kotlin));
+        assert!(languages.contains(&SupportedLanguage::Swift));
+        assert!(languages.contains(&SupportedLanguage::Scala));
+        assert!(languages.contains(&SupportedLanguage::Bash));
     }
 }
