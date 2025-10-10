@@ -394,10 +394,16 @@ mod tests {
     use super::*;
     use crate::types::Point;
 
-    fn create_test_node(node_type: &str, text: &str, children: Vec<ASTNode>) -> ASTNode {
+    fn create_test_node(node_type: &str, text: &str, children: Vec<String>) -> ASTNode {
         ASTNode {
+            id: format!("test-{}-{}", node_type, text),
             node_type: node_type.to_string(),
+            start_byte: 0,
+            end_byte: text.len() as u32,
             text: text.to_string(),
+            language: "test".to_string(),
+            complexity: 1,
+            parent_id: None,
             start_point: Point { row: 0, column: 0 },
             end_point: Point {
                 row: 0,
@@ -421,7 +427,7 @@ mod tests {
 
         assert_eq!(metrics.cyclomatic, 1);
         assert_eq!(metrics.decision_points, 0); // No children parsed in this test
-        assert!(metrics.breakdown.len() >= 0);
+                                                // breakdown is always a valid Vec, no need to assert >= 0
     }
 
     #[test]
@@ -429,10 +435,11 @@ mod tests {
         let analyzer = ComplexityAnalyzer::new();
 
         let if_child = create_test_node("if_statement", "if (x > 0)", vec![]);
+        let if_child_id = if_child.id.clone();
         let node = create_test_node(
             "function_declaration",
             "function test() { if (x > 0) return x; }",
-            vec![if_child],
+            vec![if_child_id],
         );
 
         let metrics = analyzer.analyze_node(&node, "");

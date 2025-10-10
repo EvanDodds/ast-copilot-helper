@@ -326,7 +326,7 @@ mod tests {
     #[test]
     fn test_supported_languages() {
         let languages = RustParser::supported_languages();
-        assert!(languages.len() > 0);
+        assert!(!languages.is_empty());
         assert!(languages.contains(&SupportedLanguage::JavaScript));
         assert!(languages.contains(&SupportedLanguage::Python));
     }

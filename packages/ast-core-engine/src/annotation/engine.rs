@@ -326,8 +326,14 @@ mod tests {
 
     fn create_test_node(node_type: &str, text: &str) -> ASTNode {
         ASTNode {
+            id: format!("test-{}-{}", node_type, text),
             node_type: node_type.to_string(),
+            start_byte: 0,
+            end_byte: text.len() as u32,
             text: text.to_string(),
+            language: "test".to_string(),
+            complexity: 1,
+            parent_id: None,
             start_point: Point { row: 0, column: 0 },
             end_point: Point {
                 row: 0,

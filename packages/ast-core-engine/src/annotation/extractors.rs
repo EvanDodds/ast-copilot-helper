@@ -114,10 +114,10 @@ impl LanguageExtractor for TypeScriptExtractor {
         // Match: import X from 'module'
         // Match: import * as X from 'module'
         // Match: require('module')
-        
+
         for line in text.lines() {
             let line = line.trim();
-            
+
             // ES6 imports: import ... from "module"
             if line.starts_with("import ") {
                 if let Some(from_pos) = line.find(" from ") {
@@ -127,7 +127,7 @@ impl LanguageExtractor for TypeScriptExtractor {
                     }
                 }
             }
-            
+
             // CommonJS require: require("module")
             if let Some(req_pos) = line.find("require(") {
                 let after_req = &line[req_pos + 8..];
@@ -135,7 +135,7 @@ impl LanguageExtractor for TypeScriptExtractor {
                     dependencies.push(module);
                 }
             }
-            
+
             // Dynamic imports: import("module")
             if let Some(imp_pos) = line.find("import(") {
                 let after_imp = &line[imp_pos + 7..];
@@ -148,7 +148,7 @@ impl LanguageExtractor for TypeScriptExtractor {
         // Remove duplicates while preserving order
         let mut seen = std::collections::HashSet::new();
         dependencies.retain(|dep| seen.insert(dep.clone()));
-        
+
         dependencies
     }
 
@@ -176,39 +176,44 @@ impl LanguageExtractor for TypeScriptExtractor {
 
         // Match function calls: functionName(...) or object.method(...)
         // We'll use a simple regex-like pattern matching approach
-        
+
         for line in text.lines() {
             let line = line.trim();
-            
+
             // Skip comments and imports
             if line.starts_with("//") || line.starts_with("/*") || line.starts_with("import ") {
                 continue;
             }
-            
+
             // Extract function calls using simple pattern matching
             let chars: Vec<char> = line.chars().collect();
             let mut i = 0;
-            
+
             while i < chars.len() {
                 // Look for identifier followed by '('
                 if chars[i].is_alphabetic() || chars[i] == '_' || chars[i] == '$' {
                     let start = i;
-                    
+
                     // Collect identifier (including dots for method calls)
-                    while i < chars.len() && (chars[i].is_alphanumeric() || chars[i] == '_' || chars[i] == '$' || chars[i] == '.') {
+                    while i < chars.len()
+                        && (chars[i].is_alphanumeric()
+                            || chars[i] == '_'
+                            || chars[i] == '$'
+                            || chars[i] == '.')
+                    {
                         i += 1;
                     }
-                    
+
                     // Skip whitespace
                     while i < chars.len() && chars[i].is_whitespace() {
                         i += 1;
                     }
-                    
+
                     // Check if followed by '(' (indicating a function call)
                     if i < chars.len() && chars[i] == '(' {
                         let call_expr: String = chars[start..i].iter().collect();
                         let call_expr = call_expr.trim();
-                        
+
                         // Filter out keywords and special cases
                         if !is_keyword(call_expr) && !call_expr.is_empty() {
                             calls.push(call_expr.to_string());
@@ -224,7 +229,7 @@ impl LanguageExtractor for TypeScriptExtractor {
         // Remove duplicates while preserving order
         let mut seen = std::collections::HashSet::new();
         calls.retain(|call| seen.insert(call.clone()));
-        
+
         calls
     }
 
@@ -928,28 +933,28 @@ fn parse_rust_parameter(param_str: &str) -> (String, Option<String>, Option<Stri
 fn extract_module_name(text: &str) -> Option<String> {
     // Remove quotes and extract module name
     let text = text.trim();
-    
+
     // Handle single quotes
     if let Some(start) = text.find('\'') {
         if let Some(end) = text[start + 1..].find('\'') {
             return Some(text[start + 1..start + 1 + end].to_string());
         }
     }
-    
+
     // Handle double quotes
     if let Some(start) = text.find('"') {
         if let Some(end) = text[start + 1..].find('"') {
             return Some(text[start + 1..start + 1 + end].to_string());
         }
     }
-    
+
     // Handle backticks (template strings)
     if let Some(start) = text.find('`') {
         if let Some(end) = text[start + 1..].find('`') {
             return Some(text[start + 1..start + 1 + end].to_string());
         }
     }
-    
+
     None
 }
 
@@ -957,10 +962,37 @@ fn extract_module_name(text: &str) -> Option<String> {
 fn is_keyword(text: &str) -> bool {
     matches!(
         text,
-        "if" | "else" | "for" | "while" | "do" | "switch" | "case" | "break" | "continue"
-        | "return" | "throw" | "try" | "catch" | "finally" | "function" | "class" | "const"
-        | "let" | "var" | "import" | "export" | "default" | "new" | "typeof" | "instanceof"
-        | "delete" | "void" | "yield" | "await" | "async" | "static" | "get" | "set"
+        "if" | "else"
+            | "for"
+            | "while"
+            | "do"
+            | "switch"
+            | "case"
+            | "break"
+            | "continue"
+            | "return"
+            | "throw"
+            | "try"
+            | "catch"
+            | "finally"
+            | "function"
+            | "class"
+            | "const"
+            | "let"
+            | "var"
+            | "import"
+            | "export"
+            | "default"
+            | "new"
+            | "typeof"
+            | "instanceof"
+            | "delete"
+            | "void"
+            | "yield"
+            | "await"
+            | "async"
+            | "static"
+            | "get"
+            | "set"
     )
 }
-
