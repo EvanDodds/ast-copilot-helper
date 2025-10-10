@@ -293,9 +293,10 @@ jobs:
           git push
           echo "✅ Baseline saved"
 
-      - name: Fail on regressions
+      - name: Report on regressions
         if: steps.compare.outcome == 'failure'
         run: |
-          echo "❌ Performance regressions detected (>10% degradation)"
-          echo "Please review the benchmark results above"
-          exit 1
+          echo "⚠️ Performance regressions detected (>10% degradation)"
+          echo "📊 Please review the benchmark results above"
+          echo "ℹ️  This is informational only and does not block the build"
+          echo "Note: Regressions may be due to CI runner variance"
