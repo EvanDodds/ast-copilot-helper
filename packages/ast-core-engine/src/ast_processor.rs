@@ -340,33 +340,47 @@ impl AstProcessor {
         files: Vec<(String, String, SupportedLanguage)>, // (content, path, language)
         options: ProcessingOptions,
     ) -> Result<Vec<AstProcessingResult>, EngineError> {
-        use tokio::task::spawn_blocking;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use tokio::task::spawn_blocking;
 
-        let mut tasks = Vec::new();
+            let mut tasks = Vec::new();
 
-        for (content, path, language) in files {
-            let processor_clone = self.clone();
-            let options_clone = options.clone();
+            for (content, path, language) in files {
+                let processor_clone = self.clone();
+                let options_clone = options.clone();
 
-            let task = spawn_blocking(move || {
-                processor_clone.parse_code(&content, language, &path, &options_clone)
-            });
+                let task = spawn_blocking(move || {
+                    processor_clone.parse_code(&content, language, &path, &options_clone)
+                });
 
-            tasks.push(task);
+                tasks.push(task);
+            }
+
+            let mut results = Vec::new();
+            for task in tasks {
+                let result = task.await.map_err(|e| {
+                    EngineError::ASTProcessing(ASTProcessingError::TreeSitter(format!(
+                        "Task join error: {}",
+                        e
+                    )))
+                })?;
+                results.push(result?);
+            }
+
+            Ok(results)
         }
 
-        let mut results = Vec::new();
-        for task in tasks {
-            let result = task.await.map_err(|e| {
-                EngineError::ASTProcessing(ASTProcessingError::TreeSitter(format!(
-                    "Task join error: {}",
-                    e
-                )))
-            })?;
-            results.push(result?);
+        #[cfg(target_arch = "wasm32")]
+        {
+            // In WASM, we can't use spawn_blocking, so process sequentially
+            let mut results = Vec::new();
+            for (content, path, language) in files {
+                let result = self.parse_code(&content, language, &path, &options)?;
+                results.push(result);
+            }
+            Ok(results)
         }
-
-        Ok(results)
     }
 
     /// Get engine statistics

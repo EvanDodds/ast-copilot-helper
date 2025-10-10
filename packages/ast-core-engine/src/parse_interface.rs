@@ -4,6 +4,8 @@ use crate::types::ProcessingOptions;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
+
+#[cfg(not(target_arch = "wasm32"))]
 use tokio::fs;
 
 /// High-level parsing interface for the Rust core engine
