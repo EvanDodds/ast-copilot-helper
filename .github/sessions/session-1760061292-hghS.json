@@ -4,8 +4,11 @@
   "repoOwner": "EvanDodds",
   "repoName": "ast-copilot-helper",
   "mainBranch": "main",
-  "currentStep": "0.5",
-  "status": "analysis-complete",
+  "currentStep": "2.in-progress",
+  "status": "issues-179-180-181-complete",
+  "branchName": "issues-179-180-181/performance-enhancements",
+  "prUrl": "https://github.com/EvanDodds/ast-copilot-helper/pull/182",
+  "prNumber": 182,
   "issueNetwork": {
     "primary": [179, 180, 181],
     "related": [172],
