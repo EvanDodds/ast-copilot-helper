@@ -1,4 +1,7 @@
-use crate::error::{ASTProcessingError, EngineError};
+#[cfg(feature = "full-system")]
+use crate::error::ASTProcessingError;
+use crate::error::EngineError;
+#[cfg(feature = "full-system")]
 use crate::language_config::LanguageConfig;
 use crate::types::ProcessingOptions;
 use dashmap::DashMap;
@@ -267,6 +270,7 @@ impl AstProcessor {
     }
 
     /// Check if a node type is significant for AST analysis
+    #[cfg(feature = "full-system")]
     fn is_significant_node_type(&self, node_type: &str) -> bool {
         matches!(
             node_type,
