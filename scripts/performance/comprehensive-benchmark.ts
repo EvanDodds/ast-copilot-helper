@@ -1015,7 +1015,7 @@ async function runAnnotationBenchmarks(config: BenchmarkConfig): Promise<{
   };
 }> {
   console.log("\n📝 Running Annotation Performance Benchmarks...");
-  const { MockLLMProvider } = await import("./mock-providers.js");
+  const { MockLLMProvider } = await import("./mock-providers.ts");
   const results: BenchmarkResult[] = [];
 
   const mockLLM = new MockLLMProvider();
@@ -1175,7 +1175,7 @@ async function runEmbeddingBenchmarks(config: BenchmarkConfig): Promise<{
   };
 }> {
   console.log("\n🔢 Running Embedding Performance Benchmarks...");
-  const { MockEmbeddingProvider } = await import("./mock-providers.js");
+  const { MockEmbeddingProvider } = await import("./mock-providers.ts");
   const results: BenchmarkResult[] = [];
 
   const mockEmbedding = new MockEmbeddingProvider();
@@ -1316,7 +1316,7 @@ async function runPipelineBenchmarks(
 ): Promise<BenchmarkResult[]> {
   console.log("\n🔄 Running End-to-End Pipeline Benchmarks...");
   const { MockLLMProvider, MockEmbeddingProvider } = await import(
-    "./mock-providers.js"
+    "./mock-providers.ts"
   );
   const results: BenchmarkResult[] = [];
 
