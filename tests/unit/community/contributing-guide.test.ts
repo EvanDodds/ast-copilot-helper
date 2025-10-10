@@ -1,25 +1,14 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import * as fs from "fs/promises";
-import * as fsSync from "fs";
 import * as path from "path";
 
 const CONTRIBUTING_PATH = path.join(__dirname, "../../../CONTRIBUTING.md");
 
-// Check if CONTRIBUTING.md exists (synchronously for describe.skipIf)
-const fileExists = fsSync.existsSync(CONTRIBUTING_PATH);
-
-// Skip all tests if CONTRIBUTING.md doesn't exist yet
-// TODO: Remove .skipIf once CONTRIBUTING.md is created
-describe.skipIf(!fileExists)("CONTRIBUTING.md", () => {
+describe("CONTRIBUTING.md", () => {
   let content: string;
 
   beforeAll(async () => {
-    try {
-      content = await fs.readFile(CONTRIBUTING_PATH, "utf-8");
-    } catch (error) {
-      console.warn("CONTRIBUTING.md not found:", (error as Error).message);
-      content = "";
-    }
+    content = await fs.readFile(CONTRIBUTING_PATH, "utf-8");
   });
 
   it("should exist", async () => {
