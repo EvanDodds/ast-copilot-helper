@@ -20,6 +20,7 @@ import { promises as fs } from "fs";
 import { join, dirname } from "path";
 import { execSync } from "child_process";
 import { performance } from "perf_hooks";
+import os from "os";
 
 // Types
 interface BenchmarkConfig {
@@ -230,10 +231,13 @@ async function runParsingBenchmarks(
     // Warmup
     for (let i = 0; i < config.warmup; i++) {
       try {
-        execSync(`node packages/ast-helper/bin/ast-helper parse ${op.file}`, {
-          stdio: "pipe",
-          encoding: "utf8",
-        });
+        execSync(
+          `node packages/ast-helper/bin/ast-helper parse --glob "${op.file}" --output json`,
+          {
+            stdio: "pipe",
+            encoding: "utf8",
+          },
+        );
       } catch (_error) {
         // Ignore warmup errors
       }
@@ -245,10 +249,13 @@ async function runParsingBenchmarks(
       const startTime = performance.now();
 
       try {
-        execSync(`node packages/ast-helper/bin/ast-helper parse ${op.file}`, {
-          stdio: "pipe",
-          encoding: "utf8",
-        });
+        execSync(
+          `node packages/ast-helper/bin/ast-helper parse --glob "${op.file}" --output json`,
+          {
+            stdio: "pipe",
+            encoding: "utf8",
+          },
+        );
       } catch (error) {
         console.error(`  ❌ Error in ${op.name}:`, error);
         continue;
@@ -503,8 +510,8 @@ async function main(): Promise<void> {
           nodeVersion: process.version,
           platform: process.platform,
           arch: process.arch,
-          cpus: require("os").cpus().length,
-          totalMemory: require("os").totalmem(),
+          cpus: os.cpus().length,
+          totalMemory: os.totalmem(),
         },
       },
       parsing: parsingResults,
