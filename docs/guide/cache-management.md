@@ -686,10 +686,10 @@ const analysis = await mcp.cache.analyze({ topQueries: 50 });
 
 ## Related Documentation
 
-- [Multi-Level Cache Architecture](./CACHE_ARCHITECTURE.md)
-- [Performance Monitoring](./PERFORMANCE_MONITORING.md)
-- [MCP Server Configuration](./MCP_CONFIGURATION.md)
-- [Query Processing](./QUERY_PROCESSING.md)
+- [Performance Optimization](./performance-optimization.md)
+- [Advanced Features](./advanced-features.md)
+- [MCP Integration](./mcp-integration.md)
+- [Getting Started](./getting-started.md)
 
 ## Support
 

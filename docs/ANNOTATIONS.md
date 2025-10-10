@@ -419,9 +419,9 @@ Planned features for the annotation system:
 ## Related Documentation
 
 - [Development Guide](../DEVELOPMENT.md) - General development setup
-- [Database Architecture](./DATABASE.md) - Main AST database documentation
 - [CLI Commands](../README.md#cli-commands) - Command-line interface reference
 - [Process Improvements](./development/process-improvements.md) - Code quality standards
+- [Annotation Performance](./ANNOTATION-PERFORMANCE.md) - Performance optimization guide
 
 ## Support
 

@@ -331,6 +331,6 @@ If cache is using too much memory:
 
 ## Related Documentation
 
-- [DEVELOPMENT.md](../DEVELOPMENT.md) - Overall development guide
+- [DEVELOPMENT.md](../../DEVELOPMENT.md) - Overall development guide
 - [manual-mcp-testing.md](../testing/manual-mcp-testing.md) - Manual testing procedures
 - [Query Cache Implementation](../../packages/ast-helper/src/cache/query-cache.ts) - Cache source code
