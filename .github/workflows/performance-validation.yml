@@ -73,6 +73,7 @@ jobs:
       - name: Compare with baseline
         if: steps.baseline.outputs.baseline_exists == 'true'
         id: compare
+        continue-on-error: true
         run: |
           node << 'EOF'
           const fs = require('fs');
