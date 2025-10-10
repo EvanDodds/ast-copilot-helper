@@ -77,7 +77,7 @@ jobs:
         id: init_astdb
         run: |
           echo "Initializing .astdb directory..."
-          yarn ast-helper init --force
+          node packages/ast-helper/bin/ast-helper init --force
           
           # Verify initialization
           if [ ! -d ".astdb" ]; then
@@ -92,7 +92,7 @@ jobs:
           echo "Parsing repository files..."
           
           # Parse all supported files
-          yarn ast-helper parse \
+          node packages/ast-helper/bin/ast-helper parse \
             --glob "**/*.{ts,js,py,java,cpp,c,go,rs,rb,php,cs}" \
             --batch-size 50
           
@@ -101,7 +101,7 @@ jobs:
       - name: Generate annotations
         run: |
           echo "Generating annotations..."
-          yarn ast-helper annotate --batch
+          node packages/ast-helper/bin/ast-helper annotate --batch
           echo "✅ Annotations generated"
           
       - name: Determine snapshot version
@@ -155,7 +155,7 @@ jobs:
           SNAPSHOT_FILE=".astdb-snapshot-${{ steps.version.outputs.version }}.tar.gz"
           
           # Create snapshot
-          yarn ast-helper snapshot create \
+          node packages/ast-helper/bin/ast-helper snapshot create \
             --version "${{ steps.version.outputs.version }}" \
             --description "${{ steps.description.outputs.description }}" \
             --tags "automated,ci,${{ github.event_name }}" \
@@ -190,7 +190,7 @@ jobs:
         run: |
           echo "Publishing snapshot to GitHub Releases..."
           
-          yarn ast-helper snapshot publish \
+          node packages/ast-helper/bin/ast-helper snapshot publish \
             "${{ steps.create.outputs.snapshot_file }}" \
             --verbose
           
@@ -221,15 +221,15 @@ jobs:
           #### Download and Restore:
           \`\`\`bash
           # Download snapshot
-          yarn ast-helper snapshot download ${{ steps.version.outputs.version }}
+          node packages/ast-helper/bin/ast-helper snapshot download ${{ steps.version.outputs.version }}
           
           # Restore to .astdb directory
-          yarn ast-helper snapshot restore .astdb-snapshot-${{ steps.version.outputs.version }}.tar.gz
+          node packages/ast-helper/bin/ast-helper snapshot restore .astdb-snapshot-${{ steps.version.outputs.version }}.tar.gz
           \`\`\`
           
           #### Or Use Workflow Artifact:
           - Download artifact from this workflow run
-          - Extract: \`yarn ast-helper snapshot restore <downloaded-file>\`
+          - Extract: \`node packages/ast-helper/bin/ast-helper snapshot restore <downloaded-file>\`
           
           ### Configuration
           
@@ -261,13 +261,13 @@ jobs:
           CUTOFF_DATE=$(date -d '7 days ago' +%Y%m%d 2>/dev/null || date -v-7d +%Y%m%d)
           
           # List and filter snapshots
-          yarn ast-helper snapshot list --location remote --json > snapshots.json
+          node packages/ast-helper/bin/ast-helper snapshot list --location remote --json > snapshots.json
           
           # Parse and delete old snapshots (requires jq)
           if command -v jq &> /dev/null; then
             jq -r ".remote[] | select(.metadata.tags | contains([\"automated\", \"ci\"])) | select(.metadata.version | startswith(\"nightly-\")) | select(.metadata.version | split(\"-\")[1] < \"${CUTOFF_DATE}\") | .id" snapshots.json | while read -r id; do
               echo "Deleting old snapshot: ${id}"
-              yarn ast-helper snapshot delete "${id}" --location remote --confirm
+              node packages/ast-helper/bin/ast-helper snapshot delete "${id}" --location remote --confirm
             done
             
             rm snapshots.json
