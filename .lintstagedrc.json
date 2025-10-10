@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/lintstagedrc.schema.json",
+  "*.{ts,tsx,js,jsx}": [
+    "npx prettier --write",
+    "eslint --fix --max-warnings 0 --quiet"
+  ],
+  "*.{json,md,yml,yaml}": ["npx prettier --write"],
+  "*.rs": ["rustfmt --edition 2021"]
+}
