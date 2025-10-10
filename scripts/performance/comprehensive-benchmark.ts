@@ -59,6 +59,19 @@ interface BenchmarkResult {
   iterations: number;
 }
 
+interface DatabaseSizeMetrics {
+  totalSizeMb: number;
+  totalSizeBytes: number;
+  bytesPerNode: number;
+  bytesPerLoc: number;
+  indexOverheadRatio: number;
+  breakdown?: {
+    databaseFile: number;
+    indexFile?: number;
+    otherFiles?: number;
+  };
+}
+
 interface ComprehensiveResults {
   metadata: {
     timestamp: string;
@@ -77,6 +90,7 @@ interface ComprehensiveResults {
   queries: BenchmarkResult[];
   concurrency: BenchmarkResult[];
   memory: BenchmarkResult[];
+  databaseSize?: DatabaseSizeMetrics;
   summary: {
     totalTests: number;
     passed: number;
@@ -189,6 +203,76 @@ function calculateStatistics(values: number[]): {
 async function ensureDirectory(filePath: string): Promise<void> {
   const dir = dirname(filePath);
   await fs.mkdir(dir, { recursive: true });
+}
+
+async function measureDatabaseSize(
+  config: BenchmarkConfig,
+): Promise<DatabaseSizeMetrics | undefined> {
+  try {
+    const workspaceDir = process.cwd();
+    const dbDir = join(workspaceDir, ".astdb");
+    const dbFile = join(dbDir, "index.db");
+    const dbShmFile = join(dbDir, "index.db-shm");
+    const dbWalFile = join(dbDir, "index.db-wal");
+
+    // Check if database exists
+    try {
+      await fs.access(dbFile);
+    } catch {
+      log("Database file not found, skipping size measurement", config.verbose);
+      return undefined;
+    }
+
+    // Get file sizes
+    const dbStat = await fs.stat(dbFile);
+    const dbSize = dbStat.size;
+
+    // Include WAL and shared memory files if they exist
+    let shmSize = 0;
+    let walSize = 0;
+    try {
+      const shmStat = await fs.stat(dbShmFile);
+      shmSize = shmStat.size;
+      const walStat = await fs.stat(dbWalFile);
+      walSize = walStat.size;
+    } catch {
+      // WAL files might not exist
+    }
+
+    const totalSize = dbSize + shmSize + walSize;
+
+    // Estimate node count and LOC from synthetic repository
+    // TypeScript: 1,412 LOC, ~177-235 nodes (avg 206)
+    // JavaScript: 1,139 LOC, ~142-190 nodes (avg 166)
+    // Python: 1,129 LOC, ~94-141 nodes (avg 118)
+    // Total: 3,680 LOC, ~490 nodes (estimated)
+    const estimatedNodes = 490;
+    const totalLoc = 3680;
+
+    const bytesPerNode = totalSize / estimatedNodes;
+    const bytesPerLoc = totalSize / totalLoc;
+
+    // Calculate index overhead (indexed data vs source data)
+    // Approximate source size: 3,680 LOC * ~50 bytes/line = ~184KB
+    const estimatedSourceSize = totalLoc * 50;
+    const indexOverheadRatio = totalSize / estimatedSourceSize;
+
+    return {
+      totalSizeMb: totalSize / (1024 * 1024),
+      totalSizeBytes: totalSize,
+      bytesPerNode,
+      bytesPerLoc,
+      indexOverheadRatio,
+      breakdown: {
+        databaseFile: dbSize,
+        indexFile: shmSize + walSize,
+        otherFiles: 0,
+      },
+    };
+  } catch (error) {
+    log(`Error measuring database size: ${error}`, config.verbose);
+    return undefined;
+  }
 }
 
 function getMemoryUsage() {
@@ -496,6 +580,26 @@ async function main(): Promise<void> {
     const concurrencyResults = await runConcurrencyBenchmarks(config);
     const memoryResults = await runMemoryBenchmarks(config);
 
+    // Measure database size
+    console.log("\n📦 Measuring Database Size...");
+    const databaseSize = await measureDatabaseSize(config);
+    if (databaseSize) {
+      console.log(
+        `  ✅ Database size: ${databaseSize.totalSizeMb.toFixed(2)} MB`,
+      );
+      console.log(
+        `     Bytes per node: ${databaseSize.bytesPerNode.toFixed(0)} bytes`,
+      );
+      console.log(
+        `     Bytes per LOC: ${databaseSize.bytesPerLoc.toFixed(0)} bytes`,
+      );
+      console.log(
+        `     Index overhead: ${databaseSize.indexOverheadRatio.toFixed(2)}x`,
+      );
+    } else {
+      console.log("  ⚠️  Database not found, skipping size measurement");
+    }
+
     const endTime = performance.now();
     const totalDuration = endTime - startTime;
 
@@ -518,6 +622,7 @@ async function main(): Promise<void> {
       queries: queryResults,
       concurrency: concurrencyResults,
       memory: memoryResults,
+      databaseSize,
       summary: {
         totalTests:
           parsingResults.length +
@@ -563,4 +668,5 @@ export {
   runQueryBenchmarks,
   runConcurrencyBenchmarks,
   runMemoryBenchmarks,
+  measureDatabaseSize,
 };

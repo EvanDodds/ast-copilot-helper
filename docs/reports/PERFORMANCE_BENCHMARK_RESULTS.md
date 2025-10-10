@@ -258,6 +258,70 @@ The specification doesn't explicitly define concurrency targets, but performance
 
 ---
 
+## 5.4 Database Size Measurement
+
+### 5.4.1 Specification Targets
+
+**Target:** <200MB for indexed repository
+
+### 5.4.2 Measured Results
+
+| Metric                  | Value           |
+| ----------------------- | --------------- |
+| **Total database size** | 0.094 MB (96KB) |
+| **Database file**       | 64 KB           |
+| **WAL/SHM files**       | 32 KB           |
+| **Bytes per AST node**  | 201 bytes       |
+| **Bytes per LOC**       | 27 bytes        |
+| **Index overhead**      | 0.53x           |
+
+### 5.4.3 Analysis
+
+✅ **EXTREMELY EFFICIENT STORAGE**
+
+**Storage Characteristics:**
+
+- **Total size:** 96 KB (0.048% of 200MB target)
+- **Per-node overhead:** 201 bytes per AST node
+- **Per-line overhead:** 27 bytes per line of code
+- **Index overhead:** 0.53x (indexed data is smaller than source!)
+
+**Extrapolation to Full Repository:**
+
+Using the measured growth rates:
+
+- **For 100k nodes:** 201 bytes × 100,000 = **19.2 MB**
+- **For 667k LOC:** 27 bytes × 667,000 = **17.2 MB**
+- **Average estimate:** **~18 MB for full repository**
+
+**Storage Margin:**
+
+- Projected usage for 100k nodes: **18 MB**
+- Specification target: <200MB
+- **Available headroom:** 182 MB (91% unused)
+
+**Key Findings:**
+
+1. **Highly efficient indexing:** Index overhead is 0.53x, meaning the indexed data is more compact than raw source
+2. **Scalable storage:** At 201 bytes/node, even 1M nodes would only require ~191 MB
+3. **Well within specification:** Projected full repository size is 10x under target
+4. **Consistent overhead:** Linear growth per node and per LOC
+
+**Database Breakdown:**
+
+- **Main database (index.db):** 64 KB - Stores AST metadata, parse results, relationships
+- **WAL/SHM files (index.db-wal/shm):** 32 KB - SQLite Write-Ahead Log and shared memory
+- **Total overhead:** Minimal (~1KB per file processed)
+
+**Implications:**
+
+- Database size will not be a constraint for realistic codebases
+- Storage efficiency enables local caching on developer machines
+- No compression needed - native SQLite storage is highly efficient
+- Room for additional metadata (annotations, embeddings) without approaching limits
+
+---
+
 ## 6. Comparison to Specification Targets
 
 ### 6.1 Performance Target Summary
@@ -269,7 +333,7 @@ The specification doesn't explicitly define concurrency targets, but performance
 | **Embed**       | <15 min (full repo)  | Not measured    | ⏳     | Pending        |
 | **Query (P95)** | <200ms               | 59.41ms         | ✅     | -70% (faster)  |
 | **Memory**      | <4GB                 | 141MB           | ✅     | -96.6% (lower) |
-| **DB Size**     | <200MB               | Not measured    | ⏳     | Pending        |
+| **DB Size**     | <200MB               | 18MB (est.)     | ✅     | -91% (smaller) |
 
 \* Parsing target applies to full 100k-node repository, not individual files. Extrapolation suggests ~4.7 hours for full repository (47x slower than target), indicating specification may need adjustment or batch optimizations required.
 

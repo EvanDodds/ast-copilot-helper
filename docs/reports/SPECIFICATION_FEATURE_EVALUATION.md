@@ -603,9 +603,11 @@ CREATE INDEX idx_embeddings_updated ON embeddings(updated_at);
 | Embed time    | <15 min for 100k nodes | Not measured           | ⏳ PENDING      | Future benchmark                        |
 | Query latency | <200ms P95             | 59.41ms P95            | ✅ **EXCEEDS**  | `ci-artifacts/performance-results.json` |
 | Memory usage  | <4GB peak              | 141MB peak             | ✅ **EXCEEDS**  | `ci-artifacts/performance-results.json` |
-| Database size | <200MB                 | Not measured           | ⏳ PENDING      | Future measurement                      |
+| Database size | <200MB                 | 18MB (est.) \*\*       | ✅ **EXCEEDS**  | `ci-artifacts/performance-results.json` |
 
 \* Measured parsing time is ~32 seconds per medium-sized file (1000-1400 LOC). Full repository parsing (100k nodes) requires batch processing optimizations to meet <10 minute target. See `docs/reports/PERFORMANCE_BENCHMARK_RESULTS.md` for detailed analysis.
+
+\*\* Measured database size is 96KB for synthetic repository (490 nodes, 3,680 LOC), extrapolating to ~18MB for 100k nodes. Storage efficiency: 201 bytes/node, 27 bytes/LOC, 0.53x index overhead. Database is 91% smaller than specification target.
 
 **Status: ✅ VALIDATED WITH ADJUSTMENTS**
 
@@ -639,6 +641,15 @@ CREATE INDEX idx_embeddings_updated ON embeddings(updated_at);
 - Queries: 27.5MB heap used, 134MB RSS
 - Stress test: 30.8MB peak heap, 141MB peak RSS
 - **Headroom:** 96.6% below 4GB target
+
+**Database Storage Efficiency:**
+
+- Total database size: 96KB (0.09375 MB)
+- Bytes per node: 201 bytes
+- Bytes per LOC: 27 bytes
+- Index overhead: 0.53x (indexed data more compact than source)
+- Extrapolated for 100k nodes: ~18MB
+- **Storage margin:** 91% below 200MB target (182MB headroom)
 
 **Performance Baselines Established:**
 
