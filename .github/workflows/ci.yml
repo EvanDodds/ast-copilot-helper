@@ -170,11 +170,10 @@ jobs:
       - name: Configure Yarn network settings
         run: |
           yarn config set httpTimeout 300000
-          yarn config set networkTimeout 300000
           echo "✅ Increased network timeouts to 300s"
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install --immutable --network-timeout 300000
 
       - name: Run security audit
         run: |
