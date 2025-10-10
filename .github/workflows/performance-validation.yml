@@ -51,7 +51,7 @@ jobs:
         id: benchmarks
         run: |
           echo "🚀 Running performance benchmarks..."
-          npx ts-node --esm scripts/performance/comprehensive-benchmark.ts \
+          npx tsx scripts/performance/comprehensive-benchmark.ts \
             --output ci-artifacts/performance-results-pr.json \
             --quick \
             --verbose
