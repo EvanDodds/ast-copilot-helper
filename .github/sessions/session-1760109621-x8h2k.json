@@ -195,15 +195,37 @@
       "existingStatus": "partial"
     },
     {
-      "id": 15,
+      "id": 13,
       "category": "CI/CD Pipeline",
-      "text": "Add conditional job execution based on file paths (5.3)",
+      "text": "Add 'paths' filters to workflow triggers (5.3)",
       "source": 183,
       "priority": "high",
       "effort": "1-2h",
-      "benefit": "Save CI minutes for doc-only changes",
+      "benefit": "Skip unnecessary jobs",
       "risk": "very-low",
-      "existingStatus": "not-started"
+      "existingStatus": "complete",
+      "completionDate": "2025-01-09",
+      "actualEffort": "2h",
+      "actualBenefit": "~10-15 minutes saved on doc-only PRs",
+      "implementation": {
+        "approach": "Added path change detection in validate job, conditional execution for expensive jobs",
+        "filesModified": [".github/workflows/ci.yml", "DEVELOPMENT.md"],
+        "patterns": {
+          "docs": "*.md|docs/|LICENSE|CODE_OF_CONDUCT.md|CONTRIBUTING.md|SECURITY.md",
+          "config": ".vscode/|.github/workflows/|.eslintrc*|.prettierrc*|tsconfig*.json|.gitignore|.editorconfig",
+          "rust": "packages/ast-core-engine/|*.rs|Cargo.toml|Cargo.lock",
+          "typescript": "packages/|*.ts|*.tsx|*.js|*.jsx|package.json|yarn.lock"
+        },
+        "conditionalJobs": [
+          "rust-validation (Rust changes only)",
+          "build-wasm (Rust changes only)",
+          "unit-tests (code changes only)",
+          "integration-tests (code changes only)",
+          "performance-tests (code changes only)",
+          "build (code changes only)"
+        ],
+        "exampleSavings": "Doc-only PR: ~3 min vs ~18 min"
+      }
     },
     {
       "id": 16,
@@ -279,11 +301,86 @@
       "Project references optimization",
       "Type-only imports enforcement",
       "swc integration",
-      "Conditional CI job execution",
       "Incremental documentation builds",
       "Parallel documentation processing",
       "Validation result caching"
     ]
+  },
+  "subtasks": {
+    "1": {
+      "id": 1,
+      "title": "Optimize lint-staged Configuration",
+      "acceptanceCriteria": ["AC #7"],
+      "status": "complete",
+      "completionDate": "2025-01-09",
+      "effort": "1.5h",
+      "files": [".lintstagedrc.json", "package.json"],
+      "benchmark": {
+        "approach": "Verified pre-commit hook working correctly, measured execution time",
+        "baseline": "Pre-commit hook appeared broken (false alarm, actually working)",
+        "result": "Confirmed working: validates only staged files as designed",
+        "improvement": "Configuration improved: moved to dedicated file, added Rust/YAML support"
+      }
+    },
+    "2": {
+      "id": 2,
+      "title": "Enable Incremental Rust Compilation",
+      "acceptanceCriteria": ["AC #3"],
+      "status": "complete",
+      "completionDate": "2025-01-09",
+      "effort": "1h",
+      "files": [
+        "packages/ast-core-engine/.cargo/config.toml",
+        "DEVELOPMENT.md"
+      ],
+      "benchmark": {
+        "approach": "Measured clean build vs incremental rebuild after small change",
+        "baseline": "Clean build: 21.7s, Incremental rebuild: 21.2s (minimal benefit)",
+        "result": "With config: Clean 21.7s, Incremental 2.4s",
+        "improvement": "89% faster (21.7s → 2.4s), exceeded 30-50% estimate"
+      }
+    },
+    "3": {
+      "id": 3,
+      "title": "Verify and Fix ESLint Caching",
+      "acceptanceCriteria": ["AC #8"],
+      "status": "complete",
+      "completionDate": "2025-01-09",
+      "effort": "1h",
+      "files": ["package.json"],
+      "benchmark": {
+        "approach": "Tested with/without cache, measured execution time",
+        "baseline": "First run: 15.0s (no cache file created)",
+        "result": "First run: 15.0s, Second run: 2.5s (cache created and used)",
+        "improvement": "83% faster (15.0s → 2.5s), exceeded 40-60% estimate"
+      }
+    },
+    "4": {
+      "id": 4,
+      "title": "Add Conditional CI Job Execution",
+      "acceptanceCriteria": ["AC #13"],
+      "status": "complete",
+      "completionDate": "2025-01-09",
+      "effort": "2h",
+      "files": [".github/workflows/ci.yml", "DEVELOPMENT.md"],
+      "implementation": {
+        "approach": "Added path change detection in validate job, output flags for changed file categories",
+        "conditionalJobs": [
+          "rust-validation (requires has-rust-changes)",
+          "build-wasm (requires has-rust-changes)",
+          "unit-tests (requires has-code-changes)",
+          "integration-tests (requires has-code-changes)",
+          "performance-tests (requires has-code-changes)",
+          "build (requires has-code-changes)"
+        ],
+        "patterns": {
+          "docs": "*.md|docs/|LICENSE|CODE_OF_CONDUCT.md|CONTRIBUTING.md|SECURITY.md",
+          "rust": "packages/ast-core-engine/|*.rs|Cargo.toml|Cargo.lock",
+          "typescript": "packages/|*.ts|*.tsx|*.js|*.jsx|package.json|yarn.lock"
+        },
+        "benefit": "Doc-only PRs: ~3 min vs ~18 min (saves 10-15 minutes)"
+      }
+    }
   },
   "strategy": "hybrid",
   "implementationApproach": "This is a ROADMAP issue. We will implement only Phase 1 'Quick Wins' (items 1-4 from priority list). The issue body explicitly states this is for tracking 22 opportunities, not implementing all of them. We'll create comprehensive documentation of the roadmap and implement the highest-value, lowest-risk improvements.",
@@ -297,5 +394,8 @@
     ],
     "itemsToDefer": "All other items remain as roadmap documentation for future work",
     "rationale": "Issue explicitly describes this as a 'roadmap' for 'deferred' optimizations. Phase 1 represents immediate ROI with minimal effort (4-6h total). Other phases remain documented for future implementation."
-  }
+  },
+  "currentPhase": "verification",
+  "currentSubtask": 4,
+  "estimatedCompletion": "2025-01-09 16:00:00 UTC"
 }

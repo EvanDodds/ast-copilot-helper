@@ -51,6 +51,10 @@ jobs:
       is-main-push: ${{ steps.context.outputs.is-main-push }}
       is-release: ${{ steps.context.outputs.is-release }}
       is-pr: ${{ steps.context.outputs.is-pr }}
+      has-code-changes: ${{ steps.path-changes.outputs.has-code-changes }}
+      has-rust-changes: ${{ steps.path-changes.outputs.has-rust-changes }}
+      has-ts-changes: ${{ steps.path-changes.outputs.has-ts-changes }}
+      is-docs-only: ${{ steps.path-changes.outputs.is-docs-only }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -150,6 +154,54 @@ jobs:
             echo "should-run=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check for path-specific changes
+        id: path-changes
+        run: |
+          # Define file patterns for different categories
+          DOC_PATTERNS="*.md|docs/|LICENSE|CODE_OF_CONDUCT.md|CONTRIBUTING.md|SECURITY.md"
+          CONFIG_PATTERNS=".vscode/|.github/workflows/|.eslintrc*|.prettierrc*|tsconfig*.json|.gitignore|.editorconfig"
+          RUST_PATTERNS="packages/ast-core-engine/|*.rs|Cargo.toml|Cargo.lock"
+          TS_PATTERNS="packages/|*.ts|*.tsx|*.js|*.jsx|package.json|yarn.lock"
+
+          # Get changed files
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Check for docs-only changes
+          if echo "$CHANGED_FILES" | grep -vE "$DOC_PATTERNS" > /dev/null; then
+            echo "has-code-changes=true" >> $GITHUB_OUTPUT
+            echo "is-docs-only=false" >> $GITHUB_OUTPUT
+            echo "✅ Code changes detected"
+          else
+            echo "has-code-changes=false" >> $GITHUB_OUTPUT
+            echo "is-docs-only=true" >> $GITHUB_OUTPUT
+            echo "📚 Documentation-only changes detected"
+          fi
+
+          # Check for Rust changes
+          if echo "$CHANGED_FILES" | grep -E "$RUST_PATTERNS" > /dev/null; then
+            echo "has-rust-changes=true" >> $GITHUB_OUTPUT
+            echo "🦀 Rust changes detected"
+          else
+            echo "has-rust-changes=false" >> $GITHUB_OUTPUT
+            echo "No Rust changes"
+          fi
+
+          # Check for TypeScript changes
+          if echo "$CHANGED_FILES" | grep -E "$TS_PATTERNS" > /dev/null; then
+            echo "has-ts-changes=true" >> $GITHUB_OUTPUT
+            echo "📘 TypeScript changes detected"
+          else
+            echo "has-ts-changes=false" >> $GITHUB_OUTPUT
+            echo "No TypeScript changes"
+          fi
+
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -180,7 +232,7 @@ jobs:
           # Retry security audit (network can be flaky)
           MAX_ATTEMPTS=3
           ATTEMPT=1
-          
+
           while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
             echo "🔍 Security audit attempt $ATTEMPT of $MAX_ATTEMPTS..."
             
@@ -217,7 +269,9 @@ jobs:
     name: Rust Validation
     runs-on: ubuntu-latest
     needs: validate
-    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    if: |
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request') &&
+      needs.validate.outputs.has-rust-changes == 'true'
     timeout-minutes: 15
     steps:
       - name: Checkout code
@@ -268,7 +322,9 @@ jobs:
     name: Build WASM Bindings
     runs-on: ubuntu-latest
     needs: validate
-    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    if: |
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request') &&
+      needs.validate.outputs.has-rust-changes == 'true'
     timeout-minutes: 15
     steps:
       - name: Checkout code
@@ -324,12 +380,12 @@ jobs:
           path: packages/ast-helper/src/database/vector/wasm-pkg/
           retention-days: 7
 
-
-
   unit-tests:
     name: Unit Tests
     needs: [validate]
-    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    if: |
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request') &&
+      needs.validate.outputs.has-code-changes == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -367,8 +423,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-
-
       - name: Setup Rust for native module
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -386,8 +440,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-
-
 
       - name: Build project dependencies
         run: yarn run build
@@ -428,7 +480,8 @@ jobs:
       (needs.validate.outputs.is-main-push == 'true' || 
        needs.validate.outputs.is-release == 'true' || 
        github.event_name == 'schedule') &&
-      (github.event.pull_request.draft == false || github.event_name != 'pull_request')
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request') &&
+      needs.validate.outputs.has-code-changes == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -508,7 +561,8 @@ jobs:
       (needs.validate.outputs.is-main-push == 'true' || 
        needs.validate.outputs.is-release == 'true' || 
        github.event_name == 'schedule') &&
-      (github.event.pull_request.draft == false || github.event_name != 'pull_request')
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request') &&
+      needs.validate.outputs.has-code-changes == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -773,7 +827,8 @@ jobs:
     if: |
       (needs.validate.outputs.is-main-push == 'true' || 
        needs.validate.outputs.is-release == 'true') &&
-      (github.event.pull_request.draft == false || github.event_name != 'pull_request')
+      (github.event.pull_request.draft == false || github.event_name != 'pull_request') &&
+      needs.validate.outputs.has-code-changes == 'true'
     strategy:
       fail-fast: false
       matrix:
