@@ -25,6 +25,8 @@ community include:
 - Focusing on what is best not just for us as individuals, but for the
   overall community
 
+## Unacceptable Behavior
+
 Examples of unacceptable behavior include:
 
 - The use of sexualized language or imagery, and sexual attention or
@@ -74,6 +76,17 @@ Examples of representing our community include using an official e-mail address,
 posting via an official social media account, or acting as an appointed
 representative at an online or offline event.
 
+### Community Spaces
+
+This Code of Conduct applies to all project-managed spaces, including but not limited to:
+
+- GitHub repositories, issues, pull requests, and discussions
+- Project Discord servers or chat channels
+- Project mailing lists and email communications
+- Social media accounts managed by the project
+- In-person and virtual events hosted by the project
+- Any other forums created by the project team
+
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
@@ -83,6 +96,18 @@ All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
 reporter of any incident.
+
+### Reporting Guidelines
+
+When reporting an incident, please include:
+
+- Your contact information
+- Names (real, usernames, or pseudonyms) of anyone involved
+- Description of what occurred, including when and where it happened
+- Any additional context or relevant screenshots/links
+- Whether you believe the situation is ongoing
+
+All reports will be handled with discretion and confidentiality.
 
 ## Enforcement Guidelines
 
@@ -130,11 +155,44 @@ individual, or aggression toward or disparagement of classes of individuals.
 **Consequence**: A permanent ban from any sort of public interaction within
 the community.
 
+## Appeals Process
+
+If you believe a moderation decision was made in error, you may appeal by:
+
+1. Sending an email to conduct@ast-copilot-helper.dev within **14 days of receipt** of the decision
+2. Include your reasoning for why you believe the decision should be reconsidered
+3. Provide any additional context or information not available during the initial review
+
+Appeals will be reviewed by community leaders who were not involved in the original decision when possible. The appeal decision is final.
+
+## Community Guidelines
+
+### Communication
+
+- Be respectful and professional in all interactions
+- Assume good faith and positive intent
+- Ask questions rather than making accusations
+- Provide constructive feedback with specific suggestions
+
+### Collaboration
+
+- Welcome newcomers and help them get started
+- Share knowledge openly and generously
+- Give credit where credit is due
+- Respect different levels of experience and expertise
+
+### Technical Conduct
+
+- Write clear, maintainable code with appropriate documentation
+- Provide thorough testing for new features and bug fixes
+- Review pull requests constructively and promptly
+- Follow established project conventions and guidelines
+
 ## Attribution
 
 This Code of Conduct is adapted from the [Contributor Covenant][homepage],
-version 2.0, available at
-https://www.contributor-covenant.org/version/2/0/code_of_conduct.html.
+version 2.1, available at
+https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
 
 Community Impact Guidelines were inspired by [Mozilla's code of conduct
 enforcement ladder](https://github.com/mozilla/diversity).

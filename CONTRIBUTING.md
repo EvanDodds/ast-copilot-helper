@@ -1,15 +1,17 @@
-# Contributing Guidelines
+# Contributing to ast-copilot-helper
 
-Welcome to ast-copilot-helper! We're excited to have you contribute to making AI-powered code analysis accessible to everyone. This guide will help you get started with contributing to the project.
+Thank you for your interest in contributing to ast-copilot-helper! We're excited to have you contribute to making AI-powered code analysis accessible to everyone. This guide will help you get started with contributing to the project.
 
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
 - [Development Setup](#development-setup)
+- [Contributing Guidelines](#contributing-guidelines)
 - [Contribution Workflow](#contribution-workflow)
 - [Code Standards](#code-standards)
 - [Testing Requirements](#testing-requirements)
+- [Pull Request Process](#pull-request-process)
 - [Documentation](#documentation)
 - [Community Guidelines](#community-guidelines)
 
@@ -47,7 +49,7 @@ Project maintainers will remove, edit, or reject contributions that violate this
 
 Before contributing, ensure you have:
 
-- **Node.js 20+** (24+ recommended)
+- **Node.js 20.0.0 or higher** (24+ recommended)
 - **npm 9+**
 - **Git** with proper SSH/HTTPS setup
 - **Python 3.8+** (for Python language support)
@@ -72,22 +74,24 @@ Before contributing, ensure you have:
 4. **Install dependencies:**
 
    ```bash
-   npm install
+   yarn install
    ```
 
 5. **Run tests** to ensure everything works:
    ```bash
-   npm test
+   yarn test
    ```
 
 ## Development Setup
 
-### Repository Structure
+### Project Structure
+
+The project is organized as a monorepo with the following key packages:
 
 ```
 ast-copilot-helper/
 ├── packages/
-│   ├── ast-copilot-helper/         # Core CLI package
+│   ├── ast-helper/         # Core CLI package
 │   ├── ast-mcp-server/     # MCP server implementation
 │   └── vscode-extension/   # VS Code extension
 ├── docs/                   # Documentation
@@ -96,6 +100,12 @@ ast-copilot-helper/
 ├── .github/               # GitHub workflows and templates
 └── tools/                 # Development tools
 ```
+
+**Key Files:**
+
+- [README.md](README.md) - Project overview and quick start
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - Community standards
+- [tsconfig.json](tsconfig.json) - TypeScript configuration
 
 ### Environment Setup
 
@@ -118,35 +128,35 @@ ast-copilot-helper/
 
 3. **Set up pre-commit hooks:**
    ```bash
-   npm run prepare
+   yarn run prepare
    ```
 
 ### Development Commands
 
 ```bash
 # Build all packages
-npm run build
+yarn run build
 
 # Start development mode (watch mode)
-npm run dev
+yarn run dev
 
 # Run all tests
-npm test
+yarn test
 
 # Run tests in watch mode
-npm run test:watch
+yarn run test:watch
 
 # Lint code
-npm run lint
+yarn run lint
 
 # Fix linting issues
-npm run lint:fix
+yarn run lint:fix
 
 # Format code
-npm run format
+yarn run format
 
 # Type check
-npm run type-check
+yarn run type-check
 ```
 
 ### Package-Specific Development
@@ -157,13 +167,13 @@ npm run type-check
 cd packages/ast-copilot-helper
 
 # Build package
-npm run build
+yarn run build
 
 # Run CLI locally
-npm run dev -- parse src/
+yarn run dev -- parse src/
 
 # Test package
-npm test
+yarn test
 ```
 
 **MCP Server:**
@@ -172,10 +182,10 @@ npm test
 cd packages/ast-mcp-server
 
 # Start server in development
-npm run dev
+yarn run dev
 
 # Test MCP protocol
-npm run test:mcp
+yarn run test:mcp
 ```
 
 **VS Code Extension:**
@@ -184,10 +194,10 @@ npm run test:mcp
 cd packages/vscode-extension
 
 # Build extension
-npm run build
+yarn run build
 
 # Package extension
-npm run package
+yarn run package
 
 # Install locally for testing
 code --install-extension ast-copilot-helper-*.vsix
@@ -269,7 +279,7 @@ interface ParseOptions {
 }
 ```
 
-#### Commit Guidelines
+#### Commit Message Format
 
 Follow [Conventional Commits](https://conventionalcommits.org/) format:
 
@@ -277,19 +287,19 @@ Follow [Conventional Commits](https://conventionalcommits.org/) format:
 # Format: type(scope): description
 
 # Examples:
-feat(parser): add support for Python decorators
-fix(cli): handle file not found errors gracefully
-docs(api): update MCP server documentation
-test(query): add integration tests for semantic search
-refactor(database): optimize query performance
-chore(deps): update TypeScript to 5.0
+git commit -m "feat(parser): add support for Python decorators"
+git commit -m "fix(cli): handle file not found errors gracefully"
+git commit -m "docs(api): update MCP server documentation"
+git commit -m "test(query): add integration tests for semantic search"
+git commit -m "refactor(database): optimize query performance"
+git commit -m "chore(deps): update TypeScript to 5.0"
 ```
 
 **Commit Types:**
 
-- `feat` - New features
-- `fix` - Bug fixes
-- `docs` - Documentation changes
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
 - `style` - Code style changes (formatting, etc.)
 - `refactor` - Code refactoring
 - `test` - Test changes
@@ -301,20 +311,20 @@ Ensure all tests pass before submitting:
 
 ```bash
 # Run full test suite
-npm test
+yarn test
 
 # Run specific test suites
-npm run test:unit
-npm run test:integration
-npm run test:e2e
+yarn run test:unit
+yarn run test:integration
+yarn run test:e2e
 
 # Run tests for specific package
-npm run test:ast-copilot-helper
-npm run test:mcp-server
-npm run test:vscode-extension
+yarn run test:ast-copilot-helper
+yarn run test:mcp-server
+yarn run test:vscode-extension
 
 # Generate coverage report
-npm run test:coverage
+yarn run test:coverage
 ```
 
 #### Manual Testing
@@ -323,20 +333,45 @@ Test your changes manually:
 
 ```bash
 # Test CLI functionality
-npm run build
+yarn run build
 ./packages/ast-copilot-helper/bin/ast-copilot-helper.js init
 ./packages/ast-copilot-helper/bin/ast-copilot-helper.js parse examples/
 
 # Test MCP server
-npm run build:mcp-server
+yarn run build:mcp-server
 cd examples/test-project
 ast-copilot-helper server --transport stdio
 
 # Test VS Code extension
 cd packages/vscode-extension
-npm run package
+yarn run package
 code --install-extension *.vsix
 ```
+
+### Debugging
+
+If you encounter issues during development, use these debugging tools:
+
+```bash
+# Debug CLI commands with verbose output
+yarn run debug:cli init --verbose
+
+# Debug MCP server with logging
+DEBUG=* yarn run build:mcp-server
+
+# Run specific test file in debug mode
+yarn run test:unit --reporter=verbose path/to/test.ts
+
+# Check TypeScript compilation issues
+yarn run tsc --noEmit
+```
+
+Common debugging approaches:
+
+- **Add breakpoints** in VS Code and run tests with debugging
+- **Use console.log** for quick debugging (but remove before committing)
+- **Check logs** in test output for detailed error messages
+- **Verify dependencies** are installed correctly with `yarn install --check-files`
 
 ### 5. Update Documentation
 
@@ -347,7 +382,30 @@ Keep documentation up to date:
 - **Add examples** for new functionality
 - **Update CHANGELOG.md** following [Keep a Changelog](https://keepachangelog.com/)
 
-### 6. Submit Pull Request
+Generate documentation with:
+
+```bash
+# Generate API documentation
+yarn run docs:generate
+
+# Preview documentation locally
+yarn run docs:dev
+```
+
+## Pull Request Process
+
+### Before Submitting
+
+Before submitting your pull request, ensure:
+
+- [ ] All tests pass (`yarn test`)
+- [ ] Code is properly formatted (`yarn run format`)
+- [ ] No linting errors (`yarn run lint`)
+- [ ] Documentation is updated
+- [ ] Commit messages follow conventional format
+- [ ] Branch is up to date with main
+
+### Creating a Pull Request
 
 1. **Push your branch:**
 
@@ -422,6 +480,17 @@ Related to #456
 ## Code Standards
 
 ### TypeScript Guidelines
+
+- **Use strict mode**: Enable strict TypeScript compilation (`strict: true` in tsconfig.json)
+- Use explicit types and interfaces
+- Prefer `readonly` for immutable properties
+- Use `async/await` over promise chains
+- Document public APIs with JSDoc comments
+
+**Code Quality:**
+
+- Run `yarn run lint` to check for linting issues
+- Run `yarn run format` to format code consistently
 
 ```typescript
 // ✅ Good: Clear types and interfaces
@@ -564,22 +633,22 @@ Maintain high test coverage:
 
 ```bash
 # All tests
-npm test
+yarn test
 
 # Unit tests only
-npm run test:unit
+yarn run test:unit
 
 # Integration tests
-npm run test:integration
+yarn run test:integration
 
 # End-to-end tests
-npm run test:e2e
+yarn run test:e2e
 
 # Performance tests
-npm run test:performance
+yarn run test:performance
 
 # Coverage report
-npm run test:coverage
+yarn run test:coverage
 open coverage/index.html
 ```
 
@@ -646,13 +715,13 @@ async query(query: string, options?: QueryOptions): Promise<QueryResult[]>
 
 ```bash
 # Build documentation site
-npm run docs:build
+yarn run docs:build
 
 # Serve documentation locally
-npm run docs:dev
+yarn run docs:dev
 
 # Deploy documentation
-npm run docs:deploy
+yarn run docs:deploy
 ```
 
 ## Community Guidelines
@@ -677,6 +746,93 @@ npm run docs:deploy
 - **Review pull requests** from other contributors
 - **Improve documentation** and examples
 - **Mentor new contributors**
+
+## Troubleshooting
+
+### Common Issues
+
+#### Build Failures
+
+**Problem:** TypeScript compilation errors after pulling latest changes
+
+**Solution:**
+
+```bash
+# Clean and rebuild
+yarn run clean
+yarn install
+yarn run build
+```
+
+#### Test Failures
+
+**Problem:** Tests failing locally but passing in CI
+
+**Solution:**
+
+```bash
+# Clear test cache and run again
+yarn run test:clean
+yarn test
+
+# Check Node.js version matches requirements
+node --version  # Should be 20.0.0 or higher
+```
+
+#### WASM Binary Issues
+
+**Problem:** `Error loading WASM binary` in Rust core tests
+
+**Solution:**
+
+```bash
+# Rebuild WASM bindings
+cd packages/ast-core-engine
+yarn run build:wasm
+```
+
+#### Dependency Issues
+
+**Problem:** Module not found errors or version conflicts
+
+**Solution:**
+
+```bash
+# Clean install all dependencies
+rm -rf node_modules
+rm yarn.lock
+yarn install
+```
+
+#### Performance Issues
+
+**Problem:** Tests or CLI commands running slowly
+
+**Solution:**
+
+```bash
+# Check if debug mode is enabled
+echo $DEBUG  # Should be empty
+
+# Run performance profiling
+yarn run benchmark
+
+# Check disk usage for cache
+du -sh .cache
+```
+
+### Getting More Help
+
+If you encounter an issue not listed here:
+
+1. **Search GitHub Issues** for similar problems
+2. **Check GitHub Discussions** for community solutions
+3. **Create a new issue** with:
+   - Node.js version (`node --version`)
+   - Yarn version (`yarn --version`)
+   - Operating system
+   - Full error message
+   - Steps to reproduce
 
 ## Release Process
 
