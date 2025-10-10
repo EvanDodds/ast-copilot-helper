@@ -1,0 +1,300 @@
+name: Performance Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/**'
+      - 'scripts/performance/**'
+      - 'tests/**'
+      - '.github/workflows/performance-validation.yml'
+  workflow_dispatch:
+    inputs:
+      save_baseline:
+        description: 'Save results as new baseline'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: performance-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  performance-benchmarks:
+    name: Run Performance Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build packages
+        run: yarn build
+
+      - name: Run performance benchmarks
+        id: benchmarks
+        run: |
+          echo "🚀 Running performance benchmarks..."
+          npx ts-node --esm scripts/performance/comprehensive-benchmark.ts \
+            --output ci-artifacts/performance-results-pr.json \
+            --quick \
+            --verbose
+          echo "✅ Benchmarks complete"
+
+      - name: Download baseline results
+        id: baseline
+        continue-on-error: true
+        run: |
+          echo "📥 Downloading baseline performance results..."
+          if [ -f "ci-artifacts/performance-results.json" ]; then
+            echo "baseline_exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Baseline found in repository"
+          else
+            echo "baseline_exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No baseline found, will skip comparison"
+          fi
+
+      - name: Compare with baseline
+        if: steps.baseline.outputs.baseline_exists == 'true'
+        id: compare
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          // Load results
+          const baseline = JSON.parse(fs.readFileSync('ci-artifacts/performance-results.json', 'utf8'));
+          const current = JSON.parse(fs.readFileSync('ci-artifacts/performance-results-pr.json', 'utf8'));
+
+          // Regression threshold: 10% degradation
+          const THRESHOLD = 0.10;
+
+          // Compare parsing benchmarks
+          const regressions = [];
+          const improvements = [];
+
+          function compareMetric(name, baselineValue, currentValue, unit = 'ms') {
+            const change = ((currentValue - baselineValue) / baselineValue);
+            const changePercent = (change * 100).toFixed(1);
+            const arrow = change > 0 ? '📈' : '📉';
+            
+            if (change > THRESHOLD) {
+              regressions.push({
+                test: name,
+                baseline: baselineValue.toFixed(2),
+                current: currentValue.toFixed(2),
+                change: changePercent,
+                unit
+              });
+            } else if (change < -0.05) {
+              improvements.push({
+                test: name,
+                baseline: baselineValue.toFixed(2),
+                current: currentValue.toFixed(2),
+                change: changePercent,
+                unit
+              });
+            }
+
+            return { change: changePercent, arrow, regression: change > THRESHOLD };
+          }
+
+          // Compare parsing tests
+          baseline.parsing.forEach((baselineTest) => {
+            const currentTest = current.parsing.find(t => t.test === baselineTest.test);
+            if (currentTest) {
+              compareMetric(
+                `Parsing: ${baselineTest.test}`,
+                baselineTest.metrics.duration,
+                currentTest.metrics.duration
+              );
+            }
+          });
+
+          // Compare query tests
+          baseline.queries.forEach((baselineTest) => {
+            const currentTest = current.queries.find(t => t.test === baselineTest.test);
+            if (currentTest) {
+              compareMetric(
+                `Query: ${baselineTest.test}`,
+                baselineTest.statistics.p95,
+                currentTest.statistics.p95
+              );
+            }
+          });
+
+          // Compare concurrency tests
+          baseline.concurrency.forEach((baselineTest) => {
+            const currentTest = current.concurrency.find(t => t.test === baselineTest.test);
+            if (currentTest) {
+              compareMetric(
+                `Concurrency: ${baselineTest.test}`,
+                baselineTest.metrics.duration,
+                currentTest.metrics.duration
+              );
+            }
+          });
+
+          // Compare memory
+          if (baseline.memory && baseline.memory.length > 0 && current.memory && current.memory.length > 0) {
+            compareMetric(
+              'Memory: Peak heap',
+              baseline.memory[0].metrics.memory.heapUsed,
+              current.memory[0].metrics.memory.heapUsed,
+              'bytes'
+            );
+          }
+
+          // Generate summary
+          let summary = '## 📊 Performance Benchmark Results\n\n';
+
+          if (regressions.length > 0) {
+            summary += '### ⚠️ Performance Regressions Detected (>10% degradation)\n\n';
+            summary += '| Test | Baseline | Current | Change | Unit |\n';
+            summary += '|------|----------|---------|--------|------|\n';
+            regressions.forEach(r => {
+              summary += `| ${r.test} | ${r.baseline} | ${r.current} | **+${r.change}%** | ${r.unit} |\n`;
+            });
+            summary += '\n';
+          } else {
+            summary += '### ✅ No Performance Regressions\n\n';
+            summary += 'All benchmarks are within acceptable variance (<10% degradation).\n\n';
+          }
+
+          if (improvements.length > 0) {
+            summary += '### 🎉 Performance Improvements (>5% faster)\n\n';
+            summary += '| Test | Baseline | Current | Change | Unit |\n';
+            summary += '|------|----------|---------|--------|------|\n';
+            improvements.forEach(i => {
+              summary += `| ${i.test} | ${i.baseline} | ${i.current} | **${i.change}%** | ${i.unit} |\n`;
+            });
+            summary += '\n';
+          }
+
+          // Add full results table
+          summary += '### 📈 All Results\n\n';
+          summary += '**Parsing Benchmarks:**\n\n';
+          summary += '| Test | Duration | Memory (heap) |\n';
+          summary += '|------|----------|---------------|\n';
+          current.parsing.forEach(t => {
+            summary += `| ${t.test} | ${t.metrics.duration.toFixed(2)}ms | ${(t.metrics.memory.heapUsed / 1024).toFixed(2)}KB |\n`;
+          });
+
+          summary += '\n**Query Benchmarks (P95):**\n\n';
+          summary += '| Test | P95 Latency |\n';
+          summary += '|------|-------------|\n';
+          current.queries.forEach(t => {
+            summary += `| ${t.test} | ${t.statistics.p95.toFixed(2)}ms |\n`;
+          });
+
+          summary += '\n**Concurrency Benchmarks:**\n\n';
+          summary += '| Test | Duration |\n';
+          summary += '|------|----------|\n';
+          current.concurrency.forEach(t => {
+            summary += `| ${t.test} | ${t.metrics.duration.toFixed(2)}ms |\n`;
+          });
+
+          summary += '\n**Memory Benchmarks:**\n\n';
+          summary += '| Test | Peak Heap | Peak RSS |\n';
+          summary += '|------|-----------|----------|\n';
+          current.memory.forEach(t => {
+            summary += `| ${t.test} | ${(t.metrics.memory.heapUsed / 1024 / 1024).toFixed(2)}MB | ${(t.metrics.memory.rss / 1024 / 1024).toFixed(2)}MB |\n`;
+          });
+
+          // Save summary
+          fs.writeFileSync('ci-artifacts/performance-summary.md', summary);
+
+          // Set outputs
+          const hasRegressions = regressions.length > 0;
+          console.log(`has_regressions=${hasRegressions}`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `has_regressions=${hasRegressions}\n`);
+
+          if (hasRegressions) {
+            console.error('⚠️ Performance regressions detected!');
+            process.exit(1);
+          } else {
+            console.log('✅ No performance regressions detected');
+          }
+          EOF
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: ci-artifacts/performance-results-pr.json
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && steps.baseline.outputs.baseline_exists == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('ci-artifacts/performance-summary.md', 'utf8');
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('📊 Performance Benchmark Results')
+            );
+            
+            const commentBody = `${summary}\n\n---\n\n*Automated performance validation - triggered by commit ${context.sha.substring(0, 7)}*`;
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
+
+      - name: Save baseline (manual trigger only)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.save_baseline == 'true'
+        run: |
+          echo "💾 Saving new performance baseline..."
+          cp ci-artifacts/performance-results-pr.json ci-artifacts/performance-results.json
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ci-artifacts/performance-results.json
+          git commit -m "chore: update performance baseline [skip ci]"
+          git push
+          echo "✅ Baseline saved"
+
+      - name: Fail on regressions
+        if: steps.compare.outcome == 'failure'
+        run: |
+          echo "❌ Performance regressions detected (>10% degradation)"
+          echo "Please review the benchmark results above"
+          exit 1
