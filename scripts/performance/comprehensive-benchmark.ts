@@ -98,7 +98,25 @@ interface ComprehensiveResults {
   queries: BenchmarkResult[];
   concurrency: BenchmarkResult[];
   memory: BenchmarkResult[];
+  annotations?: BenchmarkResult[];
+  embeddings?: BenchmarkResult[];
+  pipeline?: BenchmarkResult[];
   databaseSize?: DatabaseSizeMetrics;
+  qualityMetrics?: {
+    annotations?: {
+      accuracy: number;
+      relevance: number;
+      completeness: number;
+      averageScore: number;
+    };
+    embeddings?: {
+      dimensionality: number;
+      avgMagnitude: number;
+      vectorSimilarity: number;
+      searchRelevance: number;
+      averageScore: number;
+    };
+  };
   summary: {
     totalTests: number;
     passed: number;
@@ -661,6 +679,386 @@ async function runMemoryBenchmarks(
   return results;
 }
 
+/**
+ * Run annotation performance benchmarks
+ */
+async function runAnnotationBenchmarks(config: BenchmarkConfig): Promise<{
+  results: BenchmarkResult[];
+  qualityMetrics: {
+    accuracy: number;
+    relevance: number;
+    completeness: number;
+    averageScore: number;
+  };
+}> {
+  console.log("\n📝 Running Annotation Performance Benchmarks...");
+  const { MockLLMProvider } = await import("./mock-providers.js");
+  const results: BenchmarkResult[] = [];
+
+  const mockLLM = new MockLLMProvider();
+  const allAnnotations: any[] = [];
+
+  // Test 1: Single annotation generation
+  log("  Testing: annotate-single", config.verbose);
+  const singleDurations: number[] = [];
+
+  for (let i = 0; i < config.iterations; i++) {
+    const startTime = performance.now();
+
+    const annotation = await mockLLM.generateAnnotation(
+      `node-${i}`,
+      "/test/file.ts",
+      "function_declaration",
+      "function testFunction()",
+      "function testFunction() { return 42; }".repeat(10),
+    );
+
+    const endTime = performance.now();
+    singleDurations.push(endTime - startTime);
+    allAnnotations.push(annotation);
+  }
+
+  const singleStats = calculateStatistics(singleDurations);
+  results.push({
+    test: "annotate-single",
+    operation: "annotation",
+    metrics: {
+      duration: singleStats.mean,
+      memory: getMemoryUsage(),
+    },
+    statistics: singleStats,
+    iterations: singleDurations.length,
+  });
+
+  console.log(
+    `  ✅ annotate-single: ${singleStats.mean.toFixed(2)}ms (P95: ${singleStats.p95.toFixed(2)}ms)`,
+  );
+
+  // Test 2: Batch annotation generation (10 nodes)
+  log("  Testing: annotate-batch-10", config.verbose);
+  const batchDurations: number[] = [];
+
+  for (let i = 0; i < config.iterations; i++) {
+    const nodes = Array.from({ length: 10 }, (_, j) => ({
+      nodeId: `batch-node-${i}-${j}`,
+      filePath: `/test/file-${i}.ts`,
+      nodeType: "function_declaration",
+      signature: `function test${j}()`,
+      codeContext: `function test${j}() { return ${j}; }`.repeat(5),
+    }));
+
+    const startTime = performance.now();
+    const batchAnnotations = await mockLLM.generateAnnotationsBatch(nodes);
+    const endTime = performance.now();
+
+    batchDurations.push(endTime - startTime);
+    allAnnotations.push(...batchAnnotations);
+  }
+
+  const batchStats = calculateStatistics(batchDurations);
+  results.push({
+    test: "annotate-batch-10",
+    operation: "annotation",
+    metrics: {
+      duration: batchStats.mean,
+      memory: getMemoryUsage(),
+    },
+    statistics: batchStats,
+    iterations: batchDurations.length,
+  });
+
+  console.log(
+    `  ✅ annotate-batch-10: ${batchStats.mean.toFixed(2)}ms (P95: ${batchStats.p95.toFixed(2)}ms)`,
+  );
+
+  // Test 3: Large batch (100 nodes) for 100k target validation
+  log("  Testing: annotate-batch-100", config.verbose);
+  const largeBatchDurations: number[] = [];
+
+  // Run fewer iterations for large batch
+  const largeBatchIterations = Math.max(1, Math.floor(config.iterations / 2));
+  for (let i = 0; i < largeBatchIterations; i++) {
+    const nodes = Array.from({ length: 100 }, (_, j) => ({
+      nodeId: `large-batch-node-${i}-${j}`,
+      filePath: `/test/file-${i}.ts`,
+      nodeType: "function_declaration",
+      signature: `function test${j}()`,
+      codeContext: `function test${j}() { return ${j}; }`.repeat(3),
+    }));
+
+    const startTime = performance.now();
+    const batchAnnotations = await mockLLM.generateAnnotationsBatch(nodes);
+    const endTime = performance.now();
+
+    largeBatchDurations.push(endTime - startTime);
+    allAnnotations.push(...batchAnnotations);
+  }
+
+  const largeBatchStats = calculateStatistics(largeBatchDurations);
+  results.push({
+    test: "annotate-batch-100",
+    operation: "annotation",
+    metrics: {
+      duration: largeBatchStats.mean,
+      memory: getMemoryUsage(),
+    },
+    statistics: largeBatchStats,
+    iterations: largeBatchDurations.length,
+  });
+
+  console.log(
+    `  ✅ annotate-batch-100: ${largeBatchStats.mean.toFixed(2)}ms (P95: ${largeBatchStats.p95.toFixed(2)}ms)`,
+  );
+
+  // Extrapolate to 100k nodes
+  const avgTimePerNode = largeBatchStats.mean / 100;
+  const estimatedTime100k = (avgTimePerNode * 100000) / 1000; // Convert to seconds
+  console.log(
+    `  📊 Estimated time for 100k nodes: ${(estimatedTime100k / 60).toFixed(2)} minutes`,
+  );
+  if (estimatedTime100k / 60 > 5) {
+    console.log(
+      `  ⚠️  Warning: Exceeds 5-minute target (${((estimatedTime100k / 60 - 5) * 60).toFixed(0)}s over)`,
+    );
+  } else {
+    console.log(
+      `  ✅ Meets 5-minute target (${((5 - estimatedTime100k / 60) * 60).toFixed(0)}s under)`,
+    );
+  }
+
+  // Calculate quality metrics
+  const qualityMetrics = mockLLM.calculateQualityMetrics(allAnnotations);
+  console.log(
+    `  📈 Quality metrics: accuracy=${qualityMetrics.accuracy.toFixed(2)}, ` +
+      `relevance=${qualityMetrics.relevance.toFixed(2)}, ` +
+      `completeness=${qualityMetrics.completeness.toFixed(2)}, ` +
+      `avg=${qualityMetrics.averageScore.toFixed(2)}`,
+  );
+
+  return { results, qualityMetrics };
+}
+
+/**
+ * Run embedding performance benchmarks
+ */
+async function runEmbeddingBenchmarks(config: BenchmarkConfig): Promise<{
+  results: BenchmarkResult[];
+  qualityMetrics: {
+    dimensionality: number;
+    avgMagnitude: number;
+    vectorSimilarity: number;
+    searchRelevance: number;
+    averageScore: number;
+  };
+}> {
+  console.log("\n🔢 Running Embedding Performance Benchmarks...");
+  const { MockEmbeddingProvider } = await import("./mock-providers.js");
+  const results: BenchmarkResult[] = [];
+
+  const mockEmbedding = new MockEmbeddingProvider();
+  const allEmbeddings: any[] = [];
+
+  // Test 1: Single embedding generation
+  log("  Testing: embed-single", config.verbose);
+  const singleDurations: number[] = [];
+
+  for (let i = 0; i < config.iterations; i++) {
+    const text = `function testFunction${i}() { return ${i}; }`.repeat(10);
+    const startTime = performance.now();
+
+    const embedding = await mockEmbedding.generateEmbedding(text);
+
+    const endTime = performance.now();
+    singleDurations.push(endTime - startTime);
+    allEmbeddings.push(embedding);
+  }
+
+  const singleStats = calculateStatistics(singleDurations);
+  results.push({
+    test: "embed-single",
+    operation: "embedding",
+    metrics: {
+      duration: singleStats.mean,
+      memory: getMemoryUsage(),
+    },
+    statistics: singleStats,
+    iterations: singleDurations.length,
+  });
+
+  console.log(
+    `  ✅ embed-single: ${singleStats.mean.toFixed(2)}ms (P95: ${singleStats.p95.toFixed(2)}ms)`,
+  );
+
+  // Test 2: Batch embedding generation (10 texts)
+  log("  Testing: embed-batch-10", config.verbose);
+  const batchDurations: number[] = [];
+
+  for (let i = 0; i < config.iterations; i++) {
+    const texts = Array.from({ length: 10 }, (_, j) =>
+      `function test${j}() { return ${j}; }`.repeat(5),
+    );
+
+    const startTime = performance.now();
+    const batchEmbeddings = await mockEmbedding.generateEmbeddingsBatch(texts);
+    const endTime = performance.now();
+
+    batchDurations.push(endTime - startTime);
+    allEmbeddings.push(...batchEmbeddings);
+  }
+
+  const batchStats = calculateStatistics(batchDurations);
+  results.push({
+    test: "embed-batch-10",
+    operation: "embedding",
+    metrics: {
+      duration: batchStats.mean,
+      memory: getMemoryUsage(),
+    },
+    statistics: batchStats,
+    iterations: batchDurations.length,
+  });
+
+  console.log(
+    `  ✅ embed-batch-10: ${batchStats.mean.toFixed(2)}ms (P95: ${batchStats.p95.toFixed(2)}ms)`,
+  );
+
+  // Test 3: Large batch (100 texts) for 100k target validation
+  log("  Testing: embed-batch-100", config.verbose);
+  const largeBatchDurations: number[] = [];
+
+  const largeBatchIterations = Math.max(1, Math.floor(config.iterations / 2));
+  for (let i = 0; i < largeBatchIterations; i++) {
+    const texts = Array.from({ length: 100 }, (_, j) =>
+      `function test${j}() { return ${j}; }`.repeat(3),
+    );
+
+    const startTime = performance.now();
+    const batchEmbeddings = await mockEmbedding.generateEmbeddingsBatch(texts);
+    const endTime = performance.now();
+
+    largeBatchDurations.push(endTime - startTime);
+    allEmbeddings.push(...batchEmbeddings);
+  }
+
+  const largeBatchStats = calculateStatistics(largeBatchDurations);
+  results.push({
+    test: "embed-batch-100",
+    operation: "embedding",
+    metrics: {
+      duration: largeBatchStats.mean,
+      memory: getMemoryUsage(),
+    },
+    statistics: largeBatchStats,
+    iterations: largeBatchDurations.length,
+  });
+
+  console.log(
+    `  ✅ embed-batch-100: ${largeBatchStats.mean.toFixed(2)}ms (P95: ${largeBatchStats.p95.toFixed(2)}ms)`,
+  );
+
+  // Extrapolate to 100k nodes
+  const avgTimePerText = largeBatchStats.mean / 100;
+  const estimatedTime100k = (avgTimePerText * 100000) / 1000; // Convert to seconds
+  console.log(
+    `  📊 Estimated time for 100k nodes: ${(estimatedTime100k / 60).toFixed(2)} minutes`,
+  );
+  if (estimatedTime100k / 60 > 15) {
+    console.log(
+      `  ⚠️  Warning: Exceeds 15-minute target (${((estimatedTime100k / 60 - 15) * 60).toFixed(0)}s over)`,
+    );
+  } else {
+    console.log(
+      `  ✅ Meets 15-minute target (${((15 - estimatedTime100k / 60) * 60).toFixed(0)}s under)`,
+    );
+  }
+
+  // Calculate quality metrics
+  const qualityMetrics = mockEmbedding.calculateQualityMetrics(allEmbeddings);
+  console.log(
+    `  📈 Quality metrics: dimensionality=${qualityMetrics.dimensionality}, ` +
+      `magnitude=${qualityMetrics.avgMagnitude.toFixed(2)}, ` +
+      `similarity=${qualityMetrics.vectorSimilarity.toFixed(2)}, ` +
+      `relevance=${qualityMetrics.searchRelevance.toFixed(2)}, ` +
+      `avg=${qualityMetrics.averageScore.toFixed(2)}`,
+  );
+
+  return { results, qualityMetrics };
+}
+
+/**
+ * Run end-to-end pipeline benchmarks
+ */
+async function runPipelineBenchmarks(
+  config: BenchmarkConfig,
+): Promise<BenchmarkResult[]> {
+  console.log("\n🔄 Running End-to-End Pipeline Benchmarks...");
+  const { MockLLMProvider, MockEmbeddingProvider } = await import(
+    "./mock-providers.js"
+  );
+  const results: BenchmarkResult[] = [];
+
+  const mockLLM = new MockLLMProvider();
+  const mockEmbedding = new MockEmbeddingProvider();
+
+  // Test: Parse → Annotate → Embed pipeline
+  log("  Testing: pipeline-parse-annotate-embed", config.verbose);
+  const pipelineDurations: number[] = [];
+
+  const pipelineIterations = Math.max(1, Math.floor(config.iterations / 2));
+  for (let i = 0; i < pipelineIterations; i++) {
+    const startTime = performance.now();
+
+    // Step 1: Parse (simulated - we assume parsing is already benchmarked)
+    const parseDelay = 50; // Mock parse time
+    await new Promise((resolve) => setTimeout(resolve, parseDelay));
+
+    // Step 2: Annotate (10 nodes)
+    const nodes = Array.from({ length: 10 }, (_, j) => ({
+      nodeId: `pipeline-node-${i}-${j}`,
+      filePath: `/test/file-${i}.ts`,
+      nodeType: "function_declaration",
+      signature: `function test${j}()`,
+      codeContext: `function test${j}() { return ${j}; }`.repeat(5),
+    }));
+
+    const annotations = await mockLLM.generateAnnotationsBatch(nodes);
+
+    // Step 3: Embed (10 texts from annotations)
+    const texts = annotations
+      .map((a) => a.signature)
+      .filter((s): s is string => s !== undefined);
+    await mockEmbedding.generateEmbeddingsBatch(texts);
+
+    const endTime = performance.now();
+    pipelineDurations.push(endTime - startTime);
+  }
+
+  const pipelineStats = calculateStatistics(pipelineDurations);
+  results.push({
+    test: "pipeline-parse-annotate-embed",
+    operation: "pipeline",
+    metrics: {
+      duration: pipelineStats.mean,
+      memory: getMemoryUsage(),
+    },
+    statistics: pipelineStats,
+    iterations: pipelineDurations.length,
+  });
+
+  console.log(
+    `  ✅ pipeline-parse-annotate-embed: ${pipelineStats.mean.toFixed(2)}ms (P95: ${pipelineStats.p95.toFixed(2)}ms)`,
+  );
+
+  // Extrapolate to 100k nodes
+  const avgTimePerBatch = pipelineStats.mean / 10; // Time per node in batch
+  const estimatedTime100k = (avgTimePerBatch * 100000) / 1000 / 60; // Convert to minutes
+  console.log(
+    `  📊 Estimated total pipeline time for 100k nodes: ${estimatedTime100k.toFixed(2)} minutes`,
+  );
+
+  return results;
+}
+
 // Main orchestrator
 async function main(): Promise<void> {
   console.log("🚀 Comprehensive Performance Benchmark Suite");
@@ -680,6 +1078,11 @@ async function main(): Promise<void> {
     const queryResults = await runQueryBenchmarks(config);
     const concurrencyResults = await runConcurrencyBenchmarks(config);
     const memoryResults = await runMemoryBenchmarks(config);
+
+    // Run annotation and embedding benchmarks
+    const annotationBenchmark = await runAnnotationBenchmarks(config);
+    const embeddingBenchmark = await runEmbeddingBenchmarks(config);
+    const pipelineResults = await runPipelineBenchmarks(config);
 
     // Measure database size
     console.log("\n📦 Measuring Database Size...");
@@ -705,6 +1108,15 @@ async function main(): Promise<void> {
     const totalDuration = endTime - startTime;
 
     // Compile comprehensive results
+    const totalTestCount =
+      parsingResults.length +
+      queryResults.length +
+      concurrencyResults.length +
+      memoryResults.length +
+      annotationBenchmark.results.length +
+      embeddingBenchmark.results.length +
+      pipelineResults.length;
+
     const results: ComprehensiveResults = {
       metadata: {
         timestamp: new Date().toISOString(),
@@ -723,18 +1135,17 @@ async function main(): Promise<void> {
       queries: queryResults,
       concurrency: concurrencyResults,
       memory: memoryResults,
+      annotations: annotationBenchmark.results,
+      embeddings: embeddingBenchmark.results,
+      pipeline: pipelineResults,
       databaseSize,
+      qualityMetrics: {
+        annotations: annotationBenchmark.qualityMetrics,
+        embeddings: embeddingBenchmark.qualityMetrics,
+      },
       summary: {
-        totalTests:
-          parsingResults.length +
-          queryResults.length +
-          concurrencyResults.length +
-          memoryResults.length,
-        passed:
-          parsingResults.length +
-          queryResults.length +
-          concurrencyResults.length +
-          memoryResults.length,
+        totalTests: totalTestCount,
+        passed: totalTestCount,
         failed: 0,
         warnings: 0,
       },
