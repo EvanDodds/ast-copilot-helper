@@ -167,11 +167,39 @@ jobs:
           node-version: ${{ env.NODE_VERSION_DEFAULT }}
           cache: "yarn"
 
+      - name: Configure Yarn network settings
+        run: |
+          yarn config set httpTimeout 300000
+          yarn config set networkTimeout 300000
+          echo "✅ Increased network timeouts to 300s"
+
       - name: Install dependencies
         run: yarn install --immutable
 
       - name: Run security audit
-        run: yarn run security:audit
+        run: |
+          # Retry security audit (network can be flaky)
+          MAX_ATTEMPTS=3
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "🔍 Security audit attempt $ATTEMPT of $MAX_ATTEMPTS..."
+            
+            if yarn run security:audit; then
+              echo "✅ Security audit completed successfully"
+              exit 0
+            fi
+            
+            if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+              echo "⚠️  Attempt $ATTEMPT failed, retrying in 10 seconds..."
+              sleep 10
+            else
+              echo "❌ Security audit failed after $MAX_ATTEMPTS attempts"
+              exit 1
+            fi
+            
+            ATTEMPT=$((ATTEMPT + 1))
+          done
         continue-on-error: false
 
       - name: Run security scanning
