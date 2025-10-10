@@ -650,6 +650,7 @@ CREATE INDEX idx_embeddings_updated ON embeddings(updated_at);
 - Index overhead: 0.53x (indexed data more compact than source)
 - Extrapolated for 100k nodes: ~18MB
 - **Storage margin:** 91% below 200MB target (182MB headroom)
+- **✅ Per-table breakdown:** Enhanced measurement now provides detailed size analysis by table category (parser results, annotations, embeddings, metadata, indexes, other) using SQLite's `dbstat` virtual table (Issue #179)
 
 **Performance Baselines Established:**
 

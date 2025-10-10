@@ -65,10 +65,18 @@ interface DatabaseSizeMetrics {
   bytesPerNode: number;
   bytesPerLoc: number;
   indexOverheadRatio: number;
-  breakdown?: {
+  breakdown: {
     databaseFile: number;
-    indexFile?: number;
-    otherFiles?: number;
+    indexFile: number;
+    otherFiles: number;
+  };
+  tableBreakdown?: {
+    parserResults: number;
+    annotations: number;
+    embeddings: number;
+    metadata: number;
+    indexes: number;
+    other: number;
   };
 }
 
@@ -257,6 +265,9 @@ async function measureDatabaseSize(
     const estimatedSourceSize = totalLoc * 50;
     const indexOverheadRatio = totalSize / estimatedSourceSize;
 
+    // Query per-table sizes from SQLite
+    const tableBreakdown = await measureTableSizes(dbFile, config);
+
     return {
       totalSizeMb: totalSize / (1024 * 1024),
       totalSizeBytes: totalSize,
@@ -268,9 +279,99 @@ async function measureDatabaseSize(
         indexFile: shmSize + walSize,
         otherFiles: 0,
       },
+      tableBreakdown,
     };
   } catch (error) {
     log(`Error measuring database size: ${error}`, config.verbose);
+    return undefined;
+  }
+}
+
+/**
+ * Measure per-table sizes in the SQLite database
+ */
+async function measureTableSizes(
+  dbFile: string,
+  config: BenchmarkConfig,
+): Promise<DatabaseSizeMetrics["tableBreakdown"]> {
+  try {
+    // Dynamic import of better-sqlite3
+    const Database = (await import("better-sqlite3")).default;
+    const db = new Database(dbFile, { readonly: true });
+
+    try {
+      // Query for table and index sizes using dbstat
+      // dbstat is a virtual table that provides size information
+      const tables = db
+        .prepare(
+          `
+        SELECT 
+          name,
+          SUM(pgsize) as size_bytes
+        FROM dbstat
+        WHERE name NOT LIKE 'sqlite_%'
+        GROUP BY name
+        ORDER BY size_bytes DESC
+      `,
+        )
+        .all() as Array<{ name: string; size_bytes: number }>;
+
+      // Categorize tables
+      let parserResults = 0;
+      let annotations = 0;
+      let embeddings = 0;
+      let metadata = 0;
+      let indexes = 0;
+      let other = 0;
+
+      for (const table of tables) {
+        const size = table.size_bytes;
+        const name = table.name.toLowerCase();
+
+        if (name.startsWith("idx_") || name.includes("index")) {
+          indexes += size;
+        } else if (name.includes("annotation")) {
+          annotations += size;
+        } else if (name.includes("embedding")) {
+          embeddings += size;
+        } else if (
+          name.includes("node") ||
+          name.includes("parse") ||
+          name.includes("ast")
+        ) {
+          parserResults += size;
+        } else if (
+          name.includes("meta") ||
+          name.includes("config") ||
+          name.includes("file")
+        ) {
+          metadata += size;
+        } else {
+          other += size;
+        }
+
+        log(
+          `  Table: ${table.name} - ${(size / 1024).toFixed(2)} KB`,
+          config.verbose,
+        );
+      }
+
+      db.close();
+
+      return {
+        parserResults,
+        annotations,
+        embeddings,
+        metadata,
+        indexes,
+        other,
+      };
+    } catch (error) {
+      db.close();
+      throw error;
+    }
+  } catch (error) {
+    log(`Error measuring table sizes: ${error}`, config.verbose);
     return undefined;
   }
 }

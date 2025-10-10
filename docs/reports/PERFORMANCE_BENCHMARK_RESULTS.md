@@ -275,6 +275,27 @@ The specification doesn't explicitly define concurrency targets, but performance
 | **Bytes per LOC**       | 27 bytes        |
 | **Index overhead**      | 0.53x           |
 
+**Per-Table Breakdown:**
+
+The database size measurement now includes detailed per-table analysis using SQLite's `dbstat` virtual table:
+
+| Table Category     | Description                                   | Size (bytes) | Size (KB) | % of Total |
+| ------------------ | --------------------------------------------- | ------------ | --------- | ---------- |
+| **Indexes**        | B-tree and HNSW indexes for query performance | 28,672       | 28 KB     | 63.7%      |
+| **Parser Results** | AST nodes, parse trees, syntax information    | 8,192        | 8 KB      | 18.2%      |
+| **Metadata**       | File information, configuration, statistics   | 4,096        | 4 KB      | 9.1%       |
+| **Other**          | Miscellaneous tables and overhead             | 4,096        | 4 KB      | 9.1%       |
+| **Annotations**    | LLM-generated code annotations and metadata   | 0            | 0 KB      | 0%         |
+| **Embeddings**     | Vector embeddings for semantic search         | 0            | 0 KB      | 0%         |
+| **Total**          |                                               | **45,056**   | **44 KB** | **100%**   |
+
+**Key Insights:**
+
+- **Indexes dominate storage** (64%): This is expected and efficient - indexes enable fast queries
+- **Parser results are compact** (18%): AST storage is very space-efficient at 8KB for 490 nodes
+- **No annotations/embeddings yet**: These features will be benchmarked in Issue #181
+- **Efficient categorization**: The breakdown helps identify optimization opportunities for future growth
+
 ### 5.4.3 Analysis
 
 ✅ **EXTREMELY EFFICIENT STORAGE**
