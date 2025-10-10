@@ -557,6 +557,9 @@ export class BinaryCompatibilityTester implements PlatformTester {
       platform: this.currentPlatform,
       passed: wasmSupported,
       duration: Date.now() - startTime,
+      error: wasmSupported
+        ? undefined
+        : "WebAssembly is not supported in this environment",
       details: {
         wasmSupported: wasmSupported,
         version: wasmSupported ? "1.0" : "N/A",
@@ -573,6 +576,9 @@ export class BinaryCompatibilityTester implements PlatformTester {
       platform: this.currentPlatform,
       passed: archSupported,
       duration: Date.now() - startTime,
+      error: archSupported
+        ? undefined
+        : `Architecture '${this.currentArchitecture}' is not supported`,
       details: {
         processArchitecture: this.currentArchitecture,
         processPlatform: this.currentPlatform,
@@ -605,6 +611,9 @@ export class BinaryCompatibilityTester implements PlatformTester {
       platform: this.currentPlatform,
       passed: memoryPassed,
       duration: Date.now() - startTime,
+      error: memoryPassed
+        ? undefined
+        : `Memory usage exceeded threshold: ${(memUsage.heapUsed / (1024 * 1024)).toFixed(2)} MB`,
       details: {
         beforeMemory: beforeMemory,
         afterMemory: afterMemory,
