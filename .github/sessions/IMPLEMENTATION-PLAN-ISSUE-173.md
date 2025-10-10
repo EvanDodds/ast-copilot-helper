@@ -63,7 +63,7 @@ Add automatic `.gitignore` template generation to the `ast-copilot-helper init` 
 
 **Template Content:**
 
-```gitignore
+```txt
 # ast-copilot-helper generated files
 # Database files should not be committed to version control
 
