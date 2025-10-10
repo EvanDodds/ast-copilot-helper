@@ -1,0 +1,555 @@
+{
+  "metadata": {
+    "timestamp": "2025-10-10T04:32:09.553Z",
+    "duration": 479073.96971399995,
+    "iterations": 3,
+    "warmup": 1,
+    "environment": {
+      "nodeVersion": "v24.10.0",
+      "platform": "linux",
+      "arch": "x64",
+      "cpus": 24,
+      "totalMemory": 33611198464
+    }
+  },
+  "parsing": [
+    {
+      "test": "parse-typescript",
+      "operation": "parse",
+      "metrics": {
+        "duration": 32089.842774999997,
+        "memory": {
+          "heapUsed": -4111952,
+          "heapTotal": 31002624,
+          "external": 15038608,
+          "rss": 139767808
+        }
+      },
+      "statistics": {
+        "mean": 32089.842774999997,
+        "median": 32058.415701000005,
+        "min": 31719.29006899998,
+        "max": 32491.822555000006,
+        "stddev": 316.16699829520013,
+        "p95": 32491.822555000006,
+        "p99": 32491.822555000006
+      },
+      "iterations": 3
+    },
+    {
+      "test": "parse-javascript",
+      "operation": "parse",
+      "metrics": {
+        "duration": 31767.528025666677,
+        "memory": {
+          "heapUsed": 80538.66666666667,
+          "heapTotal": 31002624,
+          "external": 15052323,
+          "rss": 138588160
+        }
+      },
+      "statistics": {
+        "mean": 31767.528025666677,
+        "median": 31738.057652000018,
+        "min": 31673.057954000018,
+        "max": 31891.468471,
+        "stddev": 91.56842860975367,
+        "p95": 31891.468471,
+        "p99": 31891.468471
+      },
+      "iterations": 3
+    },
+    {
+      "test": "parse-python",
+      "operation": "parse",
+      "metrics": {
+        "duration": 31665.777032000013,
+        "memory": {
+          "heapUsed": 80664,
+          "heapTotal": 31002624,
+          "external": 15066027,
+          "rss": 138588160
+        }
+      },
+      "statistics": {
+        "mean": 31665.777032000013,
+        "median": 31658.911069000023,
+        "min": 31607.59950400004,
+        "max": 31730.820522999973,
+        "stddev": 50.538506552154736,
+        "p95": 31730.820522999973,
+        "p99": 31730.820522999973
+      },
+      "iterations": 3
+    }
+  ],
+  "queries": [
+    {
+      "test": "simple-identifier-query",
+      "operation": "query",
+      "metrics": {
+        "duration": 28.84096266666893,
+        "memory": {
+          "heapUsed": 27509376,
+          "heapTotal": 29691904,
+          "external": 15028324,
+          "rss": 131346432
+        }
+      },
+      "statistics": {
+        "mean": 28.84096266666893,
+        "median": 27.30753699998604,
+        "min": 25.336959999985993,
+        "max": 33.87839100003475,
+        "stddev": 3.6517170927825067,
+        "p95": 33.87839100003475,
+        "p99": 33.87839100003475
+      },
+      "iterations": 3
+    },
+    {
+      "test": "complex-ast-query",
+      "operation": "query",
+      "metrics": {
+        "duration": 37.243493000006616,
+        "memory": {
+          "heapUsed": 27548872,
+          "heapTotal": 29691904,
+          "external": 15028324,
+          "rss": 131346432
+        }
+      },
+      "statistics": {
+        "mean": 37.243493000006616,
+        "median": 35.295152999984566,
+        "min": 27.328059000021312,
+        "max": 49.10726700001396,
+        "stddev": 8.997425440776578,
+        "p95": 49.10726700001396,
+        "p99": 49.10726700001396
+      },
+      "iterations": 3
+    },
+    {
+      "test": "semantic-search",
+      "operation": "query",
+      "metrics": {
+        "duration": 19.929552666668314,
+        "memory": {
+          "heapUsed": 27575464,
+          "heapTotal": 29691904,
+          "external": 15028324,
+          "rss": 131346432
+        }
+      },
+      "statistics": {
+        "mean": 19.929552666668314,
+        "median": 20.225817999977153,
+        "min": 17.256335000041872,
+        "max": 22.30650499998592,
+        "stddev": 2.0723391160512574,
+        "p95": 22.30650499998592,
+        "p99": 22.30650499998592
+      },
+      "iterations": 3
+    }
+  ],
+  "concurrency": [
+    {
+      "test": "concurrent-1",
+      "operation": "concurrency",
+      "metrics": {
+        "duration": 29.285582000001643,
+        "memory": {
+          "heapUsed": 27600648,
+          "heapTotal": 29691904,
+          "external": 15028324,
+          "rss": 131346432
+        }
+      },
+      "statistics": {
+        "mean": 29.285582000001643,
+        "median": 37.298248999984935,
+        "min": 11.224874000006821,
+        "max": 39.333623000013176,
+        "stddev": 12.797853125317685,
+        "p95": 39.333623000013176,
+        "p99": 39.333623000013176
+      },
+      "iterations": 3
+    },
+    {
+      "test": "concurrent-5",
+      "operation": "concurrency",
+      "metrics": {
+        "duration": 35.10215500001019,
+        "memory": {
+          "heapUsed": 27631256,
+          "heapTotal": 29691904,
+          "external": 15028324,
+          "rss": 131346432
+        }
+      },
+      "statistics": {
+        "mean": 35.10215500001019,
+        "median": 34.13887700001942,
+        "min": 34.129555999999866,
+        "max": 37.0380320000113,
+        "stddev": 1.3688770433242707,
+        "p95": 37.0380320000113,
+        "p99": 37.0380320000113
+      },
+      "iterations": 3
+    },
+    {
+      "test": "concurrent-10",
+      "operation": "concurrency",
+      "metrics": {
+        "duration": 36.49534000000373,
+        "memory": {
+          "heapUsed": 27677320,
+          "heapTotal": 29691904,
+          "external": 15028324,
+          "rss": 131346432
+        }
+      },
+      "statistics": {
+        "mean": 36.49534000000373,
+        "median": 37.17530300002545,
+        "min": 35.05067899997812,
+        "max": 37.260038000007626,
+        "stddev": 1.022115146416733,
+        "p95": 37.260038000007626,
+        "p99": 37.260038000007626
+      },
+      "iterations": 3
+    }
+  ],
+  "memory": [
+    {
+      "test": "memory-stress",
+      "operation": "memory",
+      "metrics": {
+        "duration": 4.772920666669961,
+        "memory": {
+          "heapUsed": 30882306.666666668,
+          "heapTotal": 37556224,
+          "external": 15028324,
+          "rss": 137637888
+        }
+      },
+      "statistics": {
+        "mean": 4.772920666669961,
+        "median": 4.07864600000903,
+        "min": 3.6843579999986105,
+        "max": 6.555758000002243,
+        "stddev": 1.2708914127704682,
+        "p95": 6.555758000002243,
+        "p99": 6.555758000002243
+      },
+      "iterations": 3
+    }
+  ],
+  "batchParsing": [
+    {
+      "test": "batch-sequential-10",
+      "operation": "batch-parsing",
+      "metrics": {
+        "duration": 21.00731033333189,
+        "memory": {
+          "heapUsed": 31440120,
+          "heapTotal": 37818368,
+          "external": 15028324,
+          "rss": 137637888
+        }
+      },
+      "statistics": {
+        "mean": 21.00731033333189,
+        "median": 20.681154999998398,
+        "min": 20.439920000033453,
+        "max": 21.900855999963824,
+        "stddev": 0.6394614791992554,
+        "p95": 21.900855999963824,
+        "p99": 21.900855999963824
+      },
+      "iterations": 3
+    },
+    {
+      "test": "batch-parallel-10",
+      "operation": "batch-parsing",
+      "metrics": {
+        "duration": 6.7053916666579125,
+        "memory": {
+          "heapUsed": 31493560,
+          "heapTotal": 37818368,
+          "external": 15028324,
+          "rss": 137637888
+        }
+      },
+      "statistics": {
+        "mean": 6.7053916666579125,
+        "median": 6.6345560000045225,
+        "min": 6.357443999964744,
+        "max": 7.12417500000447,
+        "stddev": 0.3169988174091005,
+        "p95": 7.12417500000447,
+        "p99": 7.12417500000447
+      },
+      "iterations": 3
+    },
+    {
+      "test": "batch-grouped-100",
+      "operation": "batch-parsing",
+      "metrics": {
+        "duration": 22.302444999979343,
+        "memory": {
+          "heapUsed": 31666088,
+          "heapTotal": 37818368,
+          "external": 15028324,
+          "rss": 137834496
+        }
+      },
+      "statistics": {
+        "mean": 22.302444999979343,
+        "median": 22.302444999979343,
+        "min": 22.302444999979343,
+        "max": 22.302444999979343,
+        "stddev": 0,
+        "p95": 22.302444999979343,
+        "p99": 22.302444999979343
+      },
+      "iterations": 1
+    },
+    {
+      "test": "batch-incremental",
+      "operation": "batch-parsing",
+      "metrics": {
+        "duration": 4.482514999981504,
+        "memory": {
+          "heapUsed": 31699832,
+          "heapTotal": 37818368,
+          "external": 15028324,
+          "rss": 137834496
+        }
+      },
+      "statistics": {
+        "mean": 4.482514999981504,
+        "median": 4.462706999969669,
+        "min": 4.339052999974228,
+        "max": 4.645785000000615,
+        "stddev": 0.12600369732246855,
+        "p95": 4.645785000000615,
+        "p99": 4.645785000000615
+      },
+      "iterations": 3
+    }
+  ],
+  "annotations": [
+    {
+      "test": "annotate-single",
+      "operation": "annotation",
+      "metrics": {
+        "duration": 2097.373976333319,
+        "memory": {
+          "heapUsed": 31879144,
+          "heapTotal": 37818368,
+          "external": 15042253,
+          "rss": 138817536
+        }
+      },
+      "statistics": {
+        "mean": 2097.373976333319,
+        "median": 2089.8834969999734,
+        "min": 2078.50512799999,
+        "max": 2123.733303999994,
+        "stddev": 19.20898117295304,
+        "p95": 2123.733303999994,
+        "p99": 2123.733303999994
+      },
+      "iterations": 3
+    },
+    {
+      "test": "annotate-batch-10",
+      "operation": "annotation",
+      "metrics": {
+        "duration": 7788.527402666669,
+        "memory": {
+          "heapUsed": 28743576,
+          "heapTotal": 30478336,
+          "external": 15042253,
+          "rss": 138817536
+        }
+      },
+      "statistics": {
+        "mean": 7788.527402666669,
+        "median": 7780.682812999992,
+        "min": 7763.644351999974,
+        "max": 7821.255043000041,
+        "stddev": 24.1647280094384,
+        "p95": 7821.255043000041,
+        "p99": 7821.255043000041
+      },
+      "iterations": 3
+    },
+    {
+      "test": "annotate-batch-100",
+      "operation": "annotation",
+      "metrics": {
+        "duration": 48024.70825199998,
+        "memory": {
+          "heapUsed": 29022496,
+          "heapTotal": 30478336,
+          "external": 15042253,
+          "rss": 138817536
+        }
+      },
+      "statistics": {
+        "mean": 48024.70825199998,
+        "median": 48024.70825199998,
+        "min": 48024.70825199998,
+        "max": 48024.70825199998,
+        "stddev": 0,
+        "p95": 48024.70825199998,
+        "p99": 48024.70825199998
+      },
+      "iterations": 1
+    }
+  ],
+  "embeddings": [
+    {
+      "test": "embed-single",
+      "operation": "embedding",
+      "metrics": {
+        "duration": 341.8185249999903,
+        "memory": {
+          "heapUsed": 29054192,
+          "heapTotal": 31526912,
+          "external": 15028324,
+          "rss": 139014144
+        }
+      },
+      "statistics": {
+        "mean": 341.8185249999903,
+        "median": 343.81391299999086,
+        "min": 336.92316100001335,
+        "max": 344.71850099996664,
+        "stddev": 3.481188626664524,
+        "p95": 344.71850099996664,
+        "p99": 344.71850099996664
+      },
+      "iterations": 3
+    },
+    {
+      "test": "embed-batch-10",
+      "operation": "embedding",
+      "metrics": {
+        "duration": 916.1165516666564,
+        "memory": {
+          "heapUsed": 29253920,
+          "heapTotal": 31789056,
+          "external": 15028324,
+          "rss": 139210752
+        }
+      },
+      "statistics": {
+        "mean": 916.1165516666564,
+        "median": 919.749422999972,
+        "min": 899.5312749999575,
+        "max": 929.0689570000395,
+        "stddev": 12.329287086116317,
+        "p95": 929.0689570000395,
+        "p99": 929.0689570000395
+      },
+      "iterations": 3
+    },
+    {
+      "test": "embed-batch-100",
+      "operation": "embedding",
+      "metrics": {
+        "duration": 4955.5327370000305,
+        "memory": {
+          "heapUsed": 31956384,
+          "heapTotal": 34934784,
+          "external": 15028324,
+          "rss": 139800576
+        }
+      },
+      "statistics": {
+        "mean": 4955.5327370000305,
+        "median": 4955.5327370000305,
+        "min": 4955.5327370000305,
+        "max": 4955.5327370000305,
+        "stddev": 0,
+        "p95": 4955.5327370000305,
+        "p99": 4955.5327370000305
+      },
+      "iterations": 1
+    }
+  ],
+  "pipeline": [
+    {
+      "test": "pipeline-parse-annotate-embed",
+      "operation": "pipeline",
+      "metrics": {
+        "duration": 8088.420342000027,
+        "memory": {
+          "heapUsed": 30903168,
+          "heapTotal": 32575488,
+          "external": 15028324,
+          "rss": 139997184
+        }
+      },
+      "statistics": {
+        "mean": 8088.420342000027,
+        "median": 8088.420342000027,
+        "min": 8088.420342000027,
+        "max": 8088.420342000027,
+        "stddev": 0,
+        "p95": 8088.420342000027,
+        "p99": 8088.420342000027
+      },
+      "iterations": 1
+    }
+  ],
+  "databaseSize": {
+    "totalSizeMb": 0.09375,
+    "totalSizeBytes": 98304,
+    "bytesPerNode": 200.6204081632653,
+    "bytesPerLoc": 26.713043478260868,
+    "indexOverheadRatio": 0.5342608695652173,
+    "breakdown": {
+      "databaseFile": 65536,
+      "indexFile": 32768,
+      "otherFiles": 0
+    },
+    "tableBreakdown": {
+      "parserResults": 8192,
+      "annotations": 0,
+      "embeddings": 0,
+      "metadata": 4096,
+      "indexes": 28672,
+      "other": 4096
+    }
+  },
+  "qualityMetrics": {
+    "annotations": {
+      "accuracy": 1,
+      "relevance": 0.5,
+      "completeness": 1,
+      "averageScore": 0.8333333333333334
+    },
+    "embeddings": {
+      "dimensionality": 1536,
+      "avgMagnitude": 1,
+      "vectorSimilarity": -0.0004007803326912938,
+      "searchRelevance": 0.85,
+      "averageScore": 0.8875000000000001
+    }
+  },
+  "summary": {
+    "totalTests": 21,
+    "passed": 21,
+    "failed": 0,
+    "warnings": 0
+  }
+}

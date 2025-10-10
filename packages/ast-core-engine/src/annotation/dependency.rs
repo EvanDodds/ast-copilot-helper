@@ -483,6 +483,7 @@ mod tests {
     use super::*;
     use crate::types::Point;
 
+    #[allow(dead_code)]
     fn create_test_node(node_type: &str, text: &str, children_ids: Vec<String>) -> ASTNode {
         ASTNode {
             id: format!("test_{}_{}", node_type, text.len()),
