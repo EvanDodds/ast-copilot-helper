@@ -156,7 +156,7 @@ jobs:
           
           # Create snapshot
           node packages/ast-helper/bin/ast-helper snapshot create \
-            --version "${{ steps.version.outputs.version }}" \
+            --snapshot-version "${{ steps.version.outputs.version }}" \
             --description "${{ steps.description.outputs.description }}" \
             --tags "automated,ci,${{ github.event_name }}" \
             --compression 6 \

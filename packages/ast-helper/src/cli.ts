@@ -854,7 +854,7 @@ export class AstHelperCli {
       .description("Create compressed snapshot from .astdb directory")
       .addOption(
         new Option(
-          "-v, --version <version>",
+          "--snapshot-version <version>",
           "Snapshot version (e.g., '1.0.0')",
         ),
       )
@@ -877,9 +877,18 @@ export class AstHelperCli {
         new Option("-o, --output <path>", "Output path for snapshot file"),
       )
       .addOption(new Option("--verbose", "Show detailed progress"))
-      .action(async (options: CreateSnapshotCommandOptions) => {
-        await this.executeCommand("snapshot:create", options);
-      });
+      .action(
+        async (
+          options: CreateSnapshotCommandOptions & { snapshotVersion?: string },
+        ) => {
+          // Map snapshotVersion to version for compatibility
+          const commandOptions = {
+            ...options,
+            version: options.snapshotVersion,
+          };
+          await this.executeCommand("snapshot:create", commandOptions);
+        },
+      );
 
     // snapshot restore - Restore snapshot to .astdb directory
     snapshotCmd

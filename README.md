@@ -153,7 +153,7 @@ Share pre-built `.astdb` databases to reduce onboarding time from hours to minut
 
 ```bash
 # Create and publish a snapshot
-yarn ast-helper snapshot create --version 1.0.0 --description "Production snapshot"
+yarn ast-helper snapshot create --snapshot-version 1.0.0 --description "Production snapshot"
 yarn ast-helper snapshot publish snapshot-1.0.0.tar.gz
 
 # On another machine, download and restore
