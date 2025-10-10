@@ -1,4 +1,5 @@
 use crate::ast_processor::SupportedLanguage;
+#[cfg(feature = "full-system")]
 use crate::error::EngineError;
 #[cfg(feature = "full-system")]
 use tree_sitter::{Language, Parser};
