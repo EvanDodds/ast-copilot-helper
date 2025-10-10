@@ -18,7 +18,7 @@ The Repository Snapshot Distribution System enables teams to share pre-built `.a
 
 ```bash
 # Create a snapshot
-yarn ast-helper snapshot create --version 1.0.0 --description "Production snapshot"
+yarn ast-helper snapshot create --snapshot-version 1.0.0 --description "Production snapshot"
 
 # Publish to GitHub Releases
 yarn ast-helper snapshot publish snapshot-1.0.0.tar.gz
@@ -89,11 +89,11 @@ yarn ast-helper snapshot create [options]
 
 ```bash
 # Basic snapshot
-yarn ast-helper snapshot create --version 1.0.0
+yarn ast-helper snapshot create --snapshot-version 1.0.0
 
 # Production snapshot with tags
 yarn ast-helper snapshot create \
-  --version 1.0.0 \
+  --snapshot-version 1.0.0 \
   --description "Production release" \
   --tags "production,stable,v1.0"
 
@@ -383,7 +383,7 @@ yarn ast-helper snapshot delete 1.0.0 \
 # Team lead creates and publishes snapshot
 yarn ast-helper init
 yarn ast-helper parse
-yarn ast-helper snapshot create --version 1.0.0 --description "Onboarding snapshot"
+yarn ast-helper snapshot create --snapshot-version 1.0.0 --description "Onboarding snapshot"
 yarn ast-helper snapshot publish snapshot-1.0.0.tar.gz
 
 # New developer downloads and restores
