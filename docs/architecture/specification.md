@@ -534,7 +534,7 @@ project-root/
 
 **Gitignore Configuration**:
 
-```gitignore
+```txt
 # AST Copilot Helper
 .astdb/
 !.astdb/config.json    # Keep configuration in repo

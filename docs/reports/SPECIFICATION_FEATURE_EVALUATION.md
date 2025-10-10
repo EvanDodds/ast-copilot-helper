@@ -1150,7 +1150,7 @@ if (hash !== expectedSha256) {
   - Add to `init` command output
   - Document in README
   - Content:
-    ```gitignore
+    ```txt
     # AST Copilot Helper
     .astdb/
     !.astdb/config.json
