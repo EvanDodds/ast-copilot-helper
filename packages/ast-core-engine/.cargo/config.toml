@@ -1,0 +1,28 @@
+# Cargo configuration for ast-core-engine
+# See: https://doc.rust-lang.org/cargo/reference/config.html
+
+[build]
+# Enable incremental compilation for faster rebuilds in development
+# This significantly reduces rebuild times (30-50%) by reusing previous compilation artifacts
+# Note: Incremental compilation is automatically disabled for release builds
+incremental = true
+
+[profile.dev]
+# Development profile optimizations
+# Incremental compilation enabled by default via [build.incremental]
+opt-level = 0          # No optimizations for faster compilation
+debug = true          # Include debug information
+debug-assertions = true
+overflow-checks = true
+
+[profile.release]
+# Release profile - incremental disabled for reproducibility and optimization
+incremental = false    # Disable incremental for clean, optimized builds
+opt-level = 3         # Maximum optimizations
+lto = true            # Link-time optimization
+codegen-units = 1     # Better optimization, slower compile
+strip = true          # Strip symbols for smaller binary
+
+[profile.test]
+# Test profile - enable incremental for faster test iteration
+incremental = true

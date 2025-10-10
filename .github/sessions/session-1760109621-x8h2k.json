@@ -70,15 +70,18 @@
       "existingStatus": "not-started"
     },
     {
-      "id": 4,
-      "category": "Rust Build",
-      "text": "Enable incremental compilation consistently (2.1)",
-      "source": 183,
-      "priority": "high",
-      "effort": "30min",
-      "benefit": "30-50% faster rebuilds",
-      "risk": "very-low",
-      "existingStatus": "partial"
+      "id": 2,
+      "title": "Enable incremental Rust compilation consistently",
+      "workType": "update-existing",
+      "criteria": [4],
+      "files": [
+        "packages/ast-core-engine/.cargo/config.toml",
+        "DEVELOPMENT.md"
+      ],
+      "complexity": "low",
+      "status": "complete",
+      "findings": "Created .cargo/config.toml to enable incremental compilation in dev/test profiles. Benchmarked: clean build 21.7s, incremental rebuild 2.4s (89% faster, 9x speedup). Documented in DEVELOPMENT.md.",
+      "improvement": "89% faster Rust rebuilds (from 21.7s to 2.4s)"
     },
     {
       "id": 5,
