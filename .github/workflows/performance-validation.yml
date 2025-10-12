@@ -3,17 +3,18 @@ name: Performance Validation
 on:
   pull_request:
     branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - 'packages/**'
-      - 'scripts/performance/**'
-      - 'tests/**'
-      - '.github/workflows/performance-validation.yml'
+      - "packages/**"
+      - "scripts/performance/**"
+      - "tests/**"
+      - ".github/workflows/performance-validation.yml"
   workflow_dispatch:
     inputs:
       save_baseline:
-        description: 'Save results as new baseline'
+        description: "Save results as new baseline"
         required: false
-        default: 'false'
+        default: "false"
 
 concurrency:
   group: performance-${{ github.ref }}
@@ -28,6 +29,8 @@ jobs:
     name: Run Performance Benchmarks
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Skip draft PRs
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
 
     steps:
       - name: Checkout code
@@ -38,8 +41,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'yarn'
+          node-version: "20"
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -248,21 +251,21 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.readFileSync('ci-artifacts/performance-summary.md', 'utf8');
-            
+
             // Find existing comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
+
             const botComment = comments.find(comment => 
               comment.user.type === 'Bot' && 
               comment.body.includes('📊 Performance Benchmark Results')
             );
-            
+
             const commentBody = `${summary}\n\n---\n\n*Automated performance validation - triggered by commit ${context.sha.substring(0, 7)}*`;
-            
+
             if (botComment) {
               // Update existing comment
               await github.rest.issues.updateComment({
