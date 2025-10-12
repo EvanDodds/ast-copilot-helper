@@ -8,6 +8,7 @@ on:
       - ".github/workflows/docs.yml"
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "docs/**"
       - ".github/workflows/docs.yml"
@@ -16,6 +17,8 @@ jobs:
   # Build job - runs on both PR and main
   build:
     runs-on: ubuntu-latest
+    # Skip draft PRs
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
