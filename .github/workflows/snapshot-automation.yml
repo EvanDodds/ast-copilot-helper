@@ -18,10 +18,6 @@ on:
   release:
     types: [published]
   
-  # Nightly snapshots
-  schedule:
-    - cron: '0 2 * * *'  # 2 AM UTC daily
-  
   # Manual trigger
   workflow_dispatch:
     inputs:
