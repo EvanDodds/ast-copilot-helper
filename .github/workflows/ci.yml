@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
-  schedule:
-    # Run nightly performance benchmarks and security scans
-    - cron: "0 2 * * *"
   workflow_call:
     inputs:
       skip-nightly:
